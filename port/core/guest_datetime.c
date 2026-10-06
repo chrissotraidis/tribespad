@@ -34,6 +34,16 @@ static int get_time(uint64_t base,uint32_t p,GuestTime *t,int date){
  static const unsigned days[]={31,28,31,30,31,30,31,31,30,31,30,31};unsigned leap=t->year%4==0&&(t->year%100||t->year%400==0);if(t->day>days[t->month-1]+(t->month==2?leap:0))return 0;
  unsigned y=t->year,m=t->month;if(m<3){m+=12;y--;}t->dow=(t->day+13*(m+1)/5+y+y/4-y/100+y/400+6)%7;return 1;
 }
+/* Win32 GetLocalTime has no return value. Reuse the actual native local
+   calendar conversion, then publish exactly the eight x86 WORD fields.
+   The checked build instruments this guest write; no host pointer is retained.
+   https://learn.microsoft.com/en-us/windows/win32/api/sysinfoapi/nf-sysinfoapi-getlocaltime */
+void tribes_get_local_time(uint64_t base,uint32_t output){
+ GuestTime stamp;
+ if(!range(base,output,sizeof stamp))unsupported("GetLocalTime output range");
+ if(!get_time(base,0,&stamp,0))unsupported("native local clock fields");
+ memcpy((void *)(uintptr_t)(base+output),&stamp,sizeof stamp);
+}
 struct Text {uint16_t *s;unsigned n,capacity;};
 static void append(struct Text *b,uint16_t ch){if(b->n==b->capacity){if(b->capacity==1048576)unsupported("expanded output exceeds bounded profile");unsigned capacity=b->capacity*2;uint16_t *s=realloc(b->s,2ull*capacity);if(!s)unsupported("native output allocation");b->s=s;b->capacity=capacity;}b->s[b->n++]=ch;}
 static void text(struct Text *b,uint32_t offset){const uint16_t *s=dt_strings+offset;while(*s)append(b,*s++);}

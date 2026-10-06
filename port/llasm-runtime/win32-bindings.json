@@ -1008,6 +1008,13 @@
     "guest_base": true,
     "returns": true
   },
+  "GetLocalTime": {
+    "helper": "tribes_get_local_time",
+    "arguments": 1,
+    "guest_base": true,
+    "returns": false,
+    "helper_returns": "void"
+  },
   "GetTimeFormatEx": {
     "helper": "tribes_get_time_format_ex",
     "arguments": 6,

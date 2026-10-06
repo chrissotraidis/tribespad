@@ -1,0 +1,183 @@
+{
+  "date": "2026-10-06",
+  "implementation": "GetLocalTime reuses native local calendar conversion and checked 16-byte SYSTEMTIME output; emitted void stdcall binding.",
+  "component": {
+    "passed": true,
+    "state": "finished",
+    "runs": [
+      {
+        "mode": "normal",
+        "timezone": "UTC",
+        "output": "PASS: real local calendar/milliseconds, independent wall-clock bracket, unaligned and page-end 16-byte output, void stdcall/full CPU/stack/LastError preservation",
+        "binary_sha256": "0ed8c292e7f0b82616729e01a446c797d0644130980abe2b617cc792297ab05e"
+      },
+      {
+        "mode": "normal",
+        "timezone": "America/Chicago",
+        "output": "PASS: real local calendar/milliseconds, independent wall-clock bracket, unaligned and page-end 16-byte output, void stdcall/full CPU/stack/LastError preservation",
+        "binary_sha256": "0ed8c292e7f0b82616729e01a446c797d0644130980abe2b617cc792297ab05e"
+      },
+      {
+        "mode": "normal",
+        "timezone": "Asia/Kathmandu",
+        "output": "PASS: real local calendar/milliseconds, independent wall-clock bracket, unaligned and page-end 16-byte output, void stdcall/full CPU/stack/LastError preservation",
+        "binary_sha256": "0ed8c292e7f0b82616729e01a446c797d0644130980abe2b617cc792297ab05e"
+      },
+      {
+        "mode": "checked",
+        "timezone": "UTC",
+        "output": "PASS: real local calendar/milliseconds, independent wall-clock bracket, unaligned and page-end 16-byte output, void stdcall/full CPU/stack/LastError preservation",
+        "binary_sha256": "2356afcb6d6914882f00badc2507236b1e0a22cd05cfce2ab1e2c54c2b76ed84"
+      },
+      {
+        "mode": "checked",
+        "timezone": "America/Chicago",
+        "output": "PASS: real local calendar/milliseconds, independent wall-clock bracket, unaligned and page-end 16-byte output, void stdcall/full CPU/stack/LastError preservation",
+        "binary_sha256": "2356afcb6d6914882f00badc2507236b1e0a22cd05cfce2ab1e2c54c2b76ed84"
+      },
+      {
+        "mode": "checked",
+        "timezone": "Asia/Kathmandu",
+        "output": "PASS: real local calendar/milliseconds, independent wall-clock bracket, unaligned and page-end 16-byte output, void stdcall/full CPU/stack/LastError preservation",
+        "binary_sha256": "2356afcb6d6914882f00badc2507236b1e0a22cd05cfce2ab1e2c54c2b76ed84"
+      }
+    ],
+    "checked_faults": [
+      {
+        "name": "null",
+        "returncode": -6
+      },
+      {
+        "name": "short",
+        "returncode": -6
+      },
+      {
+        "name": "readonly",
+        "returncode": -6
+      }
+    ],
+    "sources_sha256": {
+      "scripts/test-local-time.py": "128a524168449baedb25fbb1e7fdda39cc6d58adc1c00dab00b38343c00c426c",
+      "tests/local_time_test.c": "9522ba81382354eec622d4a40a9aedc459768567214ab2245c94fdd839509a56",
+      "port/core/guest_datetime.h": "fc05e4045d75aaeee4c80d0ab589b65c596bd9b0fde12da91dcdcbbb434cda1e",
+      "port/core/guest_datetime.c": "ef2ef249daa2d3b6de39cc3d7bb5147329466540f9804566390037da7ff8a616",
+      "port/core/guest_heap.c": "791c26c9fd72984fc53f0f5f1447df5f1dd43e38af08a529b1efc0b3e65dd96b",
+      "tests/fixtures/native_enter.ll": "78597a5a3030a7a7e0d6746358a6f3489ff8e8c395fba21383c200133f2f1f9d",
+      "port/core/guest_memory_checks.c": "ee00fcff6979a3f4480835115d10db5dddf5fabf089a04c80f4a55e0ea82ec7c",
+      "port/core/guest_external_checks.c": "2ecaf0cf09462d76b293ab70860c9245ae46536959e81fd2549ad7675ad63523",
+      "port/llasm-runtime/win32-bindings.json": "583c6deb1fb58f1f0724a5c026ba470b8aa7cf27d65781ff8c7de345b7dbb7a4"
+    },
+    "scope": "Native and checked emitted GetLocalTime ABI, actual host timezone/calendar/millisecond output and guarded 16-byte writes. Component evidence; not original-game or playable-map acceptance."
+  },
+  "datetime_regression": {
+    "passed": true,
+    "runs": [
+      {
+        "mode": "normal",
+        "pass": true,
+        "output": "PASS: 42 golden date/time cases through actual ARM64 seven/six-argument wrappers, eight concurrent threads, size queries/full/short buffers, readonly unaligned UTF-16/SYSTEMTIME inputs, Unicode locale/genitive/default/custom patterns, quotes/time filtering/leap dates/DOW recomputation/long output, native local-clock queries; full CPU/FP/flags/stack guards and LastError, invalid fields/flags/capacity/reserved cases",
+        "binary_sha256": "00ae2e5cb471af01121e57839ca95e6f474195022937c1b3008cc8fa95e17042"
+      },
+      {
+        "mode": "tsan",
+        "pass": true,
+        "output": "PASS: 42 golden date/time cases through actual ARM64 seven/six-argument wrappers, eight concurrent threads, size queries/full/short buffers, readonly unaligned UTF-16/SYSTEMTIME inputs, Unicode locale/genitive/default/custom patterns, quotes/time filtering/leap dates/DOW recomputation/long output, native local-clock queries; full CPU/FP/flags/stack guards and LastError, invalid fields/flags/capacity/reserved cases",
+        "binary_sha256": "faf8b958c5970797f205bcead5a2a0f1d1c268cbb917bd12feffe7e03c5f0d41"
+      }
+    ],
+    "golden_cases": 42
+  },
+  "mobile_compile": {
+    "passed": true,
+    "rows": [
+      {
+        "platform": "device",
+        "target": "arm64-apple-ios16",
+        "objects": [
+          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/local-time/mobile-compile/device/00-guest_datetime.o",
+          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/local-time/mobile-compile/device/01-bindings.o"
+        ],
+        "proof": "56d20693f3841702aa197bb4cb4179b999496a5e59192bcc8bb09d33438550a8"
+      },
+      {
+        "platform": "simulator",
+        "target": "arm64-apple-ios16-simulator",
+        "objects": [
+          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/local-time/mobile-compile/simulator/00-guest_datetime.o",
+          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/local-time/mobile-compile/simulator/01-bindings.o"
+        ],
+        "proof": "730641bd6715805f53e06b3bdf0aa14a85e16d5d179eb13ff7a65693577472ff"
+      }
+    ],
+    "scope": "Checked ARM64 iOS device/Simulator compilation only; no mobile engine link or execution."
+  },
+  "original_execution_before_fix": {
+    "pid": 91720,
+    "frames": [
+      "qol_missing_import",
+      "tbimp_GetLocalTime",
+      "tribes_enter",
+      "main",
+      "start"
+    ],
+    "return_pc": "0x6ff23f",
+    "output": "0x2fd044",
+    "renderer_globals": {
+      "0x1046ce48": "0x0",
+      "0x1046ce60": "0x0",
+      "0x1046ceec": "0xdb000002",
+      "0x1046e258": "0x0",
+      "0x1046ce50": "0x0",
+      "0x1046c8a4": "0x0",
+      "0x1046ca80": "0x0",
+      "0x1046c9b0": "0xfffa0070",
+      "0x1046c9d0": "0x1",
+      "0x1046ca90": "0x0",
+      "0x1046c6f4": "0x0",
+      "0x1046cb74": "0x0",
+      "0x1046cb40": "0x1",
+      "0x101d6828": "0x9e826c"
+    },
+    "window_dimensions": [
+      1470,
+      956
+    ],
+    "native_gl": {
+      "context": {
+        "error": "success",
+        "value": "0x000000751dc07b60",
+        "summary": null
+      },
+      "version": {
+        "error": "success",
+        "value": "0x000000751d83064a",
+        "summary": "\"2.1 Metal - 91.7\""
+      },
+      "extensions": {
+        "error": "success",
+        "value": "0x000000751d82f646",
+        "summary": "\"GL_ARB_color_buffer_float GL_ARB_depth_buffer_float GL_ARB_depth_clamp GL_ARB_depth_texture GL_ARB_draw_buffers GL_ARB_draw_elements_base_vertex GL_ARB_draw_instanced GL_ARB_fragment_program GL_ARB_fragment_program_shadow GL_ARB_fragment_shader GL_ARB_framebuffer_object GL_ARB_framebuffer_sRGB GL_ARB_half_float_pixel GL_ARB_half_float_vertex GL_ARB_imaging GL_ARB_instanced_arrays GL_ARB_multisample GL_ARB_multitexture GL_ARB_occlusion_query GL_ARB_pixel_buffer_object GL_ARB_point_parameters GL_ARB_point_sprite GL_ARB_provoking_vertex GL_ARB_seamless_cube_map GL_ARB_shader_objects GL_ARB_shader_texture_lod GL_ARB_shading_language_100 GL_ARB_shadow GL_ARB_shadow_ambient GL_ARB_sync GL_ARB_texture_border_clamp GL_ARB_texture_compression GL_ARB_texture_compression_rgtc GL_ARB_texture_cube_map GL_ARB_texture_env_add GL_ARB_texture_env_combine GL_ARB_texture_env_crossbar GL_ARB_texture_env_dot3 GL_ARB_texture_float GL_ARB_texture_mirrored_repeat GL_ARB_texture_non_power_of_two GL_ARB_texture_rectangle GL_ARB_textur\"..."
+      },
+      "framebuffer": {
+        "error": "error: Falling back to default language. Ran expression as 'Objective C++'.\nerror: <user expression 3>:1:12: 'glGetIntegerv' has unknown return type; cast the call to its declared return type\n    1 | ({int n=-1;glGetIntegerv(0x8ca6,&n);n;})\n      |            ^~~~~~~~~~~~~~~~~~~~~~~~",
+        "value": null,
+        "summary": null
+      }
+    },
+    "trace_counts": {},
+    "scope": "Stopped at actual GetLocalTime before lighting; no creator/teardown/loader breakpoint occurred after attach. Native framebuffer-binding query failed to compile and is not a result."
+  },
+  "full_engine_after_fix": {
+    "state": "finished",
+    "initialized": true,
+    "attach_returned": true,
+    "native_patch_publication": true,
+    "independent_subpages_enabled": true,
+    "binary_sha256": "fe92bb35369f4717c0c45514aedf77232a93a0ade83b6349fe73c62d3a3c86f2",
+    "exit": -9,
+    "execution_timeout": true,
+    "playable": false,
+    "scope": "Full checked native engine build and original startup observation; deliberate 60-second execution timeout. Post-fix signed-app mission execution remains pending."
+  },
+  "scope": "Original pre-fix app evidence, passed changed component checks and completed full checked engine startup observation; post-fix signed-app mission execution and playable acceptance pending."
+}
