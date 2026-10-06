@@ -1,205 +1,135 @@
 {
   "date": "2026-10-06",
   "original_execution": {
-    "pid": 99314,
-    "original_binary_sha256": "fe92bb35369f4717c0c45514aedf77232a93a0ade83b6349fe73c62d3a3c86f2",
-    "next_import": "tbimp_SystemTimeToFileTime",
-    "return_pc": "0x6fcc52",
+    "pid": 9459,
+    "original_binary_sha256": "6065e2f6ab4944497bf66e5d8e15269708a8d9846aacbadd2b7bff43f667611b",
+    "signed_engine_sha256": "85aecf3a1917c4055fe0fe29cc5134a5ffe71861d2cc333294fac42c4569ee97",
+    "menus_and_textured_player": true,
+    "native_hid_training_start": true,
+    "loading_captured": "datablock933/1485, then object311/321",
+    "clock_returns": [
+      {
+        "system_return": "0x6fcc52",
+        "local_return": "0x6fcc66",
+        "system_input": [
+          2026,
+          10,
+          18,
+          6,
+          18,
+          28,
+          23,
+          0
+        ],
+        "local_filetime": 134357849030000000,
+        "utc_filetime": 134358029030000000,
+        "current_offset_seconds": -18000,
+        "return_value": 1,
+        "independent_python_check": true
+      },
+      {
+        "system_return": "0x6fcc52",
+        "local_return": "0x6fcc66",
+        "system_input": [
+          2026,
+          10,
+          18,
+          6,
+          18,
+          28,
+          23,
+          0
+        ],
+        "local_filetime": 134357849030000000,
+        "utc_filetime": 134358029030000000,
+        "current_offset_seconds": -18000,
+        "return_value": 1,
+        "independent_python_check": true
+      }
+    ],
+    "next_import": "tbimp_SetFileTime",
+    "return_pc": "0x6fcd22",
     "arguments": [
-      "0x2fd048",
-      "0x2fd058"
+      "0xe1000920",
+      "0x0",
+      "0x2fd07c",
+      "0x2fd074"
     ],
-    "local_time_return": [
-      2026,
-      10,
-      2,
-      6,
-      17,
-      42,
-      46,
-      593
-    ],
-    "renderer_globals": {
-      "0x1046ce48": "0x0",
-      "0x1046ce60": "0x0",
-      "0x1046ceec": "0xdb000002",
-      "0x1046e258": "0x0",
-      "0x1046ce50": "0x0",
-      "0x1046c8a4": "0x0",
-      "0x1046ca80": "0x0",
-      "0x1046c9b0": "0xfffa0070",
-      "0x1046c9d0": "0x1",
-      "0x1046ca90": "0x0",
-      "0x1046c6f4": "0x0",
-      "0x1046cb74": "0x0",
-      "0x1046cb40": "0x1",
-      "0x101d6828": "0x9e826c"
+    "framebuffer": {
+      "error": "success",
+      "value": "0",
+      "summary": null
     },
     "window_dimensions": [
       1470,
       956
     ],
-    "native_gl_framebuffer": {
-      "error": "success",
-      "value": "0",
-      "summary": null
-    },
-    "scope": "Actual signed app, native menus/Training input and mission loading; local-time return executed, stopped at original SystemTimeToFileTime before lighting. Selected-thread fields only."
+    "renderer_dimension_paths_observed": false,
+    "scope": "Actual signed original engine; selected-thread fields, not a coherent whole-memory snapshot. Loading artwork is not a playable map."
   },
   "components": {
-    "filetime": {
+    "local_filetime": {
+      "receipt": "generated/integration-review/filetime/result.json",
+      "sha256": "65d66a6a3a419246f7e7d84bc0bf40cb19187efd46a56907cecb83f2f2af6620",
+      "scope": "Native and checked emitted UTC and local FILETIME conversion pairs, independent Python datetime/cycle golden fields and zoneinfo current-bias oracle, input/output/overlap boundaries, invalid-date failure and protected-memory checks. Component evidence; not original-game or playable-map acceptance.",
       "passed": true,
-      "state": "finished",
-      "runs": [
-        {
-          "mode": "normal",
-          "timezone": "UTC",
-          "output": "PASS: UTC FILETIME epoch/century/leap/millisecond/upper-limit conversion against independent Python datetime/cycle golden fields, ignored weekday, unaligned/page-end/overlap output, full emitted stdcall CPU/stack preservation and invalid-date/output preservation",
-          "binary_sha256": "e720e165d5fa8551ead86f4ac248ddd974b8f954af70aced4c3279c41286d6bb"
-        },
-        {
-          "mode": "normal",
-          "timezone": "America/Chicago",
-          "output": "PASS: UTC FILETIME epoch/century/leap/millisecond/upper-limit conversion against independent Python datetime/cycle golden fields, ignored weekday, unaligned/page-end/overlap output, full emitted stdcall CPU/stack preservation and invalid-date/output preservation",
-          "binary_sha256": "e720e165d5fa8551ead86f4ac248ddd974b8f954af70aced4c3279c41286d6bb"
-        },
-        {
-          "mode": "normal",
-          "timezone": "Asia/Kathmandu",
-          "output": "PASS: UTC FILETIME epoch/century/leap/millisecond/upper-limit conversion against independent Python datetime/cycle golden fields, ignored weekday, unaligned/page-end/overlap output, full emitted stdcall CPU/stack preservation and invalid-date/output preservation",
-          "binary_sha256": "e720e165d5fa8551ead86f4ac248ddd974b8f954af70aced4c3279c41286d6bb"
-        },
-        {
-          "mode": "checked",
-          "timezone": "UTC",
-          "output": "PASS: UTC FILETIME epoch/century/leap/millisecond/upper-limit conversion against independent Python datetime/cycle golden fields, ignored weekday, unaligned/page-end/overlap output, full emitted stdcall CPU/stack preservation and invalid-date/output preservation",
-          "binary_sha256": "61343a06006691fd6ac54c6e4d4f6344266028ee5c0697669a9d55cd788a97d4"
-        },
-        {
-          "mode": "checked",
-          "timezone": "America/Chicago",
-          "output": "PASS: UTC FILETIME epoch/century/leap/millisecond/upper-limit conversion against independent Python datetime/cycle golden fields, ignored weekday, unaligned/page-end/overlap output, full emitted stdcall CPU/stack preservation and invalid-date/output preservation",
-          "binary_sha256": "61343a06006691fd6ac54c6e4d4f6344266028ee5c0697669a9d55cd788a97d4"
-        },
-        {
-          "mode": "checked",
-          "timezone": "Asia/Kathmandu",
-          "output": "PASS: UTC FILETIME epoch/century/leap/millisecond/upper-limit conversion against independent Python datetime/cycle golden fields, ignored weekday, unaligned/page-end/overlap output, full emitted stdcall CPU/stack preservation and invalid-date/output preservation",
-          "binary_sha256": "61343a06006691fd6ac54c6e4d4f6344266028ee5c0697669a9d55cd788a97d4"
-        }
-      ],
-      "checked_faults": [
-        {
-          "name": "input-short",
-          "returncode": -6
-        },
-        {
-          "name": "output-short",
-          "returncode": -6
-        },
-        {
-          "name": "input-protected",
-          "returncode": -6
-        },
-        {
-          "name": "output-readonly",
-          "returncode": -6
-        },
-        {
-          "name": "inverse-input-short",
-          "returncode": -6
-        },
-        {
-          "name": "inverse-output-short",
-          "returncode": -6
-        }
-      ],
-      "golden_sha256": "904c7e16313b3f5b78a9bff9f412bbf1a4794914c9cd8666ca239052d8404491",
-      "sources_sha256": {
-        "scripts/test-filetime.py": "465bcd5aa1021c1fe5f1baf6f234dc4cb9cd62850d473ba5bc2adeec4a4c5ceb",
-        "tests/filetime_test.c": "c6787bb5dacc3659e9c9125aab65310102c09b225653af025357449154f7bd56",
-        "port/core/guest_datetime.h": "b91a0c5538b6c4070ad84fc960c7ef7aeb28a493b00b1b50d4506c083c4f07fe",
-        "port/core/guest_datetime.c": "1ba69049715d0171ac630a7aa1ca630ba9f367b4bca510389b15ccd1d6c46f72",
-        "port/core/guest_heap.c": "791c26c9fd72984fc53f0f5f1447df5f1dd43e38af08a529b1efc0b3e65dd96b",
-        "tests/fixtures/native_enter.ll": "78597a5a3030a7a7e0d6746358a6f3489ff8e8c395fba21383c200133f2f1f9d",
-        "port/core/guest_memory_checks.c": "ee00fcff6979a3f4480835115d10db5dddf5fabf089a04c80f4a55e0ea82ec7c",
-        "port/core/guest_external_checks.c": "2ecaf0cf09462d76b293ab70860c9245ae46536959e81fd2549ad7675ad63523",
-        "port/llasm-runtime/win32-bindings.json": "e81744e20003a129ea37cdab2d0539d4da638b2f56a9f4292cad70fc740832d5"
-      },
-      "scope": "Native and checked emitted UTC conversion pair, independent Python datetime/cycle golden fields, input/output/overlap boundaries, invalid-date failure and protected-memory checks. Component evidence; not original-game or playable-map acceptance."
+      "qualification": "Passed before the subsequent SetFileTime binding addition; the four clock wrappers and calendar implementation are unchanged."
     },
-    "renderer": {
-      "passed": true,
-      "normal": {
-        "passed": true,
-        "cases": 512,
-        "binary_sha256": "1f2ff73ca90ce446a96b0be1493b6d1dd08e1ea0ea758b912699caaa3769eb62"
-      },
-      "checked": {
-        "passed": true,
-        "cases": 512,
-        "binary_sha256": "814da6ddb833d8f72a5f7f0767d5f7b0178976d5200553888bc1a4808168391c"
-      },
-      "checked_faults": [
-        "nonzero",
-        "protected",
-        "interop",
-        "current",
-        "dimensions"
-      ],
-      "sources_sha256": {
-        "scripts/test-apple-render-dimensions.py": "f5f3af0815d617bc63c3b42f81eead3b1df3c7fe4fbde69898f5186969cb4b6f",
-        "scripts/apple_render_dimensions.py": "932a05aedb49ef2aae0aba5d023e6cb867042a05f792d8260163de004e45eb37",
-        "port/core/guest_memory_checks.c": "ee00fcff6979a3f4480835115d10db5dddf5fabf089a04c80f4a55e0ea82ec7c",
-        "port/core/guest_external_checks.c": "2ecaf0cf09462d76b293ab70860c9245ae46536959e81fd2549ad7675ad63523"
-      },
-      "original_blocks_sha256": {
-        "loc_1004324C": "1f8dc62294a9fd002da36ef736bd5a4e59af68adbb06eaf3a35c09e1a0be1b0f",
-        "loc_100432DD": "71f8def96c23422dc3b2f1cf481e43f55ea020df0a24fe5e9438a45613f01f3e"
-      },
-      "scope": "Two actual renderer blocks; original nonzero target behavior preserved, default dimensions compared to original object dimensions, full CPU/stack comparison with only the deliberately absent object pointer normalized, five real checked invalid/protected reads. Component test; no playable-map acceptance."
+    "set_file_time": {
+      "receipt": "generated/integration-review/set-file-time/result.json",
+      "sha256": "ba1c10cb62a4cf7c1c9d95671516ee87fa803f0003c21948ec87714be1b5c8c7",
+      "scope": "Actual native file/directory timestamp updates through emitted normal/checked SetFileTime, rights and boundary semantics. Per-handle automatic-time suppression remains explicitly unavailable. Component evidence, not mission/gameplay acceptance.",
+      "passed": true
     },
-    "mobile_compile": {
-      "passed": true,
-      "rows": [
-        {
-          "platform": "device",
-          "target": "arm64-apple-ios16",
-          "objects": [
-            "generated/integration-review/apple-render-dimensions/mobile-compile/device/00-blocks.o",
-            "generated/integration-review/apple-render-dimensions/mobile-compile/device/01-guest_datetime.o",
-            "generated/integration-review/apple-render-dimensions/mobile-compile/device/02-bindings.o"
-          ],
-          "proof": "4aad2b366250f7bb5e75645e2521bd941a8c75d477bd41c5eb69a0419b1f05f5"
-        },
-        {
-          "platform": "simulator",
-          "target": "arm64-apple-ios16-simulator",
-          "objects": [
-            "generated/integration-review/apple-render-dimensions/mobile-compile/simulator/00-blocks.o",
-            "generated/integration-review/apple-render-dimensions/mobile-compile/simulator/01-guest_datetime.o",
-            "generated/integration-review/apple-render-dimensions/mobile-compile/simulator/02-bindings.o"
-          ],
-          "proof": "e6f720d7fa7060f026478774176f8d9c9b9992598f5c941586cf924033f5d3cd"
-        }
-      ],
-      "scope": "Changed checked renderer and time service/wrappers compile for ARM64 iOS device and Simulator; compilation only, no mobile link or execution."
+    "file_metadata": {
+      "receipt": "generated/integration-review/file-metadata/macos/result.json",
+      "sha256": "7919e66a12174be8723ad5b8426aca12633e318400619e4a641b2c6764fc5679",
+      "scope": "Checked A/W component semantics, not game startup or physical-device acceptance; host file-security suite separately verifies inheritance and fault subprocesses.",
+      "passed": true
+    },
+    "file_write": {
+      "receipt": "generated/integration-review/write-file/result.json",
+      "sha256": "993d3c50326e5c2c19cd5682b34aa3b72585b685b9d28db66f61d8822b72f50f",
+      "scope": "Actual owned descriptor writes through emitted ABI and both compiler guards. Source is fully checked/copied before host writes. Async/overlapped/device-specific semantics remain unsupported.",
+      "passed": true
+    },
+    "mobile_file_time_compile": {
+      "receipt": "generated/integration-review/set-file-time/mobile-compile/result.json",
+      "sha256": "43710a023c107425600853f962b4079d86ec5518f763e4808420ecadd381281e",
+      "scope": "Changed checked native file service and emitted SetFileTime/CreateFile wrappers compile for ARM64 iOS device and Simulator. Compilation only; no mobile execution.",
+      "passed": true
     }
   },
-  "full_engine_after_changes": {
-    "state": "building",
-    "pid": 4372,
-    "session": 53638,
-    "log": "generated/integration-review/local-time/full-engine-integrated.log",
-    "previous_attempt": {
-      "state": "terminal",
-      "reason": "Mission-entry source receipt was stale after integration-script change; reran the affected normal/checked test, verified current inputs and restarted."
+  "implementation": {
+    "set_file_time": "Staged optional FILETIME inputs, real retained-descriptor fsetattrlist, expanded generic-write attributes, zero/null preservation and actual error results. Per-handle -1 automatic-update suppression remains unavailable.",
+    "default_window_dimensions": "Existing three pinned checked reads await mission-lighting execution."
+  },
+  "full_engine": {
+    "completed_clock_build_sha256": "6065e2f6ab4944497bf66e5d8e15269708a8d9846aacbadd2b7bff43f667611b",
+    "initialized": true,
+    "attach_return": 1,
+    "stages_returned": 2,
+    "observation_limit_seconds": 60,
+    "pending_set_file_time_build": {
+      "pid": 13273,
+      "session": 68672,
+      "log": "generated/integration-review/set-file-time/full-engine-integrated.log",
+      "state": "live at recording"
     }
   },
-  "scope": "UTC conversion/default-window dimensions implemented and component-tested; new full-engine build and signed-app mission result pending. No playable map, HD, authenticated match or full mobile acceptance.",
-  "required_mission_entry_regression": {
-    "passed": true,
-    "normal_cases": 800,
-    "checked_cases": 800
+  "cleanup": {
+    "original_app_and_debugger_ended": true,
+    "voice_preference_restored": true,
+    "audio": "default 106",
+    "simulator_booted": false
+  },
+  "next_action": "Finish the live build, package/sign/relaunch Training, verify original SetFileTime return0x6fcd22 and dimension/lighting paths, then actual rendered map and controls.",
+  "acceptance": {
+    "playable_map": false,
+    "gameplay_controls": false,
+    "hd": false,
+    "authenticated_community_match": false,
+    "full_mobile": false,
+    "goal": "active"
   }
 }

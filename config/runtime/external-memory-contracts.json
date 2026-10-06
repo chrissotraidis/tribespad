@@ -81,6 +81,7 @@
     "open",
     "close",
     "fstat",
+    "fsetattrlist",
     "lstat",
     "stat",
     "realpath",

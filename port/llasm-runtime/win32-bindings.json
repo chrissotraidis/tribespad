@@ -1027,6 +1027,24 @@
     "guest_base": true,
     "returns": true
   },
+  "SetFileTime": {
+    "helper": "tribes_set_file_time",
+    "arguments": 4,
+    "guest_base": true,
+    "returns": true
+  },
+  "LocalFileTimeToFileTime": {
+    "helper": "tribes_local_file_time_to_file_time",
+    "arguments": 2,
+    "guest_base": true,
+    "returns": true
+  },
+  "FileTimeToLocalFileTime": {
+    "helper": "tribes_file_time_to_local_file_time",
+    "arguments": 2,
+    "guest_base": true,
+    "returns": true
+  },
   "GetTimeFormatEx": {
     "helper": "tribes_get_time_format_ex",
     "arguments": 6,

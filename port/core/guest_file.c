@@ -11,6 +11,7 @@
 #include <string.h>
 #include <strings.h>
 #include <sys/stat.h>
+#include <sys/attr.h>
 #include <sys/mount.h>
 #include <unistd.h>
 /* x86 records are packed explicitly; native structs never cross the guest ABI. */
@@ -183,8 +184,8 @@ static uint32_t create_file(uint64_t base,uint32_t name,uint32_t access,uint32_t
     if(creation!=3&&(backup||reparse||!(access&0x40000000))){fputs("TribesPad: unsupported CreateFile creation access/backup mode\n",stderr);abort();}
     TribesFileOpenInfo info={0};char host[PATH_MAX],canonical[PATH_MAX];
     uint32_t data=(access&0x80000000?1:0)|(access&0x40000000?2:0);
-    uint32_t rights=data|(access&0x10000?TRIBES_FILE_DELETE:0)|
-        (access&0x80?TRIBES_FILE_READ_ATTRIBUTES:0)|(access&0x100?TRIBES_FILE_WRITE_ATTRIBUTES:0);
+    uint32_t rights=data|TRIBES_FILE_READ_ATTRIBUTES|(access&0x10000?TRIBES_FILE_DELETE:0)|
+        (access&0x40000100?TRIBES_FILE_WRITE_ATTRIBUTES:0);
     int mode=data==3?O_RDWR:data==2?O_WRONLY:data==1?O_RDONLY:O_EVTONLY;
     int fd,created=0;
     if(creation!=3)fd=tribes_filesystem_open_create(base,guest,host,sizeof host,canonical,mode,&created);
@@ -259,6 +260,37 @@ uint32_t tribes_set_file_pointer(uint64_t base,uint32_t handle,uint32_t low,uint
     int64_t target=origin+distance;if(!high&&(uint64_t)target>UINT32_MAX){close(fd);tribes_set_last_error(87);return UINT32_MAX;}
     off_t result=lseek(fd,(off_t)target,SEEK_SET);close(fd);if(result<0){tribes_set_last_error(87);return UINT32_MAX;}
     if(high){uint32_t upper=(uint32_t)((uint64_t)result>>32);memcpy((void *)(uintptr_t)(base+high),&upper,4);}tribes_set_last_error(0);return (uint32_t)result;
+}
+/* Update the retained native file, never a pathname reopened after borrowing.
+   All optional guest inputs are staged before one real metadata operation.
+   Darwin attrlist order is creation, modification, access. Null/zero entries
+   leave that field untouched. Per-handle automatic-time suppression (-1) is
+   an explicit unsupported operation, not an accepted native timestamp.
+   https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-setfiletime */
+uint32_t tribes_set_file_time(uint64_t base,uint32_t handle,uint32_t creation,uint32_t access,uint32_t write){
+    uint32_t pointers[]={creation,write,access};uint64_t ticks[3]={0};
+    for(unsigned i=0;i<3;i++)if(pointers[i]){
+        uint32_t p=pointers[i];
+        if(p<0x10000||(uint64_t)p+8>UINT64_C(0x100000000)||base>UINTPTR_MAX-p-8){tribes_set_last_error(87);return 0;}
+        memcpy(ticks+i,(const void *)(uintptr_t)(base+p),8);
+        if(ticks[i]==UINT64_MAX){tribes_set_last_error(50);return 0;}
+        if(ticks[i]>=UINT64_C(0x8000000000000000)){tribes_set_last_error(87);return 0;}
+    }
+    int fd=tribes_fd_borrow_access(handle,TRIBES_FILE_WRITE_ATTRIBUTES);if(fd<0)return 0;
+    struct stat st;
+    if(fstat(fd,&st)){close(fd);tribes_set_last_error(6);return 0;}
+    if(!S_ISREG(st.st_mode)&&!S_ISDIR(st.st_mode)){close(fd);tribes_set_last_error(50);return 0;}
+    const attrgroup_t bits[]={ATTR_CMN_CRTIME,ATTR_CMN_MODTIME,ATTR_CMN_ACCTIME};
+    struct attrlist attributes={0};attributes.bitmapcount=ATTR_BIT_MAP_COUNT;
+    struct timespec times[3];unsigned count=0;
+    for(unsigned i=0;i<3;i++)if(ticks[i]){
+        attributes.commonattr|=bits[i];
+        times[count++]=(struct timespec){(time_t)(ticks[i]/10000000)-INT64_C(11644473600),(long)(ticks[i]%10000000)*100};
+    }
+    int result=count?fsetattrlist(fd,&attributes,times,count*sizeof *times,0):0;
+    int error=errno;close(fd);
+    if(result){tribes_set_last_error(error==EBADF?6:error==EINVAL?87:error==ENOTSUP?50:error==EROFS?19:error==ENOSPC?112:error==EACCES||error==EPERM?5:1);return 0;}
+    return 1;
 }
 uint32_t tribes_read_file(uint64_t base,uint32_t handle,uint32_t buffer,uint32_t count,uint32_t output,uint32_t overlapped){
     if(overlapped){fprintf(stderr,"TribesPad: overlapped ReadFile is not implemented\n");abort();}

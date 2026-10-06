@@ -74,6 +74,22 @@ uint32_t tribes_file_time_to_system_time(uint64_t base,uint32_t input,uint32_t o
  GuestTime stamp={(uint16_t)low,(uint16_t)month,(uint16_t)((days+1)%7),(uint16_t)(day+1),(uint16_t)(clock/3600000),(uint16_t)(clock/60000%60),(uint16_t)(clock/1000%60),(uint16_t)(clock%1000)};
  memcpy((void *)(uintptr_t)(base+output),&stamp,16);return 1;
 }
+/* The legacy FILETIME pair applies today's timezone/DST bias even to dates
+   in another season. Obtain the actual native offset, preserving 100 ns bits.
+   Use unsigned arithmetic for the NT 64-bit bias operation at the boundaries.
+   https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-localfiletimetofiletime
+   https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-filetimetolocalfiletime */
+static uint32_t convert_local_file_time(uint64_t base,uint32_t input,uint32_t output,int to_local){
+ if(input==output||!range(base,input,8)||!range(base,output,8)){tribes_set_last_error(87);return 0;}
+ uint64_t ticks;memcpy(&ticks,(void *)(uintptr_t)(base+input),8);
+ struct timespec now;struct tm local;
+ if(clock_gettime(CLOCK_REALTIME,&now)||!localtime_r(&now.tv_sec,&local))unsupported("native FILETIME timezone");
+ uint64_t offset=(uint64_t)((int64_t)local.tm_gmtoff*INT64_C(10000000));
+ ticks=to_local?ticks+offset:ticks-offset;
+ memcpy((void *)(uintptr_t)(base+output),&ticks,8);return 1;
+}
+uint32_t tribes_local_file_time_to_file_time(uint64_t base,uint32_t input,uint32_t output){return convert_local_file_time(base,input,output,0);}
+uint32_t tribes_file_time_to_local_file_time(uint64_t base,uint32_t input,uint32_t output){return convert_local_file_time(base,input,output,1);}
 struct Text {uint16_t *s;unsigned n,capacity;};
 static void append(struct Text *b,uint16_t ch){if(b->n==b->capacity){if(b->capacity==1048576)unsupported("expanded output exceeds bounded profile");unsigned capacity=b->capacity*2;uint16_t *s=realloc(b->s,2ull*capacity);if(!s)unsupported("native output allocation");b->s=s;b->capacity=capacity;}b->s[b->n++]=ch;}
 static void text(struct Text *b,uint32_t offset){const uint16_t *s=dt_strings+offset;while(*s)append(b,*s++);}
