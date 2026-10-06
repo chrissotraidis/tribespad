@@ -1302,6 +1302,15 @@ void tribes_gl_mult_matrix_f(_cpu *cpu,uint32_t input){
     glMultMatrixf(matrix);DRAW_RETURN();
 #endif
 }
+void tribes_gl_mult_matrix_d(_cpu *cpu,uint32_t input){
+    WINDOW_ENTER();
+#if TARGET_OS_IPHONE
+    (void)input;(void)error;stop();
+#else
+    GLdouble matrix[16];checked_copy(matrix,guest(cpu,input,sizeof matrix),sizeof matrix);
+    glMultMatrixd(matrix);DRAW_RETURN();
+#endif
+}
 void tribes_gl_viewport(_cpu *cpu,uint32_t x,uint32_t y,uint32_t width,uint32_t height){
     WINDOW_ENTER();glViewport((int32_t)x,(int32_t)y,(int32_t)width,(int32_t)height);DRAW_RETURN();
 }
@@ -1384,6 +1393,10 @@ void tribes_gl_scale_f(_cpu *cpu,uint32_t x,uint32_t y,uint32_t z){
 }
 void tribes_gl_front_face(_cpu *cpu,uint32_t mode){WINDOW_ENTER();glFrontFace(mode);DRAW_RETURN();}
 void tribes_gl_depth_mask(_cpu *cpu,uint32_t value){WINDOW_ENTER();glDepthMask((GLboolean)value);DRAW_RETURN();}
+void tribes_gl_polygon_offset(_cpu *cpu,uint32_t factor,uint32_t units){
+    WINDOW_ENTER();uint32_t bits[]={factor,units};GLfloat value[2];memcpy(value,bits,sizeof value);
+    glPolygonOffset(value[0],value[1]);DRAW_RETURN();
+}
 uint32_t tribes_gl_is_enabled(_cpu *cpu,uint32_t cap){WINDOW_ENTER();uint32_t result=glIsEnabled(cap);WINDOW_RETURN(result);}
 void tribes_gl_color4fv(_cpu *cpu,uint32_t input){
     WINDOW_ENTER();

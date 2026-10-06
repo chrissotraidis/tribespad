@@ -59,7 +59,7 @@ extern unsigned sdl_test_live,sdl_test_fail;
 #ifdef CHECKED
 extern void bad_window(void),bad_context(void);
 #if defined(GRAPHICS) && !TARGET_OS_IPHONE
-extern void bad_frustum(void),bad_mult_matrix(void),bad_depth_mask(void),bad_is_enabled(void),bad_scale(void);
+extern void bad_frustum(void),bad_mult_matrix(void),bad_mult_matrix_double(void),bad_depth_mask(void),bad_is_enabled(void),bad_scale(void),bad_polygon_offset(void);
 #endif
 #endif
 static unsigned char *memory;static _cpu cpu;
@@ -675,27 +675,53 @@ static void render_state(const char *fault){
  GC(0xfffa02f0,0,GL_VERTEX_ARRAY);GC(0xfffa00e0,0,GL_TEXTURE0);GC(0xfffa0320,0,0);glDeleteProgram(program);glDeleteShader(vs);glDeleteShader(fs);assert(!glGetError());
  puts("Original 3D state: native winding/depth/enable/color/material/texture state and five normal formats, sparse checked draw-time data, pixels and detached pointers PASS");
 }
-static void matrix_multiplication(const char *fault){
- const uint32_t address=0xfffa05c0;
+static void polygon_offset(void){
+ const uint32_t address=0xfffa0690;
+ strcpy((char *)memory+0x24000,"opengl32");uint32_t module=CALL(60,0x24000);assert(module==0x20040000);
+ strcpy((char *)memory+0x24000,"glPolygonOffset");assert(CALL(63,0x24000)==address&&tribes_get_proc_address(cpu._pointer_offset,module,0x24000)==address);CALL(62,module);
+ const GLfloat values[][2]={{-2,-2},{.25f,-7.5f},{0,0},{-1.25f,16}};
+ for(unsigned i=0;i<sizeof values/sizeof *values;i++){
+  uint32_t bits[2];memcpy(bits,values[i],sizeof bits);GC(address,0,bits[0],bits[1]);
+  GLfloat factor,units;glGetFloatv(GL_POLYGON_OFFSET_FACTOR,&factor);glGetFloatv(GL_POLYGON_OFFSET_UNITS,&units);
+  assert(factor==values[i][0]&&units==values[i][1]&&!glGetError());
+ }
+ glGetString(0xffffffff);GC(address,0,0xc0000000,0xc0000000);assert(GC(0xfffa0010,1)==GL_INVALID_ENUM&&!GC(0xfffa0010,1));
+ glBegin(GL_TRIANGLES);GC(address,0,0,0);glEnd();assert(GC(0xfffa0010,1)==GL_INVALID_OPERATION&&!GC(0xfffa0010,1));
+ GLfloat factor,units;glGetFloatv(GL_POLYGON_OFFSET_FACTOR,&factor);glGetFloatv(GL_POLYGON_OFFSET_UNITS,&units);assert(factor==-2&&units==-2);GC(address,0,0,0);
+ puts("Polygon offset: original shadow arguments, native factor/units, retained errors and rejected begin-state mutation PASS");
+}
+static void matrix_multiplication(const char *fault,int doubles){
+ const uint32_t address=doubles?0xfffa0680:0xfffa05c0;
+ const char *prefix=doubles?"matrix-double-":"matrix-mult-";
+ const size_t bytes=doubles?128:64;
  if(fault){
-  if(!strncmp(fault,"matrix-mult-",12)){
-   const GLfloat identity[16]={1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1};memcpy(memory+0x3ff1,identity,sizeof identity);
-   if(!strcmp(fault,"matrix-mult-unreadable")){assert(tribes_memory_permissions_set(0x4000,4096,0));GC(address,0,0x3ff1);}
-   else if(!strcmp(fault,"matrix-mult-overflow"))GC(address,0,0xfffffff0);
+  if(!strncmp(fault,prefix,strlen(prefix))){
+   const GLdouble identity[16]={1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1};if(doubles)memcpy(memory+0x3ff1,identity,128);else{GLfloat f[16];for(unsigned i=0;i<16;i++)f[i]=(GLfloat)identity[i];memcpy(memory+0x3ff1,f,64);}
+   if(strstr(fault,"unreadable")!=NULL){assert(tribes_memory_permissions_set(0x4000,4096,0));GC(address,0,0x3ff1);}
+   else if(strstr(fault,"overflow")!=NULL)GC(address,0,0xfffffff0);
    assert(0);
   }return;
  }
  strcpy((char *)memory+0x24000,"opengl32");uint32_t module=CALL(60,0x24000);assert(module==0x20040000);
- strcpy((char *)memory+0x24000,"glMultMatrixf");assert(CALL(63,0x24000)==address&&tribes_get_proc_address(cpu._pointer_offset,module,0x24000)==address);CALL(62,module);
- const GLfloat original[16]={1,0,0,0,0,0,-1,0,0,1,0,0,0,0,0,1},asymmetric[16]={1,2,0,0,.25,1,0,0,0,.5,2,0,3,-2,1,1};
+ strcpy((char *)memory+0x24000,doubles?"glMultMatrixd":"glMultMatrixf");assert(CALL(63,0x24000)==address&&tribes_get_proc_address(cpu._pointer_offset,module,0x24000)==address);CALL(62,module);
+ const GLdouble original[16]={1,0,0,0,0,0,-1,0,0,1,0,0,0,0,0,1},asymmetric[16]={1,2,0,0,.25,1,0,0,0,.5,2,0,3,-2,1,1};
+ if(doubles){
+  memcpy(memory+0x3f80,original,128);assert(tribes_memory_permissions_set(0x4000,4096,0));
+  GC(0xfffa0240,0,GL_MODELVIEW);GC(0xfffa0250,0);GC(address,0,0x3f80);
+  GLdouble actual[16];glGetDoublev(GL_MODELVIEW_MATRIX,actual);assert(!memcmp(original,actual,sizeof actual));
+  assert(tribes_memory_permissions_set(0x4000,4096,3));GC(0xfffa0250,0);
+ }
+ // Original TribesNEXT input captured at glMultMatrixd, return0x10032ac8.
+ const GLdouble model[16]={0.0018420678097754717,0.005896706599742174,0.999961256980896,0.0,0.017905060201883316,0.9998221397399902,-0.005928400903940201,0.0,-0.9998183250427246,0.017915522679686546,0.0017361606005579233,0.0,-4.069979020471237e-09,1.6039540469137137e-06,1.4516024589538574,1.0};
  const GLenum modes[]={GL_PROJECTION,GL_MODELVIEW,GL_TEXTURE},queries[]={GL_PROJECTION_MATRIX,GL_MODELVIEW_MATRIX,GL_TEXTURE_MATRIX};
  for(unsigned mode=0;mode<3;mode++){
   GLdouble current[16]={2,0,0,0,0,3,0,0,0,0,4,0,.25,-.5,1,1},actual[16];
   memcpy(memory+0x3000,current,sizeof current);GC(0xfffa0240,0,modes[mode]);GC(0xfffa0260,0,0x3000);
-  for(unsigned pass=0;pass<2;pass++){
-   const GLfloat *input=pass?asymmetric:original;memcpy(memory+0x3ff1,input,64);
-   unsigned char unchanged[64];memcpy(unchanged,memory+0x3ff1,64);assert(tribes_memory_permissions_set(0x4000,4096,1));
-   GC(address,0,0x3ff1);assert(!memcmp(unchanged,memory+0x3ff1,64));assert(tribes_memory_permissions_set(0x4000,4096,3));
+  for(unsigned pass=0;pass<(doubles?3u:2u);pass++){
+   const GLdouble *input=pass==2?model:pass?asymmetric:original;GLfloat f[16];for(unsigned i=0;i<16;i++)f[i]=(GLfloat)input[i];
+   memcpy(memory+0x3ff1,doubles?(const void *)input:(const void *)f,bytes);
+   unsigned char unchanged[128];memcpy(unchanged,memory+0x3ff1,bytes);assert(tribes_memory_permissions_set(0x4000,4096,1));
+   GC(address,0,0x3ff1);assert(!memcmp(unchanged,memory+0x3ff1,bytes));assert(tribes_memory_permissions_set(0x4000,4096,3));
    GLdouble product[16];for(unsigned col=0;col<4;col++)for(unsigned row=0;row<4;row++){
     double value=0;for(unsigned k=0;k<4;k++)value+=current[k*4+row]*input[col*4+k];product[col*4+row]=value;
    }
@@ -703,13 +729,13 @@ static void matrix_multiplication(const char *fault){
    memcpy(current,product,sizeof current);assert(!glGetError());
   }
   /* GL keeps its own matrix value; changing guest storage cannot alter it. */
-  memset(memory+0x3ff1,0,64);GLdouble retained[16];glGetDoublev(queries[mode],retained);assert(!memcmp(actual,retained,sizeof actual));
+  memset(memory+0x3ff1,0,bytes);GLdouble retained[16];glGetDoublev(queries[mode],retained);assert(!memcmp(actual,retained,sizeof actual));
   GC(0xfffa0250,0);
  }
- GC(0xfffa0240,0,GL_MODELVIEW);memcpy(memory+0x3ff1,original,64);glGetString(0xffffffff);GC(address,0,0x3ff1);assert(GC(0xfffa0010,1)==GL_INVALID_ENUM&&!GC(0xfffa0010,1));
+ GC(0xfffa0240,0,GL_MODELVIEW);if(doubles)memcpy(memory+0x3ff1,original,128);else{GLfloat f[16];for(unsigned i=0;i<16;i++)f[i]=(GLfloat)original[i];memcpy(memory+0x3ff1,f,64);}glGetString(0xffffffff);GC(address,0,0x3ff1);assert(GC(0xfffa0010,1)==GL_INVALID_ENUM&&!GC(0xfffa0010,1));
  GLdouble before[16],after[16];glGetDoublev(GL_MODELVIEW_MATRIX,before);glBegin(GL_TRIANGLES);GC(address,0,0x3ff1);glEnd();assert(GC(0xfffa0010,1)==GL_INVALID_OPERATION&&!GC(0xfffa0010,1));
  glGetDoublev(GL_MODELVIEW_MATRIX,after);assert(!memcmp(before,after,sizeof before));GC(0xfffa0250,0);
- puts("Matrix multiplication: original coordinates, noncommuting repeated products in all modes, unaligned/read-only guest staging, retained values/errors and invalid-operation preservation pass");
+ printf("Matrix multiplication (%s): original coordinates, noncommuting repeated products in all modes, unaligned/read-only guest staging, retained values/errors and invalid-operation preservation pass\n",doubles?"double":"float");
 }
 static void legacy_route(uint32_t original_window,uint32_t original_context,const char *fault){
  assert(CALL(53,SDL_GL_CONTEXT_MAJOR_VERSION,3)&&CALL(53,SDL_GL_CONTEXT_MINOR_VERSION,2)&&CALL(53,SDL_GL_CONTEXT_PROFILE_MASK,SDL_GL_CONTEXT_PROFILE_COMPATIBILITY));
@@ -725,9 +751,10 @@ static void legacy_route(uint32_t original_window,uint32_t original_context,cons
  GC(0xfffa0240,0,GL_PROJECTION);GC(0xfffa0260,0,0x3f80);glGetDoublev(GL_PROJECTION_MATRIX,actual);assert(!memcmp(matrix,actual,sizeof matrix));
  assert(tribes_memory_permissions_set(0x4000,4096,3));
  if(!fault)perspective_projection();
- matrix_multiplication(fault);
+ matrix_multiplication(fault,0);
+ matrix_multiplication(fault,1);
  render_state(fault);
- if(!fault)matrix_stack();
+ if(!fault){matrix_stack();polygon_offset();}
  GC(0xfffa0240,0,GL_MODELVIEW);GC(0xfffa0250,0);glGetDoublev(GL_MODELVIEW_MATRIX,actual);for(unsigned i=0;i<16;i++)assert(actual[i]==(i%5==0?1:0));
  GC(0xfffa0270,0,0,0,64,64);GLint viewport[4];glGetIntegerv(GL_VIEWPORT,viewport);assert(viewport[0]==0&&viewport[1]==0&&viewport[2]==64&&viewport[3]==64);
  GC(0xfffa0270,0,0,0,0xffffffff,64);assert(glGetError()==GL_INVALID_VALUE);
@@ -1023,9 +1050,11 @@ static int window_main(int argc,char **argv){
  if(argc==2&&!strcmp(argv[1],"bad-context")){bad_context();return 99;}
 #if defined(GRAPHICS) && !TARGET_OS_IPHONE
  if(argc==2&&!strcmp(argv[1],"bad-frustum")){bad_frustum();return 99;}
+ if(argc==2&&!strcmp(argv[1],"bad-mult-matrix-double")){bad_mult_matrix_double();return 99;}
  if(argc==2&&!strcmp(argv[1],"bad-mult-matrix")){bad_mult_matrix();return 99;}
  if(argc==2&&!strcmp(argv[1],"bad-depth-mask")){bad_depth_mask();return 99;}
  if(argc==2&&!strcmp(argv[1],"bad-is-enabled")){bad_is_enabled();return 99;}
+ if(argc==2&&!strcmp(argv[1],"bad-polygon-offset")){bad_polygon_offset();return 99;}
  if(argc==2&&!strcmp(argv[1],"bad-scale")){bad_scale();return 99;}
 #endif
 #endif
@@ -1074,7 +1103,7 @@ static int window_main(int argc,char **argv){
  assert(CALL(54,SDL_GL_CONTEXT_PROFILE_MASK,0x3001)&&word(0x3001)==SDL_GL_CONTEXT_PROFILE_CORE);
  puts("explicit native core context retains existing modern graphics coverage");
 #ifdef GRAPHICS
- if(argc==1||(argc==2&&(!strncmp(argv[1],"sync-",5)||!strncmp(argv[1],"array-",6)||!strncmp(argv[1],"uniform-",8)||!strncmp(argv[1],"shader-",7)||!strncmp(argv[1],"quad-",5)||!strncmp(argv[1],"matrix-mult-",12)||!strncmp(argv[1],"state-",6)||!strncmp(argv[1],"normal-",7)||!strcmp(argv[1],"unreadable-matrix")||!strcmp(argv[1],"shared-copy-delete")||!strcmp(argv[1],"shared-array-delete"))))legacy_route(window,context,argc==2?argv[1]:NULL);
+ if(argc==1||(argc==2&&(!strncmp(argv[1],"sync-",5)||!strncmp(argv[1],"array-",6)||!strncmp(argv[1],"uniform-",8)||!strncmp(argv[1],"shader-",7)||!strncmp(argv[1],"quad-",5)||!strncmp(argv[1],"matrix-mult-",12)||!strncmp(argv[1],"matrix-double-",14)||!strncmp(argv[1],"state-",6)||!strncmp(argv[1],"normal-",7)||!strcmp(argv[1],"unreadable-matrix")||!strcmp(argv[1],"shared-copy-delete")||!strcmp(argv[1],"shared-array-delete"))))legacy_route(window,context,argc==2?argv[1]:NULL);
  if(argc==2&&!strcmp(argv[1],"mipmap-nonzero-base")){
   GC(0xfffa0150,0,1,0x3001);GC(0xfffa0160,0,GL_TEXTURE_2D,word(0x3001));GC(0xfffa0170,0,GL_TEXTURE_2D,0x8191,1);GC(0xfffa0170,0,GL_TEXTURE_2D,GL_TEXTURE_BASE_LEVEL,1);
   const unsigned char color[]={1,2,3,255};mipmap_upload(1,2,color);assert(0);

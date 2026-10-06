@@ -430,9 +430,10 @@ struct ExternalMemoryPass : PassInfoMixin<ExternalMemoryPass>{
      Allowed=Allowed&&!Target->isVarArg()&&Call->getType()->isVoidTy()&&Call->arg_size()==Args.size();
      if(Allowed)for(unsigned i=0;i<Args.size();++i)if(Call->getArgOperand(i)->getType()!=Args[i])Allowed=false;
     }
-    if(Name=="glFrontFace"||Name=="glDepthMask"||Name=="glIsEnabled"||Name=="glColor4fv"||Name=="glMaterialfv"||Name=="glTexEnvfv"||Name=="glTexEnvf"||Name=="glNormalPointer"){
+    if(Name=="glFrontFace"||Name=="glDepthMask"||Name=="glPolygonOffset"||Name=="glIsEnabled"||Name=="glColor4fv"||Name=="glMaterialfv"||Name=="glTexEnvfv"||Name=="glTexEnvf"||Name=="glNormalPointer"){
      SmallVector<Type *,3> Args={I32};Type *Result=B.getVoidTy();
      if(Name=="glDepthMask")Args={B.getInt8Ty()};
+     else if(Name=="glPolygonOffset")Args={B.getFloatTy(),B.getFloatTy()};
      else if(Name=="glIsEnabled")Result=B.getInt8Ty();
      else if(Name=="glColor4fv")Args={P};
      else if(Name=="glMaterialfv"||Name=="glTexEnvfv"||Name=="glNormalPointer")Args={I32,I32,P};
@@ -453,10 +454,10 @@ struct ExternalMemoryPass : PassInfoMixin<ExternalMemoryPass>{
      Allowed=Allowed&&!Target->isVarArg()&&Call->getType()->isVoidTy()&&Call->arg_size()==Args.size();
      if(Allowed)for(unsigned i=0;i<Args.size();++i)if(Call->getArgOperand(i)->getType()!=Args[i])Allowed=false;
     }
-    if(Name=="glMatrixMode"||Name=="glLoadIdentity"||Name=="glLoadMatrixd"||Name=="glMultMatrixf"||Name=="glViewport"||Name=="glDisable"||Name=="glEnable"){
+    if(Name=="glMatrixMode"||Name=="glLoadIdentity"||Name=="glLoadMatrixd"||Name=="glMultMatrixf"||Name=="glMultMatrixd"||Name=="glViewport"||Name=="glDisable"||Name=="glEnable"){
      SmallVector<Type *,4> Args={I32};
      if(Name=="glLoadIdentity")Args.clear();
-     else if(Name=="glLoadMatrixd"||Name=="glMultMatrixf")Args={P};
+     else if(Name=="glLoadMatrixd"||Name=="glMultMatrixf"||Name=="glMultMatrixd")Args={P};
      else if(Name=="glViewport")Args={I32,I32,I32,I32};
      Allowed=Allowed&&!Target->isVarArg()&&Call->getType()->isVoidTy()&&Call->arg_size()==Args.size();
      if(Allowed)for(unsigned i=0;i<Args.size();++i)if(Call->getArgOperand(i)->getType()!=Args[i])Allowed=false;

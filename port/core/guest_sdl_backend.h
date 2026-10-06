@@ -152,6 +152,7 @@ void tribes_gl_matrix_mode(_cpu *,uint32_t);
 void tribes_gl_load_identity(_cpu *);
 void tribes_gl_load_matrix_d(_cpu *,uint32_t);
 void tribes_gl_mult_matrix_f(_cpu *,uint32_t);
+void tribes_gl_mult_matrix_d(_cpu *,uint32_t);
 void tribes_gl_frustum(_cpu *,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t);
 void tribes_gl_viewport(_cpu *,uint32_t,uint32_t,uint32_t,uint32_t);
 void tribes_gl_disable(_cpu *,uint32_t);
@@ -202,6 +203,7 @@ void tribes_gl_tex_sub_image_3d(_cpu *,uint32_t,uint32_t,uint32_t,uint32_t,uint3
 /* Original 3D render state and checked normal-array descriptors. */
 void tribes_gl_front_face(_cpu *,uint32_t);
 void tribes_gl_depth_mask(_cpu *,uint32_t);
+void tribes_gl_polygon_offset(_cpu *,uint32_t,uint32_t);
 uint32_t tribes_gl_is_enabled(_cpu *,uint32_t);
 void tribes_gl_color4fv(_cpu *,uint32_t);
 void tribes_gl_material_fv(_cpu *,uint32_t,uint32_t,uint32_t);

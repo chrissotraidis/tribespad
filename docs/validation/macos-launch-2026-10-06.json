@@ -1,27 +1,20 @@
 {
   "date": "2026-10-06",
   "platform": "macOS ARM64",
-  "full_checked_engine_sha256": "cd9e3f81c024b564fc826d0240dd66cca72f5fd125d73b19b60dc68e24f0551a",
-  "signed_engine_sha256": "f4edbcda944bef17b9496b50b58023a8535dc4d7964b90131039c3b8f7603124",
+  "full_checked_engine_sha256": "f0108ab4b8ee9839b099a3aefddf9e997d7951442060218abf8c079523e39165",
+  "signed_engine_sha256": "542fdef982c25bf6690b63c31311f2f6955f92f78e37ee61eda4a37207490ec8",
   "observed": [
     "Original TribesNEXT UI launched as a signed app",
     "Verified native EULA/Create Account keyboard navigation",
     "Actual account-server ONLINE and connectable response",
     "Agreement accepted; original projection and coordinate transform executed",
     "Original front-face, depth-mask, colour and material setup executed",
-    "Original glPushMatrix executed"
+    "Original glPushMatrix executed",
+    "Original double model transform and repeated matrix push/pop executed",
+    "Original polygon-offset shadow setup executed"
   ],
-  "actual_app_pid": 33061,
-  "next_failure": "unsupported original guest PC 0x00000000 after glPushMatrix; exact indirect target not identified",
-  "static_candidate": {
-    "routine": "0x4472e0",
-    "lookup_slot": "0x7855c4",
-    "scope": "Static original transform hook only; not captured failure"
-  },
-  "additional_attach_attempt": {
-    "pid": 35521,
-    "outcome": "Observation deadline before failure reproduction; no next-call capture"
-  },
+  "actual_app_pid": 46228,
+  "next_failure": "client_state rejects original glDisableClientState(GL_FOG_COORD_ARRAY=0x8457), CALL0x447239/return0x44723f",
   "implemented_exports": [
     "glFrontFace",
     "glDepthMask",
@@ -33,7 +26,9 @@
     "glNormalPointer",
     "glPushMatrix",
     "glPopMatrix",
-    "glScalef"
+    "glScalef",
+    "glMultMatrixd",
+    "glPolygonOffset"
   ],
   "validation": {
     "graphics_modes": [
@@ -50,11 +45,13 @@
         "passed": true
       }
     ],
-    "checked_faults": 84,
+    "checked_faults": 88,
     "device_simulator_source_compilation": true,
     "full_engine_entered": true,
     "unattended_startup_observation_timeout": true,
-    "signed_app_built_and_verified": true
+    "signed_app_built_and_verified": true,
+    "finite_patch_revisions": 33,
+    "source_bound_receipt_matches": true
   },
   "acceptance": {
     "character_page_rendered": false,
@@ -70,6 +67,22 @@
     "audio_restored": 106,
     "simulator_booted": false
   },
-  "local_evidence": "generated/integration-review/model-matrix-stack/",
-  "backup_scope": "Source, tests, documentation and compact validation; local downloaded assets and generated builds are excluded"
+  "local_evidence": "generated/integration-review/polygon-offset/",
+  "backup_scope": "Source, tests, documentation and compact validation; local downloaded assets and generated builds are excluded",
+  "previous_double_transform_capture": {
+    "pid": 42106,
+    "actual_input_16_doubles": true,
+    "next_failure": "glPolygonOffset(-2,-2), CALL0x6ae135/return0x6ae13b",
+    "evidence": "generated/integration-review/matrix-double/"
+  },
+  "isolated_original_offline_mode": {
+    "pid": 43772,
+    "same_previous_signed_engine": true,
+    "profile_override": "base/autoexec.cs: $SkipLogin=true; $LaunchMode=\"Offline\";",
+    "initializing_visibly_rendered": true,
+    "menu_rendered": false,
+    "next_failure": "SDL_OpenAudioDevice, CALL0x10056a18/return0x10056a1e",
+    "scope": "Independent original offline branch; no authenticated online acceptance",
+    "evidence": "generated/integration-review/offline-menu/"
+  }
 }

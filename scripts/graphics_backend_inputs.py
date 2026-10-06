@@ -42,6 +42,8 @@ EXPORTS += [('glNormalPointer', 'tribes_gl_normal_pointer', 3, False, 537133056)
 EXPORTS += [('glPushMatrix', 'tribes_gl_push_matrix', 0, False, 537133056)]
 EXPORTS += [('glPopMatrix', 'tribes_gl_pop_matrix', 0, False, 537133056)]
 EXPORTS += [('glScalef', 'tribes_gl_scale_f', 3, False, 537133056)]
+EXPORTS += [('glMultMatrixd','tribes_gl_mult_matrix_d',1,False,0x20040000)]
+EXPORTS += [('glPolygonOffset','tribes_gl_polygon_offset',2,False,0x20040000)]
 def prepare(out):
  bindings={};rows=[]
  for i,(name,helper,n,returns,module) in enumerate(EXPORTS):
