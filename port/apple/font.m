@@ -84,17 +84,15 @@ int tb_apple_font_glyph(void *font,uint32_t c,TBGlyphMetrics *metrics,unsigned c
         uint32_t stride=(m.width+3)&~3u;if((uint64_t)stride*m.height>16777216)return 0;length=stride*m.height;
         data=calloc(1,length);if(!data)return 0;
         CGColorSpaceRef space=CGColorSpaceCreateDeviceGray();
-        CGContextRef context=space?CGBitmapContextCreate(data,m.width,m.height,8,stride,space,kCGImageAlphaNone):NULL;
+        CGContextRef context=space?CGBitmapContextCreate(data,m.width,m.height,8,stride,space,(CGBitmapInfo)kCGImageAlphaNone):NULL;
         if(space)CGColorSpaceRelease(space);if(!context){free(data);return 0;}
         CGContextSetShouldAntialias(context,true);CGContextSetShouldSmoothFonts(context,false);
         CGContextSetShouldSubpixelPositionFonts(context,false);CGContextSetShouldSubpixelQuantizeFonts(context,true);
         CGContextSetGrayFillColor(context,1,1);
         CGPoint position={-left,-bottom};CTFontDrawGlyphs(f,&g,&position,1,context);CGContextRelease(context);
-        /* Quartz rows are bottom-up in this untransformed bitmap context. */
-        for(uint32_t y=0;y<(m.height+1)/2;y++)for(uint32_t x=0;x<stride;x++){
-            uint32_t a=y*stride+x,b=(m.height-y-1)*stride+x;
-            unsigned char v=data[a],w=data[b];data[a]=(unsigned char)((w*64u+127u)/255u);data[b]=(unsigned char)((v*64u+127u)/255u);
-        }
+        /* The native bitmap's first row is the glyph's top, independently
+           verified with asymmetric glyphs. GGO_GRAY8 uses 65 gray levels. */
+        for(uint32_t i=0;i<length;i++)data[i]=(unsigned char)((data[i]*64u+127u)/255u);
     }
     *metrics=m;*pixels=data;*bytes=length;return 1;
 }

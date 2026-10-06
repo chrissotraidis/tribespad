@@ -26,7 +26,7 @@ struct ExternalMemoryPass : PassInfoMixin<ExternalMemoryPass>{
   if(!M.getModuleFlag("tribes.checked.memory")||M.getModuleFlag("tribes.checked.externals"))report_fatal_error("External guard requires exactly one prior memory pass");
   const char *Path=std::getenv("TRIBES_EXTERNAL_POLICY");if(!Path)report_fatal_error("Missing explicit external policy");
   auto File=MemoryBuffer::getFile(Path);if(!File)report_fatal_error("Cannot read external policy");auto Parsed=json::parse((*File)->getBuffer());if(!Parsed)report_fatal_error("Invalid external policy JSON");auto *O=Parsed->getAsObject();if(!O)report_fatal_error("Invalid external policy object");
-  StringSet<> Checked,Host,Range,Managers,Sources,Intrinsics,Strings,Callbacks,BarrierSources,ProcessorSources,SchedulingSources;
+  StringSet<> Checked,Host,Range,Managers,Sources,Intrinsics,Strings,Callbacks,BarrierSources,ProcessorSources,SchedulingSources,FontSources;
   auto Read=[&](StringRef Key,StringSet<> &Set){auto *A=O->getArray(Key);if(!A)report_fatal_error(Twine("Missing policy list ")+Key);for(auto &V:*A){auto S=V.getAsString();if(!S)report_fatal_error("Nonstring policy entry");Set.insert(*S);}};
   Read("checked_symbols",Checked);Read("host_only",Host);Read("range_checked",Range);Read("memory_manager_calls",Managers);Read("memory_manager_sources",Sources);Read("host_intrinsics",Intrinsics);
   Read("checked_strings",Strings);
@@ -34,9 +34,25 @@ struct ExternalMemoryPass : PassInfoMixin<ExternalMemoryPass>{
   Read("barrier_asm_sources",BarrierSources);
   if(O->getArray("processor_snapshot_sources"))Read("processor_snapshot_sources",ProcessorSources);
   if(O->getArray("scheduling_sources"))Read("scheduling_sources",SchedulingSources);
+  if(O->getArray("font_sources"))Read("font_sources",FontSources);
   std::map<uint64_t,unsigned> ScalarFcntl;auto *Commands=O->getArray("scalar_fcntl_commands");if(!Commands)report_fatal_error("Missing scalar fcntl policy");
   for(auto &V:*Commands){auto *A=V.getAsArray();if(!A||A->size()!=2)report_fatal_error("Invalid scalar fcntl entry");auto Command=(*A)[0].getAsInteger(),Arity=(*A)[1].getAsInteger();if(!Command||!Arity||*Command<0||*Command>INT32_MAX||(*Arity!=2&&*Arity!=3))report_fatal_error("Invalid scalar fcntl ABI");ScalarFcntl[*Command]=(unsigned)*Arity;}
   auto &C=M.getContext();auto *P=PointerType::getUnqual(C);auto *Void=Type::getVoidTy(C);auto *I32=Type::getInt32Ty(C);auto *I64=Type::getInt64Ty(C);
+  auto *I1=Type::getInt1Ty(C);auto *I8=Type::getInt8Ty(C);auto *I16=Type::getInt16Ty(C);auto *Double=Type::getDoubleTy(C);
+  // The reviewed font backend stages every native argument privately. Exact
+  // C prototypes and source identity are required in addition to pointer gates.
+  std::map<StringRef,FunctionType *> FontCalls;
+  auto FontABI=[&](StringRef Name,Type *Result,std::initializer_list<Type *> Args){FontCalls[Name]=FunctionType::get(Result,ArrayRef<Type *>(Args),false);};
+  FontABI("CFStringCreateWithCString",P,{P,P,I32});FontABI("CTFontCreateWithName",P,{P,Double,P});
+  FontABI("CFRelease",Void,{P});FontABI("CTFontCopyPostScriptName",P,{P});
+  FontABI("CFStringGetCString",I8,{P,P,I64,I32});FontABI("CFStringCreateWithBytes",P,{P,P,I64,I32,I8});
+  FontABI("CFStringGetCharacterAtIndex",I16,{P,I64});FontABI("CTFontGetGlyphsForCharacters",I1,{P,P,P,I64});
+  for(auto Name:{"CTFontGetAscent","CTFontGetDescent","CTFontGetSize","CTFontGetLeading"})FontABI(Name,Double,{P});
+  FontABI("CTFontGetAdvancesForGlyphs",Double,{P,I32,P,P,I64});
+  FontABI("CGColorSpaceCreateDeviceGray",P,{});FontABI("CGBitmapContextCreate",P,{P,I64,I64,I64,I64,P,I32});
+  FontABI("CGColorSpaceRelease",Void,{P});FontABI("CGContextRelease",Void,{P});
+  for(auto Name:{"CGContextSetShouldAntialias","CGContextSetShouldSmoothFonts","CGContextSetShouldSubpixelPositionFonts","CGContextSetShouldSubpixelQuantizeFonts"})FontABI(Name,Void,{P,I1});
+  FontABI("CGContextSetGrayFillColor",Void,{P,Double,Double});FontABI("CTFontDrawGlyphs",Void,{P,P,P,I64,P});
   auto Gate=M.getOrInsertFunction("tribes_memory_external_gate",Void,P,I32);auto Pointer=M.getOrInsertFunction("tribes_memory_external_pointer",Void,P,P);auto Indirect=M.getOrInsertFunction("tribes_memory_indirect_target",Void,P);auto Register=M.getOrInsertFunction("tribes_memory_register_targets",Void,P,I64);
   auto Callback=M.getOrInsertFunction("tribes_memory_callback_target",Void,P,I32);
   SmallVector<Function *,128> Functions;for(auto &F:M)if(!F.isDeclaration())Functions.push_back(&F);
@@ -76,6 +92,20 @@ struct ExternalMemoryPass : PassInfoMixin<ExternalMemoryPass>{
     }
     if(Managers.contains(Name)&&Sources.contains(M.getSourceFileName())){++ManagerCalls;continue;}
     bool Allowed=Host.contains(Name)||Intrinsics.contains(Name);
+    if(auto ABI=FontCalls.find(Name);ABI!=FontCalls.end()){
+     Allowed=Allowed&&FontSources.contains(M.getSourceFileName())&&Target->getFunctionType()==ABI->second&&Call->getFunctionType()==ABI->second&&Target->getCallingConv()==CallingConv::C&&Call->getCallingConv()==CallingConv::C;
+    }
+    if(Name=="CTFontGetBoundingRectsForGlyphs"){
+     // ARM64 returns CGRect as two nested two-double records. Pointer-bearing
+     // aggregates, alternate layouts and changed calling conventions stop.
+     auto *Rect=dyn_cast<StructType>(Call->getType());bool Shape=Rect&&!Rect->isOpaque()&&!Rect->isPacked()&&Rect->getNumElements()==2;
+     if(Shape)for(auto *Element:Rect->elements()){
+      auto *Pair=dyn_cast<StructType>(Element);if(!Pair||Pair->isOpaque()||Pair->isPacked()||Pair->getNumElements()!=2||Pair->getElementType(0)!=Double||Pair->getElementType(1)!=Double)Shape=false;
+     }
+     SmallVector<Type *,5> Args={P,I32,P,P,I64};
+     Allowed=Allowed&&FontSources.contains(M.getSourceFileName())&&Shape&&!Target->isVarArg()&&Target->getReturnType()==Call->getType()&&Target->arg_size()==Args.size()&&Call->arg_size()==Args.size()&&Target->getCallingConv()==CallingConv::C&&Call->getCallingConv()==CallingConv::C;
+     if(Allowed)for(unsigned i=0;i<Args.size();++i)if(Target->getFunctionType()->getParamType(i)!=Args[i]||Call->getArgOperand(i)->getType()!=Args[i])Allowed=false;
+    }
     if(Name=="llvm.aarch64.hint"){
      // Only the state-preserving YIELD translation of x86 PAUSE. Other
      // AArch64 hints (including waits) must not inherit this contract.

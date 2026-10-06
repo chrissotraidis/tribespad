@@ -31,6 +31,7 @@ for name in ['guest_encoding','native_fls','process_heap','guest_file','guest_fi
   exe=out/(name+'-'+mode);cmd=['clang','-isysroot',sdk,'-arch','arm64','-O1' if mode=='tsan' else '-O2','-g','-std=c11','-Wall','-Wextra','-Werror','-pthread','-DPTROFS_64BIT','-Wno-override-module']
   if mode=='tsan':cmd+=['-fsanitize=thread']
   extras=[str(R/'port/core/guest_heap.c')] if name in ['guest_encoding','native_fls','process_heap','critical_section','guest_file','guest_find','guest_display','guest_cursors','guest_icons','keyboard_state','input_buffer','guest_dinput_abi','guest_dinput','guest_version','native_handles','native_semaphore','process_environment','process_startup','guest_modules','gdi_memory','window_classes','hidden_windows','native_winsock','guest_tls','performance_clock','guest_filesystem','tribes_result'] else []
+  if name=='gdi_memory':extras += [str(R/'port/apple/font.m'),str(R/'port/core/guest_memory_checks.c')];cmd += ['-framework','CoreText','-framework','CoreGraphics','-framework','CoreFoundation']
   if name=='process_heap':extras.append(str(R/'port/core/guest_virtual_memory.c'))
   if name=='guest_file':extras += [str(R/'port/core/guest_filesystem.c'),str(R/'port/core/native_handles.c')]
   if name=='guest_find':extras.append(str(R/'port/core/guest_filesystem.c'))

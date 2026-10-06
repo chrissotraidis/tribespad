@@ -1789,5 +1789,41 @@
     "returns": true,
     "helper_returns": "i32",
     "guest_base": true
+  },
+  "CreateFontA": {
+    "helper": "tribes_create_font_a",
+    "arguments": 14,
+    "returns": true,
+    "guest_base": true
+  },
+  "SetBkColor": {
+    "helper": "tribes_set_bk_color",
+    "arguments": 2,
+    "returns": true,
+    "guest_base": true
+  },
+  "SetTextColor": {
+    "helper": "tribes_set_text_color",
+    "arguments": 2,
+    "returns": true,
+    "guest_base": true
+  },
+  "GetTextMetricsA": {
+    "helper": "tribes_get_text_metrics_a",
+    "arguments": 2,
+    "returns": true,
+    "guest_base": true
+  },
+  "GetGlyphOutlineA": {
+    "helper": "tribes_get_glyph_outline_a",
+    "arguments": 7,
+    "returns": true,
+    "guest_base": true
+  },
+  "GetTextExtentPoint32A": {
+    "helper": "tribes_get_text_extent_point32_a",
+    "arguments": 4,
+    "returns": true,
+    "guest_base": true
   }
 }

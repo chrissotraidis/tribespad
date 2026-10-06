@@ -1,0 +1,226 @@
+{
+  "date": "2026-10-06",
+  "scope": "Native ANSI raster-font cache integration, actual signed original offline execution; no menu/map/gameplay/HD/authenticated-match/full-mobile acceptance.",
+  "sources_sha256": {
+    "port/apple/font.m": "bb936cff23b5434d8e0acf16b79a9e8a867009f3d22f38c58e0d724a57500bd1",
+    "port/apple/font.h": "e0e3340fc18b4a46240ef7ad28b85283d0236106546de392bed4028b87257df6",
+    "port/core/gdi_memory.c": "f0ea3299f10fc01af5e84648a007f7a1ee01e15a10b5b8b9967127eb5306533c",
+    "port/core/gdi_memory.h": "a83bdab6a4d2e3e25f85bf3ff038aa9a647482cf69f40e5e4af3e82f28690391",
+    "port/compiler/ExternalMemoryPass.cpp": "d28b69854fbb6c49b25bdb5322dea29c96e4587bfde7414c3eb57c00dd0a7af2",
+    "port/llasm-runtime/win32-bindings.json": "f97accaa8a447bf11840ae6747a58d15e1cf6e3885a5d6607dee34ba98f2fca6",
+    "config/runtime/external-memory-contracts.json": "966d1029bbe13d916bc5a458578df4ef0cb8dbb3264eb5cb8b0c6309287eb46c",
+    "scripts/build-native-win32.py": "104cc574e6dbf192a5695f6262ac0ec9a55bbde67850da0eb5aeae318a987042",
+    "scripts/guard_checked_link.py": "a68154aa6a94fdaad12b794303c1af1bd18a143d0a897bd0508b2f3078f80388",
+    "scripts/test-native-win32.py": "cb083117bc0d57f7b4fa2d90d7226a7c2797819b0d186ed46636e19b14c3a874",
+    "scripts/test-qol-native-bootstrap.py": "8155f8be8534a0c7ba932c6c84e7d055636fd12161bf81550de350d9a4209c52",
+    "scripts/test-raster-font.py": "fe04cda8b783f265da087b4b4b443565599dc3ef6b9c4b3d314fb41d16a3bcd2",
+    "tests/raster_font_test.c": "eb2a50c73cbc35dc917fb4772c9f7404746986cd5d897f5e8b01e11bf2128122",
+    "tests/fixtures/raster_font_dispatch.c": "9094970338d1583cf609fa8ba23ce8237fd0632590c3f2039353281f369ace67"
+  },
+  "component": {
+    "receipt_sha256": "ec44b6f8dfe3817e7b8f5abbaca1c339983794f294cb7568fbdbd4b63dde49d3",
+    "normal": true,
+    "checked": true,
+    "tsan": true,
+    "ansi_characters": 224,
+    "checked_fault_stops": 17,
+    "original_requested_face": "Univers",
+    "original_requested_height": 24,
+    "actual_mapped_face": "Helvetica",
+    "limits": "Upright regular ANSI fonts, identity MAT2 and GGO_GRAY8/metrics. CoreText rasterization is real; Windows typography pixel identity and arbitrary GDI drawing are unproven."
+  },
+  "existing_dc_bitmap_regressions": {
+    "normal": true,
+    "tsan": true,
+    "receipt_sha256": "764e4c847a10e0e2456b0a6d9ac055964189a1bd67aeb0c8d80daa3a570c02ae"
+  },
+  "full_engine": {
+    "binary_sha256": "f1e21bd9547b4e1a3fe6d527885eb68c340b0e310d82be1f6cfc4a61981ca9ac",
+    "initialized": true,
+    "independent_subpages_enabled": true,
+    "result": {
+      "diagnostic_stop": true,
+      "kind": "execution_timeout",
+      "timeout_seconds": 60,
+      "attach_return": 1,
+      "stages_returned": 2,
+      "engine_entered": true,
+      "native_patch_publication": true
+    }
+  },
+  "signed_app": {
+    "original_binary_sha256": "f1e21bd9547b4e1a3fe6d527885eb68c340b0e310d82be1f6cfc4a61981ca9ac",
+    "signed_engine_sha256": "f107de611163952943bd94fbbd1af8371f497e67cb6ae61fc079b5ecf0bcff80",
+    "strict_signature_verified": true,
+    "receipt_sha256": "99da4eff302061702ed424d20dcc69063c8e85a5fc7e9de982260c37da783771"
+  },
+  "original_execution": {
+    "pids": [
+      74450,
+      74925
+    ],
+    "font_calls": {
+      "tribes_create_font_a": 1,
+      "tribes_select_gdi_object": 2,
+      "tribes_set_bk_color": 1,
+      "tribes_set_text_color": 1,
+      "tribes_get_text_metrics_a": 1,
+      "tribes_get_glyph_outline_a": 224,
+      "tribes_delete_gdi_object": 1
+    },
+    "glyph_characters": "32..255 inclusive, each once, format6",
+    "font_sequence_receipt_sha256": "6181cf5b598cc70d944de03c711c0b624d7a5f403e72451838c2010ad39b19c0",
+    "fallback_extent_observed": false,
+    "delete_attempt_observed": true,
+    "delete_result_observed": false,
+    "next_instruction": {
+      "pc": "0x100c2fdd",
+      "bytes_hex": "f30fbcc0",
+      "mnemonic": "TZCNT EAX,EAX",
+      "eax": "0x4000000",
+      "module": "IFC22.dll"
+    },
+    "selected_thread_cpu_only": true,
+    "visible_window": "Original EULA remains displayed with ACCEPT focused during synchronous startup; no menu/map acceptance.",
+    "window_geometry": {
+      "pid": 74925,
+      "screens": [
+        {
+          "cg_pixels": [
+            2048,
+            1332
+          ],
+          "display": 1,
+          "cocoa_frame": [
+            0,
+            0,
+            2048,
+            1332
+          ],
+          "bounds": [
+            0,
+            0,
+            2048,
+            1332
+          ],
+          "scale": 1
+        }
+      ],
+      "windows": [
+        {
+          "id": 13570,
+          "bounds": [
+            0,
+            422,
+            2048,
+            32
+          ]
+        },
+        {
+          "id": 13567,
+          "bounds": [
+            0,
+            422,
+            2048,
+            1286
+          ]
+        }
+      ]
+    },
+    "isolated_voice_capture_disabled": true,
+    "diagnostic_preference_restored": true,
+    "audio_restored": true,
+    "owned_processes_ended": true
+  },
+  "mobile_compilation": {
+    "passed": true,
+    "objects": [
+      {
+        "source": "port/apple/font.m",
+        "source_sha256": "bb936cff23b5434d8e0acf16b79a9e8a867009f3d22f38c58e0d724a57500bd1",
+        "target": "arm64-apple-ios16",
+        "object_sha256": "b400835b1fa8cc53ec69e4733c086f98956b0eaefe6956d5603239e36fb04586",
+        "command": [
+          "clang",
+          "-target",
+          "arm64-apple-ios16",
+          "-isysroot",
+          "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk",
+          "-O2",
+          "-Wall",
+          "-Wextra",
+          "-Werror",
+          "-c",
+          "/Users/chrissotraidis/GitHub/tribespad/port/apple/font.m",
+          "-o",
+          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/raster-font/mobile-compilation/iphoneos-font.o"
+        ]
+      },
+      {
+        "source": "port/core/gdi_memory.c",
+        "source_sha256": "f0ea3299f10fc01af5e84648a007f7a1ee01e15a10b5b8b9967127eb5306533c",
+        "target": "arm64-apple-ios16",
+        "object_sha256": "1787b8a330a97f2de2a311b508d522613bc6841fcd17b2d1e1c7e633fc523211",
+        "command": [
+          "clang",
+          "-target",
+          "arm64-apple-ios16",
+          "-isysroot",
+          "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk",
+          "-O2",
+          "-Wall",
+          "-Wextra",
+          "-Werror",
+          "-c",
+          "/Users/chrissotraidis/GitHub/tribespad/port/core/gdi_memory.c",
+          "-o",
+          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/raster-font/mobile-compilation/iphoneos-gdi_memory.o"
+        ]
+      },
+      {
+        "source": "port/apple/font.m",
+        "source_sha256": "bb936cff23b5434d8e0acf16b79a9e8a867009f3d22f38c58e0d724a57500bd1",
+        "target": "arm64-apple-ios16-simulator",
+        "object_sha256": "8af11e23f06b3ff8812fbbf5ffcdd5f9dede861d19a3b61ce527c5b5c1b91cc3",
+        "command": [
+          "clang",
+          "-target",
+          "arm64-apple-ios16-simulator",
+          "-isysroot",
+          "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.5.sdk",
+          "-O2",
+          "-Wall",
+          "-Wextra",
+          "-Werror",
+          "-c",
+          "/Users/chrissotraidis/GitHub/tribespad/port/apple/font.m",
+          "-o",
+          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/raster-font/mobile-compilation/iphonesimulator-font.o"
+        ]
+      },
+      {
+        "source": "port/core/gdi_memory.c",
+        "source_sha256": "f0ea3299f10fc01af5e84648a007f7a1ee01e15a10b5b8b9967127eb5306533c",
+        "target": "arm64-apple-ios16-simulator",
+        "object_sha256": "5093c788db41e48c8d7cb4386699d215d32b7220a3eab519b3d171bd71407172",
+        "command": [
+          "clang",
+          "-target",
+          "arm64-apple-ios16-simulator",
+          "-isysroot",
+          "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.5.sdk",
+          "-O2",
+          "-Wall",
+          "-Wextra",
+          "-Werror",
+          "-c",
+          "/Users/chrissotraidis/GitHub/tribespad/port/core/gdi_memory.c",
+          "-o",
+          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/raster-font/mobile-compilation/iphonesimulator-gdi_memory.o"
+        ]
+      }
+    ],
+    "scope": "Source compilation only; no full mobile game link or simulator/device execution."
+  },
+  "next_action": "Implement and independently validate reached TZCNT32 translation, including zero input, destination aliases and defined CF/ZF semantics; rebuild and relaunch toward the original menu/training map. Preserve checked memory, native AOT and finite patch publication."
+}

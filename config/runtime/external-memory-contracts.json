@@ -464,7 +464,31 @@
     "glPopMatrix",
     "glScalef",
     "f32_sqrt",
-    "f64_sqrt"
+    "f64_sqrt",
+    "CFRelease",
+    "CFStringCreateWithBytes",
+    "CFStringCreateWithCString",
+    "CFStringGetCString",
+    "CFStringGetCharacterAtIndex",
+    "CGBitmapContextCreate",
+    "CGColorSpaceCreateDeviceGray",
+    "CGColorSpaceRelease",
+    "CGContextRelease",
+    "CGContextSetGrayFillColor",
+    "CGContextSetShouldAntialias",
+    "CGContextSetShouldSmoothFonts",
+    "CGContextSetShouldSubpixelPositionFonts",
+    "CGContextSetShouldSubpixelQuantizeFonts",
+    "CTFontCopyPostScriptName",
+    "CTFontCreateWithName",
+    "CTFontDrawGlyphs",
+    "CTFontGetAdvancesForGlyphs",
+    "CTFontGetAscent",
+    "CTFontGetBoundingRectsForGlyphs",
+    "CTFontGetDescent",
+    "CTFontGetGlyphsForCharacters",
+    "CTFontGetLeading",
+    "CTFontGetSize"
   ],
   "range_checked": [
     "memcpy",
@@ -612,7 +636,11 @@
     "ref/softfloat/SoftFloat-3e/source/f32_sqrt.c": "7e6c3c65e5cff08b05ddd34c6d29330f8fe30237a809086af394072488bf80fe",
     "ref/softfloat/SoftFloat-3e/source/f64_sqrt.c": "181790dd6916704eb333c314384943fbe75f2174988d4e75b4f9f76f032d4664",
     "ref/softfloat/SoftFloat-3e/source/s_approxRecipSqrt32_1.c": "2107412b2c94d0b19c5b584d645bbad2cd4f0c3596ab11c95d00a282903f1731",
-    "ref/softfloat/SoftFloat-3e/source/s_approxRecipSqrt_1Ks.c": "31b5b77d4e98b898c9cf661947c8530da00a5632350fe280249087e846be6f97"
+    "ref/softfloat/SoftFloat-3e/source/s_approxRecipSqrt_1Ks.c": "31b5b77d4e98b898c9cf661947c8530da00a5632350fe280249087e846be6f97",
+    "port/apple/font.m": "bb936cff23b5434d8e0acf16b79a9e8a867009f3d22f38c58e0d724a57500bd1",
+    "port/apple/font.h": "e0e3340fc18b4a46240ef7ad28b85283d0236106546de392bed4028b87257df6",
+    "port/core/gdi_memory.c": "f0ea3299f10fc01af5e84648a007f7a1ee01e15a10b5b8b9967127eb5306533c",
+    "port/core/gdi_memory.h": "a83bdab6a4d2e3e25f85bf3ff038aa9a647482cf69f40e5e4af3e82f28690391"
   },
   "scalar_softfloat_contract": "f32/f64 add/sub/mul/div and sqrt only: Apple ARM64 scalar-struct ABI i32 (i64,i64) / i64 (i64,i64) for binary operations; sqrt is i32 (i64) / i64 (i64), exact nonvariadic C declaration/call. Arguments are values, never addresses. Reviewed dependencies use locals, bounded internal tables and host thread-local rounding/exception state. Exact library identity and header contents checked by sse_inputs.",
   "barrier_asm_sources": [
@@ -631,5 +659,8 @@
   "scheduling_contract": "Exact Darwin int setpriority(int,id_t,int), restricted to reviewed scheduling service and constant PRIO_PROCESS=0, who=0. No other process/group/user scheduling mutation.",
   "condition_contract": "Exact nonvariadic Darwin i32 pthread_cond_signal(ptr) and i32 pthread_cond_timedwait_relative_np(ptr,ptr,ptr); all direct arguments host-only. Native condition/mutex/timespec storage only, never guest lock words.",
   "thread_contract": "Exact Darwin pthread attributes and _setjmp/_longjmp ABI, host-owned storage only. pthread_create has four host pointers and requires its entry to be a registered AOT target. Guest entries are finite dispatch tokens, never native callback pointers.",
-  "sdl_metadata_contract": "Exact bool(i1) return and three/two host string pointers. Guest UTF-8 inputs are checked and copied before native SDL entry; the existing owner-thread guest allocator frame covers all native allocations. Preserve SDL 3.2.18 behavior, including its aggregate metadata setter return on underlying property allocation failure."
+  "sdl_metadata_contract": "Exact bool(i1) return and three/two host string pointers. Guest UTF-8 inputs are checked and copied before native SDL entry; the existing owner-thread guest allocator frame covers all native allocations. Preserve SDL 3.2.18 behavior, including its aggregate metadata setter return on underlying property allocation failure.",
+  "font_sources": [
+    "port/apple/font.m"
+  ]
 }

@@ -179,7 +179,7 @@ if a.guard_externals:
     entries+=math_entries
     objects,external_build_sha256=guard_link(entries,out/'guarded');link_sources=[]
 module_objects=[] if a.guard_externals else [str(module)]
-cmd=['clang','-isysroot',subprocess.check_output(['xcrun','--sdk','macosx','--show-sdk-path'],text=True).strip(),'-target','arm64-apple-macos12','-O2','-std=c11','-Wno-override-module','-DPTROFS_64BIT','-I',str(out),'-I',str(zbuild),'-I',str(R/'ref/zlib-ng')]+(['-DTB_CHECKED_IMAGE'] if a.checked_image else [])+math['compile_flags']+objects+module_objects+link_sources+math['libraries']+([] if a.publish_patches else [str(R/'generated/bochs-math/libmath.dylib')])+[str(zbuild/'libz-ng.a'),'-framework','Foundation','-framework','AppKit','-framework','CoreGraphics','-o',str(exe)]
+cmd=['clang','-isysroot',subprocess.check_output(['xcrun','--sdk','macosx','--show-sdk-path'],text=True).strip(),'-target','arm64-apple-macos12','-O2','-std=c11','-Wno-override-module','-DPTROFS_64BIT','-I',str(out),'-I',str(zbuild),'-I',str(R/'ref/zlib-ng')]+(['-DTB_CHECKED_IMAGE'] if a.checked_image else [])+math['compile_flags']+objects+module_objects+link_sources+math['libraries']+([] if a.publish_patches else [str(R/'generated/bochs-math/libmath.dylib')])+[str(zbuild/'libz-ng.a'),'-framework','Foundation','-framework','AppKit','-framework','CoreGraphics','-framework','CoreText','-framework','CoreFoundation','-o',str(exe)]
 cmd+=curl_flags+curl_libraries+sdl_flags+sdl_libraries
 with (out/'link.log').open('w') as log:subprocess.run(cmd,stdout=log,stderr=log,check=True)
 volume=out/'volume';temp=volume/'TribesPad/Temp';temp.mkdir(parents=True,exist_ok=True)
