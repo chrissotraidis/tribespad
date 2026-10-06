@@ -1,8 +1,8 @@
 {
   "date": "2026-10-06",
   "platform": "macOS ARM64",
-  "full_checked_engine_sha256": "f0108ab4b8ee9839b099a3aefddf9e997d7951442060218abf8c079523e39165",
-  "signed_engine_sha256": "542fdef982c25bf6690b63c31311f2f6955f92f78e37ee61eda4a37207490ec8",
+  "full_checked_engine_sha256": "03c268cdb3c4d26f78b4be75f6496487e76d97966bb79aa6f3a350b1fef544b6",
+  "signed_engine_sha256": "13ae33ecc3c2b8a37206f55cb892f57eeb42b935a9aab40ba4435f0dc910c249",
   "observed": [
     "Original TribesNEXT UI launched as a signed app",
     "Verified native EULA/Create Account keyboard navigation",
@@ -11,10 +11,13 @@
     "Original front-face, depth-mask, colour and material setup executed",
     "Original glPushMatrix executed",
     "Original double model transform and repeated matrix push/pop executed",
-    "Original polygon-offset shadow setup executed"
+    "Original polygon-offset shadow setup executed",
+    "Original fog-coordinate array reset passed",
+    "Original account-details page rendered textured player model",
+    "Successive frames differ only in the player model region (idle animation)"
   ],
-  "actual_app_pid": 46228,
-  "next_failure": "client_state rejects original glDisableClientState(GL_FOG_COORD_ARRAY=0x8457), CALL0x447239/return0x44723f",
+  "actual_app_pid": 51548,
+  "next_failure": null,
   "implemented_exports": [
     "glFrontFace",
     "glDepthMask",
@@ -45,29 +48,50 @@
         "passed": true
       }
     ],
-    "checked_faults": 88,
+    "checked_faults": 89,
     "device_simulator_source_compilation": true,
     "full_engine_entered": true,
     "unattended_startup_observation_timeout": true,
     "signed_app_built_and_verified": true,
     "finite_patch_revisions": 33,
-    "source_bound_receipt_matches": true
+    "source_bound_receipt_matches": true,
+    "model_frame_comparison": {
+      "width": 2048,
+      "height": 1286,
+      "changed_pixels": 15092,
+      "changed_model_pixels": 15092,
+      "difference_bounds": [
+        1218,
+        546,
+        1392,
+        812
+      ],
+      "model_region": [
+        1200,
+        520,
+        1410,
+        850
+      ],
+      "scope": "Successive actual original account-details frames; model motion evidence only, not gameplay"
+    }
   },
   "acceptance": {
-    "character_page_rendered": false,
+    "character_page_rendered": true,
     "map_rendered": false,
     "playable": false,
     "registration_submitted": false,
     "authenticated_multiplayer": false,
     "hd_gameplay": false,
-    "full_mobile_gameplay": false
+    "full_mobile_gameplay": false,
+    "textured_player_model_rendered": true,
+    "player_model_idle_animation": true
   },
   "cleanup": {
     "diagnostic_processes_ended": true,
     "audio_restored": 106,
     "simulator_booted": false
   },
-  "local_evidence": "generated/integration-review/polygon-offset/",
+  "local_evidence": "generated/integration-review/fog-array-reset/",
   "backup_scope": "Source, tests, documentation and compact validation; local downloaded assets and generated builds are excluded",
   "previous_double_transform_capture": {
     "pid": 42106,
@@ -84,5 +108,27 @@
     "next_failure": "SDL_OpenAudioDevice, CALL0x10056a18/return0x10056a1e",
     "scope": "Independent original offline branch; no authenticated online acceptance",
     "evidence": "generated/integration-review/offline-menu/"
-  }
+  },
+  "observation_end": "Owned diagnostic app manually terminated after model observation; SIGTERM is not a game failure",
+  "implemented_state_transition": "glDisableClientState(GL_FOG_COORD_ARRAY)",
+  "next_action": "Original offline SDL audio initialization/stream group to reach menu and training map",
+  "mouse_window_diagnostic": {
+    "window_bounds": [
+      0,
+      422,
+      2048,
+      1286
+    ],
+    "display_bounds": [
+      0,
+      0,
+      1470,
+      956
+    ],
+    "buttons_offscreen": true,
+    "sole_mouse_delivery_cause_proven": false,
+    "isolated_smaller_window_profile": "first run checked read0x46; retry stalled during GL setup; main profile unchanged",
+    "evidence": "generated/integration-review/mouse-window-fit/"
+  },
+  "screenshot": "macos-model-2026-10-06.png"
 }

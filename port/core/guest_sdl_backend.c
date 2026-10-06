@@ -1324,6 +1324,9 @@ static GLContext *legacy_context(void){GLContext *c=current_context();if(!c||c->
 static unsigned client_texture_unit(void){GLint unit=0;glGetIntegerv(GL_CLIENT_ACTIVE_TEXTURE,&unit);if(unit<GL_TEXTURE0||unit>=GL_TEXTURE0+32)stop();return (unsigned)(unit-GL_TEXTURE0);}
 static void client_state(uint32_t cap,int enabled){
     GLContext *c=legacy_context();ClientArray *a;
+    /* Original reset routine 0x447239 disables this optional array. Disabling
+       consumes no pointer; enabling still needs a checked draw descriptor. */
+    if(cap==GL_FOG_COORD_ARRAY&&!enabled){glDisableClientState(cap);return;}
     if(cap==GL_VERTEX_ARRAY)a=&c->vertex;
     else if(cap==GL_COLOR_ARRAY)a=&c->color;
     else if(cap==GL_NORMAL_ARRAY)a=&c->normal;

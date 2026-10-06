@@ -28,6 +28,7 @@ extern GLint glGetUniformLocation(GLuint,const GLchar *);
 extern void glGetUniformiv(GLuint,GLint,GLint *);
 extern void glGetUniformfv(GLuint,GLint,GLfloat *);
 extern void glGetShaderSource(GLuint,GLsizei,GLsizei *,GLchar *);
+extern void glFogCoordPointerEXT(GLenum,GLsizei,const GLvoid *);
 extern void glVertexAttribPointer(GLuint,GLint,GLenum,GLboolean,GLsizei,const void *);
 extern void glEnableVertexAttribArray(GLuint);
 extern void glDisableVertexAttribArray(GLuint);
@@ -619,6 +620,20 @@ static void matrix_stack(void){
  puts("Model matrix stack: native per-mode push/scale/pop, finite limits, error preservation, rejected begin-state changes and projected coverage PASS");
 }
 static void render_state(const char *fault){
+ /* Original reset at0x447239: native fog disable retains pointer/other state
+    and consumes no inaccessible client data. Enabling is still unsupported. */
+ if(fault&&!strcmp(fault,"state-fog-enable")){GC(0xfffa02e0,0,GL_FOG_COORD_ARRAY);assert(0);}
+ glFogCoordPointerEXT(GL_FLOAT,0,memory+0x23000);glEnableClientState(GL_FOG_COORD_ARRAY);
+ glEnableClientState(GL_VERTEX_ARRAY);GC(0xfffa00e0,0,GL_TEXTURE1);
+ assert(tribes_memory_permissions_set(0x23000,4096,0));
+ GC(0xfffa02f0,0,GL_FOG_COORD_ARRAY);assert(!glIsEnabled(GL_FOG_COORD_ARRAY)&&glIsEnabled(GL_VERTEX_ARRAY));
+ void *fog_pointer=NULL;glGetPointerv(GL_FOG_COORD_ARRAY_POINTER,&fog_pointer);assert(fog_pointer==memory+0x23000);
+ GLint fog_unit=0;glGetIntegerv(GL_CLIENT_ACTIVE_TEXTURE,&fog_unit);assert(fog_unit==GL_TEXTURE1&&!glGetError());
+ glGetString(0xffffffff);GC(0xfffa02f0,0,GL_FOG_COORD_ARRAY);assert(glGetError()==GL_INVALID_ENUM);
+ GC(0xfffa02f0,0,GL_FOG_COORD_ARRAY);assert(!glGetError());
+ assert(tribes_memory_permissions_set(0x23000,4096,3));glFogCoordPointerEXT(GL_FLOAT,0,NULL);
+ glDisableClientState(GL_VERTEX_ARRAY);GC(0xfffa00e0,0,GL_TEXTURE0);
+ puts("Original fog-array reset: native disable, protected data isolation, pointer/client-unit preservation and retained errors PASS");
  const char *names[]={"glFrontFace","glDepthMask","glIsEnabled","glColor4fv","glMaterialfv","glTexEnvfv","glTexEnvf","glNormalPointer"};
  for(unsigned i=0;i<8;i++){strcpy((char *)memory+0x24000,names[i]);assert(CALL(63,0x24000)==0xfffa05d0+16*i);}
  GC(0xfffa05d0,0,GL_CW);GLint winding=0;glGetIntegerv(GL_FRONT_FACE,&winding);assert(winding==GL_CW);
