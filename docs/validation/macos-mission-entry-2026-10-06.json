@@ -1,0 +1,200 @@
+{
+  "date": "2026-10-06",
+  "passed_component_tests": true,
+  "added_original_entries": 81,
+  "reused_identical_original_entries": [
+    "loc_1000C4F0",
+    "loc_1000C546",
+    "loc_1000C57D",
+    "loc_1000C5A0",
+    "loc_1000C5AC"
+  ],
+  "normal": {
+    "passed": true,
+    "cases": 800,
+    "unmasked_no_publication": [
+      "0xbf800000",
+      "0x40000000"
+    ],
+    "library_sha256": "4bb73fc7a36c3412e3d905f33f11b6508e320ea177fe7f1c014b39f565f14a1d"
+  },
+  "checked": {
+    "passed": true,
+    "cases": 800,
+    "unmasked_no_publication": [
+      "0xbf800000",
+      "0x40000000"
+    ],
+    "library_sha256": "bbe8d2b61a757030348b01f36ac7650592e7c334874e16e3f8146ecc2d4fc9ad"
+  },
+  "mobile": {
+    "passed": true,
+    "source_sha256": "b68ba1c9d615f8aa23bd348bb9fddb399c229781cbd9c0ff5c4e099b202ee8e7",
+    "results": [
+      {
+        "target": "arm64-apple-ios15",
+        "metadata": "generated/integration-review/mission-entry-test/mobile-compile/iphoneos/result.json",
+        "objects_sha256": {
+          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/mission-entry-test/mobile-compile/iphoneos/00-module.o": "fc5ef1bbe1d14357a9e4be0a336ac05163bcc2a0d4f842fbc4313639aa2ddd9e"
+        }
+      },
+      {
+        "target": "arm64-apple-ios15-simulator",
+        "metadata": "generated/integration-review/mission-entry-test/mobile-compile/iphonesimulator/result.json",
+        "objects_sha256": {
+          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/mission-entry-test/mobile-compile/iphonesimulator/00-module.o": "e44dfb314a7ed3a8239d6e7ab9740d91fd499aa720287e2c94d3145b30d6e647"
+        }
+      }
+    ],
+    "scope": "81 checked original mission entries compile for ARM64 device and Simulator. Compilation only, no mobile engine link or execution."
+  },
+  "full_engine": {
+    "state": "finished",
+    "binary_sha256": "1e9571241961e0d13f0caedd9ac82f3a70fdf8e7211bb4a3706e625f79fec25b",
+    "initialized": true,
+    "attach_returned": true,
+    "execution_timeout": true,
+    "exit": -9,
+    "playable": false,
+    "independent_subpages_enabled": true,
+    "native_patch_publication": true
+  },
+  "app": {
+    "original_binary_sha256": "1e9571241961e0d13f0caedd9ac82f3a70fdf8e7211bb4a3706e625f79fec25b",
+    "signed_engine_sha256": "0a501a0699b24a0de00421f9934edb5e2a8df202a164909f62f6723422eb34f7"
+  },
+  "original_execution": {
+    "pid": 88219,
+    "native_input": "EULA Tab/Return, local tribespad alias, Launch/Training keyboard, original Alt+Enter, real HID START.",
+    "method": {
+      "rows": [
+        {
+          "symbol": "tb_sse_sqrtss",
+          "cpu_address": "0x10ec0cc70",
+          "xmm1_low": "0x3f7fffff",
+          "mxcsr": "0x1fa1",
+          "ecx": "0x647f8a3c",
+          "frames": [
+            "tb_sse_sqrtss",
+            "loc_1000C57D",
+            "tribes_enter",
+            "main",
+            "start"
+          ]
+        },
+        {
+          "symbol": "loc_10007D00",
+          "cpu_address": "0x10ec0cc70",
+          "xmm1_low": "0x7fffffff",
+          "mxcsr": "0x1fa1",
+          "ecx": "0x647f8000",
+          "frames": [
+            "loc_10007D00",
+            "tribes_enter",
+            "main",
+            "start"
+          ]
+        }
+      ],
+      "scope": "First actual original native method and SQRTSS helper entry; selected-thread CPU only, not a whole-memory snapshot."
+    },
+    "loading": "Observed 604/1485 datablocks, then 12/321 objects, then LIGHTING MISSION. Loading-page landscape is a shipped image, not a rendered playable map.",
+    "stop": {
+      "pid": 88219,
+      "frames": [
+        "abort",
+        "violation",
+        "require",
+        "tribes_memory_access_begin",
+        "loc_1004324C",
+        "tribes_enter",
+        "main",
+        "start"
+      ],
+      "scope": "Actual isolated offline app stop; selected-thread CPU/stack only, not a whole-memory snapshot.",
+      "cpu_address": "0x10ec0cc70",
+      "base": "0x7000000000",
+      "esp": "0x2ff9f0",
+      "registers": [
+        10388076,
+        0,
+        0,
+        1645569024,
+        3144176,
+        3144324,
+        1676984320,
+        1645569112
+      ],
+      "stack_from": "0x2ff9e0",
+      "stack": [
+        "0x63f4c000",
+        "0x62156400",
+        "0x2ffa84",
+        "0x10043215",
+        "0x0",
+        "0x6042a100",
+        "0x60622b00",
+        "0x0",
+        "0x590b2164",
+        "0x62156458",
+        "0x0",
+        "0x3f800000",
+        "0x0",
+        "0x0",
+        "0x0",
+        "0x0",
+        "0x0",
+        "0x0",
+        "0xe75d3033",
+        "0xbf712358",
+        "0x0",
+        "0x0",
+        "0x0",
+        "0x0",
+        "0x0",
+        "0x0",
+        "0x0",
+        "0x0",
+        "0x0",
+        "0x3ff00000",
+        "0x0",
+        "0x0",
+        "0x0",
+        "0xbff00000",
+        "0x0",
+        "0x3ff00000",
+        "0x0",
+        "0x80000000",
+        "0x0",
+        "0x33d5cf86"
+      ],
+      "mission_literal_bytes": "c745cc3acd13bfc745c43acd133fc745c83acd133f",
+      "mission_literal_values": [
+        "0xbf13cd3a",
+        "0x3f13cd3a",
+        "0x3f13cd3a"
+      ]
+    },
+    "actual_guard_failure": "checked guest read at0x28 size4 access1; original SUB ECX,[EDX+0x28] at0x1004325a, EDX0 loaded from0x1046ce48.",
+    "next": "Trace original render-target creator0x1003e850/return0x100445d8 and teardown0x1004a5a4 to explain the null target during mission lighting; preserve checked memory and real GL results.",
+    "cleanup": {
+      "pid": 88219,
+      "original_audio": "default 106\n113 MacBook Air Microphone\n106 MacBook Air Speakers\n118 eqMac\n88 Microsoft Teams Audio\n84 Jump Desktop Microphone\n57 Jump Desktop Audio\n",
+      "restored": "default 106\n113 MacBook Air Microphone\n106 MacBook Air Speakers\n118 eqMac\n88 Microsoft Teams Audio\n84 Jump Desktop Microphone\n57 Jump Desktop Audio\n",
+      "scope": "Actual signed isolated original offline app; diagnostic stop/manual termination is not gameplay acceptance."
+    }
+  },
+  "sources_sha256": {
+    "scripts/test-mission-entry.py": "1f8f2e17b30095e8dbb5ed7ed5bd00bf19ea8b6bd5caa4a605305b5aa3570a56",
+    "scripts/mission_entry_runtime_inputs.py": "a2a55e75955fe46a3363fa3454eb68b78cb12da7639e11ad186832be8d0e31d3",
+    "scripts/patch_runtime_inputs.py": "3239bf248144f534467627252929334d7d517987a680972919d6220b56ba6ec8",
+    "port/llasm-support/tribes_sqrtss.c": "3a6fc219b6f72b2e50575ece6df2407ce0bb4b941154927ed8eca0cbeef21595",
+    "tests/mission_sqrtss_oracle.c": "fa9ca48d9a9e36c0ed35f56a3c1b71578dad3a5dd16efaf807a129d8abfd60eb",
+    "port/core/sse_arithmetic.c": "a3fa606b116168cba4ceb30d689a31f3b2c7d034a10102efa343ee3871b13e83",
+    "port/core/sse_arithmetic.h": "7fbfdd7dce1d91f651b0c25f6a064865dc4c68c20bcdcf166f5015d19342d80f",
+    "port/llasm-support/llasm_cpu.h": "8c3cd17ee706cd3768d793c21d4f553b981cb45d3845dd9a93793d16f1bcc356",
+    "ref/qol/IFC22.dll": "eaf5a42d301cc64a6e526aa49a82dbaefe655ed1ac0ba67939d0bab2fb6ab607"
+  },
+  "local_evidence": "generated/integration-review/mission-entry-test",
+  "scope": "Original Mac mission loader advances through the newly linked method into datablock/object loading and lighting. No rendered gameplay, HD verification, authenticated match or mobile runtime acceptance."
+}

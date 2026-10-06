@@ -241,6 +241,8 @@ original:
  dll,audio_hook_sources,audio_hook_metadata=prepare_audio_hooks(dll,engine_source,out)
  from mission_literal_runtime_inputs import prepare as prepare_mission_literals
  dll,mission_literal_metadata=prepare_mission_literals(dll,engine_source,renderer_batch_source,out)
+ from mission_entry_runtime_inputs import prepare as prepare_mission_entry
+ mission_entry_sources,mission_entry_metadata=prepare_mission_entry(native,out)
  input_variant_metadata["engine_before_library_sha256"]=input_variant_metadata["engine_sha256"]
  input_variant_metadata["engine_sha256"]=sha(engine_source)
  (out/"startup-input-code.json").write_text(json.dumps(input_variant_metadata,indent=2)+"\n")
@@ -263,6 +265,7 @@ original:
  entries += [(r['address'],r['symbol']) for r in renderer_hook_metadata['bank_entries']]
  entries += [(int(n[4:],16),n) for n in audio_hook_metadata['added']]
  entries += [(r['address'],r['symbol']) for r in audio_hook_metadata['bank_entries']]
+ entries += [(int(n[4:],16),n) for n in mission_entry_metadata['added']]
  imports=nm['imports']+ev['imports']
  from codec_runtime_inputs import prepare as prepare_codecs
  codec_sources,codec_metadata,codec_imports=prepare_codecs(out)
@@ -360,10 +363,11 @@ define hidden fastcc void @tbimp_FlushInstructionCache(ptr %cpu) {
  config.append('static const TribesInputDevice tb_input_devices[]={'+','.join(records)+'};')
  (out/'engine_bootstrap.inc').write_text('\n'.join(config)+'\n')
  sources=[out/'qol-patched.ll',engine_source,bank/'module.ll',cont/'qol/module.ll',cont/'bridges.ll',out/'publication-bindings.ll',out/'cross-imports.ll',late_source,followup_source,network_source,http_source,string_source,console_fade_source,console_animation_source,post_file_patch_source,collision_patch_source,allocation_patch_source,clock_patch_source,post_video_prefix_source,post_video_nop_source,post_video_nop_second_source,post_video_tail_source,display_immediates_source,startup_calls_source,input_nop_source,renderer_call_source,renderer_startup_source,renderer_redirects_source,renderer_dimensions_source,renderer_batch_source,renderer_nested_source,renderer_outer_source]+pending_hook_sources+renderer_hook_sources
- sources+=[font_size_source,audio_tables_source]+miles_sources+codec_sources+audio_hook_sources
+ sources+=[font_size_source,audio_tables_source]+miles_sources+codec_sources+audio_hook_sources+mission_entry_sources
  metadata=dict(plan_sha256=sha(plan_path),linked_imports=linked,miles=miles_metadata,codecs=codec_metadata,whole_engine_object_sha256=ec['object_sha256'],manifest_sha256=sha(out/'published-code.bin'),ranges=[dict(address=v,bytes=len(b)) for v,b in ranges],dispatch_entries=len(entries),sources_sha256={str(p.relative_to(R)):sha(p) for p in sources+[out/'merged-dispatch.ll',out/'patch_publication.inc',out/'engine_bootstrap.inc',out/'miles_bootstrap.inc',out/'codec_bootstrap.inc',R/'scripts/codec_runtime_inputs.py',R/'scripts/miles_runtime_inputs.py',keyboard,devices,pathlib.Path(__file__).resolve()]})
  metadata['late_patch']=late_metadata
  metadata['mission_literals']=mission_literal_metadata
+ metadata['mission_entry']=mission_entry_metadata
  metadata['startup_input_code']=input_variant_metadata
  metadata['library_patch']=library_metadata
  metadata['followup_patch']=followup_metadata

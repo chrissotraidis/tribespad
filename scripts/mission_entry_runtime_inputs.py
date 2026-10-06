@@ -8,8 +8,8 @@ def translate_sqrt(text):
  image=R/'ref/qol/IFC22.dll';assert sha(image)=='eaf5a42d301cc64a6e526aa49a82dbaefe655ed1ac0ba67939d0bab2fb6ab607'
  assert pefile.PE(str(image)).get_data(SQRT-0x10000000,4)==bytes.fromhex('f30f51c9')
  needle=f'call void @halopad_trap_unimplemented(i32 {SQRT}) nounwind'
- assert text.count(needle)==1 and '@tb_mission_sqrtss' not in text
- return text.replace(needle,'call void @tb_mission_sqrtss(%_cpu* %cpu)',1)+'\ndeclare void @tb_mission_sqrtss(%_cpu*)\n'
+ assert text.count(needle)==1 and '@tb_sse_sqrtss' not in text
+ return text.replace(needle,'call void @tb_sse_sqrtss(%_cpu* %cpu, i32 1, i32 1)',1)+'\ndeclare void @tb_sse_sqrtss(%_cpu*, i32, i32)\n'
 def prepare(native,out,verify_test=True):
  if verify_test:
   proof=json.loads((R/'generated/integration-review/mission-entry-test/result.json').read_text());assert proof['passed']
@@ -27,10 +27,16 @@ def prepare(native,out,verify_test=True):
  before={m[1]:m[0] for m in re.finditer(pattern,(source/'seg01_code.llinc').read_text(),re.M|re.S)}
  after={m[1]:m[0] for m in re.finditer(pattern,(path/'seg01_code.llinc').read_text(),re.M|re.S)}
  assert not(set(before)-set(after)) and all(before[n]==after[n] for n in before)
- added=set(after)-set(before);assert len(added)==86 and name in added
+ discovered=set(after)-set(before);assert len(discovered)==86 and name in discovered
+ pending=R/'generated/integration-review/pending-hook-bank/detours'
+ owner=json.loads((pending/'result.json').read_text());assert owner['passed'] and owner['module_sha256']==sha(pending/'module.ll')
+ reused=discovered&set(owner['added']);assert reused=={'loc_1000C4F0','loc_1000C546','loc_1000C57D','loc_1000C5A0','loc_1000C5AC'}
+ prior={m[1]:m[0] for m in re.finditer(pattern,(pending/'selected.llinc').read_text(),re.M|re.S)}
+ assert all(after[n].strip()==prior[n].strip() for n in reused)
+ added=discovered-reused
  selected='\n\n'.join(after[n] for n in sorted(added))+'\n'
- assert selected.count('halopad_trap_unimplemented')==1 and f'halopad_trap_unimplemented {hex(SQRT)}' in selected
- refs=set(re.findall(r'^\s*(?:tcall|ctcallz|ctcallnz)\s+.*?\b(loc_[0-9A-F]+)\s*$',selected,re.M));external=refs-added;assert external<=set(before),external-set(before)
+ assert 'halopad_trap_unimplemented' not in selected
+ refs=set(re.findall(r'^\s*(?:tcall|ctcallz|ctcallnz)\s+.*?\b(loc_[0-9A-F]+)\s*$',selected,re.M));external=refs-added;assert external<=set(before)|reused,external-(set(before)|reused)
  spec=importlib.util.spec_from_file_location('va',R/'scripts/prepare-va-model.py');va=importlib.util.module_from_spec(spec);spec.loader.exec_module(va)
  meta=json.loads((native/'result.json').read_text());values={n:row['guest_va'] for row in meta['imports'] for n in [row['name'],row['sr_name']]}
  transformed,stats=va.transform(selected.splitlines(),values);(path/'code.llinc').write_text('\n'.join(transformed)+'\n')
@@ -40,7 +46,7 @@ def prepare(native,out,verify_test=True):
  tool=R/'generated/tools/llasm/llasm';assert sha(tool)==json.loads((R/'toolchains.lock.json').read_text())['artifacts']['llasm/llasm']
  with (path/'llasm.log').open('w') as log:subprocess.run([str(tool),'-m64','-ptrofs','-O2','-I',str(path),'-I',str(R/'port/llasm-support'),'-I',str(R/'ref/halopad/port/llasm-support'),'-o',str(path/'raw.ll'),str(path/'module.llasm')],cwd=path,stdout=log,stderr=log,check=True)
  procedures,_=va.postprocess(path/'raw.ll',path/'module.ll');assert set(procedures)==added
- module=path/'module.ll';module.write_text(translate_sqrt(module.read_text()));assert 'call void @halopad_trap_unimplemented' not in module.read_text()
- report=dict(added=sorted(added),external=sorted(external),existing_blocks_changed=0,stats=stats,image_sha256=sha(image),srw_sha256=sha(srw),module_sha256=sha(module),selected_source_sha256=hashlib.sha256(selected.encode()).hexdigest(),script_sha256=sha(pathlib.Path(__file__).resolve()))
+ module=path/'module.ll';assert 'call void @halopad_trap_unimplemented' not in module.read_text()
+ report=dict(discovered=sorted(discovered),reused=sorted(reused),existing_owner_metadata_sha256=sha(pending/'result.json'),added=sorted(added),external=sorted(external),existing_blocks_changed=0,stats=stats,image_sha256=sha(image),srw_sha256=sha(srw),module_sha256=sha(module),selected_source_sha256=hashlib.sha256(selected.encode()).hexdigest(),script_sha256=sha(pathlib.Path(__file__).resolve()))
  (path/'result.json').write_text(json.dumps(report,indent=2)+'\n')
- return [module,R/'port/llasm-support/tribes_mission_sqrtss.c'],report
+ return [module],report
