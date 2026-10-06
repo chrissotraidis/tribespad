@@ -59,7 +59,7 @@ extern unsigned sdl_test_live,sdl_test_fail;
 #ifdef CHECKED
 extern void bad_window(void),bad_context(void);
 #if defined(GRAPHICS) && !TARGET_OS_IPHONE
-extern void bad_frustum(void),bad_mult_matrix(void);
+extern void bad_frustum(void),bad_mult_matrix(void),bad_depth_mask(void),bad_is_enabled(void),bad_scale(void);
 #endif
 #endif
 static unsigned char *memory;static _cpu cpu;
@@ -597,6 +597,84 @@ static void perspective_projection(void){
  GC(0xfffa0240,0,GL_PROJECTION);GC(0xfffa0250,0);GC(0xfffa0240,0,GL_MODELVIEW);GC(0xfffa0250,0);assert(!glGetError());
  puts("Perspective projection: original/asymmetric arguments, native matrix product, invalid-state preservation, retained error and projected pixels pass");
 }
+static void matrix_stack(void){
+ const char *names[]={"glPushMatrix","glPopMatrix","glScalef"};
+ for(unsigned i=0;i<3;i++){strcpy((char *)memory+0x24000,names[i]);assert(CALL(63,0x24000)==0xfffa0650+16*i);}
+ const GLenum modes[]={GL_MODELVIEW,GL_PROJECTION,GL_TEXTURE},queries[]={GL_MODELVIEW_MATRIX,GL_PROJECTION_MATRIX,GL_TEXTURE_MATRIX};
+ const GLenum depths[]={GL_MODELVIEW_STACK_DEPTH,GL_PROJECTION_STACK_DEPTH,GL_TEXTURE_STACK_DEPTH},limits[]={GL_MAX_MODELVIEW_STACK_DEPTH,GL_MAX_PROJECTION_STACK_DEPTH,GL_MAX_TEXTURE_STACK_DEPTH};
+ GLdouble seed[]={1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16},actual[16];memcpy(memory+0x3100,seed,sizeof seed);
+ for(unsigned m=0;m<3;m++){
+  GC(0xfffa0240,0,modes[m]);GC(0xfffa0260,0,0x3100);GC(0xfffa0650,0);GC(0xfffa0670,0,0x40000000,0xbf000000,0x3f400000);
+  glGetDoublev(queries[m],actual);for(unsigned c=0;c<4;c++)for(unsigned r=0;r<4;r++)assert(actual[4*c+r]==seed[4*c+r]*(c==0?2:c==1?-.5:c==2?.75:1));
+  GC(0xfffa0660,0);glGetDoublev(queries[m],actual);assert(!memcmp(actual,seed,sizeof seed));GLint depth=0,limit=0;glGetIntegerv(depths[m],&depth);glGetIntegerv(limits[m],&limit);assert(depth==1&&limit>=2&&limit<1024);
+  for(int i=1;i<limit;i++)GC(0xfffa0650,0);GC(0xfffa0650,0);assert(glGetError()==GL_STACK_OVERFLOW);glGetIntegerv(depths[m],&depth);assert(depth==limit);
+  glGetDoublev(queries[m],actual);assert(!memcmp(actual,seed,sizeof seed));for(int i=1;i<limit;i++)GC(0xfffa0660,0);GC(0xfffa0660,0);assert(glGetError()==GL_STACK_UNDERFLOW);
+  glGetDoublev(queries[m],actual);assert(!memcmp(actual,seed,sizeof seed));
+  GC(0xfffa0500,0,GL_TRIANGLES);GC(0xfffa0650,0);GC(0xfffa0660,0);GC(0xfffa0670,0,0x40000000,0x40000000,0x40000000);GC(0xfffa0520,0);assert(glGetError()==GL_INVALID_OPERATION);glGetDoublev(queries[m],actual);assert(!memcmp(actual,seed,sizeof seed));GC(0xfffa0250,0);
+ }
+ GC(0xfffa0240,0,GL_MODELVIEW);GC(0xfffa0280,0,GL_DEPTH_TEST);GC(0xfffa0280,0,GL_TEXTURE_2D);GC(0xfffa0280,0,GL_BLEND);GC(0xfffa0270,0,0,0,64,64);
+ GC(0xfffa0650,0);GC(0xfffa0670,0,0x3f000000,0x3f000000,0x3f800000);GC(0xfffa0060,0,0,0,0,0x3f800000);GC(0xfffa0080,0,GL_COLOR_BUFFER_BIT);glColor4f(0,1,0,1);
+ glBegin(GL_TRIANGLE_FAN);glVertex2f(-1,-1);glVertex2f(1,-1);glVertex2f(1,1);glVertex2f(-1,1);glEnd();unsigned char px[4];glReadPixels(32,32,1,1,GL_RGBA,GL_UNSIGNED_BYTE,px);assert(px[1]==255);glReadPixels(8,8,1,1,GL_RGBA,GL_UNSIGNED_BYTE,px);assert(px[1]==0);
+ GC(0xfffa0660,0);glBegin(GL_TRIANGLE_FAN);glVertex2f(-1,-1);glVertex2f(1,-1);glVertex2f(1,1);glVertex2f(-1,1);glEnd();glReadPixels(8,8,1,1,GL_RGBA,GL_UNSIGNED_BYTE,px);assert(px[1]==255&&!glGetError());
+ puts("Model matrix stack: native per-mode push/scale/pop, finite limits, error preservation, rejected begin-state changes and projected coverage PASS");
+}
+static void render_state(const char *fault){
+ const char *names[]={"glFrontFace","glDepthMask","glIsEnabled","glColor4fv","glMaterialfv","glTexEnvfv","glTexEnvf","glNormalPointer"};
+ for(unsigned i=0;i<8;i++){strcpy((char *)memory+0x24000,names[i]);assert(CALL(63,0x24000)==0xfffa05d0+16*i);}
+ GC(0xfffa05d0,0,GL_CW);GLint winding=0;glGetIntegerv(GL_FRONT_FACE,&winding);assert(winding==GL_CW);
+ GC(0xfffa05d0,0,0xffffffff);assert(glGetError()==GL_INVALID_ENUM);glGetIntegerv(GL_FRONT_FACE,&winding);assert(winding==GL_CW);GC(0xfffa05d0,0,GL_CCW);
+ /* Windows GLboolean is an eight-bit argument, rather than a 32-bit bool. */
+ GC(0xfffa05e0,0,0x100);GLboolean depth=1;glGetBooleanv(GL_DEPTH_WRITEMASK,&depth);assert(!depth);
+ GC(0xfffa05e0,0,0x101);glGetBooleanv(GL_DEPTH_WRITEMASK,&depth);assert(depth);
+ GC(0xfffa0280,0,GL_LIGHTING);assert(!GC(0xfffa05f0,1,GL_LIGHTING));GC(0xfffa0290,0,GL_LIGHTING);assert(GC(0xfffa05f0,1,GL_LIGHTING)==1);GC(0xfffa0280,0,GL_LIGHTING);
+ glGetString(0xffffffff);assert(!GC(0xfffa05f0,1,GL_LIGHTING)&&glGetError()==GL_INVALID_ENUM);assert(!GC(0xfffa05f0,1,0xffffffff)&&glGetError()==GL_INVALID_ENUM);
+ const GLfloat color[]={.25f,.5f,.75f,1};memcpy(memory+0x3ff0,color,sizeof color);
+ if(fault&&!strcmp(fault,"state-color")){assert(tribes_memory_permissions_set(0x4000,4096,0));GC(0xfffa0600,0,0x3ff1);assert(0);}
+ if(fault&&!strcmp(fault,"state-material")){assert(tribes_memory_permissions_set(0x4000,4096,0));GC(0xfffa0610,0,GL_FRONT,GL_DIFFUSE,0x3ff1);assert(0);}
+ if(fault&&!strcmp(fault,"state-texenv")){assert(tribes_memory_permissions_set(0x4000,4096,0));GC(0xfffa0620,0,GL_TEXTURE_ENV,GL_TEXTURE_ENV_COLOR,0x3ff1);assert(0);}
+ assert(tribes_memory_permissions_set(0x3000,4096,1)&&tribes_memory_permissions_set(0x4000,4096,0));
+ GLfloat actual[4];GC(0xfffa0600,0,0x3ff0);glGetFloatv(GL_CURRENT_COLOR,actual);assert(!memcmp(actual,color,sizeof color));
+ const GLenum materials[]={GL_AMBIENT,GL_DIFFUSE,GL_SPECULAR,GL_EMISSION,GL_AMBIENT_AND_DIFFUSE};
+ for(unsigned i=0;i<5;i++){GC(0xfffa0610,0,GL_FRONT_AND_BACK,materials[i],0x3ff0);glGetMaterialfv(GL_FRONT,materials[i]==GL_AMBIENT_AND_DIFFUSE?GL_DIFFUSE:materials[i],actual);assert(!memcmp(actual,color,sizeof color));}
+ GC(0xfffa0610,0,GL_BACK,GL_SHININESS,0x3ffc);glGetMaterialfv(GL_BACK,GL_SHININESS,actual);assert(actual[0]==1);
+ GC(0xfffa0610,0,GL_FRONT,GL_COLOR_INDEXES,0x3ff4);glGetMaterialfv(GL_FRONT,GL_COLOR_INDEXES,actual);assert(!memcmp(actual,color+1,12));
+ GC(0xfffa0610,0,0xffffffff,GL_DIFFUSE,0x4000);assert(glGetError()==GL_INVALID_ENUM);
+ GC(0xfffa0620,0,GL_TEXTURE_ENV,GL_TEXTURE_ENV_COLOR,0x3ff0);glGetTexEnvfv(GL_TEXTURE_ENV,GL_TEXTURE_ENV_COLOR,actual);assert(!memcmp(actual,color,sizeof color));
+ GC(0xfffa0620,0,GL_TEXTURE_ENV,GL_RGB_SCALE,0x3ffc);glGetTexEnvfv(GL_TEXTURE_ENV,GL_RGB_SCALE,actual);assert(actual[0]==1);
+ GC(0xfffa0630,0,GL_TEXTURE_ENV,GL_RGB_SCALE,0x40000000);glGetTexEnvfv(GL_TEXTURE_ENV,GL_RGB_SCALE,actual);assert(actual[0]==2);GC(0xfffa0630,0,GL_TEXTURE_ENV,GL_RGB_SCALE,0x3f800000);
+ GC(0xfffa0620,0,0xffffffff,GL_TEXTURE_ENV_COLOR,0x4000);assert(glGetError()==GL_INVALID_ENUM);
+ GC(0xfffa0630,0,GL_TEXTURE_ENV,GL_RGB_SCALE,0x40400000);assert(glGetError()==GL_INVALID_VALUE);
+ assert(tribes_memory_permissions_set(0x3000,4096,3)&&tribes_memory_permissions_set(0x4000,4096,3));
+ GC(0xfffa0240,0,GL_PROJECTION);GC(0xfffa0250,0);GC(0xfffa0240,0,GL_MODELVIEW);GC(0xfffa0250,0);GC(0xfffa0270,0,0,0,64,64);
+ glDisable(GL_DEPTH_TEST);glDisable(GL_BLEND);glDisable(GL_TEXTURE_2D);
+ GLuint vs=glCreateShader(GL_VERTEX_SHADER),fs=glCreateShader(GL_FRAGMENT_SHADER),program=glCreateProgram();
+ const char *v="#version 120\nvarying vec3 n;void main(){gl_Position=gl_Vertex;n=abs(gl_Normal);}",*f="#version 120\nvarying vec3 n;void main(){gl_FragColor=vec4(n,1.0);}";
+ glShaderSource(vs,1,&v,NULL);glCompileShader(vs);glShaderSource(fs,1,&f,NULL);glCompileShader(fs);glAttachShader(program,vs);glAttachShader(program,fs);glLinkProgram(program);GLint linked=0;glGetProgramiv(program,GL_LINK_STATUS,&linked);assert(linked);GC(0xfffa0320,0,program);
+ const GLfloat vertices[]={-1,-1,0,0,1,-1,0,0,0,1};const unsigned char indices[]={0,2,4};memcpy(memory+0x8101,vertices,sizeof vertices);memcpy(memory+0x7101,indices,sizeof indices);
+ GC(0xfffa01c0,0,GL_ARRAY_BUFFER,0);GC(0xfffa0300,0,2,GL_FLOAT,0,0x8101);GC(0xfffa02e0,0,GL_VERTEX_ARRAY);GC(0xfffa02e0,0,GL_NORMAL_ARRAY);assert(GC(0xfffa05f0,1,GL_NORMAL_ARRAY));
+ const GLenum types[]={GL_BYTE,GL_SHORT,GL_INT,GL_FLOAT,GL_DOUBLE};
+ for(unsigned t=0;t<5;t++){
+  unsigned bytes=t==0?1:t==1?2:t==4?8:4;unsigned char value[24]={0};
+  if(t==0){int8_t x=127;memcpy(value+bytes,&x,bytes);}else if(t==1){int16_t x=32767;memcpy(value+bytes,&x,bytes);}else if(t==2){int32_t x=INT32_MAX;memcpy(value+bytes,&x,bytes);}else if(t==3){GLfloat x=1;memcpy(value+bytes,&x,bytes);}else{GLdouble x=1;memcpy(value+bytes,&x,bytes);}
+  memset(memory+0xa001,0,3*bytes);GC(0xfffa0640,0,types[t],4096,0xa001);
+  for(unsigned i=0;i<3;i++)memcpy(memory+0xa001+8192*i,value,3*bytes);
+  assert(tribes_memory_permissions_set(0xb000,4096,0)&&tribes_memory_permissions_set(0xd000,4096,0));
+  if(fault&&!strcmp(fault,"normal-unreadable")){assert(tribes_memory_permissions_set(0xc000,4096,0));GC(0xfffa0350,0,GL_TRIANGLES,3,GL_UNSIGNED_BYTE,0x7101);assert(0);}
+  if(fault&&!strcmp(fault,"normal-range")){GC(0xfffa0640,0,GL_FLOAT,4096,0xaff8);GC(0xfffa0350,0,GL_TRIANGLES,3,GL_UNSIGNED_BYTE,0x7101);assert(0);}
+  if(fault&&!strcmp(fault,"normal-overflow")){GC(0xfffa0640,0,GL_FLOAT,4096,0xfffffff8);GC(0xfffa0350,0,GL_TRIANGLES,3,GL_UNSIGNED_BYTE,0x7101);assert(0);}
+  GC(0xfffa0640,0,GL_UNSIGNED_BYTE,0,0xffffffff);assert(glGetError()==GL_INVALID_ENUM);GC(0xfffa0640,0,GL_FLOAT,0xffffffff,0xffffffff);assert(glGetError()==GL_INVALID_VALUE);
+  GC(0xfffa01b0,0,1,0x3011);GLuint buffer=word(0x3011);GC(0xfffa01c0,0,GL_ARRAY_BUFFER,buffer);
+  if(fault&&!strcmp(fault,"normal-vbo")){GC(0xfffa0640,0,GL_FLOAT,0,0);assert(0);}
+  GC(0xfffa00e0,0,GL_TEXTURE1);GC(0xfffa0060,0,0,0,0,0x3f800000);GC(0xfffa0080,0,GL_COLOR_BUFFER_BIT);GC(0xfffa0350,0,GL_TRIANGLES,3,GL_UNSIGNED_BYTE,0x7101);
+  unsigned char pixel[4];glReadPixels(32,32,1,1,GL_RGBA,GL_UNSIGNED_BYTE,pixel);assert(pixel[0]==0&&pixel[1]==255&&pixel[2]==0&&pixel[3]==255);
+  void *pointer=(void *)1;glGetPointerv(GL_NORMAL_ARRAY_POINTER,&pointer);assert(!pointer);GLint bound=0,unit=0;glGetIntegerv(GL_ARRAY_BUFFER_BINDING,&bound);glGetIntegerv(GL_CLIENT_ACTIVE_TEXTURE,&unit);assert((GLuint)bound==buffer&&unit==GL_TEXTURE1);
+  GC(0xfffa01e0,0,1,0x3011);assert(tribes_memory_permissions_set(0xb000,4096,3)&&tribes_memory_permissions_set(0xd000,4096,3));
+ }
+ GC(0xfffa02f0,0,GL_NORMAL_ARRAY);assert(!GC(0xfffa05f0,1,GL_NORMAL_ARRAY));GC(0xfffa0640,0,GL_FLOAT,0,0xfffffff8);glNormal3f(1,0,0);
+ GC(0xfffa0350,0,GL_TRIANGLES,3,GL_UNSIGNED_BYTE,0x7101);unsigned char pixel[4];glReadPixels(32,32,1,1,GL_RGBA,GL_UNSIGNED_BYTE,pixel);assert(pixel[0]==255&&pixel[1]==0&&pixel[2]==0);
+ GC(0xfffa02f0,0,GL_VERTEX_ARRAY);GC(0xfffa00e0,0,GL_TEXTURE0);GC(0xfffa0320,0,0);glDeleteProgram(program);glDeleteShader(vs);glDeleteShader(fs);assert(!glGetError());
+ puts("Original 3D state: native winding/depth/enable/color/material/texture state and five normal formats, sparse checked draw-time data, pixels and detached pointers PASS");
+}
 static void matrix_multiplication(const char *fault){
  const uint32_t address=0xfffa05c0;
  if(fault){
@@ -648,6 +726,8 @@ static void legacy_route(uint32_t original_window,uint32_t original_context,cons
  assert(tribes_memory_permissions_set(0x4000,4096,3));
  if(!fault)perspective_projection();
  matrix_multiplication(fault);
+ render_state(fault);
+ if(!fault)matrix_stack();
  GC(0xfffa0240,0,GL_MODELVIEW);GC(0xfffa0250,0);glGetDoublev(GL_MODELVIEW_MATRIX,actual);for(unsigned i=0;i<16;i++)assert(actual[i]==(i%5==0?1:0));
  GC(0xfffa0270,0,0,0,64,64);GLint viewport[4];glGetIntegerv(GL_VIEWPORT,viewport);assert(viewport[0]==0&&viewport[1]==0&&viewport[2]==64&&viewport[3]==64);
  GC(0xfffa0270,0,0,0,0xffffffff,64);assert(glGetError()==GL_INVALID_VALUE);
@@ -944,6 +1024,9 @@ static int window_main(int argc,char **argv){
 #if defined(GRAPHICS) && !TARGET_OS_IPHONE
  if(argc==2&&!strcmp(argv[1],"bad-frustum")){bad_frustum();return 99;}
  if(argc==2&&!strcmp(argv[1],"bad-mult-matrix")){bad_mult_matrix();return 99;}
+ if(argc==2&&!strcmp(argv[1],"bad-depth-mask")){bad_depth_mask();return 99;}
+ if(argc==2&&!strcmp(argv[1],"bad-is-enabled")){bad_is_enabled();return 99;}
+ if(argc==2&&!strcmp(argv[1],"bad-scale")){bad_scale();return 99;}
 #endif
 #endif
  static const char env[]="TRIBESPAD_WINDOW_TEST=1\0";assert(tribes_environment_configure(cpu._pointer_offset,env,sizeof env));
@@ -991,7 +1074,7 @@ static int window_main(int argc,char **argv){
  assert(CALL(54,SDL_GL_CONTEXT_PROFILE_MASK,0x3001)&&word(0x3001)==SDL_GL_CONTEXT_PROFILE_CORE);
  puts("explicit native core context retains existing modern graphics coverage");
 #ifdef GRAPHICS
- if(argc==1||(argc==2&&(!strncmp(argv[1],"sync-",5)||!strncmp(argv[1],"array-",6)||!strncmp(argv[1],"uniform-",8)||!strncmp(argv[1],"shader-",7)||!strncmp(argv[1],"quad-",5)||!strncmp(argv[1],"matrix-mult-",12)||!strcmp(argv[1],"unreadable-matrix")||!strcmp(argv[1],"shared-copy-delete")||!strcmp(argv[1],"shared-array-delete"))))legacy_route(window,context,argc==2?argv[1]:NULL);
+ if(argc==1||(argc==2&&(!strncmp(argv[1],"sync-",5)||!strncmp(argv[1],"array-",6)||!strncmp(argv[1],"uniform-",8)||!strncmp(argv[1],"shader-",7)||!strncmp(argv[1],"quad-",5)||!strncmp(argv[1],"matrix-mult-",12)||!strncmp(argv[1],"state-",6)||!strncmp(argv[1],"normal-",7)||!strcmp(argv[1],"unreadable-matrix")||!strcmp(argv[1],"shared-copy-delete")||!strcmp(argv[1],"shared-array-delete"))))legacy_route(window,context,argc==2?argv[1]:NULL);
  if(argc==2&&!strcmp(argv[1],"mipmap-nonzero-base")){
   GC(0xfffa0150,0,1,0x3001);GC(0xfffa0160,0,GL_TEXTURE_2D,word(0x3001));GC(0xfffa0170,0,GL_TEXTURE_2D,0x8191,1);GC(0xfffa0170,0,GL_TEXTURE_2D,GL_TEXTURE_BASE_LEVEL,1);
   const unsigned char color[]={1,2,3,255};mipmap_upload(1,2,color);assert(0);

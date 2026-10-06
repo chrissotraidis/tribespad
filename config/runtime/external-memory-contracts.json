@@ -445,7 +445,18 @@
     "connect",
     "getpeername",
     "send",
-    "recv"
+    "recv",
+    "glFrontFace",
+    "glDepthMask",
+    "glIsEnabled",
+    "glColor4fv",
+    "glMaterialfv",
+    "glTexEnvfv",
+    "glTexEnvf",
+    "glNormalPointer",
+    "glPushMatrix",
+    "glPopMatrix",
+    "glScalef"
   ],
   "range_checked": [
     "memcpy",

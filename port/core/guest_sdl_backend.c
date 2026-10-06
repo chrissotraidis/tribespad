@@ -109,7 +109,7 @@ static uint32_t next_sync_token=0xdd000001;
 #endif
 typedef struct TextureState {unsigned refs;AutoMipmap *automatic;SyncObject *syncs;} TextureState;
 typedef struct ClientArray {uint32_t address,size,type,stride;int enabled,defined;} ClientArray;
-typedef struct GLContext {SDL_GLContext native;uint32_t token;int core;GLuint copy_bindings[2];ClientArray vertex,color,texcoord[32];GLenum mipmap_hint;unsigned errors;TextureState *textures;struct GLContext *next;} GLContext;
+typedef struct GLContext {SDL_GLContext native;uint32_t token;int core;GLuint copy_bindings[2];ClientArray vertex,color,normal,texcoord[32];GLenum mipmap_hint;unsigned errors;TextureState *textures;struct GLContext *next;} GLContext;
 typedef struct Properties {SDL_PropertiesID native;struct Properties *next;} Properties;
 static Properties *properties;
 static Window *windows;
@@ -1317,6 +1317,7 @@ static void client_state(uint32_t cap,int enabled){
     GLContext *c=legacy_context();ClientArray *a;
     if(cap==GL_VERTEX_ARRAY)a=&c->vertex;
     else if(cap==GL_COLOR_ARRAY)a=&c->color;
+    else if(cap==GL_NORMAL_ARRAY)a=&c->normal;
     else if(cap==GL_TEXTURE_COORD_ARRAY)a=&c->texcoord[client_texture_unit()];
     else stop();
     if(enabled)glEnableClientState(cap);else glDisableClientState(cap);a->enabled=enabled;
@@ -1357,6 +1358,100 @@ static void *stage_array(_cpu *cpu,const ClientArray *a,const unsigned char *ind
     }return copy;
 }
 #endif
+void tribes_gl_push_matrix(_cpu *cpu){
+    WINDOW_ENTER();
+#if TARGET_OS_IPHONE
+    (void)error;stop();
+#else
+    glPushMatrix();DRAW_RETURN();
+#endif
+}
+void tribes_gl_pop_matrix(_cpu *cpu){
+    WINDOW_ENTER();
+#if TARGET_OS_IPHONE
+    (void)error;stop();
+#else
+    glPopMatrix();DRAW_RETURN();
+#endif
+}
+void tribes_gl_scale_f(_cpu *cpu,uint32_t x,uint32_t y,uint32_t z){
+    WINDOW_ENTER();
+#if TARGET_OS_IPHONE
+    (void)x;(void)y;(void)z;(void)error;stop();
+#else
+    uint32_t bits[]={x,y,z};GLfloat v[3];memcpy(v,bits,sizeof v);glScalef(v[0],v[1],v[2]);DRAW_RETURN();
+#endif
+}
+void tribes_gl_front_face(_cpu *cpu,uint32_t mode){WINDOW_ENTER();glFrontFace(mode);DRAW_RETURN();}
+void tribes_gl_depth_mask(_cpu *cpu,uint32_t value){WINDOW_ENTER();glDepthMask((GLboolean)value);DRAW_RETURN();}
+uint32_t tribes_gl_is_enabled(_cpu *cpu,uint32_t cap){WINDOW_ENTER();uint32_t result=glIsEnabled(cap);WINDOW_RETURN(result);}
+void tribes_gl_color4fv(_cpu *cpu,uint32_t input){
+    WINDOW_ENTER();
+#if TARGET_OS_IPHONE
+    (void)input;(void)error;stop();
+#else
+    GLfloat value[4];checked_copy(value,guest(cpu,input,sizeof value),sizeof value);glColor4fv(value);DRAW_RETURN();
+#endif
+}
+void tribes_gl_material_fv(_cpu *cpu,uint32_t face,uint32_t name,uint32_t input){
+    WINDOW_ENTER();
+#if TARGET_OS_IPHONE
+    (void)face;(void)name;(void)input;(void)error;stop();
+#else
+    unsigned count=0;
+    switch(name){
+    case GL_AMBIENT:case GL_DIFFUSE:case GL_SPECULAR:case GL_EMISSION:case GL_AMBIENT_AND_DIFFUSE:count=4;break;
+    case GL_SHININESS:count=1;break;case GL_COLOR_INDEXES:count=3;break;
+    default:stop();
+    }
+    GLfloat value[4]={0};
+    if(face==GL_FRONT||face==GL_BACK||face==GL_FRONT_AND_BACK)checked_copy(value,guest(cpu,input,count*sizeof *value),count*sizeof *value);
+    glMaterialfv(face,name,value);DRAW_RETURN();
+#endif
+}
+#if !TARGET_OS_IPHONE
+static unsigned tex_env_count(uint32_t target,uint32_t name){
+    if(target==GL_TEXTURE_FILTER_CONTROL)return name==GL_TEXTURE_LOD_BIAS?1:0;
+    if(target==GL_POINT_SPRITE)return name==GL_COORD_REPLACE?1:0;
+    if(target!=GL_TEXTURE_ENV)return 0;
+    switch(name){
+    case GL_TEXTURE_ENV_COLOR:return 4;
+    case GL_TEXTURE_ENV_MODE:case GL_COMBINE_RGB:case GL_COMBINE_ALPHA:case GL_RGB_SCALE:case GL_ALPHA_SCALE:
+    case GL_SOURCE0_RGB:case GL_SOURCE1_RGB:case GL_SOURCE2_RGB:case GL_SOURCE0_ALPHA:case GL_SOURCE1_ALPHA:case GL_SOURCE2_ALPHA:
+    case GL_OPERAND0_RGB:case GL_OPERAND1_RGB:case GL_OPERAND2_RGB:case GL_OPERAND0_ALPHA:case GL_OPERAND1_ALPHA:case GL_OPERAND2_ALPHA:return 1;
+    default:stop();
+    }
+}
+#endif
+void tribes_gl_tex_env_fv(_cpu *cpu,uint32_t target,uint32_t name,uint32_t input){
+    WINDOW_ENTER();
+#if TARGET_OS_IPHONE
+    (void)target;(void)name;(void)input;(void)error;stop();
+#else
+    unsigned count=tex_env_count(target,name);GLfloat value[4]={0};
+    if(count)checked_copy(value,guest(cpu,input,count*sizeof *value),count*sizeof *value);
+    glTexEnvfv(target,name,value);DRAW_RETURN();
+#endif
+}
+void tribes_gl_tex_env_f(_cpu *cpu,uint32_t target,uint32_t name,uint32_t bits){
+    WINDOW_ENTER();
+#if TARGET_OS_IPHONE
+    (void)target;(void)name;(void)bits;(void)error;stop();
+#else
+    GLfloat value;memcpy(&value,&bits,sizeof value);glTexEnvf(target,name,value);DRAW_RETURN();
+#endif
+}
+void tribes_gl_normal_pointer(_cpu *cpu,uint32_t type,uint32_t stride,uint32_t address){
+    WINDOW_ENTER();
+#if TARGET_OS_IPHONE
+    (void)type;(void)stride;(void)address;(void)error;stop();
+#else
+    GLContext *c=legacy_context();
+    if((type!=GL_BYTE&&type!=GL_SHORT&&type!=GL_INT&&type!=GL_FLOAT&&type!=GL_DOUBLE)||(int32_t)stride<0){glNormalPointer(type,(int32_t)stride,NULL);DRAW_RETURN();}
+    GLint buffer=0;glGetIntegerv(GL_ARRAY_BUFFER_BINDING,&buffer);if(buffer)stop();
+    ClientArray *a=&c->normal;a->address=address;a->size=3;a->type=type;a->stride=stride;a->defined=1;DRAW_RETURN();
+#endif
+}
 void tribes_gl_tex_env_i(_cpu *cpu,uint32_t target,uint32_t name,uint32_t value){
     WINDOW_ENTER();
 #if TARGET_OS_IPHONE
@@ -1461,19 +1556,22 @@ void tribes_gl_draw_elements(_cpu *cpu,uint32_t mode,uint32_t count,uint32_t typ
     if(count>UINT32_MAX/width)stop();size_t bytes=(size_t)count*width;
     unsigned char *indices=malloc(bytes);if(!indices)stop();checked_copy(indices,guest(cpu,input,bytes),bytes);
     uint32_t maximum=0;for(uint32_t i=0;i<count;i++){uint32_t index=draw_index(indices,width,i);if(index>maximum)maximum=index;}
-    void *vertex=NULL,*color=NULL,*texcoords[32]={0};
+    void *vertex=NULL,*color=NULL,*normal=NULL,*texcoords[32]={0};
     if(c->vertex.enabled)vertex=stage_array(cpu,&c->vertex,indices,width,count,maximum);
     if(c->color.enabled)color=stage_array(cpu,&c->color,indices,width,count,maximum);
+    if(c->normal.enabled)normal=stage_array(cpu,&c->normal,indices,width,count,maximum);
     for(unsigned i=0;i<32;i++)if(c->texcoord[i].enabled)texcoords[i]=stage_array(cpu,&c->texcoord[i],indices,width,count,maximum);
     unsigned unit=client_texture_unit();glGetIntegerv(GL_ARRAY_BUFFER_BINDING,&previous);glBindBuffer(GL_ARRAY_BUFFER,0);
     if(vertex)glVertexPointer((GLint)c->vertex.size,c->vertex.type,0,vertex);
     if(color)glColorPointer((GLint)c->color.size,c->color.type,0,color);
+    if(normal)glNormalPointer(c->normal.type,0,normal);
     for(unsigned i=0;i<32;i++)if(texcoords[i]){glClientActiveTexture(GL_TEXTURE0+i);glTexCoordPointer((GLint)c->texcoord[i].size,c->texcoord[i].type,0,texcoords[i]);}
     glClientActiveTexture(GL_TEXTURE0+unit);glDrawElements(mode,(GLsizei)count,type,indices);
     if(vertex)glVertexPointer((GLint)c->vertex.size,c->vertex.type,0,NULL);
     if(color)glColorPointer((GLint)c->color.size,c->color.type,0,NULL);
+    if(normal)glNormalPointer(c->normal.type,0,NULL);
     for(unsigned i=0;i<32;i++)if(texcoords[i]){glClientActiveTexture(GL_TEXTURE0+i);glTexCoordPointer((GLint)c->texcoord[i].size,c->texcoord[i].type,0,NULL);free(texcoords[i]);}
-    glClientActiveTexture(GL_TEXTURE0+unit);glBindBuffer(GL_ARRAY_BUFFER,(GLuint)previous);free(color);free(vertex);free(indices);DRAW_RETURN();
+    glClientActiveTexture(GL_TEXTURE0+unit);glBindBuffer(GL_ARRAY_BUFFER,(GLuint)previous);free(normal);free(color);free(vertex);free(indices);DRAW_RETURN();
 #endif
 }
 /* Texture names are the native context's GLuint values. No host pointers or

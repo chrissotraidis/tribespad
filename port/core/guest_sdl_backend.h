@@ -198,4 +198,18 @@ void tribes_gl_uniform1f(_cpu *,uint32_t,uint32_t);
 void tribes_gl_uniform4fv(_cpu *,uint32_t,uint32_t,uint32_t);
 void tribes_gl_tex_image_3d(_cpu *,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t);
 void tribes_gl_tex_sub_image_3d(_cpu *,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t);
+
+/* Original 3D render state and checked normal-array descriptors. */
+void tribes_gl_front_face(_cpu *,uint32_t);
+void tribes_gl_depth_mask(_cpu *,uint32_t);
+uint32_t tribes_gl_is_enabled(_cpu *,uint32_t);
+void tribes_gl_color4fv(_cpu *,uint32_t);
+void tribes_gl_material_fv(_cpu *,uint32_t,uint32_t,uint32_t);
+void tribes_gl_tex_env_fv(_cpu *,uint32_t,uint32_t,uint32_t);
+void tribes_gl_tex_env_f(_cpu *,uint32_t,uint32_t,uint32_t);
+void tribes_gl_normal_pointer(_cpu *,uint32_t,uint32_t,uint32_t);
+
+void tribes_gl_push_matrix(_cpu *);
+void tribes_gl_pop_matrix(_cpu *);
+void tribes_gl_scale_f(_cpu *,uint32_t,uint32_t,uint32_t);
 #endif

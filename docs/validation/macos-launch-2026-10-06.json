@@ -1,47 +1,60 @@
 {
   "date": "2026-10-06",
   "platform": "macOS ARM64",
-  "full_checked_engine_sha256": "47fca8df62f922ace217f787517c6f2f86ce366c2b8b3b0a7b5b1d496e18af88",
-  "signed_engine_sha256": "dcf9c447043a4b00a306ec2e25e59ddbd3b9d762f446f9e473b6b84766353e5c",
+  "full_checked_engine_sha256": "cd9e3f81c024b564fc826d0240dd66cca72f5fd125d73b19b60dc68e24f0551a",
+  "signed_engine_sha256": "f4edbcda944bef17b9496b50b58023a8535dc4d7964b90131039c3b8f7603124",
   "observed": [
-    "Original TribesNEXT UI launched",
-    "Native EULA/Create Account navigation",
+    "Original TribesNEXT UI launched as a signed app",
+    "Verified native EULA/Create Account keyboard navigation",
     "Actual account-server ONLINE and connectable response",
-    "Agreement accepted; both reached math kernels passed",
-    "Original glFrustum and glMultMatrixf executed through finite native bridge",
-    "Original preview clear and depth-function setup executed"
+    "Agreement accepted; original projection and coordinate transform executed",
+    "Original front-face, depth-mask, colour and material setup executed",
+    "Original glPushMatrix executed"
   ],
-  "next_failure": "unsupported original guest PC 0x00000000",
-  "next_call": {
-    "export": "glFrontFace",
-    "call": "0x6a631d",
-    "return": "0x6a6323",
-    "call_bytes": "ff15088d9e00",
-    "lookup_slot": "0x9e8d08",
-    "lookup_string": "0x78a6b8",
-    "argument": "0x900",
-    "argument_name": "GL_CW",
-    "capture_scope": "Reached original account-request thread state only; not whole-memory capture",
-    "observed_coordinate_matrix_matches_fixture": true
+  "actual_app_pid": 33061,
+  "next_failure": "unsupported original guest PC 0x00000000 after glPushMatrix; exact indirect target not identified",
+  "static_candidate": {
+    "routine": "0x4472e0",
+    "lookup_slot": "0x7855c4",
+    "scope": "Static original transform hook only; not captured failure"
   },
-  "adjacent_render_group": [
+  "additional_attach_attempt": {
+    "pid": 35521,
+    "outcome": "Observation deadline before failure reproduction; no next-call capture"
+  },
+  "implemented_exports": [
     "glFrontFace",
-    "GL_NORMAL_ARRAY state and checked normal arrays",
     "glDepthMask",
     "glIsEnabled",
     "glColor4fv",
     "glMaterialfv",
     "glTexEnvfv",
-    "glTexEnvf"
+    "glTexEnvf",
+    "glNormalPointer",
+    "glPushMatrix",
+    "glPopMatrix",
+    "glScalef"
   ],
   "validation": {
-    "native_matrix_modes": [
-      "normal",
-      "tsan",
-      "checked"
+    "graphics_modes": [
+      {
+        "mode": "normal",
+        "passed": true
+      },
+      {
+        "mode": "tsan",
+        "passed": true
+      },
+      {
+        "mode": "checked",
+        "passed": true
+      }
     ],
-    "checked_faults": 74,
-    "device_simulator_source_compilation": true
+    "checked_faults": 84,
+    "device_simulator_source_compilation": true,
+    "full_engine_entered": true,
+    "unattended_startup_observation_timeout": true,
+    "signed_app_built_and_verified": true
   },
   "acceptance": {
     "character_page_rendered": false,
@@ -49,12 +62,14 @@
     "playable": false,
     "registration_submitted": false,
     "authenticated_multiplayer": false,
+    "hd_gameplay": false,
     "full_mobile_gameplay": false
   },
   "cleanup": {
-    "processes_ended": true,
+    "diagnostic_processes_ended": true,
     "audio_restored": 106,
     "simulator_booted": false
   },
-  "local_evidence": "generated/integration-review/matrix-multiply/execution"
+  "local_evidence": "generated/integration-review/model-matrix-stack/",
+  "backup_scope": "Source, tests, documentation and compact validation; local downloaded assets and generated builds are excluded"
 }
