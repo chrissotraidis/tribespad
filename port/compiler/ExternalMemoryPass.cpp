@@ -300,6 +300,11 @@ struct ExternalMemoryPass : PassInfoMixin<ExternalMemoryPass>{
      Allowed=Allowed&&!Target->isVarArg()&&Call->getType()->isVoidTy()&&Call->arg_size()==Args.size();
      if(Allowed)for(unsigned i=0;i<Args.size();++i)if(Call->getArgOperand(i)->getType()!=Args[i])Allowed=false;
     }
+    if(Name=="glFrustum"){
+     SmallVector<Type *,6> Args(6,B.getDoubleTy());
+     Allowed=Allowed&&!Target->isVarArg()&&Call->getType()==B.getVoidTy()&&Call->arg_size()==Args.size();
+     if(Allowed)for(unsigned i=0;i<Args.size();++i)if(Call->getArgOperand(i)->getType()!=Args[i])Allowed=false;
+    }
     if(Name=="glDepthRange"){
      SmallVector<Type *,7> Args={B.getDoubleTy(),B.getDoubleTy()};
      Allowed=Allowed&&!Target->isVarArg()&&Call->getType()==B.getVoidTy()&&Call->arg_size()==Args.size();

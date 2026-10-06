@@ -29,6 +29,7 @@ EXPORTS += [('glGetSynciv','tribes_gl_get_sync_iv',5,False,0x20040000)]
 EXPORTS += [('glColorPointer','tribes_gl_color_pointer',4,False,0x20040000)]
 EXPORTS += [('glIsSync','tribes_gl_is_sync',1,True,0x20040000)]
 EXPORTS += [('glGenerateMipmap','tribes_gl_generate_mipmap',1,False,0x20040000)]
+EXPORTS += [('glFrustum','tribes_gl_frustum',12,False,0x20040000)]
 def prepare(out):
  bindings={};rows=[]
  for i,(name,helper,n,returns,module) in enumerate(EXPORTS):

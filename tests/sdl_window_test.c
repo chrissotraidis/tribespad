@@ -49,6 +49,7 @@ extern void glGetQueryObjectuivARB(GLuint id,GLenum pname,GLuint *params);
 extern void glDeleteQueriesARB(GLsizei n,const GLuint *ids);
 #endif
 #include <assert.h>
+#include <math.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <string.h>
@@ -56,7 +57,7 @@ extern void glDeleteQueriesARB(GLsizei n,const GLuint *ids);
 extern void tribes_enter(_cpu *,uint32_t);
 extern unsigned sdl_test_live,sdl_test_fail;
 #ifdef CHECKED
-extern void bad_window(void),bad_context(void);
+extern void bad_window(void),bad_context(void),bad_frustum(void);
 #endif
 static unsigned char *memory;static _cpu cpu;
 static uint32_t call(unsigned id,const uint32_t *args,size_t count){
@@ -552,6 +553,47 @@ static void gpu_sync(uint32_t window,uint32_t context,const char *fault){
  status=GC(wait,1,sync,1,1000000000,0);assert(status==0x911a||status==0x911c);GC(del,0,sync);assert(GC(0xfffa0010,1)==0);
  puts("GPU sync: native fence completion, 64-bit timeout, pixels, error retention, shared lifetime and stale/foreign tokens PASS");
 }
+static void perspective_projection(void){
+ const uint32_t address=0xfffa05b0;
+ strcpy((char *)memory+0x24000,"opengl32");uint32_t module=CALL(60,0x24000);assert(module==0x20040000);
+ strcpy((char *)memory+0x24000,"glFrustum");assert(CALL(63,0x24000)==address);
+ assert(tribes_get_proc_address(cpu._pointer_offset,module,0x24000)==address);CALL(62,module);
+ /* Six IA-32 doubles use twelve little-endian argument words. First fixture
+    is the actual model-preview stack captured at original return 0x447446. */
+ const uint32_t captured[]={0x9fb3c819,0xbf98a7e1,0x9fb3c819,0x3f98a7e1,0x9fb3c819,0xbf98a7e1,0x9fb3c819,0x3f98a7e1,0xa0000000,0x3fa99999,0,0x40a06800};
+ double cases[3][6];memcpy(cases[0],captured,sizeof captured);
+ const double asymmetric[]={-.4,.7,-.2,.5,.3,37},symmetric[]={-1,1,-1,1,1,10};
+ memcpy(cases[1],asymmetric,sizeof asymmetric);memcpy(cases[2],symmetric,sizeof symmetric);
+ for(unsigned c=0;c<3;c++){
+  double l=cases[c][0],r=cases[c][1],b=cases[c][2],t=cases[c][3],n=cases[c][4],f=cases[c][5];
+  GLdouble projection[16]={2*n/(r-l),0,0,0,0,2*n/(t-b),0,0,(r+l)/(r-l),(t+b)/(t-b),-(f+n)/(f-n),-1,0,0,-2*f*n/(f-n),0};
+  GLdouble seed[16]={2,0,0,0,0,3,0,0,0,0,4,0,.25,-.5,1,1},actual[16];
+  memcpy(memory+0x3000,seed,sizeof seed);GC(0xfffa0240,0,GL_PROJECTION);GC(0xfffa0260,0,0x3000);
+  uint32_t words[12];memcpy(words,cases[c],sizeof words);gc(address,words,12,0);
+  glGetDoublev(GL_PROJECTION_MATRIX,actual);
+  for(unsigned col=0;col<4;col++)for(unsigned row=0;row<4;row++){
+   double expected=0;for(unsigned k=0;k<4;k++)expected+=seed[k*4+row]*projection[col*4+k];
+   assert(fabs(actual[col*4+row]-expected)<1e-6*fmax(1,fabs(expected)));
+  }
+  assert(!glGetError());
+ }
+ const double invalid[][6]={{0,0,-1,1,1,10},{-1,1,0,0,1,10},{-1,1,-1,1,1,1},{-1,1,-1,1,0,10},{-1,1,-1,1,1,-1}};
+ for(unsigned c=0;c<sizeof invalid/sizeof *invalid;c++){
+  GLdouble before[16],after[16];glGetDoublev(GL_PROJECTION_MATRIX,before);
+  uint32_t words[12];memcpy(words,invalid[c],sizeof words);gc(address,words,12,0);
+  assert(GC(0xfffa0010,1)==GL_INVALID_VALUE&&!GC(0xfffa0010,1));glGetDoublev(GL_PROJECTION_MATRIX,after);assert(!memcmp(before,after,sizeof before));
+ }
+ GC(0xfffa0250,0);glGetString(0xffffffff);uint32_t words[12];memcpy(words,symmetric,sizeof words);gc(address,words,12,0);
+ assert(GC(0xfffa0010,1)==GL_INVALID_ENUM&&!GC(0xfffa0010,1));
+ GC(0xfffa0240,0,GL_MODELVIEW);GC(0xfffa0250,0);GC(0xfffa0270,0,0,0,64,64);
+ GC(0xfffa0280,0,GL_DEPTH_TEST);GC(0xfffa0280,0,GL_TEXTURE_2D);GC(0xfffa0280,0,GL_BLEND);
+ GC(0xfffa0060,0,0,0,0,0x3f800000);GC(0xfffa0080,0,GL_COLOR_BUFFER_BIT);
+ glColor4f(0,1,0,1);glBegin(GL_TRIANGLES);glVertex3f(-1,-1,-2);glVertex3f(1,-1,-2);glVertex3f(0,1,-2);glEnd();
+ unsigned char pixel[4];glReadPixels(32,32,1,1,GL_RGBA,GL_UNSIGNED_BYTE,pixel);assert(pixel[0]==0&&pixel[1]==255&&pixel[2]==0);
+ glReadPixels(1,1,1,1,GL_RGBA,GL_UNSIGNED_BYTE,pixel);assert(pixel[0]==0&&pixel[1]==0&&pixel[2]==0);
+ GC(0xfffa0240,0,GL_PROJECTION);GC(0xfffa0250,0);GC(0xfffa0240,0,GL_MODELVIEW);GC(0xfffa0250,0);assert(!glGetError());
+ puts("Perspective projection: original/asymmetric arguments, native matrix product, invalid-state preservation, retained error and projected pixels pass");
+}
 static void legacy_route(uint32_t original_window,uint32_t original_context,const char *fault){
  assert(CALL(53,SDL_GL_CONTEXT_MAJOR_VERSION,3)&&CALL(53,SDL_GL_CONTEXT_MINOR_VERSION,2)&&CALL(53,SDL_GL_CONTEXT_PROFILE_MASK,SDL_GL_CONTEXT_PROFILE_COMPATIBILITY));
  uint32_t window=CALL(40,0x2000,64,64,SDL_WINDOW_OPENGL|SDL_WINDOW_HIDDEN,0);assert(window);
@@ -565,6 +607,7 @@ static void legacy_route(uint32_t original_window,uint32_t original_context,cons
  assert(tribes_memory_permissions_set(0x4000,4096,0));
  GC(0xfffa0240,0,GL_PROJECTION);GC(0xfffa0260,0,0x3f80);glGetDoublev(GL_PROJECTION_MATRIX,actual);assert(!memcmp(matrix,actual,sizeof matrix));
  assert(tribes_memory_permissions_set(0x4000,4096,3));
+ if(!fault)perspective_projection();
  GC(0xfffa0240,0,GL_MODELVIEW);GC(0xfffa0250,0);glGetDoublev(GL_MODELVIEW_MATRIX,actual);for(unsigned i=0;i<16;i++)assert(actual[i]==(i%5==0?1:0));
  GC(0xfffa0270,0,0,0,64,64);GLint viewport[4];glGetIntegerv(GL_VIEWPORT,viewport);assert(viewport[0]==0&&viewport[1]==0&&viewport[2]==64&&viewport[3]==64);
  GC(0xfffa0270,0,0,0,0xffffffff,64);assert(glGetError()==GL_INVALID_VALUE);
@@ -858,6 +901,7 @@ static int window_main(int argc,char **argv){
  tribes_memory_external_configure(cpu._pointer_offset,UINT64_C(0x100000000));tribes_memory_external_enable();
  if(argc==2&&!strcmp(argv[1],"bad-window")){bad_window();return 99;}
  if(argc==2&&!strcmp(argv[1],"bad-context")){bad_context();return 99;}
+ if(argc==2&&!strcmp(argv[1],"bad-frustum")){bad_frustum();return 99;}
 #endif
  static const char env[]="TRIBESPAD_WINDOW_TEST=1\0";assert(tribes_environment_configure(cpu._pointer_offset,env,sizeof env));
  #ifdef GRAPHICS

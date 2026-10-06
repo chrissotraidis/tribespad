@@ -1649,6 +1649,14 @@ void tribes_gl_tex_sub_image_3d(_cpu *cpu,uint32_t target,uint32_t level,uint32_
 /* Opaque shader/program names are native GL names in the existing share group.
    Never retain a guest string/vector or expose a host pointer to the engine. */
 static double gl_double_words(uint32_t low,uint32_t high){uint64_t bits=((uint64_t)high<<32)|low;double value;memcpy(&value,&bits,8);return value;}
+void tribes_gl_frustum(_cpu *cpu,uint32_t ll,uint32_t lh,uint32_t rl,uint32_t rh,uint32_t bl,uint32_t bh,uint32_t tl,uint32_t th,uint32_t nl,uint32_t nh,uint32_t fl,uint32_t fh){
+    WINDOW_ENTER();
+#if TARGET_OS_IPHONE
+    (void)ll;(void)lh;(void)rl;(void)rh;(void)bl;(void)bh;(void)tl;(void)th;(void)nl;(void)nh;(void)fl;(void)fh;(void)error;stop();
+#else
+    glFrustum(gl_double_words(ll,lh),gl_double_words(rl,rh),gl_double_words(bl,bh),gl_double_words(tl,th),gl_double_words(nl,nh),gl_double_words(fl,fh));DRAW_RETURN();
+#endif
+}
 void tribes_gl_depth_range(_cpu *cpu,uint32_t lo,uint32_t hi,uint32_t flo,uint32_t fhi){
     WINDOW_ENTER();double near=gl_double_words(lo,hi),far=gl_double_words(flo,fhi);
 #if TARGET_OS_IPHONE

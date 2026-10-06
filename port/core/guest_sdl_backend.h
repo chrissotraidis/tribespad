@@ -151,6 +151,7 @@ void tribes_gl_get_query_object_ui64(_cpu *,uint32_t,uint32_t,uint32_t);
 void tribes_gl_matrix_mode(_cpu *,uint32_t);
 void tribes_gl_load_identity(_cpu *);
 void tribes_gl_load_matrix_d(_cpu *,uint32_t);
+void tribes_gl_frustum(_cpu *,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t);
 void tribes_gl_viewport(_cpu *,uint32_t,uint32_t,uint32_t,uint32_t);
 void tribes_gl_disable(_cpu *,uint32_t);
 void tribes_gl_enable(_cpu *,uint32_t);

@@ -1,60 +1,44 @@
 {
   "date": "2026-10-06",
   "platform": "macOS ARM64",
-  "full_checked_engine_sha256": "f9d388bfa5ffc2021eacb6ad898a55321b5aae30ef46aa58f0efda7da7c2642e",
-  "signed_engine_sha256": "eb0c8a7ef2b34fccedc56fcf25f711c5aa338570098eb6fb537bfb97b2d28139",
+  "full_checked_engine_sha256": "d5884f965aa61fdf4235b8a8afb41f0c7b4ab4f751c3afae14bd2a4b8849c71a",
+  "signed_engine_sha256": "50521938089844fd0b7f67692c40828d3c21ef9ce4c835806f4525d0169bb920",
   "observed": [
     "Original TribesNEXT UI launched",
     "Native EULA/Create Account navigation",
     "Actual account-server ONLINE and connectable response",
-    "Agreement accepted; both reached math kernels passed"
+    "Agreement accepted; both reached math kernels passed",
+    "Original glFrustum executed through finite native bridge"
   ],
   "next_failure": "unsupported original guest PC 0x00000000",
-  "original_stack_return": "0x00447446",
-  "capture_scope": "Reached original account-request thread state only; not whole-memory capture",
-  "guest_stack": [
-    "0x0",
-    "0x0",
-    "0x3",
-    "0x0",
-    "0x447446",
-    "0x9fb3c819",
-    "0xbf98a7e1",
-    "0x9fb3c819",
-    "0x3f98a7e1",
-    "0x9fb3c819",
-    "0xbf98a7e1",
-    "0x9fb3c819",
-    "0x3f98a7e1",
-    "0xa0000000",
-    "0x3fa99999",
-    "0x0",
-    "0x40a06800",
-    "0x0",
-    "0x2ff7d4",
-    "0x2ff6d4",
-    "0x10031ba4",
-    "0x9fb3c819",
-    "0xbf98a7e1",
-    "0x9fb3c819",
-    "0x3f98a7e1",
-    "0x9fb3c819",
-    "0xbf98a7e1",
-    "0x9fb3c819",
-    "0x3f98a7e1",
-    "0xa0000000",
-    "0x3fa99999",
-    "0x0",
-    "0x40a06800",
-    "0x0",
-    "0x1046cd10",
-    "0x2ff7e0",
-    "0x0",
-    "0x0",
-    "0x0",
-    "0x0"
-  ],
-  "mxcsr": "0x1fa1",
+  "next_call": {
+    "export": "glMultMatrixf",
+    "call": "0x447470",
+    "return": "0x447476",
+    "call_bytes": "ff157c829e00",
+    "lookup_slot": "0x9e827c",
+    "lookup_string": "0x78ab30",
+    "matrix_pointer": "0x7576e8",
+    "matrix_static_initial_values": [
+      1.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      -1.0,
+      0.0,
+      0.0,
+      1.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ],
+    "capture_scope": "Reached original account-request thread state only; not whole-memory capture"
+  },
   "frames": [
     "abort",
     "tribes_lookup",
@@ -64,11 +48,13 @@
     "start"
   ],
   "validation": {
-    "finite_math_sites": 27,
-    "differential_cases": 17766,
-    "source_rejections": 55,
-    "unmasked_destination_preservation_stops": 4,
-    "control_store_cases": 584
+    "native_projection_modes": [
+      "normal",
+      "tsan",
+      "checked"
+    ],
+    "checked_faults": 71,
+    "device_simulator_compilation": true
   },
   "acceptance": {
     "character_page_rendered": false,
@@ -80,8 +66,8 @@
   },
   "cleanup": {
     "processes_ended": true,
-    "audio_restored": 57,
+    "audio_restored": 106,
     "simulator_booted": false
   },
-  "local_evidence": "generated/integration-review/math-next-kernel/execution/"
+  "local_evidence": "generated/integration-review/perspective-projection/execution"
 }

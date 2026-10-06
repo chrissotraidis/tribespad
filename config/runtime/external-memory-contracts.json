@@ -235,6 +235,7 @@
     "glHint",
     "glGenQueriesARB",
     "glDepthRange",
+    "glFrustum",
     "glClearDepth",
     "glDepthRangef",
     "glClearDepthf",
