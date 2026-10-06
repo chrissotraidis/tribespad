@@ -52,4 +52,8 @@ uint32_t tribes_memory_code_revision(uint64_t base);
 /* Last fully completed phase, even during a later finite write transaction.
    A route may use this only after proving it is unaffected by that revision. */
 uint32_t tribes_memory_code_completed_revision(uint64_t base);
+/* Three pinned mission-time MOV immediate fields. Native readers load the
+   actual guest fields; only their original MOVSS writers may update them,
+   after startup publication, on its owner, with real RW permissions. */
+int tribes_memory_write_mission_literal(uint64_t base,uint32_t pc,uint32_t address,uint32_t value);
 #endif

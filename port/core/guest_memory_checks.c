@@ -226,6 +226,31 @@ int tribes_memory_finish_code_revision(uint64_t base){
  if(ok){revision_finished=1;if(revision_font>=0)font_size_published|=1u<<revision_font;else completed_revisions++;}
  if(pthread_rwlock_unlock(&guard))abort();return ok;
 }
+int tribes_memory_write_mission_literal(uint64_t base,uint32_t pc,uint32_t address,uint32_t value){
+ static const uint32_t writers[]={0x10010f23,0x10010f50,0x10010f7d};
+ static const uint32_t fields[]={0x5edc8d,0x5edc94,0x5edc9b};
+ static const unsigned char displacements[]={0xcc,0xc4,0xc8};
+ if(!permissions||base!=guest_base)return 0;
+ unsigned index=0;while(index<3&&(writers[index]!=pc||fields[index]!=address))index++;
+ if(index==3||guest_size<UINT64_C(0x10010f85))return 0;
+ write_lock();
+ int ok=published&&revision_finished&&completed_revisions==33&&
+        pthread_equal(pthread_self(),revision_owner)&&
+        covered(published,published_count,pc,8)&&
+        covered(published,published_count,address-3,7)&&
+        (permissions[pc/4096]&1)&&(permissions[address/4096]&3)==3;
+ if(ok){
+  unsigned char instruction[]={0xf3,0x0f,0x11,0x05,0,0,0,0};
+  memcpy(instruction+4,&address,4);
+  const unsigned char *reader=(const unsigned char *)(guest_base+address-3);
+  ok=!memcmp((const void *)(guest_base+pc),instruction,8)&&
+     reader[0]==0xc7&&reader[1]==0x45&&reader[2]==displacements[index];
+  /* Preserve each conditional original store separately, including repeated
+     and zero/NaN bit patterns. No instruction opcode or native code changes. */
+  if(ok)memcpy((void *)(guest_base+address),&value,4);
+ }
+ if(pthread_rwlock_unlock(&guard))abort();return ok;
+}
 uint32_t tribes_memory_access_begin(const void *p,uint64_t size,uint32_t access){
  if(access<1||access>3)abort();if(!touches(p,size))return 0;read_lock();require(p,size,access);return 1;
 }

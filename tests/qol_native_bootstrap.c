@@ -178,6 +178,12 @@ void qol_collision_patch_write(_cpu *c,uint32_t pc,const void *pointer,uint32_t 
 int qol_font_size_route_ready(uint32_t index){
  assert(index<2);return tribes_memory_font_size_published(base,index);
 }
+void qol_mission_literal_write(_cpu *c,uint32_t pc,uint32_t address){
+ assert(c==&state&&c->_pointer_offset==base&&engine_entered&&stage==2);
+ uint32_t value;memcpy(&value,&c->_xmm[0],sizeof value);
+ assert(tribes_memory_write_mission_literal(base,pc,address,value));
+ fprintf(stderr,"Validated mission literal pc=0x%08x address=0x%08x bits=0x%08x\n",pc,address,value);
+}
 void qol_font_size_write(_cpu *c,uint32_t pc,const void *pointer,uint32_t size,uint64_t value){
  assert(c==&state&&c->_pointer_offset==base&&engine_entered&&stage==2&&renderer_batch_write_count==23);
  unsigned index=pc==font_size_writes[0].pc?0:1;const TribesCodeWrite *w=font_size_writes+index;

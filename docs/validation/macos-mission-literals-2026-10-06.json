@@ -1,0 +1,152 @@
+{
+  "date": "2026-10-06",
+  "scope": "Checked runtime-data relocation for three mission-time immediate fields; signed original offline UI and mission loader exercised. No rendered-map/gameplay/HD/authenticated-match/full-mobile acceptance.",
+  "sources_sha256": {
+    "scripts/test-mission-literals.py": "d8993fe5f75c0c8f79367b1509f15c9c63445334f9ffdf0fcaf15bfa81a8d549",
+    "scripts/mission_literal_runtime_inputs.py": "4bf524bd0998b3fd055ec86e336c9047faeda8523646e364176505ab8b7a3851",
+    "tests/mission_literal_test.c": "f7e3925dd23343c7762129e55cf1252ffcaa24b6d8ab3dd30e374766666a5928",
+    "port/core/guest_memory_checks.c": "ee00fcff6979a3f4480835115d10db5dddf5fabf089a04c80f4a55e0ea82ec7c",
+    "port/core/guest_memory_checks.h": "09f6bd6162b9cb989f6ab9ef5090597ddb4573a95301c6784d3940a9e65ef1df",
+    "tests/qol_native_bootstrap.c": "9f8802e6d591f9ebf654d009dad4c359b1cdfdcee1611d1c9e5ff930dbe3c49e",
+    "scripts/patch_runtime_inputs.py": "856befb1eb6dc2b54db7b47dd4a286317e1a4f5ad67947a14511e7d06690185b",
+    "config/runtime/external-memory-contracts.json": "f501d2cfceba73ccf2f8cd3d482947d7ab5d0a235e47b3fe8bffa6cd6f22a4f1"
+  },
+  "component": {
+    "normal": {
+      "passed": true,
+      "cases": 236,
+      "library_sha256": "e9cdc80cf31b9a912de01d1cf1b1f85d2793e7d23f8a135e257e2d0123e4d82b"
+    },
+    "checked": {
+      "passed": true,
+      "cases": 236,
+      "library_sha256": "d6567da262670eb49491f0a84f5cfa5a969ffe8e6bd06132a85a09f1f85ba5df"
+    },
+    "barrier": {
+      "passed": true,
+      "ordinary_write_faults": 3,
+      "output": "PASS: exact mission fields, owner/phase/permissions/opcodes; 3 ordinary-write faults; 12000 concurrent protected reads and repeated writes; primary phase66 retained\n"
+    },
+    "tsan": {
+      "passed": true,
+      "output": "PASS: exact mission fields, owner/phase/permissions/opcodes; 0 ordinary-write faults; 12000 concurrent protected reads and repeated writes; primary phase66 retained\n"
+    },
+    "receipt_sha256": "0ad32ff21789dcff9e861403a9bba1a9c59438954fb264017527d477832d0fd3"
+  },
+  "startup": {
+    "binary_sha256": "053bfae8e5268a09b07495146e32587c43c8a5cc07b66f6013795be0d8743d24",
+    "initialized": true,
+    "attach_returned": true,
+    "returned_stages": 2,
+    "native_patch_publication": true,
+    "independent_subpages_enabled": true,
+    "execution_timeout": true,
+    "playable": false
+  },
+  "signed_app": {
+    "pid": 83436,
+    "original_binary_sha256": "053bfae8e5268a09b07495146e32587c43c8a5cc07b66f6013795be0d8743d24",
+    "signed_engine_sha256": "b5dbea4255244a81e89bc12149f4464e5a79007316311858d2471f4c0f01cb2e",
+    "keyboard": "Original EULA, in-session tribespad alias, Launch/Training; original Alt+Enter yields on-screen1470x988 window.",
+    "mouse": "Native HID START at window fraction .872,.837 activates Charybdis mission loader.",
+    "writes": [
+      {
+        "pc": "0x10010f23",
+        "address": "0x5edc8d",
+        "xmm0_low": "0xbf13cd3a",
+        "before_literals_hex": "c745cc85eb11bfc745c485eb113fc745c885eb113f",
+        "frames": [
+          "qol_mission_literal_write",
+          "loc_10010F1E",
+          "tribes_enter",
+          "main",
+          "start"
+        ]
+      },
+      {
+        "pc": "0x10010f50",
+        "address": "0x5edc94",
+        "xmm0_low": "0x3f13cd3a",
+        "before_literals_hex": "c745cc3acd13bfc745c485eb113fc745c885eb113f",
+        "frames": [
+          "qol_mission_literal_write",
+          "loc_10010F4B",
+          "tribes_enter",
+          "main",
+          "start"
+        ]
+      },
+      {
+        "pc": "0x10010f7d",
+        "address": "0x5edc9b",
+        "xmm0_low": "0x3f13cd3a",
+        "before_literals_hex": "c745cc3acd13bfc745c43acd133fc745c885eb113f",
+        "frames": [
+          "qol_mission_literal_write",
+          "loc_10010F78",
+          "tribes_enter",
+          "main",
+          "start"
+        ]
+      }
+    ],
+    "final_literal_values": [
+      "0xbf13cd3a",
+      "0x3f13cd3a",
+      "0x3f13cd3a"
+    ],
+    "consumer_execution": "Native readers compared independently; actual engine reader entry was not traced.",
+    "next_stop": {
+      "kind": "unsupported original guest PC",
+      "pc": "0x10007d00",
+      "original_call": "0x60a9fa",
+      "return_pc": "0x60aa00",
+      "frames": [
+        "abort",
+        "tribes_lookup",
+        "tribes_dispatch",
+        "tribes_enter",
+        "main",
+        "start"
+      ]
+    },
+    "capture_scope": "Actual isolated offline app stop; selected-thread CPU/stack only, not a whole-memory snapshot.",
+    "ui": "Original STARTING MISSION dialog; cyan/contrast imperfections remain."
+  },
+  "next_route": {
+    "classification": "Reached virtual-method entry erroneously classified as data in original analysis seeds.",
+    "preparation_state": "relifted_not_compiled_or_linked",
+    "added_entries": 86,
+    "existing_blocks_changed": 0,
+    "instruction": {
+      "pc": "0x1000c597",
+      "bytes": "f30f51c9",
+      "instruction": "sqrtss xmm1,xmm1"
+    },
+    "action": "Prepare/link only86 added original entries; implement and validate exact SQRTSS xmm1,xmm1 using the real binary32 math adapter; relaunch Training."
+  },
+  "mobile": {
+    "passed": true,
+    "targets": [
+      {
+        "target": "arm64-apple-ios16",
+        "source_sha256": "ee00fcff6979a3f4480835115d10db5dddf5fabf089a04c80f4a55e0ea82ec7c",
+        "object_sha256": "96049a1e32bbde1920a21d652e6aa16feaca735ce3ee25e34c919001baf991a3"
+      },
+      {
+        "target": "arm64-apple-ios16-simulator",
+        "source_sha256": "ee00fcff6979a3f4480835115d10db5dddf5fabf089a04c80f4a55e0ea82ec7c",
+        "object_sha256": "e8b4a026fdf92a479f8c1145f2bfbe8c768d9d53866a5e275dc4f171ad9266f6"
+      }
+    ],
+    "scope": "Changed checked barrier compiles only; no Simulator/device game execution."
+  },
+  "cleanup": {
+    "autoexec_restored": true,
+    "original_audio": "default 106",
+    "restored_audio": "default 106",
+    "owned_processes_ended": true,
+    "simulators_booted": 0
+  },
+  "local_evidence": "generated/integration-review/mission-literals"
+}

@@ -517,6 +517,7 @@
     "tribes_memory_font_size_published",
     "tribes_memory_apply_code_write",
     "tribes_memory_finish_code_revision",
+    "tribes_memory_write_mission_literal",
     "tribes_memory_code_revision",
     "tribes_memory_vm_initialize",
     "tribes_memory_vm_change"
