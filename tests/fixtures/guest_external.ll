@@ -142,6 +142,28 @@ define i64 @external_f32_bad() {
  %v = call i64 @f32_mul(i64 1,i64 2)
  ret i64 %v
 }
+declare i32 @f32_sqrt(i64)
+declare i64 @f64_sqrt(i64)
+define i32 @external_f32_sqrt(i64 %a) {
+ %v = call i32 @f32_sqrt(i64 %a)
+ ret i32 %v
+}
+define i64 @external_f64_sqrt(i64 %a) {
+ %v = call i64 @f64_sqrt(i64 %a)
+ ret i64 %v
+}
+define i64 @external_sqrt_bad_result() {
+ %v = call i64 @f32_sqrt(i64 0)
+ ret i64 %v
+}
+define i64 @external_sqrt_bad_argument(ptr %p) {
+ %v = call i64 @f64_sqrt(ptr %p)
+ ret i64 %v
+}
+define i64 @external_sqrt_bad_cc() {
+ %v = call fastcc i64 @f64_sqrt(i64 0)
+ ret i64 %v
+}
 declare [2 x i64] @f32_to_extF80(i64)
 declare [2 x i64] @f64_to_extF80(i64)
 declare [2 x i64] @i64_to_extF80(i64)

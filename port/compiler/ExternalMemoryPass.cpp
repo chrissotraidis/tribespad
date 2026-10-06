@@ -615,6 +615,15 @@ struct ExternalMemoryPass : PassInfoMixin<ExternalMemoryPass>{
      Allowed=Allowed&&Call->getType()->isIntegerTy(Float32?32:64)&&Call->arg_size()==2;
      for(auto &A:Call->args())if(!A->getType()->isIntegerTy(64))Allowed=false;
     }
+    if(Name=="f32_sqrt"||Name=="f64_sqrt"){
+     // The same scalar-struct ABI, with exactly one by-value input. Reject
+     // mismatched declarations, varargs and calling conventions before entry.
+     Type *Result=Name=="f32_sqrt"?I32:I64;
+     Allowed=Allowed&&!Target->isVarArg()&&Target->arg_size()==1&&
+             Target->getReturnType()==Result&&Target->getFunctionType()->getParamType(0)==I64&&
+             Target->getCallingConv()==CallingConv::C&&Call->getCallingConv()==CallingConv::C&&
+             Call->getType()==Result&&Call->arg_size()==1&&Call->getArgOperand(0)->getType()==I64;
+    }
     bool ToExt=Name=="f32_to_extF80"||Name=="f64_to_extF80"||Name=="i64_to_extF80"||Name=="ui64_to_extF80";
     bool FromExt=Name=="extF80_to_f32"||Name=="extF80_to_f64";
     auto ExtValue=[](Type *T){auto *A=dyn_cast<ArrayType>(T);return A&&A->getNumElements()==2&&A->getElementType()->isIntegerTy(64);};

@@ -462,7 +462,9 @@
     "glNormalPointer",
     "glPushMatrix",
     "glPopMatrix",
-    "glScalef"
+    "glScalef",
+    "f32_sqrt",
+    "f64_sqrt"
   ],
   "range_checked": [
     "memcpy",
@@ -606,9 +608,13 @@
     "port/llasm-support/tribes_result.c": "983b85e4760dfbabccf08711b6007f8bdd0612f037164e6698aaeabf9b00bed5",
     "port/core/guest_system_query.c": "dee5fc63fd78f93e11ec874229dd011170f4cd82e2ebfe13e4f6b5de20457911",
     "port/core/guest_registry.c": "45974244392523af63c4647ee75781094ce92b192d2ab5d01aa5f7fec359f87f",
-    "port/core/guest_scheduling.c": "b65bd6dc622f06e331e970fffe58c9ce5baf92d542586aa4bd213b669d141a17"
+    "port/core/guest_scheduling.c": "b65bd6dc622f06e331e970fffe58c9ce5baf92d542586aa4bd213b669d141a17",
+    "ref/softfloat/SoftFloat-3e/source/f32_sqrt.c": "7e6c3c65e5cff08b05ddd34c6d29330f8fe30237a809086af394072488bf80fe",
+    "ref/softfloat/SoftFloat-3e/source/f64_sqrt.c": "181790dd6916704eb333c314384943fbe75f2174988d4e75b4f9f76f032d4664",
+    "ref/softfloat/SoftFloat-3e/source/s_approxRecipSqrt32_1.c": "2107412b2c94d0b19c5b584d645bbad2cd4f0c3596ab11c95d00a282903f1731",
+    "ref/softfloat/SoftFloat-3e/source/s_approxRecipSqrt_1Ks.c": "31b5b77d4e98b898c9cf661947c8530da00a5632350fe280249087e846be6f97"
   },
-  "scalar_softfloat_contract": "Only f32/f64 add/sub/mul/div: Apple ARM64 scalar-struct ABI i32 (i64,i64) for binary32 and i64 (i64,i64) for binary64. Arguments are values, never addresses. Reviewed dependencies use locals, bounded internal tables and host thread-local rounding/exception state. Exact library identity and header contents checked by sse_inputs.",
+  "scalar_softfloat_contract": "f32/f64 add/sub/mul/div and sqrt only: Apple ARM64 scalar-struct ABI i32 (i64,i64) / i64 (i64,i64) for binary operations; sqrt is i32 (i64) / i64 (i64), exact nonvariadic C declaration/call. Arguments are values, never addresses. Reviewed dependencies use locals, bounded internal tables and host thread-local rounding/exception state. Exact library identity and header contents checked by sse_inputs.",
   "barrier_asm_sources": [
     "port/llasm-support/tribes_sse.c"
   ],
