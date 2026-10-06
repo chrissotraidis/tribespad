@@ -62,6 +62,7 @@ static void rejected(unsigned mode,uint32_t key){
   if(mode==11){strcpy((char *)memory+0x3001,"ProcessorNameString");put32(0x4001,512);assert(tribes_memory_permissions_set(0x18000,4096,1));tribes_reg_get_value_a(base,key,0,0x3001,2,0,0x18000,0x4001);}
   if(mode==12){strcpy((char *)memory+0x18fff,"AB");assert(tribes_memory_permissions_set(0x19000,4096,0));tribes_reg_get_value_a(base,key,0,0x18fff,0,0,0,0);}
   if(mode==13){strcpy((char *)memory+0x3001,"MissingValue");put32(0x4001,4);assert(tribes_memory_permissions_set(0x18000,4096,1));tribes_reg_get_value_a(base,key,0,0x3001,0x20000010,0,0x18000,0x4001);}
+  if(mode==14||mode==15)open_key(mode==14?0x80000001:0x80000002,"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Fonts\\Unimplemented",1);
   _exit(90);
  }
  int status;assert(waitpid(child,&status,0)==child&&WIFSIGNALED(status)&&WTERMSIG(status)==SIGABRT);
@@ -110,6 +111,15 @@ int main(void){
   uint32_t args[]={0x80000002,0x1001,0,1,0x2001};put32(0x2001,0xa1b2c3d4);
   assert(call(encoding?1:4,args,5)==2&&read32(0x2001)==0xa1b2c3d4);
  }
+ /* Reached font-loader leaves are genuinely absent in both Apple profile
+    roots. Missing-key return must preserve the caller's handle and neighbors,
+    including the original read rights and ANSI/wide mixed-case lookup. */
+ const char *font_paths[]={"software\\Microsoft\\Windows NT\\CurrentVersion\\FontSubstitutes","SOFTWARE\\microsoft\\Windows NT\\CurrentVersion\\Fonts\\"};
+ for(unsigned root_index=0;root_index<2;root_index++)for(unsigned encoding=0;encoding<2;encoding++)for(unsigned i=0;i<2;i++){
+  if(encoding)wide(0x1001,font_paths[i]);else strcpy((char *)memory+0x1001,font_paths[i]);
+  memset(memory+0x2000,0xa1,6);uint32_t args[]={0x80000001+root_index,0x1001,0,0x20019,0x2001};
+  assert(call(encoding?1:4,args,5)==2&&read32(0x2001)==0xa1a1a1a1&&memory[0x2000]==0xa1&&memory[0x2005]==0xa1);
+ }
  strcpy((char *)memory+0x1001,"software\\microsoft\\accessibility");uint32_t ua[]={0x80000001,0x1001,0,0x20019,0x2001};put32(0x2001,0xabcdef);assert(call(4,ua,5)==2&&read32(0x2001)==0xabcdef);
  uint32_t bad=0;assert(call(3,&bad,1)==6);
  strcpy((char *)memory+0x3001,"CursorSize");uint32_t ga[]={0x80000001,0x1001,0x3001,0x20000010,0x4001,0x5001,0x4005};put32(0x4005,4);put32(0x5001,0xa5a5a5a5);assert(call(5,ga,7)==2&&!read32(0x5001));
@@ -123,7 +133,7 @@ int main(void){
  pthread_t threads[4];for(uintptr_t i=0;i<4;i++)assert(!pthread_create(&threads[i],NULL,worker,(void *)i));for(unsigned i=0;i<4;i++)assert(!pthread_join(threads[i],NULL));
 #if defined(CHECKED_TEST) && !defined(SIMULATOR_TEST)
  wide(0x1001,"HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0");
- for(unsigned i=0;i<14;i++)rejected(i,key);
+ for(unsigned i=0;i<16;i++)rejected(i,key);
 #endif
  close_key(key);printf("PASS: %u real CPU keys; brand=%s; frequency=%s; UTF-16 size/full/short buffers, emitted ABI, rights, stale handles, 128 concurrent lifetimes; guards when enabled\n",count,brand,hr||!hz?"2400 MHz compatibility fallback (not measured)":"host-reported");return 0;
 }

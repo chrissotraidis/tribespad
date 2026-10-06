@@ -45,7 +45,8 @@ for mode in (['checked'] if a.simulator else ['checked','normal','tsan']):
  (out/(mode+'-stdout.log')).write_text(run.stdout);(out/(mode+'-stderr.log')).write_text(run.stderr);assert run.returncode==0 and run.stdout.startswith('PASS:'),(mode,run.returncode,run.stdout,run.stderr)
  if mode=='checked' and not a.simulator:
   assert run.stderr.count('checked guest memory violation')==10,run.stderr
-  assert run.stderr.count('registry namespace not implemented')==1,run.stderr
+  assert run.stderr.count('registry namespace not implemented')==3,run.stderr
+  assert run.stderr.count('user registry namespace not implemented')==1,run.stderr
   assert run.stderr.count('guest pointer passed to host-only call: sysctlbyname')==1,run.stderr
   assert run.stderr.count('unverified call: sysctlbyname')==2,run.stderr
  if mode=='tsan':assert not run.stderr

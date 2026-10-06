@@ -54,6 +54,17 @@ static int absent_user_path(const char *path){
  static const char prefix[]="SOFTWARE\\MICROSOFT\\ACCESSIBILITY";
  size_t n=sizeof prefix-1;return !strncmp(path,prefix,n)&&(!path[n]||path[n]=='\\');
 }
+/* The original QoL font loader checks these two leaves in HKCU then HKLM.
+ * This file-based Apple profile has neither Windows font registrations nor
+ * font-substitution settings. Preserve its real missing-key fallback; do not
+ * synthesize Windows registrations from Apple fonts or allow other software
+ * keys to silently succeed/fail as if implemented. */
+static int absent_font_path(const char *path){
+ static const char *leaves[]={"SOFTWARE\\MICROSOFT\\WINDOWS NT\\CURRENTVERSION\\FONTS","SOFTWARE\\MICROSOFT\\WINDOWS NT\\CURRENTVERSION\\FONTSUBSTITUTES"};
+ size_t n=strlen(path);while(n&&path[n-1]=='\\')n--;
+ for(unsigned i=0;i<sizeof leaves/sizeof *leaves;i++)if(n==strlen(leaves[i])&&!memcmp(path,leaves[i],n))return 1;
+ return 0;
+}
 static Key *find(uint64_t base,uint32_t token){for(Key *k=keys;k;k=k->next)if(k->base==base&&k->token==token)return k;return NULL;}
 static unsigned cpu_count(void){long n=sysconf(_SC_NPROCESSORS_ONLN);if(n<1){fputs("TribesPad: registry CPU count unavailable\n",stderr);abort();}return n>32?32:(unsigned)n;}
 /* Returns -1 for a parent, a CPU index for a leaf, -2 for absent profile keys.
@@ -64,6 +75,7 @@ static int path_kind(const char *path){
     The original EULA-region query at0x5c3ca0 takes its normal missing-key
     fallback. No region, license acceptance or installer data is invented. */
  if(!strcmp(path,"SOFTWARE\\SIERRA ON-LINE\\TRIBES2"))return -2;
+ if(absent_font_path(path))return -2;
  const char *parents[]={"HARDWARE","HARDWARE\\DESCRIPTION","HARDWARE\\DESCRIPTION\\SYSTEM",cpu_path};
  for(unsigned i=0;i<sizeof parents/sizeof *parents;i++)if(!strcmp(path,parents[i]))return -1;
  if(strncmp(path,"HARDWARE\\",9)){fputs("TribesPad: registry namespace not implemented\n",stderr);abort();}
@@ -80,7 +92,7 @@ static uint32_t open_path(uint64_t base,uint32_t key,const char *sub,uint32_t op
  char path[PATH_BYTES];
  if(key==HKCU){
   if(!*sub){*output=HKCU;return 0;}
-  if(absent_user_path(sub))return 2;
+  if(absent_user_path(sub)||absent_font_path(sub))return 2;
   fputs("TribesPad: user registry namespace not implemented\n",stderr);abort();
  }
  pthread_mutex_lock(&mutex);Key *parent=find(base,key);

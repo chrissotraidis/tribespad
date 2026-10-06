@@ -605,7 +605,7 @@
     "ref/softfloat/SoftFloat-3e/source/8086/s_commonNaNToF64UI.c": "be1ecb12428036b40d9bb249231d94c1c7b362633c8e5b7cf1ff0ca1d160b945",
     "port/llasm-support/tribes_result.c": "983b85e4760dfbabccf08711b6007f8bdd0612f037164e6698aaeabf9b00bed5",
     "port/core/guest_system_query.c": "dee5fc63fd78f93e11ec874229dd011170f4cd82e2ebfe13e4f6b5de20457911",
-    "port/core/guest_registry.c": "ff051cc9e5b217abf755376730931744c6b31801bbbeacadfe045197243d11ce",
+    "port/core/guest_registry.c": "45974244392523af63c4647ee75781094ce92b192d2ab5d01aa5f7fec359f87f",
     "port/core/guest_scheduling.c": "b65bd6dc622f06e331e970fffe58c9ce5baf92d542586aa4bd213b669d141a17"
   },
   "scalar_softfloat_contract": "Only f32/f64 add/sub/mul/div: Apple ARM64 scalar-struct ABI i32 (i64,i64) for binary32 and i64 (i64,i64) for binary64. Arguments are values, never addresses. Reviewed dependencies use locals, bounded internal tables and host thread-local rounding/exception state. Exact library identity and header contents checked by sse_inputs.",

@@ -2,7 +2,7 @@
 The reference installation remains unchanged. No missing-provider fiction:
 the excluded library is physically absent from the mounted runtime profile.
 """
-import hashlib,json,pathlib,subprocess
+import hashlib,json,pathlib,subprocess,zipfile
 import pefile,struct
 R=pathlib.Path(__file__).resolve().parents[1];sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
 def prepare():
@@ -49,6 +49,21 @@ def prepare():
    digest=desired_digest
   assert target.is_file() and not target.is_symlink() and sha(target)==digest,(p,target)
   files.append(dict(path=str(rel),bytes=target.stat().st_size,sha256=digest))
+ # The original console/tree/inspector profiles request Windows Lucida
+ # Console, which is not shipped here. Use the selected archive's real Univers
+ # SDF for these GUI controls, just as the existing Arial profile uses it.
+ # Only font preferences change; original control code and commands remain.
+ archive=source/'base/scripts.vl2';entry='gui/guiProfiles.cs';font_archive=source/'base/t2csri.vl2'
+ with zipfile.ZipFile(archive) as z:original=z.read(entry)
+ with zipfile.ZipFile(font_archive) as z:assert 'fonts/Univers.sdft' in z.namelist()
+ assert original.count(b'fontType = "Lucida Console";')==4
+ desired=original.replace(b'fontType = "Lucida Console";',b'fontType = "Univers";')
+ rel='base/'+entry;target=out/rel;target.parent.mkdir(parents=True,exist_ok=True)
+ original_digest=hashlib.sha256(original).hexdigest();digest=hashlib.sha256(desired).hexdigest()
+ assert not target.is_symlink() and (not target.exists() or sha(target) in (original_digest,digest)),target
+ if not target.exists() or sha(target)!=digest:target.write_bytes(desired)
+ expected.add(rel);files.append(dict(path=rel,bytes=target.stat().st_size,sha256=digest))
+ overrides.append(dict(path=rel,source_archive='base/scripts.vl2',source_archive_sha256=sha(archive),source_entry=entry,source_sha256=original_digest,sha256=digest,font_archive='base/t2csri.vl2',font_archive_sha256=sha(font_archive),font_entry='fonts/Univers.sdft',replacements=4,reason='Console/tree/inspector GUI profiles use bundled Univers SDF instead of unavailable Windows Lucida Console.'))
  actual={str(p.relative_to(out)) for p in out.rglob('*') if p.is_file()}
  runtime_cache=sorted(actual-expected)
  # Original script compilation writes DSO caches into this writable clone.
@@ -60,7 +75,7 @@ def prepare():
   for parent in target.parents:
    assert not parent.is_symlink(),name
    if parent==out:break
- report=dict(runtime_cache=runtime_cache,profile='apple-bundled-fonts-no-discord-sdk',source=str(source.relative_to(R)),root=str(out.relative_to(R)),overrides=overrides,excluded=[dict(path=excluded,source_sha256=sha(sdk),reason='Optional Discord presence/invite SDK is not included in this Apple runtime profile.')],files=files,original_absence_branch=dict(module_sha256=sha(dll),instructions_hex=code[:13].hex(),verification='exact original bytes and decoded branch target; static zero-handle semantics',entry=0x10060d04,continuation=0x10060e35,script_sha256=sha(script)),generator_sha256=sha(pathlib.Path(__file__).resolve()),scope='Copy-on-write reference projection excluding the optional Discord Windows SDK and selecting the bundled Univers Arial fallback and skipping the optional AVI intro and using VSync instead of the optional software frame limiter with original client settings. Original reference preserved; no native provider, fake handle, success result, or core authentication/gameplay code replacement.')
+ report=dict(runtime_cache=runtime_cache,profile='apple-bundled-fonts-no-discord-sdk',source=str(source.relative_to(R)),root=str(out.relative_to(R)),overrides=overrides,excluded=[dict(path=excluded,source_sha256=sha(sdk),reason='Optional Discord presence/invite SDK is not included in this Apple runtime profile.')],files=files,original_absence_branch=dict(module_sha256=sha(dll),instructions_hex=code[:13].hex(),verification='exact original bytes and decoded branch target; static zero-handle semantics',entry=0x10060d04,continuation=0x10060e35,script_sha256=sha(script)),generator_sha256=sha(pathlib.Path(__file__).resolve()),scope='Copy-on-write reference projection excluding the optional Discord Windows SDK and selecting bundled Univers for the Arial fallback and console/tree/inspector GUI fonts and skipping the optional AVI intro and using VSync instead of the optional software frame limiter with original client settings. Original reference preserved; no native provider, fake handle, success result, or core authentication/gameplay code replacement.')
  manifest=R/'generated/apple-game-profile.json';manifest.write_text(json.dumps(report,indent=2)+'\n');return out,dict(manifest=str(manifest.relative_to(R)),sha256=sha(manifest),profile=report['profile'],excluded=report['excluded'])
 if __name__=='__main__':
  out,report=prepare();print(json.dumps(report,indent=2))

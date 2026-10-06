@@ -1,0 +1,213 @@
+{
+  "date": "2026-10-06",
+  "change": "Original font loader: real absence of the two Windows font-registration leaves in HKCU/HKLM. Other software keys remain guarded.",
+  "source_validation": {
+    "passed": true,
+    "checked_sha256": "1829bf995055b7fdcb5ceed3db26cd76a02ef4c3607aead15c4436be33529173",
+    "guarded_sha256": "3278f6e584c705e6693ccc791fa6045850fcdbf2d7af79eeb157f9d38faefb71",
+    "simulator": null,
+    "target": "arm64-apple-macos12",
+    "checked": {
+      "passed": true,
+      "binary_sha256": "793eb9dbbead12c76a626b7607ab48a19c24e7caa8987a26fcce3613a8da0002",
+      "stdout": "PASS: 8 real CPU keys; brand=Apple M2; frequency=2400 MHz compatibility fallback (not measured); UTF-16 size/full/short buffers, emitted ABI, rights, stale handles, 128 concurrent lifetimes; guards when enabled\n"
+    },
+    "normal": {
+      "passed": true,
+      "binary_sha256": "a4d6ecb3149622ef2008120417dc5213e7ca90e6d264aeb31501989e78b91bcc",
+      "stdout": "PASS: 8 real CPU keys; brand=Apple M2; frequency=2400 MHz compatibility fallback (not measured); UTF-16 size/full/short buffers, emitted ABI, rights, stale handles, 128 concurrent lifetimes; guards when enabled\n"
+    },
+    "tsan": {
+      "passed": true,
+      "binary_sha256": "4ad210d06bf7436630af3e4dfa88a73fefb2002485ee3dca0473bbf441b6112e",
+      "stdout": "PASS: 8 real CPU keys; brand=Apple M2; frequency=2400 MHz compatibility fallback (not measured); UTF-16 size/full/short buffers, emitted ABI, rights, stale handles, 128 concurrent lifetimes; guards when enabled\n"
+    },
+    "sources_sha256": {
+      "port/core/guest_registry.c": "45974244392523af63c4647ee75781094ce92b192d2ab5d01aa5f7fec359f87f",
+      "port/core/guest_heap.c": "791c26c9fd72984fc53f0f5f1447df5f1dd43e38af08a529b1efc0b3e65dd96b",
+      "tests/fixtures/registry_dispatch.c": "85bbdba2a60bf17d70e0a82848d5858fcd91bbbbef5dc0e92f3fe65c26d4001b",
+      "tests/fixtures/native_enter.ll": "78597a5a3030a7a7e0d6746358a6f3489ff8e8c395fba21383c200133f2f1f9d",
+      "generated/integration-review/registry/macos/bindings.ll": "d4054f6573b1a322ea1551d81dd9b7ac519bb52e540bfec0dba7c254d6fde970",
+      "generated/integration-review/registry/macos/sysctl-contracts.ll": "f95b6378b70eec08d12d0bccf0f6cdef6447a9fc71d4f68659c2e0b66ede8618",
+      "generated/integration-review/registry/macos/sysctl-wrong.ll": "d7313ea65c2c3d6baeb9aa7926c33387ce5bd90ab30bb58e17a05ff7aedd7958",
+      "tests/registry_test.c": "5468a8511798e7ad666e72dcda2d9a8c7d253078bb8cf68dc6bb8b4a60f6c842",
+      "port/core/guest_memory_checks.c": "1e9167f5c1e198c69cdaefb1d7bca0ee5a2be6c8566224cd753128febd2ffe20",
+      "port/core/guest_external_checks.c": "2ecaf0cf09462d76b293ab70860c9245ae46536959e81fd2549ad7675ad63523",
+      "port/core/guest_registry.h": "5f55ba325b70ecdc4797d27c113300bc794ee9966deb1c305f06cc263013b7ee",
+      "port/core/cpu_metadata_profile.h": "710c05b2e0777f227a7c466c5b4c20418afcf700e8471b21dccd9e01528c1fce",
+      "config/runtime/cpu-metadata.json": "64cc958d6556277c00fa4a86a902e5cc86e680d60e164ed256cb3b6df6480098",
+      "scripts/gen-cpu-metadata.py": "b50d71f8f36578f7376d73a073b2be924d623f855d7ae3901d9c4bf67eccc535",
+      "ref/downloads/libuv-cpu-reference/darwin.c": "91922cd990ece6110752745ac58d2df092aced5b376b562efc48214783ce050d",
+      "port/compiler/ExternalMemoryPass.cpp": "fb39fac89e253d45f248b8a222afdf8e4f67759bf4957dc8d7a9d1b736cd7aaf",
+      "config/runtime/external-memory-contracts.json": "327eeea99ab799702a9f05e3921c478be8e9eba0c1e7e7af9fb63cfaf76e654f",
+      "scripts/test-registry.py": "746b6c686b50f0b41fa60160480f100d0f464d05eb0fd99975bb6fcf5d1b1aca"
+    },
+    "scope": "Read-only HKLM hardware CPU metadata from host sysctl; missing frequency uses the declared 2400 MHz libuv Apple compatibility fallback, not a physical measurement. Checked emitted ABI, handles, buffer sizes and host-only read contracts. No persisted software registry, device execution or game acceptance."
+  },
+  "checked_fault_cases": 16,
+  "mobile_compilation": {
+    "passed": true,
+    "objects": [
+      {
+        "source": "port/core/guest_registry.c",
+        "sha256": "45974244392523af63c4647ee75781094ce92b192d2ab5d01aa5f7fec359f87f",
+        "target": "arm64-apple-ios16",
+        "exit": 0
+      },
+      {
+        "source": "tests/registry_test.c",
+        "sha256": "5468a8511798e7ad666e72dcda2d9a8c7d253078bb8cf68dc6bb8b4a60f6c842",
+        "target": "arm64-apple-ios16",
+        "exit": 0
+      },
+      {
+        "source": "port/core/guest_registry.c",
+        "sha256": "45974244392523af63c4647ee75781094ce92b192d2ab5d01aa5f7fec359f87f",
+        "target": "arm64-apple-ios16-simulator",
+        "exit": 0
+      },
+      {
+        "source": "tests/registry_test.c",
+        "sha256": "5468a8511798e7ad666e72dcda2d9a8c7d253078bb8cf68dc6bb8b4a60f6c842",
+        "target": "arm64-apple-ios16-simulator",
+        "exit": 0
+      }
+    ],
+    "scope": "Changed font-registry bridge and ABI tests compile for ARM64 iOS device and Simulator. No mobile execution or gameplay acceptance."
+  },
+  "full_engine": {
+    "state": "finished",
+    "binary_sha256": "2929101cb61cafe6481eeba358bbb48d6623f597cfcdbc5217d93fbde00ce2b0",
+    "engine_entered": true,
+    "attach_returned": true,
+    "native_patch_publication": true,
+    "execution_timeout": true,
+    "playable": false,
+    "result": {
+      "diagnostic_stop": true,
+      "kind": "execution_timeout",
+      "timeout_seconds": 60,
+      "attach_return": 1,
+      "stages_returned": 2,
+      "engine_entered": true,
+      "native_patch_publication": true
+    }
+  },
+  "signed_engine_sha256": "3404f92239b95df7aa2a489de1d21440a5c5e6cde4251a02ae84a569d9736ae7",
+  "actual_execution": {
+    "font_folder_fallback": "C:\\Windows\\Fonts",
+    "font_registry_queries_passed": true,
+    "next_import": "EnumFontFamiliesExA",
+    "original_call": "0x1003b8dd",
+    "return_pc": "0x1003b8e3",
+    "parameters": {
+      "memory_dc": "0xd1000001",
+      "logfont": "0x2fe4a8",
+      "face": "Lucida Console",
+      "charset": 0,
+      "pitch_and_family": 0,
+      "callback": "0x1003b470",
+      "context": "0x6044f880",
+      "flags": 0
+    },
+    "pids": [
+      64699,
+      65073
+    ],
+    "voice_capture": "Temporarily disabled through the original supported preference in an isolated offline profile; restored after testing. Normal online profile unchanged.",
+    "scope": "Selected-thread original CPU/stack capture, not a coherent whole-memory snapshot; app remains at original INITIALIZING, no menu/map/gameplay acceptance."
+  },
+  "mouse_test": {
+    "geometry": {
+      "pid": 65073,
+      "screens": [
+        {
+          "display": 1,
+          "scale": 1,
+          "bounds": [
+            0,
+            0,
+            2048,
+            1332
+          ]
+        }
+      ],
+      "windows": [
+        {
+          "id": 13269,
+          "bounds": [
+            0,
+            422,
+            2048,
+            32
+          ]
+        },
+        {
+          "id": 13266,
+          "bounds": [
+            0,
+            422,
+            2048,
+            1286
+          ]
+        }
+      ]
+    },
+    "accessibility_move": "AXPosition returned -25200 despite trusted access; window was not moved.",
+    "native_click": "pid=65073 window=13266 bounds=0,422,2048,1286 click=1226.75,1351.78",
+    "visible_result": "ACCEPT highlighted, dialog stayed open. Tab/Return advanced to the same font-enumeration boundary. Mouse activation and gameplay controls remain unaccepted."
+  },
+  "independent_microphone_probe": {
+    "state": "native-open-wait",
+    "exit": -9,
+    "stdout": "BEFORE_OPEN default recording, NULL spec\n",
+    "stderr": "",
+    "scope": "Independent real native SDL/CoreAudio worker-thread default-recording initialization with main-thread event pumping without original engine/OpenAL; no guest ABI or gameplay acceptance. Samples remain private and are not recorded."
+  },
+  "next_action": "Audit and validate the existing f64_sqrt native ABI/SoftFloat dependencies for the reached SQRTSD helper, preserve checked memory and exact ABI gates, then rebuild/launch toward original menu/training map. Keep the validated bundled GUI font preferences. Investigate recording open and window placement separately.",
+  "cleanup": "Owned apps/debuggers/builds ended, diagnostic voice preference restored; no simulator booted. Audio output restored by launch helper.",
+  "bundled_gui_font_profile": {
+    "override": {
+      "path": "base/gui/guiProfiles.cs",
+      "source_archive": "base/scripts.vl2",
+      "source_archive_sha256": "610463dbac0cd5e48f7cff775a6f04b23d2e35adc2779e8a00c127b86c530490",
+      "source_entry": "gui/guiProfiles.cs",
+      "source_sha256": "3beb243c8a0474d65ed410567c6b7ac50cfd8088c054e5861ec3043763da42f7",
+      "sha256": "a6584b24d82d486401af79c8743b810b89a576ab6151a396758ed312c41c8539",
+      "font_archive": "base/t2csri.vl2",
+      "font_archive_sha256": "52762570008d4c3210212867bd9ca92c82b8fa3fc94f3f84736a6058bd53e64e",
+      "font_entry": "fonts/Univers.sdft",
+      "replacements": 4,
+      "reason": "Console/tree/inspector GUI profiles use bundled Univers SDF instead of unavailable Windows Lucida Console."
+    },
+    "generator_sha256": "a532d0d2cea1b8846e93a599a7850d6db0b61ea21e235e57c28421528fccf66b",
+    "actual_signed_pid": 65816,
+    "signed_engine_sha256": "3404f92239b95df7aa2a489de1d21440a5c5e6cde4251a02ae84a569d9736ae7",
+    "result": "Original startup advances using real bundled Univers SDF, without entering the prior Windows-font lookup/enumeration route. The GDI font APIs remain guarded; no fabricated service success.",
+    "next_stop": {
+      "native_frames": [
+        "abort",
+        "fault",
+        "tribes_memory_external_gate",
+        "tb_sse_sqrt64",
+        "sqrt64",
+        "tb_sse_sqrtsd",
+        "loc_1000C6E3",
+        "tribes_enter",
+        "main",
+        "start"
+      ],
+      "original_instruction": "0x1000c6e3",
+      "bytes": "f20f51c0",
+      "mnemonic": "SQRTSD xmm0,xmm0",
+      "reason": "unverified call: f64_sqrt",
+      "scope": "The existing SQRTSD helper reaches its SoftFloat sqrt call, which the current checked external-call policy rejects before execution."
+    },
+    "canonical_signed_app": {
+      "original_binary_sha256": "2929101cb61cafe6481eeba358bbb48d6623f597cfcdbc5217d93fbde00ce2b0",
+      "signed_engine_sha256": "3404f92239b95df7aa2a489de1d21440a5c5e6cde4251a02ae84a569d9736ae7",
+      "game_profile_manifest_sha256": "40828dc74a350273c5e3547553465684c514cd64586dc6eaac1200346283cf8b"
+    },
+    "acceptance": "Original startup progression only; no menu, map or gameplay acceptance."
+  }
+}
