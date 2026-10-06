@@ -253,6 +253,8 @@ original:
  dll=translate_compression_tzcnt(dll,R/'ref/qol/IFC22.dll')
  dll=translate_math_mxcsr_save(dll,R/'ref/qol/IFC22.dll')
  dll=translate_math_model(dll,R/'ref/qol/IFC22.dll')
+ from apple_render_dimensions import prepare as prepare_apple_render_dimensions
+ dll,apple_render_dimensions_metadata=prepare_apple_render_dimensions(dll)
  (out/'qol-patched.ll').write_text(dll)
  spec=importlib.util.spec_from_file_location('patch_va',R/'scripts/prepare-va-model.py');va=importlib.util.module_from_spec(spec);spec.loader.exec_module(va)
  entries=[]
@@ -368,6 +370,7 @@ define hidden fastcc void @tbimp_FlushInstructionCache(ptr %cpu) {
  metadata['late_patch']=late_metadata
  metadata['mission_literals']=mission_literal_metadata
  metadata['mission_entry']=mission_entry_metadata
+ metadata['apple_render_dimensions']=apple_render_dimensions_metadata
  metadata['startup_input_code']=input_variant_metadata
  metadata['library_patch']=library_metadata
  metadata['followup_patch']=followup_metadata

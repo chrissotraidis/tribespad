@@ -1015,6 +1015,18 @@
     "returns": false,
     "helper_returns": "void"
   },
+  "SystemTimeToFileTime": {
+    "helper": "tribes_system_time_to_file_time",
+    "arguments": 2,
+    "guest_base": true,
+    "returns": true
+  },
+  "FileTimeToSystemTime": {
+    "helper": "tribes_file_time_to_system_time",
+    "arguments": 2,
+    "guest_base": true,
+    "returns": true
+  },
   "GetTimeFormatEx": {
     "helper": "tribes_get_time_format_ex",
     "arguments": 6,

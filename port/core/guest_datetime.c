@@ -44,6 +44,36 @@ void tribes_get_local_time(uint64_t base,uint32_t output){
  if(!get_time(base,0,&stamp,0))unsupported("native local clock fields");
  memcpy((void *)(uintptr_t)(base+output),&stamp,sizeof stamp);
 }
+/* FILETIME is UTC, in 100 ns units since 1601-01-01. These conversions do
+   not apply the host timezone. Stage inputs before writing, including overlap.
+   https://learn.microsoft.com/en-us/windows/win32/api/timezoneapi/nf-timezoneapi-systemtimetofiletime
+   https://learn.microsoft.com/en-us/windows/win32/api/timezoneapi/nf-timezoneapi-filetimetosystemtime */
+static uint64_t days_before_year(unsigned year){
+ uint64_t y=year-1;return (y-1600)*365+(y/4-400)-(y/100-16)+(y/400-4);
+}
+uint32_t tribes_system_time_to_file_time(uint64_t base,uint32_t input,uint32_t output){
+ GuestTime stamp;
+ if(!range(base,input,16)||!range(base,output,8)||!get_time(base,input,&stamp,1)||stamp.hour>=24||stamp.minute>=60||stamp.second>=60||stamp.millisecond>=1000){tribes_set_last_error(87);return 0;}
+ static const unsigned months[]={0,31,59,90,120,151,181,212,243,273,304,334};
+ unsigned leap=stamp.year%4==0&&(stamp.year%100||stamp.year%400==0);
+ uint64_t days=days_before_year(stamp.year)+months[stamp.month-1]+(stamp.month>2?leap:0)+stamp.day-1;
+ uint64_t ticks=(((days*24+stamp.hour)*60+stamp.minute)*60+stamp.second)*UINT64_C(10000000)+stamp.millisecond*UINT64_C(10000);
+ memcpy((void *)(uintptr_t)(base+output),&ticks,8);return 1;
+}
+uint32_t tribes_file_time_to_system_time(uint64_t base,uint32_t input,uint32_t output){
+ if(!range(base,input,8)||!range(base,output,16)){tribes_set_last_error(87);return 0;}
+ uint64_t ticks;memcpy(&ticks,(void *)(uintptr_t)(base+input),8);
+ if(ticks>=UINT64_C(0x8000000000000000)){tribes_set_last_error(87);return 0;}
+ uint64_t milliseconds=ticks/10000,days=milliseconds/86400000,clock=milliseconds%86400000;
+ unsigned low=1601,high=30829;
+ while(low+1<high){unsigned year=(low+high)/2;if(days_before_year(year)<=days)low=year;else high=year;}
+ unsigned day=(unsigned)(days-days_before_year(low)),month=1;
+ static const unsigned months[]={31,28,31,30,31,30,31,31,30,31,30,31};
+ unsigned leap=low%4==0&&(low%100||low%400==0);
+ while(month<12){unsigned length=months[month-1]+(month==2?leap:0);if(day<length)break;day-=length;month++;}
+ GuestTime stamp={(uint16_t)low,(uint16_t)month,(uint16_t)((days+1)%7),(uint16_t)(day+1),(uint16_t)(clock/3600000),(uint16_t)(clock/60000%60),(uint16_t)(clock/1000%60),(uint16_t)(clock%1000)};
+ memcpy((void *)(uintptr_t)(base+output),&stamp,16);return 1;
+}
 struct Text {uint16_t *s;unsigned n,capacity;};
 static void append(struct Text *b,uint16_t ch){if(b->n==b->capacity){if(b->capacity==1048576)unsupported("expanded output exceeds bounded profile");unsigned capacity=b->capacity*2;uint16_t *s=realloc(b->s,2ull*capacity);if(!s)unsupported("native output allocation");b->s=s;b->capacity=capacity;}b->s[b->n++]=ch;}
 static void text(struct Text *b,uint32_t offset){const uint16_t *s=dt_strings+offset;while(*s)append(b,*s++);}
