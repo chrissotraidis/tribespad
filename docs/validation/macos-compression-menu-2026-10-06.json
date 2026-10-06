@@ -1,0 +1,204 @@
+{
+  "date": "2026-10-06",
+  "scope": "Sixteen original compression TZCNT32 translations, shipped bold font preferences and actual signed offline menu/training startup. No rendered map/gameplay/HD/authenticated-community/full-mobile acceptance.",
+  "sources_sha256": {
+    "port/llasm-support/tribes_scan.c": "591d271fb1450cda5271ac571bc22f288629bdbc8c74df2f4beb9256b9a26d00",
+    "scripts/patch_runtime_inputs.py": "43532b986962a4817a891ade17499d4cb88f02e26718d4d7631c925ceb519c43",
+    "scripts/test-compression-tzcnt.py": "50e91d4e5e23a63691aa94e38faa5441ccc13c169300d6ba70e3d83c8ffb4ec5",
+    "tests/compression_tzcnt_threads_test.c": "b5887c9b9bc459d1d0461ea3543952151ff2784c6e009ae8b4fc3c386950aaa0",
+    "port/llasm-support/llasm_cpu.h": "8c3cd17ee706cd3768d793c21d4f553b981cb45d3845dd9a93793d16f1bcc356",
+    "scripts/apple_game_profile.py": "10cca9a00594bee858646bd1de829f0656c0eda2ee57debc8581e10311d48e2f"
+  },
+  "component": {
+    "receipt_sha256": "ef650b50de197c0a09231db55e357d65329f9d663decaa15b714c99bbf7ba1ad",
+    "original_sites": 16,
+    "normal": {
+      "passed": true,
+      "cases": 32640,
+      "zero_input_cases": 320,
+      "library_sha256": "b95817f2807127b370b494348bb5f1265dbc7e074b003b1e4529ca6f45481e7c"
+    },
+    "checked": {
+      "passed": true,
+      "cases": 32640,
+      "zero_input_cases": 320,
+      "library_sha256": "65b0013c0b5ed202c18f8906dde174f8d7cd03d1b2a44894d3a510cc115b445b"
+    },
+    "source_rejections": 4,
+    "tsan": {
+      "passed": true,
+      "binary_sha256": "ca2f78787e9bf916ef5770729d3db1fdb62873b930618d65634e80ef74bf200c",
+      "output": "PASS: 65536 concurrent TZCNT translations, eight private CPUs, zero inputs, all register aliases and complete CPU/defined-flags preservation under ThreadSanitizer\n"
+    },
+    "limits": "Register32 TZCNT only; software Unicorn x86 reference, defined CF/ZF, undefined flags retained; no general BMI/16-bit/memory forms."
+  },
+  "register_bit_regression": {
+    "receipt_sha256": "cb4fbc866248274cc8be617e04e99fc2097a591e6c8c3da81e3f813994b8b5c0",
+    "cases": 242880,
+    "original_sites": 32,
+    "passed": true
+  },
+  "bold_profile": {
+    "receipt_sha256": "dc5671fc75512aa5f46f0bd18ba45e06b29e6753c9a5018d85a7afe5769750b4",
+    "overrides": [
+      {
+        "path": "base/scripts/TR2BonusHud.cs",
+        "source_archive": "base/TR2final105-client.vl2",
+        "source_archive_sha256": "0a389be1d82abaf7f6f77c3a555e85a07648f14d996125a576c51bf7b299175b",
+        "source_entry": "scripts/TR2BonusHud.cs",
+        "source_sha256": "268e870d58a60b06a3983566a0e17b8bc5b0ce81cd3271e060464ed4e310524a",
+        "sha256": "31c733fd873f10635026c408d821bad42b91ed9057347a1142a5029456b3f48f",
+        "font_archive": "base/t2csri.vl2",
+        "font_archive_sha256": "52762570008d4c3210212867bd9ca92c82b8fa3fc94f3f84736a6058bd53e64e",
+        "font_entry": "fonts/Univers Bold.sdft",
+        "replacements": 2,
+        "reason": "Original font preferences use shipped Univers Bold SDF instead of unavailable Windows Verdana Bold; original controls and commands preserved."
+      },
+      {
+        "path": "base/scripts/EditorProfiles.cs",
+        "source_archive": "base/scripts.vl2",
+        "source_archive_sha256": "610463dbac0cd5e48f7cff775a6f04b23d2e35adc2779e8a00c127b86c530490",
+        "source_entry": "scripts/EditorProfiles.cs",
+        "source_sha256": "9192cd9ac3b1c5cec1373856a53b3c926b4ed1067db7e26fd81099919ea943ca",
+        "sha256": "8cdc347b208f8c62ddc2c863a5fe7d7ab89dc0f561ea4fc6b8af2b5d8e8891ee",
+        "font_archive": "base/t2csri.vl2",
+        "font_archive_sha256": "52762570008d4c3210212867bd9ca92c82b8fa3fc94f3f84736a6058bd53e64e",
+        "font_entry": "fonts/Univers Bold.sdft",
+        "replacements": 7,
+        "reason": "Original font preferences use shipped Univers Bold SDF instead of unavailable Windows Arial Bold; original controls and commands preserved."
+      },
+      {
+        "path": "base/scripts/aiDebug.cs",
+        "source_archive": "base/scripts.vl2",
+        "source_archive_sha256": "610463dbac0cd5e48f7cff775a6f04b23d2e35adc2779e8a00c127b86c530490",
+        "source_entry": "scripts/aiDebug.cs",
+        "source_sha256": "ff91ccb7fdf51dac151aedebf94efd63b58ece8cf510a23bd4ff9adc9ca29164",
+        "sha256": "4c3c00851cef5f9dbf8f0ed8282b69464a19cdac48ca2633f4f66ffaf5f88da4",
+        "font_archive": "base/t2csri.vl2",
+        "font_archive_sha256": "52762570008d4c3210212867bd9ca92c82b8fa3fc94f3f84736a6058bd53e64e",
+        "font_entry": "fonts/Univers Bold.sdft",
+        "replacements": 1,
+        "reason": "Original font preferences use shipped Univers Bold SDF instead of unavailable Windows Arial Bold; original controls and commands preserved."
+      },
+      {
+        "path": "base/scripts/commanderProfiles.cs",
+        "source_archive": "base/scripts.vl2",
+        "source_archive_sha256": "610463dbac0cd5e48f7cff775a6f04b23d2e35adc2779e8a00c127b86c530490",
+        "source_entry": "scripts/commanderProfiles.cs",
+        "source_sha256": "26928ffc96ad1d9e2f53196adcaa6d50d373907ba9e30ba8d3691ef007da84ef",
+        "sha256": "72b5209565db7e55c2c04e41fb5de8bbe6b12ac3e893a9408978d0de34d70723",
+        "font_archive": "base/t2csri.vl2",
+        "font_archive_sha256": "52762570008d4c3210212867bd9ca92c82b8fa3fc94f3f84736a6058bd53e64e",
+        "font_entry": "fonts/Univers Bold.sdft",
+        "replacements": 1,
+        "reason": "Original font preferences use shipped Univers Bold SDF instead of unavailable Windows Arial Bold; original controls and commands preserved."
+      }
+    ],
+    "exact_original_script_reversal": true
+  },
+  "full_engine": {
+    "binary_sha256": "644bbd55bae1c2b57f4c8adca290f2cd519eae545937acab5366b3f0f1536747",
+    "initialized": true,
+    "independent_subpages_enabled": true,
+    "result": {
+      "diagnostic_stop": true,
+      "kind": "execution_timeout",
+      "timeout_seconds": 60,
+      "attach_return": 1,
+      "stages_returned": 2,
+      "engine_entered": true,
+      "native_patch_publication": true
+    },
+    "playable": false
+  },
+  "signed_app": {
+    "original_binary_sha256": "644bbd55bae1c2b57f4c8adca290f2cd519eae545937acab5366b3f0f1536747",
+    "signed_engine_sha256": "0de13d80f3527a8778773b473e079d7f11f85a37e038020f69f9621de68a1fd8",
+    "strict_signature_verified": true,
+    "receipt_sha256": "827cfb1a5b37dcd41f64468ceff8f3fdd4184741812fee1b231238aae17d47bd"
+  },
+  "original_execution": {
+    "pids": [
+      78135,
+      78526,
+      78862
+    ],
+    "first_native_tzcnt": {
+      "cpu_address": "0x10c740c70",
+      "destination": 0,
+      "source": "0x4000000",
+      "registers": [
+        67108864,
+        1619043203,
+        4294967295,
+        1619043200,
+        3113012,
+        128,
+        0,
+        1,
+        518
+      ],
+      "frames": [
+        "tb_tzcnt32",
+        "loc_100C2FDD",
+        "tribes_enter",
+        "main",
+        "start"
+      ],
+      "scope": "First actual entry into native TZCNT helper; selected-thread CPU only."
+    },
+    "intermediate_font_faces": [
+      "Verdana Bold",
+      "Arial Bold"
+    ],
+    "final_menu_pid": 78862,
+    "observed": [
+      "Original LAN/Warrior Setup and New Warrior dialog",
+      "Native Tab, typed local name tribespad and Return create local warrior with textured model",
+      "Native Down/Return opens original Training; Charybdis mission list/briefing/planet render",
+      "Original Alt+Enter toggles to windowed bounds289,46,1470,988",
+      "Native HID mouse START activates original STARTING MISSION dialog"
+    ],
+    "controls_limits": "Per-process mouse injection only rolled over START; native HID click in windowed mode activated it. Fullscreen starts clipped; UI cyan/contrast rendering remains imperfect. Gameplay controls untested.",
+    "next_stop": {
+      "kind": "checked published-code store rejection",
+      "instruction_pc": "0x10010f23",
+      "bytes_hex": "f30f11058ddc5e00",
+      "mnemonic": "MOVSS [0x5edc8d],XMM0",
+      "address": "0x5edc8d",
+      "size": 4,
+      "xmm0_low_bits": "0xbf13cd3a",
+      "virtual_protect_result": 1,
+      "adjacent_unexecuted_store_sites": [
+        "0x10010f50 -> 0x5edc94",
+        "0x10010f7d -> 0x5edc9b"
+      ]
+    },
+    "selected_thread_cpu_only": true,
+    "stop_receipt_sha256": "2ce8872069bd876ac94abc01e29036442ccccb860c5c22b028e00536bbab05c9",
+    "cpu_sha256": "98cbda7739f0005b400fab7c465d77891c50c5780ccc170d7554516dcc322934",
+    "screenshots_sha256": {
+      "after-bold.png": "05c5c2cc23d9c38c5504ec3f57b13b74ec91c966fcccca82f5307c79f2efce75",
+      "warrior-name.png": "1c85317b68afe064bf45ec331b2b92a50f9fdff2bd0ede1da15cd73ae72f20a4",
+      "warrior-done.png": "c1d93721feeaf89c7fbb679e1da0f4ab80d1f27aa12a55c0d31df25842862bde",
+      "training-menu.png": "dc40e1ce22808ecc95f9a34e1e0bbe7c370cb020be7a19fa121e87803bfd6fb1",
+      "windowed-training.png": "cdb7fabde1be87121a534d162edf5fe90d18294004edb68ab75b11f77585e344",
+      "hid-click-start.png": "edde03bd8edb412daeabedc36f3ef19a569be581110fa00114ed6d386fd1ad7e",
+      "stopped.png": "edde03bd8edb412daeabedc36f3ef19a569be581110fa00114ed6d386fd1ad7e"
+    },
+    "diagnostic_time_limit": "First observer expired; debugger detached with SIGTERM unconsumed. Same owned app was reattached and then exercised to its actual checked mission-loader stop.",
+    "diagnostic_preference_restored": true,
+    "audio_restored": true,
+    "owned_processes_ended": true
+  },
+  "mobile_compilation": {
+    "passed": true,
+    "receipt_sha256": "7927935571e4abbe2fc3e4a696bdf2d37c5c359584a3116697f238be056c0550",
+    "targets": [
+      "arm64-apple-ios16",
+      "arm64-apple-ios16-simulator"
+    ],
+    "scope": "Source compilation only; no full mobile link or simulator/device execution."
+  },
+  "next_action": "Implement the bounded three original float-immediate updates at0x5edc8d/94/9b with source-bound checked native AOT semantics; inspect caller/repetition and validate actual values before publication. Relaunch windowed, use native HID click on Training START, and continue original map loading. Preserve guards and existing33 finite revisions."
+}

@@ -69,6 +69,25 @@ def prepare():
  if not target.exists() or sha(target)!=digest:target.write_bytes(desired)
  expected.add(rel);files.append(dict(path=rel,bytes=target.stat().st_size,sha256=digest))
  overrides.append(dict(path=rel,source_archive='base/scripts.vl2',source_archive_sha256=sha(archive),source_entry=entry,source_sha256=original_digest,sha256=digest,font_archive='base/t2csri.vl2',font_archive_sha256=sha(font_archive),font_entry='fonts/Univers.sdft',replacements=sum(faces.values()),replacements_by_face={face.decode():count for face,count in faces.items()},reason='Original GUI font preferences use bundled Univers SDF instead of unavailable Windows Lucida Console, Times and Verdana.'))
+ # Startup also creates TR2/editor/commander profiles with unavailable bold
+ # Windows faces. Use the shipped bold SDF for this finite original group.
+ with zipfile.ZipFile(font_archive) as z:assert 'fonts/Univers Bold.sdft' in z.namelist()
+ for archive_name,entry,face,count in [
+  ('TR2final105-client.vl2','scripts/TR2BonusHud.cs','Verdana Bold',2),
+  ('scripts.vl2','scripts/EditorProfiles.cs','Arial Bold',7),
+  ('scripts.vl2','scripts/aiDebug.cs','Arial Bold',1),
+  ('scripts.vl2','scripts/commanderProfiles.cs','Arial Bold',1),
+ ]:
+  archive=source/'base'/archive_name
+  with zipfile.ZipFile(archive) as z:original=z.read(entry)
+  preference=('fontType = "'+face+'";').encode();assert original.count(preference)==count
+  desired=original.replace(preference,b'fontType = "Univers Bold";')
+  rel='base/'+entry;target=out/rel;target.parent.mkdir(parents=True,exist_ok=True)
+  original_digest=hashlib.sha256(original).hexdigest();digest=hashlib.sha256(desired).hexdigest()
+  assert not target.is_symlink() and (not target.exists() or sha(target) in (original_digest,digest)),target
+  if not target.exists() or sha(target)!=digest:target.write_bytes(desired)
+  expected.add(rel);files.append(dict(path=rel,bytes=target.stat().st_size,sha256=digest))
+  overrides.append(dict(path=rel,source_archive='base/'+archive_name,source_archive_sha256=sha(archive),source_entry=entry,source_sha256=original_digest,sha256=digest,font_archive='base/t2csri.vl2',font_archive_sha256=sha(font_archive),font_entry='fonts/Univers Bold.sdft',replacements=count,reason='Original font preferences use shipped Univers Bold SDF instead of unavailable Windows '+face+'; original controls and commands preserved.'))
  actual={str(p.relative_to(out)) for p in out.rglob('*') if p.is_file()}
  runtime_cache=sorted(actual-expected)
  # Original script compilation writes DSO caches into this writable clone.
