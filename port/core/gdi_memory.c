@@ -1,15 +1,18 @@
 /* Actual memory DCs and monochrome bitmap storage for Tribes' font-cache setup.
    https://learn.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-createcompatibledc
    https://learn.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-createcompatiblebitmap
-   Fonts, drawing, window/screen DCs and color DIBs are separate unimplemented gates. */
+   Original raster fonts use private CoreText storage; arbitrary drawing,
+   window/screen DCs and color DIBs remain separate gates. */
 #include "gdi_memory.h"
 #include "guest_heap.h"
+#include "guest_memory_checks.h"
+#include "../apple/font.h"
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-enum { DC=1,BITMAP=2,BRUSH=3 };
-typedef struct Object { uint64_t base;uint32_t handle,kind,selected,stock,width,height,stride,brush,style,color;unsigned char *pixels;struct Object *next; } Object;
+enum { DC=1,BITMAP=2,BRUSH=3,FONT=4 };
+typedef struct Object { uint64_t base;uint32_t handle,kind,selected,stock,width,height,stride,brush,style,color,font,bk_color,text_color;void *native_font;unsigned char *pixels;struct Object *next; } Object;
 typedef struct Owned { uint64_t base;uint32_t handle;struct Owned *next; } Owned;
 static Object *objects;
 static uint32_t next_handle=0xd1000001;
@@ -21,10 +24,11 @@ static Object *find(uint64_t base,uint32_t handle,int kind) {
     return NULL;
 }
 static void remove_object(Object *o) {
-    Object **p=&objects;while(*p!=o)p=&(*p)->next;*p=o->next;free(o->pixels);free(o);
+    Object **p=&objects;while(*p!=o)p=&(*p)->next;*p=o->next;if(o->native_font)tb_apple_font_release(o->native_font);free(o->pixels);free(o);
 }
 static void destroy_dc(Object *dc) {
     Object *selected=find(dc->base,dc->selected,BITMAP);if(selected)selected->selected=0;
+    Object *font=find(dc->base,dc->font,FONT);if(font)font->selected--;
     Object *stock=find(dc->base,dc->stock,BITMAP);if(stock)remove_object(stock);remove_object(dc);
 }
 static void release_owned(void *data) {
@@ -68,7 +72,7 @@ uint32_t tribes_create_memory_dc(uint64_t base,uint32_t compatible) {
     Object *dc=allocate(base,DC),*stock=dc?bitmap(base,1,1):NULL;
     if(!stock){if(dc)remove_object(dc);pthread_mutex_unlock(&lock);free(owned);return 0;}
     Object *brush=stock_brush(base,0);if(!brush){remove_object(stock);remove_object(dc);pthread_mutex_unlock(&lock);free(owned);return 0;}dc->brush=brush->handle;
-    dc->selected=dc->stock=stock->handle;stock->selected=dc->handle;uint32_t result=dc->handle;
+    dc->bk_color=0xffffff;dc->selected=dc->stock=stock->handle;stock->selected=dc->handle;uint32_t result=dc->handle;
     if(owned){owned->base=base;owned->handle=result;owned->next=pthread_getspecific(owner_key);if(pthread_setspecific(owner_key,owned))abort();}
     pthread_mutex_unlock(&lock);return result;
 }
@@ -79,6 +83,7 @@ uint32_t tribes_create_compatible_bitmap(uint64_t base,uint32_t handle,uint32_t 
 uint32_t tribes_select_gdi_object(uint64_t base,uint32_t handle,uint32_t object) {
     pthread_mutex_lock(&lock);Object *dc=find(base,handle,DC),*o=find(base,object,0);
     if(dc&&o&&o->kind==BRUSH){uint32_t old=dc->brush;dc->brush=object;pthread_mutex_unlock(&lock);return old;}
+    if(dc&&o&&o->kind==FONT){uint32_t old=dc->font;Object *previous=find(base,old,FONT);if(previous)previous->selected--;dc->font=object;o->selected++;pthread_mutex_unlock(&lock);return old;}
     if(!dc||!o||o->kind!=BITMAP||(o->selected&&o->selected!=handle)){pthread_mutex_unlock(&lock);return 0;}
     uint32_t old=dc->selected;Object *previous=find(base,old,BITMAP);if(previous)previous->selected=0;o->selected=handle;dc->selected=object;
     pthread_mutex_unlock(&lock);return old;
@@ -99,4 +104,64 @@ int tribes_bitmap_snapshot(uint64_t base,uint32_t handle,uint32_t *w,uint32_t *h
     if(!w||!h||!stride||!bits||!pixels)return 0;pthread_mutex_lock(&lock);Object *o=find(base,handle,BITMAP);
     if(!o||capacity<(size_t)o->stride*o->height){pthread_mutex_unlock(&lock);return 0;}
     *w=o->width;*h=o->height;*stride=o->stride;*bits=1;memcpy(pixels,o->pixels,(size_t)o->stride*o->height);pthread_mutex_unlock(&lock);return 1;
+}
+static void *guest_range(uint64_t base,uint32_t address,uint32_t bytes){
+    if(!base||!address||(uint64_t)address+bytes>UINT64_C(0x100000000)||base>UINTPTR_MAX-((uint64_t)address+bytes))return NULL;
+    return (void *)(uintptr_t)(base+address);
+}
+static void unsupported_font(void){fputs("TribesPad: unsupported raster-font attributes/transform/format\n",stderr);abort();}
+uint32_t tribes_create_font_a(uint64_t base,uint32_t height,uint32_t width,uint32_t escapement,uint32_t orientation,uint32_t weight,uint32_t italic,uint32_t underline,uint32_t strikeout,uint32_t charset,uint32_t out_precision,uint32_t clip_precision,uint32_t quality,uint32_t pitch,uint32_t face){
+    /* The reached original cache requests ANSI, default upright regular fonts.
+       Other attributes need their real mapper/raster semantics before entry. */
+    if(width||escapement||orientation||(weight&&weight!=400)||italic||underline||strikeout||charset||out_precision||clip_precision||quality||pitch)unsupported_font();
+    char name[32]={0};
+    if(face){
+        unsigned i;for(i=0;i<sizeof name;i++){
+            if(face>UINT32_MAX-i){tribes_set_last_error(87);return 0;}
+            const char *p=guest_range(base,face+i,1);if(!p){tribes_set_last_error(87);return 0;}
+            memcpy(name+i,p,1);if(!name[i])break;
+        }
+        if(i==sizeof name){tribes_set_last_error(87);return 0;}
+    }
+    void *native=tb_apple_font_create(name,(int32_t)height);if(!native)return 0;
+    pthread_mutex_lock(&lock);Object *f=allocate(base,FONT);if(f)f->native_font=native;
+    uint32_t result=f?f->handle:0;pthread_mutex_unlock(&lock);if(!f)tb_apple_font_release(native);return result;
+}
+static uint32_t set_color(uint64_t base,uint32_t handle,uint32_t color,int text){
+    pthread_mutex_lock(&lock);Object *dc=find(base,handle,DC);if(!dc){pthread_mutex_unlock(&lock);return UINT32_MAX;}
+    uint32_t *slot=text?&dc->text_color:&dc->bk_color,previous=*slot;*slot=color&0xffffff;pthread_mutex_unlock(&lock);return previous;
+}
+uint32_t tribes_set_bk_color(uint64_t base,uint32_t dc,uint32_t color){return set_color(base,dc,color,0);}
+uint32_t tribes_set_text_color(uint64_t base,uint32_t dc,uint32_t color){return set_color(base,dc,color,1);}
+uint32_t tribes_get_text_metrics_a(uint64_t base,uint32_t handle,uint32_t output){
+    void *p=guest_range(base,output,sizeof(TBFontMetrics));if(!p)return 0;
+    uint32_t bracket=tribes_memory_access_begin(p,sizeof(TBFontMetrics),2);
+    pthread_mutex_lock(&lock);Object *dc=find(base,handle,DC),*f=dc?find(base,dc->font,FONT):NULL;TBFontMetrics metrics;
+    int result=f&&tb_apple_font_metrics(f->native_font,&metrics);if(result)memcpy(p,&metrics,sizeof metrics);
+    pthread_mutex_unlock(&lock);tribes_memory_access_end(bracket);return result;
+}
+uint32_t tribes_get_glyph_outline_a(uint64_t base,uint32_t handle,uint32_t character,uint32_t format,uint32_t output,uint32_t capacity,uint32_t buffer,uint32_t transform){
+    if((format!=6&&format!=0)||character>255)unsupported_font();
+    void *m=guest_range(base,transform,16),*p=guest_range(base,output,sizeof(TBGlyphMetrics));if(!m||!p)return UINT32_MAX;
+    int32_t matrix[4];memcpy(matrix,m,16);if(matrix[0]!=0x10000||matrix[1]||matrix[2]||matrix[3]!=0x10000)unsupported_font();
+    uint32_t metrics_bracket=tribes_memory_access_begin(p,sizeof(TBGlyphMetrics),2),buffer_bracket=0;
+    pthread_mutex_lock(&lock);Object *dc=find(base,handle,DC),*f=dc?find(base,dc->font,FONT):NULL;
+    TBGlyphMetrics metrics;unsigned char *pixels=NULL;uint32_t bytes=0,result=UINT32_MAX;
+    if(f&&tb_apple_font_glyph(f->native_font,character,&metrics,&pixels,&bytes)){
+        void *target=NULL;int copy=format==6&&capacity&&buffer&&bytes;
+        if(!copy||(capacity>=bytes&&(target=guest_range(base,buffer,bytes)))){
+            if(copy)buffer_bracket=tribes_memory_access_begin(target,bytes,2);
+            if(copy)memcpy(target,pixels,bytes);memcpy(p,&metrics,sizeof metrics);result=format?bytes:0;
+        }
+    }
+    free(pixels);pthread_mutex_unlock(&lock);tribes_memory_access_end(buffer_bracket);tribes_memory_access_end(metrics_bracket);return result;
+}
+uint32_t tribes_get_text_extent_point32_a(uint64_t base,uint32_t handle,uint32_t text,uint32_t count,uint32_t output){
+    void *p=guest_range(base,output,8);if(!p||count>65536)return 0;
+    void *input=count?guest_range(base,text,count):NULL;if(count&&!input)return 0;
+    unsigned char *copy=count?malloc(count):NULL;if(count&&!copy)return 0;if(count)memcpy(copy,input,count);
+    uint32_t bracket=tribes_memory_access_begin(p,8,2);
+    pthread_mutex_lock(&lock);Object *dc=find(base,handle,DC),*f=dc?find(base,dc->font,FONT):NULL;int32_t size[2];
+    int result=f&&tb_apple_font_extent(f->native_font,copy,count,size);if(result)memcpy(p,size,8);
+    pthread_mutex_unlock(&lock);tribes_memory_access_end(bracket);free(copy);return result;
 }
