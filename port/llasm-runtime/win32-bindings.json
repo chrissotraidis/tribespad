@@ -1782,5 +1782,12 @@
     "arguments": 1,
     "returns": true,
     "guest_base": true
+  },
+  "SHGetFolderPathA": {
+    "helper": "tribes_sh_get_folder_path_a",
+    "arguments": 5,
+    "returns": true,
+    "helper_returns": "i32",
+    "guest_base": true
   }
 }

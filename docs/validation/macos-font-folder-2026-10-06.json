@@ -1,0 +1,123 @@
+{
+  "date": "2026-10-06",
+  "change": "Implement the reached current-process CSIDL_FONTS query using the actual confined mounted filesystem; preserve empty output and HRESULT on missing fonts directory.",
+  "original_call": "0x10038d7c",
+  "component_validation": {
+    "state": "finished",
+    "pass": true,
+    "target": "arm64-apple-macos12",
+    "simulator_device": null,
+    "runs": [
+      {
+        "mode": "normal",
+        "pass": true,
+        "faults": [],
+        "output": "PASS: actual ARM64 shell fonts folder: real mounted existence/missing/file/escaped-link, exact path/empty-error output and stdcall CPU/LastError; Windows/System directory wrappers: configured paths/root/trailing separator/max length, size/short/exact/large capacities, invalid pointers and LastError; 3000 temporary path calls plus 1000 QPC/frequency pairs; full CPU/flags/stack and output-neighbor preservation",
+        "binary_sha256": "3ca9c25002656d980df2e4571fca00f0d4bd32c8bc6e1a41460a024f09bb0ccc"
+      },
+      {
+        "mode": "tsan",
+        "pass": true,
+        "faults": [],
+        "output": "PASS: actual ARM64 shell fonts folder: real mounted existence/missing/file/escaped-link, exact path/empty-error output and stdcall CPU/LastError; Windows/System directory wrappers: configured paths/root/trailing separator/max length, size/short/exact/large capacities, invalid pointers and LastError; 3000 temporary path calls plus 1000 QPC/frequency pairs; full CPU/flags/stack and output-neighbor preservation",
+        "binary_sha256": "e00a733f2e235d086a2ccbcf92705b98cefbc162fd39115e7e3ad82a7285eae8"
+      },
+      {
+        "mode": "checked",
+        "pass": true,
+        "faults": [
+          "unsupported-folder",
+          "foreign-token",
+          "readonly-folder",
+          "cross-page-folder"
+        ],
+        "output": "PASS: actual ARM64 shell fonts folder: real mounted existence/missing/file/escaped-link, exact path/empty-error output and stdcall CPU/LastError; Windows/System directory wrappers: configured paths/root/trailing separator/max length, size/short/exact/large capacities, invalid pointers and LastError; 3000 temporary path calls plus 1000 QPC/frequency pairs; full CPU/flags/stack and output-neighbor preservation",
+        "binary_sha256": "90eb46b5bab1f204e36cfe15030f2fa01d761931fc776eebbf18475aa45b4fed"
+      }
+    ],
+    "sources_sha256": {
+      "port/core/process_environment.c": "58f2ad7f11c2d3c79e21af8408ffde46954ef2ec97114035f74dcaaf529e91d7",
+      "port/core/performance_clock.c": "8416827949d497153b4ebd02c37965cd2964ad0efdd34ae80c947a65e70132d0",
+      "port/core/guest_filesystem.c": "dccc9e2c3fc003ca6beff79eb004bdc544eb2e227a7757cb79b6692a828d03ae",
+      "port/core/guest_heap.c": "791c26c9fd72984fc53f0f5f1447df5f1dd43e38af08a529b1efc0b3e65dd96b",
+      "tests/temp_path_abi_test.c": "1bdcdb7d7bb508094e123731d32fee128f2b7b47ca0ea08fffc9053b2a72d56d",
+      "tests/fixtures/native_enter.ll": "78597a5a3030a7a7e0d6746358a6f3489ff8e8c395fba21383c200133f2f1f9d",
+      "tests/fixtures/temp_path_dispatch.c": "5c603ed97a6115aaa93b1f1e8f5dde8f821ae52dd98ec255856721aef32091d6",
+      "generated/native-win32/temp-path-abi/macos/bindings.ll": "3f642abfe12eea66370ec82454c2848df0ba81f620309a7e1d264887c34d904c"
+    },
+    "checked_sha256": "9f19cdad3aeb1a707ed5c22573b2220da038c36d3cfce5f91a62b7ffe1a252d2",
+    "guarded_sha256": "bd6e74fa950ac7a5d01d8d7687554371c57618fc2d0b3e66f58e741831d19d76",
+    "bindings_sha256": "a7627c49328940ab25bfaa9afc18d415fb48c763a47a9aaf0b6fac11eecbe7a6",
+    "scope": "Actual ARM64 emitted stdcall service-wrapper execution; no QoL ARM64 module/game-session claim"
+  },
+  "environment_regression_pass": true,
+  "mobile_compilation": {
+    "passed": true,
+    "objects": [
+      {
+        "source": "port/core/process_environment.c",
+        "sha256": "58f2ad7f11c2d3c79e21af8408ffde46954ef2ec97114035f74dcaaf529e91d7",
+        "target": "arm64-apple-ios16",
+        "exit": 0
+      },
+      {
+        "source": "tests/temp_path_abi_test.c",
+        "sha256": "1bdcdb7d7bb508094e123731d32fee128f2b7b47ca0ea08fffc9053b2a72d56d",
+        "target": "arm64-apple-ios16",
+        "exit": 0
+      },
+      {
+        "source": "tests/fixtures/temp_path_dispatch.c",
+        "sha256": "5c603ed97a6115aaa93b1f1e8f5dde8f821ae52dd98ec255856721aef32091d6",
+        "target": "arm64-apple-ios16",
+        "exit": 0
+      },
+      {
+        "source": "port/core/process_environment.c",
+        "sha256": "58f2ad7f11c2d3c79e21af8408ffde46954ef2ec97114035f74dcaaf529e91d7",
+        "target": "arm64-apple-ios16-simulator",
+        "exit": 0
+      },
+      {
+        "source": "tests/temp_path_abi_test.c",
+        "sha256": "1bdcdb7d7bb508094e123731d32fee128f2b7b47ca0ea08fffc9053b2a72d56d",
+        "target": "arm64-apple-ios16-simulator",
+        "exit": 0
+      },
+      {
+        "source": "tests/fixtures/temp_path_dispatch.c",
+        "sha256": "5c603ed97a6115aaa93b1f1e8f5dde8f821ae52dd98ec255856721aef32091d6",
+        "target": "arm64-apple-ios16-simulator",
+        "exit": 0
+      }
+    ],
+    "scope": "Changed fonts-folder bridge and ABI tests compile for ARM64 iOS device and Simulator. No mobile execution or gameplay acceptance."
+  },
+  "full_engine": {
+    "state": "finished",
+    "binary_sha256": "409a2194316a2c787d8e46c0ed6dfef85a90cf9a66818b944ccd7af7f78e2d9f",
+    "engine_entered": true,
+    "attach_returned": true,
+    "native_patch_publication": true,
+    "execution_timeout": true,
+    "playable": false,
+    "result": {
+      "diagnostic_stop": true,
+      "kind": "execution_timeout",
+      "timeout_seconds": 60,
+      "attach_return": 1,
+      "stages_returned": 2,
+      "engine_entered": true,
+      "native_patch_publication": true
+    }
+  },
+  "independent_microphone_probe": {
+    "state": "native-open-wait",
+    "exit": -9,
+    "stdout": "BEFORE_OPEN default recording, NULL spec\n",
+    "stderr": "",
+    "scope": "Independent real native SDL/CoreAudio default-recording initialization without original engine/OpenAL; no guest ABI or gameplay acceptance. Samples remain private and are not recorded."
+  },
+  "scope": "The new bridge is component-tested and included in the rebuilt full engine. A signed-app run beyond the original font-folder query has not yet been performed with this change. Prior original UI/model launch evidence remains valid; menu/map, gameplay controls, HD, authenticated multiplayer and full mobile acceptance remain unfinished.",
+  "next_action": "Package the rebuilt engine, launch the signed isolated offline app and observe the original font-loader continuation; diagnose the independent native microphone wait separately."
+}

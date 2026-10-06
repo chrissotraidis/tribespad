@@ -7,6 +7,8 @@ uint32_t tribes_environment_configure(uint64_t base,const void *block,uint32_t l
 /* Ordinary non-SYSTEM process profile; host supplies its Windows directory. */
 uint32_t tribes_temp_directory_configure(uint64_t base,const char *windows_directory);
 uint32_t tribes_get_windows_directory_a(uint64_t base,uint32_t output,uint32_t capacity);
+/* Reached current-process CSIDL_FONTS query; verified configured filesystem. */
+uint32_t tribes_sh_get_folder_path_a(uint64_t base,uint32_t window,uint32_t folder,uint32_t token,uint32_t flags,uint32_t output);
 uint32_t tribes_get_system_directory_a(uint64_t base,uint32_t output,uint32_t capacity);
 uint32_t tribes_get_temp_path_w(uint64_t base,uint32_t capacity,uint32_t output);
 uint32_t tribes_get_environment_variable_a(uint64_t base,uint32_t name,uint32_t output,uint32_t capacity);

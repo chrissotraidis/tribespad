@@ -3,6 +3,10 @@
    https://learn.microsoft.com/en-us/windows/win32/api/processenv/nf-processenv-freeenvironmentstringsa */
 #include "process_environment.h"
 #include "guest_heap.h"
+#include "guest_filesystem.h"
+#include <errno.h>
+#include <limits.h>
+#include <sys/stat.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -168,6 +172,28 @@ static uint32_t installation_directory_a(uint64_t base,uint32_t output,uint32_t 
 }
 uint32_t tribes_get_windows_directory_a(uint64_t base,uint32_t output,uint32_t capacity){return installation_directory_a(base,output,capacity,0);}
 uint32_t tribes_get_system_directory_a(uint64_t base,uint32_t output,uint32_t capacity){return installation_directory_a(base,output,capacity,1);}
+/* The pinned font loader asks only for CSIDL_FONTS, the current process,
+   and the current path. Report a real directory in the configured C: mount;
+   otherwise return its actual failure and leave the shell output empty.
+   https://learn.microsoft.com/en-us/windows/win32/api/shlobj_core/nf-shlobj_core-shgetfolderpatha */
+uint32_t tribes_sh_get_folder_path_a(uint64_t base,uint32_t window,uint32_t folder,uint32_t token,uint32_t flags,uint32_t output){
+    if(window||folder!=0x14||token||flags){fprintf(stderr,"TribesPad: unsupported shell folder query\n");abort();}
+    uint32_t error=tribes_get_last_error();
+    if(!output||output>UINT32_MAX-259||base>UINTPTR_MAX-output-260)return UINT32_C(0x80070057);
+    char *destination=(void *)(uintptr_t)(base+output);destination[0]=0;
+    char logical[261];pthread_mutex_lock(&lock);Environment *env=find(base);
+    if(!env||!env->windows_directory){pthread_mutex_unlock(&lock);return UINT32_C(0x80004005);}
+    size_t n=strlen(env->windows_directory);memcpy(logical,env->windows_directory,n+1);pthread_mutex_unlock(&lock);
+    while(n>3&&logical[n-1]=='\\')logical[--n]=0;
+    if(n+(logical[n-1]=='\\'?0:1)+5>=260)return UINT32_C(0x800700ce);
+    if(logical[n-1]!='\\')logical[n++]='\\';memcpy(logical+n,"Fonts",6);
+    char host[PATH_MAX];struct stat st;uint32_t result;
+    if(!tribes_filesystem_resolve(base,logical,host,sizeof host)||stat(host,&st)){
+        int e=errno;result=e==ENOENT||e==ENOTDIR?UINT32_C(0x80070003):e==EACCES?UINT32_C(0x80070005):UINT32_C(0x80004005);
+    }else if(!S_ISDIR(st.st_mode))result=UINT32_C(0x80070003);
+    else{memcpy(destination,logical,n+6);result=0;}
+    tribes_set_last_error(error);return result;
+}
 /* GetTempPathW and GetTempPath2W share ordinary non-SYSTEM process behavior:
    TMP, TEMP, USERPROFILE, then the configured Windows directory. This runtime
    does not impersonate SYSTEM. Directory existence/permissions are not queried.
