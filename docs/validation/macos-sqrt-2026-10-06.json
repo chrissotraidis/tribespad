@@ -1,0 +1,314 @@
+{
+  "date": "2026-10-06",
+  "scope": "Square-root checked-call integration, original signed offline startup and real bundled GUI preferences; not playable acceptance.",
+  "sources_sha256": {
+    "port/compiler/ExternalMemoryPass.cpp": "061646bfe213ad91f6180887581a3278f336da7fbc02bf9f228738abefe90628",
+    "config/runtime/external-memory-contracts.json": "9ecb326801f8a378990f3a0acec95f04360f8b02318577f2fb2b8f83d6b1a39a",
+    "scripts/test-external-memory-pass.py": "199f7955f954bf19df844100a1e3087534fc60f9c0003835575d2a0197f6d063",
+    "tests/fixtures/guest_external.ll": "ecec7f7600d7dcc9c0ff916767594b0745f54665145950c9928083e92c83fd3a",
+    "tests/guest_external_checks_test.c": "7d1b435d0c38377ecc27c4c2e0eb36736dbeaa233bb5d91810722582b3c2003c",
+    "scripts/apple_game_profile.py": "d6b20616cd6efdf9c6761646e5aeff6a921d1404826c37327983a57644d108fa"
+  },
+  "tests": [
+    {
+      "receipt": "generated/integration-review/sqrt-call/reference-result.json",
+      "receipt_sha256": "6ea44ddf4b848778e20fa88685322aa1d838c8f9bad9ab43255e6fd1ae91cf36",
+      "passed": true,
+      "cases": 99712,
+      "protected_page_cases": null,
+      "checked_fault_cases": null,
+      "scope": "Fresh legacy SQRTSD REG/unaligned MEM64 Rosetta reference with independent integer square root and binary64 rounding; RC/DAZ/FTZ/sticky status, all exponents, NaN/negative inputs, high64 XMM and upper128 YMM/source/flags preservation. Not physical Intel/unmasked Windows delivery/gameplay proof."
+    },
+    {
+      "receipt": "generated/integration-review/sqrt-call/lowering-result.json",
+      "receipt_sha256": "ce9dfc44892e8ae112ca0e4d93bc211c12e12619fc3776b1187de0b6e502259f",
+      "passed": true,
+      "cases": 66240,
+      "protected_page_cases": 4096,
+      "checked_fault_cases": null,
+      "scope": "Original legacy SQRTSD plus all REG aliases/four MEM64 forms, complete CPU/YMM/flags and masked status. Fresh canonical Rosetta/independent integer square root proof, exact8-byte guarded reads; two macOS unmasked stop/no-publication checks. Not precise Windows delivery/physical Intel/fullDLL/gameplay proof."
+    },
+    {
+      "receipt": "generated/integration-review/sqrt-call/sqrt32-result.json",
+      "receipt_sha256": "fc949ade6263718748fca40d20415e4bc64c6bd500d68bcc4d44c5aaca5e32ee",
+      "passed": true,
+      "cases": 278848,
+      "protected_page_cases": null,
+      "checked_fault_cases": null,
+      "scope": "Unary binary32 candidate/status adapter versus exact integer sqrt and repeated-lane Rosetta VSQRTPS; eight threads and four TLS fields restored; candidate API only, no emitted instruction, CPU publication, precise fault delivery, physical Intel or gameplay claim"
+    },
+    {
+      "receipt": "generated/integration-review/sqrt-call/gate-result.json",
+      "receipt_sha256": "4ecca7900f3c2aa2649b1205bf98741a30c031f7b4adb90da9d79d50390984c2",
+      "passed": true,
+      "cases": null,
+      "protected_page_cases": null,
+      "checked_fault_cases": 16,
+      "scope": "External gate compiler/runtime fixture. Real bootstrap policy and application are not yet established."
+    }
+  ],
+  "full_engine": {
+    "receipt": "generated/integration-review/sqrt-call/full-engine-result.json",
+    "receipt_sha256": "799378c45f6f0cf8787da00f792727133f474828e2dc4963bacba6a63307127f",
+    "binary_sha256": "58f853126978e3dbed5b18b9bb9ba9ef57ba999e38e94fbce62150c1ea0b2148",
+    "initialized": true,
+    "result": {
+      "diagnostic_stop": true,
+      "kind": "execution_timeout",
+      "timeout_seconds": 60,
+      "attach_return": 1,
+      "stages_returned": 2,
+      "engine_entered": true,
+      "native_patch_publication": true
+    },
+    "external_call_gates": true,
+    "independent_subpages_enabled": true,
+    "playable": false
+  },
+  "signed_app": {
+    "app_build_receipt": "generated/integration-review/macos-engine-app/app-build.json",
+    "app_build_receipt_sha256": "6773f1d68e11cd7605bbb791b198e4e4cad205265695c4594392a766aaade5f8",
+    "signed_engine_sha256": "edf041b8c1394a2976f2fd24d4393f0d3a17c054402024b646d540f303a9926a",
+    "game_profile": {
+      "manifest_sha256": "d85047788d2fab1e09d909b55fe1f87dc2771c1d3c9de951d7761f36a7b1ec8f",
+      "overrides": [
+        {
+          "path": "base/prefs/ClientPrefs.cs",
+          "source_sha256": "400cd6c0f127235f9f98f57a119f53bda5a2f75b51aaadeda2950595f566de74",
+          "sha256": "79ca4957bbd1558d33ca017298de39227d260c9b8da134a46acaf2ca82966bb9",
+          "reason": "Original client settings use native VSync with the optional SDL timer frame limiter disabled."
+        },
+        {
+          "path": "console_start.cs",
+          "source_sha256": "412b6c81d9f8459c6d1c42034859422443387b1f92340cc017bd005256e203ae",
+          "sha256": "d7d3c70a79663d1e0f7dd28ebd179788bfcc657b65e39c4c8983f0222fdf9ceb",
+          "reason": "Original preferences select bundled Univers for Arial and skip the optional AVI intro; original login remains enabled."
+        },
+        {
+          "path": "base/gui/guiProfiles.cs",
+          "source_archive": "base/scripts.vl2",
+          "source_archive_sha256": "610463dbac0cd5e48f7cff775a6f04b23d2e35adc2779e8a00c127b86c530490",
+          "source_entry": "gui/guiProfiles.cs",
+          "source_sha256": "3beb243c8a0474d65ed410567c6b7ac50cfd8088c054e5861ec3043763da42f7",
+          "sha256": "b0fa259135c334d7f82c0c620143bf9366d6009c4324026123421abcf79551d3",
+          "font_archive": "base/t2csri.vl2",
+          "font_archive_sha256": "52762570008d4c3210212867bd9ca92c82b8fa3fc94f3f84736a6058bd53e64e",
+          "font_entry": "fonts/Univers.sdft",
+          "replacements": 8,
+          "replacements_by_face": {
+            "Lucida Console": 4,
+            "Times": 2,
+            "verdana": 2
+          },
+          "reason": "Original GUI font preferences use bundled Univers SDF instead of unavailable Windows Lucida Console, Times and Verdana."
+        }
+      ]
+    },
+    "scope": "Canonical profile selects eight real Univers GUI preferences. Actual offline runs additionally used a temporary voice-disable diagnostic; restored afterwards."
+  },
+  "original_execution": {
+    "sqrt_pid": 69232,
+    "sqrt_entry_count": 7684,
+    "first_sqrt_call": {
+      "input": "0x3fe0000000000000",
+      "control": "0x1fa0",
+      "frames": [
+        "tb_sse_sqrt64",
+        "sqrt64",
+        "tb_sse_sqrtsd",
+        "loc_1000C6E3",
+        "tribes_enter",
+        "main",
+        "start"
+      ]
+    },
+    "sqrt_log_sha256": "8ca067584604d89859314a1ba01ad9221560e27ef0d8aa917c82c574fc0bfac8",
+    "next_stop": {
+      "pid": 69732,
+      "frames": [
+        "qol_missing_import",
+        "tbimp_CreateFontA",
+        "tribes_enter",
+        "main",
+        "start"
+      ],
+      "scope": "Actual isolated offline app stop; selected-thread CPU/stack only, not a whole-memory snapshot.",
+      "cpu_address": "0x110e5cc70",
+      "base": "0x7000000000",
+      "esp": "0x2fc26c",
+      "registers": [
+        24,
+        404286111,
+        0,
+        1632359000,
+        3129964,
+        3130148,
+        3139084,
+        1632359000
+      ],
+      "stack_from": "0x2fc25c",
+      "stack": [
+        "0x1",
+        "0x5008be00",
+        "0x2",
+        "0x0",
+        "0x556010",
+        "0x18",
+        "0x0",
+        "0x0",
+        "0x0",
+        "0x0",
+        "0x0",
+        "0x0",
+        "0x0",
+        "0x0",
+        "0x0",
+        "0x0",
+        "0x0",
+        "0x0",
+        "0x614bd258",
+        "0x441a58",
+        "0x6063aa7c",
+        "0x7e77ac",
+        "0x55b294",
+        "0x7e77ac",
+        "0x5",
+        "0x61daa304",
+        "0x43f319",
+        "0x6063aa7c",
+        "0x61daa304",
+        "0x7e77ac",
+        "0x0",
+        "0x60578e00",
+        "0x2fc334",
+        "0x60579684",
+        "0x2fc308",
+        "0x440e3a",
+        "0x6063aa7c",
+        "0x61daa304",
+        "0x0",
+        "0x6063aa7c"
+      ],
+      "return_pc": "0x556010",
+      "arguments": [
+        "0x18",
+        "0x0",
+        "0x0",
+        "0x0",
+        "0x0",
+        "0x0",
+        "0x0",
+        "0x0",
+        "0x0",
+        "0x0",
+        "0x0",
+        "0x0",
+        "0x0",
+        "0x614bd258"
+      ],
+      "original_font_folder_buffer": "",
+      "original_audio_globals": [
+        "0x0",
+        "0x0"
+      ],
+      "font_face": "Univers"
+    },
+    "next_stop_receipt": "generated/integration-review/sqrt-call/font-create-execution/next-stop.json",
+    "next_stop_sha256": "ed332f45dbee475ea9777a4c25e1c6d007d95c247ba7dac83948efd4280789e7",
+    "prior_pid": 68744,
+    "prior_boundary": "EnumFontFamiliesExA for times; superseded after Times/Verdana GUI preferences selected bundled Univers",
+    "concurrent_memory_scope": "Selected-thread CPU/stack captures only; not coherent whole-memory snapshots.",
+    "inspected_window": {
+      "path": "generated/integration-review/sqrt-call/font-create-execution/stopped.png",
+      "sha256": "8fa01478719a30f526e91a49e03583b1f342d43c80b501a1f94b42b75c55d727",
+      "visible_state": "Original INITIALIZING / Please wait dialog; no menu or map rendered."
+    }
+  },
+  "next_original_font_sequence": [
+    {
+      "name": "CreateFontA",
+      "call": "0x55600a",
+      "return_pc": "0x556010"
+    },
+    {
+      "name": "SelectObject (bitmap)",
+      "call": "0x556053",
+      "return_pc": "0x556059"
+    },
+    {
+      "name": "SelectObject (font)",
+      "call": "0x556062",
+      "return_pc": "0x556068"
+    },
+    {
+      "name": "SetBkColor",
+      "call": "0x556070",
+      "return_pc": "0x556076"
+    },
+    {
+      "name": "SetTextColor",
+      "call": "0x556081",
+      "return_pc": "0x556087"
+    },
+    {
+      "name": "GetTextMetricsA",
+      "call": "0x556091",
+      "return_pc": "0x556097"
+    },
+    {
+      "name": "GetGlyphOutlineA",
+      "call": "0x5560eb",
+      "return_pc": "0x5560f1"
+    },
+    {
+      "name": "GetTextExtentPoint32A (fallback)",
+      "call": "0x556163",
+      "return_pc": "0x556169"
+    },
+    {
+      "name": "DeleteObject (font)",
+      "call": "0x5561ad",
+      "return_pc": "0x5561b3"
+    }
+  ],
+  "font_sequence_source_sha256": "7ad1d40a6aa74a25d089af6bd6f34fcc20a172fd5932ded82c69fca673e7f8f9",
+  "font_sequence_scope": "Static original calls in the reached font-cache routine; later calls have not yet executed.",
+  "window": {
+    "requested_gui_size": [
+      1470,
+      956
+    ],
+    "centered_creation": true,
+    "fullscreen_requested": true,
+    "observed_display_bounds": [
+      0,
+      0,
+      2048,
+      1332
+    ],
+    "observed_game_bounds": [
+      0,
+      422,
+      2048,
+      1286
+    ],
+    "native_window_calls_sha256": "c69c76c2cb4e1f89304e849bed8e7e575cae0ce912caf790a7aca782bad21bc6",
+    "scope": "Captured original SDL requests and real window geometry; crop/mouse activation unresolved."
+  },
+  "cleanup": {
+    "owned_apps_debuggers_builds_ended": true,
+    "isolated_voice_override_restored": true,
+    "canonical_voice_preference_unchanged": true,
+    "original_audio_output_restored": 106,
+    "simulators_booted": 0
+  },
+  "acceptance": {
+    "original_menu": false,
+    "rendered_playable_map": false,
+    "gameplay_controls": false,
+    "hd_in_map": false,
+    "authenticated_community_match": false,
+    "full_mobile_execution": false
+  },
+  "next_action": "Implement the bounded original raster-font sequence using real native font metrics and glyph pixels, existing DC ownership and checked private staging; then relaunch toward the menu/training map. Diagnose fullscreen placement independently."
+}
