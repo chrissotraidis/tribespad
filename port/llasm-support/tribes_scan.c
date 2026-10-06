@@ -14,6 +14,14 @@ void tb_bsf32(_cpu *c,unsigned destination,uint32_t value) {
  if(value) {*dst=(uint32_t)__builtin_ctz(value);c->_eflags&=~ZF;}
  else c->_eflags|=ZF;
 }
+/* Intel SDM TZCNT: zero input returns 32 and sets CF; zero output sets ZF.
+ * OF/SF/AF/PF are undefined; preserve them and every unrelated CPU field.
+ * Source evaluation precedes destination publication, including aliases. */
+void tb_tzcnt32(_cpu *c,unsigned destination,uint32_t value) {
+ uint32_t *dst=bit_register(c,destination);
+ uint32_t result=value?(uint32_t)__builtin_ctz(value):32;
+ *dst=result;c->_eflags=(c->_eflags&~(CF|ZF))|(value?0:CF)|(result?0:ZF);
+}
 /* Register bit indices wrap modulo 32. Other arithmetic flags are undefined;
  * preserve them, and all unrelated flags, while publishing the original bit. */
 void tb_btr32(_cpu *c,unsigned destination,uint32_t index) {

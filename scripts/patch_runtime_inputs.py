@@ -25,6 +25,50 @@ def translate_startup_memory_bits(dll,image):
   dll=dll.replace(needle,'call void @%s(%%_cpu* %%cpu)'%helper,1)+'\ndeclare void @%s(%%_cpu*)\n'%helper
  return dll
 
+# Original compression code uses TZCNT32 register forms. These sixteen
+# pinned instructions are compiled through the existing checked support path.
+# Intel SDM: https://cdrdv2-public.intel.com/789581/325383-sdm-vol-2abcd.pdf
+COMPRESSION_TZCNT_SITES=[
+ (0x100c17bf,'f30fbcc0',0,0),
+ (0x100c2c8c,'f30fbcc2',0,2),
+ (0x100c2fdd,'f30fbcc0',0,0),
+ (0x100c34bd,'f30fbcc0',0,0),
+ (0x100c4085,'f30fbcc2',0,2),
+ (0x100c4104,'f30fbcc0',0,0),
+ (0x100c4115,'f30fbcc7',0,7),
+ (0x100c458d,'f30fbcc2',0,2),
+ (0x100c4611,'f30fbcc0',0,0),
+ (0x100c461e,'f30fbcc7',0,7),
+ (0x100c4be3,'f30fbcc2',0,2),
+ (0x100c4c64,'f30fbcc0',0,0),
+ (0x100c4c71,'f30fbcc7',0,7),
+ (0x100c6933,'f30fbcce',1,6),
+ (0x100c6ce0,'f30fbcce',1,6),
+ (0x100c7231,'f30fbcc6',0,6),
+]
+def compression_tzcnt_body(destination,source,suffix):
+ assert destination in range(8) and source in range(8)
+ assert re.fullmatch('[A-Za-z0-9_]+',suffix)
+ return '''%%tz_cpu_%s = bitcast %%_cpu* %%cpu to i8*
+%%tz_source_%s = getelementptr i8, i8* %%tz_cpu_%s, i64 %d
+%%tz_i32_%s = bitcast i8* %%tz_source_%s to i32*
+%%tz_value_%s = load i32, i32* %%tz_i32_%s, align 4
+call void @tb_tzcnt32(%%_cpu* %%cpu, i32 %d, i32 %%tz_value_%s)'''%(suffix,suffix,suffix,source*4,suffix,suffix,suffix,suffix,destination,suffix)
+
+def translate_compression_tzcnt(dll,image):
+ assert sha(image)=='eaf5a42d301cc64a6e526aa49a82dbaefe655ed1ac0ba67939d0bab2fb6ab607'
+ pe=pefile.PE(str(image));assert pe.OPTIONAL_HEADER.ImageBase==0x10000000
+ assert '@tb_tzcnt32' not in dll
+ for pc,raw,destination,source in COMPRESSION_TZCNT_SITES:
+  opcode=bytes.fromhex(raw)
+  assert opcode==bytes([0xf3,0x0f,0xbc,0xc0|(destination<<3)|source])
+  assert pe.get_data(pc-0x10000000,4)==opcode,hex(pc)
+  section=pe.get_section_by_rva(pc-0x10000000);assert section.Characteristics&0x20000000
+  needle='call void @halopad_trap_unimplemented(i32 %d) nounwind'%pc
+  assert dll.count(needle)==1,hex(pc)
+  dll=dll.replace(needle,compression_tzcnt_body(destination,source,'%x'%pc),1)
+ return dll+'\ndeclare void @tb_tzcnt32(%_cpu*, i32, i32)\n'
+
 def translate_math_mxcsr_save(dll,image):
  assert sha(image)=='eaf5a42d301cc64a6e526aa49a82dbaefe655ed1ac0ba67939d0bab2fb6ab607'
  pe=pefile.PE(str(image));assert pe.OPTIONAL_HEADER.ImageBase==0x10000000
@@ -202,6 +246,7 @@ original:
  (out/'late-patch-inputs.json').write_text(json.dumps(late_metadata,indent=2)+'\n')
  dll=translate_startup_pause(dll,R/'ref/qol/IFC22.dll')
  dll=translate_startup_memory_bits(dll,R/'ref/qol/IFC22.dll')
+ dll=translate_compression_tzcnt(dll,R/'ref/qol/IFC22.dll')
  dll=translate_math_mxcsr_save(dll,R/'ref/qol/IFC22.dll')
  dll=translate_math_model(dll,R/'ref/qol/IFC22.dll')
  (out/'qol-patched.ll').write_text(dll)
