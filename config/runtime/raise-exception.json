@@ -1,0 +1,14 @@
+{
+  "scope": "Reached continuable 0x406d1388 thread-name notification, four-word packet with type0x1000 and flags0. This dispatches to original handlers; it is not a debugger-consumed no-op or general SEH implementation.",
+  "dispatch": "Read the current thread FS:[0] chain with bounded ascending stack-frame validation; construct guest EXCEPTION_RECORD and x86 CONTEXT_CONTROL|CONTEXT_INTEGER in checked guest stack scratch; enter each finite original handler via cdecl with record/frame/context/dispatcher arguments. Continue only if the original handler returns ExceptionContinueExecution and retains the context; ContinueSearch advances to the next frame.",
+  "context": "Declared continuation point is the original guest API return PC and post-stdcall ESP. Integer registers/EFLAGS/EBP preserved, flat user control selectors CS1b/SS23; floating/debug/segment context sections are not advertised.",
+  "limits": [
+    "Other exception codes/flags/packets and unhandled notifications stop explicitly.",
+    "Unwind/nested dispositions and context edits remain unsupported.",
+    "Native faults are not converted to guest exceptions.",
+    "No debugger is attached or represented; the thread name is logged diagnostically after the original handler continues."
+  ],
+  "references": [
+    "https://learn.microsoft.com/en-us/windows/win32/api/errhandlingapi/nf-errhandlingapi-raiseexception"
+  ]
+}

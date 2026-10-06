@@ -1,0 +1,5886 @@
+{
+  "source_sha256": "a4683e84e4d55cbc95abb0aee99876e6ded86da8a818864f28733eeac9d48025",
+  "header_sha256": "f9f04fdd983bff92c429b593a1cc68986ba4239d1ccf20ec3cda1f6403a48589",
+  "entries": [
+    {
+      "name": "",
+      "flags": 33,
+      "lcid": 127,
+      "data_index": 0
+    },
+    {
+      "name": "aa",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 1
+    },
+    {
+      "name": "aa-DJ",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 2
+    },
+    {
+      "name": "aa-ER",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 3
+    },
+    {
+      "name": "aa-ET",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 4
+    },
+    {
+      "name": "af",
+      "flags": 17,
+      "lcid": 54,
+      "data_index": 5
+    },
+    {
+      "name": "af-NA",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 6
+    },
+    {
+      "name": "af-ZA",
+      "flags": 33,
+      "lcid": 1078,
+      "data_index": 7
+    },
+    {
+      "name": "agq",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 8
+    },
+    {
+      "name": "agq-CM",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 9
+    },
+    {
+      "name": "ak",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 10
+    },
+    {
+      "name": "ak-GH",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 11
+    },
+    {
+      "name": "am",
+      "flags": 17,
+      "lcid": 94,
+      "data_index": 12
+    },
+    {
+      "name": "am-ET",
+      "flags": 33,
+      "lcid": 1118,
+      "data_index": 13
+    },
+    {
+      "name": "ar",
+      "flags": 17,
+      "lcid": 1,
+      "data_index": 14
+    },
+    {
+      "name": "ar-001",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 15
+    },
+    {
+      "name": "ar-AE",
+      "flags": 33,
+      "lcid": 14337,
+      "data_index": 16
+    },
+    {
+      "name": "ar-BH",
+      "flags": 33,
+      "lcid": 15361,
+      "data_index": 17
+    },
+    {
+      "name": "ar-DJ",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 18
+    },
+    {
+      "name": "ar-DZ",
+      "flags": 33,
+      "lcid": 5121,
+      "data_index": 19
+    },
+    {
+      "name": "ar-EG",
+      "flags": 33,
+      "lcid": 3073,
+      "data_index": 20
+    },
+    {
+      "name": "ar-EH",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 21
+    },
+    {
+      "name": "ar-ER",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 22
+    },
+    {
+      "name": "ar-IL",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 23
+    },
+    {
+      "name": "ar-IQ",
+      "flags": 33,
+      "lcid": 2049,
+      "data_index": 24
+    },
+    {
+      "name": "ar-JO",
+      "flags": 33,
+      "lcid": 11265,
+      "data_index": 25
+    },
+    {
+      "name": "ar-KM",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 26
+    },
+    {
+      "name": "ar-KW",
+      "flags": 33,
+      "lcid": 13313,
+      "data_index": 27
+    },
+    {
+      "name": "ar-LB",
+      "flags": 33,
+      "lcid": 12289,
+      "data_index": 28
+    },
+    {
+      "name": "ar-LY",
+      "flags": 33,
+      "lcid": 4097,
+      "data_index": 29
+    },
+    {
+      "name": "ar-MA",
+      "flags": 33,
+      "lcid": 6145,
+      "data_index": 30
+    },
+    {
+      "name": "ar-MR",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 31
+    },
+    {
+      "name": "ar-OM",
+      "flags": 33,
+      "lcid": 8193,
+      "data_index": 32
+    },
+    {
+      "name": "ar-PS",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 33
+    },
+    {
+      "name": "ar-QA",
+      "flags": 33,
+      "lcid": 16385,
+      "data_index": 34
+    },
+    {
+      "name": "ar-SA",
+      "flags": 33,
+      "lcid": 1025,
+      "data_index": 35
+    },
+    {
+      "name": "ar-SD",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 36
+    },
+    {
+      "name": "ar-SO",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 37
+    },
+    {
+      "name": "ar-SS",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 38
+    },
+    {
+      "name": "ar-SY",
+      "flags": 33,
+      "lcid": 10241,
+      "data_index": 39
+    },
+    {
+      "name": "ar-TD",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 40
+    },
+    {
+      "name": "ar-TN",
+      "flags": 33,
+      "lcid": 7169,
+      "data_index": 41
+    },
+    {
+      "name": "ar-YE",
+      "flags": 33,
+      "lcid": 9217,
+      "data_index": 42
+    },
+    {
+      "name": "arn",
+      "flags": 17,
+      "lcid": 122,
+      "data_index": 43
+    },
+    {
+      "name": "arn-CL",
+      "flags": 33,
+      "lcid": 1146,
+      "data_index": 44
+    },
+    {
+      "name": "as",
+      "flags": 17,
+      "lcid": 77,
+      "data_index": 45
+    },
+    {
+      "name": "as-IN",
+      "flags": 33,
+      "lcid": 1101,
+      "data_index": 46
+    },
+    {
+      "name": "asa",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 47
+    },
+    {
+      "name": "asa-TZ",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 48
+    },
+    {
+      "name": "ast",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 49
+    },
+    {
+      "name": "ast-ES",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 50
+    },
+    {
+      "name": "az",
+      "flags": 17,
+      "lcid": 44,
+      "data_index": 51
+    },
+    {
+      "name": "az-Cyrl",
+      "flags": 17,
+      "lcid": 29740,
+      "data_index": 52
+    },
+    {
+      "name": "az-Cyrl-AZ",
+      "flags": 33,
+      "lcid": 2092,
+      "data_index": 53
+    },
+    {
+      "name": "az-Latn",
+      "flags": 17,
+      "lcid": 30764,
+      "data_index": 54
+    },
+    {
+      "name": "az-Latn-AZ",
+      "flags": 33,
+      "lcid": 1068,
+      "data_index": 55
+    },
+    {
+      "name": "ba",
+      "flags": 17,
+      "lcid": 109,
+      "data_index": 56
+    },
+    {
+      "name": "ba-RU",
+      "flags": 33,
+      "lcid": 1133,
+      "data_index": 57
+    },
+    {
+      "name": "bas",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 58
+    },
+    {
+      "name": "bas-CM",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 59
+    },
+    {
+      "name": "be",
+      "flags": 17,
+      "lcid": 35,
+      "data_index": 60
+    },
+    {
+      "name": "be-BY",
+      "flags": 33,
+      "lcid": 1059,
+      "data_index": 61
+    },
+    {
+      "name": "bem",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 62
+    },
+    {
+      "name": "bem-ZM",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 63
+    },
+    {
+      "name": "bew",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 64
+    },
+    {
+      "name": "bew-ID",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 65
+    },
+    {
+      "name": "bez",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 66
+    },
+    {
+      "name": "bez-TZ",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 67
+    },
+    {
+      "name": "bg",
+      "flags": 17,
+      "lcid": 2,
+      "data_index": 68
+    },
+    {
+      "name": "bg-BG",
+      "flags": 33,
+      "lcid": 1026,
+      "data_index": 69
+    },
+    {
+      "name": "bin",
+      "flags": 17,
+      "lcid": 102,
+      "data_index": 70
+    },
+    {
+      "name": "bin-NG",
+      "flags": 33,
+      "lcid": 1126,
+      "data_index": 71
+    },
+    {
+      "name": "blo",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 72
+    },
+    {
+      "name": "blo-BJ",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 73
+    },
+    {
+      "name": "bm",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 74
+    },
+    {
+      "name": "bm-Latn",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 75
+    },
+    {
+      "name": "bm-Latn-ML",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 76
+    },
+    {
+      "name": "bn",
+      "flags": 17,
+      "lcid": 69,
+      "data_index": 77
+    },
+    {
+      "name": "bn-BD",
+      "flags": 33,
+      "lcid": 2117,
+      "data_index": 78
+    },
+    {
+      "name": "bn-IN",
+      "flags": 33,
+      "lcid": 1093,
+      "data_index": 79
+    },
+    {
+      "name": "bo",
+      "flags": 17,
+      "lcid": 81,
+      "data_index": 80
+    },
+    {
+      "name": "bo-CN",
+      "flags": 33,
+      "lcid": 1105,
+      "data_index": 81
+    },
+    {
+      "name": "bo-IN",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 82
+    },
+    {
+      "name": "br",
+      "flags": 17,
+      "lcid": 126,
+      "data_index": 83
+    },
+    {
+      "name": "br-FR",
+      "flags": 33,
+      "lcid": 1150,
+      "data_index": 84
+    },
+    {
+      "name": "brx",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 85
+    },
+    {
+      "name": "brx-IN",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 86
+    },
+    {
+      "name": "bs",
+      "flags": 17,
+      "lcid": 30746,
+      "data_index": 87
+    },
+    {
+      "name": "bs-Cyrl",
+      "flags": 17,
+      "lcid": 25626,
+      "data_index": 88
+    },
+    {
+      "name": "bs-Cyrl-BA",
+      "flags": 33,
+      "lcid": 8218,
+      "data_index": 89
+    },
+    {
+      "name": "bs-Latn",
+      "flags": 17,
+      "lcid": 26650,
+      "data_index": 90
+    },
+    {
+      "name": "bs-Latn-BA",
+      "flags": 33,
+      "lcid": 5146,
+      "data_index": 91
+    },
+    {
+      "name": "byn",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 92
+    },
+    {
+      "name": "byn-ER",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 93
+    },
+    {
+      "name": "ca",
+      "flags": 17,
+      "lcid": 3,
+      "data_index": 94
+    },
+    {
+      "name": "ca-AD",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 95
+    },
+    {
+      "name": "ca-ES",
+      "flags": 33,
+      "lcid": 1027,
+      "data_index": 96
+    },
+    {
+      "name": "ca-ES-valencia",
+      "flags": 33,
+      "lcid": 2051,
+      "data_index": 97
+    },
+    {
+      "name": "ca-FR",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 98
+    },
+    {
+      "name": "ca-IT",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 99
+    },
+    {
+      "name": "ccp",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 100
+    },
+    {
+      "name": "ccp-Cakm",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 101
+    },
+    {
+      "name": "ccp-Cakm-BD",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 102
+    },
+    {
+      "name": "ccp-Cakm-IN",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 103
+    },
+    {
+      "name": "ce",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 104
+    },
+    {
+      "name": "ce-RU",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 105
+    },
+    {
+      "name": "ceb",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 106
+    },
+    {
+      "name": "ceb-Latn",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 107
+    },
+    {
+      "name": "ceb-Latn-PH",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 108
+    },
+    {
+      "name": "cgg",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 109
+    },
+    {
+      "name": "cgg-UG",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 110
+    },
+    {
+      "name": "chr",
+      "flags": 17,
+      "lcid": 92,
+      "data_index": 111
+    },
+    {
+      "name": "chr-Cher",
+      "flags": 17,
+      "lcid": 31836,
+      "data_index": 112
+    },
+    {
+      "name": "chr-Cher-US",
+      "flags": 33,
+      "lcid": 1116,
+      "data_index": 113
+    },
+    {
+      "name": "co",
+      "flags": 17,
+      "lcid": 131,
+      "data_index": 114
+    },
+    {
+      "name": "co-FR",
+      "flags": 33,
+      "lcid": 1155,
+      "data_index": 115
+    },
+    {
+      "name": "cs",
+      "flags": 17,
+      "lcid": 5,
+      "data_index": 116
+    },
+    {
+      "name": "cs-CZ",
+      "flags": 33,
+      "lcid": 1029,
+      "data_index": 117
+    },
+    {
+      "name": "csw",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 118
+    },
+    {
+      "name": "csw-CA",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 119
+    },
+    {
+      "name": "cu",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 120
+    },
+    {
+      "name": "cu-RU",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 121
+    },
+    {
+      "name": "cy",
+      "flags": 17,
+      "lcid": 82,
+      "data_index": 122
+    },
+    {
+      "name": "cy-GB",
+      "flags": 33,
+      "lcid": 1106,
+      "data_index": 123
+    },
+    {
+      "name": "da",
+      "flags": 17,
+      "lcid": 6,
+      "data_index": 124
+    },
+    {
+      "name": "da-DK",
+      "flags": 33,
+      "lcid": 1030,
+      "data_index": 125
+    },
+    {
+      "name": "da-GL",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 126
+    },
+    {
+      "name": "dav",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 127
+    },
+    {
+      "name": "dav-KE",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 128
+    },
+    {
+      "name": "de",
+      "flags": 17,
+      "lcid": 7,
+      "data_index": 129
+    },
+    {
+      "name": "de-AT",
+      "flags": 33,
+      "lcid": 3079,
+      "data_index": 130
+    },
+    {
+      "name": "de-BE",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 131
+    },
+    {
+      "name": "de-CH",
+      "flags": 33,
+      "lcid": 2055,
+      "data_index": 132
+    },
+    {
+      "name": "de-DE",
+      "flags": 33,
+      "lcid": 1031,
+      "data_index": 133
+    },
+    {
+      "name": "de-DE_phoneb",
+      "flags": 4,
+      "lcid": 66567,
+      "data_index": 133
+    },
+    {
+      "name": "de-IT",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 134
+    },
+    {
+      "name": "de-LI",
+      "flags": 33,
+      "lcid": 5127,
+      "data_index": 135
+    },
+    {
+      "name": "de-LU",
+      "flags": 33,
+      "lcid": 4103,
+      "data_index": 136
+    },
+    {
+      "name": "dje",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 137
+    },
+    {
+      "name": "dje-NE",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 138
+    },
+    {
+      "name": "doi",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 139
+    },
+    {
+      "name": "doi-Deva",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 140
+    },
+    {
+      "name": "doi-Deva-IN",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 141
+    },
+    {
+      "name": "dsb",
+      "flags": 17,
+      "lcid": 31790,
+      "data_index": 142
+    },
+    {
+      "name": "dsb-DE",
+      "flags": 33,
+      "lcid": 2094,
+      "data_index": 143
+    },
+    {
+      "name": "dua",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 144
+    },
+    {
+      "name": "dua-CM",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 145
+    },
+    {
+      "name": "dv",
+      "flags": 17,
+      "lcid": 101,
+      "data_index": 146
+    },
+    {
+      "name": "dv-MV",
+      "flags": 33,
+      "lcid": 1125,
+      "data_index": 147
+    },
+    {
+      "name": "dyo",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 148
+    },
+    {
+      "name": "dyo-SN",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 149
+    },
+    {
+      "name": "dz",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 150
+    },
+    {
+      "name": "dz-BT",
+      "flags": 33,
+      "lcid": 3153,
+      "data_index": 151
+    },
+    {
+      "name": "ebu",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 152
+    },
+    {
+      "name": "ebu-KE",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 153
+    },
+    {
+      "name": "ee",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 154
+    },
+    {
+      "name": "ee-GH",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 155
+    },
+    {
+      "name": "ee-TG",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 156
+    },
+    {
+      "name": "el",
+      "flags": 17,
+      "lcid": 8,
+      "data_index": 157
+    },
+    {
+      "name": "el-CY",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 158
+    },
+    {
+      "name": "el-GR",
+      "flags": 33,
+      "lcid": 1032,
+      "data_index": 159
+    },
+    {
+      "name": "en",
+      "flags": 17,
+      "lcid": 9,
+      "data_index": 160
+    },
+    {
+      "name": "en-001",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 161
+    },
+    {
+      "name": "en-029",
+      "flags": 33,
+      "lcid": 9225,
+      "data_index": 162
+    },
+    {
+      "name": "en-150",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 163
+    },
+    {
+      "name": "en-AE",
+      "flags": 33,
+      "lcid": 19465,
+      "data_index": 164
+    },
+    {
+      "name": "en-AG",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 165
+    },
+    {
+      "name": "en-AI",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 166
+    },
+    {
+      "name": "en-AS",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 167
+    },
+    {
+      "name": "en-AT",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 168
+    },
+    {
+      "name": "en-AU",
+      "flags": 33,
+      "lcid": 3081,
+      "data_index": 169
+    },
+    {
+      "name": "en-BB",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 170
+    },
+    {
+      "name": "en-BE",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 171
+    },
+    {
+      "name": "en-BI",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 172
+    },
+    {
+      "name": "en-BM",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 173
+    },
+    {
+      "name": "en-BS",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 174
+    },
+    {
+      "name": "en-BW",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 175
+    },
+    {
+      "name": "en-BZ",
+      "flags": 33,
+      "lcid": 10249,
+      "data_index": 176
+    },
+    {
+      "name": "en-CA",
+      "flags": 33,
+      "lcid": 4105,
+      "data_index": 177
+    },
+    {
+      "name": "en-CC",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 178
+    },
+    {
+      "name": "en-CH",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 179
+    },
+    {
+      "name": "en-CK",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 180
+    },
+    {
+      "name": "en-CM",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 181
+    },
+    {
+      "name": "en-CX",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 182
+    },
+    {
+      "name": "en-CY",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 183
+    },
+    {
+      "name": "en-DE",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 184
+    },
+    {
+      "name": "en-DG",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 185
+    },
+    {
+      "name": "en-DK",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 186
+    },
+    {
+      "name": "en-DM",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 187
+    },
+    {
+      "name": "en-ER",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 188
+    },
+    {
+      "name": "en-FI",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 189
+    },
+    {
+      "name": "en-FJ",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 190
+    },
+    {
+      "name": "en-FK",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 191
+    },
+    {
+      "name": "en-FM",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 192
+    },
+    {
+      "name": "en-GB",
+      "flags": 33,
+      "lcid": 2057,
+      "data_index": 193
+    },
+    {
+      "name": "en-GD",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 194
+    },
+    {
+      "name": "en-GG",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 195
+    },
+    {
+      "name": "en-GH",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 196
+    },
+    {
+      "name": "en-GI",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 197
+    },
+    {
+      "name": "en-GM",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 198
+    },
+    {
+      "name": "en-GU",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 199
+    },
+    {
+      "name": "en-GY",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 200
+    },
+    {
+      "name": "en-HK",
+      "flags": 33,
+      "lcid": 15369,
+      "data_index": 201
+    },
+    {
+      "name": "en-ID",
+      "flags": 33,
+      "lcid": 14345,
+      "data_index": 202
+    },
+    {
+      "name": "en-IE",
+      "flags": 33,
+      "lcid": 6153,
+      "data_index": 203
+    },
+    {
+      "name": "en-IL",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 204
+    },
+    {
+      "name": "en-IM",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 205
+    },
+    {
+      "name": "en-IN",
+      "flags": 33,
+      "lcid": 16393,
+      "data_index": 206
+    },
+    {
+      "name": "en-IO",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 207
+    },
+    {
+      "name": "en-JE",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 208
+    },
+    {
+      "name": "en-JM",
+      "flags": 33,
+      "lcid": 8201,
+      "data_index": 209
+    },
+    {
+      "name": "en-KE",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 210
+    },
+    {
+      "name": "en-KI",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 211
+    },
+    {
+      "name": "en-KN",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 212
+    },
+    {
+      "name": "en-KY",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 213
+    },
+    {
+      "name": "en-LC",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 214
+    },
+    {
+      "name": "en-LR",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 215
+    },
+    {
+      "name": "en-LS",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 216
+    },
+    {
+      "name": "en-MG",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 217
+    },
+    {
+      "name": "en-MH",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 218
+    },
+    {
+      "name": "en-MO",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 219
+    },
+    {
+      "name": "en-MP",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 220
+    },
+    {
+      "name": "en-MS",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 221
+    },
+    {
+      "name": "en-MT",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 222
+    },
+    {
+      "name": "en-MU",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 223
+    },
+    {
+      "name": "en-MW",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 224
+    },
+    {
+      "name": "en-MY",
+      "flags": 33,
+      "lcid": 17417,
+      "data_index": 225
+    },
+    {
+      "name": "en-NA",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 226
+    },
+    {
+      "name": "en-NF",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 227
+    },
+    {
+      "name": "en-NG",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 228
+    },
+    {
+      "name": "en-NL",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 229
+    },
+    {
+      "name": "en-NR",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 230
+    },
+    {
+      "name": "en-NU",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 231
+    },
+    {
+      "name": "en-NZ",
+      "flags": 33,
+      "lcid": 5129,
+      "data_index": 232
+    },
+    {
+      "name": "en-PG",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 233
+    },
+    {
+      "name": "en-PH",
+      "flags": 33,
+      "lcid": 13321,
+      "data_index": 234
+    },
+    {
+      "name": "en-PK",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 235
+    },
+    {
+      "name": "en-PN",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 236
+    },
+    {
+      "name": "en-PR",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 237
+    },
+    {
+      "name": "en-PW",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 238
+    },
+    {
+      "name": "en-RW",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 239
+    },
+    {
+      "name": "en-SB",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 240
+    },
+    {
+      "name": "en-SC",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 241
+    },
+    {
+      "name": "en-SD",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 242
+    },
+    {
+      "name": "en-SE",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 243
+    },
+    {
+      "name": "en-SG",
+      "flags": 33,
+      "lcid": 18441,
+      "data_index": 244
+    },
+    {
+      "name": "en-SH",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 245
+    },
+    {
+      "name": "en-SI",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 246
+    },
+    {
+      "name": "en-SL",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 247
+    },
+    {
+      "name": "en-SS",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 248
+    },
+    {
+      "name": "en-SX",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 249
+    },
+    {
+      "name": "en-SZ",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 250
+    },
+    {
+      "name": "en-TC",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 251
+    },
+    {
+      "name": "en-TK",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 252
+    },
+    {
+      "name": "en-TO",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 253
+    },
+    {
+      "name": "en-TT",
+      "flags": 33,
+      "lcid": 11273,
+      "data_index": 254
+    },
+    {
+      "name": "en-TV",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 255
+    },
+    {
+      "name": "en-TZ",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 256
+    },
+    {
+      "name": "en-UG",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 257
+    },
+    {
+      "name": "en-UM",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 258
+    },
+    {
+      "name": "en-US",
+      "flags": 33,
+      "lcid": 1033,
+      "data_index": 259
+    },
+    {
+      "name": "en-VC",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 260
+    },
+    {
+      "name": "en-VG",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 261
+    },
+    {
+      "name": "en-VI",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 262
+    },
+    {
+      "name": "en-VU",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 263
+    },
+    {
+      "name": "en-WS",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 264
+    },
+    {
+      "name": "en-ZA",
+      "flags": 33,
+      "lcid": 7177,
+      "data_index": 265
+    },
+    {
+      "name": "en-ZM",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 266
+    },
+    {
+      "name": "en-ZW",
+      "flags": 33,
+      "lcid": 12297,
+      "data_index": 267
+    },
+    {
+      "name": "eo",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 268
+    },
+    {
+      "name": "eo-001",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 269
+    },
+    {
+      "name": "es",
+      "flags": 17,
+      "lcid": 10,
+      "data_index": 270
+    },
+    {
+      "name": "es-419",
+      "flags": 33,
+      "lcid": 22538,
+      "data_index": 271
+    },
+    {
+      "name": "es-AR",
+      "flags": 33,
+      "lcid": 11274,
+      "data_index": 272
+    },
+    {
+      "name": "es-BO",
+      "flags": 33,
+      "lcid": 16394,
+      "data_index": 273
+    },
+    {
+      "name": "es-BR",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 274
+    },
+    {
+      "name": "es-BZ",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 275
+    },
+    {
+      "name": "es-CL",
+      "flags": 33,
+      "lcid": 13322,
+      "data_index": 276
+    },
+    {
+      "name": "es-CO",
+      "flags": 33,
+      "lcid": 9226,
+      "data_index": 277
+    },
+    {
+      "name": "es-CR",
+      "flags": 33,
+      "lcid": 5130,
+      "data_index": 278
+    },
+    {
+      "name": "es-CU",
+      "flags": 33,
+      "lcid": 23562,
+      "data_index": 279
+    },
+    {
+      "name": "es-DO",
+      "flags": 33,
+      "lcid": 7178,
+      "data_index": 280
+    },
+    {
+      "name": "es-EA",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 281
+    },
+    {
+      "name": "es-EC",
+      "flags": 33,
+      "lcid": 12298,
+      "data_index": 282
+    },
+    {
+      "name": "es-ES",
+      "flags": 33,
+      "lcid": 3082,
+      "data_index": 283
+    },
+    {
+      "name": "es-ES_tradnl",
+      "flags": 4,
+      "lcid": 1034,
+      "data_index": 284
+    },
+    {
+      "name": "es-GQ",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 285
+    },
+    {
+      "name": "es-GT",
+      "flags": 33,
+      "lcid": 4106,
+      "data_index": 286
+    },
+    {
+      "name": "es-HN",
+      "flags": 33,
+      "lcid": 18442,
+      "data_index": 287
+    },
+    {
+      "name": "es-IC",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 288
+    },
+    {
+      "name": "es-MX",
+      "flags": 33,
+      "lcid": 2058,
+      "data_index": 289
+    },
+    {
+      "name": "es-NI",
+      "flags": 33,
+      "lcid": 19466,
+      "data_index": 290
+    },
+    {
+      "name": "es-PA",
+      "flags": 33,
+      "lcid": 6154,
+      "data_index": 291
+    },
+    {
+      "name": "es-PE",
+      "flags": 33,
+      "lcid": 10250,
+      "data_index": 292
+    },
+    {
+      "name": "es-PH",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 293
+    },
+    {
+      "name": "es-PR",
+      "flags": 33,
+      "lcid": 20490,
+      "data_index": 294
+    },
+    {
+      "name": "es-PY",
+      "flags": 33,
+      "lcid": 15370,
+      "data_index": 295
+    },
+    {
+      "name": "es-SV",
+      "flags": 33,
+      "lcid": 17418,
+      "data_index": 296
+    },
+    {
+      "name": "es-US",
+      "flags": 33,
+      "lcid": 21514,
+      "data_index": 297
+    },
+    {
+      "name": "es-UY",
+      "flags": 33,
+      "lcid": 14346,
+      "data_index": 298
+    },
+    {
+      "name": "es-VE",
+      "flags": 33,
+      "lcid": 8202,
+      "data_index": 299
+    },
+    {
+      "name": "et",
+      "flags": 17,
+      "lcid": 37,
+      "data_index": 300
+    },
+    {
+      "name": "et-EE",
+      "flags": 33,
+      "lcid": 1061,
+      "data_index": 301
+    },
+    {
+      "name": "eu",
+      "flags": 17,
+      "lcid": 45,
+      "data_index": 302
+    },
+    {
+      "name": "eu-ES",
+      "flags": 33,
+      "lcid": 1069,
+      "data_index": 303
+    },
+    {
+      "name": "ewo",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 304
+    },
+    {
+      "name": "ewo-CM",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 305
+    },
+    {
+      "name": "fa",
+      "flags": 17,
+      "lcid": 41,
+      "data_index": 306
+    },
+    {
+      "name": "fa-IR",
+      "flags": 33,
+      "lcid": 1065,
+      "data_index": 307
+    },
+    {
+      "name": "ff",
+      "flags": 17,
+      "lcid": 103,
+      "data_index": 308
+    },
+    {
+      "name": "ff-Adlm",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 309
+    },
+    {
+      "name": "ff-Adlm-BF",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 310
+    },
+    {
+      "name": "ff-Adlm-CM",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 311
+    },
+    {
+      "name": "ff-Adlm-GH",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 312
+    },
+    {
+      "name": "ff-Adlm-GM",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 313
+    },
+    {
+      "name": "ff-Adlm-GN",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 314
+    },
+    {
+      "name": "ff-Adlm-GW",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 315
+    },
+    {
+      "name": "ff-Adlm-LR",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 316
+    },
+    {
+      "name": "ff-Adlm-MR",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 317
+    },
+    {
+      "name": "ff-Adlm-NE",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 318
+    },
+    {
+      "name": "ff-Adlm-NG",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 319
+    },
+    {
+      "name": "ff-Adlm-SL",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 320
+    },
+    {
+      "name": "ff-Adlm-SN",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 321
+    },
+    {
+      "name": "ff-Latn",
+      "flags": 17,
+      "lcid": 31847,
+      "data_index": 322
+    },
+    {
+      "name": "ff-Latn-BF",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 323
+    },
+    {
+      "name": "ff-Latn-CM",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 324
+    },
+    {
+      "name": "ff-Latn-GH",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 325
+    },
+    {
+      "name": "ff-Latn-GM",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 326
+    },
+    {
+      "name": "ff-Latn-GN",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 327
+    },
+    {
+      "name": "ff-Latn-GW",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 328
+    },
+    {
+      "name": "ff-Latn-LR",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 329
+    },
+    {
+      "name": "ff-Latn-MR",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 330
+    },
+    {
+      "name": "ff-Latn-NE",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 331
+    },
+    {
+      "name": "ff-Latn-NG",
+      "flags": 33,
+      "lcid": 1127,
+      "data_index": 332
+    },
+    {
+      "name": "ff-Latn-SL",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 333
+    },
+    {
+      "name": "ff-Latn-SN",
+      "flags": 33,
+      "lcid": 2151,
+      "data_index": 334
+    },
+    {
+      "name": "fi",
+      "flags": 17,
+      "lcid": 11,
+      "data_index": 335
+    },
+    {
+      "name": "fi-FI",
+      "flags": 33,
+      "lcid": 1035,
+      "data_index": 336
+    },
+    {
+      "name": "fil",
+      "flags": 17,
+      "lcid": 100,
+      "data_index": 337
+    },
+    {
+      "name": "fil-PH",
+      "flags": 33,
+      "lcid": 1124,
+      "data_index": 338
+    },
+    {
+      "name": "fo",
+      "flags": 17,
+      "lcid": 56,
+      "data_index": 339
+    },
+    {
+      "name": "fo-DK",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 340
+    },
+    {
+      "name": "fo-FO",
+      "flags": 33,
+      "lcid": 1080,
+      "data_index": 341
+    },
+    {
+      "name": "fr",
+      "flags": 17,
+      "lcid": 12,
+      "data_index": 342
+    },
+    {
+      "name": "fr-029",
+      "flags": 33,
+      "lcid": 7180,
+      "data_index": 343
+    },
+    {
+      "name": "fr-BE",
+      "flags": 33,
+      "lcid": 2060,
+      "data_index": 344
+    },
+    {
+      "name": "fr-BF",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 345
+    },
+    {
+      "name": "fr-BI",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 346
+    },
+    {
+      "name": "fr-BJ",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 347
+    },
+    {
+      "name": "fr-BL",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 348
+    },
+    {
+      "name": "fr-CA",
+      "flags": 33,
+      "lcid": 3084,
+      "data_index": 349
+    },
+    {
+      "name": "fr-CD",
+      "flags": 33,
+      "lcid": 9228,
+      "data_index": 350
+    },
+    {
+      "name": "fr-CF",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 351
+    },
+    {
+      "name": "fr-CG",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 352
+    },
+    {
+      "name": "fr-CH",
+      "flags": 33,
+      "lcid": 4108,
+      "data_index": 353
+    },
+    {
+      "name": "fr-CI",
+      "flags": 33,
+      "lcid": 12300,
+      "data_index": 354
+    },
+    {
+      "name": "fr-CM",
+      "flags": 33,
+      "lcid": 11276,
+      "data_index": 355
+    },
+    {
+      "name": "fr-DJ",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 356
+    },
+    {
+      "name": "fr-DZ",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 357
+    },
+    {
+      "name": "fr-FR",
+      "flags": 33,
+      "lcid": 1036,
+      "data_index": 358
+    },
+    {
+      "name": "fr-GA",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 359
+    },
+    {
+      "name": "fr-GF",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 360
+    },
+    {
+      "name": "fr-GN",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 361
+    },
+    {
+      "name": "fr-GP",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 362
+    },
+    {
+      "name": "fr-GQ",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 363
+    },
+    {
+      "name": "fr-HT",
+      "flags": 33,
+      "lcid": 15372,
+      "data_index": 364
+    },
+    {
+      "name": "fr-KM",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 365
+    },
+    {
+      "name": "fr-LU",
+      "flags": 33,
+      "lcid": 5132,
+      "data_index": 366
+    },
+    {
+      "name": "fr-MA",
+      "flags": 33,
+      "lcid": 14348,
+      "data_index": 367
+    },
+    {
+      "name": "fr-MC",
+      "flags": 33,
+      "lcid": 6156,
+      "data_index": 368
+    },
+    {
+      "name": "fr-MF",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 369
+    },
+    {
+      "name": "fr-MG",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 370
+    },
+    {
+      "name": "fr-ML",
+      "flags": 33,
+      "lcid": 13324,
+      "data_index": 371
+    },
+    {
+      "name": "fr-MQ",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 372
+    },
+    {
+      "name": "fr-MR",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 373
+    },
+    {
+      "name": "fr-MU",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 374
+    },
+    {
+      "name": "fr-NC",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 375
+    },
+    {
+      "name": "fr-NE",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 376
+    },
+    {
+      "name": "fr-PF",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 377
+    },
+    {
+      "name": "fr-PM",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 378
+    },
+    {
+      "name": "fr-RE",
+      "flags": 33,
+      "lcid": 8204,
+      "data_index": 379
+    },
+    {
+      "name": "fr-RW",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 380
+    },
+    {
+      "name": "fr-SC",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 381
+    },
+    {
+      "name": "fr-SN",
+      "flags": 33,
+      "lcid": 10252,
+      "data_index": 382
+    },
+    {
+      "name": "fr-SY",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 383
+    },
+    {
+      "name": "fr-TD",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 384
+    },
+    {
+      "name": "fr-TG",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 385
+    },
+    {
+      "name": "fr-TN",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 386
+    },
+    {
+      "name": "fr-VU",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 387
+    },
+    {
+      "name": "fr-WF",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 388
+    },
+    {
+      "name": "fr-YT",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 389
+    },
+    {
+      "name": "fur",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 390
+    },
+    {
+      "name": "fur-IT",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 391
+    },
+    {
+      "name": "fy",
+      "flags": 17,
+      "lcid": 98,
+      "data_index": 392
+    },
+    {
+      "name": "fy-NL",
+      "flags": 33,
+      "lcid": 1122,
+      "data_index": 393
+    },
+    {
+      "name": "ga",
+      "flags": 17,
+      "lcid": 60,
+      "data_index": 394
+    },
+    {
+      "name": "ga-GB",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 395
+    },
+    {
+      "name": "ga-IE",
+      "flags": 33,
+      "lcid": 2108,
+      "data_index": 396
+    },
+    {
+      "name": "gd",
+      "flags": 17,
+      "lcid": 145,
+      "data_index": 397
+    },
+    {
+      "name": "gd-GB",
+      "flags": 33,
+      "lcid": 1169,
+      "data_index": 398
+    },
+    {
+      "name": "gl",
+      "flags": 17,
+      "lcid": 86,
+      "data_index": 399
+    },
+    {
+      "name": "gl-ES",
+      "flags": 33,
+      "lcid": 1110,
+      "data_index": 400
+    },
+    {
+      "name": "gn",
+      "flags": 17,
+      "lcid": 116,
+      "data_index": 401
+    },
+    {
+      "name": "gn-PY",
+      "flags": 33,
+      "lcid": 1140,
+      "data_index": 402
+    },
+    {
+      "name": "gsw",
+      "flags": 17,
+      "lcid": 132,
+      "data_index": 403
+    },
+    {
+      "name": "gsw-CH",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 404
+    },
+    {
+      "name": "gsw-FR",
+      "flags": 33,
+      "lcid": 1156,
+      "data_index": 405
+    },
+    {
+      "name": "gsw-LI",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 406
+    },
+    {
+      "name": "gu",
+      "flags": 17,
+      "lcid": 71,
+      "data_index": 407
+    },
+    {
+      "name": "gu-IN",
+      "flags": 33,
+      "lcid": 1095,
+      "data_index": 408
+    },
+    {
+      "name": "guz",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 409
+    },
+    {
+      "name": "guz-KE",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 410
+    },
+    {
+      "name": "gv",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 411
+    },
+    {
+      "name": "gv-GB",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 412
+    },
+    {
+      "name": "gv-IM",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 413
+    },
+    {
+      "name": "ha",
+      "flags": 17,
+      "lcid": 104,
+      "data_index": 414
+    },
+    {
+      "name": "ha-Latn",
+      "flags": 17,
+      "lcid": 31848,
+      "data_index": 415
+    },
+    {
+      "name": "ha-Latn-GH",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 416
+    },
+    {
+      "name": "ha-Latn-NE",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 417
+    },
+    {
+      "name": "ha-Latn-NG",
+      "flags": 33,
+      "lcid": 1128,
+      "data_index": 418
+    },
+    {
+      "name": "haw",
+      "flags": 17,
+      "lcid": 117,
+      "data_index": 419
+    },
+    {
+      "name": "haw-US",
+      "flags": 33,
+      "lcid": 1141,
+      "data_index": 420
+    },
+    {
+      "name": "he",
+      "flags": 17,
+      "lcid": 13,
+      "data_index": 421
+    },
+    {
+      "name": "he-IL",
+      "flags": 33,
+      "lcid": 1037,
+      "data_index": 422
+    },
+    {
+      "name": "hi",
+      "flags": 17,
+      "lcid": 57,
+      "data_index": 423
+    },
+    {
+      "name": "hi-IN",
+      "flags": 33,
+      "lcid": 1081,
+      "data_index": 424
+    },
+    {
+      "name": "hr",
+      "flags": 17,
+      "lcid": 26,
+      "data_index": 425
+    },
+    {
+      "name": "hr-BA",
+      "flags": 33,
+      "lcid": 4122,
+      "data_index": 426
+    },
+    {
+      "name": "hr-HR",
+      "flags": 33,
+      "lcid": 1050,
+      "data_index": 427
+    },
+    {
+      "name": "hsb",
+      "flags": 17,
+      "lcid": 46,
+      "data_index": 428
+    },
+    {
+      "name": "hsb-DE",
+      "flags": 33,
+      "lcid": 1070,
+      "data_index": 429
+    },
+    {
+      "name": "hu",
+      "flags": 17,
+      "lcid": 14,
+      "data_index": 430
+    },
+    {
+      "name": "hu-HU",
+      "flags": 33,
+      "lcid": 1038,
+      "data_index": 431
+    },
+    {
+      "name": "hu-HU_technl",
+      "flags": 4,
+      "lcid": 66574,
+      "data_index": 431
+    },
+    {
+      "name": "hy",
+      "flags": 17,
+      "lcid": 43,
+      "data_index": 432
+    },
+    {
+      "name": "hy-AM",
+      "flags": 33,
+      "lcid": 1067,
+      "data_index": 433
+    },
+    {
+      "name": "ia",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 434
+    },
+    {
+      "name": "ia-001",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 435
+    },
+    {
+      "name": "id",
+      "flags": 17,
+      "lcid": 33,
+      "data_index": 436
+    },
+    {
+      "name": "id-ID",
+      "flags": 33,
+      "lcid": 1057,
+      "data_index": 437
+    },
+    {
+      "name": "ie",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 438
+    },
+    {
+      "name": "ie-EE",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 439
+    },
+    {
+      "name": "ig",
+      "flags": 17,
+      "lcid": 112,
+      "data_index": 440
+    },
+    {
+      "name": "ig-NG",
+      "flags": 33,
+      "lcid": 1136,
+      "data_index": 441
+    },
+    {
+      "name": "ii",
+      "flags": 17,
+      "lcid": 120,
+      "data_index": 442
+    },
+    {
+      "name": "ii-CN",
+      "flags": 33,
+      "lcid": 1144,
+      "data_index": 443
+    },
+    {
+      "name": "is",
+      "flags": 17,
+      "lcid": 15,
+      "data_index": 444
+    },
+    {
+      "name": "is-IS",
+      "flags": 33,
+      "lcid": 1039,
+      "data_index": 445
+    },
+    {
+      "name": "it",
+      "flags": 17,
+      "lcid": 16,
+      "data_index": 446
+    },
+    {
+      "name": "it-CH",
+      "flags": 33,
+      "lcid": 2064,
+      "data_index": 447
+    },
+    {
+      "name": "it-IT",
+      "flags": 33,
+      "lcid": 1040,
+      "data_index": 448
+    },
+    {
+      "name": "it-SM",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 449
+    },
+    {
+      "name": "it-VA",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 450
+    },
+    {
+      "name": "iu",
+      "flags": 17,
+      "lcid": 93,
+      "data_index": 451
+    },
+    {
+      "name": "iu-Cans",
+      "flags": 17,
+      "lcid": 30813,
+      "data_index": 452
+    },
+    {
+      "name": "iu-Cans-CA",
+      "flags": 33,
+      "lcid": 1117,
+      "data_index": 453
+    },
+    {
+      "name": "iu-Latn",
+      "flags": 17,
+      "lcid": 31837,
+      "data_index": 454
+    },
+    {
+      "name": "iu-Latn-CA",
+      "flags": 33,
+      "lcid": 2141,
+      "data_index": 455
+    },
+    {
+      "name": "ja",
+      "flags": 17,
+      "lcid": 17,
+      "data_index": 456
+    },
+    {
+      "name": "ja-JP",
+      "flags": 33,
+      "lcid": 1041,
+      "data_index": 457
+    },
+    {
+      "name": "ja-JP_radstr",
+      "flags": 4,
+      "lcid": 263185,
+      "data_index": 457
+    },
+    {
+      "name": "jgo",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 458
+    },
+    {
+      "name": "jgo-CM",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 459
+    },
+    {
+      "name": "jmc",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 460
+    },
+    {
+      "name": "jmc-TZ",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 461
+    },
+    {
+      "name": "jv",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 462
+    },
+    {
+      "name": "jv-Latn",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 463
+    },
+    {
+      "name": "jv-Latn-ID",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 464
+    },
+    {
+      "name": "ka",
+      "flags": 17,
+      "lcid": 55,
+      "data_index": 465
+    },
+    {
+      "name": "ka-GE",
+      "flags": 33,
+      "lcid": 1079,
+      "data_index": 466
+    },
+    {
+      "name": "ka-GE_modern",
+      "flags": 4,
+      "lcid": 66615,
+      "data_index": 466
+    },
+    {
+      "name": "kaa",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 467
+    },
+    {
+      "name": "kaa-Cyrl",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 468
+    },
+    {
+      "name": "kaa-Cyrl-UZ",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 469
+    },
+    {
+      "name": "kaa-Latn",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 470
+    },
+    {
+      "name": "kaa-Latn-UZ",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 471
+    },
+    {
+      "name": "kab",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 472
+    },
+    {
+      "name": "kab-DZ",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 473
+    },
+    {
+      "name": "kam",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 474
+    },
+    {
+      "name": "kam-KE",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 475
+    },
+    {
+      "name": "kde",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 476
+    },
+    {
+      "name": "kde-TZ",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 477
+    },
+    {
+      "name": "kea",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 478
+    },
+    {
+      "name": "kea-CV",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 479
+    },
+    {
+      "name": "kgp",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 480
+    },
+    {
+      "name": "kgp-BR",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 481
+    },
+    {
+      "name": "khq",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 482
+    },
+    {
+      "name": "khq-ML",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 483
+    },
+    {
+      "name": "ki",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 484
+    },
+    {
+      "name": "ki-KE",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 485
+    },
+    {
+      "name": "kk",
+      "flags": 17,
+      "lcid": 63,
+      "data_index": 486
+    },
+    {
+      "name": "kk-Arab",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 487
+    },
+    {
+      "name": "kk-Arab-CN",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 488
+    },
+    {
+      "name": "kk-Cyrl",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 489
+    },
+    {
+      "name": "kk-Cyrl-KZ",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 490
+    },
+    {
+      "name": "kk-KZ",
+      "flags": 33,
+      "lcid": 1087,
+      "data_index": 491
+    },
+    {
+      "name": "kkj",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 492
+    },
+    {
+      "name": "kkj-CM",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 493
+    },
+    {
+      "name": "kl",
+      "flags": 17,
+      "lcid": 111,
+      "data_index": 494
+    },
+    {
+      "name": "kl-GL",
+      "flags": 33,
+      "lcid": 1135,
+      "data_index": 495
+    },
+    {
+      "name": "kln",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 496
+    },
+    {
+      "name": "kln-KE",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 497
+    },
+    {
+      "name": "km",
+      "flags": 17,
+      "lcid": 83,
+      "data_index": 498
+    },
+    {
+      "name": "km-KH",
+      "flags": 33,
+      "lcid": 1107,
+      "data_index": 499
+    },
+    {
+      "name": "kn",
+      "flags": 17,
+      "lcid": 75,
+      "data_index": 500
+    },
+    {
+      "name": "kn-IN",
+      "flags": 33,
+      "lcid": 1099,
+      "data_index": 501
+    },
+    {
+      "name": "ko",
+      "flags": 17,
+      "lcid": 18,
+      "data_index": 502
+    },
+    {
+      "name": "ko-KP",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 503
+    },
+    {
+      "name": "ko-KR",
+      "flags": 33,
+      "lcid": 1042,
+      "data_index": 504
+    },
+    {
+      "name": "kok",
+      "flags": 17,
+      "lcid": 87,
+      "data_index": 505
+    },
+    {
+      "name": "kok-Deva",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 506
+    },
+    {
+      "name": "kok-Deva-IN",
+      "flags": 33,
+      "lcid": 1111,
+      "data_index": 507
+    },
+    {
+      "name": "kok-Latn",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 508
+    },
+    {
+      "name": "kok-Latn-IN",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 509
+    },
+    {
+      "name": "kr",
+      "flags": 17,
+      "lcid": 113,
+      "data_index": 510
+    },
+    {
+      "name": "kr-Latn",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 511
+    },
+    {
+      "name": "kr-Latn-NG",
+      "flags": 33,
+      "lcid": 1137,
+      "data_index": 512
+    },
+    {
+      "name": "ks",
+      "flags": 17,
+      "lcid": 96,
+      "data_index": 513
+    },
+    {
+      "name": "ks-Arab",
+      "flags": 17,
+      "lcid": 1120,
+      "data_index": 514
+    },
+    {
+      "name": "ks-Arab-IN",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 515
+    },
+    {
+      "name": "ks-Deva",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 516
+    },
+    {
+      "name": "ks-Deva-IN",
+      "flags": 33,
+      "lcid": 2144,
+      "data_index": 517
+    },
+    {
+      "name": "ksb",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 518
+    },
+    {
+      "name": "ksb-TZ",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 519
+    },
+    {
+      "name": "ksf",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 520
+    },
+    {
+      "name": "ksf-CM",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 521
+    },
+    {
+      "name": "ksh",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 522
+    },
+    {
+      "name": "ksh-DE",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 523
+    },
+    {
+      "name": "ku",
+      "flags": 17,
+      "lcid": 146,
+      "data_index": 524
+    },
+    {
+      "name": "ku-Arab",
+      "flags": 17,
+      "lcid": 31890,
+      "data_index": 525
+    },
+    {
+      "name": "ku-Arab-IQ",
+      "flags": 33,
+      "lcid": 1170,
+      "data_index": 526
+    },
+    {
+      "name": "ku-Arab-IR",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 527
+    },
+    {
+      "name": "kw",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 528
+    },
+    {
+      "name": "kw-GB",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 529
+    },
+    {
+      "name": "ky",
+      "flags": 17,
+      "lcid": 64,
+      "data_index": 530
+    },
+    {
+      "name": "ky-KG",
+      "flags": 33,
+      "lcid": 1088,
+      "data_index": 531
+    },
+    {
+      "name": "la",
+      "flags": 17,
+      "lcid": 118,
+      "data_index": 532
+    },
+    {
+      "name": "la-VA",
+      "flags": 33,
+      "lcid": 1142,
+      "data_index": 533
+    },
+    {
+      "name": "lag",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 534
+    },
+    {
+      "name": "lag-TZ",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 535
+    },
+    {
+      "name": "lb",
+      "flags": 17,
+      "lcid": 110,
+      "data_index": 536
+    },
+    {
+      "name": "lb-LU",
+      "flags": 33,
+      "lcid": 1134,
+      "data_index": 537
+    },
+    {
+      "name": "lg",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 538
+    },
+    {
+      "name": "lg-UG",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 539
+    },
+    {
+      "name": "lkt",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 540
+    },
+    {
+      "name": "lkt-US",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 541
+    },
+    {
+      "name": "lld",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 542
+    },
+    {
+      "name": "lld-IT",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 543
+    },
+    {
+      "name": "ln",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 544
+    },
+    {
+      "name": "ln-AO",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 545
+    },
+    {
+      "name": "ln-CD",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 546
+    },
+    {
+      "name": "ln-CF",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 547
+    },
+    {
+      "name": "ln-CG",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 548
+    },
+    {
+      "name": "lo",
+      "flags": 17,
+      "lcid": 84,
+      "data_index": 549
+    },
+    {
+      "name": "lo-LA",
+      "flags": 33,
+      "lcid": 1108,
+      "data_index": 550
+    },
+    {
+      "name": "lrc",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 551
+    },
+    {
+      "name": "lrc-IQ",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 552
+    },
+    {
+      "name": "lrc-IR",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 553
+    },
+    {
+      "name": "lt",
+      "flags": 17,
+      "lcid": 39,
+      "data_index": 554
+    },
+    {
+      "name": "lt-LT",
+      "flags": 33,
+      "lcid": 1063,
+      "data_index": 555
+    },
+    {
+      "name": "ltg",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 556
+    },
+    {
+      "name": "ltg-LV",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 557
+    },
+    {
+      "name": "lu",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 558
+    },
+    {
+      "name": "lu-CD",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 559
+    },
+    {
+      "name": "luo",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 560
+    },
+    {
+      "name": "luo-KE",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 561
+    },
+    {
+      "name": "luy",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 562
+    },
+    {
+      "name": "luy-KE",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 563
+    },
+    {
+      "name": "lv",
+      "flags": 17,
+      "lcid": 38,
+      "data_index": 564
+    },
+    {
+      "name": "lv-LV",
+      "flags": 33,
+      "lcid": 1062,
+      "data_index": 565
+    },
+    {
+      "name": "mai",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 566
+    },
+    {
+      "name": "mai-IN",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 567
+    },
+    {
+      "name": "mas",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 568
+    },
+    {
+      "name": "mas-KE",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 569
+    },
+    {
+      "name": "mas-TZ",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 570
+    },
+    {
+      "name": "mer",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 571
+    },
+    {
+      "name": "mer-KE",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 572
+    },
+    {
+      "name": "mfe",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 573
+    },
+    {
+      "name": "mfe-MU",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 574
+    },
+    {
+      "name": "mg",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 575
+    },
+    {
+      "name": "mg-MG",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 576
+    },
+    {
+      "name": "mgh",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 577
+    },
+    {
+      "name": "mgh-MZ",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 578
+    },
+    {
+      "name": "mgo",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 579
+    },
+    {
+      "name": "mgo-CM",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 580
+    },
+    {
+      "name": "mhn",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 581
+    },
+    {
+      "name": "mhn-IT",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 582
+    },
+    {
+      "name": "mi",
+      "flags": 17,
+      "lcid": 129,
+      "data_index": 583
+    },
+    {
+      "name": "mi-NZ",
+      "flags": 33,
+      "lcid": 1153,
+      "data_index": 584
+    },
+    {
+      "name": "mic",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 585
+    },
+    {
+      "name": "mic-CA",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 586
+    },
+    {
+      "name": "mk",
+      "flags": 17,
+      "lcid": 47,
+      "data_index": 587
+    },
+    {
+      "name": "mk-MK",
+      "flags": 33,
+      "lcid": 1071,
+      "data_index": 588
+    },
+    {
+      "name": "ml",
+      "flags": 17,
+      "lcid": 76,
+      "data_index": 589
+    },
+    {
+      "name": "ml-IN",
+      "flags": 33,
+      "lcid": 1100,
+      "data_index": 590
+    },
+    {
+      "name": "mn",
+      "flags": 17,
+      "lcid": 80,
+      "data_index": 591
+    },
+    {
+      "name": "mn-Cyrl",
+      "flags": 17,
+      "lcid": 30800,
+      "data_index": 592
+    },
+    {
+      "name": "mn-MN",
+      "flags": 33,
+      "lcid": 1104,
+      "data_index": 593
+    },
+    {
+      "name": "mn-Mong",
+      "flags": 17,
+      "lcid": 31824,
+      "data_index": 594
+    },
+    {
+      "name": "mn-Mong-CN",
+      "flags": 33,
+      "lcid": 2128,
+      "data_index": 595
+    },
+    {
+      "name": "mn-Mong-MN",
+      "flags": 33,
+      "lcid": 3152,
+      "data_index": 596
+    },
+    {
+      "name": "mni",
+      "flags": 17,
+      "lcid": 88,
+      "data_index": 597
+    },
+    {
+      "name": "mni-Beng",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 599
+    },
+    {
+      "name": "mni-IN",
+      "flags": 33,
+      "lcid": 1112,
+      "data_index": 598
+    },
+    {
+      "name": "moh",
+      "flags": 17,
+      "lcid": 124,
+      "data_index": 600
+    },
+    {
+      "name": "moh-CA",
+      "flags": 33,
+      "lcid": 1148,
+      "data_index": 601
+    },
+    {
+      "name": "mr",
+      "flags": 17,
+      "lcid": 78,
+      "data_index": 602
+    },
+    {
+      "name": "mr-IN",
+      "flags": 33,
+      "lcid": 1102,
+      "data_index": 603
+    },
+    {
+      "name": "ms",
+      "flags": 17,
+      "lcid": 62,
+      "data_index": 604
+    },
+    {
+      "name": "ms-BN",
+      "flags": 33,
+      "lcid": 2110,
+      "data_index": 605
+    },
+    {
+      "name": "ms-ID",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 606
+    },
+    {
+      "name": "ms-MY",
+      "flags": 33,
+      "lcid": 1086,
+      "data_index": 607
+    },
+    {
+      "name": "ms-SG",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 608
+    },
+    {
+      "name": "mt",
+      "flags": 17,
+      "lcid": 58,
+      "data_index": 609
+    },
+    {
+      "name": "mt-MT",
+      "flags": 33,
+      "lcid": 1082,
+      "data_index": 610
+    },
+    {
+      "name": "mua",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 611
+    },
+    {
+      "name": "mua-CM",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 612
+    },
+    {
+      "name": "my",
+      "flags": 17,
+      "lcid": 85,
+      "data_index": 613
+    },
+    {
+      "name": "my-MM",
+      "flags": 33,
+      "lcid": 1109,
+      "data_index": 614
+    },
+    {
+      "name": "mzn",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 615
+    },
+    {
+      "name": "mzn-IR",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 616
+    },
+    {
+      "name": "naq",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 617
+    },
+    {
+      "name": "naq-NA",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 618
+    },
+    {
+      "name": "nb",
+      "flags": 17,
+      "lcid": 31764,
+      "data_index": 619
+    },
+    {
+      "name": "nb-NO",
+      "flags": 33,
+      "lcid": 1044,
+      "data_index": 620
+    },
+    {
+      "name": "nb-SJ",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 621
+    },
+    {
+      "name": "nd",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 622
+    },
+    {
+      "name": "nd-ZW",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 623
+    },
+    {
+      "name": "nds",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 624
+    },
+    {
+      "name": "nds-DE",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 625
+    },
+    {
+      "name": "nds-NL",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 626
+    },
+    {
+      "name": "ne",
+      "flags": 17,
+      "lcid": 97,
+      "data_index": 627
+    },
+    {
+      "name": "ne-IN",
+      "flags": 33,
+      "lcid": 2145,
+      "data_index": 628
+    },
+    {
+      "name": "ne-NP",
+      "flags": 33,
+      "lcid": 1121,
+      "data_index": 629
+    },
+    {
+      "name": "nl",
+      "flags": 17,
+      "lcid": 19,
+      "data_index": 630
+    },
+    {
+      "name": "nl-AW",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 631
+    },
+    {
+      "name": "nl-BE",
+      "flags": 33,
+      "lcid": 2067,
+      "data_index": 632
+    },
+    {
+      "name": "nl-BQ",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 633
+    },
+    {
+      "name": "nl-CW",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 634
+    },
+    {
+      "name": "nl-NL",
+      "flags": 33,
+      "lcid": 1043,
+      "data_index": 635
+    },
+    {
+      "name": "nl-SR",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 636
+    },
+    {
+      "name": "nl-SX",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 637
+    },
+    {
+      "name": "nmg",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 638
+    },
+    {
+      "name": "nmg-CM",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 639
+    },
+    {
+      "name": "nn",
+      "flags": 17,
+      "lcid": 30740,
+      "data_index": 640
+    },
+    {
+      "name": "nn-NO",
+      "flags": 33,
+      "lcid": 2068,
+      "data_index": 641
+    },
+    {
+      "name": "nnh",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 642
+    },
+    {
+      "name": "nnh-CM",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 643
+    },
+    {
+      "name": "no",
+      "flags": 17,
+      "lcid": 20,
+      "data_index": 644
+    },
+    {
+      "name": "nqo",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 645
+    },
+    {
+      "name": "nqo-GN",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 646
+    },
+    {
+      "name": "nr",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 647
+    },
+    {
+      "name": "nr-ZA",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 648
+    },
+    {
+      "name": "nso",
+      "flags": 17,
+      "lcid": 108,
+      "data_index": 649
+    },
+    {
+      "name": "nso-ZA",
+      "flags": 33,
+      "lcid": 1132,
+      "data_index": 650
+    },
+    {
+      "name": "nus",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 651
+    },
+    {
+      "name": "nus-SS",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 652
+    },
+    {
+      "name": "nyn",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 653
+    },
+    {
+      "name": "nyn-UG",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 654
+    },
+    {
+      "name": "oc",
+      "flags": 17,
+      "lcid": 130,
+      "data_index": 655
+    },
+    {
+      "name": "oc-FR",
+      "flags": 33,
+      "lcid": 1154,
+      "data_index": 656
+    },
+    {
+      "name": "om",
+      "flags": 17,
+      "lcid": 114,
+      "data_index": 657
+    },
+    {
+      "name": "om-ET",
+      "flags": 33,
+      "lcid": 1138,
+      "data_index": 658
+    },
+    {
+      "name": "om-KE",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 659
+    },
+    {
+      "name": "or",
+      "flags": 17,
+      "lcid": 72,
+      "data_index": 660
+    },
+    {
+      "name": "or-IN",
+      "flags": 33,
+      "lcid": 1096,
+      "data_index": 661
+    },
+    {
+      "name": "os",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 662
+    },
+    {
+      "name": "os-GE",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 663
+    },
+    {
+      "name": "os-RU",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 664
+    },
+    {
+      "name": "pa",
+      "flags": 17,
+      "lcid": 70,
+      "data_index": 665
+    },
+    {
+      "name": "pa-Arab",
+      "flags": 17,
+      "lcid": 31814,
+      "data_index": 666
+    },
+    {
+      "name": "pa-Arab-PK",
+      "flags": 33,
+      "lcid": 2118,
+      "data_index": 667
+    },
+    {
+      "name": "pa-Guru",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 668
+    },
+    {
+      "name": "pa-IN",
+      "flags": 33,
+      "lcid": 1094,
+      "data_index": 669
+    },
+    {
+      "name": "pap",
+      "flags": 17,
+      "lcid": 121,
+      "data_index": 670
+    },
+    {
+      "name": "pcm",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 671
+    },
+    {
+      "name": "pcm-Latn",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 672
+    },
+    {
+      "name": "pcm-Latn-NG",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 673
+    },
+    {
+      "name": "pl",
+      "flags": 17,
+      "lcid": 21,
+      "data_index": 674
+    },
+    {
+      "name": "pl-PL",
+      "flags": 33,
+      "lcid": 1045,
+      "data_index": 675
+    },
+    {
+      "name": "prg",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 676
+    },
+    {
+      "name": "prg-001",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 677
+    },
+    {
+      "name": "prg-PL",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 678
+    },
+    {
+      "name": "prs",
+      "flags": 17,
+      "lcid": 140,
+      "data_index": 679
+    },
+    {
+      "name": "prs-AF",
+      "flags": 33,
+      "lcid": 1164,
+      "data_index": 680
+    },
+    {
+      "name": "ps",
+      "flags": 17,
+      "lcid": 99,
+      "data_index": 681
+    },
+    {
+      "name": "ps-AF",
+      "flags": 33,
+      "lcid": 1123,
+      "data_index": 682
+    },
+    {
+      "name": "ps-PK",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 683
+    },
+    {
+      "name": "pt",
+      "flags": 17,
+      "lcid": 22,
+      "data_index": 684
+    },
+    {
+      "name": "pt-AO",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 685
+    },
+    {
+      "name": "pt-BR",
+      "flags": 33,
+      "lcid": 1046,
+      "data_index": 686
+    },
+    {
+      "name": "pt-CH",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 687
+    },
+    {
+      "name": "pt-CV",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 688
+    },
+    {
+      "name": "pt-GQ",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 689
+    },
+    {
+      "name": "pt-GW",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 690
+    },
+    {
+      "name": "pt-LU",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 691
+    },
+    {
+      "name": "pt-MO",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 692
+    },
+    {
+      "name": "pt-MZ",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 693
+    },
+    {
+      "name": "pt-PT",
+      "flags": 33,
+      "lcid": 2070,
+      "data_index": 694
+    },
+    {
+      "name": "pt-ST",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 695
+    },
+    {
+      "name": "pt-TL",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 696
+    },
+    {
+      "name": "quc",
+      "flags": 17,
+      "lcid": 134,
+      "data_index": 697
+    },
+    {
+      "name": "quc-Latn",
+      "flags": 17,
+      "lcid": 31878,
+      "data_index": 698
+    },
+    {
+      "name": "quc-Latn-GT",
+      "flags": 33,
+      "lcid": 1158,
+      "data_index": 699
+    },
+    {
+      "name": "quz",
+      "flags": 17,
+      "lcid": 107,
+      "data_index": 700
+    },
+    {
+      "name": "quz-BO",
+      "flags": 33,
+      "lcid": 1131,
+      "data_index": 701
+    },
+    {
+      "name": "quz-EC",
+      "flags": 33,
+      "lcid": 2155,
+      "data_index": 702
+    },
+    {
+      "name": "quz-PE",
+      "flags": 33,
+      "lcid": 3179,
+      "data_index": 703
+    },
+    {
+      "name": "rm",
+      "flags": 17,
+      "lcid": 23,
+      "data_index": 704
+    },
+    {
+      "name": "rm-CH",
+      "flags": 33,
+      "lcid": 1047,
+      "data_index": 705
+    },
+    {
+      "name": "rn",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 706
+    },
+    {
+      "name": "rn-BI",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 707
+    },
+    {
+      "name": "ro",
+      "flags": 17,
+      "lcid": 24,
+      "data_index": 708
+    },
+    {
+      "name": "ro-MD",
+      "flags": 33,
+      "lcid": 2072,
+      "data_index": 709
+    },
+    {
+      "name": "ro-RO",
+      "flags": 33,
+      "lcid": 1048,
+      "data_index": 710
+    },
+    {
+      "name": "rof",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 711
+    },
+    {
+      "name": "rof-TZ",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 712
+    },
+    {
+      "name": "ru",
+      "flags": 17,
+      "lcid": 25,
+      "data_index": 713
+    },
+    {
+      "name": "ru-BY",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 714
+    },
+    {
+      "name": "ru-KG",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 715
+    },
+    {
+      "name": "ru-KZ",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 716
+    },
+    {
+      "name": "ru-MD",
+      "flags": 33,
+      "lcid": 2073,
+      "data_index": 717
+    },
+    {
+      "name": "ru-RU",
+      "flags": 33,
+      "lcid": 1049,
+      "data_index": 718
+    },
+    {
+      "name": "ru-UA",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 719
+    },
+    {
+      "name": "rw",
+      "flags": 17,
+      "lcid": 135,
+      "data_index": 720
+    },
+    {
+      "name": "rw-RW",
+      "flags": 33,
+      "lcid": 1159,
+      "data_index": 721
+    },
+    {
+      "name": "rwk",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 722
+    },
+    {
+      "name": "rwk-TZ",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 723
+    },
+    {
+      "name": "sa",
+      "flags": 17,
+      "lcid": 79,
+      "data_index": 724
+    },
+    {
+      "name": "sa-IN",
+      "flags": 33,
+      "lcid": 1103,
+      "data_index": 725
+    },
+    {
+      "name": "sah",
+      "flags": 17,
+      "lcid": 133,
+      "data_index": 726
+    },
+    {
+      "name": "sah-RU",
+      "flags": 33,
+      "lcid": 1157,
+      "data_index": 727
+    },
+    {
+      "name": "saq",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 728
+    },
+    {
+      "name": "saq-KE",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 729
+    },
+    {
+      "name": "sat",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 730
+    },
+    {
+      "name": "sat-Olck",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 731
+    },
+    {
+      "name": "sat-Olck-IN",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 732
+    },
+    {
+      "name": "sbp",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 733
+    },
+    {
+      "name": "sbp-TZ",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 734
+    },
+    {
+      "name": "sc",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 735
+    },
+    {
+      "name": "sc-IT",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 736
+    },
+    {
+      "name": "sd",
+      "flags": 17,
+      "lcid": 89,
+      "data_index": 737
+    },
+    {
+      "name": "sd-Arab",
+      "flags": 17,
+      "lcid": 31833,
+      "data_index": 738
+    },
+    {
+      "name": "sd-Arab-PK",
+      "flags": 33,
+      "lcid": 2137,
+      "data_index": 739
+    },
+    {
+      "name": "sd-Deva",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 740
+    },
+    {
+      "name": "sd-Deva-IN",
+      "flags": 33,
+      "lcid": 1113,
+      "data_index": 741
+    },
+    {
+      "name": "se",
+      "flags": 17,
+      "lcid": 59,
+      "data_index": 742
+    },
+    {
+      "name": "se-FI",
+      "flags": 33,
+      "lcid": 3131,
+      "data_index": 743
+    },
+    {
+      "name": "se-NO",
+      "flags": 33,
+      "lcid": 1083,
+      "data_index": 744
+    },
+    {
+      "name": "se-SE",
+      "flags": 33,
+      "lcid": 2107,
+      "data_index": 745
+    },
+    {
+      "name": "seh",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 746
+    },
+    {
+      "name": "seh-MZ",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 747
+    },
+    {
+      "name": "ses",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 748
+    },
+    {
+      "name": "ses-ML",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 749
+    },
+    {
+      "name": "sg",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 750
+    },
+    {
+      "name": "sg-CF",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 751
+    },
+    {
+      "name": "shi",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 752
+    },
+    {
+      "name": "shi-Latn",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 753
+    },
+    {
+      "name": "shi-Latn-MA",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 754
+    },
+    {
+      "name": "shi-Tfng",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 755
+    },
+    {
+      "name": "shi-Tfng-MA",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 756
+    },
+    {
+      "name": "si",
+      "flags": 17,
+      "lcid": 91,
+      "data_index": 757
+    },
+    {
+      "name": "si-LK",
+      "flags": 33,
+      "lcid": 1115,
+      "data_index": 758
+    },
+    {
+      "name": "sk",
+      "flags": 17,
+      "lcid": 27,
+      "data_index": 759
+    },
+    {
+      "name": "sk-SK",
+      "flags": 33,
+      "lcid": 1051,
+      "data_index": 760
+    },
+    {
+      "name": "skr",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 761
+    },
+    {
+      "name": "skr-PK",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 762
+    },
+    {
+      "name": "sl",
+      "flags": 17,
+      "lcid": 36,
+      "data_index": 763
+    },
+    {
+      "name": "sl-SI",
+      "flags": 33,
+      "lcid": 1060,
+      "data_index": 764
+    },
+    {
+      "name": "sma",
+      "flags": 17,
+      "lcid": 30779,
+      "data_index": 765
+    },
+    {
+      "name": "sma-NO",
+      "flags": 33,
+      "lcid": 6203,
+      "data_index": 766
+    },
+    {
+      "name": "sma-SE",
+      "flags": 33,
+      "lcid": 7227,
+      "data_index": 767
+    },
+    {
+      "name": "smj",
+      "flags": 17,
+      "lcid": 31803,
+      "data_index": 768
+    },
+    {
+      "name": "smj-NO",
+      "flags": 33,
+      "lcid": 4155,
+      "data_index": 769
+    },
+    {
+      "name": "smj-SE",
+      "flags": 33,
+      "lcid": 5179,
+      "data_index": 770
+    },
+    {
+      "name": "smn",
+      "flags": 17,
+      "lcid": 28731,
+      "data_index": 771
+    },
+    {
+      "name": "smn-FI",
+      "flags": 33,
+      "lcid": 9275,
+      "data_index": 772
+    },
+    {
+      "name": "sms",
+      "flags": 17,
+      "lcid": 29755,
+      "data_index": 773
+    },
+    {
+      "name": "sms-FI",
+      "flags": 33,
+      "lcid": 8251,
+      "data_index": 774
+    },
+    {
+      "name": "sn",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 775
+    },
+    {
+      "name": "sn-Latn",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 776
+    },
+    {
+      "name": "sn-Latn-ZW",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 777
+    },
+    {
+      "name": "so",
+      "flags": 17,
+      "lcid": 119,
+      "data_index": 778
+    },
+    {
+      "name": "so-DJ",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 779
+    },
+    {
+      "name": "so-ET",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 780
+    },
+    {
+      "name": "so-KE",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 781
+    },
+    {
+      "name": "so-SO",
+      "flags": 33,
+      "lcid": 1143,
+      "data_index": 782
+    },
+    {
+      "name": "sq",
+      "flags": 17,
+      "lcid": 28,
+      "data_index": 783
+    },
+    {
+      "name": "sq-AL",
+      "flags": 33,
+      "lcid": 1052,
+      "data_index": 784
+    },
+    {
+      "name": "sq-MK",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 785
+    },
+    {
+      "name": "sq-XK",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 786
+    },
+    {
+      "name": "sr",
+      "flags": 17,
+      "lcid": 31770,
+      "data_index": 787
+    },
+    {
+      "name": "sr-Cyrl",
+      "flags": 17,
+      "lcid": 27674,
+      "data_index": 788
+    },
+    {
+      "name": "sr-Cyrl-BA",
+      "flags": 33,
+      "lcid": 7194,
+      "data_index": 789
+    },
+    {
+      "name": "sr-Cyrl-ME",
+      "flags": 33,
+      "lcid": 12314,
+      "data_index": 790
+    },
+    {
+      "name": "sr-Cyrl-RS",
+      "flags": 33,
+      "lcid": 10266,
+      "data_index": 791
+    },
+    {
+      "name": "sr-Cyrl-XK",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 792
+    },
+    {
+      "name": "sr-Latn",
+      "flags": 17,
+      "lcid": 28698,
+      "data_index": 793
+    },
+    {
+      "name": "sr-Latn-BA",
+      "flags": 33,
+      "lcid": 6170,
+      "data_index": 794
+    },
+    {
+      "name": "sr-Latn-ME",
+      "flags": 33,
+      "lcid": 11290,
+      "data_index": 795
+    },
+    {
+      "name": "sr-Latn-RS",
+      "flags": 33,
+      "lcid": 9242,
+      "data_index": 796
+    },
+    {
+      "name": "sr-Latn-XK",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 797
+    },
+    {
+      "name": "ss",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 798
+    },
+    {
+      "name": "ss-SZ",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 799
+    },
+    {
+      "name": "ss-ZA",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 800
+    },
+    {
+      "name": "ssy",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 801
+    },
+    {
+      "name": "ssy-ER",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 802
+    },
+    {
+      "name": "st",
+      "flags": 17,
+      "lcid": 48,
+      "data_index": 803
+    },
+    {
+      "name": "st-LS",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 804
+    },
+    {
+      "name": "st-ZA",
+      "flags": 33,
+      "lcid": 1072,
+      "data_index": 805
+    },
+    {
+      "name": "su",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 806
+    },
+    {
+      "name": "su-Latn",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 807
+    },
+    {
+      "name": "su-Latn-ID",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 808
+    },
+    {
+      "name": "sv",
+      "flags": 17,
+      "lcid": 29,
+      "data_index": 809
+    },
+    {
+      "name": "sv-AX",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 810
+    },
+    {
+      "name": "sv-FI",
+      "flags": 33,
+      "lcid": 2077,
+      "data_index": 811
+    },
+    {
+      "name": "sv-SE",
+      "flags": 33,
+      "lcid": 1053,
+      "data_index": 812
+    },
+    {
+      "name": "sw",
+      "flags": 17,
+      "lcid": 65,
+      "data_index": 813
+    },
+    {
+      "name": "sw-CD",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 814
+    },
+    {
+      "name": "sw-KE",
+      "flags": 33,
+      "lcid": 1089,
+      "data_index": 815
+    },
+    {
+      "name": "sw-TZ",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 816
+    },
+    {
+      "name": "sw-UG",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 817
+    },
+    {
+      "name": "syr",
+      "flags": 17,
+      "lcid": 90,
+      "data_index": 818
+    },
+    {
+      "name": "syr-SY",
+      "flags": 33,
+      "lcid": 1114,
+      "data_index": 819
+    },
+    {
+      "name": "ta",
+      "flags": 17,
+      "lcid": 73,
+      "data_index": 820
+    },
+    {
+      "name": "ta-IN",
+      "flags": 33,
+      "lcid": 1097,
+      "data_index": 821
+    },
+    {
+      "name": "ta-LK",
+      "flags": 33,
+      "lcid": 2121,
+      "data_index": 822
+    },
+    {
+      "name": "ta-MY",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 823
+    },
+    {
+      "name": "ta-SG",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 824
+    },
+    {
+      "name": "te",
+      "flags": 17,
+      "lcid": 74,
+      "data_index": 825
+    },
+    {
+      "name": "te-IN",
+      "flags": 33,
+      "lcid": 1098,
+      "data_index": 826
+    },
+    {
+      "name": "teo",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 827
+    },
+    {
+      "name": "teo-KE",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 828
+    },
+    {
+      "name": "teo-UG",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 829
+    },
+    {
+      "name": "tg",
+      "flags": 17,
+      "lcid": 40,
+      "data_index": 830
+    },
+    {
+      "name": "tg-Cyrl",
+      "flags": 17,
+      "lcid": 31784,
+      "data_index": 831
+    },
+    {
+      "name": "tg-Cyrl-TJ",
+      "flags": 33,
+      "lcid": 1064,
+      "data_index": 832
+    },
+    {
+      "name": "th",
+      "flags": 17,
+      "lcid": 30,
+      "data_index": 833
+    },
+    {
+      "name": "th-TH",
+      "flags": 33,
+      "lcid": 1054,
+      "data_index": 834
+    },
+    {
+      "name": "ti",
+      "flags": 17,
+      "lcid": 115,
+      "data_index": 835
+    },
+    {
+      "name": "ti-ER",
+      "flags": 33,
+      "lcid": 2163,
+      "data_index": 836
+    },
+    {
+      "name": "ti-ET",
+      "flags": 33,
+      "lcid": 1139,
+      "data_index": 837
+    },
+    {
+      "name": "tig",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 838
+    },
+    {
+      "name": "tig-ER",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 839
+    },
+    {
+      "name": "tk",
+      "flags": 17,
+      "lcid": 66,
+      "data_index": 840
+    },
+    {
+      "name": "tk-TM",
+      "flags": 33,
+      "lcid": 1090,
+      "data_index": 841
+    },
+    {
+      "name": "tn",
+      "flags": 17,
+      "lcid": 50,
+      "data_index": 842
+    },
+    {
+      "name": "tn-BW",
+      "flags": 33,
+      "lcid": 2098,
+      "data_index": 843
+    },
+    {
+      "name": "tn-ZA",
+      "flags": 33,
+      "lcid": 1074,
+      "data_index": 844
+    },
+    {
+      "name": "to",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 845
+    },
+    {
+      "name": "to-TO",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 846
+    },
+    {
+      "name": "tr",
+      "flags": 17,
+      "lcid": 31,
+      "data_index": 847
+    },
+    {
+      "name": "tr-CY",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 848
+    },
+    {
+      "name": "tr-TR",
+      "flags": 33,
+      "lcid": 1055,
+      "data_index": 849
+    },
+    {
+      "name": "ts",
+      "flags": 17,
+      "lcid": 49,
+      "data_index": 850
+    },
+    {
+      "name": "ts-ZA",
+      "flags": 33,
+      "lcid": 1073,
+      "data_index": 851
+    },
+    {
+      "name": "tt",
+      "flags": 17,
+      "lcid": 68,
+      "data_index": 852
+    },
+    {
+      "name": "tt-RU",
+      "flags": 33,
+      "lcid": 1092,
+      "data_index": 853
+    },
+    {
+      "name": "twq",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 854
+    },
+    {
+      "name": "twq-NE",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 855
+    },
+    {
+      "name": "tyv",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 856
+    },
+    {
+      "name": "tyv-RU",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 857
+    },
+    {
+      "name": "tzm",
+      "flags": 17,
+      "lcid": 95,
+      "data_index": 858
+    },
+    {
+      "name": "tzm-Latn",
+      "flags": 17,
+      "lcid": 31839,
+      "data_index": 859
+    },
+    {
+      "name": "tzm-Latn-DZ",
+      "flags": 33,
+      "lcid": 2143,
+      "data_index": 861
+    },
+    {
+      "name": "tzm-Latn-MA",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 860
+    },
+    {
+      "name": "ug",
+      "flags": 17,
+      "lcid": 128,
+      "data_index": 862
+    },
+    {
+      "name": "ug-CN",
+      "flags": 33,
+      "lcid": 1152,
+      "data_index": 863
+    },
+    {
+      "name": "uk",
+      "flags": 17,
+      "lcid": 34,
+      "data_index": 864
+    },
+    {
+      "name": "uk-UA",
+      "flags": 33,
+      "lcid": 1058,
+      "data_index": 865
+    },
+    {
+      "name": "ur",
+      "flags": 17,
+      "lcid": 32,
+      "data_index": 866
+    },
+    {
+      "name": "ur-IN",
+      "flags": 33,
+      "lcid": 2080,
+      "data_index": 867
+    },
+    {
+      "name": "ur-PK",
+      "flags": 33,
+      "lcid": 1056,
+      "data_index": 868
+    },
+    {
+      "name": "uz",
+      "flags": 17,
+      "lcid": 67,
+      "data_index": 869
+    },
+    {
+      "name": "uz-Arab",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 870
+    },
+    {
+      "name": "uz-Arab-AF",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 871
+    },
+    {
+      "name": "uz-Cyrl",
+      "flags": 17,
+      "lcid": 30787,
+      "data_index": 872
+    },
+    {
+      "name": "uz-Cyrl-UZ",
+      "flags": 33,
+      "lcid": 2115,
+      "data_index": 873
+    },
+    {
+      "name": "uz-Latn",
+      "flags": 17,
+      "lcid": 31811,
+      "data_index": 874
+    },
+    {
+      "name": "uz-Latn-UZ",
+      "flags": 33,
+      "lcid": 1091,
+      "data_index": 875
+    },
+    {
+      "name": "vai",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 876
+    },
+    {
+      "name": "vai-Latn",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 877
+    },
+    {
+      "name": "vai-Latn-LR",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 878
+    },
+    {
+      "name": "vai-Vaii",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 879
+    },
+    {
+      "name": "vai-Vaii-LR",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 880
+    },
+    {
+      "name": "ve",
+      "flags": 17,
+      "lcid": 51,
+      "data_index": 881
+    },
+    {
+      "name": "ve-ZA",
+      "flags": 33,
+      "lcid": 1075,
+      "data_index": 882
+    },
+    {
+      "name": "vi",
+      "flags": 17,
+      "lcid": 42,
+      "data_index": 883
+    },
+    {
+      "name": "vi-VN",
+      "flags": 33,
+      "lcid": 1066,
+      "data_index": 884
+    },
+    {
+      "name": "vmw",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 885
+    },
+    {
+      "name": "vmw-MZ",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 886
+    },
+    {
+      "name": "vo",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 887
+    },
+    {
+      "name": "vo-001",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 888
+    },
+    {
+      "name": "vun",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 889
+    },
+    {
+      "name": "vun-TZ",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 890
+    },
+    {
+      "name": "wa",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 891
+    },
+    {
+      "name": "wa-BE",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 892
+    },
+    {
+      "name": "wae",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 893
+    },
+    {
+      "name": "wae-CH",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 894
+    },
+    {
+      "name": "wal",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 895
+    },
+    {
+      "name": "wal-ET",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 896
+    },
+    {
+      "name": "wo",
+      "flags": 17,
+      "lcid": 136,
+      "data_index": 897
+    },
+    {
+      "name": "wo-SN",
+      "flags": 33,
+      "lcid": 1160,
+      "data_index": 898
+    },
+    {
+      "name": "x-IV_mathan",
+      "flags": 4,
+      "lcid": 65663,
+      "data_index": 0
+    },
+    {
+      "name": "xh",
+      "flags": 17,
+      "lcid": 52,
+      "data_index": 899
+    },
+    {
+      "name": "xh-ZA",
+      "flags": 33,
+      "lcid": 1076,
+      "data_index": 900
+    },
+    {
+      "name": "xnr",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 901
+    },
+    {
+      "name": "xnr-IN",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 902
+    },
+    {
+      "name": "xog",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 903
+    },
+    {
+      "name": "xog-UG",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 904
+    },
+    {
+      "name": "yav",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 905
+    },
+    {
+      "name": "yav-CM",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 906
+    },
+    {
+      "name": "yi",
+      "flags": 17,
+      "lcid": 61,
+      "data_index": 907
+    },
+    {
+      "name": "yi-001",
+      "flags": 33,
+      "lcid": 1085,
+      "data_index": 908
+    },
+    {
+      "name": "yi-UA",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 909
+    },
+    {
+      "name": "yo",
+      "flags": 17,
+      "lcid": 106,
+      "data_index": 910
+    },
+    {
+      "name": "yo-BJ",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 911
+    },
+    {
+      "name": "yo-NG",
+      "flags": 33,
+      "lcid": 1130,
+      "data_index": 912
+    },
+    {
+      "name": "yrl",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 913
+    },
+    {
+      "name": "yrl-BR",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 914
+    },
+    {
+      "name": "yrl-CO",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 915
+    },
+    {
+      "name": "yrl-VE",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 916
+    },
+    {
+      "name": "yue",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 917
+    },
+    {
+      "name": "yue-Hans",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 918
+    },
+    {
+      "name": "yue-Hans-CN",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 919
+    },
+    {
+      "name": "yue-Hant",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 920
+    },
+    {
+      "name": "yue-Hant-CN",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 921
+    },
+    {
+      "name": "yue-Hant-HK",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 922
+    },
+    {
+      "name": "za",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 926
+    },
+    {
+      "name": "za-CN",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 927
+    },
+    {
+      "name": "zgh",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 923
+    },
+    {
+      "name": "zgh-Tfng",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 924
+    },
+    {
+      "name": "zgh-Tfng-MA",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 925
+    },
+    {
+      "name": "zh",
+      "flags": 17,
+      "lcid": 30724,
+      "data_index": 928
+    },
+    {
+      "name": "zh-CN",
+      "flags": 33,
+      "lcid": 2052,
+      "data_index": 929
+    },
+    {
+      "name": "zh-CN_phoneb",
+      "flags": 4,
+      "lcid": 329732,
+      "data_index": 929
+    },
+    {
+      "name": "zh-CN_stroke",
+      "flags": 4,
+      "lcid": 133124,
+      "data_index": 929
+    },
+    {
+      "name": "zh-Hans",
+      "flags": 17,
+      "lcid": 4,
+      "data_index": 930
+    },
+    {
+      "name": "zh-Hans-HK",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 931
+    },
+    {
+      "name": "zh-Hans-MO",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 932
+    },
+    {
+      "name": "zh-Hans-MY",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 933
+    },
+    {
+      "name": "zh-Hant",
+      "flags": 17,
+      "lcid": 31748,
+      "data_index": 934
+    },
+    {
+      "name": "zh-Hant-MY",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 935
+    },
+    {
+      "name": "zh-HK",
+      "flags": 33,
+      "lcid": 3076,
+      "data_index": 938
+    },
+    {
+      "name": "zh-HK_radstr",
+      "flags": 4,
+      "lcid": 265220,
+      "data_index": 938
+    },
+    {
+      "name": "zh-Latn",
+      "flags": 17,
+      "lcid": 4096,
+      "data_index": 936
+    },
+    {
+      "name": "zh-Latn-CN",
+      "flags": 33,
+      "lcid": 4096,
+      "data_index": 937
+    },
+    {
+      "name": "zh-MO",
+      "flags": 33,
+      "lcid": 5124,
+      "data_index": 939
+    },
+    {
+      "name": "zh-MO_radstr",
+      "flags": 4,
+      "lcid": 267268,
+      "data_index": 939
+    },
+    {
+      "name": "zh-MO_stroke",
+      "flags": 4,
+      "lcid": 136196,
+      "data_index": 939
+    },
+    {
+      "name": "zh-SG",
+      "flags": 33,
+      "lcid": 4100,
+      "data_index": 940
+    },
+    {
+      "name": "zh-SG_phoneb",
+      "flags": 4,
+      "lcid": 331780,
+      "data_index": 940
+    },
+    {
+      "name": "zh-SG_stroke",
+      "flags": 4,
+      "lcid": 135172,
+      "data_index": 940
+    },
+    {
+      "name": "zh-TW",
+      "flags": 33,
+      "lcid": 1028,
+      "data_index": 941
+    },
+    {
+      "name": "zh-TW_pronun",
+      "flags": 4,
+      "lcid": 197636,
+      "data_index": 941
+    },
+    {
+      "name": "zh-TW_radstr",
+      "flags": 4,
+      "lcid": 263172,
+      "data_index": 941
+    },
+    {
+      "name": "zu",
+      "flags": 17,
+      "lcid": 53,
+      "data_index": 942
+    },
+    {
+      "name": "zu-ZA",
+      "flags": 33,
+      "lcid": 1077,
+      "data_index": 943
+    }
+  ],
+  "alias_names_skipped": [
+    "arn-Latn",
+    "arn-Latn-CL",
+    "ba-Cyrl",
+    "ba-Cyrl-RU",
+    "bm-ML",
+    "bo-Tibt",
+    "bo-Tibt-CN",
+    "bo-Tibt-IN",
+    "br-Latn",
+    "br-Latn-FR",
+    "ccp-BD",
+    "ccp-IN",
+    "ceb-PH",
+    "chr-US",
+    "ckb",
+    "ckb-IQ",
+    "ckb-IR",
+    "co-Latn",
+    "co-Latn-FR",
+    "de-DE-u-co-phonebk",
+    "doi-IN",
+    "es-ES-u-co-trad",
+    "fa-AF",
+    "ff-CM",
+    "ff-GN",
+    "ff-MR",
+    "ff-NG",
+    "ff-SN",
+    "fil-Latn",
+    "fil-Latn-PH",
+    "fuv-NG",
+    "gd-Latn",
+    "ha-GH",
+    "ha-NE",
+    "ha-NG",
+    "haw-Latn",
+    "haw-Latn-US",
+    "ig-Latn",
+    "ig-Latn-NG",
+    "ii-Yiii",
+    "ii-Yiii-CN",
+    "ja-JP-u-co-unihan",
+    "jv-ID",
+    "kaa-UZ",
+    "kok-IN",
+    "kr-NG",
+    "ks-IN",
+    "ky-Cyrl",
+    "ky-Cyrl-KG",
+    "la-001",
+    "mi-Latn",
+    "mi-Latn-NZ",
+    "mn-Cyrl-MN",
+    "mni-Beng-IN",
+    "moh-Latn",
+    "moh-Latn-CA",
+    "ms-Latn",
+    "ms-Latn-BN",
+    "ms-Latn-MY",
+    "ms-Latn-SG",
+    "nus-SD",
+    "oc-Latn",
+    "oc-Latn-FR",
+    "pa-Guru-IN",
+    "pcm-NG",
+    "prs-Arab",
+    "prs-Arab-AF",
+    "qu",
+    "qu-BO",
+    "qu-EC",
+    "qu-PE",
+    "qut",
+    "qut-GT",
+    "quz-Latn",
+    "quz-Latn-BO",
+    "quz-Latn-EC",
+    "quz-Latn-PE",
+    "sa-Deva",
+    "sa-Deva-IN",
+    "sah-Cyrl",
+    "sah-Cyrl-RU",
+    "sd-PK",
+    "se-Latn",
+    "se-Latn-FI",
+    "se-Latn-NO",
+    "se-Latn-SE",
+    "sma-Latn",
+    "sma-Latn-NO",
+    "sma-Latn-SE",
+    "smj-Latn",
+    "smj-Latn-NO",
+    "smj-Latn-SE",
+    "smn-Latn",
+    "smn-Latn-FI",
+    "sms-Latn",
+    "sms-Latn-FI",
+    "sn-ZW",
+    "swc-CD",
+    "syr-Syrc",
+    "syr-Syrc-SY",
+    "tg-TJ",
+    "tig-Ethi-ER",
+    "tk-Latn",
+    "tk-Latn-TM",
+    "tt-Cyrl",
+    "tt-Cyrl-RU",
+    "tzm-DZ",
+    "tzm-MA",
+    "ug-Arab",
+    "ug-Arab-CN",
+    "wo-Latn",
+    "wo-Latn-SN",
+    "yo-Latn",
+    "yo-Latn-NG",
+    "zgh-MA",
+    "zh-Hans-CN",
+    "zh-Hans-CN-u-co-phonebk",
+    "zh-Hans-CN-u-co-stroke",
+    "zh-Hans-SG",
+    "zh-Hans-SG-u-co-phonebk",
+    "zh-Hans-SG-u-co-stroke",
+    "zh-Hant-HK",
+    "zh-Hant-HK-u-co-unihan",
+    "zh-Hant-MO",
+    "zh-Hant-MO-u-co-stroke",
+    "zh-Hant-MO-u-co-unihan",
+    "zh-Hant-TW",
+    "zh-Hant-TW-u-co-phonetic",
+    "zh-Hant-TW-u-co-unihan"
+  ],
+  "scope": "Pinned Wine 10.0 name-index order, alias exclusion, alternate-sort and inverted-neutral metadata; no Apple/Windows installed population claim"
+}

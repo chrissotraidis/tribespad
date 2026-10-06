@@ -1,0 +1,23 @@
+{
+  "scope": "Synchronous ReadFile on existing regular-file handles. The guest-facing ABI and existing zero/error behavior are retained; only native-buffer handling is changed.",
+  "behavior": [
+    "Native read uses at most 64 KiB of host-owned scratch memory per call. Bytes are copied into guest memory through the checked runtime; no guest pointer is admitted to the syscall.",
+    "The entire requested guest destination and byte-count output retain write-permission brackets before file position can advance and until the final count is written. Initial byte-count zeroing retains the prior behavior.",
+    "Reads continue to the requested length or EOF, retry EINTR, and preserve LastError on success. A short read writes only the bytes actually returned. Zero length performs no native read.",
+    "File access rights, guest pointer bounds, invalid handles and regular-file type checks precede transfer; metadata-only handles cannot read content.",
+    "The external-call guard admits only the native fixed (i32, host pointer, i64) -> i64 read ABI. Guest output and a wrong native return type stop explicitly."
+  ],
+  "validation": [
+    "Mac normal/TSan/checked and sole checked iPad: more than two native chunks with known bytes, odd guest alignment, EOF, short read, unchanged tail, file offset, zero length, invalid count/output/handle/access, CPU/stdcall and LastError.",
+    "Six checked stops: protected count, protected destination, cross-page destination, guest output passed directly to native read, wrong native read ABI and overlapped request. Mac shared-memory checks verify no destination bytes or file offset changed before those stops.",
+    "Existing filesystem/file/search/environment and emitted relative-path/file-encoding consumers remain regression checks."
+  ],
+  "limits": [
+    "Pipes, device reads and overlapped/asynchronous completion remain unsupported.",
+    "No new partial-read-on-I/O-error or cancellation semantics are claimed; error after an earlier successful chunk leaves already copied bytes and reports failure with zero count, as in the preceding regular-file loop.",
+    "This removes a known checked-runtime boundary; the original certificate-loading worker currently stops earlier in NtQueryInformationFile. No actual original ReadFile completion or playable-game acceptance is established."
+  ],
+  "sources": [
+    "https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-readfile"
+  ]
+}

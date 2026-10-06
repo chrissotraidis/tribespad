@@ -1,0 +1,90 @@
+[
+  {
+    "module": "mp3dec",
+    "path": "ref/qol/Mp3dec.asi",
+    "product_path": "ref/product/Mp3dec.asi",
+    "sha256": "0a6db88a5fad28168c1dac700473c5709b17802c33e36b2668c3300c1e580fad",
+    "import_base": 4294049792,
+    "lift": "generated/srw/run-20261004T210704-mp3dec"
+  },
+  {
+    "module": "mssv12",
+    "path": "ref/control/Mssv12.asi",
+    "product_path": "ref/product/Mssv12.asi",
+    "sha256": "d08c3d1051c62429f66c0c6cbaa6acae13f0b8b7e41d0b7482a1810a85984ead",
+    "import_base": 4294115328,
+    "lift": "generated/srw/run-20261004T210704-mssv12"
+  },
+  {
+    "module": "mssv24",
+    "path": "ref/control/Mssv24.asi",
+    "product_path": "ref/product/Mssv24.asi",
+    "sha256": "b742241256dbb7b54661625ebf0b400ae2ad5a08a92d02cac815635fa3a09299",
+    "import_base": 4294180864,
+    "lift": "generated/srw/run-20261004T210704-mssv24"
+  },
+  {
+    "module": "mssv29",
+    "path": "ref/control/Mssv29.asi",
+    "product_path": "ref/product/Mssv29.asi",
+    "sha256": "ff4364a198f695dc95285cc66b6758635bae6ee099bef32f2d3de9691e295a17",
+    "import_base": 4294246400,
+    "lift": "generated/srw/run-20261004T210704-mssv29"
+  },
+  {
+    "module": "mssds3dh",
+    "path": "ref/qol/Mssds3dh.m3d",
+    "product_path": "ref/product/Mssds3dh.m3d",
+    "sha256": "b90b26d654b7edc746f326ed34bbfd65e6cee4ecf6876eda5c7d04de4d54d1de",
+    "import_base": 4292935680,
+    "lift": "generated/srw/run-20261004T230306-mssds3dh"
+  },
+  {
+    "module": "mssds3ds",
+    "path": "ref/qol/Mssds3ds.m3d",
+    "product_path": "ref/product/Mssds3ds.m3d",
+    "sha256": "4f6642c0a7ebf33f2f5adf01149eaf5749159082fdd8ed5930d2cd1458e94709",
+    "import_base": 4293001216,
+    "lift": "generated/srw/run-20261004T230307-mssds3ds"
+  },
+  {
+    "module": "mssdx7sn",
+    "path": "ref/qol/Mssdx7sn.m3d",
+    "product_path": "ref/product/Mssdx7sn.m3d",
+    "sha256": "efa0feedc9e66ef290f56dd5b68f5fb83ea216e030ae64cc687f1043b0197269",
+    "import_base": 4293066752,
+    "lift": "generated/srw/run-20261004T230307-mssdx7sn"
+  },
+  {
+    "module": "msseax",
+    "path": "ref/qol/Msseax.m3d",
+    "product_path": "ref/product/Msseax.m3d",
+    "sha256": "34617f321bd68616c4c4a96c2ca17a8ca92c3c381f699102e7584c1881f734cc",
+    "import_base": 4293132288,
+    "lift": "generated/srw/run-20261004T230308-msseax"
+  },
+  {
+    "module": "msseax2",
+    "path": "ref/qol/Msseax2.m3d",
+    "product_path": "ref/product/Msseax2.m3d",
+    "sha256": "005b8966d8c67fe705c1497f5199e14108c960914305cd846a8e9905f7d14142",
+    "import_base": 4293197824,
+    "lift": "generated/srw/run-20261004T230308-msseax2"
+  },
+  {
+    "module": "mssfast",
+    "path": "ref/qol/Mssfast.m3d",
+    "product_path": "ref/product/Mssfast.m3d",
+    "sha256": "343ba39b3e5d0f220e0d15ec5f9eb9b84a04617599ba6cd1d815539637f10647",
+    "import_base": 4293263360,
+    "lift": "generated/srw/run-20261004T230309-mssfast"
+  },
+  {
+    "module": "reverb3",
+    "path": "ref/qol/Reverb3.flt",
+    "product_path": "ref/product/Reverb3.flt",
+    "sha256": "e106854e123efa1396474b8a65369514c5b86f9a891fac74170ea5846faad62c",
+    "import_base": 4293328896,
+    "lift": "generated/srw/run-20261004T231511-reverb3"
+  }
+]

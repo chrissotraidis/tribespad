@@ -1,0 +1,19 @@
+#include "../port/llasm-support/llasm_cpu.h"
+#include "../port/core/guest_memory_checks.h"
+#include "../port/core/guest_heap.h"
+#include <assert.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+#include <sys/mman.h>
+extern void tribes_enter(_cpu *,uint32_t),tribes_return_to_host(void),tbimp_lstrcatA(void),tbimp_lstrcpyA(void),tbimp_lstrlenA(void);
+void *tribes_lookup(uint32_t a){switch(a){case 1:return tbimp_lstrcatA;case 2:return tbimp_lstrcpyA;case 3:return tbimp_lstrlenA;case 0xfffff000:return tribes_return_to_host;default:abort();}}
+static unsigned char *m;
+static uint32_t call(unsigned target,unsigned n,uint32_t *args){_cpu c={0};c._pointer_offset=(uintptr_t)m;c._esp=0x180000-4*n;c._eax=123;c._eflags=0x246;memcpy(m+c._esp,args,4*n);_cpu before=c;tribes_enter(&c,target);before._eax=c._eax;before._esp=0x180000;assert(!memcmp(&before,&c,sizeof c));return c._eax;}
+int main(int argc,char **argv){
+ m=mmap(NULL,UINT64_C(0x100000000),PROT_NONE,MAP_PRIVATE|MAP_ANON,-1,0);assert(m!=MAP_FAILED&&!mprotect(m+0x100000,0x100000,PROT_READ|PROT_WRITE));assert(tribes_memory_checks_configure((uintptr_t)m,UINT64_C(0x100000000)));strcpy((char *)m+0x101000,"Miles ");strcpy((char *)m+0x102000,"audio\x80\xff");uint32_t a[]={0x101000,0x102000};
+ if(argc>1&&!strcmp(argv[1],"readonly"))assert(tribes_memory_permissions_set(0x101000,4096,1));
+ if(argc>1&&!strcmp(argv[1],"unreadable"))assert(tribes_memory_permissions_set(0x102000,4096,0));
+ tribes_set_last_error(123);assert(call(1,2,a)==a[0]&&tribes_get_last_error()==123);assert(!strcmp((char *)m+a[0],"Miles audio\x80\xff"));assert(call(3,1,a)==13);assert(call(2,2,a)==a[0]&&!strcmp((char *)m+a[0],"audio\x80\xff"));m[a[1]]=0;assert(call(1,2,a)==a[0]&&call(3,1,a)==7);assert(call(2,2,a)==a[0]&&!m[a[0]]);a[0]=0;assert(!call(3,1,a));assert(!call(2,2,a)&&tribes_get_last_error()==87);
+ puts("PASS: original-width lstrcat/lstrcpy/lstrlen ABI, terminators, empty strings, opaque high bytes, null length and caller register preservation");return 0;
+}

@@ -1,0 +1,30 @@
+{
+  "schema": 1,
+  "guest_page_bytes": 4096,
+  "reservation_alignment_bytes": 65536,
+  "arena_begin": "0x60030000",
+  "arena_end": "0x7fff0000",
+  "checked_opt_in": "Host registers immutable TribesVirtualMemoryBackend targets before external-call target freeze and before any VM reservation. Native-only mode retains its subpage rejection.",
+  "checked_transactions": "VM ownership mutex serializes region metadata. Trusted backend holds memory-access write lock across native group permission changes, zero-fill of newly committed logical pages, and logical permission publication. All other pages in each native group retain their protection and bytes.",
+  "commit": "Newly committed pages are zero-filled even for PAGE_READONLY or PAGE_NOACCESS. Classic and FromApp recommit preserve existing protection and contents. NT recommit changes protection and retains contents.",
+  "decommit": "Clear only the requested logical page states. Do not madvise partial native groups. Recommit zero-fills decommitted pages. Full release denies checked/native access before MADV_DONTNEED and metadata removal.",
+  "query": "Committed/reserved runs follow 4 KiB state in checked mode. Native tail padding is retained as owned reserved space, not made available to another allocation.",
+  "failure": "Publish region-state bytes only after successful backend transaction. Rollback native protections on OS failure; fail closed if rollback fails. Failed zero-fill transactions can change only formerly inaccessible uncommitted bytes.",
+  "scope": [
+    "Current process only",
+    "PAGE_NOACCESS, PAGE_READONLY, PAGE_READWRITE",
+    "Existing allocation modes and bounded address-requirement handling",
+    "No new executable-memory allocation, PAGE_GUARD, large pages, placeholders, remote process, Windows SEH, or dynamic VirtualProtect support"
+  ],
+  "tests": [
+    "scripts/test-vm-subpages.py",
+    "scripts/test-virtual-memory-abi.py",
+    "scripts/test-guest-threads.py --modes checked"
+  ],
+  "sources": [
+    "https://learn.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-virtualalloc2fromapp",
+    "https://learn.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-virtualalloc",
+    "https://learn.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-virtualfree"
+  ],
+  "nested_access": "Nested explicit/compiler-generated read brackets share one outer OS read lock per native thread, checking every inner range. A queued permission writer waits for all brackets to end. Publication inside a live read bracket fails closed instead of attempting lock upgrade."
+}

@@ -1,0 +1,12 @@
+{
+  "major": 5,
+  "minor": 1,
+  "build": 2600,
+  "platform": 2,
+  "service_pack": "Service Pack 3",
+  "service_pack_major": 3,
+  "service_pack_minor": 0,
+  "suite_mask": 256,
+  "product_type": 1,
+  "qualification": "Legacy NT API compatibility identity for the guest process, not an assertion that the host runs Windows. Does not establish complete XP API behavior. Required entry points are implemented and validated individually."
+}

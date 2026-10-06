@@ -1,0 +1,70 @@
+{
+  "scope": "Sixteenth finite startup revision: second 27-byte post-video NOP region.",
+  "writes": [
+    {
+      "writer": "0x1005b433",
+      "address": "0x402543",
+      "size": 4,
+      "before": "6a056a05",
+      "after": "90909090"
+    },
+    {
+      "writer": "0x1005b435",
+      "address": "0x402547",
+      "size": 4,
+      "before": "6858a374",
+      "after": "90909090"
+    },
+    {
+      "writer": "0x1005b438",
+      "address": "0x40254b",
+      "size": 4,
+      "before": "00682022",
+      "after": "90909090"
+    },
+    {
+      "writer": "0x1005b43b",
+      "address": "0x40254f",
+      "size": 4,
+      "before": "4000688c",
+      "after": "90909090"
+    },
+    {
+      "writer": "0x1005b43e",
+      "address": "0x402553",
+      "size": 4,
+      "before": "a37400e8",
+      "after": "90909090"
+    },
+    {
+      "writer": "0x1005b441",
+      "address": "0x402557",
+      "size": 4,
+      "before": "f5400200",
+      "after": "90909090"
+    },
+    {
+      "writer": "0x1005b444",
+      "address": "0x40255b",
+      "size": 2,
+      "before": "83c4",
+      "after": "9090"
+    },
+    {
+      "writer": "0x1005b448",
+      "address": "0x40255d",
+      "size": 1,
+      "before": "14",
+      "after": "90"
+    }
+  ],
+  "behavior": [
+    "Eight exact original stores replace 0x402543 through 0x40255d with NOPs. Complete variants retain both historical entries loc_402540 and loc_40255B. The first retains ADD ESP,20; both paths retain the next registration to 0x426650 and its exact stack/return address.",
+    "Main CPU, startup stage, completed first NOP region, ordered writer/address/width/preimage/value and final bytes are validated. Activation follows the eighth store before the next interleaved registration. Arbitrary stores and a seventeenth revision remain forbidden.",
+    "Both NOP entries are disjoint from earlier wrappers. Prior routes remain available during revisions14/15/16; the prefix routes require completed phase28. First NOP routes require completed phase30; new second NOP routes remain unavailable throughout partial publication. Pending trampoline bank entries retain existing timing."
+  ],
+  "limits": [
+    "Only the two NOP regions are admitted. The following CALL redirect, byte constants, additional bank entries and display-dependent patches remain unverified.",
+    "No original window, map, HD, gameplay controls or authenticated match acceptance. Bounded debugger endpoints do not establish whole-memory or ordinary-launch timing equivalence."
+  ]
+}

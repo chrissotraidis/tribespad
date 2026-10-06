@@ -1,0 +1,215 @@
+funcv tb_sse_load $, index, address, mode
+funcv tb_avx_ssreg $, dest, merge, source
+funcv tb_avx_ssload $, dest, address
+funcv tb_avx_ssstore $, source, address
+funcv tb_sse_store $, index, address, mode
+funcv tb_sse_regmove $, dest, source, mode
+funcv tb_sse_setd $, index, value
+func tb_sse_getd $, index
+funcv tb_sse_binary $, op, dest, source
+funcv tb_sse_binarymem $, op, dest, address
+func tb_sse_mask $, index
+funcv tb_sse_shuffle $, op, dest, source, control
+funcv tb_sse_shufflemem $, op, dest, address, control
+funcv tb_sse_dq2pd $, dest, source
+funcv tb_sse_dq2pdmem $, dest, address
+funcv tb_sse_ucomisd $, left, right
+funcv tb_sse_ucomisdmem $, left, address
+func tb_sse_cvttss2si $, source
+func tb_sse_cvttss2simem $, address
+funcv tb_sse_pd2ps $, dest, source
+funcv tb_sse_pd2psmem $, dest, address
+funcv tb_sse_scalar $, op, dest, source
+funcv tb_sse_scalarmem $, op, dest, address
+funcv tb_avx_scalar $, op, dest, merge, source
+funcv tb_avx_scalarmem $, op, dest, merge, address
+funcv tb_avx_ss2sd $, dest, merge, source
+funcv tb_avx_ss2sdmem $, dest, merge, address
+funcv tb_avx_xor $, dest, left, right
+funcv tb_avx_xormem $, dest, left, address
+funcv tb_avx_sqrtsd $, dest, merge, source
+funcv tb_avx_sqrtsdmem $, dest, merge, address
+funcv tb_avx_sd2ss $, dest, merge, source
+funcv tb_avx_sd2ssmem $, dest, merge, address
+funcv tb_avx_comiss $, left, right
+funcv tb_avx_comissmem $, left, address
+funcv tb_avx_apsreg $, dest, source
+funcv tb_avx_apsload $, dest, address
+funcv tb_avx_apsstore $, source, address
+funcv tb_avx_aps256reg $, dest, source
+funcv tb_avx_aps256load $, dest, address
+funcv tb_avx_aps256store $, source, address
+funcv tb_avx_upsreg $, dest, source
+funcv tb_avx_upsload $, dest, address
+funcv tb_avx_upsstore $, source, address
+funcv tb_avx_ups256reg $, dest, source
+funcv tb_avx_ups256load $, dest, address
+funcv tb_avx_ups256store $, source, address
+funcv tb_avx_zeroupper $
+funcv tb_avx_shufps $, wide, dest, left, right, control
+funcv tb_avx_shufpsmem $, wide, dest, left, address, control
+funcv tb_avx_extract128reg $, dest, source, control
+funcv tb_avx_extract128store $, source, address, control
+funcv tb_avx_halfreg $, high, dest, merge, source
+funcv tb_avx_halfload $, high, dest, merge, address
+funcv tb_avx_halfstore $, high, source, address
+funcv tb_avx_packed $, wide, op, dest, left, right
+funcv tb_avx_packedmem $, wide, op, dest, left, address
+
+funcv tb_avx_broadcast $, wide, kind, dest, source
+funcv tb_avx_broadcastmem $, wide, kind, dest, address
+
+funcv tb_avx_sdreg $, dest, merge, source
+funcv tb_avx_sdload $, dest, address
+funcv tb_avx_sdstore $, source, address
+
+funcv tb_avx_sqrtps $, wide, dest, source
+funcv tb_avx_sqrtpsmem $, wide, dest, address
+
+func tb_sse_cvttsd2si $, source
+func tb_sse_cvttsd2simem $, address
+
+funcv tb_avx_minmaxss $, maximum, dest, merge, source
+funcv tb_avx_minmaxssmem $, maximum, dest, merge, address
+funcv tb_avx_comisd $, left, right
+funcv tb_avx_comisdmem $, left, address
+
+funcv tb_avx_integer_logic $, wide, op, dest, left, right
+funcv tb_avx_integer_logicmem $, wide, op, dest, left, address
+
+funcv tb_avx_setd $, dest, value
+funcv tb_avx_qreg $, dest, source
+funcv tb_avx_smallload $, quad, dest, address
+funcv tb_avx_smallstore $, quad, source, address
+
+funcv tb_avx_sadbw $, wide, dest, left, right
+funcv tb_avx_sadbwmem $, wide, dest, left, address
+
+funcv tb_avx_maddadd $, wide, op, dest, left, right
+funcv tb_avx_maddaddmem $, wide, op, dest, left, address
+
+funcv tb_avx_shiftimm $, wide, op, dest, source, count
+funcv tb_avx_shiftcount $, wide, op, dest, source, countreg
+funcv tb_avx_shiftcountmem $, wide, op, dest, source, address
+
+funcv tb_avx_permd $, dest, indices, source
+funcv tb_avx_permdmem $, dest, indices, address
+
+funcv tb_avx_unpackhighq $, wide, dest, left, right
+funcv tb_avx_unpackhighqmem $, wide, dest, left, address
+
+funcv tb_avx_shufd $, wide, dest, source, order
+funcv tb_avx_shufdmem $, wide, dest, address, order
+
+funcv tb_avx_shufb $, wide, dest, source, controls
+funcv tb_avx_shufbmem $, wide, dest, source, address
+
+funcv tb_avx_ibroadcast $, wide, kind, dest, source
+funcv tb_avx_ibroadcastmem $, wide, kind, dest, address
+
+funcv tb_avx_icmp $, wide, op, dest, left, right
+funcv tb_avx_icmpmem $, wide, op, dest, left, address
+
+funcv tb_avx_blendvb $, wide, dest, left, right, masks
+funcv tb_avx_blendvbmem $, wide, dest, left, address, masks
+
+funcv tb_avx_inserti128 $, dest, merge, source, control
+funcv tb_avx_inserti128mem $, dest, merge, address, control
+
+func tb_avx_movmskb $, wide, source
+
+funcv tb_avx_subusw $, wide, dest, left, right
+funcv tb_avx_subuswmem $, wide, dest, left, address
+funcv tb_avx_clmul $, wide, dest, left, right, control
+funcv tb_avx_clmulmem $, wide, dest, left, address, control
+
+funcv tb_evex_quadconv128 $, op, dest, source
+funcv tb_evex_quadconv128mem $, op, dest, address
+
+func tb_avx_extractd $, source, control
+funcv tb_avx_extractdmem $, source, address, control
+funcv tb_avx_insertd $, dest, merge, value, control
+funcv tb_avx_insertdmem $, dest, merge, address, control
+
+func tb_sse_extractw $, source, control
+funcv tb_sse_extractwmem $, source, address, control
+
+funcv tb_sse_fence $, kind
+
+func tb_sse_cmov $, cc, bits, dest, value
+func tb_sse_cmovmem $, cc, bits, dest, address
+
+funcv tb_sse_ps2pd $, dest, source
+funcv tb_sse_ps2pdmem $, dest, address
+
+funcv tb_sse_sqrtsd $, dest, source
+funcv tb_sse_sqrtsdmem $, dest, address
+
+funcv tb_sse_sd2ss $, dest, source
+funcv tb_sse_sd2ssmem $, dest, address
+
+funcv tb_sse_mulps $, dest, source
+funcv tb_sse_mulpsmem $, dest, address
+
+funcv tb_sse_divps $, dest, source
+funcv tb_sse_divpsmem $, dest, address
+
+funcv tb_sse_addps $, dest, source
+funcv tb_sse_addpsmem $, dest, address
+
+funcv tb_sse_shufps $, dest, source, control
+funcv tb_sse_shufpsmem $, dest, address, control
+funcv tb_sse_subps $, dest, source
+funcv tb_sse_subpsmem $, dest, address
+funcv tb_sse_halfreg $, high, dest, source
+funcv tb_sse_ss2sd $, dest, source
+funcv tb_sse_ss2sdmem $, dest, address
+funcv tb_sse_sqrtps $, dest, source
+funcv tb_sse_sqrtpsmem $, dest, address
+funcv tb_sse_minmaxss $, maximum, dest, source
+funcv tb_sse_minmaxssmem $, maximum, dest, address
+
+funcv tb_sse_andnps $, dest, source
+funcv tb_sse_andnpsmem $, dest, address
+
+funcv tb_sse_unpacklowd $, dest, source
+funcv tb_sse_unpacklowdmem $, dest, address
+
+funcv tb_sse_shiftrbytes $, dest, count
+
+funcv tb_sse_mulsd $, dest, source
+funcv tb_sse_mulsdmem $, dest, address
+
+funcv tb_sse_dq2ps $, dest, source
+funcv tb_sse_dq2psmem $, dest, address
+funcv tb_sse_si2ss $, dest, input
+funcv tb_sse_si2ssmem $, dest, address
+funcv tb_sse_si2sd $, dest, input
+funcv tb_sse_si2sdmem $, dest, address
+funcv tb_sse_packuswb $, dest, source
+funcv tb_sse_packuswbmem $, dest, address
+funcv tb_sse_paddd $, dest, source
+funcv tb_sse_padddmem $, dest, address
+funcv tb_sse_ucomiss $, left, right
+funcv tb_sse_ucomissmem $, left, address
+funcv tb_sse_pminsd $, dest, source
+funcv tb_sse_pminsdmem $, dest, address
+funcv tb_sse_unpackloww $, dest, source
+funcv tb_sse_unpacklowwmem $, dest, address
+funcv tb_sse_unpacklowb $, dest, source
+funcv tb_sse_unpacklowbmem $, dest, address
+funcv tb_sse_divpd $, dest, source
+funcv tb_sse_divpdmem $, dest, address
+funcv tb_sse_addpd $, dest, source
+funcv tb_sse_addpdmem $, dest, address
+funcv tb_sse_cmppd $, dest, source, predicate
+funcv tb_sse_cmppdmem $, dest, address, predicate
+funcv tb_sse_divsd $, dest, source
+funcv tb_sse_divsdmem $, dest, address
+funcv tb_sse_truncpd $, dest, source
+funcv tb_sse_truncpdmem $, dest, address
+funcv tb_sse_bits128 $, op, dest, source
+funcv tb_sse_bits128mem $, op, dest, address
+funcv tb_sse_shiftimm $, op, dest, count
+funcv tb_sse_shiftcount $, op, dest, source
+funcv tb_sse_shiftcountmem $, op, dest, address

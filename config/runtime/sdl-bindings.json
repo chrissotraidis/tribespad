@@ -1,0 +1,659 @@
+{
+  "SDL_SetHint": {
+    "helper": "tribes_sdl_set_hint",
+    "arguments": 2,
+    "returns": true,
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_SetHintWithPriority": {
+    "helper": "tribes_sdl_set_hint_priority",
+    "arguments": 3,
+    "returns": true,
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_ResetHint": {
+    "helper": "tribes_sdl_reset_hint",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_GetHint": {
+    "helper": "tribes_sdl_get_hint",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_SetAppMetadata": {
+    "helper": "tribes_sdl_set_app_metadata",
+    "arguments": 3,
+    "returns": true,
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_SetAppMetadataProperty": {
+    "helper": "tribes_sdl_set_app_metadata_property",
+    "arguments": 2,
+    "returns": true,
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_SetLogOutputFunction": {
+    "helper": "tribes_sdl_set_log_output",
+    "arguments": 2,
+    "returns": false,
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_SetMainReady": {
+    "helper": "tribes_sdl_set_main_ready",
+    "arguments": 0,
+    "returns": false,
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_Init": {
+    "helper": "tribes_sdl_init",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_InitSubSystem": {
+    "helper": "tribes_sdl_init",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_WasInit": {
+    "helper": "tribes_sdl_was_init",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_QuitSubSystem": {
+    "helper": "tribes_sdl_quit_subsystem",
+    "arguments": 1,
+    "returns": false,
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_Quit": {
+    "helper": "tribes_sdl_backend_quit",
+    "arguments": 0,
+    "returns": false,
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_GetPrimaryDisplay": {
+    "helper": "tribes_sdl_get_primary_display",
+    "arguments": 0,
+    "returns": true,
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_GetDesktopDisplayMode": {
+    "helper": "tribes_sdl_get_desktop_display_mode",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_CreateMutex": {
+    "helper": "tribes_sdl_create_mutex",
+    "arguments": 0,
+    "returns": true,
+    "guest_base": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_DestroyMutex": {
+    "helper": "tribes_sdl_destroy_mutex",
+    "arguments": 1,
+    "returns": false,
+    "guest_base": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_LockMutex": {
+    "helper": "tribes_sdl_lock_mutex",
+    "arguments": 1,
+    "returns": false,
+    "guest_base": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_TryLockMutex": {
+    "helper": "tribes_sdl_try_lock_mutex",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_UnlockMutex": {
+    "helper": "tribes_sdl_unlock_mutex",
+    "arguments": 1,
+    "returns": false,
+    "guest_base": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_CreateCondition": {
+    "helper": "tribes_sdl_create_condition",
+    "arguments": 0,
+    "returns": true,
+    "guest_base": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_DestroyCondition": {
+    "helper": "tribes_sdl_destroy_condition",
+    "arguments": 1,
+    "returns": false,
+    "guest_base": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_SignalCondition": {
+    "helper": "tribes_sdl_signal_condition",
+    "arguments": 1,
+    "returns": false,
+    "guest_base": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_BroadcastCondition": {
+    "helper": "tribes_sdl_broadcast_condition",
+    "arguments": 1,
+    "returns": false,
+    "guest_base": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_WaitConditionTimeout": {
+    "helper": "tribes_sdl_wait_condition_timeout",
+    "arguments": 3,
+    "returns": true,
+    "guest_base": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_SetTLS": {
+    "helper": "tribes_sdl_set_tls",
+    "arguments": 3,
+    "returns": true,
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_GetTLS": {
+    "helper": "tribes_sdl_get_tls",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_CleanupTLS": {
+    "helper": "tribes_sdl_cleanup_tls",
+    "arguments": 0,
+    "returns": false,
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_GetKeyboardState": {
+    "helper": "tribes_sdl_get_keyboard_state",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_GetGamepads": {
+    "helper": "tribes_sdl_get_gamepads",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_HasJoystick": {
+    "helper": "tribes_sdl_has_joystick",
+    "arguments": 0,
+    "returns": true,
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_OpenGamepad": {
+    "helper": "tribes_sdl_open_gamepad",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_GetGamepadName": {
+    "helper": "tribes_sdl_get_gamepad_name",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_CloseGamepad": {
+    "helper": "tribes_sdl_close_gamepad",
+    "arguments": 1,
+    "returns": false,
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_CreateWindow": {
+    "helper": "tribes_sdl_create_window",
+    "arguments": 5,
+    "returns": true,
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_DestroyWindow": {
+    "helper": "tribes_sdl_destroy_window",
+    "arguments": 1,
+    "returns": false,
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_ShowWindow": {
+    "helper": "tribes_sdl_show_window",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_GetWindowID": {
+    "helper": "tribes_sdl_get_window_id",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_GetWindowProperties": {
+    "helper": "tribes_sdl_get_window_properties",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_GetWindowSize": {
+    "helper": "tribes_sdl_get_window_size",
+    "arguments": 3,
+    "returns": true,
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_GetWindowSizeInPixels": {
+    "helper": "tribes_sdl_get_window_size_pixels",
+    "arguments": 3,
+    "returns": true,
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_GL_CreateContext": {
+    "helper": "tribes_sdl_gl_create_context",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_GL_DestroyContext": {
+    "helper": "tribes_sdl_gl_destroy_context",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_GL_MakeCurrent": {
+    "helper": "tribes_sdl_gl_make_current",
+    "arguments": 2,
+    "returns": true,
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_GL_GetCurrentWindow": {
+    "helper": "tribes_sdl_gl_get_current_window",
+    "arguments": 0,
+    "returns": true,
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_GL_GetCurrentContext": {
+    "helper": "tribes_sdl_gl_get_current_context",
+    "arguments": 0,
+    "returns": true,
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_GL_SwapWindow": {
+    "helper": "tribes_sdl_gl_swap_window",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_GL_SetAttribute": {
+    "helper": "tribes_sdl_gl_set_attribute",
+    "arguments": 2,
+    "returns": true,
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_GL_GetAttribute": {
+    "helper": "tribes_sdl_gl_get_attribute",
+    "arguments": 2,
+    "returns": true,
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_GL_ResetAttributes": {
+    "helper": "tribes_sdl_gl_reset_attributes",
+    "arguments": 0,
+    "returns": false,
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_GetFullscreenDisplayModes": {
+    "helper": "tribes_sdl_get_fullscreen_display_modes",
+    "arguments": 2,
+    "returns": true,
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_CreateProperties": {
+    "helper": "tribes_sdl_create_properties",
+    "arguments": 0,
+    "returns": true,
+    "helper_returns": "i32",
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_DestroyProperties": {
+    "helper": "tribes_sdl_destroy_properties",
+    "arguments": 1,
+    "returns": false,
+    "helper_returns": "void",
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_SetStringProperty": {
+    "helper": "tribes_sdl_set_string_property",
+    "arguments": 3,
+    "returns": true,
+    "helper_returns": "i32",
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_SetBooleanProperty": {
+    "helper": "tribes_sdl_set_boolean_property",
+    "arguments": 3,
+    "returns": true,
+    "helper_returns": "i32",
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_SetNumberProperty": {
+    "helper": "tribes_sdl_set_number_property",
+    "arguments": 4,
+    "returns": true,
+    "helper_returns": "i32",
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_CreateWindowWithProperties": {
+    "helper": "tribes_sdl_create_window_properties",
+    "arguments": 1,
+    "returns": true,
+    "helper_returns": "i32",
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_GetDisplayForWindow": {
+    "helper": "tribes_sdl_get_display_for_window",
+    "arguments": 1,
+    "returns": true,
+    "helper_returns": "i32",
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_GetCurrentDisplayMode": {
+    "helper": "tribes_sdl_get_current_display_mode",
+    "arguments": 1,
+    "returns": true,
+    "helper_returns": "i32",
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_SetWindowFullscreenMode": {
+    "helper": "tribes_sdl_set_window_fullscreen_mode",
+    "arguments": 2,
+    "returns": true,
+    "helper_returns": "i32",
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_GL_SetSwapInterval": {
+    "helper": "tribes_sdl_gl_set_swap_interval",
+    "arguments": 1,
+    "returns": true,
+    "helper_returns": "i32",
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_GetWindowDisplayScale": {
+    "helper": "tribes_sdl_get_window_display_scale",
+    "arguments": 1,
+    "returns": false,
+    "helper_returns": "void",
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_ceilf": {
+    "helper": "tribes_sdl_ceilf",
+    "arguments": 1,
+    "returns": false,
+    "helper_returns": "void",
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_GetClosestFullscreenDisplayMode": {
+    "helper": "tribes_sdl_get_closest_fullscreen_mode",
+    "arguments": 6,
+    "returns": true,
+    "helper_returns": "i32",
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_SetWindowFullscreen": {
+    "helper": "tribes_sdl_set_window_fullscreen",
+    "arguments": 2,
+    "returns": true,
+    "helper_returns": "i32",
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_SetWindowSize": {
+    "helper": "tribes_sdl_set_window_size",
+    "arguments": 3,
+    "returns": true,
+    "helper_returns": "i32",
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_SetWindowRelativeMouseMode": {
+    "helper": "tribes_sdl_set_window_relative_mouse_mode",
+    "arguments": 2,
+    "returns": true,
+    "helper_returns": "i32",
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_SetWindowBordered": {
+    "helper": "tribes_sdl_set_window_bordered",
+    "arguments": 2,
+    "returns": true,
+    "helper_returns": "i32",
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_SetWindowPosition": {
+    "helper": "tribes_sdl_set_window_position",
+    "arguments": 3,
+    "returns": true,
+    "helper_returns": "i32",
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_SyncWindow": {
+    "helper": "tribes_sdl_sync_window",
+    "arguments": 1,
+    "returns": true,
+    "helper_returns": "i32",
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_CreateSurfaceFrom": {
+    "helper": "tribes_sdl_create_surface_from",
+    "arguments": 5,
+    "returns": true,
+    "helper_returns": "i32",
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_ConvertSurface": {
+    "helper": "tribes_sdl_convert_surface",
+    "arguments": 2,
+    "returns": true,
+    "helper_returns": "i32",
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_PremultiplySurfaceAlpha": {
+    "helper": "tribes_sdl_premultiply_surface_alpha",
+    "arguments": 2,
+    "returns": true,
+    "helper_returns": "i32",
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_RemoveSurfaceAlternateImages": {
+    "helper": "tribes_sdl_remove_surface_alternate_images",
+    "arguments": 1,
+    "returns": false,
+    "helper_returns": "void",
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_DestroySurface": {
+    "helper": "tribes_sdl_destroy_surface",
+    "arguments": 1,
+    "returns": false,
+    "helper_returns": "void",
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_CreateColorCursor": {
+    "helper": "tribes_sdl_create_color_cursor",
+    "arguments": 3,
+    "returns": true,
+    "helper_returns": "i32",
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_SetCursor": {
+    "helper": "tribes_sdl_set_cursor",
+    "arguments": 1,
+    "returns": true,
+    "helper_returns": "i32",
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_DestroyCursor": {
+    "helper": "tribes_sdl_destroy_cursor",
+    "arguments": 1,
+    "returns": false,
+    "helper_returns": "void",
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_PollEvent": {
+    "helper": "tribes_sdl_poll_event",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_PumpEvents": {
+    "helper": "tribes_sdl_pump_events",
+    "arguments": 0,
+    "returns": false,
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  }
+}

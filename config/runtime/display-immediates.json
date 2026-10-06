@@ -1,0 +1,17 @@
+{
+  "scope": "Eighteenth finite startup revision: native display width and height immediates.",
+  "writes": [
+    {"writer":"0x1005b5ac", "address":"0x561251", "size":4, "before":800, "value":"cached native desktop width"},
+    {"writer":"0x1005b5cd", "address":"0x561273", "size":4, "before":600, "value":"cached native desktop height"}
+  ],
+  "behavior": [
+    "Compile both MOV EAX blocks to read their exact guest immediate bytes as checked data. No executable allocation or per-device recompilation.",
+    "The trusted SDL snapshot lookup requires the original owner/main application, live mode identity and unchanged mirror. It returns private native dimensions; unknown or expired modes cannot activate the plan.",
+    "Validate original main CPU, completed tail, writer/order/address/size/preimage/value and final bytes. Preserve the original intervening protection call and conditional branch. Publish only after both stores.",
+    "Earlier disjoint routes remain available through partial publication. Both changing display routes stop while partial; unrelated code writes and a nineteenth revision remain forbidden."
+  ],
+  "limits": [
+    "Original behavior initializes defaults once; this does not implement hotplug, dynamic window resizing, rendering, HD, controls or multiplayer.",
+    "Independent block comparisons and component tests do not by themselves establish original startup completion."
+  ]
+}

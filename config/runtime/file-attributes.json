@@ -1,0 +1,34 @@
+{
+  "scope": "GetFileAttributesA/W in the existing mounted ASCII namespace. Regular-file and directory attributes use the same declared Apple-backed profile as FindFirstFileA; this is not a complete NTFS attribute store.",
+  "observed": {
+    "api": "GetFileAttributesW",
+    "name": "curl-ca-bundle.crt",
+    "call": "0x1007a7f0",
+    "return": "0x1007a7f6",
+    "evidence": "generated/integration-review/sdl-events/file-query.json"
+  },
+  "behavior": [
+    "Bounded ASCII A and UTF16 W names are copied through instrumented loads; non-ASCII remains ERROR_NOT_SUPPORTED.",
+    "The final component is resolved without following a link. lstat reads real metadata without opening file contents or entering the file-share registry.",
+    "Directories return DIRECTORY; regular files return ARCHIVE, matching the mounted search profile. Missing owner-write mode adds READONLY; UF_HIDDEN adds HIDDEN.",
+    "Success preserves LastError. Missing leaf returns FILE_NOT_FOUND; missing or non-directory parent returns PATH_NOT_FOUND. Invalid/long names and namespace escapes retain explicit errors.",
+    "Final symlinks and special objects return ERROR_NOT_SUPPORTED; Windows reparse attributes are not guessed from a target.",
+    "The original absent certificate filename is not created or replaced by a test asset."
+  ],
+  "tests": [
+    "Actual A/W stdcall wrappers preserve all CPU bytes except EAX and argument cleanup; inputs remain unchanged.",
+    "Case-insensitive file/directory queries, real chmod and hidden-flag changes, querying while a handle denies sharing, missing and malformed paths, bounds/non-ASCII rejection, symlink/special object and intermediate escape handling.",
+    "Mac normal/TSan/both guards and sole guarded iPad; three rejected protected name reads (A, W, cross-page UTF16).",
+    "Existing filesystem/file/search/environment normal/TSan and emitted CreateFile SECURITY_ATTRIBUTES/metadata regressions."
+  ],
+  "limits": [
+    "No full Windows ACL/security/NTFS archive-state or other extended-attribute parity.",
+    "No final native symbolic-link attribute mapping until a retained Windows link kind is available.",
+    "Existing path-resolution race limitations remain.",
+    "Successful guarded ReadFile still needs its separate host-buffer implementation."
+  ],
+  "sources": [
+    "https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-getfileattributesw",
+    "https://learn.microsoft.com/en-us/windows/win32/fileio/file-attribute-constants"
+  ]
+}

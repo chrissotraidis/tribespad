@@ -1,0 +1,31 @@
+{
+  "scope": "Reached flags14 interface snapshot only. Darwin names/indices/addresses/masks/link metadata; DNS, DHCP leases, DAD/origin, route metrics and Windows-only identifiers are not provided.",
+  "sources": [
+    {
+      "url": "https://learn.microsoft.com/en-us/windows/win32/api/iphlpapi/nf-iphlpapi-getadaptersaddresses",
+      "purpose": "buffer/family/return contract"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/windows/win32/api/iptypes/ns-iptypes-ip_adapter_addresses_lh",
+      "purpose": "output fields"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/windows/win32/api/iptypes/ns-iptypes-ip_adapter_unicast_address_lh",
+      "purpose": "unicast structure"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/mingw-w64/mingw-w64/v12.0.0/mingw-w64-headers/include/iptypes.h",
+      "path": "ref/adapter-api/iptypes.h",
+      "sha256": "390e780c3dab5d46921d7c5b921bb748453fcedcfb5e9cb3cd334eeeb7c9fa10",
+      "purpose": "Unmodified public-domain header; independently compile original declarations for i686 Windows layout assertions"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/wine-mirror/wine/wine-10.0/dlls/iphlpapi/tests/iphlpapi.c",
+      "purpose": "Reviewed tests for null buffer/size negotiation and successful capacity preservation; no copied implementation"
+    }
+  ],
+  "licenses": {
+    "ref/adapter-api/COPYING": "99a69660981156c21336fdb5661f89341b013c94e4bf9e1c7467b4745718397f",
+    "ref/adapter-api/DISCLAIMER.PD": "87f33608570312a0f2a9745edcb2527275df813b13982e8c3b3f893d88a4141a"
+  }
+}

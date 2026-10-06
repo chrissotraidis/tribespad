@@ -1,0 +1,25 @@
+{
+  "schema": 1,
+  "sources": [
+    {
+      "name": "curl-apple-backend",
+      "version": "8.22.0",
+      "url": "https://curl.se/download/curl-8.22.0.tar.xz",
+      "sha256": "f7ef3ae8a22e521f289803fe93543eb64c329b58aa73a9e224dfd915a2a5f4f7",
+      "archive": "ref/http-sources/curl-8.22.0.tar.xz",
+      "path": "ref/http-sources/curl-8.22.0",
+      "license": "COPYING"
+    },
+    {
+      "name": "libressl-apple-backend",
+      "version": "4.3.2",
+      "url": "https://ftp.openbsd.org/pub/OpenBSD/LibreSSL/libressl-4.3.2.tar.gz",
+      "sha256": "edf01aee24c65d69e6a9efcb9d44bcda682ff9d4f3bbbd95e794e1dfa90847b5",
+      "archive": "ref/http-sources/libressl-4.3.2.tar.gz",
+      "path": "ref/http-sources/libressl-4.3.2",
+      "license": "COPYING",
+      "checksum_source": "https://ftp.openbsd.org/pub/OpenBSD/LibreSSL/SHA256"
+    }
+  ],
+  "scope": "Static ARM64 HTTP/1.1 and HTTPS backend candidate with explicit CA files and synchronous DNS. No implicit Homebrew libraries, system curl, HTTP/2 or HTTP/3. Guest ABI, allocator ownership, external memory contracts and Apple application integration are separate gates. The original Windows DLL is curl 8.15.0 with LibreSSL 4.1.0; this candidate reports its actual newer versions, and is not a claim of exact DLL parity."
+}

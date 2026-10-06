@@ -1,0 +1,20 @@
+{
+  "profile": "ordinary guest user process; no Windows secure-process context, Windows debugger or Application Verifier",
+  "layout": "x86 little endian; guest pointers remain 32-bit addresses",
+  "declared_fields": {
+    "TEB+0x30": "Shared PEB pointer, populated in the current TEB and all subsequent thread TEBs",
+    "PEB+0x02": "BeingDebugged = 0 (no guest Windows debugger)",
+    "PEB+0x08": "Audited main PE image base",
+    "PEB+0x10": "Shared process-parameters pointer",
+    "PEB+0x68": "NtGlobalFlag = 0 (no Windows Application Verifier)",
+    "ProcessParameters": "76-byte bounded prefix: allocation/structure sizes, NORMALIZED flag 1, real configured standard handles, UTF-16 image path and command line descriptors, retained environment pointer"
+  },
+  "ownership": "Loader-owned process-lifetime storage and guest buffers. Registration is once per guest base before worker creation. Host metadata contains no guest-visible native pointers.",
+  "limitations": "Not a complete PEB, loader list, NT heap structure, current-directory representation, dynamic process-parameter synchronization or Windows security subsystem. Undeclared fields are outside this bounded profile.",
+  "validation": "Unmodified lifted IFC22 readers loc_1011C79B and loc_1011C7AD execute through finite AOT dispatch. Synthetic flag toggles verify both return values; actual threaded fixtures see shared ordinary-process metadata.",
+  "sources": [
+    "https://learn.microsoft.com/en-us/windows/win32/api/winternl/ns-winternl-peb",
+    "https://learn.microsoft.com/en-us/windows/win32/api/winternl/ns-winternl-rtl_user_process_parameters",
+    "https://raw.githubusercontent.com/reactos/reactos/master/sdk/lib/ucrt/internal/peb_access.cpp"
+  ]
+}

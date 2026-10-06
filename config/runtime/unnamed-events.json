@@ -1,0 +1,16 @@
+{
+  "scope": "Unnamed, process-local CreateEventA, SetEvent and ResetEvent integrated with the existing WaitForSingleObject, DuplicateHandle and CloseHandle registry.",
+  "manual": "Signaling releases all registered waiters and remains signaled until reset. Already selected waiters retain their wake after a subsequent reset.",
+  "automatic": "Signaling releases one pending waiter, or retains one signaled state if no waiter is pending. Repeated SetEvent does not accumulate a count when already signaled.",
+  "lifetime": "Wait operations retain host object references. Same-process duplicates share state. Final handle close wakes pending waiters with invalid-handle failure rather than freeing live wait storage; concurrent final close is a defined port behavior, not a Windows compatibility guarantee.",
+  "limits": [
+    "Named events, security attributes, interprocess inheritance and reduced-access duplication are explicit boundaries.",
+    "General multiple-object waits, alertable waits and PulseEvent remain unimplemented."
+  ],
+  "references": [
+    "https://learn.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-createeventa",
+    "https://learn.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-setevent",
+    "https://learn.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-resetevent"
+  ],
+  "multiple_wait": "Reached Miles wait-any pair only: index0 manual-reset event, index1 local recursive mutex. Atomic selection/acquisition under existing registry, event-before-mutex ordering, abandoned mutex status129, real native condition wakeups. Other combinations and wait-all explicitly stop."
+}

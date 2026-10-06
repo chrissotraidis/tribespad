@@ -1,0 +1,10 @@
+{
+  "sources": [
+    "https://learn.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-getmodulehandleexw",
+    "https://raw.githubusercontent.com/wine-mirror/wine/master/dlls/kernelbase/loader.c"
+  ],
+  "scope": "GetModuleHandleEx A/W, currently ASCII names, flags 0/PIN1/UNCHANGED2/FROM_ADDRESS4 with PIN+UNCHANGED rejected. Guest HMODULE is 4 bytes; errors null its output when the output address is valid. NULL name selects main image, including FROM_ADDRESS.",
+  "lifetime": "Host-linked PE images retain one loader reference. GetModuleHandleEx and LoadLibrary add balanced references; FreeLibrary releases them. Releasing the last linked-image reference stops until original detach and safe unmapping exist. PIN gives permanent process lifetime. Native providers retain existing unload-to-zero semantics unless pinned.",
+  "address": "Host passes audited PE SizeOfImage during registration. Nonempty half-open image intervals cannot overlap other intervals or metadata handles. FROM_ADDRESS never reads the code pointer. Native provider guest export tokens do not create fictitious PE ranges.",
+  "limits": "No new mapped image loader/unloader, Unicode namespace beyond ASCII, datafile/resource loads, module enumeration or thread creation is implied."
+}

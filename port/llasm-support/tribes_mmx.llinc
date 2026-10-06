@@ -1,0 +1,5 @@
+func tb_mmx_low $, index
+funcv tb_mmx_apply $, op, index, low, high
+funcv tb_mmx_emms $
+funcv tb_mmx_regop $, op, dest, source
+funcv tb_mmx_store $, index, address, width

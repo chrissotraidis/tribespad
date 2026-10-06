@@ -1,0 +1,34 @@
+{
+  "scope": "Owning-guest-thread posted messages and coalesced USER timers, with real monotonic deadlines and finite native AOT callback dispatch.",
+  "apis": [
+    "SetTimer",
+    "KillTimer",
+    "PeekMessageA",
+    "GetMessageA",
+    "DispatchMessageA",
+    "TranslateMessage",
+    "PostMessageA",
+    "PostThreadMessageA",
+    "PostQuitMessage"
+  ],
+  "timers": "Period clamped to 10..2147483647 milliseconds. HWND0 timers receive process-unique nonzero IDs. Existing owner/window/ID resets deadline and callback. Retrieval generates WM_TIMER only after matching posted messages; overdue periods coalesce. KillTimer and window destruction remove future timers, preserving messages already queued.",
+  "delivery": "DispatchMessageA calls the finite original TIMERPROC with HWND, WM_TIMER, ID and current GetTickCount on the calling guest thread using tribes_call_guest. No guest callback runs on the native audio thread. Hidden window messages call their retained original WNDPROC.",
+  "queues": "Created lazily per configured TEB thread or on catalog window creation. Registry/queue synchronization uses pthread mutex and conditions. GetMessage waits on actual posts or matching timer deadlines; WM_QUIT bypasses filters and returns zero. Guest thread finalization removes queue and timers.",
+  "memory": "Legacy x86 28-byte MSG prefix; checked guest reads/writes and CPU-aware stdcall callbacks use existing instrumentation. Host queue nodes are never exposed as guest pointers.",
+  "limits": [
+    "Native SDL input conversion and native SDL window WNDPROC dispatch remain explicit integration boundaries.",
+    "Keyboard TranslateMessage, broadcast posting and PeekMessage queue-category flags remain explicit stops.",
+    "Catalog supports current top-level windows, not child-window descendant filtering.",
+    "Message cursor coordinates are zero until native input integration; no mouse-input acceptance is claimed.",
+    "No general sent-message API or nested GUI modal-loop implementation."
+  ],
+  "validation": "Normal, checked-memory and thread-sanitizer component tests exercise deadlines, reset/cancel/coalescing, queue priority, blocking wakeups, owning-thread callback ABI and thread cleanup. Original-engine registration and callback execution require separate full-app evidence.",
+  "references": [
+    "https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-settimer",
+    "https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-killtimer",
+    "https://learn.microsoft.com/en-us/windows/win32/api/winuser/nc-winuser-timerproc",
+    "https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-peekmessagea",
+    "https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getmessagea",
+    "https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-dispatchmessagea"
+  ]
+}

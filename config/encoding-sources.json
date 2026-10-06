@@ -1,0 +1,123 @@
+{
+  "source": "https://www.unicode.org/Public/MAPPINGS/VENDORS/MICSFT/WINDOWS/CP1252.TXT",
+  "local_path": "ref/downloads/CP1252.TXT",
+  "sha256": "f607ae328b4dff5e9bfef725f5fff0ae23f38797f8a5b95998a0d2735c0e8fad",
+  "bytes": 9355,
+  "acquired_utc": "2026-09-30T22:45:43.893337+00:00",
+  "table_version": "2.01",
+  "table_date": "1998-04-15",
+  "entries": 256,
+  "undefined_byte_values": [
+    129,
+    141,
+    143,
+    144,
+    157
+  ],
+  "status": "Primary source tables pinned and cross-validated. Native CP1252 decoding implemented for flags 0/1/8/9; source-table and core tests pass. Native Windows DLL execution, other encodings and unsupported flag modes remain unverified or unfinished.",
+  "windows_best_fit": {
+    "source": "https://www.unicode.org/Public/MAPPINGS/VENDORS/MICSFT/WindowsBestFit/bestfit1252.txt",
+    "local_path": "ref/downloads/bestfit1252.txt",
+    "sha256": "72ea23c939c5b26fae7aded0207b327e2f3902d7d3c168d7087f5cfc38ee76a9",
+    "bytes": 37057,
+    "acquired_utc": "2026-09-30T22:48:00.553888+00:00",
+    "mbtable_entries": 256,
+    "agrees_with_all_251_defined_standard_entries": true,
+    "additional_mappings": {
+      "0x81": "0x81",
+      "0x8d": "0x8d",
+      "0x8f": "0x8f",
+      "0x90": "0x90",
+      "0x9d": "0x9d"
+    }
+  },
+  "classification_reference": {
+    "source": "https://raw.githubusercontent.com/wine-mirror/wine/wine-10.0/nls/sortdefault.nls",
+    "tag": "wine-10.0",
+    "local_path": "ref/downloads/wine-10.0-sortdefault.nls",
+    "sha256": "8f92004f6d245648e98a5b6b206e8fdb3dfe6694251692590f5f9aae1552a943",
+    "bytes": 3379292,
+    "reader_source": "https://raw.githubusercontent.com/wine-mirror/wine/wine-10.0/dlls/kernelbase/locale.c",
+    "reader_local_path": "ref/downloads/wine-10.0-locale.c",
+    "reader_sha256": "3c6b3d18709b240845d8c49d7cfdf72591aea7e68b267db5db0508d9d80e4328",
+    "acquired_utc": "2026-09-30T23:04:27.381147+00:00",
+    "scope": "Wine-compatible NLS data, not native Windows execution or a proven XP data version",
+    "license": "Wine LGPL-2.1-or-later; provenance retained, license notice to be saved with generated data"
+  },
+  "oem_cp437": {
+    "source": "https://www.unicode.org/Public/MAPPINGS/VENDORS/MICSFT/PC/CP437.TXT",
+    "local_path": "ref/downloads/CP437.TXT",
+    "sha256": "6bad4dabcdf5940227c7d81fab130dcb18a77850b5d79de28b5dc4e047b0aaac",
+    "bytes": 9794,
+    "entries": 256,
+    "table_version": "2.00",
+    "table_date": "1996-04-24",
+    "acquired_utc": "2026-10-01T01:22:49.932800+00:00",
+    "scope": "OEM environment snapshot conversion; general OEM string/filename APIs remain unfinished"
+  },
+  "collation_reference": {
+    "data": {
+      "source": "https://raw.githubusercontent.com/wine-mirror/wine/wine-10.0/nls/sortdefault.nls",
+      "tag": "wine-10.0",
+      "local_path": "ref/downloads/wine-10.0-sortdefault.nls",
+      "sha256": "8f92004f6d245648e98a5b6b206e8fdb3dfe6694251692590f5f9aae1552a943",
+      "bytes": 3379292,
+      "reader_source": "https://raw.githubusercontent.com/wine-mirror/wine/wine-10.0/dlls/kernelbase/locale.c",
+      "reader_local_path": "ref/downloads/wine-10.0-locale.c",
+      "reader_sha256": "3c6b3d18709b240845d8c49d7cfdf72591aea7e68b267db5db0508d9d80e4328",
+      "acquired_utc": "2026-09-30T23:04:27.381147+00:00",
+      "scope": "Wine-compatible NLS data, not native Windows execution or a proven XP data version",
+      "license": "Wine LGPL-2.1-or-later; provenance retained, license notice to be saved with generated data"
+    },
+    "supporting_sources": {
+      "tests": {
+        "url": "https://raw.githubusercontent.com/wine-mirror/wine/wine-10.0/dlls/kernel32/tests/locale.c",
+        "local_path": "ref/downloads/wine-10.0-locale-tests.c",
+        "sha256": "0d0b406e18351fd9be46d341a1c1beaacd23d971ccec743a11505ec18c9138a2",
+        "acquired_utc": "2026-10-01T04:23:44.939642+00:00"
+      },
+      "registry": {
+        "url": "https://raw.githubusercontent.com/wine-mirror/wine/wine-10.0/loader/wine.inf.in",
+        "local_path": "ref/downloads/wine-10.0-wine.inf.in",
+        "sha256": "0d7df9c831676e4daf7dcce6608f90dac3cf4746b1c52d78664f92b9c0ed72a7",
+        "acquired_utc": "2026-10-01T04:23:45.117716+00:00"
+      },
+      "header": {
+        "url": "https://raw.githubusercontent.com/wine-mirror/wine/wine-10.0/include/winnls.h",
+        "local_path": "ref/downloads/wine-10.0-winnls.h",
+        "sha256": "93113ae3c58d813481fc3ed15e5900a15a3074965b08c61777354b875e65b3d8"
+      }
+    },
+    "license": "LGPL-2.1-or-later; see port/core/vendor/wine-nls/LICENSE",
+    "scope": "Pinned Wine 10.0 default collation profile; not native Windows execution/version parity"
+  },
+  "locale_reference": {
+    "sources": {
+      "data": {
+        "url": "https://raw.githubusercontent.com/wine-mirror/wine/wine-10.0/nls/locale.nls",
+        "local_path": "ref/downloads/wine-10.0-locale.nls",
+        "sha256": "a4683e84e4d55cbc95abb0aee99876e6ded86da8a818864f28733eeac9d48025",
+        "bytes": 771670,
+        "acquired_utc": "2026-10-01T04:38:59.510578+00:00"
+      },
+      "header": {
+        "url": "https://raw.githubusercontent.com/wine-mirror/wine/wine-10.0/include/winternl.h",
+        "local_path": "ref/downloads/wine-10.0-winternl.h",
+        "sha256": "f9f04fdd983bff92c429b593a1cc68986ba4239d1ccf20ec3cda1f6403a48589",
+        "bytes": 250827,
+        "acquired_utc": "2026-10-01T04:40:07.575734+00:00"
+      }
+    },
+    "scope": "Pinned Wine 10.0 installed/supported locale profile; no native Windows population/version claim",
+    "license": "LGPL-2.1-or-later"
+  },
+  "composition_reference": {
+    "source": "https://raw.githubusercontent.com/wine-mirror/wine/wine-10.0/nls/normnfc.nls",
+    "local_path": "ref/downloads/wine-10.0-normnfc.nls",
+    "sha256": "ab81cc1e451e99c25d5daf69cf2670f198ff7e1d56f98def6dafc994bfc2ab7d",
+    "bytes": 60578,
+    "tag": "wine-10.0",
+    "scope": "BMP pair composition for the existing CP1252 Wine-compatible profile; not full Unicode normalization or native Windows version parity",
+    "license": "LGPL-2.1-or-later"
+  }
+}

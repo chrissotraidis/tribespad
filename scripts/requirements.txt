@@ -1,0 +1,5 @@
+capstone==5.0.9
+pefile==2024.8.26
+unicorn==2.1.4
+SCons==4.8.1
+mpmath==1.3.0

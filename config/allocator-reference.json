@@ -1,0 +1,20 @@
+{
+  "tag": "v2.1.7",
+  "scope": "Primary reference for nonzero allocator thread identity/NtCurrentTeb; selected QoL embedded version not proven",
+  "sources": [
+    {
+      "url": "https://raw.githubusercontent.com/microsoft/mimalloc/v2.1.7/include/mimalloc/prim.h",
+      "path": "ref/downloads/mimalloc-v2.1.7-prim.h",
+      "bytes": 16775,
+      "sha256": "e8f88eaaffc10532c1516371f3111cd3a656c76a6d928c6aa09f30fbeacd8f33",
+      "acquired_utc": "2026-10-01T02:30:24.234332+00:00"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/microsoft/mimalloc/v2.1.7/LICENSE",
+      "path": "ref/downloads/mimalloc-v2.1.7-LICENSE",
+      "bytes": 1096,
+      "sha256": "19c99805e7a44a34b297a75d1edea9985e300066dfc024d5c99d4236d4573b5d",
+      "acquired_utc": "2026-10-01T02:30:24.399290+00:00"
+    }
+  ]
+}

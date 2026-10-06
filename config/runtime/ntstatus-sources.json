@@ -1,0 +1,48 @@
+{
+  "revision": "wine-10.0",
+  "license": "LGPL-2.1-or-later",
+  "files": [
+    {
+      "path": "ref/downloads/wine-10.0-ntdll/error.c",
+      "upstream_path": "dlls/ntdll/error.c",
+      "url": "https://raw.githubusercontent.com/wine-mirror/wine/wine-10.0/dlls/ntdll/error.c",
+      "sha256": "5d12fc8b0d77397a20a018c867122e64b54214dcda024888b03a825a331d54a1",
+      "bytes": 3956
+    },
+    {
+      "path": "ref/downloads/wine-10.0-ntdll/error.h",
+      "upstream_path": "dlls/ntdll/error.h",
+      "url": "https://raw.githubusercontent.com/wine-mirror/wine/wine-10.0/dlls/ntdll/error.h",
+      "sha256": "5629928e325b75127ddf007c37c0761191846dcb36e732d0aab347b8f0da479d",
+      "bytes": 319143
+    },
+    {
+      "path": "ref/downloads/wine-10.0-ntdll/winerror.h",
+      "upstream_path": "include/winerror.h",
+      "url": "https://raw.githubusercontent.com/wine-mirror/wine/wine-10.0/include/winerror.h",
+      "sha256": "a47c0e84bddeeb5f610517d5ad4d44ff0deec3eca6510bf8986c202efd5c1027",
+      "bytes": 555465
+    },
+    {
+      "path": "ref/downloads/wine-10.0-ntdll/ntstatus.h",
+      "upstream_path": "include/ntstatus.h",
+      "url": "https://raw.githubusercontent.com/wine-mirror/wine/wine-10.0/include/ntstatus.h",
+      "sha256": "8ddfee6d855a7f570b465a377edf8b47a781932a0243705dd7ddc34178a78ca4",
+      "bytes": 233302
+    },
+    {
+      "path": "ref/downloads/wine-10.0-ntdll/COPYING.LIB",
+      "upstream_path": "COPYING.LIB",
+      "url": "https://raw.githubusercontent.com/wine-mirror/wine/wine-10.0/COPYING.LIB",
+      "sha256": "e237fa56668030e928551ddd60f05df5fe957f75eab874bbd017e085ed722e7c",
+      "bytes": 26434
+    },
+    {
+      "path": "ref/downloads/wine-10.0-ntdll/winternl.h",
+      "upstream_path": "include/winternl.h",
+      "url": "https://raw.githubusercontent.com/wine-mirror/wine/wine-10.0/include/winternl.h",
+      "sha256": "f9f04fdd983bff92c429b593a1cc68986ba4239d1ccf20ec3cda1f6403a48589",
+      "bytes": 250827
+    }
+  ]
+}

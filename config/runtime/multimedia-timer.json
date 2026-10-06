@@ -1,0 +1,18 @@
+{
+  "scope": "Single guest-process multimedia timer resolution profile over native CLOCK_MONOTONIC and nanosleep; no callback/event timer implementation or scheduler latency guarantee.",
+  "minimum": "ceil(clock_getres(CLOCK_MONOTONIC) nanoseconds / 1000000); invalid or unavailable resolution returns TIMERR_NOCANDO",
+  "maximum_ms": 65535,
+  "capability_bytes": 8,
+  "oversized_buffers": "write only the two UINT fields; sizes >=8 accepted",
+  "periods": "Balanced per-period references with synchronized updates. Native clock and finite delays already use their finest available representation, independent of period requests. No global host timer adjustment.",
+  "last_error": "preserved; API returns MMRESULT directly",
+  "time_get_time": "Existing native boot-domain milliseconds, modulo2^32",
+  "references": [
+    "https://learn.microsoft.com/en-us/windows/win32/api/timeapi/nf-timeapi-timegetdevcaps",
+    "https://learn.microsoft.com/en-us/windows/win32/api/timeapi/ns-timeapi-timecaps",
+    "https://learn.microsoft.com/en-us/windows/win32/api/timeapi/nf-timeapi-timebeginperiod",
+    "https://learn.microsoft.com/en-us/windows/win32/api/timeapi/nf-timeapi-timeendperiod",
+    "https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man2/nanosleep.2.html"
+  ],
+  "compatibility_note": "65535ms is a declared compatibility ceiling, not a measured Darwin maximum. The native resolution is queried rather than copied from a Windows machine."
+}

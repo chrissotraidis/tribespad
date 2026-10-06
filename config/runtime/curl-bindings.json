@@ -1,0 +1,160 @@
+{
+  "curl_global_init_mem": {
+    "helper": "tribes_curl_global_init_mem",
+    "arguments": 6,
+    "guest_base": false,
+    "cpu_argument": true,
+    "returns": true,
+    "calling_convention": "cdecl"
+  },
+  "curl_multi_init": {
+    "helper": "tribes_curl_multi_init",
+    "arguments": 0,
+    "guest_base": false,
+    "cpu_argument": true,
+    "returns": true,
+    "calling_convention": "cdecl"
+  },
+  "curl_multi_setopt": {
+    "helper": "tribes_curl_multi_setopt",
+    "arguments": 3,
+    "guest_base": false,
+    "cpu_argument": true,
+    "returns": true,
+    "calling_convention": "cdecl"
+  },
+  "curl_easy_init": {
+    "helper": "tribes_curl_easy_init",
+    "arguments": 0,
+    "guest_base": false,
+    "cpu_argument": true,
+    "returns": true,
+    "calling_convention": "cdecl"
+  },
+  "curl_easy_cleanup": {
+    "helper": "tribes_curl_easy_cleanup",
+    "arguments": 1,
+    "guest_base": false,
+    "cpu_argument": true,
+    "returns": false,
+    "calling_convention": "cdecl",
+    "helper_returns": "void"
+  },
+  "curl_easy_setopt": {
+    "helper": "tribes_curl_easy_setopt",
+    "arguments": 3,
+    "guest_base": false,
+    "cpu_argument": true,
+    "returns": true,
+    "calling_convention": "cdecl"
+  },
+  "curl_easy_getinfo": {
+    "helper": "tribes_curl_easy_getinfo",
+    "arguments": 3,
+    "guest_base": false,
+    "cpu_argument": true,
+    "returns": true,
+    "calling_convention": "cdecl"
+  },
+  "curl_multi_add_handle": {
+    "helper": "tribes_curl_multi_add_handle",
+    "arguments": 2,
+    "guest_base": false,
+    "cpu_argument": true,
+    "returns": true,
+    "calling_convention": "cdecl"
+  },
+  "curl_multi_remove_handle": {
+    "helper": "tribes_curl_multi_remove_handle",
+    "arguments": 2,
+    "guest_base": false,
+    "cpu_argument": true,
+    "returns": true,
+    "calling_convention": "cdecl"
+  },
+  "curl_multi_assign": {
+    "helper": "tribes_curl_multi_assign",
+    "arguments": 3,
+    "guest_base": false,
+    "cpu_argument": true,
+    "returns": true,
+    "calling_convention": "cdecl"
+  },
+  "curl_multi_socket_action": {
+    "helper": "tribes_curl_multi_socket_action",
+    "arguments": 4,
+    "guest_base": false,
+    "cpu_argument": true,
+    "returns": true,
+    "calling_convention": "cdecl"
+  },
+  "curl_version": {
+    "helper": "tribes_curl_version",
+    "arguments": 0,
+    "guest_base": false,
+    "cpu_argument": true,
+    "returns": true,
+    "calling_convention": "cdecl"
+  },
+  "curl_easy_perform": {
+    "helper": "tribes_curl_easy_perform",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "curl_slist_append": {
+    "helper": "tribes_curl_slist_append",
+    "arguments": 2,
+    "returns": true,
+    "helper_returns": "i32",
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "curl_slist_free_all": {
+    "helper": "tribes_curl_slist_free_all",
+    "arguments": 1,
+    "returns": false,
+    "helper_returns": "void",
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "curl_url": {
+    "helper": "tribes_curl_url",
+    "arguments": 0,
+    "returns": true,
+    "helper_returns": "i32",
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "curl_url_set": {
+    "helper": "tribes_curl_url_set",
+    "arguments": 4,
+    "returns": true,
+    "helper_returns": "i32",
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "curl_url_cleanup": {
+    "helper": "tribes_curl_url_cleanup",
+    "arguments": 1,
+    "returns": false,
+    "helper_returns": "void",
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "curl_multi_info_read": {
+    "helper": "tribes_curl_multi_info_read",
+    "arguments": 2,
+    "guest_base": false,
+    "cpu_argument": true,
+    "returns": true,
+    "calling_convention": "cdecl"
+  }
+}

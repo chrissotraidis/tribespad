@@ -1,0 +1,40 @@
+{
+  "scope": "NtQueryInformationFile class 18 / FileAllInformation for named synchronous CreateFileA/W regular files and directories, plus NtQueryVolumeInformationFile class 1 / FileFsVolumeInformation for the mounted virtual C: profile.",
+  "observed": {
+    "file_call": "0x10078db2",
+    "file_return": "0x10078db8",
+    "file_length": 104,
+    "file_class": 18,
+    "following_volume_call": "0x10078dda",
+    "following_volume_return": "0x10078de0",
+    "volume_length": 24,
+    "volume_class": 1
+  },
+  "behavior": [
+    "CreateFile resolves host and canonical guest paths from one process-CWD snapshot. Its immutable native open record retains the volume-relative ASCII guest name, expanded Win32 access mask and synchronous/sequential mode. Same-access duplicates retain the record; borrowed descriptors and metadata are copied together under the handle registry lock.",
+    "File metadata comes from the owned fstat descriptor: birth/access/write/change times converted to 1601-based 100ns units, readonly/hidden/directory/archive attributes, allocated blocks, EOF, link count and inode. Position is the actual current shared file offset, read without moving it. Directories have zero logical/allocated content size. Windows EAs, delete-on-close and unbuffered alignment are not exposed by this profile.",
+    "FileAllInformation uses independently compiled i686 MSVC field offsets. The full filename byte length is at offset96 and non-terminated UTF16 characters at100. At length104 the caller normally receives STATUS_BUFFER_OVERFLOW with IOSB Information104 and the first two characters. Odd excess bytes stay untouched; full buffers return success and the actual written length.",
+    "The virtual C: volume label is TribesPad, not the native host volume label. Its serial is the backing mount f_fsid.val[0], stable for that mount session, not a persistent physical disk ID. Unsupported Windows volume creation time and object-ID support are zero. The variable label starts at18; a24-byte query yields overflow with the first three characters. Existing class4 device semantics remain.",
+    "Both output ranges are preflighted and their permission epoch retained until the record and x86 IOSB are copied. Native syscalls only receive host-owned buffers. CPU/stdcall/LastError are preserved.",
+    "Unsupported classes/objects still stop. Invalid/short/misaligned output preconditions or handles leave buffers unchanged. Bare adopted descriptors have no invented path/open-mode record and return STATUS_NOT_SUPPORTED. A renamed/replaced/unlinked host pathname is detected by lstat identity and also returns STATUS_NOT_SUPPORTED."
+  ],
+  "validation": [
+    "Mac normal/ThreadSanitizer/checked and sole guarded iPad, actual regular file/directory descriptors, metadata-only and generic read/write access, duplicated handle metadata and close lifetime, file offset, hard links, readonly changes, later CWD changes, filename truncation/capacity matrix and volume label/serial.",
+    "Seven guarded failures (file and volume record/status/cross-page writes and unsupported class); Mac shared-memory fork checks prove no partial output on rejected accesses. Short/invalid/type/closed/raw handle cases and sentinel tails are checked.",
+    "Independent i686-pc-windows-msvc compilation verifies Microsoft WDK structure sizes/offsets without Apple native packing assumptions. Real dynamic ntdll lookup resolves and executes the new wrapper;90 finite provider exports remain disjoint."
+  ],
+  "limits": [
+    "No direct native Windows comparison was available. Structure layout is checked for the guest ABI; four-byte user-buffer alignment and precondition ordering follow the existing NT bridge profile, rather than a captured Windows class18 experiment.",
+    "The guest filesystem supports ASCII existing paths, buffered synchronous opens, and no Windows extended attributes, token/DACL or delete-pending model. Final symbolic-link-object FileAllInformation remains unsupported; followed paths retain their resolved open name. Host rename/unlink equivalence is not implemented.",
+    "Volume identity is explicitly virtual and mount-session based; no persistent serial, actual native volume birth date, physical-media identity, NTFS features, network/read-only mount execution or asynchronous completion is claimed.",
+    "Queries are snapshots of individual native attributes, not an atomic snapshot against concurrent external host file changes. Unexpected native inspection/position failures return STATUS_UNSUCCESSFUL without an IOSB completion.",
+    "No game window, rendered map, HD, gameplay controls, physical-device execution or authenticated match acceptance follows from these component tests."
+  ],
+  "sources": [
+    "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/ns-ntifs-_file_all_information",
+    "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-ntqueryinformationfile",
+    "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntddk/ns-ntddk-_file_fs_volume_information",
+    "https://raw.githubusercontent.com/wine-mirror/wine/wine-10.0/dlls/kernelbase/file.c",
+    "https://raw.githubusercontent.com/wine-mirror/wine/wine-10.0/dlls/ntdll/unix/file.c"
+  ]
+}

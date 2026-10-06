@@ -1,0 +1,138 @@
+{
+  "module": "IFC22.dll",
+  "image_sha256": "eaf5a42d301cc64a6e526aa49a82dbaefe655ed1ac0ba67939d0bab2fb6ab607",
+  "image_base": 268435456,
+  "routes": [
+    {
+      "guest_va": 269229088,
+      "binding": "QoL_Adler32Scalar",
+      "entry_bytes_hex": "8b442404538b5c241056578bf80fb7c8c1ef1083fb01753a8b4424140fb630b8"
+    },
+    {
+      "guest_va": 269229040,
+      "binding": "QoL_Adler32CopyScalar",
+      "entry_bytes_hex": "56ff742414ff742414ff742410ff157c541d10ff7424208bf0ff742420ff7424"
+    },
+    {
+      "guest_va": 269251872,
+      "binding": "QoL_Adler32AVX512Core",
+      "entry_bytes_hex": "83ec10578b7c242085ff750b8d47015fc5f87783c410c38b4c24248b44241885",
+      "replacement_length": 530,
+      "replacement_sha256": "ae986e8986cb246fd2ffb331b2e6f5186420c3ace060dfd4588055774045a9d6"
+    },
+    {
+      "guest_va": 269252416,
+      "binding": "QoL_ChunkCopy32",
+      "entry_bytes_hex": "568b7424108bd683e21f83fe20732783c8ffc4e268f5c88b44240cc5fb92c95e",
+      "replacement_length": 120,
+      "replacement_sha256": "1f77f44d4724fecdd96d544dbe7485dfcf3daedc8b21530fec7f792664083509"
+    },
+    {
+      "guest_va": 269252544,
+      "binding": "QoL_ChunkMemset32",
+      "entry_bytes_hex": "558bec83e4e083ec3856578b7d088bc72b450c998bca8944241c8bf0c7442418",
+      "replacement_length": 701,
+      "replacement_sha256": "20f9bc901f6db37b7d7b490c73e884734e90fdf7657b89effa3c41ef7969b7b2"
+    },
+    {
+      "guest_va": 269253248,
+      "binding": "QoL_ChunkMemset32Safe",
+      "entry_bytes_hex": "8b54240c3b5424108b4424040f47542410568b74240ca8037415660f1f440000",
+      "replacement_length": 64,
+      "replacement_sha256": "3f53c8a56ad03dfd554e8b68a9f66d893c0f0be671da4bfcbfd5dcc8232fc537"
+    },
+    {
+      "guest_va": 269254992,
+      "binding": "QoL_Adler32VNNI",
+      "entry_bytes_hex": "558bec83e4c08b4d0c83ec78565785c9750c8d4101c5f8775f5e8be55dc38b75",
+      "replacement_length": 548,
+      "replacement_sha256": "ae0844ce53a484b29e92ee49d724e52d4e7c38e18969030e2cd30a7686180311"
+    },
+    {
+      "guest_va": 269255552,
+      "binding": "QoL_Adler32CopyVNNI",
+      "entry_bytes_hex": "558bec83e4e08b4d1083ec38565785c9750c8d4101c5f8775f5e8be55dc38b7d",
+      "replacement_length": 505,
+      "replacement_sha256": "9a5c084eebe927f3a85396f216224c3fa9afaaadb0177444e9198c7f92189ca8"
+    },
+    {
+      "guest_va": 269261728,
+      "binding": "QoL_CRC32FoldFinal",
+      "entry_bytes_hex": "8b4c2404c5f96f1d50961410c5fa6f11c5fa6f4110c4e36944cb01c4e36944d3",
+      "replacement_length": 195,
+      "replacement_sha256": "51ca8d6da1389084a4d676c72fc2865961588ee008813b5f68be3bee0d4bf389",
+      "constant_ranges": [
+        {
+          "guest_va": 269784656,
+          "length": 80,
+          "bytes_hex": "9e00aacc00000000d0971975010000009e00aacc000000002461cd6301000000401601f701000000400671db01000000ffffffffffffffff000000000000000000000000ffffffffffffffffffffffff",
+          "sha256": "f787bb75acca02ce869af45f12eac64765e090572b046d8d5738e81cbcfa6572"
+        }
+      ]
+    },
+    {
+      "guest_va": 269261984,
+      "binding": "QoL_CRC32Optimized",
+      "entry_bytes_hex": "558bec83e4f083ec6ca1405d1d1033c4894424688b5510568b750c83fa10733c",
+      "replacement_length": 352,
+      "replacement_sha256": "5d767c8b075f4fd70e6d44459aea098815e0f163c546637db2dae68fe61f3b99",
+      "constant_ranges": [
+        {
+          "guest_va": 269774048,
+          "length": 1024,
+          "bytes_hex": "00000000963007772c610eeeba51099919c46d078ff46a7035a563e9a395649e3288db0ea4b8dc791ee9d5e088d9d2972b4cb609bd7cb17e072db8e7911dbf906410b71df220b06a4871b9f3de41be847dd4da1aebe4dd6d51b5d4f4c785d38356986c13c0a86b647af962fdecc9658a4f5c0114d96c0663633d0ffaf50d088dc8206e3b5e10694ce44160d5727167a2d1e4033c47d4044bfd850dd26bb50aa5faa8b5356c98b242d6c9bbdb40f9bcace36cd832755cdf45cf0dd6dc593dd1abac30d9263a00de518051d7c81661d0bfb5f4b42123c4b3569995bacf0fa5bdb89eb802280888055fb2d90cc624e90bb1877c6f2f114c6858ab1d61c13d2d66b69041dc760671db01bc20d2982a10d5ef8985b1711fb5b606a5e4bf9f33d4b8e8a2c9077834f9000f8ea8099618980ee1bb0d6a7f2d3d6d08976c6491015c63e6f4516b6b62616c1cd83065854e0062f2ed95066c7ba5011bc1f4088257c40ff5c6d9b06550e9b712eab8be8b7c88b9fcdf1ddd62492dda15f37cd38c654cd4fb5861b24dce51b53a7400bca3e230bbd441a5df4ad795d83d6dc4d1a4fbf4d6d36ae96943fcd96e34468867add0b860da732d0444e51d03335f4c0aaac97c0ddd3c710550aa41022710100bbe86200cc925b56857b3856f2009d466b99fe461ce0ef9de5e98c9d9292298d0b0b4a8d7c7173db359810db42e3b5cbdb7ad6cbac02083b8edb6b3bf9a0ce2b6039ad2b1743947d5eaaf77d29d1526db048316dc73120b63e3843b64943e6a6d0da85a6a7a0bcf0ee49dff099327ae000ab19e077d44930ff0d2a3088768f2011efec206695d5762f7cb67658071366c19e7066b6e761bd4fee02bd3895a7ada10cc4add676fdfb9f9f9efbe8e43beb717d58eb060e8a3d6d67e93d1a1c4c2d83852f2df4ff167bbd16757bca6dd06b53f4b36b248da2b0dd84c1b0aaff64a0336607a0441c3ef60df55df67a8ef8e6e3179be69468cb361cb1a8366bca0d26f2536e2685295770ccc03470bbbb91602222f260555be3bbac5280bbdb2925ab42b046ab35ca7ffd7c231cfd0b58b9ed92c1daede5bb0c2649b26f263ec9ca36a750a936d02a906099c3f360eeb8567077213570005824abf95147ab8e2ae2bb17b381bb60c9b8ed2920dbed5e5b7efdc7c21dfdb0bd4d2d38642e2d4f1f8b3dd686e83da1fcd16be815b26b9f6e177b06f7747b718e65a0888706a0fffca3b06665c0b0111ff9e658f69ae62f8d3ff6b6145cf6c1678e20aa0eed20dd75483044ec2b30339612667a7f71660d04d476949db776e3e4a6ad1aedc5ad6d9660bdf40f03bd83753aebca9c59ebbde7fcfb247e9ffb5301cf2bdbd8ac2baca3093b353a6a3b4240536d0ba9306d7cd2957de54bf67d9232e7a66b3b84a61c4021b685d942b6f2a37be0bb4a18e0cc31bdf055a8def022d",
+          "sha256": "12f3e0576d447eb37b36d82ba0c1c5481b8f0d12fdc70347ce4a076b229d4c86"
+        },
+        {
+          "guest_va": 269784656,
+          "length": 80,
+          "bytes_hex": "9e00aacc00000000d0971975010000009e00aacc000000002461cd6301000000401601f701000000400671db01000000ffffffffffffffff000000000000000000000000ffffffffffffffffffffffff",
+          "sha256": "f787bb75acca02ce869af45f12eac64765e090572b046d8d5738e81cbcfa6572"
+        }
+      ]
+    },
+    {
+      "guest_va": 269262336,
+      "binding": "QoL_CRC32FoldBulk",
+      "entry_bytes_hex": "837c241c008b4424148b4c241862f17e486f3d0097141062f17e486f15c09614",
+      "replacement_length": 388,
+      "replacement_sha256": "eda9b4ffcac71e8bed86d923615000e835741a59db3cc3d07dc638745fd082d7",
+      "constant_ranges": [
+        {
+          "guest_va": 269784768,
+          "length": 64,
+          "bytes_hex": "30142d32010000008a7742150100000030142d32010000008a7742150100000030142d32010000008a7742150100000030142d32010000008a77421501000000",
+          "sha256": "5897b3e6ada6ad0dbc33f693c75b2223b0d8b3e80ab517a96f3754f11d3ac0c4"
+        },
+        {
+          "guest_va": 269784832,
+          "length": 64,
+          "bytes_hex": "9615e4c601000000d42b4454010000009615e4c601000000d42b4454010000009615e4c601000000d42b4454010000009615e4c601000000d42b445401000000",
+          "sha256": "1a4b30ed537fd2eaf83933b65128db574951695d7ba3dd2949cd642429c1565c"
+        }
+      ]
+    },
+    {
+      "guest_va": 269262736,
+      "binding": "QoL_CRC32FoldBulkCopy",
+      "entry_bytes_hex": "558bec83e4c081ecf80000008b45088b4d1c8b552062f17e486f35c0961410c5",
+      "replacement_length": 606,
+      "replacement_sha256": "af2be2b4f68ba45e1f4f0f9631a17da74d270973072c12004f8b9687c7c57d98",
+      "constant_ranges": [
+        {
+          "guest_va": 269784768,
+          "length": 64,
+          "bytes_hex": "30142d32010000008a7742150100000030142d32010000008a7742150100000030142d32010000008a7742150100000030142d32010000008a77421501000000",
+          "sha256": "5897b3e6ada6ad0dbc33f693c75b2223b0d8b3e80ab517a96f3754f11d3ac0c4"
+        },
+        {
+          "guest_va": 269784832,
+          "length": 64,
+          "bytes_hex": "9615e4c601000000d42b4454010000009615e4c601000000d42b4454010000009615e4c601000000d42b4454010000009615e4c601000000d42b445401000000",
+          "sha256": "1a4b30ed537fd2eaf83933b65128db574951695d7ba3dd2949cd642429c1565c"
+        }
+      ]
+    }
+  ],
+  "scope": "Image-pinned native scalar/optimized Adler, fixed32 memory and original x86 CRC fold-final boundaries. Original lazy dispatch/publication retained; whole DLL/client activation incomplete."
+}

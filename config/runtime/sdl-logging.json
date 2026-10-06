@@ -1,0 +1,31 @@
+{
+  "scope": "SDL_SetLogOutputFunction and SDL_SetMainReady for the synchronous single-owner native SDL backend; not general asynchronous logging or video/audio lifecycle support.",
+  "observed": {
+    "call": "0x10061198",
+    "return": "0x1006119e",
+    "callback": "0x10060bd0",
+    "userdata": 0
+  },
+  "implementation": [
+    "SDL receives one registered native trampoline and host-owned state; guest function address and userdata remain uint32 values.",
+    "A live owner-thread allocator/CPU frame is required before reading callback state. Worker or out-of-frame logging stops.",
+    "Messages shorter than 1 MiB are copied into temporary guest heap memory, dispatched cdecl with userdata/category/priority/message, and freed after return.",
+    "The allocator frame is suspended around guest dispatch so supported nested SDL entries use their own CPU/frame.",
+    "LastError is restored. Existing callback machinery copies the CPU, preserves general registers, verifies cdecl stack cleanup, and retains guest FP thread state.",
+    "NULL disables logging according to the pinned SDL behavior; replacing callbacks preserves supplied guest userdata.",
+    "SDL_SetMainReady calls the actual SDL 3.2.18 lifecycle function, recording its native main-thread identity; repeated calls preserve the original identity."
+  ],
+  "limits": [
+    "No callback from native worker threads without an established guest context.",
+    "No nonlocal guest exit through a native SDL logger frame.",
+    "Temporary message allocation failure or overlong message remains an explicit diagnostic stop.",
+    "No SDL_GetLogOutputFunction/default-function guest API, generic vararg logger, native window or event-loop implementation."
+  ],
+  "sources": [
+    "ref/sdl3/SDL3-3.2.18/src/SDL_log.c",
+    "ref/sdl3/SDL3-3.2.18/include/SDL3/SDL_log.h",
+    "ref/sdl3/SDL3-3.2.18/src/SDL.c",
+    "ref/sdl3/SDL3-3.2.18/include/SDL3/SDL_main.h"
+  ],
+  "tests": "Native SDL_LogMessage invokes the installed guest callback; normal/TSan/both-guard Mac and sole guarded iPad tests cover copied UTF8 and long messages, reentry, replacement/NULL, CPU/stack and LastError, plus Mac boundary fault cases. Main-ready is invoked twice through its emitted void/cdecl ABI. Eighteen Mac fault cases include incorrect fixed-parameter count for variadic SDL_LogMessage; the only admitted native log format is literal %s with one host-owned message."
+}

@@ -1,0 +1,15 @@
+{
+  "backend": "Pinned native SDL 3.2.18, using the existing owner-thread private allocator bridge",
+  "guest_bindings": ["SDL_SetAppMetadata", "SDL_SetAppMetadataProperty"],
+  "arguments": "Checked bounded UTF-8 byte strings are copied to private native buffers; NULL is preserved. No guest pointer is passed to SDL.",
+  "execution": "Real native SDL setters execute inside the existing registered guest allocator frame. Native bool becomes a 32-bit guest result; cdecl arguments remain caller-owned and Win32 LastError is preserved.",
+  "pinned_behavior": "SDL_SetAppMetadata calls its three property setters and returns true even if one property allocation fails. This is retained, with partial property updates observed in tests. SDL_SetAppMetadataProperty reports its real individual failure.",
+  "inspection": "Test-only observers read native SDL metadata inside the allocator frame; no guest getter or production observer is exported. Native getters can change private mutex state and must not be called outside that frame.",
+  "limits": "Single guest on allocator owner thread, as for the existing hint bridge. SDL's general cross-thread capability is not claimed by this bridge. No window, renderer, audio, input, physical-device or gameplay acceptance.",
+  "sources": [
+    "ref/sdl3/SDL3-3.2.18/src/SDL.c",
+    "ref/sdl3/SDL3-3.2.18/src/SDL_properties.c",
+    "https://wiki.libsdl.org/SDL3/SDL_SetAppMetadata",
+    "https://wiki.libsdl.org/SDL3/SDL_SetAppMetadataProperty"
+  ]
+}

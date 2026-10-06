@@ -1,0 +1,44 @@
+{
+  "scope": "Native DirectSound device, primary format/3D listener and secondary software PCM rings. Native SDL/CoreAudio consumes host-owned copies of checked guest ring writes. Secondary positional audio and hardware buffers remain unimplemented.",
+  "module": "0x20060000",
+  "exports": "0xffd00000,0xffd00010",
+  "root_vtable": "0xffd01000 + 16*index, index0..10",
+  "sources": {
+    "https://raw.githubusercontent.com/wine-mirror/wine/wine-10.0/include/dsound.h": {
+      "path": "ref/contracts/directsound/dsound-wine-10.h",
+      "sha256": "afead216b15386912f1ac4e2d147064a542ed3ab5c112c09a4edf5617e3d9bcf"
+    },
+    "https://learn.microsoft.com/en-us/previous-versions/windows/desktop/mt708948(v=vs.85)": {
+      "contract": "Cooperative levels; direct primary writes remain unsupported"
+    },
+    "https://learn.microsoft.com/en-us/previous-versions/windows/desktop/ee416821(v=vs.85)": {
+      "contract": "DSCAPS_EMULDRIVER denotes WaveOut emulation, not software mixing. Clear it for direct SDL/CoreAudio output while retaining zero hardware resources."
+    },
+    "https://learn.microsoft.com/en-us/previous-versions/windows/desktop/mt708943(v=vs.85)": {
+      "contract": "CreateSoundBuffer failure codes and null output on failed creation."
+    },
+    "https://learn.microsoft.com/en-us/previous-versions/windows/desktop/ee418003(v=vs.85)": {
+      "contract": "Primary CTRL3D listener acquisition and method contracts."
+    },
+    "https://learn.microsoft.com/en-us/previous-versions/windows/desktop/ee416817(v=vs.85)": {
+      "contract": "Original 64-byte DS3DLISTENER structure."
+    }
+  },
+  "lifetime": "Every buffer retains the root. Primary owns a bound format stream. Each secondary owns a conversion stream, nonexecutable guest PCM storage and host PCM shadow copied on Unlock. SDL stream locks serialize callback/control access; callbacks never take the registry lock or access guest memory. Destroy synchronizes with callbacks before storage release.",
+  "caps": "Software mono/stereo PCM8/16,100..200000Hz; native SDL/CoreAudio output (no WaveOut emulation); one primary; no hardware or 3D memory. Secondary global-focus profile with frequency/pan/volume and cursor reporting.",
+  "unimplemented": [
+    "Secondary 3D/hardware buffers and duplicate buffers",
+    "secondary focus-dependent playback",
+    "exclusive focus",
+    "speaker config changes",
+    "non-ASCII enumeration names",
+    "original game audible audio acceptance",
+    "mobile device execution"
+  ],
+  "license_reference": "port/licenses/Wine-LGPL-2.1.txt",
+  "primary_vtable": "0xffd02000 + 16*index, index0..20; finite implemented methods, explicit stops for the remainder",
+  "secondary": "Reached flags0x180e0 accepted with static/software-location variants. SDL pulls convert host PCM to float stereo with volume/pan, then resample and mix to the actual device. Playback cursor follows frames submitted minus real unconsumed SDL queue. Write cursor reserves queued samples plus one native output quantum. Looping and finite playback supported. No wall-clock progress.",
+  "primary_3d_probe": "PRIMARYBUFFER|CTRL3D creates the real native primary stream plus a distinct listener interface sharing COM identity and lifetime. The listener retains the primary and its real device. Device hardware-voice/memory capability counts remain zero. Invalid primary byte/format/reserved fields fail INVALIDPARAM. A pre-existing 2D-only primary cannot acquire a listener through a second incompatible creation request.",
+  "listener_vtable": "0xffd03000 + 16*index, index0..17",
+  "listener": "All primary listener methods use original-width arguments and checked pointers. Position, velocity, orientation and distance/rolloff/doppler factors have documented defaults, finite/range/degenerate-orientation validation, requested state visible to getters, per-field immediate application and atomic deferred commit. No secondary 3D source is admitted yet, so this is listener state/lifetime support, not positional sound acceptance."
+}

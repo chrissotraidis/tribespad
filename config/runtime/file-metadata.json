@@ -1,0 +1,41 @@
+{
+  "scope": "Existing ASCII paths in the configured guest mounts. Regular files, backup-directory handles and final native symbolic-link handles. Not a Windows token/DACL or reparse-tag implementation.",
+  "observed_request": {
+    "api": "CreateFileW",
+    "name": "cacert.pem",
+    "desired_access": "0x00010180",
+    "share": 7,
+    "creation": "OPEN_EXISTING",
+    "flags": "0x02200000",
+    "security": 0,
+    "template": 0,
+    "capture": "generated/integration-review/bcrypt-provider/file-open-analysis.json"
+  },
+  "access": {
+    "generic_read": "data read bit 1",
+    "generic_write": "data write bit 2",
+    "delete": "sharing bit 4",
+    "read_attributes": "retained bit 8, excluded from share tests",
+    "write_attributes": "retained bit 16, excluded from share tests",
+    "seek": "internal request 128 requires data read or data write"
+  },
+  "behavior": [
+    "Missing cacert.pem retains ERROR_FILE_NOT_FOUND; no fixture is added to the game profile.",
+    "Share checks are bidirectional by native device/inode; duplicate handles retain reservations.",
+    "BACKUP_SEMANTICS admits a directory; it grants no backup privilege.",
+    "OPEN_REPARSE_POINT preserves the final name and uses Darwin O_SYMLINK; dangling or outward links can be opened as link objects, while intermediate escapes remain rejected.",
+    "Ordinary resolution follows contained links. Content operations retain separate rights and regular-file checks.",
+    "Descriptor inheritance and native authority are preserved. Native mutation permission must be checked when any future metadata/delete operation is implemented."
+  ],
+  "limitations": [
+    "ASCII and existing paths only; creation/truncation/overlapped/device/template modes remain explicit gates.",
+    "No Windows ACL, access-token, backup/restore privilege, arbitrary reparse-tag or delete-by-handle implementation.",
+    "Native host changes do not participate in the process-local Windows share registry.",
+    "Path-based component resolution inherits the existing namespace resolver race limitations."
+  ],
+  "references": [
+    "https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilew",
+    "https://learn.microsoft.com/en-us/windows/win32/fileio/file-access-rights-constants",
+    "https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man2/open.2.html"
+  ]
+}

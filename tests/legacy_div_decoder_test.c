@@ -1,0 +1,6 @@
+#include "udis86.h"
+#include <assert.h>
+#include <stdio.h>
+int main(void){unsigned total=0;unsigned mn[]={UD_Idivss,UD_Imulss,UD_Iaddsd,UD_Isubsd};unsigned char op[]={0x5e,0x59,0x58,0x5c};
+for(unsigned family=0;family<4;++family)for(unsigned d=0;d<8;++d)for(unsigned s=0;s<9;++s){unsigned char raw[]={family<2?0xf3:0xf2,0x0f,op[family],(unsigned char)((s==8?0:0xc0)|d<<3|(s==8?6:s)),0xc3};ud_t u;ud_init(&u);ud_set_mode(&u,32);ud_set_input_buffer(&u,raw,5);assert(ud_disassemble(&u)==4&&u.mnemonic==mn[family]);assert(u.operand[0].type==UD_OP_REG&&u.operand[0].base==UD_R_XMM0+d&&u.operand[0].size==128);assert(u.operand[1].type==(s==8?UD_OP_MEM:UD_OP_REG)&&u.operand[1].base==(s==8?UD_R_ESI:UD_R_XMM0+s)&&u.operand[1].size==(s==8?(family<2?32:64):128));assert(ud_disassemble(&u)==1&&u.mnemonic==UD_Iret&&u.operand[1].type==UD_NONE);++total;}
+printf("PASS: %u legacy scalar width/role/reset decoder checks\n",total);return 0;}

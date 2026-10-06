@@ -1,0 +1,19 @@
+{
+  "encoding": "cp437",
+  "variables": {
+    "PATH": "C:\\TribesPad\\Game",
+    "TEMP": "C:\\TribesPad\\Temp",
+    "TMP": "C:\\TribesPad\\Temp"
+  },
+  "qualification": "Explicit guest-process environment. macOS bootstrap mounts Game to ref/product or the manifest-verified Apple profile (which excludes the optional Discord SDK), and Temp to its owned runtime directory. Existing ASCII paths and disk queries are implemented; file creation, remaining pathname services and physical-device mount integration remain unfinished. Host environment variables are not imported implicitly.",
+  "command_line": {
+    "encoding": "cp1252",
+    "value": "\"C:\\TribesPad\\Game\\Tribes2.exe\" -online"
+  },
+  "legacy_profile": {
+    "backend": "file",
+    "windows_directory": "C:\\Windows",
+    "file": "C:\\Windows\\win.ini",
+    "ini_file_mapping": {}
+  }
+}

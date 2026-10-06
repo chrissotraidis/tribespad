@@ -1,0 +1,11 @@
+{
+  "scope": "Native CPU brand and count with an explicit compatibility frequency when Apple supplies none. The fallback is guest metadata, not a measurement of physical CPU speed.",
+  "native_frequency_selector": "hw.cpufrequency",
+  "missing_frequency_mhz": 2400,
+  "fallback_conditions": ["ENOENT", "empty native value", "zero native value"],
+  "reference_revision": "49b1c064714b412d7f7a2f5e7146c977554e57f9",
+  "reference_path": "ref/downloads/libuv-cpu-reference/darwin.c",
+  "reference_sha256": "91922cd990ece6110752745ac58d2df092aced5b376b562efc48214783ce050d",
+  "reference_url": "https://github.com/libuv/libuv/blob/49b1c064714b412d7f7a2f5e7146c977554e57f9/src/unix/darwin.c",
+  "reason": "The original QoL caller assumes uv_cpu_info succeeds and dereferences an uninitialized result if the Windows registry frequency query fails. Match the pinned libuv Apple frequency fallback while retaining real native brand, processor count and counters. Other syscall failures and malformed values remain errors."
+}

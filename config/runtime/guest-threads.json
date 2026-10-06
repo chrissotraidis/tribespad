@@ -1,0 +1,25 @@
+{
+  "scope": "Native pthread execution of finite AOT guest procedures. Original startup integration remains subject to its diagnostic result; component success is not game acceptance.",
+  "create": {
+    "supported_flags": [0, 4, 65536, 65540],
+    "security_attributes": "NULL only; non-NULL stops explicitly",
+    "guest_stack": "PE default reserve or documented request rounding, fully committed with a separate inaccessible 64 KiB lower reservation",
+    "limitations": "No demand growth, exact Windows guard-page geometry, stack-overflow SEH, active suspension, external termination, remote processes or last-thread process exit",
+    "native_stack_bytes": 16777216,
+    "start": "CREATE_SUSPENDED gates all guest execution, including thread attach. Process initialization readiness is also required. A child may finish before CreateThread returns."
+  },
+  "lifecycle": {
+    "thread_environment": "Independent CPU, VM stack, TEB, static TLS template/zero fill, Win32 ID and LastError. Host module metadata is copied before attach; no guest header trust.",
+    "notifications": "Serialized TLS callbacks followed by DllMain in configured module order on attach; reverse module order on detach. No EXE entry invocation as DllMain.",
+    "exit": "Normal stdcall return, ExitThread and balanced FreeLibraryAndExitThread. FLS drains while TEB exists, before module detach and once again afterward. Guest stack and environment are freed before signaling the thread object.",
+    "handles": "Running owner, each duplicate and pending wait retain separate references. CloseHandle does not terminate a thread. Exit code persists until final handle close. A signaled thread remains signaled."
+  },
+  "diagnostics": "Track current callback CPU per native thread. Do not save a supposedly coherent whole-memory snapshot while guest workers are active.",
+  "sources": [
+    "https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-createthread",
+    "https://learn.microsoft.com/en-us/windows/win32/procthread/thread-stack-size",
+    "https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-exitthread",
+    "https://raw.githubusercontent.com/wine-mirror/wine/master/dlls/ntdll/loader.c"
+  ],
+  "reference": "projectreach c4aad6873057e48cb7e6aca907797722ef7da5b9; reviewed implementation pattern, not a drop-in Tribes TLS implementation"
+}

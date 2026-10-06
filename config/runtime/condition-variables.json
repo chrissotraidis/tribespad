@@ -1,0 +1,15 @@
+{
+  "guest_size": 4,
+  "static_initializer": 0,
+  "shared_flag": 1,
+  "infinite": 4294967295,
+  "timeout_error": 1460,
+  "sources": [
+    "https://learn.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-initializeconditionvariable",
+    "https://learn.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-sleepconditionvariablesrw",
+    "https://learn.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-sleepconditionvariablecs",
+    "https://raw.githubusercontent.com/mingw-w64/mingw-w64/master/mingw-w64-headers/include/winnt.h"
+  ],
+  "implementation": "Native per-waiter pthread condition, one registry mutex serializes registration/unlock/wait and wake selection. Apple relative timeout; no retry extending the timeout. Spurious wakes allowed. Guest lock reacquired before every normal/timeout return. CS depth must equal one and a native lifetime reference survives sleep. Idle object returns to zero and retires registry metadata.",
+  "limits": "No cancellation, asynchronous thread termination, guest SEH, cross-process use, fairness, internal Windows encoding, copied live objects, or unspecified SRW flag values beyond 0/1. Misuse and host failures stop explicitly. This service test does not establish an original guest thread or game-loop integration."
+}

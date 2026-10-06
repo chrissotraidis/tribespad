@@ -1,0 +1,51 @@
+{
+  "scope": "Native SDL3.2.18 lifecycle and real owner-thread polling/pumping through32-bit guest cdecl imports; original gameplay remains unverified.",
+  "observed": {
+    "api": "SDL_Init",
+    "flags": "0x4000 SDL_INIT_EVENTS",
+    "call": "0x100611ac",
+    "bytes": "ff1564951210",
+    "return": "0x100611b2"
+  },
+  "bindings": {
+    "SDL_Init": "native SDL_Init, bool expanded to guest uint32 0/1",
+    "SDL_InitSubSystem": "same native SDL_Init implementation, as documented by SDL 3.2.18",
+    "SDL_WasInit": "native uint32 mask; zero queries all subsystems",
+    "SDL_QuitSubSystem": "native reference-counted teardown",
+    "SDL_Quit": "native full teardown and backend environment re-seeding on later entry",
+    "SDL_PollEvent": "Native queue and NULL peek; explicit Windows32 128-byte event conversion, checked output and keyboard refresh",
+    "SDL_PumpEvents": "Native pumping and keyboard refresh; retire borrowed event data at next pump"
+  },
+  "contracts": [
+    "Initialize and quit-subsystem admit zero/EVENTS and VIDEO under the additional Apple host-entry contract in sdl-video.json; other subsystem flags still stop diagnostically.",
+    "Every lifecycle call runs inside the owner guest CPU/allocator frame. Native startup logging can enter guest cdecl callbacks and perform supported nested SDL calls.",
+    "LastError and original cdecl argument ownership are preserved. Native initialization failure returns false; no forced success.",
+    "Native reference counts determine WasInit; there is no parallel invented initialized-state mask.",
+    "Full quit releases SDL environment/hints/properties/TLS and permits backend reentry. Native main-ready retains SDL main-thread identity.",
+    "Pointer-bearing text/edit/candidate/drop/clipboard events use private native storage and checked borrowed guest copies retained through the poll cycle; native pointers never escape.",
+    "Scalar window/display, keyboard/mouse, joystick/gamepad, audio and finger events preserve explicit i686 field offsets. Unknown event types stop diagnostically.",
+    "Event marshalling allocation failure stops rather than reporting a fabricated or incomplete event."
+  ],
+  "tests": [
+    "Mac normal, ThreadSanitizer and both memory guards; sole guarded iPad simulator.",
+    "Zero flags, forced-allocation failure with no EVENTS bit, successful retry, repeated init, partial quit retaining EVENTS, final quit clearing EVENTS, harmless extra quit, full quit after two refs, event reinit after full quit.",
+    "Actual native metadata startup logs through the guest callback during SDL_Init(0).",
+    "Existing logging/hints/metadata/allocator checks and 22 rejected boundary cases on Mac.",
+    "Production event bridge compiles for device and simulator.",
+    "Mac normal, checked and ThreadSanitizer window tests pass with actual native queued events, NULL peek, UTF-8/drop lifetimes, keyboard snapshot and CPU/LastError preservation;25 checked fault cases total.",
+    "Pinned SDL declarations compiled for i686-pc-windows-msvc verify108 marshalled field offsets and128-byte event union."
+  ],
+  "limitations": [
+    "Native VIDEO initialization is now separately validated under sdl-video.json; video windows/rendering and audio/gamepad/sensor/camera acceptance remain unfinished.",
+    "Native worker logging/allocation without a live supported guest frame remains a lifecycle gate.",
+    "Guest SDL_GetError bridge is still an unimplemented import; native SDL retains initialization error state.",
+    "No original menu/map/HD/online acceptance from component lifecycle results.",
+    "Guest custom pointer events, pen/render/sensor families and guest event-filter/watch registration remain explicit boundaries. Original gameplay input and mobile event acceptance are unverified."
+  ],
+  "sources": [
+    "ref/sdl3/SDL3-3.2.18/include/SDL3/SDL_init.h",
+    "ref/sdl3/SDL3-3.2.18/src/SDL.c",
+    "ref/sdl3/SDL3-3.2.18/src/events/SDL_events.c",
+    "ref/sdl3/SDL3-3.2.18/include/SDL3/SDL_events.h"
+  ]
+}

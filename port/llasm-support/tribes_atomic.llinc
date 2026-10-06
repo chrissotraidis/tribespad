@@ -1,0 +1,4 @@
+funcv tb_locked_xadd32 $, address, source
+funcv tb_locked_cmpxchg32 $, address, source
+funcv tb_locked_cmpxchg8 $, address, source
+funcv tb_locked_cmpxchg8b $, address

@@ -1,0 +1,44 @@
+{
+  "version": [
+    3,
+    2,
+    18,
+    0
+  ],
+  "version_source": "VS_FIXEDFILEINFO in selected product SDL3.dll",
+  "binary_sha256": "cb9ecc5eba280355e65ab9a439edc62dff816f6963685000193318ccbe46f4e1",
+  "references": [
+    {
+      "url": "https://raw.githubusercontent.com/libsdl-org/SDL/release-3.2.18/src/stdlib/SDL_malloc.c",
+      "local_path": "ref/downloads/SDL-release-3.2.18-SDL_malloc.c",
+      "bytes": 227579,
+      "sha256": "94c5e9c0885b590a1e716e4746de4b55d2765d82c59ef3c1de95c2c04ec1c62a"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/libsdl-org/SDL/release-3.2.18/LICENSE.txt",
+      "local_path": "ref/downloads/SDL-release-3.2.18-LICENSE.txt",
+      "bytes": 884,
+      "sha256": "97f35b302b361680ec1e891e95d2d52097bb95abff361434916d99dc1305f127"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/libsdl-org/SDL/release-3.2.18/include/SDL3/SDL_stdinc.h",
+      "local_path": "ref/downloads/SDL-release-3.2.18-SDL_stdinc.h",
+      "bytes": 204230,
+      "sha256": "f3908ed4c41f5a5f352764243deb71113d470b482f7729ddbf7b88a056d9b3e0"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/libsdl-org/SDL/release-3.2.18/include/SDL3/SDL_error.h",
+      "local_path": "ref/downloads/SDL-release-3.2.18-SDL_error.h",
+      "bytes": 7095,
+      "sha256": "7d294ba3e994b89a42bc6346e7e59bff82fbce2d050f7cdb189d8f45f31795f2"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/libsdl-org/SDL/release-3.2.18/src/SDL_error.c",
+      "local_path": "ref/downloads/SDL-release-3.2.18-SDL_error.c",
+      "bytes": 3040,
+      "sha256": "2c74920194ea19ab5662586303650de6304f078b624e7ca3dd0438d80bb34565"
+    }
+  ],
+  "acquired_utc": "2026-10-01T02:44:42.174250+00:00",
+  "scope": "Pinned upstream source for observed allocator callback boundary; no native SDL integration claim"
+}

@@ -1,0 +1,22 @@
+{
+  "scope": "Fourteenth finite startup revision: original callback PUSH and short JMP in the post-video initializer.",
+  "writes": [
+    {"writer":"0x1005b384","address":"0x5bb96b","size":4,"before":"d0ac5b00","after":"80ae0410"},
+    {"writer":"0x1005b3a1","address":"0x561689","size":1,"before":"0b","after":"5b"}
+  ],
+  "behavior": [
+    "PUSH changes the registered callback from0x5bacd0 to0x1004ae80 in complete block loc_5BB95E; JMP changes destination0x561695 to0x5616e5 in complete block loc_561683. Original stack arguments, return addresses and surrounding instructions remain.",
+    "Exact main CPU, startup stage, prior clock publication, ordered writer/address/width/preimage/value and final bytes are validated. Both compiled variants become callable immediately after the second original store. The intervening VirtualProtect is real; a partial revision cannot activate either variant.",
+    "All thirteen prior routes are disjoint from these two modified wrappers and remain callable by workers during revision14. The last-completed-phase query is protected by the same native lock as publication. Earlier overlapping partial revisions and future unknown phases still stop.",
+    "The original engine registration after this prefix runs after publication. Pending trampoline-bank entries remain unchanged. Ordinary published-code writes and a fifteenth revision remain forbidden."
+  ],
+  "validation": [
+    "512 complete-block ARM64/original-x86 comparisons, all440 CPU bytes and64KiB stack, exact callback arguments and branch target.",
+    "323 route bodies across earlier/current states,5335 positive checks and380 expected stops, including partial14th publication with unaffected prior routes available and changed routes blocked.",
+    "Fourteen-plan guard regression with42 rejected emitted ordinary writes. Four actual readers retain prior routing across40000 partial-publication observations on Mac, under ThreadSanitizer, and on the sole iPad Simulator."
+  ],
+  "limits": [
+    "This prefix does not validate the complete callback behavior, subsequent NOP/CALL patches, display-dependent constants, SDL window, renderer, HD, gameplay or authentication.",
+    "Workers run concurrently. Bounded debugger endpoint comparisons do not establish a coherent whole-memory snapshot or ordinary-launch timing equivalence."
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "scope": "Native SDL 3.2.18 VIDEO initialization on real Cocoa/UIKit drivers through original guest cdecl ABI, with Apple process/application main entry. Native windows, guest event conversion and game rendering are separate unfinished work.",
+  "observed": {
+    "api": "SDL_InitSubSystem",
+    "flags": "0x20 SDL_INIT_VIDEO",
+    "call": "0x1005b2a5",
+    "return": "0x1005b2ab",
+    "return_value": 1,
+    "evidence": "generated/integration-review/sdl-video/video-startup.json",
+    "qualification": "Debugger suspended the worker at an unimplemented NtQueryInformationFile probe and did not supply a return value. Ordinary concurrent startup still stops at that worker query."
+  },
+  "contracts": [
+    "Zero/EVENTS/VIDEO flags call actual native SDL initialization and teardown; audio/gamepad/sensor/camera flags remain diagnostic stops.",
+    "VIDEO requires the native main thread and a trusted Apple application entry. Cocoa initializes its own NSApplication in native SDL. The reusable native SDL_RunApp host invokes UIKit guest entry after didFinishLaunching.",
+    "All guest SDL lifecycle calls retain the established owner CPU/allocator frame and LastError/cdecl behavior; native pointers are not guest handles.",
+    "Native app exit requires guest SDL_Quit, no active guest SDL frame/subsystem and zero live mirrored allocations. It permanently closes guest SDL entry. The native host then restores original native SDL allocators and clears guest logging before UIKit post-main lifecycle work.",
+    "The host bootstrap uses native argc/argv/function pointers and is not a guest import. The guest-facing runtime remains guarded; native startup itself is a host-owned entry boundary."
+  ],
+  "dependency_fix": [
+    "Persistent allocation failure exposed recursive SDL_GetErrBuf -> SDL_SetTLS -> SDL_realloc -> SDL_OutOfMemory. The pinned Apple build now uses a per-native-thread creation guard and allocation-free emergency error storage. Failed TLS installation frees the uninstalled original-allocator error buffer.",
+    "Fallback errors remain readable/clearable and successful later allocation recovers to ordinary TLS. Exact source replacements and hashes remain declared in sdl-backend.json; upstream source files are kept pristine."
+  ],
+  "validation": [
+    "Mac normal/TSan/checked real Cocoa driver and sole guarded UIKit simulator app: real display id, initialization failure/retry, multiple VIDEO refs/partial/final quit, full quit/reinit, CPU/cdecl/LastError; 366/366 and 335/335 mirrored allocations/frees respectively, zero live mirrors.",
+    "Missing Apple host entry, wrong native thread, app return before SDL shutdown and guest entry after host handoff all stop; four rejected app cases on Mac and iPad. UIKit remains alive through native post-main lifecycle before the test driver terminates its own probe.",
+    "Persistent native allocator failure, 3000 concurrent per-thread error read/clear cycles, recovery and zero live custom-allocator blocks: Mac normal/TSan harness and sole simulator CLI. SDL itself remains the release library, not a sanitizer-instrumented dependency.",
+    "Existing SDL event/logging/hint/metadata/allocator regressions and external-memory compiler regression pass. Production video bridge and host entry compile for device and Simulator."
+  ],
+  "limits": [
+    "No original game window, GL/Metal renderer, event union conversion, controls in gameplay, HD or authenticated multiplayer acceptance.",
+    "No physical iPad/iPhone execution; simulator app tests validate UIKit integration only.",
+    "Active native SDL worker/asynchronous callbacks without a live supported guest frame remain explicit ownership stops; post-main host ownership handoff does not permit them during gameplay.",
+    "The macOS whole-engine CLI uses process main; the whole engine is not yet linked into the UIKit application.",
+    "The next main-thread startup dependency is another runtime code patch at 0x5bb96b; the finite AOT publication guard continues rejecting it."
+  ],
+  "sources": [
+    "ref/sdl3/SDL3-3.2.18/src/video/cocoa/SDL_cocoaevents.m",
+    "ref/sdl3/SDL3-3.2.18/src/video/uikit/SDL_uikitappdelegate.m",
+    "ref/sdl3/SDL3-3.2.18/src/video/uikit/SDL_uikitevents.m",
+    "ref/sdl3/SDL3-3.2.18/src/thread/SDL_thread.c",
+    "ref/sdl3/SDL3-3.2.18/include/SDL3/SDL_init.h"
+  ]
+}

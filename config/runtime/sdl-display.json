@@ -1,0 +1,16 @@
+{
+  "scope": "Native SDL3.2.18 primary display and borrowed desktop display mode through the32-bit guest ABI.",
+  "exports": ["SDL_GetPrimaryDisplay", "SDL_GetDesktopDisplayMode"],
+  "behavior": [
+    "Use the actual native SDL display ID and mode on the Apple application main thread within the existing owner-thread allocator frame. Preserve guest CPU/LastError and native SDL failure state.",
+    "Marshal displayID, format, width, height, density, refresh float and rational refresh into the exact36-byte x86 public layout. The private internal field is a stable opaque registry token when native internal data exists; no native mode pointer is returned.",
+    "Cache one borrowed public mode per successfully queried display, refresh its public fields on queries, and retain its address across repeat queries and nonfinal VIDEO reference releases. Reject guest mutation rather than importing it into native state.",
+    "Release mode storage on final VIDEO shutdown or SDL_Quit, and on a failed native query for a cached display. Tokens are never reused across reinitialization. Allocate/free through the registered guest allocator; failed allocation returnsNULL with native SDL OutOfMemory and allows retry.",
+    "Exact native external signatures are checked. Wrong-thread/host-lifecycle calls, invalid external signatures, guest mode mutation and protected mode storage are rejected. No code-revision limit is changed."
+  ],
+  "limits": [
+    "Original display-derived engine immediates still require separately verified publication. Display enumeration does not establish an original game window, rendering, HD, controls or multiplayer.",
+    "The guest SDL_GetError export remains a separate missing bridge; native SDL error text is preserved and tested. Hotplug event delivery and passing mode structures into future window APIs remain unimplemented.",
+    "The current mode cache refreshes on queries and lifecycle transitions. No claim of asynchronous mode refresh or physical-device acceptance."
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "image_sha256": "cd3c9b26cd1f4e7037bac56056427908c2ef8dc9fb6f899ab9f47bd8046ba9fb",
+  "entries": {
+    "MIXER_startup": 555016231,
+    "MIXER_shutdown": 555016247,
+    "MIXER_flush": 555016263,
+    "MIXER_merge": 555016347,
+    "MIXER_copy": 555016709
+  },
+  "provenance": "Original callback table constructed by 0x21129090; original indirect startup call returns to 0x211291ff.",
+  "flat_segments": {
+    "ds": 35,
+    "es": 35,
+    "push_bytes": 4,
+    "base": 0,
+    "limit": 4294967295,
+    "qualification": "Fixed flat data profile, not a general segment-register implementation. DWORD zero-extension is the Intel-documented permitted form and the Unicorn reference behavior.",
+    "source": "https://cdrdv2-public.intel.com/782156/325383-sdm-vol-2abcd.pdf"
+  }
+}

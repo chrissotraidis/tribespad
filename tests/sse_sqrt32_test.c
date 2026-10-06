@@ -1,0 +1,44 @@
+#include "../port/core/sse_arithmetic.h"
+#include "softfloat.h"
+#include <assert.h>
+#include <pthread.h>
+#include <stdio.h>
+typedef struct {uint32_t source,control,result,raised;} Case;
+#include "cases.inc"
+static void *worker(void *arg) {
+    unsigned seed=(unsigned)(uintptr_t)arg;
+    for(unsigned i=0;i<sizeof cases/sizeof cases[0];i++) {
+        const Case *test=&cases[i];
+        for(unsigned unmasked=0;unmasked<2;unmasked++) {
+            softfloat_roundingMode=(seed+i)%4;
+            softfloat_detectTininess=(seed+i)&1;
+            softfloat_exceptionFlags=(seed+i)&31;
+            extF80_roundingPrecision=(uint_fast8_t[]){32,64,80}[(seed+i)%3];
+            unsigned round=softfloat_roundingMode,tiny=softfloat_detectTininess;
+            unsigned flags=softfloat_exceptionFlags,precision=extF80_roundingPrecision;
+            struct {uint64_t before,result,after;} output={0x1122334455667788,0xaaaaaaaaaaaaaaaa,0x8877665544332211};
+            struct {uint32_t before,raised,after;} status={0x12345678,0xaaaaaaaa,0x87654321};
+            uint32_t control=test->control&~(unmasked?0x1f80u:0u);
+            assert(tb_sse_sqrt32(test->source,control,&output.result,&status.raised));
+            if(output.result!=test->result||status.raised!=test->raised) {
+                fprintf(stderr,"sqrt32 mismatch %u source %x control %x result %llx/%x raised %x/%x\n",i,test->source,control,(unsigned long long)output.result,test->result,status.raised,test->raised);assert(0);
+            }
+            assert(output.before==0x1122334455667788&&output.after==0x8877665544332211);
+            assert(status.before==0x12345678&&status.after==0x87654321);
+            assert(round==softfloat_roundingMode&&tiny==softfloat_detectTininess);
+            assert(flags==softfloat_exceptionFlags&&precision==extF80_roundingPrecision);
+        }
+    }
+    uint64_t result=0xaaaaaaaaaaaaaaaa;uint32_t raised=0xaaaaaaaa;
+    assert(!tb_sse_sqrt32(0,0x10000,&result,&raised));
+    assert(!tb_sse_sqrt32(0,0x1f80,NULL,&raised));
+    assert(!tb_sse_sqrt32(0,0x1f80,&result,NULL));
+    assert(result==0xaaaaaaaaaaaaaaaa&&raised==0xaaaaaaaa);
+    return NULL;
+}
+int main(void) {
+    worker(NULL);pthread_t threads[8];
+    for(unsigned n=0;n<8;n++)assert(!pthread_create(&threads[n],NULL,worker,(void *)(uintptr_t)(n+1)));
+    for(unsigned n=0;n<8;n++)assert(!pthread_join(threads[n],NULL));
+    printf("PASS: %zu binary32 square-root candidates, masked/unmasked controls, guarded outputs, eight threads, all SoftFloat TLS restored\n",sizeof cases/sizeof cases[0]);return 0;
+}

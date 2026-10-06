@@ -1,0 +1,96 @@
+{
+  "QoL_Adler32Scalar": {
+    "arguments": 3,
+    "calling_convention": "cdecl",
+    "guest_base": true,
+    "helper": "tribes_zlib_adler32",
+    "returns": true
+  },
+  "QoL_Adler32AVX512Core": {
+    "arguments": 5,
+    "calling_convention": "cdecl",
+    "guest_base": false,
+    "cpu_argument": true,
+    "helper": "tribes_zlib_adler32_optimized_cpu",
+    "returns": true
+  },
+  "QoL_Adler32CopyScalar": {
+    "arguments": 4,
+    "calling_convention": "cdecl",
+    "guest_base": true,
+    "helper": "tribes_zlib_adler32_copy",
+    "returns": true
+  },
+  "QoL_ChunkCopy32": {
+    "arguments": 3,
+    "calling_convention": "cdecl",
+    "guest_base": false,
+    "cpu_argument": true,
+    "helper": "tribes_zlib_chunkcopy32_cpu",
+    "returns": true
+  },
+  "QoL_ChunkMemset32": {
+    "arguments": 3,
+    "calling_convention": "cdecl",
+    "guest_base": false,
+    "cpu_argument": true,
+    "helper": "tribes_zlib_chunkmemset32_cpu",
+    "returns": true
+  },
+  "QoL_ChunkMemset32Safe": {
+    "arguments": 4,
+    "calling_convention": "cdecl",
+    "guest_base": false,
+    "cpu_argument": true,
+    "helper": "tribes_zlib_chunkmemset32_safe_cpu",
+    "returns": true
+  },
+  "QoL_Adler32VNNI": {
+    "arguments": 3,
+    "calling_convention": "cdecl",
+    "guest_base": false,
+    "cpu_argument": true,
+    "helper": "tribes_zlib_adler32_vnni_cpu",
+    "returns": true
+  },
+  "QoL_Adler32CopyVNNI": {
+    "arguments": 4,
+    "calling_convention": "cdecl",
+    "guest_base": false,
+    "cpu_argument": true,
+    "helper": "tribes_zlib_adler32_copy_vnni_cpu",
+    "returns": true
+  },
+  "QoL_CRC32FoldFinal": {
+    "arguments": 1,
+    "calling_convention": "cdecl",
+    "guest_base": false,
+    "cpu_argument": true,
+    "helper": "tribes_zlib_crc_fold_final_cpu",
+    "returns": true
+  },
+  "QoL_CRC32Optimized": {
+    "arguments": 3,
+    "calling_convention": "cdecl",
+    "guest_base": false,
+    "cpu_argument": true,
+    "helper": "tribes_zlib_crc32_cpu",
+    "returns": true
+  },
+  "QoL_CRC32FoldBulk": {
+    "arguments": 7,
+    "calling_convention": "cdecl",
+    "guest_base": false,
+    "cpu_argument": true,
+    "helper": "tribes_zlib_crc_fold_bulk_cpu",
+    "returns": true
+  },
+  "QoL_CRC32FoldBulkCopy": {
+    "arguments": 7,
+    "calling_convention": "cdecl",
+    "guest_base": false,
+    "cpu_argument": true,
+    "helper": "tribes_zlib_crc_fold_bulk_copy_cpu",
+    "returns": true
+  }
+}

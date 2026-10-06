@@ -1,0 +1,4 @@
+funcv tb_repne_scasw $
+funcv tb_bsf32 $, destination, value
+funcv tb_btr32 $, destination, index
+funcv tb_bt32 $, value, index

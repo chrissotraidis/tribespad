@@ -1,0 +1,40 @@
+/* Address-only linkage fixture: these symbols are never called by C tests.
+   The engine bootstrap separately executes actual emitted LLVM wrappers. */
+void tbimp_DirectInputCreateA(void) {}
+void tbimp_DI_QueryInterface(void) {}
+void tbimp_DI_AddRef(void) {}
+void tbimp_DI_Release(void) {}
+void tbimp_DI_CreateDevice(void) {}
+void tbimp_DI_EnumDevices(void) {}
+void tbimp_DI_GetDeviceStatus(void) {}
+void tbimp_DI_RunControlPanel(void) {}
+void tbimp_DI_Initialize(void) {}
+void tbimp_DI_FindDevice(void) {}
+
+void tbimp_DID_QueryInterface(void) {}
+void tbimp_DID_AddRef(void) {}
+void tbimp_DID_Release(void) {}
+void tbimp_DID_GetCapabilities(void) {}
+void tbimp_DID_EnumObjects(void) {}
+void tbimp_DID_GetProperty(void) {}
+void tbimp_DID_SetProperty(void) {}
+void tbimp_DID_Acquire(void) {}
+void tbimp_DID_Unacquire(void) {}
+void tbimp_DID_GetDeviceState(void) {}
+void tbimp_DID_GetDeviceData(void) {}
+void tbimp_DID_SetDataFormat(void) {}
+void tbimp_DID_SetEventNotification(void) {}
+void tbimp_DID_SetCooperativeLevel(void) {}
+void tbimp_DID_GetObjectInfo(void) {}
+void tbimp_DID_GetDeviceInfo(void) {}
+void tbimp_DID_RunControlPanel(void) {}
+void tbimp_DID_Initialize(void) {}
+void tbimp_DID_CreateEffect(void) {}
+void tbimp_DID_EnumEffects(void) {}
+void tbimp_DID_GetEffectInfo(void) {}
+void tbimp_DID_GetForceFeedbackState(void) {}
+void tbimp_DID_SendForceFeedbackCommand(void) {}
+void tbimp_DID_EnumCreatedEffectObjects(void) {}
+void tbimp_DID_Escape(void) {}
+void tbimp_DID_Poll(void) {}
+void tbimp_DID_SendDeviceData(void) {}

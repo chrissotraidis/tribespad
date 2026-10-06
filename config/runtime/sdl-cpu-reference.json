@@ -1,0 +1,16 @@
+{
+  "version": "3.2.18",
+  "references": [
+    {
+      "url": "https://raw.githubusercontent.com/libsdl-org/SDL/release-3.2.18/include/SDL3/SDL_cpuinfo.h",
+      "path": "ref/downloads/SDL-release-3.2.18-SDL_cpuinfo.h",
+      "sha256": "c03363b9c6c93f751b5b253d636208baa9d6658c6926802b35169736b96f1aef"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/libsdl-org/SDL/release-3.2.18/src/cpuinfo/SDL_cpuinfo.c",
+      "path": "ref/downloads/SDL-release-3.2.18-SDL_cpuinfo.c",
+      "sha256": "c32f0996108e922a9248121986b8f4053633dd3f1ca30c3f1c6dd9086d50719b"
+    }
+  ],
+  "scope": "Guest CPU feature queries use the x86 compatibility profile, not ARM host features."
+}

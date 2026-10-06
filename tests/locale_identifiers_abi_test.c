@@ -1,0 +1,31 @@
+#include "../port/llasm-support/llasm_cpu.h"
+#include "../port/core/guest_heap.h"
+#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <pthread.h>
+#include <sys/mman.h>
+extern void tbimp_GetUserDefaultLocaleName(void),tbimp_IsValidLocaleName(void),tbimp_LocaleNameToLCID(void),tbimp_LCIDToLocaleName(void),tribes_return_to_host(void),tribes_enter(_cpu *,uint32_t);
+void *tribes_lookup(uint32_t pc){switch(pc){case 1:return (void *)tbimp_GetUserDefaultLocaleName;case 2:return (void *)tbimp_IsValidLocaleName;case 3:return (void *)tbimp_LocaleNameToLCID;case 4:return (void *)tbimp_LCIDToLocaleName;case 0xfffff000:return (void *)tribes_return_to_host;}abort();}
+_Noreturn void tribes_unimplemented_dinput(_cpu *cpu,uint32_t method){(void)cpu;(void)method;abort();}
+struct ValidCase {const uint16_t *name;uint32_t expected;};struct NameCase {const uint16_t *name;uint32_t flags,expected,error;};struct IDCase {uint32_t id,flags;const uint16_t *expected;uint32_t error;};
+#include "locale_identifier_cases.h"
+#define COUNT(a) (sizeof(a)/sizeof((a)[0]))
+static unsigned char *memory;static uint32_t cursor=0x200001;static uint32_t valid_ptr[COUNT(valid_cases)],name_ptr[COUNT(name_cases)],id_expected[COUNT(id_cases)],default_expected;
+static unsigned length(const uint16_t *p){unsigned n=0;while(p[n])n++;return n+1;}
+static uint32_t save(const uint16_t *p){if(!p)return 0;unsigned n=length(p)*2;uint32_t at=cursor;assert(at+n<0x240000);memcpy(memory+at,p,n);cursor+=n+3;return at;}
+static uint32_t invoke(_cpu *cpu,unsigned target,const uint32_t args[4]){unsigned count=target==4?4:target==2?1:2;uint32_t top=cpu->_esp,sp=top-4*count;memcpy(memory+sp,args,4*count);memset(memory+sp-68,0x79,64);memset(memory+top,0x79,64);cpu->_esp=sp;_cpu before=*cpu;tribes_enter(cpu,target);uint32_t value=cpu->_eax;before._eax=value;before._esp=top;assert(!memcmp(cpu,&before,sizeof before)&&!memcmp(memory+sp,args,4*count));for(unsigned i=0;i<64;i++)assert(memory[sp-68+i]==0x79&&memory[top+i]==0x79);return value;}
+static void setup(_cpu *cpu,unsigned i){memset(cpu,0xa5,sizeof *cpu);cpu->_pointer_offset=(uintptr_t)memory;cpu->_esp=0x100000+65536*i+0xf003;}
+static void output_case(_cpu *cpu,unsigned target,uint32_t id,uint32_t flags,uint32_t expected,unsigned n,uint32_t error,uint32_t output){uint32_t args[4]={output,0,0,0};if(target==4){args[0]=id;args[1]=output;args[2]=0;args[3]=flags;}tribes_set_last_error(123);memset(memory+output-1,0x79,512);uint32_t result=invoke(cpu,target,args);if(result!=n){fprintf(stderr,"id %x flags %x query %u expected %u error %u\n",id,flags,result,n,tribes_get_last_error());abort();}assert(tribes_get_last_error()==error&&memory[output]==0x79);if(!n)return;args[target==4?2:1]=n;assert(invoke(cpu,target,args)==n&&!memcmp(memory+output,memory+expected,2*n)&&tribes_get_last_error()==123&&memory[output-1]==0x79&&memory[output+2*n]==0x79);if(n>1){args[target==4?2:1]=n-1;memset(memory+output-1,0x79,512);assert(!invoke(cpu,target,args)&&tribes_get_last_error()==122);for(unsigned j=0;j<512;j++)assert(memory[output-1+j]==0x79);}}
+static void *worker(void *p){unsigned id=(unsigned)(uintptr_t)p;_cpu cpu;setup(&cpu,id);uint32_t output=0x108001+65536*id;
+ for(unsigned round=0;round<3;round++){
+  for(unsigned i=0;i<COUNT(valid_cases);i++){uint32_t args[4]={valid_ptr[i],0,0,0};tribes_set_last_error(123);assert(invoke(&cpu,2,args)==valid_cases[i].expected&&tribes_get_last_error()==123);}
+  for(unsigned i=0;i<COUNT(name_cases);i++){uint32_t args[4]={name_ptr[i],name_cases[i].flags,0,0};tribes_set_last_error(123);uint32_t value=invoke(&cpu,3,args);if(value!=name_cases[i].expected){fprintf(stderr,"name case %u got %x expected %x\n",i,value,name_cases[i].expected);abort();}assert(tribes_get_last_error()==name_cases[i].error);}
+  for(unsigned i=0;i<COUNT(id_cases);i++)output_case(&cpu,4,id_cases[i].id,id_cases[i].flags,id_expected[i],id_cases[i].expected?length(id_cases[i].expected):0,id_cases[i].error,output);
+  output_case(&cpu,1,0,0,default_expected,6,123,output);
+ }
+ return NULL;}
+int main(void){memory=mmap(NULL,UINT64_C(0x100000000),PROT_NONE,MAP_PRIVATE|MAP_ANON,-1,0);assert(memory!=MAP_FAILED&&!mprotect(memory+0x100000,0x80000,PROT_READ|PROT_WRITE)&&!mprotect(memory+0x200000,0x40000,PROT_READ|PROT_WRITE));for(unsigned i=0;i<COUNT(valid_cases);i++)valid_ptr[i]=save(valid_cases[i].name);for(unsigned i=0;i<COUNT(name_cases);i++)name_ptr[i]=save(name_cases[i].name);for(unsigned i=0;i<COUNT(id_cases);i++)id_expected[i]=save(id_cases[i].expected);static const uint16_t enus[]={'e','n','-','U','S',0};default_expected=save(enus);unsigned char *snapshot=malloc(0x40000);assert(snapshot);memcpy(snapshot,memory+0x200000,0x40000);assert(!mprotect(memory+0x200000,0x40000,PROT_READ));pthread_t threads[8];for(unsigned i=0;i<8;i++)assert(!pthread_create(&threads[i],NULL,worker,(void *)(uintptr_t)i));for(unsigned i=0;i<8;i++)assert(!pthread_join(threads[i],NULL));assert(!memcmp(snapshot,memory+0x200000,0x40000));free(snapshot);
+ _cpu cpu;setup(&cpu,0);uint32_t args[4]={0,6,0,0};assert(!invoke(&cpu,1,args)&&tribes_get_last_error()==87);args[0]=0x108001;args[1]=UINT32_MAX;assert(!invoke(&cpu,1,args)&&tribes_get_last_error()==87);args[0]=1;args[1]=6;assert(!invoke(&cpu,1,args)&&tribes_get_last_error()==87);args[1]=0;tribes_set_last_error(123);assert(invoke(&cpu,1,args)==6&&tribes_get_last_error()==123);args[0]=0x409;args[1]=0;args[2]=6;args[3]=0;assert(!invoke(&cpu,4,args)&&tribes_get_last_error()==87);args[1]=0x108001;args[2]=UINT32_MAX;assert(!invoke(&cpu,4,args)&&tribes_get_last_error()==87);args[1]=1;args[2]=6;assert(!invoke(&cpu,4,args)&&tribes_get_last_error()==87);args[2]=0;tribes_set_last_error(123);assert(invoke(&cpu,4,args)==6&&tribes_get_last_error()==123);
+ printf("PASS: Four actual ARM64 wrappers, %zu validity cases including the complete 1087-name pinned population, %zu name-to-ID and %zu ID-to-name golden cases, eight threads/three rounds, neutral/specific/alternate-sort/default/alias and case/separator handling, readonly unaligned inputs, size/full/short buffers and failure write isolation, full CPU/FP/flags/stack guards, LastError and invalid names/flags/capacity/output ranges\n",COUNT(valid_cases),COUNT(name_cases),COUNT(id_cases));assert(!munmap(memory,UINT64_C(0x100000000)));return 0;}

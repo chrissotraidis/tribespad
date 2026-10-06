@@ -1,0 +1,36 @@
+{
+  "scope": "NtQueryVolumeInformationFile classes4 (FileFsDeviceInformation) and1 (FileFsVolumeInformation), x86 stdcall, Apple-backed virtual filesystem profile. See nt-file.json for the class1 extension.",
+  "observed": {
+    "return": "0x10078d52",
+    "handle": "0xe100000f",
+    "length": 8,
+    "class": 4,
+    "descriptor": 12,
+    "native_object": "generated/apple-game-profile/curl-ca-bundle.crt",
+    "evidence": "generated/integration-review/nt-volume/handle-lldb.log"
+  },
+  "behavior": [
+    "Own a duplicated descriptor while consulting fstat/fstatfs; registry rejects invalid and wrong-type handles with separate NTSTATUS values. LastError is unchanged.",
+    "Local APFS/HFS yields FILE_DEVICE_DISK_FILE_SYSTEM (8); nfs/smbfs/afpfs yields FILE_DEVICE_NETWORK_FILE_SYSTEM (20). Native MNT_RDONLY and MNT_LOCAL determine READ_ONLY_DEVICE and REMOTE_DEVICE. No physical-drive, removable-media or mounted-disk flag is fabricated.",
+    "Success writes exactly two 32-bit device fields and IO_STATUS_BLOCK {STATUS_SUCCESS,8}; native structures remain host-owned. Both guest destinations are checked before either copy and permission changes remain excluded through both copies.",
+    "Class zero is invalid; insufficient capacity is rejected before pointers/handles. Null/wrapped buffers and non-four-byte-aligned outputs are rejected. Invalid preconditions leave both outputs unchanged.",
+    "Protected guest pointers retain the runtime abort policy, not Windows SEH recovery."
+  ],
+  "validation": [
+    "Mac normal/ThreadSanitizer/checked and sole checked iPad fixture, actual descriptors and mounts, metadata-only rights, file/directory queries, borrowed lifetime, preserved file offset, CPU/stdcall/LastError and sentinel bytes.",
+    "Seven guarded stops: protected output, status block and crossing page; direct guest pointer to fstatfs; wrong native fstatfs return ABI; unimplemented class and device object. Mac shared-memory fork checks confirm neither output changed before faults.",
+    "Dynamic ntdll lookup invokes actual generated wrapper against a real file."
+  ],
+  "limits": [
+    "No native Windows comparison run was available. Error precedence uses upstream Windows API tests; four-byte output alignment is inferred from the x86 structures and NT probe convention rather than a captured class-4 Windows experiment.",
+    "Virtual-volume serial/label semantics are specified in nt-file.json. No size/attributes classes, asynchronous operation or IO-completion delivery.",
+    "Only APFS/HFS local mounts were exercised. Network and read-only mount mappings are implemented from native flags but no such mounted test volume was available.",
+    "No full physical-device/NTFS/ACL equivalence; unexpected descriptor inspection failure currently returns STATUS_UNSUCCESSFUL without an IOSB completion."
+  ],
+  "sources": [
+    "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-ntqueryvolumeinformationfile",
+    "https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/ns-wdm-_file_fs_device_information",
+    "https://doxygen.reactos.org/d2/d47/NtQueryVolumeInformationFile_8c_source.html",
+    "https://raw.githubusercontent.com/wine-mirror/wine/wine-10.0/dlls/ntdll/unix/file.c"
+  ]
+}

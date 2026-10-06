@@ -1,0 +1,427 @@
+{
+  "scope": "Finite implemented native Windows providers. Handles are guest metadata tokens, not host or executable addresses. ntdll uses the unused static reservation at0x20000000;0x60000000 belongs to DirectInput and0x60030000 begins owned virtual allocations. bcrypt uses metadata handle0x20030000 and exposes only its implemented system-preferred RNG.",
+  "exports": [
+    {
+      "name": "TlsAlloc",
+      "guest_va": 4294639616
+    },
+    {
+      "name": "TlsFree",
+      "guest_va": 4294639632
+    },
+    {
+      "name": "TlsGetValue",
+      "guest_va": 4294639648
+    },
+    {
+      "name": "TlsSetValue",
+      "guest_va": 4294639664
+    },
+    {
+      "name": "InitializeCriticalSectionEx",
+      "guest_va": 4294639680
+    },
+    {
+      "name": "FlsAlloc",
+      "guest_va": 4294639696
+    },
+    {
+      "name": "FlsGetValue",
+      "guest_va": 4294639712
+    },
+    {
+      "name": "FlsSetValue",
+      "guest_va": 4294639728
+    },
+    {
+      "name": "FlsFree",
+      "guest_va": 4294639744
+    },
+    {
+      "name": "LCMapStringEx",
+      "guest_va": 4294639760
+    },
+    {
+      "name": "GetSystemTimePreciseAsFileTime",
+      "guest_va": 4294639776
+    },
+    {
+      "name": "GetTempPath2W",
+      "guest_va": 4294639792
+    },
+    {
+      "name": "VirtualAlloc2FromApp",
+      "guest_va": 4294639808
+    },
+    {
+      "name": "GetCurrentProcessorNumberEx",
+      "guest_va": 4294639824
+    },
+    {
+      "name": "GetNumaProcessorNodeEx",
+      "guest_va": 4294639840
+    },
+    {
+      "name": "GetNumaNodeProcessorMaskEx",
+      "guest_va": 4294639856
+    },
+    {
+      "name": "GetNumaProcessorNode",
+      "guest_va": 4294639872
+    },
+    {
+      "name": "AreFileApisANSI",
+      "guest_va": 4294639888
+    },
+    {
+      "name": "CompareStringEx",
+      "guest_va": 4294639904
+    },
+    {
+      "name": "EnumSystemLocalesEx",
+      "guest_va": 4294639920
+    },
+    {
+      "name": "GetDateFormatEx",
+      "guest_va": 4294639936
+    },
+    {
+      "name": "GetTimeFormatEx",
+      "guest_va": 4294639952
+    },
+    {
+      "name": "GetLocaleInfoEx",
+      "guest_va": 4294639968
+    },
+    {
+      "name": "GetUserDefaultLocaleName",
+      "guest_va": 4294639984
+    },
+    {
+      "name": "IsValidLocaleName",
+      "guest_va": 4294640000
+    },
+    {
+      "name": "LocaleNameToLCID",
+      "guest_va": 4294640016
+    },
+    {
+      "name": "LCIDToLocaleName",
+      "guest_va": 4294640032
+    },
+    {
+      "name": "NtAllocateVirtualMemoryEx",
+      "guest_va": 4294643712
+    },
+    {
+      "name": "RtlNtStatusToDosError",
+      "guest_va": 4294643728
+    },
+    {
+      "name": "CreateWindowExA",
+      "guest_va": 4294643744
+    },
+    {
+      "name": "DefWindowProcA",
+      "guest_va": 4294643760
+    },
+    {
+      "name": "DestroyWindow",
+      "guest_va": 4294643776
+    },
+    {
+      "name": "GetDC",
+      "guest_va": 4294643792
+    },
+    {
+      "name": "GetDesktopWindow",
+      "guest_va": 4294643808
+    },
+    {
+      "name": "GetKeyState",
+      "guest_va": 4294643824
+    },
+    {
+      "name": "GetSystemMetrics",
+      "guest_va": 4294643840
+    },
+    {
+      "name": "LoadCursorA",
+      "guest_va": 4294643856
+    },
+    {
+      "name": "LoadIconA",
+      "guest_va": 4294643872
+    },
+    {
+      "name": "MapVirtualKeyA",
+      "guest_va": 4294643888
+    },
+    {
+      "name": "RegisterClassA",
+      "guest_va": 4294643904
+    },
+    {
+      "name": "ReleaseDC",
+      "guest_va": 4294643920
+    },
+    {
+      "name": "ToAscii",
+      "guest_va": 4294643936
+    },
+    {
+      "name": "UnregisterClassA",
+      "guest_va": 4294643952
+    },
+    {
+      "name": "WSACleanup",
+      "guest_va": 4294643968
+    },
+    {
+      "name": "WSAGetLastError",
+      "guest_va": 4294643984
+    },
+    {
+      "name": "WSASetLastError",
+      "guest_va": 4294644000
+    },
+    {
+      "name": "WSAStartup",
+      "guest_va": 4294644016
+    },
+    {
+      "name": "bind",
+      "guest_va": 4294644032
+    },
+    {
+      "name": "closesocket",
+      "guest_va": 4294644048
+    },
+    {
+      "name": "getsockname",
+      "guest_va": 4294644064
+    },
+    {
+      "name": "htonl",
+      "guest_va": 4294644080
+    },
+    {
+      "name": "htons",
+      "guest_va": 4294644096
+    },
+    {
+      "name": "ioctlsocket",
+      "guest_va": 4294644112
+    },
+    {
+      "name": "ntohl",
+      "guest_va": 4294644128
+    },
+    {
+      "name": "ntohs",
+      "guest_va": 4294644144
+    },
+    {
+      "name": "recvfrom",
+      "guest_va": 4294644160
+    },
+    {
+      "name": "sendto",
+      "guest_va": 4294644176
+    },
+    {
+      "name": "socket",
+      "guest_va": 4294644192
+    },
+    {
+      "name": "getsockopt",
+      "guest_va": 4294644208
+    },
+    {
+      "name": "NtQuerySystemInformation",
+      "guest_va": 4294644224
+    },
+    {
+      "name": "BCryptGenRandom",
+      "guest_va": 4294644240
+    },
+    {
+      "name": "NtQueryVolumeInformationFile",
+      "guest_va": 4294644256
+    },
+    {
+      "name": "NtQueryInformationFile",
+      "guest_va": 4294644272
+    },
+    {
+      "name": "ConnectEx",
+      "guest_va": 4294644288
+    },
+    {
+      "name": "setsockopt",
+      "guest_va": 4294644304
+    },
+    {
+      "name": "WSARecv",
+      "guest_va": 4294644320
+    },
+    {
+      "name": "WSASend",
+      "guest_va": 4294644336
+    },
+    {
+      "name": "CancelIoEx",
+      "guest_va": 4294644352
+    },
+    {
+      "name": "CancelIo",
+      "guest_va": 4294644368
+    }
+  ],
+  "providers": [
+    {
+      "name": "kernel32.dll",
+      "image": 1610678272,
+      "path": "C:\\Windows\\System32\\kernel32.dll",
+      "exports": [
+        "TlsAlloc",
+        "TlsFree",
+        "TlsGetValue",
+        "TlsSetValue",
+        "InitializeCriticalSectionEx",
+        "FlsAlloc",
+        "FlsGetValue",
+        "FlsSetValue",
+        "FlsFree",
+        "LCMapStringEx",
+        "GetSystemTimePreciseAsFileTime",
+        "GetTempPath2W",
+        "VirtualAlloc2FromApp",
+        "GetCurrentProcessorNumberEx",
+        "GetNumaProcessorNodeEx",
+        "GetNumaNodeProcessorMaskEx",
+        "GetNumaProcessorNode",
+        "AreFileApisANSI",
+        "CompareStringEx",
+        "EnumSystemLocalesEx",
+        "GetDateFormatEx",
+        "GetTimeFormatEx",
+        "GetLocaleInfoEx",
+        "GetUserDefaultLocaleName",
+        "IsValidLocaleName",
+        "LocaleNameToLCID",
+        "LCIDToLocaleName",
+        "CancelIoEx",
+        "CancelIo"
+      ],
+      "initial_references": 1
+    },
+    {
+      "name": "kernelbase.dll",
+      "image": 1610743808,
+      "path": "C:\\Windows\\System32\\kernelbase.dll",
+      "exports": [
+        "TlsAlloc",
+        "TlsFree",
+        "TlsGetValue",
+        "TlsSetValue",
+        "InitializeCriticalSectionEx",
+        "FlsAlloc",
+        "FlsGetValue",
+        "FlsSetValue",
+        "FlsFree",
+        "LCMapStringEx",
+        "GetSystemTimePreciseAsFileTime",
+        "GetTempPath2W",
+        "VirtualAlloc2FromApp",
+        "GetCurrentProcessorNumberEx",
+        "GetNumaProcessorNodeEx",
+        "GetNumaNodeProcessorMaskEx",
+        "GetNumaProcessorNode",
+        "AreFileApisANSI",
+        "CompareStringEx",
+        "EnumSystemLocalesEx",
+        "GetDateFormatEx",
+        "GetTimeFormatEx",
+        "GetLocaleInfoEx",
+        "GetUserDefaultLocaleName",
+        "IsValidLocaleName",
+        "LocaleNameToLCID",
+        "LCIDToLocaleName"
+      ],
+      "initial_references": 0
+    },
+    {
+      "name": "ntdll.dll",
+      "image": 536870912,
+      "path": "C:\\Windows\\System32\\ntdll.dll",
+      "exports": [
+        "NtAllocateVirtualMemoryEx",
+        "RtlNtStatusToDosError",
+        "NtQuerySystemInformation",
+        "NtQueryVolumeInformationFile",
+        "NtQueryInformationFile"
+      ],
+      "initial_references": 1
+    },
+    {
+      "name": "user32.dll",
+      "image": 536936448,
+      "path": "C:\\Windows\\System32\\user32.dll",
+      "exports": [
+        "CreateWindowExA",
+        "DefWindowProcA",
+        "DestroyWindow",
+        "GetDC",
+        "GetDesktopWindow",
+        "GetKeyState",
+        "GetSystemMetrics",
+        "LoadCursorA",
+        "LoadIconA",
+        "MapVirtualKeyA",
+        "RegisterClassA",
+        "ReleaseDC",
+        "ToAscii",
+        "UnregisterClassA"
+      ],
+      "initial_references": 1
+    },
+    {
+      "name": "ws2_32.dll",
+      "image": 537001984,
+      "path": "C:\\Windows\\System32\\ws2_32.dll",
+      "exports": [
+        "WSACleanup",
+        "WSAGetLastError",
+        "WSASetLastError",
+        "WSAStartup",
+        "bind",
+        "closesocket",
+        "getsockname",
+        "htonl",
+        "htons",
+        "ioctlsocket",
+        "ntohl",
+        "ntohs",
+        "recvfrom",
+        "sendto",
+        "socket",
+        "getsockopt",
+        "setsockopt",
+        "WSARecv",
+        "WSASend"
+      ],
+      "initial_references": 1
+    },
+    {
+      "name": "bcrypt.dll",
+      "image": 537067520,
+      "path": "C:\\Windows\\System32\\bcrypt.dll",
+      "exports": [
+        "BCryptGenRandom"
+      ],
+      "initial_references": 1
+    }
+  ],
+  "startup_scope": "kernel32, its ntdll dependency, and the statically imported user32/ws2_32/bcrypt native providers own one process-start loader reference each. kernelbase remains dynamically loaded. Provider handles identify precompiled services, not readable guest PE images. Temporary LoadLibrary/FreeLibrary references are independent."
+}

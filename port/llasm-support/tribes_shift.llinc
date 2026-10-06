@@ -1,0 +1,5 @@
+funcv tb_shift_reg $, op, selector, width, source, count
+funcv tb_shift_mem $, op, address, width, source, count
+
+funcv tb_bmi_shift $, op, dest, source, countreg
+funcv tb_bmi_shiftmem $, op, dest, address, countreg

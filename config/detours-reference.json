@@ -1,0 +1,18 @@
+{
+  "references": [
+    {
+      "url": "https://raw.githubusercontent.com/microsoft/Detours/v4.0.1/src/detours.cpp",
+      "path": "ref/downloads/detours-v4.0.1-detours.cpp",
+      "bytes": 79717,
+      "sha256": "df415e05f985afe88f4b03ba34d6f5abce47edda11cd66d4f72902b801113eb7"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/microsoft/Detours/v4.0.1/LICENSE.md",
+      "path": "ref/downloads/detours-v4.0.1-LICENSE.md",
+      "bytes": 1099,
+      "sha256": "b301808b732cfaa60df2b4b422d78cd97d2a15058b207e7e33f0535ba5170dd6"
+    }
+  ],
+  "acquired_utc": "2026-10-01T03:46:56.121418+00:00",
+  "scope": "Upstream reference corroborates captured Rrtd signature, 64 KiB region and trampoline layout; embedded selected QoL Detours exact version not established"
+}

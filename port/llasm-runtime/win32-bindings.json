@@ -1,0 +1,1786 @@
+{
+  "SetUnhandledExceptionFilter": {
+    "helper": "tribes_set_exception_filter",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": false
+  },
+  "InitializeCriticalSection": {
+    "helper": "tribes_critical_init",
+    "arguments": 1,
+    "returns": false,
+    "guest_base": true
+  },
+  "InitializeCriticalSectionAndSpinCount": {
+    "helper": "tribes_critical_init_spin",
+    "arguments": 2,
+    "returns": true,
+    "guest_base": true
+  },
+  "InitializeCriticalSectionEx": {
+    "helper": "tribes_critical_init_ex",
+    "arguments": 3,
+    "returns": true,
+    "guest_base": true
+  },
+  "EnterCriticalSection": {
+    "helper": "tribes_critical_enter",
+    "arguments": 1,
+    "returns": false,
+    "guest_base": true
+  },
+  "TryEnterCriticalSection": {
+    "helper": "tribes_critical_try_enter",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": true
+  },
+  "LeaveCriticalSection": {
+    "helper": "tribes_critical_leave",
+    "arguments": 1,
+    "returns": false,
+    "guest_base": true
+  },
+  "DeleteCriticalSection": {
+    "helper": "tribes_critical_delete",
+    "arguments": 1,
+    "returns": false,
+    "guest_base": true
+  },
+  "GlobalAlloc": {
+    "helper": "tribes_global_alloc",
+    "arguments": 2,
+    "returns": true,
+    "guest_base": true
+  },
+  "GlobalFree": {
+    "helper": "tribes_global_free",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": true
+  },
+  "GlobalSize": {
+    "helper": "tribes_global_size",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": true
+  },
+  "GetLastError": {
+    "helper": "tribes_get_last_error",
+    "arguments": 0,
+    "returns": true,
+    "guest_base": false
+  },
+  "SetLastError": {
+    "helper": "tribes_set_last_error",
+    "arguments": 1,
+    "returns": false,
+    "guest_base": false
+  },
+  "GetStdHandle": {
+    "helper": "tribes_get_std_handle",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": false
+  },
+  "SetStdHandle": {
+    "helper": "tribes_set_std_handle",
+    "arguments": 2,
+    "returns": true,
+    "guest_base": false
+  },
+  "GetFileType": {
+    "helper": "tribes_get_file_type",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": false
+  },
+  "CloseHandle": {
+    "helper": "tribes_close_handle",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": false
+  },
+  "GetCurrentProcess": {
+    "helper": "tribes_get_current_process",
+    "arguments": 0,
+    "returns": true,
+    "guest_base": false
+  },
+  "DuplicateHandle": {
+    "helper": "tribes_duplicate_handle",
+    "arguments": 7,
+    "returns": true,
+    "guest_base": true
+  },
+  "GetEnvironmentStrings": {
+    "helper": "tribes_get_environment_strings",
+    "arguments": 0,
+    "returns": true,
+    "guest_base": true
+  },
+  "FreeEnvironmentStringsA": {
+    "helper": "tribes_free_environment_strings",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": true
+  },
+  "TlsAlloc": {
+    "helper": "tribes_tls_alloc",
+    "arguments": 0,
+    "returns": true,
+    "guest_base": false
+  },
+  "TlsFree": {
+    "helper": "tribes_tls_free",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": false
+  },
+  "TlsGetValue": {
+    "helper": "tribes_tls_get",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": false
+  },
+  "TlsSetValue": {
+    "helper": "tribes_tls_set",
+    "arguments": 2,
+    "returns": true,
+    "guest_base": false
+  },
+  "GetCommandLineA": {
+    "helper": "tribes_get_command_line",
+    "arguments": 0,
+    "returns": true,
+    "guest_base": true
+  },
+  "QueryPerformanceFrequency": {
+    "helper": "tribes_performance_frequency",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": true
+  },
+  "QueryPerformanceCounter": {
+    "helper": "tribes_performance_counter",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": true
+  },
+  "GetDiskFreeSpaceA": {
+    "helper": "tribes_disk_free_space",
+    "arguments": 5,
+    "returns": true,
+    "guest_base": true
+  },
+  "GetTickCount": {
+    "helper": "tribes_tick_count",
+    "arguments": 0,
+    "returns": true,
+    "guest_base": false
+  },
+  "GetSystemTimeAsFileTime": {
+    "helper": "tribes_system_file_time",
+    "arguments": 1,
+    "returns": false,
+    "guest_base": true,
+    "helper_returns": "void"
+  },
+  "GetStartupInfoA": {
+    "helper": "tribes_get_startup_info",
+    "arguments": 1,
+    "returns": false,
+    "guest_base": true,
+    "helper_returns": "void"
+  },
+  "GetModuleHandleA": {
+    "helper": "tribes_get_module_handle",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": true
+  },
+  "GetModuleFileNameA": {
+    "helper": "tribes_get_module_filename",
+    "arguments": 3,
+    "returns": true,
+    "guest_base": true
+  },
+  "CreateCompatibleDC": {
+    "helper": "tribes_create_memory_dc",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": true
+  },
+  "CreateCompatibleBitmap": {
+    "helper": "tribes_create_compatible_bitmap",
+    "arguments": 3,
+    "returns": true,
+    "guest_base": true
+  },
+  "SelectObject": {
+    "helper": "tribes_select_gdi_object",
+    "arguments": 2,
+    "returns": true,
+    "guest_base": true
+  },
+  "DeleteObject": {
+    "helper": "tribes_delete_gdi_object",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": true
+  },
+  "RegisterClassA": {
+    "helper": "tribes_register_class",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": true
+  },
+  "UnregisterClassA": {
+    "helper": "tribes_unregister_class",
+    "arguments": 2,
+    "returns": true,
+    "guest_base": true
+  },
+  "CreateWindowExA": {
+    "helper": "tribes_create_hidden_window",
+    "arguments": 12,
+    "returns": true,
+    "guest_base": false,
+    "cpu_argument": true
+  },
+  "DefWindowProcA": {
+    "helper": "tribes_default_window_proc",
+    "arguments": 4,
+    "returns": true,
+    "guest_base": true
+  },
+  "DestroyWindow": {
+    "helper": "tribes_destroy_hidden_window",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": false,
+    "cpu_argument": true
+  },
+  "IsWindow": {
+    "helper": "tribes_is_window",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": true
+  },
+  "WSAStartup": {
+    "helper": "tribes_wsa_startup",
+    "arguments": 2,
+    "returns": true,
+    "guest_base": true
+  },
+  "GetAddrInfoW": {
+    "helper": "tribes_get_addr_info_w",
+    "arguments": 4,
+    "returns": true,
+    "guest_base": true
+  },
+  "FreeAddrInfoW": {
+    "helper": "tribes_free_addr_info_w",
+    "helper_returns": "void",
+    "arguments": 1,
+    "returns": false,
+    "guest_base": true
+  },
+  "WSACleanup": {
+    "helper": "tribes_wsa_cleanup",
+    "arguments": 0,
+    "returns": true,
+    "guest_base": true
+  },
+  "socket": {
+    "helper": "tribes_socket",
+    "arguments": 3,
+    "returns": true,
+    "guest_base": true
+  },
+  "closesocket": {
+    "helper": "tribes_closesocket",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": true
+  },
+  "bind": {
+    "helper": "tribes_bind_socket",
+    "arguments": 3,
+    "returns": true,
+    "guest_base": true
+  },
+  "getsockname": {
+    "helper": "tribes_getsockname",
+    "arguments": 3,
+    "returns": true,
+    "guest_base": true
+  },
+  "ioctlsocket": {
+    "helper": "tribes_ioctlsocket",
+    "arguments": 3,
+    "returns": true,
+    "guest_base": true
+  },
+  "sendto": {
+    "helper": "tribes_sendto",
+    "arguments": 6,
+    "returns": true,
+    "guest_base": true
+  },
+  "recvfrom": {
+    "helper": "tribes_recvfrom",
+    "arguments": 6,
+    "returns": true,
+    "guest_base": true
+  },
+  "WSAGetLastError": {
+    "helper": "tribes_get_last_error",
+    "arguments": 0,
+    "returns": true,
+    "guest_base": false
+  },
+  "WSASetLastError": {
+    "helper": "tribes_set_last_error",
+    "arguments": 1,
+    "returns": false,
+    "guest_base": false
+  },
+  "GetCurrentDirectoryA": {
+    "helper": "tribes_get_current_directory",
+    "arguments": 2,
+    "returns": true,
+    "guest_base": true
+  },
+  "GetVersionExA": {
+    "helper": "tribes_get_version_ex",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": true
+  },
+  "LoadLibraryA": {
+    "helper": "tribes_load_library_cpu",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": false,
+    "cpu_argument": true
+  },
+  "LoadLibraryExW": {
+    "helper": "tribes_load_library_ex_w_cpu",
+    "arguments": 3,
+    "returns": true,
+    "guest_base": false,
+    "cpu_argument": true
+  },
+  "FreeLibrary": {
+    "helper": "tribes_free_library_cpu",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": false,
+    "cpu_argument": true
+  },
+  "GetProcAddress": {
+    "helper": "tribes_get_proc_address",
+    "arguments": 2,
+    "returns": true,
+    "guest_base": true
+  },
+  "DirectInputCreateA": {
+    "helper": "tribes_dinput_create",
+    "arguments": 4,
+    "returns": true,
+    "guest_base": true
+  },
+  "DI_QueryInterface": {
+    "helper": "tribes_dinput_query",
+    "arguments": 3,
+    "returns": true,
+    "guest_base": true
+  },
+  "DI_AddRef": {
+    "helper": "tribes_dinput_addref",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": true
+  },
+  "DI_Release": {
+    "helper": "tribes_dinput_release",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": true
+  },
+  "DI_Initialize": {
+    "helper": "tribes_dinput_initialize",
+    "arguments": 3,
+    "returns": true,
+    "guest_base": true
+  },
+  "DI_EnumDevices": {
+    "helper": "tribes_dinput_enumerate",
+    "arguments": 5,
+    "returns": true,
+    "guest_base": false,
+    "cpu_argument": true
+  },
+  "DI_CreateDevice": {
+    "helper": "tribes_dinput_create_device",
+    "arguments": 4,
+    "returns": true,
+    "guest_base": true
+  },
+  "DID_QueryInterface": {
+    "helper": "tribes_dinput_query",
+    "arguments": 3,
+    "returns": true,
+    "guest_base": true
+  },
+  "DID_AddRef": {
+    "helper": "tribes_dinput_addref",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": true
+  },
+  "DID_Release": {
+    "helper": "tribes_dinput_release",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": true
+  },
+  "DID_GetCapabilities": {
+    "helper": "tribes_dinput_device_caps",
+    "arguments": 2,
+    "returns": true,
+    "guest_base": true
+  },
+  "DID_GetDeviceInfo": {
+    "helper": "tribes_dinput_device_info",
+    "arguments": 2,
+    "returns": true,
+    "guest_base": true
+  },
+  "DID_EnumObjects": {
+    "helper": "tribes_dinput_enum_objects",
+    "arguments": 4,
+    "returns": true,
+    "guest_base": false,
+    "cpu_argument": true
+  },
+  "DID_GetProperty": {
+    "helper": "tribes_dinput_get_property",
+    "arguments": 3,
+    "returns": true,
+    "guest_base": false,
+    "cpu_argument": true
+  },
+  "DID_SetDataFormat": {
+    "helper": "tribes_dinput_set_format",
+    "arguments": 2,
+    "returns": true,
+    "guest_base": true
+  },
+  "DID_SetProperty": {
+    "helper": "tribes_dinput_set_property",
+    "arguments": 3,
+    "returns": true,
+    "guest_base": false,
+    "cpu_argument": true
+  },
+  "MapVirtualKeyA": {
+    "helper": "tribes_map_virtual_key",
+    "arguments": 2,
+    "returns": true,
+    "guest_base": false
+  },
+  "ToAscii": {
+    "helper": "tribes_to_ascii",
+    "arguments": 5,
+    "returns": true,
+    "guest_base": true
+  },
+  "GetKeyState": {
+    "helper": "tribes_get_key_state",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": true
+  },
+  "GetKeyboardState": {
+    "helper": "tribes_get_keyboard_state",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": true
+  },
+  "LoadIconA": {
+    "helper": "tribes_load_icon",
+    "arguments": 2,
+    "returns": true,
+    "guest_base": true
+  },
+  "LoadCursorA": {
+    "helper": "tribes_load_cursor",
+    "arguments": 2,
+    "returns": true,
+    "guest_base": true
+  },
+  "GetStockObject": {
+    "helper": "tribes_get_stock_object",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": true
+  },
+  "GetDesktopWindow": {
+    "helper": "tribes_get_desktop_window",
+    "arguments": 0,
+    "returns": true,
+    "guest_base": true
+  },
+  "GetDC": {
+    "helper": "tribes_get_window_dc",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": true
+  },
+  "GetDeviceCaps": {
+    "helper": "tribes_get_display_caps",
+    "arguments": 2,
+    "returns": true,
+    "guest_base": true
+  },
+  "ReleaseDC": {
+    "helper": "tribes_release_window_dc",
+    "arguments": 2,
+    "returns": true,
+    "guest_base": true
+  },
+  "GetLogicalDriveStringsA": {
+    "helper": "tribes_get_logical_drive_strings",
+    "arguments": 2,
+    "returns": true,
+    "guest_base": true
+  },
+  "GetDriveTypeA": {
+    "helper": "tribes_get_drive_type",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": true
+  },
+  "GetSystemMetrics": {
+    "helper": "tribes_get_system_metrics",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": true
+  },
+  "CreateSemaphoreA": {
+    "helper": "tribes_create_semaphore",
+    "arguments": 4,
+    "returns": true,
+    "guest_base": true
+  },
+  "ReleaseSemaphore": {
+    "helper": "tribes_release_semaphore",
+    "arguments": 3,
+    "returns": true,
+    "guest_base": true
+  },
+  "WaitForSingleObject": {
+    "helper": "tribes_wait_single_object",
+    "arguments": 2,
+    "returns": true,
+    "guest_base": false
+  },
+  "FindFirstFileA": {
+    "helper": "tribes_find_first",
+    "arguments": 2,
+    "returns": true,
+    "guest_base": true
+  },
+  "FindNextFileA": {
+    "helper": "tribes_find_next",
+    "arguments": 2,
+    "returns": true,
+    "guest_base": true
+  },
+  "FindClose": {
+    "helper": "tribes_find_close",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": true
+  },
+  "CreateFileA": {
+    "helper": "tribes_create_file",
+    "arguments": 7,
+    "returns": true,
+    "guest_base": true
+  },
+  "GetFileSize": {
+    "helper": "tribes_get_file_size",
+    "arguments": 2,
+    "returns": true,
+    "guest_base": true
+  },
+  "SetFilePointer": {
+    "helper": "tribes_set_file_pointer",
+    "arguments": 4,
+    "returns": true,
+    "guest_base": true
+  },
+  "ReadFile": {
+    "helper": "tribes_read_file",
+    "arguments": 5,
+    "returns": true,
+    "guest_base": true
+  },
+  "GetProcessHeap": {
+    "helper": "tribes_get_process_heap",
+    "arguments": 0,
+    "returns": true,
+    "guest_base": true
+  },
+  "HeapAlloc": {
+    "helper": "tribes_heap_alloc",
+    "arguments": 3,
+    "returns": true,
+    "guest_base": true
+  },
+  "HeapFree": {
+    "helper": "tribes_heap_free",
+    "arguments": 3,
+    "returns": true,
+    "guest_base": true
+  },
+  "FlsAlloc": {
+    "helper": "tribes_fls_alloc",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": false,
+    "cpu_argument": true
+  },
+  "FlsGetValue": {
+    "helper": "tribes_fls_get",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": false,
+    "cpu_argument": true
+  },
+  "FlsSetValue": {
+    "helper": "tribes_fls_set",
+    "arguments": 2,
+    "returns": true,
+    "guest_base": false,
+    "cpu_argument": true
+  },
+  "FlsFree": {
+    "helper": "tribes_fls_free",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": false,
+    "cpu_argument": true
+  },
+  "GetStartupInfoW": {
+    "helper": "tribes_get_startup_info",
+    "arguments": 1,
+    "returns": false,
+    "guest_base": true,
+    "helper_returns": "void"
+  },
+  "GetCommandLineW": {
+    "helper": "tribes_get_command_line_w",
+    "arguments": 0,
+    "returns": true,
+    "guest_base": true
+  },
+  "GetACP": {
+    "helper": "tribes_get_acp",
+    "arguments": 0,
+    "returns": true,
+    "guest_base": false
+  },
+  "GetOEMCP": {
+    "helper": "tribes_get_oemcp",
+    "arguments": 0,
+    "returns": true,
+    "guest_base": false
+  },
+  "GetCPInfo": {
+    "helper": "tribes_get_cp_info",
+    "arguments": 2,
+    "returns": true,
+    "guest_base": true
+  },
+  "IsValidCodePage": {
+    "helper": "tribes_is_valid_code_page",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": false
+  },
+  "MultiByteToWideChar": {
+    "helper": "tribes_multibyte_to_wide",
+    "arguments": 6,
+    "returns": true,
+    "guest_base": true
+  },
+  "GetStringTypeW": {
+    "helper": "tribes_get_string_type_w",
+    "arguments": 4,
+    "returns": true,
+    "guest_base": true
+  },
+  "LCMapStringEx": {
+    "helper": "tribes_lcmap_string_ex",
+    "arguments": 9,
+    "returns": true,
+    "guest_base": true
+  },
+  "WideCharToMultiByte": {
+    "helper": "tribes_wide_to_multibyte",
+    "arguments": 8,
+    "returns": true,
+    "guest_base": true
+  },
+  "InitializeSListHead": {
+    "helper": "tribes_initialize_slist_head",
+    "arguments": 1,
+    "returns": false,
+    "guest_base": true,
+    "helper_returns": "void"
+  },
+  "GetModuleHandleW": {
+    "helper": "tribes_get_module_handle_w",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": true
+  },
+  "GetSystemTimePreciseAsFileTime": {
+    "helper": "tribes_system_file_time",
+    "arguments": 1,
+    "returns": false,
+    "guest_base": true,
+    "helper_returns": "void"
+  },
+  "GetTempPathW": {
+    "helper": "tribes_get_temp_path_w",
+    "arguments": 2,
+    "returns": true,
+    "guest_base": true
+  },
+  "GetTempPath2W": {
+    "helper": "tribes_get_temp_path_w",
+    "arguments": 2,
+    "returns": true,
+    "guest_base": true
+  },
+  "GetEnvironmentVariableA": {
+    "helper": "tribes_get_environment_variable_a",
+    "arguments": 3,
+    "returns": true,
+    "guest_base": true
+  },
+  "GetSystemInfo": {
+    "helper": "tribes_get_system_info",
+    "arguments": 1,
+    "returns": false,
+    "guest_base": true,
+    "helper_returns": "void"
+  },
+  "VirtualAlloc2FromApp": {
+    "helper": "tribes_virtual_alloc2_from_app",
+    "arguments": 7,
+    "returns": true,
+    "guest_base": true
+  },
+  "VirtualFree": {
+    "helper": "tribes_virtual_free",
+    "arguments": 3,
+    "returns": true,
+    "guest_base": true
+  },
+  "NtAllocateVirtualMemoryEx": {
+    "helper": "tribes_nt_allocate_virtual_memory_ex",
+    "arguments": 7,
+    "returns": true,
+    "guest_base": true
+  },
+  "GetCurrentProcessorNumberEx": {
+    "helper": "tribes_get_current_processor_number_ex",
+    "arguments": 1,
+    "returns": false,
+    "guest_base": true,
+    "helper_returns": "void"
+  },
+  "GetNumaProcessorNodeEx": {
+    "helper": "tribes_get_numa_processor_node_ex",
+    "arguments": 2,
+    "returns": true,
+    "guest_base": true
+  },
+  "GetNumaProcessorNode": {
+    "helper": "tribes_get_numa_processor_node",
+    "arguments": 2,
+    "returns": true,
+    "guest_base": true
+  },
+  "GetNumaNodeProcessorMaskEx": {
+    "helper": "tribes_get_numa_node_processor_mask_ex",
+    "arguments": 2,
+    "returns": true,
+    "guest_base": true
+  },
+  "GetModuleFileNameW": {
+    "helper": "tribes_get_module_filename_w",
+    "arguments": 3,
+    "returns": true,
+    "guest_base": true
+  },
+  "AreFileApisANSI": {
+    "helper": "tribes_are_file_apis_ansi",
+    "arguments": 0,
+    "returns": true,
+    "guest_base": false
+  },
+  "GetEnvironmentStringsW": {
+    "helper": "tribes_get_environment_strings_w",
+    "arguments": 0,
+    "returns": true,
+    "guest_base": true
+  },
+  "FreeEnvironmentStringsW": {
+    "helper": "tribes_free_environment_strings_w",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": true
+  },
+  "GetNumaHighestNodeNumber": {
+    "helper": "tribes_get_numa_highest_node_number",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": true
+  },
+  "VirtualAlloc": {
+    "helper": "tribes_virtual_alloc",
+    "arguments": 4,
+    "returns": true,
+    "guest_base": true
+  },
+  "Sleep": {
+    "helper": "tribes_sleep",
+    "arguments": 1,
+    "returns": false,
+    "guest_base": false,
+    "helper_returns": "void"
+  },
+  "InitializeSRWLock": {
+    "helper": "tribes_srw_initialize",
+    "arguments": 1,
+    "returns": false,
+    "guest_base": true,
+    "helper_returns": "void"
+  },
+  "AcquireSRWLockExclusive": {
+    "helper": "tribes_srw_acquire_exclusive",
+    "arguments": 1,
+    "returns": false,
+    "guest_base": true,
+    "helper_returns": "void"
+  },
+  "ReleaseSRWLockExclusive": {
+    "helper": "tribes_srw_release_exclusive",
+    "arguments": 1,
+    "returns": false,
+    "guest_base": true,
+    "helper_returns": "void"
+  },
+  "AcquireSRWLockShared": {
+    "helper": "tribes_srw_acquire_shared",
+    "arguments": 1,
+    "returns": false,
+    "guest_base": true,
+    "helper_returns": "void"
+  },
+  "ReleaseSRWLockShared": {
+    "helper": "tribes_srw_release_shared",
+    "arguments": 1,
+    "returns": false,
+    "guest_base": true,
+    "helper_returns": "void"
+  },
+  "TryAcquireSRWLockExclusive": {
+    "helper": "tribes_srw_try_exclusive",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": true
+  },
+  "TryAcquireSRWLockShared": {
+    "helper": "tribes_srw_try_shared",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": true
+  },
+  "GetCurrentThread": {
+    "helper": "tribes_get_current_thread",
+    "arguments": 0,
+    "returns": true,
+    "guest_base": false
+  },
+  "SDL_SetMemoryFunctions": {
+    "helper": "tribes_sdl_set_memory_functions",
+    "arguments": 4,
+    "guest_base": true,
+    "returns": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_malloc": {
+    "helper": "tribes_sdl_malloc",
+    "arguments": 1,
+    "guest_base": false,
+    "cpu_argument": true,
+    "returns": true,
+    "helper_returns": "i32",
+    "calling_convention": "cdecl"
+  },
+  "SDL_calloc": {
+    "helper": "tribes_sdl_calloc",
+    "arguments": 2,
+    "guest_base": false,
+    "cpu_argument": true,
+    "returns": true,
+    "helper_returns": "i32",
+    "calling_convention": "cdecl"
+  },
+  "SDL_realloc": {
+    "helper": "tribes_sdl_realloc",
+    "arguments": 2,
+    "guest_base": false,
+    "cpu_argument": true,
+    "returns": true,
+    "helper_returns": "i32",
+    "calling_convention": "cdecl"
+  },
+  "SDL_free": {
+    "helper": "tribes_sdl_free",
+    "arguments": 1,
+    "guest_base": false,
+    "cpu_argument": true,
+    "returns": false,
+    "helper_returns": "void",
+    "calling_convention": "cdecl"
+  },
+  "VirtualProtect": {
+    "helper": "tribes_virtual_protect",
+    "arguments": 4,
+    "guest_base": true,
+    "returns": true
+  },
+  "VirtualQuery": {
+    "helper": "tribes_virtual_query",
+    "arguments": 3,
+    "guest_base": true,
+    "returns": true
+  },
+  "InitOnceExecuteOnce": {
+    "helper": "tribes_init_once_execute",
+    "arguments": 4,
+    "guest_base": false,
+    "cpu_argument": true,
+    "returns": true
+  },
+  "InitOnceInitialize": {
+    "helper": "tribes_once_initialize",
+    "arguments": 1,
+    "guest_base": true,
+    "returns": false,
+    "helper_returns": "void"
+  },
+  "CompareStringEx": {
+    "helper": "tribes_compare_string_ex",
+    "arguments": 9,
+    "guest_base": true,
+    "returns": true
+  },
+  "EnumSystemLocalesEx": {
+    "helper": "tribes_enum_system_locales_ex",
+    "arguments": 4,
+    "guest_base": false,
+    "cpu_argument": true,
+    "returns": true
+  },
+  "GetDateFormatEx": {
+    "helper": "tribes_get_date_format_ex",
+    "arguments": 7,
+    "guest_base": true,
+    "returns": true
+  },
+  "GetTimeFormatEx": {
+    "helper": "tribes_get_time_format_ex",
+    "arguments": 6,
+    "guest_base": true,
+    "returns": true
+  },
+  "GetLocaleInfoEx": {
+    "helper": "tribes_get_locale_info_ex",
+    "guest_base": true,
+    "returns": true,
+    "arguments": 4
+  },
+  "GetUserDefaultLocaleName": {
+    "helper": "tribes_get_user_default_locale_name",
+    "arguments": 2,
+    "guest_base": true,
+    "returns": true
+  },
+  "IsValidLocaleName": {
+    "helper": "tribes_is_valid_locale_name",
+    "arguments": 1,
+    "guest_base": true,
+    "returns": true
+  },
+  "LocaleNameToLCID": {
+    "helper": "tribes_locale_name_to_lcid",
+    "arguments": 2,
+    "guest_base": true,
+    "returns": true
+  },
+  "LCIDToLocaleName": {
+    "helper": "tribes_lcid_to_locale_name",
+    "arguments": 4,
+    "guest_base": true,
+    "returns": true
+  },
+  "SetCurrentDirectoryA": {
+    "helper": "tribes_set_current_directory",
+    "arguments": 1,
+    "guest_base": true,
+    "returns": true
+  },
+  "SetConsoleCtrlHandler": {
+    "helper": "tribes_set_console_ctrl_handler",
+    "arguments": 2,
+    "guest_base": true,
+    "returns": true
+  },
+  "GetCurrentProcessId": {
+    "helper": "tribes_get_current_process_id",
+    "arguments": 0,
+    "returns": true,
+    "guest_base": false
+  },
+  "GetCurrentThreadId": {
+    "helper": "tribes_get_current_thread_id",
+    "arguments": 0,
+    "returns": true,
+    "guest_base": false
+  },
+  "IsProcessorFeaturePresent": {
+    "helper": "tribes_processor_feature_present",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": false
+  },
+  "SetErrorMode": {
+    "helper": "tribes_set_error_mode",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": false
+  },
+  "GetErrorMode": {
+    "helper": "tribes_get_error_mode",
+    "arguments": 0,
+    "returns": true,
+    "guest_base": false
+  },
+  "FormatMessageA": {
+    "helper": "tribes_format_message_a",
+    "arguments": 7,
+    "returns": true,
+    "guest_base": true
+  },
+  "FormatMessageW": {
+    "helper": "tribes_format_message_w",
+    "arguments": 7,
+    "returns": true,
+    "guest_base": true
+  },
+  "LocalAlloc": {
+    "helper": "tribes_global_alloc",
+    "arguments": 2,
+    "returns": true,
+    "guest_base": true
+  },
+  "LocalFree": {
+    "helper": "tribes_global_free",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": true
+  },
+  "LocalSize": {
+    "helper": "tribes_global_size",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": true
+  },
+  "WriteFile": {
+    "helper": "tribes_write_file",
+    "arguments": 5,
+    "returns": true,
+    "guest_base": true
+  },
+  "RtlNtStatusToDosError": {
+    "helper": "tribes_ntstatus_to_dos_error",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": false
+  },
+  "LoadLibraryExA": {
+    "helper": "tribes_load_library_ex_a_cpu",
+    "arguments": 3,
+    "returns": true,
+    "guest_base": false,
+    "cpu_argument": true
+  },
+  "htons": {
+    "helper": "tribes_network_u16",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": false
+  },
+  "ntohs": {
+    "helper": "tribes_network_u16",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": false
+  },
+  "htonl": {
+    "helper": "tribes_network_u32",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": false
+  },
+  "ntohl": {
+    "helper": "tribes_network_u32",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": false
+  },
+  "getsockopt": {
+    "helper": "tribes_getsockopt",
+    "arguments": 5,
+    "returns": true,
+    "guest_base": true
+  },
+  "CreateFileW": {
+    "helper": "tribes_create_file_w",
+    "arguments": 7,
+    "returns": true,
+    "guest_base": true
+  },
+  "CreateIoCompletionPort": {
+    "helper": "tribes_create_io_completion_port",
+    "arguments": 4,
+    "returns": true,
+    "guest_base": true
+  },
+  "PostQueuedCompletionStatus": {
+    "helper": "tribes_post_queued_completion",
+    "arguments": 4,
+    "returns": true,
+    "guest_base": false
+  },
+  "GetQueuedCompletionStatus": {
+    "helper": "tribes_get_queued_completion",
+    "arguments": 5,
+    "returns": true,
+    "guest_base": true
+  },
+  "BCryptGenRandom": {
+    "helper": "tribes_bcrypt_gen_random",
+    "arguments": 4,
+    "returns": true,
+    "guest_base": true
+  },
+  "GetAdaptersAddresses": {
+    "helper": "tribes_get_adapters_addresses",
+    "arguments": 5,
+    "returns": true,
+    "guest_base": true
+  },
+  "NtQuerySystemInformation": {
+    "helper": "tribes_nt_query_system_information",
+    "arguments": 4,
+    "returns": true,
+    "guest_base": true
+  },
+  "RegOpenKeyExW": {
+    "helper": "tribes_reg_open_key_ex_w",
+    "arguments": 5,
+    "returns": true,
+    "guest_base": true
+  },
+  "RegQueryValueExW": {
+    "helper": "tribes_reg_query_value_ex_w",
+    "arguments": 6,
+    "returns": true,
+    "guest_base": true
+  },
+  "RegCloseKey": {
+    "helper": "tribes_reg_close_key",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": true
+  },
+  "SDL_HasMMX": {
+    "helper": "tribes_sdl_has_mmx",
+    "arguments": 0,
+    "guest_base": false,
+    "returns": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_HasSSE": {
+    "helper": "tribes_sdl_has_sse",
+    "arguments": 0,
+    "guest_base": false,
+    "returns": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_HasAVX": {
+    "helper": "tribes_sdl_has_avx",
+    "arguments": 0,
+    "guest_base": false,
+    "returns": true,
+    "calling_convention": "cdecl"
+  },
+  "SetPriorityClass": {
+    "helper": "tribes_set_priority_class",
+    "arguments": 2,
+    "returns": true,
+    "guest_base": false
+  },
+  "GetProcessAffinityMask": {
+    "helper": "tribes_get_process_affinity_mask",
+    "arguments": 3,
+    "returns": true,
+    "guest_base": true
+  },
+  "SetThreadAffinityMask": {
+    "helper": "tribes_set_thread_affinity_mask",
+    "arguments": 2,
+    "returns": true,
+    "guest_base": false
+  },
+  "MonitorFromWindow": {
+    "helper": "tribes_monitor_from_window",
+    "arguments": 2,
+    "returns": true,
+    "guest_base": true
+  },
+  "GetMonitorInfoA": {
+    "helper": "tribes_get_monitor_info_a",
+    "arguments": 2,
+    "returns": true,
+    "guest_base": true
+  },
+  "GetMonitorInfoW": {
+    "helper": "tribes_get_monitor_info_w",
+    "arguments": 2,
+    "returns": true,
+    "guest_base": true
+  },
+  "timeGetDevCaps": {
+    "helper": "tribes_time_caps",
+    "arguments": 2,
+    "returns": true,
+    "guest_base": true
+  },
+  "timeBeginPeriod": {
+    "helper": "tribes_time_begin_period",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": false
+  },
+  "timeEndPeriod": {
+    "helper": "tribes_time_end_period",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": false
+  },
+  "timeGetTime": {
+    "helper": "tribes_tick_count",
+    "arguments": 0,
+    "returns": true,
+    "guest_base": false
+  },
+  "InitializeConditionVariable": {
+    "helper": "tribes_condition_initialize",
+    "arguments": 1,
+    "returns": false,
+    "guest_base": true,
+    "helper_returns": "void"
+  },
+  "WakeConditionVariable": {
+    "helper": "tribes_condition_wake",
+    "arguments": 1,
+    "returns": false,
+    "guest_base": true,
+    "helper_returns": "void"
+  },
+  "WakeAllConditionVariable": {
+    "helper": "tribes_condition_wake_all",
+    "arguments": 1,
+    "returns": false,
+    "guest_base": true,
+    "helper_returns": "void"
+  },
+  "SleepConditionVariableSRW": {
+    "helper": "tribes_condition_sleep_srw",
+    "arguments": 4,
+    "returns": true,
+    "guest_base": true
+  },
+  "SleepConditionVariableCS": {
+    "helper": "tribes_condition_sleep_cs",
+    "arguments": 3,
+    "returns": true,
+    "guest_base": true
+  },
+  "GetNativeSystemInfo": {
+    "helper": "tribes_get_system_info",
+    "arguments": 1,
+    "returns": false,
+    "guest_base": true,
+    "helper_returns": "void"
+  },
+  "GetModuleHandleExA": {
+    "helper": "tribes_get_module_handle_ex_a",
+    "arguments": 3,
+    "returns": true,
+    "guest_base": true
+  },
+  "GetModuleHandleExW": {
+    "helper": "tribes_get_module_handle_ex_w",
+    "arguments": 3,
+    "returns": true,
+    "guest_base": true
+  },
+  "CreateThread": {
+    "helper": "tribes_create_thread",
+    "arguments": 6,
+    "guest_base": true,
+    "returns": true
+  },
+  "QueueUserWorkItem": {
+    "helper": "tribes_queue_user_work_item",
+    "arguments": 3,
+    "guest_base": true,
+    "returns": true
+  },
+  "ResumeThread": {
+    "helper": "tribes_resume_thread",
+    "arguments": 1,
+    "guest_base": false,
+    "returns": true
+  },
+  "GetExitCodeThread": {
+    "helper": "tribes_get_exit_code_thread",
+    "arguments": 2,
+    "guest_base": true,
+    "returns": true
+  },
+  "GetThreadId": {
+    "helper": "tribes_get_thread_id",
+    "arguments": 1,
+    "guest_base": false,
+    "returns": true
+  },
+  "ExitThread": {
+    "helper": "tribes_exit_thread",
+    "arguments": 1,
+    "guest_base": false,
+    "returns": false,
+    "cpu_argument": true,
+    "helper_returns": "void"
+  },
+  "FreeLibraryAndExitThread": {
+    "helper": "tribes_free_library_and_exit_thread",
+    "arguments": 2,
+    "guest_base": false,
+    "returns": false,
+    "cpu_argument": true,
+    "helper_returns": "void"
+  },
+  "GetFileAttributesA": {
+    "helper": "tribes_get_file_attributes",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": true
+  },
+  "GetFileAttributesW": {
+    "helper": "tribes_get_file_attributes_w",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": true
+  },
+  "NtQueryVolumeInformationFile": {
+    "helper": "tribes_nt_query_volume_information_file",
+    "arguments": 5,
+    "returns": true,
+    "guest_base": true
+  },
+  "NtQueryInformationFile": {
+    "helper": "tribes_nt_query_information_file",
+    "arguments": 5,
+    "returns": true,
+    "guest_base": true
+  },
+  "GetQueuedCompletionStatusEx": {
+    "helper": "tribes_get_queued_completion_ex",
+    "arguments": 6,
+    "returns": true,
+    "guest_base": true
+  },
+  "CreateMutexA": {
+    "helper": "tribes_create_mutex",
+    "arguments": 3,
+    "returns": true,
+    "guest_base": true
+  },
+  "FindResourceA": {
+    "helper": "tribes_find_resource_a",
+    "arguments": 3,
+    "returns": true,
+    "guest_base": true
+  },
+  "SizeofResource": {
+    "helper": "tribes_sizeof_resource",
+    "arguments": 2,
+    "returns": true,
+    "guest_base": true
+  },
+  "LoadResource": {
+    "helper": "tribes_load_resource",
+    "arguments": 2,
+    "returns": true,
+    "guest_base": true
+  },
+  "LockResource": {
+    "helper": "tribes_lock_resource",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": true
+  },
+  "GetWindowsDirectoryA": {
+    "helper": "tribes_get_windows_directory_a",
+    "arguments": 2,
+    "returns": true,
+    "helper_returns": "i32",
+    "guest_base": true
+  },
+  "GetSystemDirectoryA": {
+    "helper": "tribes_get_system_directory_a",
+    "arguments": 2,
+    "returns": true,
+    "helper_returns": "i32",
+    "guest_base": true
+  },
+  "ReleaseMutex": {
+    "helper": "tribes_release_mutex",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": false
+  },
+  "GetProfileStringA": {
+    "helper": "tribes_get_profile_string_a",
+    "arguments": 5,
+    "returns": true,
+    "guest_base": true
+  },
+  "DisableThreadLibraryCalls": {
+    "helper": "tribes_disable_thread_library_calls",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": true
+  },
+  "GetVersion": {
+    "helper": "tribes_get_version",
+    "arguments": 0,
+    "returns": true,
+    "guest_base": false
+  },
+  "HeapCreate": {
+    "helper": "tribes_heap_create",
+    "arguments": 3,
+    "returns": true,
+    "guest_base": true
+  },
+  "HeapDestroy": {
+    "helper": "tribes_heap_destroy",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": true
+  },
+  "HeapReAlloc": {
+    "helper": "tribes_heap_realloc",
+    "arguments": 4,
+    "returns": true,
+    "guest_base": true
+  },
+  "SetHandleCount": {
+    "helper": "tribes_set_handle_count",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": false
+  },
+  "LCMapStringW": {
+    "helper": "tribes_lcmap_string_w",
+    "arguments": 6,
+    "returns": true,
+    "guest_base": true
+  },
+  "LCMapStringA": {
+    "helper": "tribes_lcmap_string_a",
+    "arguments": 6,
+    "returns": true,
+    "guest_base": true
+  },
+  "GetStringTypeA": {
+    "helper": "tribes_get_string_type_a",
+    "arguments": 5,
+    "returns": true,
+    "guest_base": true
+  },
+  "GetTopWindow": {
+    "helper": "tribes_get_top_window",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": true
+  },
+  "GetWindow": {
+    "helper": "tribes_get_window",
+    "arguments": 2,
+    "returns": true,
+    "guest_base": true
+  },
+  "GetWindowThreadProcessId": {
+    "helper": "tribes_get_window_thread_process_id",
+    "arguments": 2,
+    "returns": true,
+    "guest_base": true
+  },
+  "GetWindowLongA": {
+    "helper": "tribes_get_window_long_a",
+    "arguments": 2,
+    "returns": true,
+    "guest_base": true
+  },
+  "GetActiveWindow": {
+    "helper": "tribes_get_active_window",
+    "arguments": 0,
+    "returns": true,
+    "guest_base": true
+  },
+  "SetTimer": {
+    "helper": "tribes_set_timer",
+    "arguments": 4,
+    "returns": true,
+    "guest_base": true
+  },
+  "KillTimer": {
+    "helper": "tribes_kill_timer",
+    "arguments": 2,
+    "returns": true,
+    "guest_base": true
+  },
+  "PeekMessageA": {
+    "helper": "tribes_peek_message",
+    "arguments": 5,
+    "returns": true,
+    "guest_base": true
+  },
+  "GetMessageA": {
+    "helper": "tribes_get_message",
+    "arguments": 4,
+    "returns": true,
+    "guest_base": true
+  },
+  "DispatchMessageA": {
+    "helper": "tribes_dispatch_message",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": false,
+    "cpu_argument": true
+  },
+  "TranslateMessage": {
+    "helper": "tribes_translate_message",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": true
+  },
+  "PostMessageA": {
+    "helper": "tribes_post_message",
+    "arguments": 4,
+    "returns": true,
+    "guest_base": true
+  },
+  "PostThreadMessageA": {
+    "helper": "tribes_post_thread_message",
+    "arguments": 4,
+    "returns": true,
+    "guest_base": true
+  },
+  "PostQuitMessage": {
+    "helper": "tribes_post_quit_message",
+    "arguments": 1,
+    "returns": false,
+    "guest_base": true
+  },
+  "CreateEventA": {
+    "helper": "tribes_create_event",
+    "arguments": 4,
+    "guest_base": true,
+    "returns": true
+  },
+  "SetEvent": {
+    "helper": "tribes_set_event",
+    "arguments": 1,
+    "guest_base": false,
+    "returns": true
+  },
+  "ResetEvent": {
+    "helper": "tribes_reset_event",
+    "arguments": 1,
+    "guest_base": false,
+    "returns": true
+  },
+  "RaiseException": {
+    "helper": "tribes_raise_exception",
+    "arguments": 4,
+    "guest_base": false,
+    "cpu_argument": true,
+    "returns": false,
+    "helper_returns": "void"
+  },
+  "SetThreadPriority": {
+    "helper": "tribes_set_thread_priority",
+    "arguments": 2,
+    "guest_base": false,
+    "returns": true
+  },
+  "WaitForMultipleObjects": {
+    "helper": "tribes_wait_multiple_objects",
+    "arguments": 4,
+    "guest_base": true,
+    "returns": true
+  },
+  "lstrcatA": {
+    "helper": "tribes_lstrcat_a",
+    "arguments": 2,
+    "guest_base": true,
+    "returns": true
+  },
+  "lstrcpyA": {
+    "helper": "tribes_lstrcpy_a",
+    "arguments": 2,
+    "guest_base": true,
+    "returns": true
+  },
+  "lstrlenA": {
+    "helper": "tribes_lstrlen_a",
+    "arguments": 1,
+    "guest_base": true,
+    "returns": true
+  },
+  "RegOpenKeyExA": {
+    "helper": "tribes_reg_open_key_ex_a",
+    "arguments": 5,
+    "returns": true,
+    "guest_base": true
+  },
+  "RegGetValueA": {
+    "helper": "tribes_reg_get_value_a",
+    "arguments": 7,
+    "returns": true,
+    "guest_base": true
+  },
+  "AVIFileInit": {
+    "helper": "tribes_avi_file_init",
+    "arguments": 0,
+    "returns": false,
+    "guest_base": false,
+    "helper_returns": "void"
+  },
+  "AVIFileExit": {
+    "helper": "tribes_avi_file_exit",
+    "arguments": 0,
+    "returns": false,
+    "guest_base": false,
+    "helper_returns": "void"
+  },
+  "CreateDirectoryA": {
+    "helper": "tribes_create_directory",
+    "arguments": 2,
+    "returns": true,
+    "guest_base": true
+  },
+  "CreateDirectoryW": {
+    "helper": "tribes_create_directory_w",
+    "arguments": 2,
+    "returns": true,
+    "guest_base": true
+  },
+  "WSAIoctl": {
+    "helper": "tribes_wsa_ioctl",
+    "arguments": 9,
+    "returns": true,
+    "guest_base": true
+  },
+  "select": {
+    "helper": "tribes_socket_select",
+    "arguments": 5,
+    "returns": true,
+    "guest_base": true
+  },
+  "SetHandleInformation": {
+    "helper": "tribes_set_socket_handle_information",
+    "arguments": 3,
+    "returns": true,
+    "guest_base": true
+  },
+  "SetFileCompletionNotificationModes": {
+    "helper": "tribes_socket_set_completion_modes",
+    "arguments": 2,
+    "returns": true,
+    "guest_base": true
+  },
+  "ConnectEx": {
+    "helper": "tribes_connect_ex",
+    "arguments": 7,
+    "returns": true,
+    "guest_base": true
+  },
+  "setsockopt": {
+    "helper": "tribes_setsockopt",
+    "arguments": 5,
+    "returns": true,
+    "guest_base": true
+  },
+  "WSARecv": {
+    "helper": "tribes_wsa_recv",
+    "arguments": 7,
+    "returns": true,
+    "guest_base": true
+  },
+  "WSASend": {
+    "helper": "tribes_wsa_send",
+    "arguments": 7,
+    "returns": true,
+    "guest_base": true
+  },
+  "CancelIoEx": {
+    "helper": "tribes_cancel_socket_io_ex",
+    "arguments": 2,
+    "returns": true,
+    "guest_base": true
+  },
+  "CancelIo": {
+    "helper": "tribes_cancel_socket_io",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": true
+  }
+}

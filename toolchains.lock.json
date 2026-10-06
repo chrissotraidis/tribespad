@@ -1,0 +1,72 @@
+{
+  "schema": 1,
+  "halopad_build_manifest": {
+    "identity": {
+      "source_lock": "ef83346d7715c18bc07f9affe3f2af7f35e29819c88b91e182c20c8c027e76d6",
+      "toolchain_lock": "9471548b3f0a09189178c178fd1120490438f0cae35ab42b0d7081953255cc51",
+      "patch": "a42818414474d6b9f289d2df4d60fe58dcc99b5b36a20bf475885000d8510137",
+      "builder": "a8dc20e07e97bafd5df1e11c90c569f498ebc5ad71e2fcfca312ba0caedfda38",
+      "clang": "Apple clang version 21.0.0 (clang-2100.1.1.101)\nTarget: arm64-apple-darwin25.6.0\nThread model: posix\nInstalledDir: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin\n",
+      "sdk": "25F70\n"
+    },
+    "key": "9d6c88b47852cc42409721cabd45971993b526e04d0b44a06fc1f79947c451ee",
+    "result": "BUILT_NOT_HALO_VALIDATED",
+    "build": "generated/tool-builds/9d6c88b47852-7ddadfc0",
+    "evidence": "docs/artifacts/2026-09-28/G0/lifter-9d6c88b47852-7ddadfc0",
+    "artifacts": {
+      "SRW/SRW.exe": "33350eb64813531cbe9a6838aca93904747f0802c0288b99f494e58861d81a4a",
+      "llasm/llasm": "9b9ae4421de954546c7f42942b97902570337b2735c7f3243127ad1e2cdd11eb"
+    }
+  },
+  "artifacts": {
+    "SRW/SRW.exe": "33350eb64813531cbe9a6838aca93904747f0802c0288b99f494e58861d81a4a",
+    "llasm/llasm": "9b9ae4421de954546c7f42942b97902570337b2735c7f3243127ad1e2cdd11eb"
+  },
+  "validation": "Cached tools matched the HaloPad build manifest; Tribes-specific correctness is assessed separately.",
+  "tribes_extensions": {
+    "base_sources": {
+      "SConstruct": "a66ad6f350f1cd781c8f971353efc2caf910b09b18595748272e5fbd9676d516",
+      "SRW_loader.c": "a5d1b3ef7c4dd6fc1c91763d01310d060dea52b38078fb680aa400e9d9c88c00",
+      "SR_basic.c": "aca156fa6edbc826c14533aa69282037b8541d06ca9c983757b71dd5d2a59858",
+      "SR_defs.h": "b3b52b88a975bc5aa61d56ceaf9d6420b4b8031a6e80f09bdd02468f11356935",
+      "SR_full.c": "dbdc04a951dd51503327719c5d2dad0ca592a4de3f6cb971dbafddabe32c2a0c",
+      "SR_full_dos.c": "15cf68975cb33997932377cf215f5ea4bd59206f8da99c707046c937b4fa253a",
+      "SR_full_llasm.c": "c33d32eedabeb6dc36f757398a1b9abfebdb64ae82246de31f6398ab37258718",
+      "SR_full_llasm_instr.c": "d1c3af1c8e05f75f4e817e4ab81e05676f0d5d424b62436170e1d85b6624be99",
+      "SR_full_llasm_instr_helper.h": "f4480348384f23fcb8b9cf84f8b80e1703a40f709bc448906eda70d9976185d9",
+      "SR_full_win32.c": "be69c000553e215ddd631363d00a39f409a3547080f088d564a60a0d12276277",
+      "SR_full_x64.c": "3e87a16dd92772f832ca0c96bcc27cd8a93548325509ab8ef24cb4476119da06",
+      "SR_full_x64_instr.c": "90b3bcda98230c253e0eef8a4b441cc378c90a9ddf31bc9df9e937c1f88fba83",
+      "SR_main.c": "157e701ff6f78641926c068d9ef467fc026490a93dabc5814094d13c928648ae",
+      "SR_output.c": "87f6b014a8646516879d34cf8c96ae18729fa3c69cf01cea3e979ad3c4ab264b",
+      "SR_source_code_information.c": "20939700ebb52dfdfd3893aa11b5e42941b593d1c0ca039629434b5f8c3b4016",
+      "SR_vars.h": "4b39cb9d50d59e2b2489d24528dae13e5e9a68c52ad48ee0dbd579955938753d",
+      "container_helpers.cpp": "e74b9635f3354e43ae54c7593f045f8990927e53a91957d12659143928a9e77c",
+      "container_helpers.h": "f136bb734faf5b36b7361f314a6275395e800dfcad1d59debd72c4d5b11598bb",
+      "judy_helpers.c": "543e851e6722a70b784879d4e3ca14789259d80e3b2bfae0eaad244916c025ae",
+      "judy_helpers.h": "9ab197082752c0b80551ba5249efa19da6bd1f9b454d65a013c7b5e2f03e8edd",
+      "udis86-1.7.2/libudis86/decode.c": "66562aa70c00ab8f2dbca15ba45759226fa6510fa285803c604b01a6af342d38",
+      "udis86-1.7.2/libudis86/decode.h": "bf851e6cb1c7fa5110c648a5c810a1a15f26c121016dbdaf3da633031012f9d1",
+      "udis86-1.7.2/libudis86/extern.h": "2a7a3bbe4dc2380b5bace6d8f9fac3a441bd0e9b006099b8f35c5cdc99f4bea3",
+      "udis86-1.7.2/libudis86/itab.c": "ed2029dca78d5b966008145aa5c251da112ee1d663b79747b714fcaefe59bda3",
+      "udis86-1.7.2/libudis86/itab.h": "bbf03d38014beeeb6138742d77cc80f747fab4b12aae7a94efae046179f465db",
+      "udis86-1.7.2/libudis86/syn-att.c": "d3a4aaf8abfd6b3e40e3bb53c5d740e766dfe7de3c055160daa13ce396794ed6",
+      "udis86-1.7.2/libudis86/syn-intel.c": "5d3ec4df44d19d74bbef9a8e214ef0573740fadd521cfe69bcb6cf43ce68a6fc",
+      "udis86-1.7.2/libudis86/syn.c": "66b711394b55ee05e17cc7204772a0bccf5b57c69949c2885e824d05c2675c2d",
+      "udis86-1.7.2/libudis86/syn.h": "96e1416d8a72ac9b949bd83b629206abce79ca351c692c8270e09d126ffee019",
+      "udis86-1.7.2/libudis86/types.h": "b67764b03f9802f9f227e6672a998a323cd63459a5a594d41fc5296c9a91f419",
+      "udis86-1.7.2/libudis86/udint.h": "9b599aeb3b9816dc19b5dc01a4f159fcf8e7404528efb068a4c8863225aa342e",
+      "udis86-1.7.2/libudis86/udis86.c": "d40a8fa7b495fe54df06abff256d4f210deb699ffac1e0c5889e7a563ac58eef",
+      "udis86-1.7.2/tests/bufoverrun.c": "245c201acd0c82d98b58792c96b397d9d19da0129846abee474a92b83d5deb3d",
+      "udis86-1.7.2/tests/installcheck.c": "1072e5f4c068ea69d5458db315117540d52d7e6addd317a3e1af5732fa90cbc8",
+      "udis86-1.7.2/tests/libcheck.c": "6d31a0ce88df4f4bfa8cb2442a0e7ac430b73e3d809c18ea7f0cab383140041d",
+      "udis86-1.7.2/tests/symresolve.c": "26e1b123443d440b41e010a88c87dd091fd710d5c2ae962175a513f1d221f4ed",
+      "udis86-1.7.2/udcli/udcli.c": "2a3a8f590a093f0d80dc0280f07fb476dc4d36bfb2d10c2beae4a5254f8b6550",
+      "udis86-1.7.2/udis86.h": "7bb20dcac5f1b00313d4dc65f74894e93c40d4edf4e772606386d42a58fc759f",
+      "udis86_dep.c": "538a04cb9e1f923ad7a00588d57eb642485dfdeca9857f607942cad69834a3ad",
+      "udis86_dep.h": "af64456fc01952eafc4ed90131b1d88466de4bfa24831daebd0fbb861b11595d"
+    },
+    "patch_sha256": "e9b851685343923f498db85de706671c379270cabf9370f2bf3b396344409385",
+    "scons": "4.8.1"
+  }
+}

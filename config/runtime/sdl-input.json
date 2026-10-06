@@ -1,0 +1,16 @@
+{
+  "scope": "Native SDL3.2.18 keyboard/controller startup through the original cdecl guest ABI.",
+  "exports": ["SDL_GetKeyboardState", "SDL_GetGamepads", "SDL_HasJoystick", "SDL_OpenGamepad", "SDL_GetGamepadName", "SDL_CloseGamepad"],
+  "behavior": [
+    "Initialize real native JOYSTICK, GAMEPAD and HAPTIC subsystems under the Apple application main thread. Preserve native success, failure, reference counts and dependency shutdown.",
+    "Copy the actual native bool keyboard state into a stable checked borrowed guest array. Refresh on queries; copy the native scancode count to the optional guest output.",
+    "Copy native gamepad IDs and their zero terminator into caller-owned guest allocator storage. Native enumeration memory is immediately SDL_free'd; ordinary guest SDL_free releases the returned array. Allocation failure returns zero, clears the output count and preserves SDL OutOfMemory.",
+    "Use process-qualified, nonreused typed tokens for native gamepads. Repeated opens preserve native reference counts and handle identity; final close releases borrowed name copies. Names are refreshed on queries while earlier snapshots remain valid through close. Final subsystem shutdown and SDL_Quit clear the registry.",
+    "Preserve CPU state, cdecl arguments and Win32 LastError. Reject stale or wrong-type handles, modified borrowed snapshots, inaccessible guest outputs and incompatible native call signatures. Native pointers never become guest pointers."
+  ],
+  "limits": [
+    "The guest event pump and SDL event-union conversion are not implemented. The future pump must refresh the borrowed keyboard array after native event processing and before invoking guest handlers.",
+    "Axis/button polling, rumble and other gamepad APIs remain separate reached-consumer work. Native virtual-controller tests establish bridge behavior, not physical controls or gameplay acceptance.",
+    "Original rendering, full-engine UIKit hosting, HD gameplay and authenticated multiplayer remain unverified."
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "scope": "Initial single-primary-display snapshot. Desktop HWND and NULL default selection only; other windows stop until Apple window geometry exists. No dynamic rotation, hotplug or secondary-monitor routing acceptance.",
+  "monitor_token_range": "0xc4000001..0xc4ffffff, derived from separately owned desktop tokens",
+  "geometry": "Primary Apple backing pixels with top-left origin. macOS visibleFrame converted from bottom-left coordinates. Mobile guest desktop is fullscreen; HUD safe areas are a separate window concern.",
+  "device_name": "\\\\.\\DISPLAY1 is the guest primary display identity, not an Apple hardware name",
+  "structures": {
+    "MONITORINFO": 40,
+    "MONITORINFOEXA": 72,
+    "MONITORINFOEXW": 104
+  },
+  "references": [
+    "https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-monitorfromwindow",
+    "https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getmonitorinfow",
+    "https://learn.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-monitorinfo",
+    "https://developer.apple.com/documentation/appkit/nsscreen/visibleframe"
+  ]
+}

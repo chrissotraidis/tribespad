@@ -1,0 +1,28 @@
+{
+  "scope": "Serialized curl use across guest threads and the original certificate worker's finite easy-transfer setup.",
+  "behavior": [
+    "One recursive runtime lease covers registry lookup, native execution, guest callbacks and result publication. Handles can move between guest threads; no simultaneous native handle use is allowed. The outer lease selects the actual caller's CPU/allocator frame; nested callbacks retain it.",
+    "Curl uses the shared allocator's explicit serialized handoff mode. SDL retains its fixed owner and Apple application lifecycle rules. Global references, cleanup and live allocations remain checked.",
+    "The worker options include explicit mounted-filesystem CAINFO, copied USERAGENT/URL, TIMEOUT, TIMECONDITION, signed 64-bit TIMEVALUE_LARGE, SSL_OPTIONS, FORBID_REUSE and guest WRITEFUNCTION/WRITEDATA. Only TIMEVALUE_LARGE reads a second x86 vararg word. Native vararg types and callback targets are enforced by the external-memory pass.",
+    "All easy handles use NOSIGNAL=1. Native write data is copied into temporary checked guest storage and passed through the original cdecl callback on the actual worker CPU; returned byte counts propagate to curl. Guest FILE pointers are not passed to native curl.",
+    "CURLINFO_CAINFO returns native backend configuration through owned guest storage, or guest NULL when native curl reports no configured default. The pinned backend has no default CA and Apple SecTrust is disabled; the explicit game CA file supplies trust."
+  ],
+  "validation": [
+    "Mac normal, ThreadSanitizer and both-guard tests plus the sole guarded iPad Simulator: four workers, 48 handle lifecycles, shared-handle serialization, cross-thread handoff, nested timer/write callbacks, balanced global references, 1461 allocations/frees and zero live mirrors per run.",
+    "Actual localhost HTTPS with 40000 binary response bytes, conditional 304, User-Agent and dates beyond signed 32-bit time, short-write failure, rejected TLS trust and eight deliberate guard failures. Existing curl runtime, SDL hints, Mac Cocoa/iPad UIKit VIDEO and external-memory regressions pass.",
+    "Production curl/allocator sources compile for iOS device and Simulator. Compilation alone is not physical-device execution.",
+    "Original checked client passes worker easy creation and every setup option before the independent main code-write rejection at 0x5bb96b. LLDB observes original worker perform returning CURLE_OK at 0x100237a8 and cleanup at 0x100237f4, without manually suspending a thread. No response status or body was observed in that capture. A separate run reaches unsupported LOCK CMPXCHG byte at 0x1007ff60 in worker completion."
+  ],
+  "limits": [
+    "Blocking easy_perform serializes all curl APIs, including unrelated handles. Measure and replace this coarse scheduling restriction if it stalls gameplay; component correctness is not latency acceptance.",
+    "The pinned backend uses synchronous DNS. NOSIGNAL avoids unsafe signals, but DNS timeout behavior is not equivalent to an asynchronous resolver. No native out-of-frame allocator callbacks are supported.",
+    "Unresolvable guest CA paths return CURLE_SSL_CACERT_BADFILE during setopt rather than deferring failure to perform. Non-NULL default CURLINFO_CAINFO storage is implemented but not exercised by this no-default-CA backend.",
+    "ThreadSanitizer instruments the bridge and fixtures, not the pinned release curl/LibreSSL libraries. HTTPS fixture private keys are ephemeral and removed after completion.",
+    "Original downloaded-content persistence, game authentication, online matches, rendered HD gameplay, physical devices and a full UIKit engine host remain unverified."
+  ],
+  "sources": [
+    "https://curl.se/libcurl/c/threadsafe.html",
+    "https://curl.se/libcurl/c/curl_global_init_mem.html",
+    "https://curl.se/libcurl/c/curl_easy_perform.html"
+  ]
+}

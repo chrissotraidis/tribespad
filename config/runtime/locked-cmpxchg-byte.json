@@ -1,0 +1,19 @@
+{
+  "scope": "Reached IA-32 LOCK CMPXCHG r/m8,r8 in IFC22 worker completion at 0x1007ff60.",
+  "behavior": [
+    "Strict lowering admits32-bit-addressed locked memory operands with AL/CL/DL/BL/AH/CH/DH/BH source; no segment, REP or unlocked form is added.",
+    "An actual sequentially consistent native byte compare-exchange compares AL with destination, writes the captured source byte on equality and otherwise replaces AL. Upper EAX and other registers stay intact. CF/PF/AF/ZF/SF/OF reflect the byte subtraction; other flags are preserved.",
+    "The compiler memory pass brackets the native byte atomic with read and write permission checks, even on comparison failure. Byte operands have no wider alignment requirement; neighboring bytes remain untouched."
+  ],
+  "validation": [
+    "75776 native/emulated-x86 comparisons, including all65536 AL/destination pairs at the original instruction, all eight source-byte registers and addressing variants. All440 CPU bytes and adjacent memory sentinels are compared.",
+    "Mac checked and ThreadSanitizer contention exercise80000 byte-CAS lock acquisitions each. Read-only success/failure, no-access, write-only and published-code faults reject without memory mutation. The same contention and five failures pass on the sole iPad Simulator. Device compilation passes; device execution is unverified.",
+    "Existing dword CAS/XADD and64-bit CMPXCHG8B comparisons and contention regressions pass. One old negative decoder assertion was removed because its byte form is now intentionally supported.",
+    "Full DLL audit finds73812 definitions, exactly one changed block loc_1007FF5C and one added helper declaration. Remaining text is identical; explicit diagnostic traps decrease554 to553."
+  ],
+  "limits": [
+    "No Windows exception delivery, MMIO/device-memory write-cycle equivalence, broader instruction coverage or gameplay acceptance is claimed.",
+    "The small test arena does not model a complete4GiB guest address space. An initial outside-arena fault expectation was invalid because that pointer classified as host memory; the retained initial fixture log records it. Final tests instead exercise valid guest addresses with denied permissions and valid final-byte access."
+  ],
+  "source": "https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-vol-2a-manual.pdf"
+}

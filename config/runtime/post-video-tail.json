@@ -1,0 +1,35 @@
+{
+  "scope": "Seventeenth finite startup revision: post-video CALL displacement and two PUSH immediates.",
+  "writes": [
+    {
+      "writer": "0x1005b4bb",
+      "address": "0x4023f3",
+      "size": 4,
+      "before": "f90e0000",
+      "after": "798bc50f"
+    },
+    {
+      "writer": "0x1005b4d0",
+      "address": "0x4b3c84",
+      "size": 1,
+      "before": "48",
+      "after": "54"
+    },
+    {
+      "writer": "0x1005b4ea",
+      "address": "0x4c65d6",
+      "size": 1,
+      "before": "00",
+      "after": "02"
+    }
+  ],
+  "behavior": [
+    "The original CALL in loc_4023F0 redirects0x4032f0 to0x1005af70. loc_4B3C70 changes allocation PUSH72 to84; loc_4C65D0 changes its second PUSH0 to2. All other instructions and arguments remain.",
+    "Validate original main CPU, startup stage, completed second NOP region, writer/order/address/width/preimage/value, and final bytes. Publish after the third store before the following original bank registration. Preserve both real VirtualProtect calls and their conditional branches. A skipped required store cannot activate a variant.",
+    "All three wrappers are disjoint from prior revisions. Earlier routes retain their completed variants during publication; newest tail routes stop while partial. Ordinary published-code writes and an eighteenth revision remain forbidden. Pending bank entries retain original timing."
+  ],
+  "limits": [
+    "This does not establish the new callback behavior, bank installation, display-derived patches, original window/rendering, HD, gameplay or authentication.",
+    "Bounded debugger endpoints across workers do not prove coherent whole-memory or ordinary-timing equivalence."
+  ]
+}

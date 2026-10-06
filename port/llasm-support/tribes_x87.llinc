@@ -1,0 +1,6 @@
+funcv tb_x87_ftst $
+funcv tb_x87_fclex $
+funcv tb_x87_ffree $, index
+funcv tb_x87_fbld $, address
+funcv tb_x87_fbstp $, address
+funcv tb_x87_fxtract $

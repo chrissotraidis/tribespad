@@ -1,0 +1,30 @@
+#!/usr/bin/env python3
+"""Exercise emitted ARM64 locale identifier services against primary contracts."""
+import argparse,hashlib,importlib.util,json,pathlib,subprocess
+R=pathlib.Path(__file__).resolve().parents[1];ap=argparse.ArgumentParser();ap.add_argument('--simulator-device');a=ap.parse_args()
+if a.simulator_device:
+ inv=json.loads(subprocess.check_output(['xcrun','simctl','list','devices','booted','--json'],text=True));assert [d['udid'] for rows in inv['devices'].values() for d in rows if d['state']=='Booted']==[a.simulator_device]
+sdk_name,target=('iphonesimulator','arm64-apple-ios16-simulator') if a.simulator_device else ('macosx','arm64-apple-macos12');sdk=subprocess.check_output(['xcrun','--sdk',sdk_name,'--show-sdk-path'],text=True).strip();out=R/'generated/native-win32/locale-identifiers-abi'/(a.simulator_device or 'macos');out.mkdir(parents=True,exist_ok=True);(out/'result.json').write_text('{"state":"running","pass":false}\n');apis=['GetUserDefaultLocaleName','IsValidLocaleName','LocaleNameToLCID','LCIDToLocaleName']
+spec=importlib.util.spec_from_file_location('bindings',R/'scripts/gen-win32-bindings.py');gen=importlib.util.module_from_spec(spec);spec.loader.exec_module(gen);bindings=json.loads((R/'port/llasm-runtime/win32-bindings.json').read_text());wrapper=out/'bindings.ll';wrapper.write_text(gen.generate({k:bindings[k] for k in apis}));subprocess.run(['python3',str(R/'scripts/gen-locale-identifiers.py'),'--check'],check=True,capture_output=True)
+reference=json.loads((R/'config/locale-identifiers-reference.json').read_text());valid=[(row['name'],1) for row in reference['names']];valid += [(name,want) for name,want in [(None,0),('!x-sys-default-locale',0),('DE_de-phoneb',1),('DE_de_PHONEB',1),('DE_de+phoneb',0),('zz',0),('zz-ZZ',0),('zzz',0),('zzz-ZZZ',0),('zzzz',0),('en_US',1),('é',0),('z'*85,0)]]
+# Primary Wine neutralsublang_names regression cases, expanded macro IDs.
+neutral=[('ar','ar-SA',0x401),('az','az-Latn-AZ',0x42c),('de','de-DE',0x407),('en','en-US',0x409),('es','es-ES',0xc0a),('ga','ga-IE',0x83c),('it','it-IT',0x410),('ms','ms-MY',0x43e),('nl','nl-NL',0x413),('pt','pt-BR',0x416),('sr','sr-Latn-RS',0x241a),('sv','sv-SE',0x41d),('uz','uz-Latn-UZ',0x443),('zh','zh-CN',0x804)]
+name_cases=[(name,0,id,123) for name,_,id in neutral];id_cases=[(id,0,want,123) for _,want,id in neutral]
+for name,flags,want,error in [(None,0,0x409,123),('!x-sys-default-locale',0,0x409,123),('',0,0x7f,123),('en',0x08000000,9,123),('zh-Hant',0,0xc04,123),('zh-Hant',0x08000000,0x7c04,123),('es-es',0,0xc0a,123),('de-DE_phoneb',0,0x10407,123),('DE_de_PHONEB',0,0x10407,123),('zzzz',0,0,87),('é',0,0,87),('z'*85,0,0,87),('en-US',1,0,87)]:name_cases.append((name,flags,want,error))
+for id,flags,want,error in [(0x7f,0,'',123),(9,0,'en-US',123),(9,0x08000000,'en',123),(0x7c04,0,'zh-HK',123),(0x7c04,0x08000000,'zh-Hant',123),(0x10407,0,'de-DE_phoneb',123),(0x409,0x08000000,'en-US',123),(0xffffffff,0,None,87),(0x409,1,None,87)]:id_cases.append((id,flags,want,error))
+for id in [0,0x400,0x800,0xc00,0x1000,0x1400]:
+ for flag in [0,0x08000000]:id_cases.append((id,flag,'en-US',123))
+text='/* Pinned Wine population; independent primary regression and Microsoft API cases. */\n';counter=0
+def literal(s):
+ global text,counter
+ if s is None:return 'NULL'
+ name=f's_{counter}';counter+=1;raw=(s+'\0').encode('utf-16-le');text+='static const uint16_t '+name+'[]={'+','.join(str(int.from_bytes(raw[j:j+2],'little')) for j in range(0,len(raw),2))+'};\n';return name
+v=['{%s,%d}'%(literal(s),want) for s,want in valid];n=['{%s,0x%x,0x%x,%d}'%(literal(s),flag,want,error) for s,flag,want,error in name_cases];i=['{0x%x,0x%x,%s,%d}'%(id,flag,literal(want),error) for id,flag,want,error in id_cases]
+text+='static const struct ValidCase valid_cases[]={'+','.join(v)+'};\nstatic const struct NameCase name_cases[]={'+','.join(n)+'};\nstatic const struct IDCase id_cases[]={'+','.join(i)+'};\n';fixture=out/'locale_identifier_cases.h';fixture.write_text(text)
+sources=[R/'port/core/guest_locale_identifiers.c',R/'port/core/guest_heap.c',R/'tests/locale_identifiers_abi_test.c',R/'tests/fixtures/native_enter.ll',wrapper];runs=[]
+for mode in (['normal'] if a.simulator_device else ['normal','tsan']):
+ exe=out/mode;cmd=['clang','-target',target,'-isysroot',sdk,'-O2','-pthread','-DPTROFS_64BIT','-Wall','-Wextra','-Werror','-Wno-override-module','-I',str(out)]
+ if mode=='tsan':cmd+=['-fsanitize=thread']
+ c=subprocess.run(cmd+list(map(str,sources))+['-o',str(exe)],capture_output=True,text=True);(out/(mode+'-compile.log')).write_text(c.stdout+c.stderr);assert not c.returncode,c.stderr
+ run=subprocess.run(['xcrun','simctl','spawn',a.simulator_device,str(exe)] if a.simulator_device else [str(exe)],capture_output=True,text=True,timeout=60);(out/(mode+'-run.log')).write_text(run.stdout+run.stderr);assert not run.returncode and run.stdout.startswith('PASS:') and not run.stderr,(run.returncode,run.stdout,run.stderr);runs.append({'mode':mode,'pass':True,'output':run.stdout.strip(),'binary_sha256':hashlib.sha256(exe.read_bytes()).hexdigest()})
+paths=sources+[R/'port/core/guest_locale_identifiers.h',R/'port/core/nls_identifiers.inc',R/'scripts/gen-locale-identifiers.py',R/'config/encoding-sources.json',R/'config/locale-identifiers-reference.json',fixture];report={'state':'finished','pass':True,'target':target,'simulator_device':a.simulator_device,'runs':runs,'validity_cases':len(valid),'name_to_id_cases':len(name_cases),'id_to_name_cases':len(id_cases),'sources_sha256':{str(p.relative_to(R)):hashlib.sha256(p.read_bytes()).hexdigest() for p in paths},'bindings_sha256':hashlib.sha256((R/'port/llasm-runtime/win32-bindings.json').read_bytes()).hexdigest(),'test_driver_sha256':hashlib.sha256(pathlib.Path(__file__).read_bytes()).hexdigest(),'scope':'Four actual ARM64 wrappers; pinned immutable Wine index, declared en-US defaults. No selected QoL native startup/game session or Windows execution claim'};(out/'result.json').write_text(json.dumps(report,indent=2)+'\n');print(json.dumps(report,indent=2))

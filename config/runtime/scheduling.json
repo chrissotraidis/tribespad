@@ -1,0 +1,24 @@
+{
+  "scope": "Current-process/current-thread pseudo handles for process scheduling and affinity; owned native guest-thread handles additionally support thread priority as specified below. One unrestricted x86 guest group, up to 32 online native CPUs, consistent with SYSTEM_INFO. No external process/thread handles or strict CPU pinning.",
+  "priority_classes_to_nice": {
+    "IDLE": 19,
+    "BELOW_NORMAL": 5,
+    "NORMAL": 0,
+    "ABOVE_NORMAL": -5,
+    "HIGH": -10
+  },
+  "qualification": "A declared POSIX niceness mapping, not identical Windows scheduling or a performance guarantee. Only successful native setpriority calls report success. Permission failures map to ERROR_ACCESS_DENIED. Realtime/background classes and strict thread affinity return ERROR_NOT_SUPPORTED; no fake affinity state is stored.",
+  "references": [
+    "https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-setpriorityclass",
+    "https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-getprocessaffinitymask",
+    "https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-setthreadaffinitymask",
+    "https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man2/setpriority.2.html",
+    "https://developer.apple.com/library/archive/releasenotes/Performance/RN-AffinityAPI/"
+  ],
+  "thread_priority": {
+    "scope": "Owned native guest threads and current-thread pseudo handle. Validate supported Windows relative values -15,-2,-1,0,1,2,15; wait for real native thread registration before applying.",
+    "mapping": "pthread_setschedparam(SCHED_OTHER): queried min/max for IDLE/TIME_CRITICAL, integer midpoint plus relative offset for other values, clamped to queried range.",
+    "qualification": "Explicit Apple policy, not realtime scheduling or Windows priority equivalence. Return success only after native application; preserve permission and native errors. Finished or invalid thread handles fail.",
+    "validation": "Component test queries the worker with pthread_getschedparam and verifies the requested native endpoint after successful SetThreadPriority."
+  }
+}

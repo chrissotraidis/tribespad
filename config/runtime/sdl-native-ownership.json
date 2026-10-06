@@ -1,0 +1,23 @@
+{
+  "scope": "Apple SDL native ownership and guest public ABI boundary; supersedes internal allocation mirroring in earlier SDL checkpoint contracts.",
+  "native_private_storage": "Native SDL retains its original native allocator. Its worker objects, callbacks, opaque structs and64-bit pointers never become guest allocation mirrors.",
+  "guest_public_storage": "Registered guest callbacks allocate and free public borrowed results. Host snapshots validate read-only guest copies before reuse. Guest SDL_malloc/calloc/realloc/free retain their callback contract. Native internal allocation counts and callback invocations intentionally differ from the mirror implementation.",
+  "logging": "Messages outside a guest frame are copied with callback identity, userdata, priority and category into a mutex-protected FIFO, then dispatched on the next owner entry. No native worker borrows a guest CPU. Synchronous owner messages remain immediate. Asynchronous delivery timing/thread is adapted.",
+  "subsystems": [
+    "EVENTS",
+    "VIDEO",
+    "AUDIO"
+  ],
+  "synchronization": "Recursive native SDL mutexes and condition variables use nonreused typed32-bit tokens. A registry reference protects each native call; destruction while held/waiting is rejected. Condition waits require exactly one held mutex level. Null operands retain pinned SDL semantics.",
+  "acceptance": "Native CoreAudio silent-stream drain is component evidence. Original game sound requires the remaining guest device/stream/data APIs and an actual original mixing run.",
+  "remaining": [
+    "guest audio device/stream marshalling",
+    "guest event and window APIs",
+    "OpenGL renderer and dynamic dispatch",
+    "full-engine UIKit lifecycle",
+    "HD gameplay",
+    "authenticated community multiplayer"
+  ],
+  "apple_driver_selection": "The original exact AUDIO_DRIVER hint value directsound is mapped to coreaudio on Apple, with the original priority and real SDL result. Other values retain native failure behavior. SDL_GetHint reports the selected native value.",
+  "tls": "Guest ID addresses contain nonreused32-bit tokens for host SDL_TLSID objects. Real SDL_GetTLS/SetTLS maintain thread isolation. Native values carry only guest DWORDs and cdecl targets; cleanup runs with the live exiting owner CPU before TEB/stack release, or inside explicit SDL_CleanupTLS/SDL_Quit scopes. Replacement does not invoke the former destructor; a registered destructor is called even for zero data. Mutating TLS during the pinned native cleanup loop stops explicitly. Cross-FLS/SDL destructor resurrection cycles are not accepted."
+}

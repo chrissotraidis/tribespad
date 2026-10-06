@@ -1,0 +1,31 @@
+{
+  "source": {
+    "url": "https://github.com/libsdl-org/SDL/releases/download/release-3.2.18/SDL3-3.2.18.tar.gz",
+    "sha256": "1a775bde924397a8e0c08bfda198926c17be859d0288ad0dec1dea1b2ee04f8f",
+    "archive": "ref/sdl3/SDL3-3.2.18.tar.gz",
+    "path": "ref/sdl3/SDL3-3.2.18"
+  },
+  "scope": "Static native SDL 3.2.18 for Apple ARM64. The private cached SDL environment starts empty and must be seeded from the configured guest environment before hints or initialization. Native unsafe environment APIs are not exposed to the guest. No window, rendering, audio or input acceptance is implied by this dependency build. The Apple-only error-buffer patch prevents recursive TLS-allocation failure, frees uninstalled original-allocator state and isolates emergency error buffers per native thread.",
+  "patches": [
+    {
+      "file": "src/stdlib/SDL_getenv.c",
+      "before": "SDL_environment = SDL_CreateEnvironment(true);",
+      "after": "/* TribesPad: seed this private cache from the configured guest environment. */\n        SDL_environment = SDL_CreateEnvironment(false);"
+    },
+    {
+      "file": "src/dynapi/SDL_dynapi.h",
+      "before": "#define SDL_DYNAMIC_API 1",
+      "after": "/* TribesPad: static pinned backend; no environment-selected replacement library. */\n#define SDL_DYNAMIC_API 0"
+    },
+    {
+      "file": "src/thread/SDL_thread.c",
+      "before": "SDL_error *SDL_GetErrBuf(bool create)\n{\n#ifdef SDL_THREADS_DISABLED\n    return SDL_GetStaticErrBuf();\n#else\n    static SDL_TLSID tls_errbuf;\n    SDL_error *errbuf;\n\n    errbuf = (SDL_error *)SDL_GetTLS(&tls_errbuf);\n    if (!errbuf) {\n        if (!create) {\n            return NULL;\n        }\n\n        /* Get the original memory functions for this allocation because the lifetime\n         * of the error buffer may span calls to SDL_SetMemoryFunctions() by the app\n         */\n        SDL_realloc_func realloc_func;\n        SDL_free_func free_func;\n        SDL_GetOriginalMemoryFunctions(NULL, NULL, &realloc_func, &free_func);\n\n        errbuf = (SDL_error *)realloc_func(NULL, sizeof(*errbuf));\n        if (!errbuf) {\n            return SDL_GetStaticErrBuf();\n        }\n        SDL_zerop(errbuf);\n        errbuf->realloc_func = realloc_func;\n        errbuf->free_func = free_func;\n        SDL_SetTLS(&tls_errbuf, errbuf, SDL_FreeErrBuf);\n    }\n    return errbuf;\n#endif // SDL_THREADS_DISABLED\n}\n",
+      "after": "SDL_error *SDL_GetErrBuf(bool create)\n{\n#ifdef SDL_THREADS_DISABLED\n    return SDL_GetStaticErrBuf();\n#else\n    static SDL_TLSID tls_errbuf;\n    SDL_error *errbuf;\n    /* TribesPad Apple port: TLS allocation can itself report an SDL error.\n     * Use native per-thread fallback storage while creating the TLS slot, and\n     * retain that fallback if installation fails. Never recurse or leak the\n     * original-allocator error buffer when the application allocator is OOM. */\n    static _Thread_local bool creating_error;\n    static _Thread_local bool fallback_active;\n    if (creating_error) {\n        return SDL_GetStaticErrBuf();\n    }\n\n    errbuf = (SDL_error *)SDL_GetTLS(&tls_errbuf);\n    if (!errbuf) {\n        if (!create) {\n            return fallback_active ? SDL_GetStaticErrBuf() : NULL;\n        }\n\n        /* Get the original memory functions for this allocation because the lifetime\n         * of the error buffer may span calls to SDL_SetMemoryFunctions() by the app\n         */\n        SDL_realloc_func realloc_func;\n        SDL_free_func free_func;\n        SDL_GetOriginalMemoryFunctions(NULL, NULL, &realloc_func, &free_func);\n\n        errbuf = (SDL_error *)realloc_func(NULL, sizeof(*errbuf));\n        if (!errbuf) {\n            fallback_active = true;\n            return SDL_GetStaticErrBuf();\n        }\n        SDL_zerop(errbuf);\n        errbuf->realloc_func = realloc_func;\n        errbuf->free_func = free_func;\n        creating_error = true;\n        bool stored = SDL_SetTLS(&tls_errbuf, errbuf, SDL_FreeErrBuf);\n        creating_error = false;\n        if (!stored) {\n            SDL_FreeErrBuf(errbuf);\n            fallback_active = true;\n            return SDL_GetStaticErrBuf();\n        }\n        fallback_active = false;\n    }\n    return errbuf;\n#endif // SDL_THREADS_DISABLED\n}\n"
+    },
+    {
+      "file": "src/thread/SDL_thread.c",
+      "before": "// Non-thread-safe global error variable\nstatic SDL_error *SDL_GetStaticErrBuf(void)\n{\n    static SDL_error SDL_global_error;\n    static char SDL_global_error_str[128];",
+      "after": "// TribesPad Apple port: allocation-free, thread-local emergency error state.\nstatic SDL_error *SDL_GetStaticErrBuf(void)\n{\n    static _Thread_local SDL_error SDL_global_error;\n    static _Thread_local char SDL_global_error_str[128];"
+    }
+  ]
+}

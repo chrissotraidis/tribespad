@@ -1,0 +1,1901 @@
+{
+  "encoding": "ascii",
+  "devices": [
+    {
+      "instance_guid_hex": "612b1d6fa0d5cf11bfc7444553540000",
+      "product_guid_hex": "fa33a1944526684b87a493fffc154002",
+      "type": 1027,
+      "instance_name": "TribesPad Keyboard",
+      "product_name": "TribesPad Input Proxy",
+      "attached": true,
+      "axes": 0,
+      "buttons": 256,
+      "povs": 0,
+      "objects": [
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 0,
+          "type": 4,
+          "flags": 0,
+          "name": "Scan code 0x00"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 1,
+          "type": 260,
+          "flags": 0,
+          "name": "Escape"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 2,
+          "type": 516,
+          "flags": 0,
+          "name": "1"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 3,
+          "type": 772,
+          "flags": 0,
+          "name": "2"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 4,
+          "type": 1028,
+          "flags": 0,
+          "name": "3"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 5,
+          "type": 1284,
+          "flags": 0,
+          "name": "4"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 6,
+          "type": 1540,
+          "flags": 0,
+          "name": "5"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 7,
+          "type": 1796,
+          "flags": 0,
+          "name": "6"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 8,
+          "type": 2052,
+          "flags": 0,
+          "name": "7"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 9,
+          "type": 2308,
+          "flags": 0,
+          "name": "8"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 10,
+          "type": 2564,
+          "flags": 0,
+          "name": "9"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 11,
+          "type": 2820,
+          "flags": 0,
+          "name": "0"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 12,
+          "type": 3076,
+          "flags": 0,
+          "name": "Minus"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 13,
+          "type": 3332,
+          "flags": 0,
+          "name": "Equals"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 14,
+          "type": 3588,
+          "flags": 0,
+          "name": "Backspace"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 15,
+          "type": 3844,
+          "flags": 0,
+          "name": "Tab"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 16,
+          "type": 4100,
+          "flags": 0,
+          "name": "Q"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 17,
+          "type": 4356,
+          "flags": 0,
+          "name": "W"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 18,
+          "type": 4612,
+          "flags": 0,
+          "name": "E"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 19,
+          "type": 4868,
+          "flags": 0,
+          "name": "R"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 20,
+          "type": 5124,
+          "flags": 0,
+          "name": "T"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 21,
+          "type": 5380,
+          "flags": 0,
+          "name": "Y"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 22,
+          "type": 5636,
+          "flags": 0,
+          "name": "U"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 23,
+          "type": 5892,
+          "flags": 0,
+          "name": "I"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 24,
+          "type": 6148,
+          "flags": 0,
+          "name": "O"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 25,
+          "type": 6404,
+          "flags": 0,
+          "name": "P"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 26,
+          "type": 6660,
+          "flags": 0,
+          "name": "Left Bracket"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 27,
+          "type": 6916,
+          "flags": 0,
+          "name": "Right Bracket"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 28,
+          "type": 7172,
+          "flags": 0,
+          "name": "Return"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 29,
+          "type": 7428,
+          "flags": 0,
+          "name": "Left Control"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 30,
+          "type": 7684,
+          "flags": 0,
+          "name": "A"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 31,
+          "type": 7940,
+          "flags": 0,
+          "name": "S"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 32,
+          "type": 8196,
+          "flags": 0,
+          "name": "D"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 33,
+          "type": 8452,
+          "flags": 0,
+          "name": "F"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 34,
+          "type": 8708,
+          "flags": 0,
+          "name": "G"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 35,
+          "type": 8964,
+          "flags": 0,
+          "name": "H"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 36,
+          "type": 9220,
+          "flags": 0,
+          "name": "J"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 37,
+          "type": 9476,
+          "flags": 0,
+          "name": "K"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 38,
+          "type": 9732,
+          "flags": 0,
+          "name": "L"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 39,
+          "type": 9988,
+          "flags": 0,
+          "name": "Semicolon"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 40,
+          "type": 10244,
+          "flags": 0,
+          "name": "Apostrophe"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 41,
+          "type": 10500,
+          "flags": 0,
+          "name": "Grave"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 42,
+          "type": 10756,
+          "flags": 0,
+          "name": "Left Shift"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 43,
+          "type": 11012,
+          "flags": 0,
+          "name": "Backslash"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 44,
+          "type": 11268,
+          "flags": 0,
+          "name": "Z"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 45,
+          "type": 11524,
+          "flags": 0,
+          "name": "X"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 46,
+          "type": 11780,
+          "flags": 0,
+          "name": "C"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 47,
+          "type": 12036,
+          "flags": 0,
+          "name": "V"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 48,
+          "type": 12292,
+          "flags": 0,
+          "name": "B"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 49,
+          "type": 12548,
+          "flags": 0,
+          "name": "N"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 50,
+          "type": 12804,
+          "flags": 0,
+          "name": "M"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 51,
+          "type": 13060,
+          "flags": 0,
+          "name": "Comma"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 52,
+          "type": 13316,
+          "flags": 0,
+          "name": "Period"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 53,
+          "type": 13572,
+          "flags": 0,
+          "name": "Slash"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 54,
+          "type": 13828,
+          "flags": 0,
+          "name": "Right Shift"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 55,
+          "type": 14084,
+          "flags": 0,
+          "name": "Numpad Multiply"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 56,
+          "type": 14340,
+          "flags": 0,
+          "name": "Left Alt"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 57,
+          "type": 14596,
+          "flags": 0,
+          "name": "Space"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 58,
+          "type": 14852,
+          "flags": 0,
+          "name": "Caps Lock"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 59,
+          "type": 15108,
+          "flags": 0,
+          "name": "F1"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 60,
+          "type": 15364,
+          "flags": 0,
+          "name": "F2"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 61,
+          "type": 15620,
+          "flags": 0,
+          "name": "F3"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 62,
+          "type": 15876,
+          "flags": 0,
+          "name": "F4"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 63,
+          "type": 16132,
+          "flags": 0,
+          "name": "F5"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 64,
+          "type": 16388,
+          "flags": 0,
+          "name": "F6"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 65,
+          "type": 16644,
+          "flags": 0,
+          "name": "F7"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 66,
+          "type": 16900,
+          "flags": 0,
+          "name": "F8"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 67,
+          "type": 17156,
+          "flags": 0,
+          "name": "F9"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 68,
+          "type": 17412,
+          "flags": 0,
+          "name": "F10"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 69,
+          "type": 17668,
+          "flags": 0,
+          "name": "Num Lock"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 70,
+          "type": 17924,
+          "flags": 0,
+          "name": "Scroll Lock"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 71,
+          "type": 18180,
+          "flags": 0,
+          "name": "Numpad 7"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 72,
+          "type": 18436,
+          "flags": 0,
+          "name": "Numpad 8"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 73,
+          "type": 18692,
+          "flags": 0,
+          "name": "Numpad 9"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 74,
+          "type": 18948,
+          "flags": 0,
+          "name": "Numpad Subtract"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 75,
+          "type": 19204,
+          "flags": 0,
+          "name": "Numpad 4"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 76,
+          "type": 19460,
+          "flags": 0,
+          "name": "Numpad 5"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 77,
+          "type": 19716,
+          "flags": 0,
+          "name": "Numpad 6"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 78,
+          "type": 19972,
+          "flags": 0,
+          "name": "Numpad Add"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 79,
+          "type": 20228,
+          "flags": 0,
+          "name": "Numpad 1"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 80,
+          "type": 20484,
+          "flags": 0,
+          "name": "Numpad 2"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 81,
+          "type": 20740,
+          "flags": 0,
+          "name": "Numpad 3"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 82,
+          "type": 20996,
+          "flags": 0,
+          "name": "Numpad 0"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 83,
+          "type": 21252,
+          "flags": 0,
+          "name": "Numpad Decimal"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 84,
+          "type": 21508,
+          "flags": 0,
+          "name": "Scan code 0x54"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 85,
+          "type": 21764,
+          "flags": 0,
+          "name": "Scan code 0x55"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 86,
+          "type": 22020,
+          "flags": 0,
+          "name": "ISO Backslash"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 87,
+          "type": 22276,
+          "flags": 0,
+          "name": "F11"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 88,
+          "type": 22532,
+          "flags": 0,
+          "name": "F12"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 89,
+          "type": 22788,
+          "flags": 0,
+          "name": "Scan code 0x59"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 90,
+          "type": 23044,
+          "flags": 0,
+          "name": "Scan code 0x5A"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 91,
+          "type": 23300,
+          "flags": 0,
+          "name": "Scan code 0x5B"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 92,
+          "type": 23556,
+          "flags": 0,
+          "name": "Scan code 0x5C"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 93,
+          "type": 23812,
+          "flags": 0,
+          "name": "Scan code 0x5D"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 94,
+          "type": 24068,
+          "flags": 0,
+          "name": "Scan code 0x5E"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 95,
+          "type": 24324,
+          "flags": 0,
+          "name": "Scan code 0x5F"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 96,
+          "type": 24580,
+          "flags": 0,
+          "name": "Scan code 0x60"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 97,
+          "type": 24836,
+          "flags": 0,
+          "name": "Scan code 0x61"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 98,
+          "type": 25092,
+          "flags": 0,
+          "name": "Scan code 0x62"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 99,
+          "type": 25348,
+          "flags": 0,
+          "name": "Scan code 0x63"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 100,
+          "type": 25604,
+          "flags": 0,
+          "name": "F13"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 101,
+          "type": 25860,
+          "flags": 0,
+          "name": "F14"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 102,
+          "type": 26116,
+          "flags": 0,
+          "name": "F15"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 103,
+          "type": 26372,
+          "flags": 0,
+          "name": "F16"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 104,
+          "type": 26628,
+          "flags": 0,
+          "name": "F17"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 105,
+          "type": 26884,
+          "flags": 0,
+          "name": "F18"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 106,
+          "type": 27140,
+          "flags": 0,
+          "name": "F19"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 107,
+          "type": 27396,
+          "flags": 0,
+          "name": "F20"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 108,
+          "type": 27652,
+          "flags": 0,
+          "name": "Scan code 0x6C"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 109,
+          "type": 27908,
+          "flags": 0,
+          "name": "Scan code 0x6D"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 110,
+          "type": 28164,
+          "flags": 0,
+          "name": "Scan code 0x6E"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 111,
+          "type": 28420,
+          "flags": 0,
+          "name": "Scan code 0x6F"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 112,
+          "type": 28676,
+          "flags": 0,
+          "name": "Scan code 0x70"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 113,
+          "type": 28932,
+          "flags": 0,
+          "name": "Scan code 0x71"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 114,
+          "type": 29188,
+          "flags": 0,
+          "name": "Scan code 0x72"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 115,
+          "type": 29444,
+          "flags": 0,
+          "name": "Scan code 0x73"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 116,
+          "type": 29700,
+          "flags": 0,
+          "name": "Scan code 0x74"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 117,
+          "type": 29956,
+          "flags": 0,
+          "name": "Scan code 0x75"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 118,
+          "type": 30212,
+          "flags": 0,
+          "name": "Scan code 0x76"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 119,
+          "type": 30468,
+          "flags": 0,
+          "name": "Scan code 0x77"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 120,
+          "type": 30724,
+          "flags": 0,
+          "name": "Scan code 0x78"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 121,
+          "type": 30980,
+          "flags": 0,
+          "name": "Scan code 0x79"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 122,
+          "type": 31236,
+          "flags": 0,
+          "name": "Scan code 0x7A"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 123,
+          "type": 31492,
+          "flags": 0,
+          "name": "Scan code 0x7B"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 124,
+          "type": 31748,
+          "flags": 0,
+          "name": "Scan code 0x7C"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 125,
+          "type": 32004,
+          "flags": 0,
+          "name": "Scan code 0x7D"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 126,
+          "type": 32260,
+          "flags": 0,
+          "name": "Scan code 0x7E"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 127,
+          "type": 32516,
+          "flags": 0,
+          "name": "Scan code 0x7F"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 128,
+          "type": 32772,
+          "flags": 0,
+          "name": "Scan code 0x80"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 129,
+          "type": 33028,
+          "flags": 0,
+          "name": "Scan code 0x81"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 130,
+          "type": 33284,
+          "flags": 0,
+          "name": "Scan code 0x82"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 131,
+          "type": 33540,
+          "flags": 0,
+          "name": "Scan code 0x83"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 132,
+          "type": 33796,
+          "flags": 0,
+          "name": "Scan code 0x84"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 133,
+          "type": 34052,
+          "flags": 0,
+          "name": "Scan code 0x85"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 134,
+          "type": 34308,
+          "flags": 0,
+          "name": "Scan code 0x86"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 135,
+          "type": 34564,
+          "flags": 0,
+          "name": "Scan code 0x87"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 136,
+          "type": 34820,
+          "flags": 0,
+          "name": "Scan code 0x88"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 137,
+          "type": 35076,
+          "flags": 0,
+          "name": "Scan code 0x89"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 138,
+          "type": 35332,
+          "flags": 0,
+          "name": "Scan code 0x8A"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 139,
+          "type": 35588,
+          "flags": 0,
+          "name": "Scan code 0x8B"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 140,
+          "type": 35844,
+          "flags": 0,
+          "name": "Scan code 0x8C"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 141,
+          "type": 36100,
+          "flags": 0,
+          "name": "Numpad Equals"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 142,
+          "type": 36356,
+          "flags": 0,
+          "name": "Scan code 0x8E"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 143,
+          "type": 36612,
+          "flags": 0,
+          "name": "Scan code 0x8F"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 144,
+          "type": 36868,
+          "flags": 0,
+          "name": "Scan code 0x90"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 145,
+          "type": 37124,
+          "flags": 0,
+          "name": "Scan code 0x91"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 146,
+          "type": 37380,
+          "flags": 0,
+          "name": "Scan code 0x92"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 147,
+          "type": 37636,
+          "flags": 0,
+          "name": "Scan code 0x93"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 148,
+          "type": 37892,
+          "flags": 0,
+          "name": "Scan code 0x94"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 149,
+          "type": 38148,
+          "flags": 0,
+          "name": "Scan code 0x95"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 150,
+          "type": 38404,
+          "flags": 0,
+          "name": "Scan code 0x96"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 151,
+          "type": 38660,
+          "flags": 0,
+          "name": "Scan code 0x97"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 152,
+          "type": 38916,
+          "flags": 0,
+          "name": "Scan code 0x98"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 153,
+          "type": 39172,
+          "flags": 0,
+          "name": "Scan code 0x99"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 154,
+          "type": 39428,
+          "flags": 0,
+          "name": "Scan code 0x9A"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 155,
+          "type": 39684,
+          "flags": 0,
+          "name": "Scan code 0x9B"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 156,
+          "type": 39940,
+          "flags": 0,
+          "name": "Numpad Enter"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 157,
+          "type": 40196,
+          "flags": 0,
+          "name": "Right Control"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 158,
+          "type": 40452,
+          "flags": 0,
+          "name": "Scan code 0x9E"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 159,
+          "type": 40708,
+          "flags": 0,
+          "name": "Scan code 0x9F"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 160,
+          "type": 40964,
+          "flags": 0,
+          "name": "Scan code 0xA0"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 161,
+          "type": 41220,
+          "flags": 0,
+          "name": "Scan code 0xA1"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 162,
+          "type": 41476,
+          "flags": 0,
+          "name": "Scan code 0xA2"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 163,
+          "type": 41732,
+          "flags": 0,
+          "name": "Scan code 0xA3"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 164,
+          "type": 41988,
+          "flags": 0,
+          "name": "Scan code 0xA4"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 165,
+          "type": 42244,
+          "flags": 0,
+          "name": "Scan code 0xA5"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 166,
+          "type": 42500,
+          "flags": 0,
+          "name": "Scan code 0xA6"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 167,
+          "type": 42756,
+          "flags": 0,
+          "name": "Scan code 0xA7"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 168,
+          "type": 43012,
+          "flags": 0,
+          "name": "Scan code 0xA8"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 169,
+          "type": 43268,
+          "flags": 0,
+          "name": "Scan code 0xA9"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 170,
+          "type": 43524,
+          "flags": 0,
+          "name": "Scan code 0xAA"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 171,
+          "type": 43780,
+          "flags": 0,
+          "name": "Scan code 0xAB"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 172,
+          "type": 44036,
+          "flags": 0,
+          "name": "Scan code 0xAC"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 173,
+          "type": 44292,
+          "flags": 0,
+          "name": "Scan code 0xAD"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 174,
+          "type": 44548,
+          "flags": 0,
+          "name": "Scan code 0xAE"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 175,
+          "type": 44804,
+          "flags": 0,
+          "name": "Scan code 0xAF"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 176,
+          "type": 45060,
+          "flags": 0,
+          "name": "Scan code 0xB0"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 177,
+          "type": 45316,
+          "flags": 0,
+          "name": "Scan code 0xB1"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 178,
+          "type": 45572,
+          "flags": 0,
+          "name": "Scan code 0xB2"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 179,
+          "type": 45828,
+          "flags": 0,
+          "name": "Scan code 0xB3"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 180,
+          "type": 46084,
+          "flags": 0,
+          "name": "Scan code 0xB4"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 181,
+          "type": 46340,
+          "flags": 0,
+          "name": "Numpad Divide"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 182,
+          "type": 46596,
+          "flags": 0,
+          "name": "Scan code 0xB6"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 183,
+          "type": 46852,
+          "flags": 0,
+          "name": "Print Screen"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 184,
+          "type": 47108,
+          "flags": 0,
+          "name": "Right Alt"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 185,
+          "type": 47364,
+          "flags": 0,
+          "name": "Scan code 0xB9"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 186,
+          "type": 47620,
+          "flags": 0,
+          "name": "Scan code 0xBA"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 187,
+          "type": 47876,
+          "flags": 0,
+          "name": "Scan code 0xBB"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 188,
+          "type": 48132,
+          "flags": 0,
+          "name": "Scan code 0xBC"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 189,
+          "type": 48388,
+          "flags": 0,
+          "name": "Scan code 0xBD"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 190,
+          "type": 48644,
+          "flags": 0,
+          "name": "Scan code 0xBE"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 191,
+          "type": 48900,
+          "flags": 0,
+          "name": "Scan code 0xBF"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 192,
+          "type": 49156,
+          "flags": 0,
+          "name": "Scan code 0xC0"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 193,
+          "type": 49412,
+          "flags": 0,
+          "name": "Scan code 0xC1"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 194,
+          "type": 49668,
+          "flags": 0,
+          "name": "Scan code 0xC2"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 195,
+          "type": 49924,
+          "flags": 0,
+          "name": "Scan code 0xC3"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 196,
+          "type": 50180,
+          "flags": 0,
+          "name": "Scan code 0xC4"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 197,
+          "type": 50436,
+          "flags": 0,
+          "name": "Scan code 0xC5"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 198,
+          "type": 50692,
+          "flags": 0,
+          "name": "Scan code 0xC6"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 199,
+          "type": 50948,
+          "flags": 0,
+          "name": "Home"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 200,
+          "type": 51204,
+          "flags": 0,
+          "name": "Up"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 201,
+          "type": 51460,
+          "flags": 0,
+          "name": "Page Up"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 202,
+          "type": 51716,
+          "flags": 0,
+          "name": "Scan code 0xCA"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 203,
+          "type": 51972,
+          "flags": 0,
+          "name": "Left"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 204,
+          "type": 52228,
+          "flags": 0,
+          "name": "Scan code 0xCC"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 205,
+          "type": 52484,
+          "flags": 0,
+          "name": "Right"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 206,
+          "type": 52740,
+          "flags": 0,
+          "name": "Scan code 0xCE"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 207,
+          "type": 52996,
+          "flags": 0,
+          "name": "End"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 208,
+          "type": 53252,
+          "flags": 0,
+          "name": "Down"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 209,
+          "type": 53508,
+          "flags": 0,
+          "name": "Page Down"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 210,
+          "type": 53764,
+          "flags": 0,
+          "name": "Insert"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 211,
+          "type": 54020,
+          "flags": 0,
+          "name": "Delete"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 212,
+          "type": 54276,
+          "flags": 0,
+          "name": "Scan code 0xD4"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 213,
+          "type": 54532,
+          "flags": 0,
+          "name": "Scan code 0xD5"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 214,
+          "type": 54788,
+          "flags": 0,
+          "name": "Scan code 0xD6"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 215,
+          "type": 55044,
+          "flags": 0,
+          "name": "Scan code 0xD7"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 216,
+          "type": 55300,
+          "flags": 0,
+          "name": "Scan code 0xD8"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 217,
+          "type": 55556,
+          "flags": 0,
+          "name": "Scan code 0xD9"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 218,
+          "type": 55812,
+          "flags": 0,
+          "name": "Scan code 0xDA"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 219,
+          "type": 56068,
+          "flags": 0,
+          "name": "Left Command"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 220,
+          "type": 56324,
+          "flags": 0,
+          "name": "Right Command"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 221,
+          "type": 56580,
+          "flags": 0,
+          "name": "Menu"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 222,
+          "type": 56836,
+          "flags": 0,
+          "name": "Scan code 0xDE"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 223,
+          "type": 57092,
+          "flags": 0,
+          "name": "Scan code 0xDF"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 224,
+          "type": 57348,
+          "flags": 0,
+          "name": "Scan code 0xE0"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 225,
+          "type": 57604,
+          "flags": 0,
+          "name": "Scan code 0xE1"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 226,
+          "type": 57860,
+          "flags": 0,
+          "name": "Scan code 0xE2"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 227,
+          "type": 58116,
+          "flags": 0,
+          "name": "Scan code 0xE3"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 228,
+          "type": 58372,
+          "flags": 0,
+          "name": "Scan code 0xE4"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 229,
+          "type": 58628,
+          "flags": 0,
+          "name": "Scan code 0xE5"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 230,
+          "type": 58884,
+          "flags": 0,
+          "name": "Scan code 0xE6"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 231,
+          "type": 59140,
+          "flags": 0,
+          "name": "Scan code 0xE7"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 232,
+          "type": 59396,
+          "flags": 0,
+          "name": "Scan code 0xE8"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 233,
+          "type": 59652,
+          "flags": 0,
+          "name": "Scan code 0xE9"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 234,
+          "type": 59908,
+          "flags": 0,
+          "name": "Scan code 0xEA"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 235,
+          "type": 60164,
+          "flags": 0,
+          "name": "Scan code 0xEB"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 236,
+          "type": 60420,
+          "flags": 0,
+          "name": "Scan code 0xEC"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 237,
+          "type": 60676,
+          "flags": 0,
+          "name": "Scan code 0xED"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 238,
+          "type": 60932,
+          "flags": 0,
+          "name": "Scan code 0xEE"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 239,
+          "type": 61188,
+          "flags": 0,
+          "name": "Scan code 0xEF"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 240,
+          "type": 61444,
+          "flags": 0,
+          "name": "Scan code 0xF0"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 241,
+          "type": 61700,
+          "flags": 0,
+          "name": "Scan code 0xF1"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 242,
+          "type": 61956,
+          "flags": 0,
+          "name": "Scan code 0xF2"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 243,
+          "type": 62212,
+          "flags": 0,
+          "name": "Scan code 0xF3"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 244,
+          "type": 62468,
+          "flags": 0,
+          "name": "Scan code 0xF4"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 245,
+          "type": 62724,
+          "flags": 0,
+          "name": "Scan code 0xF5"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 246,
+          "type": 62980,
+          "flags": 0,
+          "name": "Scan code 0xF6"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 247,
+          "type": 63236,
+          "flags": 0,
+          "name": "Scan code 0xF7"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 248,
+          "type": 63492,
+          "flags": 0,
+          "name": "Scan code 0xF8"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 249,
+          "type": 63748,
+          "flags": 0,
+          "name": "Scan code 0xF9"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 250,
+          "type": 64004,
+          "flags": 0,
+          "name": "Scan code 0xFA"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 251,
+          "type": 64260,
+          "flags": 0,
+          "name": "Scan code 0xFB"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 252,
+          "type": 64516,
+          "flags": 0,
+          "name": "Scan code 0xFC"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 253,
+          "type": 64772,
+          "flags": 0,
+          "name": "Scan code 0xFD"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 254,
+          "type": 65028,
+          "flags": 0,
+          "name": "Scan code 0xFE"
+        },
+        {
+          "guid_hex": "208272553cd3cf11bfc7444553540000",
+          "offset": 255,
+          "type": 65284,
+          "flags": 0,
+          "name": "Scan code 0xFF"
+        }
+      ]
+    },
+    {
+      "instance_guid_hex": "602b1d6fa0d5cf11bfc7444553540000",
+      "product_guid_hex": "fa33a1944526684b87a493fffc154003",
+      "type": 514,
+      "instance_name": "TribesPad Pointer",
+      "product_name": "TribesPad Input Proxy",
+      "attached": true,
+      "axes": 3,
+      "buttons": 8,
+      "povs": 0,
+      "objects": [
+        {
+          "guid_hex": "e0026da3f3c9cf11bfc7444553540000",
+          "offset": 0,
+          "type": 1,
+          "flags": 0,
+          "name": "X Axis"
+        },
+        {
+          "guid_hex": "e1026da3f3c9cf11bfc7444553540000",
+          "offset": 4,
+          "type": 257,
+          "flags": 0,
+          "name": "Y Axis"
+        },
+        {
+          "guid_hex": "e2026da3f3c9cf11bfc7444553540000",
+          "offset": 8,
+          "type": 513,
+          "flags": 0,
+          "name": "Wheel"
+        },
+        {
+          "guid_hex": "f0026da3f3c9cf11bfc7444553540000",
+          "offset": 12,
+          "type": 4,
+          "flags": 0,
+          "name": "Button 1"
+        },
+        {
+          "guid_hex": "f0026da3f3c9cf11bfc7444553540000",
+          "offset": 13,
+          "type": 260,
+          "flags": 0,
+          "name": "Button 2"
+        },
+        {
+          "guid_hex": "f0026da3f3c9cf11bfc7444553540000",
+          "offset": 14,
+          "type": 516,
+          "flags": 0,
+          "name": "Button 3"
+        },
+        {
+          "guid_hex": "f0026da3f3c9cf11bfc7444553540000",
+          "offset": 15,
+          "type": 772,
+          "flags": 0,
+          "name": "Button 4"
+        },
+        {
+          "guid_hex": "f0026da3f3c9cf11bfc7444553540000",
+          "offset": 16,
+          "type": 1028,
+          "flags": 0,
+          "name": "Button 5"
+        },
+        {
+          "guid_hex": "f0026da3f3c9cf11bfc7444553540000",
+          "offset": 17,
+          "type": 1284,
+          "flags": 0,
+          "name": "Button 6"
+        },
+        {
+          "guid_hex": "f0026da3f3c9cf11bfc7444553540000",
+          "offset": 18,
+          "type": 1540,
+          "flags": 0,
+          "name": "Button 7"
+        },
+        {
+          "guid_hex": "f0026da3f3c9cf11bfc7444553540000",
+          "offset": 19,
+          "type": 1796,
+          "flags": 0,
+          "name": "Button 8"
+        }
+      ]
+    }
+  ],
+  "qualification": "Explicit software keyboard/pointer proxies with US compatibility key names and canonical DIK offsets/IDs. Object/capability metadata is not proof of an Apple event feed or playable input. Physical controller enumeration, formats/state/acquisition and localization remain unfinished. Keyboard enumerates all 256 scan-code slots to match its data-format capacity; 113 have specific labels, other slots are reserved software slots and do not assert physical keys."
+}

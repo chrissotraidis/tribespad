@@ -1,0 +1,70 @@
+{
+  "scope": "Fifteenth finite startup revision: first 27-byte post-video NOP region.",
+  "writes": [
+    {
+      "writer": "0x1005b3e4",
+      "address": "0x4025e5",
+      "size": 4,
+      "before": "6a016a01",
+      "after": "90909090"
+    },
+    {
+      "writer": "0x1005b3e6",
+      "address": "0x4025e9",
+      "size": 4,
+      "before": "6850a474",
+      "after": "90909090"
+    },
+    {
+      "writer": "0x1005b3e9",
+      "address": "0x4025ed",
+      "size": 4,
+      "before": "00681023",
+      "after": "90909090"
+    },
+    {
+      "writer": "0x1005b3ec",
+      "address": "0x4025f1",
+      "size": 4,
+      "before": "40006864",
+      "after": "90909090"
+    },
+    {
+      "writer": "0x1005b3ef",
+      "address": "0x4025f5",
+      "size": 4,
+      "before": "a47400e8",
+      "after": "90909090"
+    },
+    {
+      "writer": "0x1005b3f2",
+      "address": "0x4025f9",
+      "size": 4,
+      "before": "533f0200",
+      "after": "90909090"
+    },
+    {
+      "writer": "0x1005b3f5",
+      "address": "0x4025fd",
+      "size": 2,
+      "before": "83c4",
+      "after": "9090"
+    },
+    {
+      "writer": "0x1005b3f9",
+      "address": "0x4025ff",
+      "size": 1,
+      "before": "14",
+      "after": "90"
+    }
+  ],
+  "behavior": [
+    "Eight exact original stores replace 0x4025e5 through 0x4025ff with NOPs. Complete variants retain both historical entries loc_4025E2 and loc_4025FD. The first retains ADD ESP,20; both paths retain the next registration to 0x426650 and its exact stack/return address.",
+    "Main CPU, startup stage, completed prefix, ordered writer/address/width/preimage/value and final bytes are validated. Activation follows the eighth store before the next interleaved registration. Arbitrary stores and a sixteenth revision remain forbidden.",
+    "Both NOP entries are disjoint from earlier wrappers. Prior routes remain available during revisions14/15; the prefix routes require completed phase28. New NOP routes remain unavailable throughout partial publication. Pending trampoline bank entries retain existing timing."
+  ],
+  "limits": [
+    "Only the first NOP region is admitted; the second region at0x402543 needs separately verified activation after its intervening registration.",
+    "No original window, map, HD, gameplay controls or authenticated match acceptance. Bounded debugger endpoints do not establish whole-memory or ordinary-launch timing equivalence."
+  ]
+}

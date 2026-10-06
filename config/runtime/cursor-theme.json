@@ -1,0 +1,50 @@
+{
+  "name": "TribesPad software default arrow",
+  "system_id": 32512,
+  "width": 32,
+  "height": 32,
+  "hotspot": [
+    0,
+    0
+  ],
+  "glyphs": {
+    ".": "transparent",
+    "B": "opaque black",
+    "W": "opaque white"
+  },
+  "rows": [
+    "B...............................",
+    "BB..............................",
+    "BWB.............................",
+    "BWWB............................",
+    "BWWWB...........................",
+    "BWWWWB..........................",
+    "BWWWWWB.........................",
+    "BWWWWWWB........................",
+    "BWWWWWWWB.......................",
+    "BWWWWWWWWB......................",
+    "BWWWWWWWWWB.....................",
+    "BWWWWWWWWWWB....................",
+    "BWWWWWWWWWWWB...................",
+    "BWWWWWWWWWWWWB..................",
+    "BWWWWWWWWWWWWWB.................",
+    "BWWWWWWBBBBBBBBB................",
+    "BWWW.BWWB.......................",
+    "BWWB.BWWB.......................",
+    "BWB...BWWB......................",
+    "BB....BWWB......................",
+    "B......BWWB.....................",
+    ".......BWWB.....................",
+    "........BB......................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................"
+  ],
+  "qualification": "Original TribesPad theme, independent of Windows theme bitmap assets. Shared native resource used by LoadCursorA(NULL,IDC_ARROW); Apple pointer installation and visible window integration remain unfinished."
+}

@@ -1,0 +1,11 @@
+{
+  "windows_contract": "https://learn.microsoft.com/en-us/windows/win32/api/bcrypt/nf-bcrypt-bcryptgenrandom",
+  "apple_backend": "https://developer.apple.com/documentation/swift/systemrandomnumbergenerator",
+  "wine_tests": {
+    "url": "https://raw.githubusercontent.com/wine-mirror/wine/wine-10.0/dlls/bcrypt/tests/bcrypt.c",
+    "path": "ref/references/wine-10-bcrypt-tests.c",
+    "sha256": "666a2d9be72d8ce24608b68d23f343383fb3f8ca74d35f80583327797d3ae816",
+    "license": "LGPL-2.1-or-later; original notices retained in downloaded reference; no implementation copied"
+  },
+  "profile": "System-preferred RNG with null algorithm and flags2 or3; entropy-in-buffer ignored under Windows8+ semantics. Provider/pseudo-handles and unknown flags remain explicit stops. Null handle without system flag returns INVALID_HANDLE; null output invalid; non-null zero-length succeeds. Guest Win32 LastError remains unchanged. Apple backend uses OS cryptographic randomness; no Windows algorithm identity, Windows FIPS validation or account-flow claim."
+}

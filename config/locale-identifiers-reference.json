@@ -1,0 +1,9823 @@
+{
+  "sources": {
+    "data": {
+      "url": "https://raw.githubusercontent.com/wine-mirror/wine/wine-10.0/nls/locale.nls",
+      "local_path": "ref/downloads/wine-10.0-locale.nls",
+      "sha256": "a4683e84e4d55cbc95abb0aee99876e6ded86da8a818864f28733eeac9d48025",
+      "bytes": 771670,
+      "acquired_utc": "2026-10-01T04:38:59.510578+00:00"
+    },
+    "header": {
+      "url": "https://raw.githubusercontent.com/wine-mirror/wine/wine-10.0/include/winternl.h",
+      "local_path": "ref/downloads/wine-10.0-winternl.h",
+      "sha256": "f9f04fdd983bff92c429b593a1cc68986ba4239d1ccf20ec3cda1f6403a48589",
+      "bytes": 250827,
+      "acquired_utc": "2026-10-01T04:40:07.575734+00:00"
+    }
+  },
+  "reader_sha256": "3c6b3d18709b240845d8c49d7cfdf72591aea7e68b267db5db0508d9d80e4328",
+  "names": [
+    {
+      "name": "",
+      "record": 0,
+      "lcid": 127,
+      "default_lcid": 1033,
+      "neutral": false
+    },
+    {
+      "name": "aa",
+      "record": 1,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "aa-DJ",
+      "record": 2,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "aa-ER",
+      "record": 3,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "aa-ET",
+      "record": 4,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "af",
+      "record": 5,
+      "lcid": 54,
+      "default_lcid": 1078,
+      "neutral": true
+    },
+    {
+      "name": "af-NA",
+      "record": 6,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "af-ZA",
+      "record": 7,
+      "lcid": 1078,
+      "default_lcid": 1078,
+      "neutral": false
+    },
+    {
+      "name": "agq",
+      "record": 8,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "agq-CM",
+      "record": 9,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ak",
+      "record": 10,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "ak-GH",
+      "record": 11,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "am",
+      "record": 12,
+      "lcid": 94,
+      "default_lcid": 1118,
+      "neutral": true
+    },
+    {
+      "name": "am-ET",
+      "record": 13,
+      "lcid": 1118,
+      "default_lcid": 1118,
+      "neutral": false
+    },
+    {
+      "name": "ar",
+      "record": 14,
+      "lcid": 1,
+      "default_lcid": 1025,
+      "neutral": true
+    },
+    {
+      "name": "ar-001",
+      "record": 15,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ar-AE",
+      "record": 16,
+      "lcid": 14337,
+      "default_lcid": 14337,
+      "neutral": false
+    },
+    {
+      "name": "ar-BH",
+      "record": 17,
+      "lcid": 15361,
+      "default_lcid": 15361,
+      "neutral": false
+    },
+    {
+      "name": "ar-DJ",
+      "record": 18,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ar-DZ",
+      "record": 19,
+      "lcid": 5121,
+      "default_lcid": 5121,
+      "neutral": false
+    },
+    {
+      "name": "ar-EG",
+      "record": 20,
+      "lcid": 3073,
+      "default_lcid": 3073,
+      "neutral": false
+    },
+    {
+      "name": "ar-EH",
+      "record": 21,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ar-ER",
+      "record": 22,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ar-IL",
+      "record": 23,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ar-IQ",
+      "record": 24,
+      "lcid": 2049,
+      "default_lcid": 2049,
+      "neutral": false
+    },
+    {
+      "name": "ar-JO",
+      "record": 25,
+      "lcid": 11265,
+      "default_lcid": 11265,
+      "neutral": false
+    },
+    {
+      "name": "ar-KM",
+      "record": 26,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ar-KW",
+      "record": 27,
+      "lcid": 13313,
+      "default_lcid": 13313,
+      "neutral": false
+    },
+    {
+      "name": "ar-LB",
+      "record": 28,
+      "lcid": 12289,
+      "default_lcid": 12289,
+      "neutral": false
+    },
+    {
+      "name": "ar-LY",
+      "record": 29,
+      "lcid": 4097,
+      "default_lcid": 4097,
+      "neutral": false
+    },
+    {
+      "name": "ar-MA",
+      "record": 30,
+      "lcid": 6145,
+      "default_lcid": 6145,
+      "neutral": false
+    },
+    {
+      "name": "ar-MR",
+      "record": 31,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ar-OM",
+      "record": 32,
+      "lcid": 8193,
+      "default_lcid": 8193,
+      "neutral": false
+    },
+    {
+      "name": "ar-PS",
+      "record": 33,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ar-QA",
+      "record": 34,
+      "lcid": 16385,
+      "default_lcid": 16385,
+      "neutral": false
+    },
+    {
+      "name": "ar-SA",
+      "record": 35,
+      "lcid": 1025,
+      "default_lcid": 1025,
+      "neutral": false
+    },
+    {
+      "name": "ar-SD",
+      "record": 36,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ar-SO",
+      "record": 37,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ar-SS",
+      "record": 38,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ar-SY",
+      "record": 39,
+      "lcid": 10241,
+      "default_lcid": 10241,
+      "neutral": false
+    },
+    {
+      "name": "ar-TD",
+      "record": 40,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ar-TN",
+      "record": 41,
+      "lcid": 7169,
+      "default_lcid": 7169,
+      "neutral": false
+    },
+    {
+      "name": "ar-YE",
+      "record": 42,
+      "lcid": 9217,
+      "default_lcid": 9217,
+      "neutral": false
+    },
+    {
+      "name": "arn",
+      "record": 43,
+      "lcid": 122,
+      "default_lcid": 1146,
+      "neutral": true
+    },
+    {
+      "name": "arn-CL",
+      "record": 44,
+      "lcid": 1146,
+      "default_lcid": 1146,
+      "neutral": false
+    },
+    {
+      "name": "arn-Latn",
+      "record": 43,
+      "lcid": 2147483770,
+      "default_lcid": 1146,
+      "neutral": true
+    },
+    {
+      "name": "arn-Latn-CL",
+      "record": 44,
+      "lcid": 2147484794,
+      "default_lcid": 1146,
+      "neutral": false
+    },
+    {
+      "name": "as",
+      "record": 45,
+      "lcid": 77,
+      "default_lcid": 1101,
+      "neutral": true
+    },
+    {
+      "name": "as-IN",
+      "record": 46,
+      "lcid": 1101,
+      "default_lcid": 1101,
+      "neutral": false
+    },
+    {
+      "name": "asa",
+      "record": 47,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "asa-TZ",
+      "record": 48,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ast",
+      "record": 49,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "ast-ES",
+      "record": 50,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "az",
+      "record": 51,
+      "lcid": 44,
+      "default_lcid": 1068,
+      "neutral": true
+    },
+    {
+      "name": "az-Cyrl",
+      "record": 52,
+      "lcid": 29740,
+      "default_lcid": 2092,
+      "neutral": true
+    },
+    {
+      "name": "az-Cyrl-AZ",
+      "record": 53,
+      "lcid": 2092,
+      "default_lcid": 2092,
+      "neutral": false
+    },
+    {
+      "name": "az-Latn",
+      "record": 54,
+      "lcid": 30764,
+      "default_lcid": 1068,
+      "neutral": true
+    },
+    {
+      "name": "az-Latn-AZ",
+      "record": 55,
+      "lcid": 1068,
+      "default_lcid": 1068,
+      "neutral": false
+    },
+    {
+      "name": "ba",
+      "record": 56,
+      "lcid": 109,
+      "default_lcid": 1133,
+      "neutral": true
+    },
+    {
+      "name": "ba-Cyrl",
+      "record": 56,
+      "lcid": 2147483757,
+      "default_lcid": 1133,
+      "neutral": true
+    },
+    {
+      "name": "ba-Cyrl-RU",
+      "record": 57,
+      "lcid": 2147484781,
+      "default_lcid": 1133,
+      "neutral": false
+    },
+    {
+      "name": "ba-RU",
+      "record": 57,
+      "lcid": 1133,
+      "default_lcid": 1133,
+      "neutral": false
+    },
+    {
+      "name": "bas",
+      "record": 58,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "bas-CM",
+      "record": 59,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "be",
+      "record": 60,
+      "lcid": 35,
+      "default_lcid": 1059,
+      "neutral": true
+    },
+    {
+      "name": "be-BY",
+      "record": 61,
+      "lcid": 1059,
+      "default_lcid": 1059,
+      "neutral": false
+    },
+    {
+      "name": "bem",
+      "record": 62,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "bem-ZM",
+      "record": 63,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "bew",
+      "record": 64,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "bew-ID",
+      "record": 65,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "bez",
+      "record": 66,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "bez-TZ",
+      "record": 67,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "bg",
+      "record": 68,
+      "lcid": 2,
+      "default_lcid": 1026,
+      "neutral": true
+    },
+    {
+      "name": "bg-BG",
+      "record": 69,
+      "lcid": 1026,
+      "default_lcid": 1026,
+      "neutral": false
+    },
+    {
+      "name": "bin",
+      "record": 70,
+      "lcid": 102,
+      "default_lcid": 1126,
+      "neutral": true
+    },
+    {
+      "name": "bin-NG",
+      "record": 71,
+      "lcid": 1126,
+      "default_lcid": 1126,
+      "neutral": false
+    },
+    {
+      "name": "blo",
+      "record": 72,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "blo-BJ",
+      "record": 73,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "bm",
+      "record": 74,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "bm-Latn",
+      "record": 75,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "bm-Latn-ML",
+      "record": 76,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "bm-ML",
+      "record": 76,
+      "lcid": 2147487744,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "bn",
+      "record": 77,
+      "lcid": 69,
+      "default_lcid": 2117,
+      "neutral": true
+    },
+    {
+      "name": "bn-BD",
+      "record": 78,
+      "lcid": 2117,
+      "default_lcid": 2117,
+      "neutral": false
+    },
+    {
+      "name": "bn-IN",
+      "record": 79,
+      "lcid": 1093,
+      "default_lcid": 1093,
+      "neutral": false
+    },
+    {
+      "name": "bo",
+      "record": 80,
+      "lcid": 81,
+      "default_lcid": 1105,
+      "neutral": true
+    },
+    {
+      "name": "bo-CN",
+      "record": 81,
+      "lcid": 1105,
+      "default_lcid": 1105,
+      "neutral": false
+    },
+    {
+      "name": "bo-IN",
+      "record": 82,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "bo-Tibt",
+      "record": 80,
+      "lcid": 2147483729,
+      "default_lcid": 1105,
+      "neutral": true
+    },
+    {
+      "name": "bo-Tibt-CN",
+      "record": 81,
+      "lcid": 2147484753,
+      "default_lcid": 1105,
+      "neutral": false
+    },
+    {
+      "name": "bo-Tibt-IN",
+      "record": 82,
+      "lcid": 2147487744,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "br",
+      "record": 83,
+      "lcid": 126,
+      "default_lcid": 1150,
+      "neutral": true
+    },
+    {
+      "name": "br-FR",
+      "record": 84,
+      "lcid": 1150,
+      "default_lcid": 1150,
+      "neutral": false
+    },
+    {
+      "name": "br-Latn",
+      "record": 83,
+      "lcid": 2147483774,
+      "default_lcid": 1150,
+      "neutral": true
+    },
+    {
+      "name": "br-Latn-FR",
+      "record": 84,
+      "lcid": 2147484798,
+      "default_lcid": 1150,
+      "neutral": false
+    },
+    {
+      "name": "brx",
+      "record": 85,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "brx-IN",
+      "record": 86,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "bs",
+      "record": 87,
+      "lcid": 30746,
+      "default_lcid": 5146,
+      "neutral": true
+    },
+    {
+      "name": "bs-Cyrl",
+      "record": 88,
+      "lcid": 25626,
+      "default_lcid": 8218,
+      "neutral": true
+    },
+    {
+      "name": "bs-Cyrl-BA",
+      "record": 89,
+      "lcid": 8218,
+      "default_lcid": 8218,
+      "neutral": false
+    },
+    {
+      "name": "bs-Latn",
+      "record": 90,
+      "lcid": 26650,
+      "default_lcid": 5146,
+      "neutral": true
+    },
+    {
+      "name": "bs-Latn-BA",
+      "record": 91,
+      "lcid": 5146,
+      "default_lcid": 5146,
+      "neutral": false
+    },
+    {
+      "name": "byn",
+      "record": 92,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "byn-ER",
+      "record": 93,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ca",
+      "record": 94,
+      "lcid": 3,
+      "default_lcid": 1027,
+      "neutral": true
+    },
+    {
+      "name": "ca-AD",
+      "record": 95,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ca-ES",
+      "record": 96,
+      "lcid": 1027,
+      "default_lcid": 1027,
+      "neutral": false
+    },
+    {
+      "name": "ca-ES-valencia",
+      "record": 97,
+      "lcid": 2051,
+      "default_lcid": 2051,
+      "neutral": false
+    },
+    {
+      "name": "ca-FR",
+      "record": 98,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ca-IT",
+      "record": 99,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ccp",
+      "record": 100,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "ccp-BD",
+      "record": 102,
+      "lcid": 2147487744,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ccp-Cakm",
+      "record": 101,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "ccp-Cakm-BD",
+      "record": 102,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ccp-Cakm-IN",
+      "record": 103,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ccp-IN",
+      "record": 103,
+      "lcid": 2147487744,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ce",
+      "record": 104,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "ce-RU",
+      "record": 105,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ceb",
+      "record": 106,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "ceb-Latn",
+      "record": 107,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "ceb-Latn-PH",
+      "record": 108,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ceb-PH",
+      "record": 108,
+      "lcid": 2147487744,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "cgg",
+      "record": 109,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "cgg-UG",
+      "record": 110,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "chr",
+      "record": 111,
+      "lcid": 92,
+      "default_lcid": 1116,
+      "neutral": true
+    },
+    {
+      "name": "chr-Cher",
+      "record": 112,
+      "lcid": 31836,
+      "default_lcid": 1116,
+      "neutral": true
+    },
+    {
+      "name": "chr-Cher-US",
+      "record": 113,
+      "lcid": 1116,
+      "default_lcid": 1116,
+      "neutral": false
+    },
+    {
+      "name": "chr-US",
+      "record": 113,
+      "lcid": 2147484764,
+      "default_lcid": 1116,
+      "neutral": false
+    },
+    {
+      "name": "ckb",
+      "record": 524,
+      "lcid": 2147483794,
+      "default_lcid": 1170,
+      "neutral": true
+    },
+    {
+      "name": "ckb-IQ",
+      "record": 526,
+      "lcid": 2147484818,
+      "default_lcid": 1170,
+      "neutral": false
+    },
+    {
+      "name": "ckb-IR",
+      "record": 527,
+      "lcid": 2147487744,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "co",
+      "record": 114,
+      "lcid": 131,
+      "default_lcid": 1155,
+      "neutral": true
+    },
+    {
+      "name": "co-FR",
+      "record": 115,
+      "lcid": 1155,
+      "default_lcid": 1155,
+      "neutral": false
+    },
+    {
+      "name": "co-Latn",
+      "record": 114,
+      "lcid": 2147483779,
+      "default_lcid": 1155,
+      "neutral": true
+    },
+    {
+      "name": "co-Latn-FR",
+      "record": 115,
+      "lcid": 2147484803,
+      "default_lcid": 1155,
+      "neutral": false
+    },
+    {
+      "name": "cs",
+      "record": 116,
+      "lcid": 5,
+      "default_lcid": 1029,
+      "neutral": true
+    },
+    {
+      "name": "cs-CZ",
+      "record": 117,
+      "lcid": 1029,
+      "default_lcid": 1029,
+      "neutral": false
+    },
+    {
+      "name": "csw",
+      "record": 118,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "csw-CA",
+      "record": 119,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "cu",
+      "record": 120,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "cu-RU",
+      "record": 121,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "cy",
+      "record": 122,
+      "lcid": 82,
+      "default_lcid": 1106,
+      "neutral": true
+    },
+    {
+      "name": "cy-GB",
+      "record": 123,
+      "lcid": 1106,
+      "default_lcid": 1106,
+      "neutral": false
+    },
+    {
+      "name": "da",
+      "record": 124,
+      "lcid": 6,
+      "default_lcid": 1030,
+      "neutral": true
+    },
+    {
+      "name": "da-DK",
+      "record": 125,
+      "lcid": 1030,
+      "default_lcid": 1030,
+      "neutral": false
+    },
+    {
+      "name": "da-GL",
+      "record": 126,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "dav",
+      "record": 127,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "dav-KE",
+      "record": 128,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "de",
+      "record": 129,
+      "lcid": 7,
+      "default_lcid": 1031,
+      "neutral": true
+    },
+    {
+      "name": "de-AT",
+      "record": 130,
+      "lcid": 3079,
+      "default_lcid": 3079,
+      "neutral": false
+    },
+    {
+      "name": "de-BE",
+      "record": 131,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "de-CH",
+      "record": 132,
+      "lcid": 2055,
+      "default_lcid": 2055,
+      "neutral": false
+    },
+    {
+      "name": "de-DE",
+      "record": 133,
+      "lcid": 1031,
+      "default_lcid": 1031,
+      "neutral": false
+    },
+    {
+      "name": "de-DE_phoneb",
+      "record": 133,
+      "lcid": 66567,
+      "default_lcid": 1031,
+      "neutral": false
+    },
+    {
+      "name": "de-DE-u-co-phonebk",
+      "record": 133,
+      "lcid": 2147550215,
+      "default_lcid": 1031,
+      "neutral": false
+    },
+    {
+      "name": "de-IT",
+      "record": 134,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "de-LI",
+      "record": 135,
+      "lcid": 5127,
+      "default_lcid": 5127,
+      "neutral": false
+    },
+    {
+      "name": "de-LU",
+      "record": 136,
+      "lcid": 4103,
+      "default_lcid": 4103,
+      "neutral": false
+    },
+    {
+      "name": "dje",
+      "record": 137,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "dje-NE",
+      "record": 138,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "doi",
+      "record": 139,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "doi-Deva",
+      "record": 140,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "doi-Deva-IN",
+      "record": 141,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "doi-IN",
+      "record": 141,
+      "lcid": 2147487744,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "dsb",
+      "record": 142,
+      "lcid": 31790,
+      "default_lcid": 2094,
+      "neutral": true
+    },
+    {
+      "name": "dsb-DE",
+      "record": 143,
+      "lcid": 2094,
+      "default_lcid": 2094,
+      "neutral": false
+    },
+    {
+      "name": "dua",
+      "record": 144,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "dua-CM",
+      "record": 145,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "dv",
+      "record": 146,
+      "lcid": 101,
+      "default_lcid": 1125,
+      "neutral": true
+    },
+    {
+      "name": "dv-MV",
+      "record": 147,
+      "lcid": 1125,
+      "default_lcid": 1125,
+      "neutral": false
+    },
+    {
+      "name": "dyo",
+      "record": 148,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "dyo-SN",
+      "record": 149,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "dz",
+      "record": 150,
+      "lcid": 4096,
+      "default_lcid": 3153,
+      "neutral": true
+    },
+    {
+      "name": "dz-BT",
+      "record": 151,
+      "lcid": 3153,
+      "default_lcid": 3153,
+      "neutral": false
+    },
+    {
+      "name": "ebu",
+      "record": 152,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "ebu-KE",
+      "record": 153,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ee",
+      "record": 154,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "ee-GH",
+      "record": 155,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ee-TG",
+      "record": 156,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "el",
+      "record": 157,
+      "lcid": 8,
+      "default_lcid": 1032,
+      "neutral": true
+    },
+    {
+      "name": "el-CY",
+      "record": 158,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "el-GR",
+      "record": 159,
+      "lcid": 1032,
+      "default_lcid": 1032,
+      "neutral": false
+    },
+    {
+      "name": "en",
+      "record": 160,
+      "lcid": 9,
+      "default_lcid": 1033,
+      "neutral": true
+    },
+    {
+      "name": "en-001",
+      "record": 161,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-029",
+      "record": 162,
+      "lcid": 9225,
+      "default_lcid": 9225,
+      "neutral": false
+    },
+    {
+      "name": "en-150",
+      "record": 163,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-AE",
+      "record": 164,
+      "lcid": 19465,
+      "default_lcid": 19465,
+      "neutral": false
+    },
+    {
+      "name": "en-AG",
+      "record": 165,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-AI",
+      "record": 166,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-AS",
+      "record": 167,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-AT",
+      "record": 168,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-AU",
+      "record": 169,
+      "lcid": 3081,
+      "default_lcid": 3081,
+      "neutral": false
+    },
+    {
+      "name": "en-BB",
+      "record": 170,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-BE",
+      "record": 171,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-BI",
+      "record": 172,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-BM",
+      "record": 173,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-BS",
+      "record": 174,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-BW",
+      "record": 175,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-BZ",
+      "record": 176,
+      "lcid": 10249,
+      "default_lcid": 10249,
+      "neutral": false
+    },
+    {
+      "name": "en-CA",
+      "record": 177,
+      "lcid": 4105,
+      "default_lcid": 4105,
+      "neutral": false
+    },
+    {
+      "name": "en-CC",
+      "record": 178,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-CH",
+      "record": 179,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-CK",
+      "record": 180,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-CM",
+      "record": 181,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-CX",
+      "record": 182,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-CY",
+      "record": 183,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-DE",
+      "record": 184,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-DG",
+      "record": 185,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-DK",
+      "record": 186,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-DM",
+      "record": 187,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-ER",
+      "record": 188,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-FI",
+      "record": 189,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-FJ",
+      "record": 190,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-FK",
+      "record": 191,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-FM",
+      "record": 192,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-GB",
+      "record": 193,
+      "lcid": 2057,
+      "default_lcid": 2057,
+      "neutral": false
+    },
+    {
+      "name": "en-GD",
+      "record": 194,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-GG",
+      "record": 195,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-GH",
+      "record": 196,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-GI",
+      "record": 197,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-GM",
+      "record": 198,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-GU",
+      "record": 199,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-GY",
+      "record": 200,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-HK",
+      "record": 201,
+      "lcid": 15369,
+      "default_lcid": 15369,
+      "neutral": false
+    },
+    {
+      "name": "en-ID",
+      "record": 202,
+      "lcid": 14345,
+      "default_lcid": 14345,
+      "neutral": false
+    },
+    {
+      "name": "en-IE",
+      "record": 203,
+      "lcid": 6153,
+      "default_lcid": 6153,
+      "neutral": false
+    },
+    {
+      "name": "en-IL",
+      "record": 204,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-IM",
+      "record": 205,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-IN",
+      "record": 206,
+      "lcid": 16393,
+      "default_lcid": 16393,
+      "neutral": false
+    },
+    {
+      "name": "en-IO",
+      "record": 207,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-JE",
+      "record": 208,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-JM",
+      "record": 209,
+      "lcid": 8201,
+      "default_lcid": 8201,
+      "neutral": false
+    },
+    {
+      "name": "en-KE",
+      "record": 210,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-KI",
+      "record": 211,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-KN",
+      "record": 212,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-KY",
+      "record": 213,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-LC",
+      "record": 214,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-LR",
+      "record": 215,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-LS",
+      "record": 216,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-MG",
+      "record": 217,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-MH",
+      "record": 218,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-MO",
+      "record": 219,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-MP",
+      "record": 220,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-MS",
+      "record": 221,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-MT",
+      "record": 222,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-MU",
+      "record": 223,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-MW",
+      "record": 224,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-MY",
+      "record": 225,
+      "lcid": 17417,
+      "default_lcid": 17417,
+      "neutral": false
+    },
+    {
+      "name": "en-NA",
+      "record": 226,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-NF",
+      "record": 227,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-NG",
+      "record": 228,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-NL",
+      "record": 229,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-NR",
+      "record": 230,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-NU",
+      "record": 231,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-NZ",
+      "record": 232,
+      "lcid": 5129,
+      "default_lcid": 5129,
+      "neutral": false
+    },
+    {
+      "name": "en-PG",
+      "record": 233,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-PH",
+      "record": 234,
+      "lcid": 13321,
+      "default_lcid": 13321,
+      "neutral": false
+    },
+    {
+      "name": "en-PK",
+      "record": 235,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-PN",
+      "record": 236,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-PR",
+      "record": 237,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-PW",
+      "record": 238,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-RW",
+      "record": 239,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-SB",
+      "record": 240,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-SC",
+      "record": 241,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-SD",
+      "record": 242,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-SE",
+      "record": 243,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-SG",
+      "record": 244,
+      "lcid": 18441,
+      "default_lcid": 18441,
+      "neutral": false
+    },
+    {
+      "name": "en-SH",
+      "record": 245,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-SI",
+      "record": 246,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-SL",
+      "record": 247,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-SS",
+      "record": 248,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-SX",
+      "record": 249,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-SZ",
+      "record": 250,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-TC",
+      "record": 251,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-TK",
+      "record": 252,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-TO",
+      "record": 253,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-TT",
+      "record": 254,
+      "lcid": 11273,
+      "default_lcid": 11273,
+      "neutral": false
+    },
+    {
+      "name": "en-TV",
+      "record": 255,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-TZ",
+      "record": 256,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-UG",
+      "record": 257,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-UM",
+      "record": 258,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-US",
+      "record": 259,
+      "lcid": 1033,
+      "default_lcid": 1033,
+      "neutral": false
+    },
+    {
+      "name": "en-VC",
+      "record": 260,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-VG",
+      "record": 261,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-VI",
+      "record": 262,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-VU",
+      "record": 263,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-WS",
+      "record": 264,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-ZA",
+      "record": 265,
+      "lcid": 7177,
+      "default_lcid": 7177,
+      "neutral": false
+    },
+    {
+      "name": "en-ZM",
+      "record": 266,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "en-ZW",
+      "record": 267,
+      "lcid": 12297,
+      "default_lcid": 12297,
+      "neutral": false
+    },
+    {
+      "name": "eo",
+      "record": 268,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "eo-001",
+      "record": 269,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "es",
+      "record": 270,
+      "lcid": 10,
+      "default_lcid": 3082,
+      "neutral": true
+    },
+    {
+      "name": "es-419",
+      "record": 271,
+      "lcid": 22538,
+      "default_lcid": 22538,
+      "neutral": false
+    },
+    {
+      "name": "es-AR",
+      "record": 272,
+      "lcid": 11274,
+      "default_lcid": 11274,
+      "neutral": false
+    },
+    {
+      "name": "es-BO",
+      "record": 273,
+      "lcid": 16394,
+      "default_lcid": 16394,
+      "neutral": false
+    },
+    {
+      "name": "es-BR",
+      "record": 274,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "es-BZ",
+      "record": 275,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "es-CL",
+      "record": 276,
+      "lcid": 13322,
+      "default_lcid": 13322,
+      "neutral": false
+    },
+    {
+      "name": "es-CO",
+      "record": 277,
+      "lcid": 9226,
+      "default_lcid": 9226,
+      "neutral": false
+    },
+    {
+      "name": "es-CR",
+      "record": 278,
+      "lcid": 5130,
+      "default_lcid": 5130,
+      "neutral": false
+    },
+    {
+      "name": "es-CU",
+      "record": 279,
+      "lcid": 23562,
+      "default_lcid": 23562,
+      "neutral": false
+    },
+    {
+      "name": "es-DO",
+      "record": 280,
+      "lcid": 7178,
+      "default_lcid": 7178,
+      "neutral": false
+    },
+    {
+      "name": "es-EA",
+      "record": 281,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "es-EC",
+      "record": 282,
+      "lcid": 12298,
+      "default_lcid": 12298,
+      "neutral": false
+    },
+    {
+      "name": "es-ES",
+      "record": 283,
+      "lcid": 3082,
+      "default_lcid": 3082,
+      "neutral": false
+    },
+    {
+      "name": "es-ES_tradnl",
+      "record": 284,
+      "lcid": 1034,
+      "default_lcid": 1034,
+      "neutral": false
+    },
+    {
+      "name": "es-ES-u-co-trad",
+      "record": 284,
+      "lcid": 2147484682,
+      "default_lcid": 1034,
+      "neutral": false
+    },
+    {
+      "name": "es-GQ",
+      "record": 285,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "es-GT",
+      "record": 286,
+      "lcid": 4106,
+      "default_lcid": 4106,
+      "neutral": false
+    },
+    {
+      "name": "es-HN",
+      "record": 287,
+      "lcid": 18442,
+      "default_lcid": 18442,
+      "neutral": false
+    },
+    {
+      "name": "es-IC",
+      "record": 288,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "es-MX",
+      "record": 289,
+      "lcid": 2058,
+      "default_lcid": 2058,
+      "neutral": false
+    },
+    {
+      "name": "es-NI",
+      "record": 290,
+      "lcid": 19466,
+      "default_lcid": 19466,
+      "neutral": false
+    },
+    {
+      "name": "es-PA",
+      "record": 291,
+      "lcid": 6154,
+      "default_lcid": 6154,
+      "neutral": false
+    },
+    {
+      "name": "es-PE",
+      "record": 292,
+      "lcid": 10250,
+      "default_lcid": 10250,
+      "neutral": false
+    },
+    {
+      "name": "es-PH",
+      "record": 293,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "es-PR",
+      "record": 294,
+      "lcid": 20490,
+      "default_lcid": 20490,
+      "neutral": false
+    },
+    {
+      "name": "es-PY",
+      "record": 295,
+      "lcid": 15370,
+      "default_lcid": 15370,
+      "neutral": false
+    },
+    {
+      "name": "es-SV",
+      "record": 296,
+      "lcid": 17418,
+      "default_lcid": 17418,
+      "neutral": false
+    },
+    {
+      "name": "es-US",
+      "record": 297,
+      "lcid": 21514,
+      "default_lcid": 21514,
+      "neutral": false
+    },
+    {
+      "name": "es-UY",
+      "record": 298,
+      "lcid": 14346,
+      "default_lcid": 14346,
+      "neutral": false
+    },
+    {
+      "name": "es-VE",
+      "record": 299,
+      "lcid": 8202,
+      "default_lcid": 8202,
+      "neutral": false
+    },
+    {
+      "name": "et",
+      "record": 300,
+      "lcid": 37,
+      "default_lcid": 1061,
+      "neutral": true
+    },
+    {
+      "name": "et-EE",
+      "record": 301,
+      "lcid": 1061,
+      "default_lcid": 1061,
+      "neutral": false
+    },
+    {
+      "name": "eu",
+      "record": 302,
+      "lcid": 45,
+      "default_lcid": 1069,
+      "neutral": true
+    },
+    {
+      "name": "eu-ES",
+      "record": 303,
+      "lcid": 1069,
+      "default_lcid": 1069,
+      "neutral": false
+    },
+    {
+      "name": "ewo",
+      "record": 304,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "ewo-CM",
+      "record": 305,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "fa",
+      "record": 306,
+      "lcid": 41,
+      "default_lcid": 1065,
+      "neutral": true
+    },
+    {
+      "name": "fa-AF",
+      "record": 680,
+      "lcid": 2147484812,
+      "default_lcid": 1164,
+      "neutral": false
+    },
+    {
+      "name": "fa-IR",
+      "record": 307,
+      "lcid": 1065,
+      "default_lcid": 1065,
+      "neutral": false
+    },
+    {
+      "name": "ff",
+      "record": 308,
+      "lcid": 103,
+      "default_lcid": 2151,
+      "neutral": true
+    },
+    {
+      "name": "ff-Adlm",
+      "record": 309,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "ff-Adlm-BF",
+      "record": 310,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ff-Adlm-CM",
+      "record": 311,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ff-Adlm-GH",
+      "record": 312,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ff-Adlm-GM",
+      "record": 313,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ff-Adlm-GN",
+      "record": 314,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ff-Adlm-GW",
+      "record": 315,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ff-Adlm-LR",
+      "record": 316,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ff-Adlm-MR",
+      "record": 317,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ff-Adlm-NE",
+      "record": 318,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ff-Adlm-NG",
+      "record": 319,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ff-Adlm-SL",
+      "record": 320,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ff-Adlm-SN",
+      "record": 321,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ff-CM",
+      "record": 324,
+      "lcid": 2147487744,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ff-GN",
+      "record": 327,
+      "lcid": 2147487744,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ff-Latn",
+      "record": 322,
+      "lcid": 31847,
+      "default_lcid": 2151,
+      "neutral": true
+    },
+    {
+      "name": "ff-Latn-BF",
+      "record": 323,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ff-Latn-CM",
+      "record": 324,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ff-Latn-GH",
+      "record": 325,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ff-Latn-GM",
+      "record": 326,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ff-Latn-GN",
+      "record": 327,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ff-Latn-GW",
+      "record": 328,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ff-Latn-LR",
+      "record": 329,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ff-Latn-MR",
+      "record": 330,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ff-Latn-NE",
+      "record": 331,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ff-Latn-NG",
+      "record": 332,
+      "lcid": 1127,
+      "default_lcid": 1127,
+      "neutral": false
+    },
+    {
+      "name": "ff-Latn-SL",
+      "record": 333,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ff-Latn-SN",
+      "record": 334,
+      "lcid": 2151,
+      "default_lcid": 2151,
+      "neutral": false
+    },
+    {
+      "name": "ff-MR",
+      "record": 330,
+      "lcid": 2147487744,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ff-NG",
+      "record": 332,
+      "lcid": 2147484775,
+      "default_lcid": 1127,
+      "neutral": false
+    },
+    {
+      "name": "ff-SN",
+      "record": 334,
+      "lcid": 2147485799,
+      "default_lcid": 2151,
+      "neutral": false
+    },
+    {
+      "name": "fi",
+      "record": 335,
+      "lcid": 11,
+      "default_lcid": 1035,
+      "neutral": true
+    },
+    {
+      "name": "fi-FI",
+      "record": 336,
+      "lcid": 1035,
+      "default_lcid": 1035,
+      "neutral": false
+    },
+    {
+      "name": "fil",
+      "record": 337,
+      "lcid": 100,
+      "default_lcid": 1124,
+      "neutral": true
+    },
+    {
+      "name": "fil-Latn",
+      "record": 337,
+      "lcid": 2147483748,
+      "default_lcid": 1124,
+      "neutral": true
+    },
+    {
+      "name": "fil-Latn-PH",
+      "record": 338,
+      "lcid": 2147484772,
+      "default_lcid": 1124,
+      "neutral": false
+    },
+    {
+      "name": "fil-PH",
+      "record": 338,
+      "lcid": 1124,
+      "default_lcid": 1124,
+      "neutral": false
+    },
+    {
+      "name": "fo",
+      "record": 339,
+      "lcid": 56,
+      "default_lcid": 1080,
+      "neutral": true
+    },
+    {
+      "name": "fo-DK",
+      "record": 340,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "fo-FO",
+      "record": 341,
+      "lcid": 1080,
+      "default_lcid": 1080,
+      "neutral": false
+    },
+    {
+      "name": "fr",
+      "record": 342,
+      "lcid": 12,
+      "default_lcid": 1036,
+      "neutral": true
+    },
+    {
+      "name": "fr-029",
+      "record": 343,
+      "lcid": 7180,
+      "default_lcid": 7180,
+      "neutral": false
+    },
+    {
+      "name": "fr-BE",
+      "record": 344,
+      "lcid": 2060,
+      "default_lcid": 2060,
+      "neutral": false
+    },
+    {
+      "name": "fr-BF",
+      "record": 345,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "fr-BI",
+      "record": 346,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "fr-BJ",
+      "record": 347,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "fr-BL",
+      "record": 348,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "fr-CA",
+      "record": 349,
+      "lcid": 3084,
+      "default_lcid": 3084,
+      "neutral": false
+    },
+    {
+      "name": "fr-CD",
+      "record": 350,
+      "lcid": 9228,
+      "default_lcid": 9228,
+      "neutral": false
+    },
+    {
+      "name": "fr-CF",
+      "record": 351,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "fr-CG",
+      "record": 352,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "fr-CH",
+      "record": 353,
+      "lcid": 4108,
+      "default_lcid": 4108,
+      "neutral": false
+    },
+    {
+      "name": "fr-CI",
+      "record": 354,
+      "lcid": 12300,
+      "default_lcid": 12300,
+      "neutral": false
+    },
+    {
+      "name": "fr-CM",
+      "record": 355,
+      "lcid": 11276,
+      "default_lcid": 11276,
+      "neutral": false
+    },
+    {
+      "name": "fr-DJ",
+      "record": 356,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "fr-DZ",
+      "record": 357,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "fr-FR",
+      "record": 358,
+      "lcid": 1036,
+      "default_lcid": 1036,
+      "neutral": false
+    },
+    {
+      "name": "fr-GA",
+      "record": 359,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "fr-GF",
+      "record": 360,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "fr-GN",
+      "record": 361,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "fr-GP",
+      "record": 362,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "fr-GQ",
+      "record": 363,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "fr-HT",
+      "record": 364,
+      "lcid": 15372,
+      "default_lcid": 15372,
+      "neutral": false
+    },
+    {
+      "name": "fr-KM",
+      "record": 365,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "fr-LU",
+      "record": 366,
+      "lcid": 5132,
+      "default_lcid": 5132,
+      "neutral": false
+    },
+    {
+      "name": "fr-MA",
+      "record": 367,
+      "lcid": 14348,
+      "default_lcid": 14348,
+      "neutral": false
+    },
+    {
+      "name": "fr-MC",
+      "record": 368,
+      "lcid": 6156,
+      "default_lcid": 6156,
+      "neutral": false
+    },
+    {
+      "name": "fr-MF",
+      "record": 369,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "fr-MG",
+      "record": 370,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "fr-ML",
+      "record": 371,
+      "lcid": 13324,
+      "default_lcid": 13324,
+      "neutral": false
+    },
+    {
+      "name": "fr-MQ",
+      "record": 372,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "fr-MR",
+      "record": 373,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "fr-MU",
+      "record": 374,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "fr-NC",
+      "record": 375,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "fr-NE",
+      "record": 376,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "fr-PF",
+      "record": 377,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "fr-PM",
+      "record": 378,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "fr-RE",
+      "record": 379,
+      "lcid": 8204,
+      "default_lcid": 8204,
+      "neutral": false
+    },
+    {
+      "name": "fr-RW",
+      "record": 380,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "fr-SC",
+      "record": 381,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "fr-SN",
+      "record": 382,
+      "lcid": 10252,
+      "default_lcid": 10252,
+      "neutral": false
+    },
+    {
+      "name": "fr-SY",
+      "record": 383,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "fr-TD",
+      "record": 384,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "fr-TG",
+      "record": 385,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "fr-TN",
+      "record": 386,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "fr-VU",
+      "record": 387,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "fr-WF",
+      "record": 388,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "fr-YT",
+      "record": 389,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "fur",
+      "record": 390,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "fur-IT",
+      "record": 391,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "fuv-NG",
+      "record": 332,
+      "lcid": 2147484775,
+      "default_lcid": 1127,
+      "neutral": false
+    },
+    {
+      "name": "fy",
+      "record": 392,
+      "lcid": 98,
+      "default_lcid": 1122,
+      "neutral": true
+    },
+    {
+      "name": "fy-NL",
+      "record": 393,
+      "lcid": 1122,
+      "default_lcid": 1122,
+      "neutral": false
+    },
+    {
+      "name": "ga",
+      "record": 394,
+      "lcid": 60,
+      "default_lcid": 2108,
+      "neutral": true
+    },
+    {
+      "name": "ga-GB",
+      "record": 395,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ga-IE",
+      "record": 396,
+      "lcid": 2108,
+      "default_lcid": 2108,
+      "neutral": false
+    },
+    {
+      "name": "gd",
+      "record": 397,
+      "lcid": 145,
+      "default_lcid": 1169,
+      "neutral": true
+    },
+    {
+      "name": "gd-GB",
+      "record": 398,
+      "lcid": 1169,
+      "default_lcid": 1169,
+      "neutral": false
+    },
+    {
+      "name": "gd-Latn",
+      "record": 397,
+      "lcid": 2147483793,
+      "default_lcid": 1169,
+      "neutral": true
+    },
+    {
+      "name": "gl",
+      "record": 399,
+      "lcid": 86,
+      "default_lcid": 1110,
+      "neutral": true
+    },
+    {
+      "name": "gl-ES",
+      "record": 400,
+      "lcid": 1110,
+      "default_lcid": 1110,
+      "neutral": false
+    },
+    {
+      "name": "gn",
+      "record": 401,
+      "lcid": 116,
+      "default_lcid": 1140,
+      "neutral": true
+    },
+    {
+      "name": "gn-PY",
+      "record": 402,
+      "lcid": 1140,
+      "default_lcid": 1140,
+      "neutral": false
+    },
+    {
+      "name": "gsw",
+      "record": 403,
+      "lcid": 132,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "gsw-CH",
+      "record": 404,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "gsw-FR",
+      "record": 405,
+      "lcid": 1156,
+      "default_lcid": 1156,
+      "neutral": false
+    },
+    {
+      "name": "gsw-LI",
+      "record": 406,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "gu",
+      "record": 407,
+      "lcid": 71,
+      "default_lcid": 1095,
+      "neutral": true
+    },
+    {
+      "name": "gu-IN",
+      "record": 408,
+      "lcid": 1095,
+      "default_lcid": 1095,
+      "neutral": false
+    },
+    {
+      "name": "guz",
+      "record": 409,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "guz-KE",
+      "record": 410,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "gv",
+      "record": 411,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "gv-GB",
+      "record": 412,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "gv-IM",
+      "record": 413,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ha",
+      "record": 414,
+      "lcid": 104,
+      "default_lcid": 1128,
+      "neutral": true
+    },
+    {
+      "name": "ha-GH",
+      "record": 416,
+      "lcid": 2147487744,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ha-Latn",
+      "record": 415,
+      "lcid": 31848,
+      "default_lcid": 1128,
+      "neutral": true
+    },
+    {
+      "name": "ha-Latn-GH",
+      "record": 416,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ha-Latn-NE",
+      "record": 417,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ha-Latn-NG",
+      "record": 418,
+      "lcid": 1128,
+      "default_lcid": 1128,
+      "neutral": false
+    },
+    {
+      "name": "ha-NE",
+      "record": 417,
+      "lcid": 2147487744,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ha-NG",
+      "record": 418,
+      "lcid": 2147484776,
+      "default_lcid": 1128,
+      "neutral": false
+    },
+    {
+      "name": "haw",
+      "record": 419,
+      "lcid": 117,
+      "default_lcid": 1141,
+      "neutral": true
+    },
+    {
+      "name": "haw-Latn",
+      "record": 419,
+      "lcid": 2147483765,
+      "default_lcid": 1141,
+      "neutral": true
+    },
+    {
+      "name": "haw-Latn-US",
+      "record": 420,
+      "lcid": 2147484789,
+      "default_lcid": 1141,
+      "neutral": false
+    },
+    {
+      "name": "haw-US",
+      "record": 420,
+      "lcid": 1141,
+      "default_lcid": 1141,
+      "neutral": false
+    },
+    {
+      "name": "he",
+      "record": 421,
+      "lcid": 13,
+      "default_lcid": 1037,
+      "neutral": true
+    },
+    {
+      "name": "he-IL",
+      "record": 422,
+      "lcid": 1037,
+      "default_lcid": 1037,
+      "neutral": false
+    },
+    {
+      "name": "hi",
+      "record": 423,
+      "lcid": 57,
+      "default_lcid": 1081,
+      "neutral": true
+    },
+    {
+      "name": "hi-IN",
+      "record": 424,
+      "lcid": 1081,
+      "default_lcid": 1081,
+      "neutral": false
+    },
+    {
+      "name": "hr",
+      "record": 425,
+      "lcid": 26,
+      "default_lcid": 1050,
+      "neutral": true
+    },
+    {
+      "name": "hr-BA",
+      "record": 426,
+      "lcid": 4122,
+      "default_lcid": 4122,
+      "neutral": false
+    },
+    {
+      "name": "hr-HR",
+      "record": 427,
+      "lcid": 1050,
+      "default_lcid": 1050,
+      "neutral": false
+    },
+    {
+      "name": "hsb",
+      "record": 428,
+      "lcid": 46,
+      "default_lcid": 1070,
+      "neutral": true
+    },
+    {
+      "name": "hsb-DE",
+      "record": 429,
+      "lcid": 1070,
+      "default_lcid": 1070,
+      "neutral": false
+    },
+    {
+      "name": "hu",
+      "record": 430,
+      "lcid": 14,
+      "default_lcid": 1038,
+      "neutral": true
+    },
+    {
+      "name": "hu-HU",
+      "record": 431,
+      "lcid": 1038,
+      "default_lcid": 1038,
+      "neutral": false
+    },
+    {
+      "name": "hu-HU_technl",
+      "record": 431,
+      "lcid": 66574,
+      "default_lcid": 1038,
+      "neutral": false
+    },
+    {
+      "name": "hy",
+      "record": 432,
+      "lcid": 43,
+      "default_lcid": 1067,
+      "neutral": true
+    },
+    {
+      "name": "hy-AM",
+      "record": 433,
+      "lcid": 1067,
+      "default_lcid": 1067,
+      "neutral": false
+    },
+    {
+      "name": "ia",
+      "record": 434,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "ia-001",
+      "record": 435,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "id",
+      "record": 436,
+      "lcid": 33,
+      "default_lcid": 1057,
+      "neutral": true
+    },
+    {
+      "name": "id-ID",
+      "record": 437,
+      "lcid": 1057,
+      "default_lcid": 1057,
+      "neutral": false
+    },
+    {
+      "name": "ie",
+      "record": 438,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "ie-EE",
+      "record": 439,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ig",
+      "record": 440,
+      "lcid": 112,
+      "default_lcid": 1136,
+      "neutral": true
+    },
+    {
+      "name": "ig-Latn",
+      "record": 440,
+      "lcid": 2147483760,
+      "default_lcid": 1136,
+      "neutral": true
+    },
+    {
+      "name": "ig-Latn-NG",
+      "record": 441,
+      "lcid": 2147484784,
+      "default_lcid": 1136,
+      "neutral": false
+    },
+    {
+      "name": "ig-NG",
+      "record": 441,
+      "lcid": 1136,
+      "default_lcid": 1136,
+      "neutral": false
+    },
+    {
+      "name": "ii",
+      "record": 442,
+      "lcid": 120,
+      "default_lcid": 1144,
+      "neutral": true
+    },
+    {
+      "name": "ii-CN",
+      "record": 443,
+      "lcid": 1144,
+      "default_lcid": 1144,
+      "neutral": false
+    },
+    {
+      "name": "ii-Yiii",
+      "record": 442,
+      "lcid": 2147483768,
+      "default_lcid": 1144,
+      "neutral": true
+    },
+    {
+      "name": "ii-Yiii-CN",
+      "record": 443,
+      "lcid": 2147484792,
+      "default_lcid": 1144,
+      "neutral": false
+    },
+    {
+      "name": "is",
+      "record": 444,
+      "lcid": 15,
+      "default_lcid": 1039,
+      "neutral": true
+    },
+    {
+      "name": "is-IS",
+      "record": 445,
+      "lcid": 1039,
+      "default_lcid": 1039,
+      "neutral": false
+    },
+    {
+      "name": "it",
+      "record": 446,
+      "lcid": 16,
+      "default_lcid": 1040,
+      "neutral": true
+    },
+    {
+      "name": "it-CH",
+      "record": 447,
+      "lcid": 2064,
+      "default_lcid": 2064,
+      "neutral": false
+    },
+    {
+      "name": "it-IT",
+      "record": 448,
+      "lcid": 1040,
+      "default_lcid": 1040,
+      "neutral": false
+    },
+    {
+      "name": "it-SM",
+      "record": 449,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "it-VA",
+      "record": 450,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "iu",
+      "record": 451,
+      "lcid": 93,
+      "default_lcid": 2141,
+      "neutral": true
+    },
+    {
+      "name": "iu-Cans",
+      "record": 452,
+      "lcid": 30813,
+      "default_lcid": 1117,
+      "neutral": true
+    },
+    {
+      "name": "iu-Cans-CA",
+      "record": 453,
+      "lcid": 1117,
+      "default_lcid": 1117,
+      "neutral": false
+    },
+    {
+      "name": "iu-Latn",
+      "record": 454,
+      "lcid": 31837,
+      "default_lcid": 2141,
+      "neutral": true
+    },
+    {
+      "name": "iu-Latn-CA",
+      "record": 455,
+      "lcid": 2141,
+      "default_lcid": 2141,
+      "neutral": false
+    },
+    {
+      "name": "ja",
+      "record": 456,
+      "lcid": 17,
+      "default_lcid": 1041,
+      "neutral": true
+    },
+    {
+      "name": "ja-JP",
+      "record": 457,
+      "lcid": 1041,
+      "default_lcid": 1041,
+      "neutral": false
+    },
+    {
+      "name": "ja-JP_radstr",
+      "record": 457,
+      "lcid": 263185,
+      "default_lcid": 1041,
+      "neutral": false
+    },
+    {
+      "name": "ja-JP-u-co-unihan",
+      "record": 457,
+      "lcid": 2147746833,
+      "default_lcid": 1041,
+      "neutral": false
+    },
+    {
+      "name": "jgo",
+      "record": 458,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "jgo-CM",
+      "record": 459,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "jmc",
+      "record": 460,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "jmc-TZ",
+      "record": 461,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "jv",
+      "record": 462,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "jv-ID",
+      "record": 464,
+      "lcid": 2147487744,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "jv-Latn",
+      "record": 463,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "jv-Latn-ID",
+      "record": 464,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ka",
+      "record": 465,
+      "lcid": 55,
+      "default_lcid": 1079,
+      "neutral": true
+    },
+    {
+      "name": "ka-GE",
+      "record": 466,
+      "lcid": 1079,
+      "default_lcid": 1079,
+      "neutral": false
+    },
+    {
+      "name": "ka-GE_modern",
+      "record": 466,
+      "lcid": 66615,
+      "default_lcid": 1079,
+      "neutral": false
+    },
+    {
+      "name": "kaa",
+      "record": 467,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "kaa-Cyrl",
+      "record": 468,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "kaa-Cyrl-UZ",
+      "record": 469,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "kaa-Latn",
+      "record": 470,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "kaa-Latn-UZ",
+      "record": 471,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "kaa-UZ",
+      "record": 469,
+      "lcid": 2147487744,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "kab",
+      "record": 472,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "kab-DZ",
+      "record": 473,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "kam",
+      "record": 474,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "kam-KE",
+      "record": 475,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "kde",
+      "record": 476,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "kde-TZ",
+      "record": 477,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "kea",
+      "record": 478,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "kea-CV",
+      "record": 479,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "kgp",
+      "record": 480,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "kgp-BR",
+      "record": 481,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "khq",
+      "record": 482,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "khq-ML",
+      "record": 483,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ki",
+      "record": 484,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "ki-KE",
+      "record": 485,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "kk",
+      "record": 486,
+      "lcid": 63,
+      "default_lcid": 1087,
+      "neutral": true
+    },
+    {
+      "name": "kk-Arab",
+      "record": 487,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "kk-Arab-CN",
+      "record": 488,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "kk-Cyrl",
+      "record": 489,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "kk-Cyrl-KZ",
+      "record": 490,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "kk-KZ",
+      "record": 491,
+      "lcid": 1087,
+      "default_lcid": 1087,
+      "neutral": false
+    },
+    {
+      "name": "kkj",
+      "record": 492,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "kkj-CM",
+      "record": 493,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "kl",
+      "record": 494,
+      "lcid": 111,
+      "default_lcid": 1135,
+      "neutral": true
+    },
+    {
+      "name": "kl-GL",
+      "record": 495,
+      "lcid": 1135,
+      "default_lcid": 1135,
+      "neutral": false
+    },
+    {
+      "name": "kln",
+      "record": 496,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "kln-KE",
+      "record": 497,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "km",
+      "record": 498,
+      "lcid": 83,
+      "default_lcid": 1107,
+      "neutral": true
+    },
+    {
+      "name": "km-KH",
+      "record": 499,
+      "lcid": 1107,
+      "default_lcid": 1107,
+      "neutral": false
+    },
+    {
+      "name": "kn",
+      "record": 500,
+      "lcid": 75,
+      "default_lcid": 1099,
+      "neutral": true
+    },
+    {
+      "name": "kn-IN",
+      "record": 501,
+      "lcid": 1099,
+      "default_lcid": 1099,
+      "neutral": false
+    },
+    {
+      "name": "ko",
+      "record": 502,
+      "lcid": 18,
+      "default_lcid": 1042,
+      "neutral": true
+    },
+    {
+      "name": "ko-KP",
+      "record": 503,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ko-KR",
+      "record": 504,
+      "lcid": 1042,
+      "default_lcid": 1042,
+      "neutral": false
+    },
+    {
+      "name": "kok",
+      "record": 505,
+      "lcid": 87,
+      "default_lcid": 1111,
+      "neutral": true
+    },
+    {
+      "name": "kok-Deva",
+      "record": 506,
+      "lcid": 4096,
+      "default_lcid": 1111,
+      "neutral": true
+    },
+    {
+      "name": "kok-Deva-IN",
+      "record": 507,
+      "lcid": 1111,
+      "default_lcid": 1111,
+      "neutral": false
+    },
+    {
+      "name": "kok-IN",
+      "record": 507,
+      "lcid": 2147484759,
+      "default_lcid": 1111,
+      "neutral": false
+    },
+    {
+      "name": "kok-Latn",
+      "record": 508,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "kok-Latn-IN",
+      "record": 509,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "kr",
+      "record": 510,
+      "lcid": 113,
+      "default_lcid": 1137,
+      "neutral": true
+    },
+    {
+      "name": "kr-Latn",
+      "record": 511,
+      "lcid": 4096,
+      "default_lcid": 1137,
+      "neutral": true
+    },
+    {
+      "name": "kr-Latn-NG",
+      "record": 512,
+      "lcid": 1137,
+      "default_lcid": 1137,
+      "neutral": false
+    },
+    {
+      "name": "kr-NG",
+      "record": 512,
+      "lcid": 2147484785,
+      "default_lcid": 1137,
+      "neutral": false
+    },
+    {
+      "name": "ks",
+      "record": 513,
+      "lcid": 96,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "ks-Arab",
+      "record": 514,
+      "lcid": 1120,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "ks-Arab-IN",
+      "record": 515,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ks-Deva",
+      "record": 516,
+      "lcid": 4096,
+      "default_lcid": 2144,
+      "neutral": true
+    },
+    {
+      "name": "ks-Deva-IN",
+      "record": 517,
+      "lcid": 2144,
+      "default_lcid": 2144,
+      "neutral": false
+    },
+    {
+      "name": "ks-IN",
+      "record": 515,
+      "lcid": 2147487744,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ksb",
+      "record": 518,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "ksb-TZ",
+      "record": 519,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ksf",
+      "record": 520,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "ksf-CM",
+      "record": 521,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ksh",
+      "record": 522,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "ksh-DE",
+      "record": 523,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ku",
+      "record": 524,
+      "lcid": 146,
+      "default_lcid": 1170,
+      "neutral": true
+    },
+    {
+      "name": "ku-Arab",
+      "record": 525,
+      "lcid": 31890,
+      "default_lcid": 1170,
+      "neutral": true
+    },
+    {
+      "name": "ku-Arab-IQ",
+      "record": 526,
+      "lcid": 1170,
+      "default_lcid": 1170,
+      "neutral": false
+    },
+    {
+      "name": "ku-Arab-IR",
+      "record": 527,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "kw",
+      "record": 528,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "kw-GB",
+      "record": 529,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ky",
+      "record": 530,
+      "lcid": 64,
+      "default_lcid": 1088,
+      "neutral": true
+    },
+    {
+      "name": "ky-Cyrl",
+      "record": 530,
+      "lcid": 2147483712,
+      "default_lcid": 1088,
+      "neutral": true
+    },
+    {
+      "name": "ky-Cyrl-KG",
+      "record": 531,
+      "lcid": 2147484736,
+      "default_lcid": 1088,
+      "neutral": false
+    },
+    {
+      "name": "ky-KG",
+      "record": 531,
+      "lcid": 1088,
+      "default_lcid": 1088,
+      "neutral": false
+    },
+    {
+      "name": "la",
+      "record": 532,
+      "lcid": 118,
+      "default_lcid": 1142,
+      "neutral": true
+    },
+    {
+      "name": "la-001",
+      "record": 533,
+      "lcid": 2147484790,
+      "default_lcid": 1142,
+      "neutral": false
+    },
+    {
+      "name": "la-VA",
+      "record": 533,
+      "lcid": 1142,
+      "default_lcid": 1142,
+      "neutral": false
+    },
+    {
+      "name": "lag",
+      "record": 534,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "lag-TZ",
+      "record": 535,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "lb",
+      "record": 536,
+      "lcid": 110,
+      "default_lcid": 1134,
+      "neutral": true
+    },
+    {
+      "name": "lb-LU",
+      "record": 537,
+      "lcid": 1134,
+      "default_lcid": 1134,
+      "neutral": false
+    },
+    {
+      "name": "lg",
+      "record": 538,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "lg-UG",
+      "record": 539,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "lkt",
+      "record": 540,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "lkt-US",
+      "record": 541,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "lld",
+      "record": 542,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "lld-IT",
+      "record": 543,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ln",
+      "record": 544,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "ln-AO",
+      "record": 545,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ln-CD",
+      "record": 546,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ln-CF",
+      "record": 547,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ln-CG",
+      "record": 548,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "lo",
+      "record": 549,
+      "lcid": 84,
+      "default_lcid": 1108,
+      "neutral": true
+    },
+    {
+      "name": "lo-LA",
+      "record": 550,
+      "lcid": 1108,
+      "default_lcid": 1108,
+      "neutral": false
+    },
+    {
+      "name": "lrc",
+      "record": 551,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "lrc-IQ",
+      "record": 552,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "lrc-IR",
+      "record": 553,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "lt",
+      "record": 554,
+      "lcid": 39,
+      "default_lcid": 1063,
+      "neutral": true
+    },
+    {
+      "name": "lt-LT",
+      "record": 555,
+      "lcid": 1063,
+      "default_lcid": 1063,
+      "neutral": false
+    },
+    {
+      "name": "ltg",
+      "record": 556,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "ltg-LV",
+      "record": 557,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "lu",
+      "record": 558,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "lu-CD",
+      "record": 559,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "luo",
+      "record": 560,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "luo-KE",
+      "record": 561,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "luy",
+      "record": 562,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "luy-KE",
+      "record": 563,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "lv",
+      "record": 564,
+      "lcid": 38,
+      "default_lcid": 1062,
+      "neutral": true
+    },
+    {
+      "name": "lv-LV",
+      "record": 565,
+      "lcid": 1062,
+      "default_lcid": 1062,
+      "neutral": false
+    },
+    {
+      "name": "mai",
+      "record": 566,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "mai-IN",
+      "record": 567,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "mas",
+      "record": 568,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "mas-KE",
+      "record": 569,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "mas-TZ",
+      "record": 570,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "mer",
+      "record": 571,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "mer-KE",
+      "record": 572,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "mfe",
+      "record": 573,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "mfe-MU",
+      "record": 574,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "mg",
+      "record": 575,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "mg-MG",
+      "record": 576,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "mgh",
+      "record": 577,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "mgh-MZ",
+      "record": 578,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "mgo",
+      "record": 579,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "mgo-CM",
+      "record": 580,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "mhn",
+      "record": 581,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "mhn-IT",
+      "record": 582,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "mi",
+      "record": 583,
+      "lcid": 129,
+      "default_lcid": 1153,
+      "neutral": true
+    },
+    {
+      "name": "mi-Latn",
+      "record": 583,
+      "lcid": 2147483777,
+      "default_lcid": 1153,
+      "neutral": true
+    },
+    {
+      "name": "mi-Latn-NZ",
+      "record": 584,
+      "lcid": 2147484801,
+      "default_lcid": 1153,
+      "neutral": false
+    },
+    {
+      "name": "mi-NZ",
+      "record": 584,
+      "lcid": 1153,
+      "default_lcid": 1153,
+      "neutral": false
+    },
+    {
+      "name": "mic",
+      "record": 585,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "mic-CA",
+      "record": 586,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "mk",
+      "record": 587,
+      "lcid": 47,
+      "default_lcid": 1071,
+      "neutral": true
+    },
+    {
+      "name": "mk-MK",
+      "record": 588,
+      "lcid": 1071,
+      "default_lcid": 1071,
+      "neutral": false
+    },
+    {
+      "name": "ml",
+      "record": 589,
+      "lcid": 76,
+      "default_lcid": 1100,
+      "neutral": true
+    },
+    {
+      "name": "ml-IN",
+      "record": 590,
+      "lcid": 1100,
+      "default_lcid": 1100,
+      "neutral": false
+    },
+    {
+      "name": "mn",
+      "record": 591,
+      "lcid": 80,
+      "default_lcid": 1104,
+      "neutral": true
+    },
+    {
+      "name": "mn-Cyrl",
+      "record": 592,
+      "lcid": 30800,
+      "default_lcid": 1104,
+      "neutral": true
+    },
+    {
+      "name": "mn-Cyrl-MN",
+      "record": 593,
+      "lcid": 2147484752,
+      "default_lcid": 1104,
+      "neutral": false
+    },
+    {
+      "name": "mn-MN",
+      "record": 593,
+      "lcid": 1104,
+      "default_lcid": 1104,
+      "neutral": false
+    },
+    {
+      "name": "mn-Mong",
+      "record": 594,
+      "lcid": 31824,
+      "default_lcid": 2128,
+      "neutral": true
+    },
+    {
+      "name": "mn-Mong-CN",
+      "record": 595,
+      "lcid": 2128,
+      "default_lcid": 2128,
+      "neutral": false
+    },
+    {
+      "name": "mn-Mong-MN",
+      "record": 596,
+      "lcid": 3152,
+      "default_lcid": 3152,
+      "neutral": false
+    },
+    {
+      "name": "mni",
+      "record": 597,
+      "lcid": 88,
+      "default_lcid": 1112,
+      "neutral": true
+    },
+    {
+      "name": "mni-Beng",
+      "record": 599,
+      "lcid": 4096,
+      "default_lcid": 1112,
+      "neutral": true
+    },
+    {
+      "name": "mni-Beng-IN",
+      "record": 598,
+      "lcid": 2147484760,
+      "default_lcid": 1112,
+      "neutral": false
+    },
+    {
+      "name": "mni-IN",
+      "record": 598,
+      "lcid": 1112,
+      "default_lcid": 1112,
+      "neutral": false
+    },
+    {
+      "name": "moh",
+      "record": 600,
+      "lcid": 124,
+      "default_lcid": 1148,
+      "neutral": true
+    },
+    {
+      "name": "moh-CA",
+      "record": 601,
+      "lcid": 1148,
+      "default_lcid": 1148,
+      "neutral": false
+    },
+    {
+      "name": "moh-Latn",
+      "record": 600,
+      "lcid": 2147483772,
+      "default_lcid": 1148,
+      "neutral": true
+    },
+    {
+      "name": "moh-Latn-CA",
+      "record": 601,
+      "lcid": 2147484796,
+      "default_lcid": 1148,
+      "neutral": false
+    },
+    {
+      "name": "mr",
+      "record": 602,
+      "lcid": 78,
+      "default_lcid": 1102,
+      "neutral": true
+    },
+    {
+      "name": "mr-IN",
+      "record": 603,
+      "lcid": 1102,
+      "default_lcid": 1102,
+      "neutral": false
+    },
+    {
+      "name": "ms",
+      "record": 604,
+      "lcid": 62,
+      "default_lcid": 1086,
+      "neutral": true
+    },
+    {
+      "name": "ms-BN",
+      "record": 605,
+      "lcid": 2110,
+      "default_lcid": 2110,
+      "neutral": false
+    },
+    {
+      "name": "ms-ID",
+      "record": 606,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ms-Latn",
+      "record": 604,
+      "lcid": 2147483710,
+      "default_lcid": 1086,
+      "neutral": true
+    },
+    {
+      "name": "ms-Latn-BN",
+      "record": 605,
+      "lcid": 2147485758,
+      "default_lcid": 2110,
+      "neutral": false
+    },
+    {
+      "name": "ms-Latn-MY",
+      "record": 607,
+      "lcid": 2147484734,
+      "default_lcid": 1086,
+      "neutral": false
+    },
+    {
+      "name": "ms-Latn-SG",
+      "record": 608,
+      "lcid": 2147487744,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ms-MY",
+      "record": 607,
+      "lcid": 1086,
+      "default_lcid": 1086,
+      "neutral": false
+    },
+    {
+      "name": "ms-SG",
+      "record": 608,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "mt",
+      "record": 609,
+      "lcid": 58,
+      "default_lcid": 1082,
+      "neutral": true
+    },
+    {
+      "name": "mt-MT",
+      "record": 610,
+      "lcid": 1082,
+      "default_lcid": 1082,
+      "neutral": false
+    },
+    {
+      "name": "mua",
+      "record": 611,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "mua-CM",
+      "record": 612,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "my",
+      "record": 613,
+      "lcid": 85,
+      "default_lcid": 1109,
+      "neutral": true
+    },
+    {
+      "name": "my-MM",
+      "record": 614,
+      "lcid": 1109,
+      "default_lcid": 1109,
+      "neutral": false
+    },
+    {
+      "name": "mzn",
+      "record": 615,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "mzn-IR",
+      "record": 616,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "naq",
+      "record": 617,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "naq-NA",
+      "record": 618,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "nb",
+      "record": 619,
+      "lcid": 31764,
+      "default_lcid": 1044,
+      "neutral": true
+    },
+    {
+      "name": "nb-NO",
+      "record": 620,
+      "lcid": 1044,
+      "default_lcid": 1044,
+      "neutral": false
+    },
+    {
+      "name": "nb-SJ",
+      "record": 621,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "nd",
+      "record": 622,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "nd-ZW",
+      "record": 623,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "nds",
+      "record": 624,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "nds-DE",
+      "record": 625,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "nds-NL",
+      "record": 626,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ne",
+      "record": 627,
+      "lcid": 97,
+      "default_lcid": 1121,
+      "neutral": true
+    },
+    {
+      "name": "ne-IN",
+      "record": 628,
+      "lcid": 2145,
+      "default_lcid": 2145,
+      "neutral": false
+    },
+    {
+      "name": "ne-NP",
+      "record": 629,
+      "lcid": 1121,
+      "default_lcid": 1121,
+      "neutral": false
+    },
+    {
+      "name": "nl",
+      "record": 630,
+      "lcid": 19,
+      "default_lcid": 1043,
+      "neutral": true
+    },
+    {
+      "name": "nl-AW",
+      "record": 631,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "nl-BE",
+      "record": 632,
+      "lcid": 2067,
+      "default_lcid": 2067,
+      "neutral": false
+    },
+    {
+      "name": "nl-BQ",
+      "record": 633,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "nl-CW",
+      "record": 634,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "nl-NL",
+      "record": 635,
+      "lcid": 1043,
+      "default_lcid": 1043,
+      "neutral": false
+    },
+    {
+      "name": "nl-SR",
+      "record": 636,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "nl-SX",
+      "record": 637,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "nmg",
+      "record": 638,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "nmg-CM",
+      "record": 639,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "nn",
+      "record": 640,
+      "lcid": 30740,
+      "default_lcid": 2068,
+      "neutral": true
+    },
+    {
+      "name": "nn-NO",
+      "record": 641,
+      "lcid": 2068,
+      "default_lcid": 2068,
+      "neutral": false
+    },
+    {
+      "name": "nnh",
+      "record": 642,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "nnh-CM",
+      "record": 643,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "no",
+      "record": 644,
+      "lcid": 20,
+      "default_lcid": 1044,
+      "neutral": true
+    },
+    {
+      "name": "nqo",
+      "record": 645,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "nqo-GN",
+      "record": 646,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "nr",
+      "record": 647,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "nr-ZA",
+      "record": 648,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "nso",
+      "record": 649,
+      "lcid": 108,
+      "default_lcid": 1132,
+      "neutral": true
+    },
+    {
+      "name": "nso-ZA",
+      "record": 650,
+      "lcid": 1132,
+      "default_lcid": 1132,
+      "neutral": false
+    },
+    {
+      "name": "nus",
+      "record": 651,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "nus-SD",
+      "record": 652,
+      "lcid": 2147487744,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "nus-SS",
+      "record": 652,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "nyn",
+      "record": 653,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "nyn-UG",
+      "record": 654,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "oc",
+      "record": 655,
+      "lcid": 130,
+      "default_lcid": 1154,
+      "neutral": true
+    },
+    {
+      "name": "oc-FR",
+      "record": 656,
+      "lcid": 1154,
+      "default_lcid": 1154,
+      "neutral": false
+    },
+    {
+      "name": "oc-Latn",
+      "record": 655,
+      "lcid": 2147483778,
+      "default_lcid": 1154,
+      "neutral": true
+    },
+    {
+      "name": "oc-Latn-FR",
+      "record": 656,
+      "lcid": 2147484802,
+      "default_lcid": 1154,
+      "neutral": false
+    },
+    {
+      "name": "om",
+      "record": 657,
+      "lcid": 114,
+      "default_lcid": 1138,
+      "neutral": true
+    },
+    {
+      "name": "om-ET",
+      "record": 658,
+      "lcid": 1138,
+      "default_lcid": 1138,
+      "neutral": false
+    },
+    {
+      "name": "om-KE",
+      "record": 659,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "or",
+      "record": 660,
+      "lcid": 72,
+      "default_lcid": 1096,
+      "neutral": true
+    },
+    {
+      "name": "or-IN",
+      "record": 661,
+      "lcid": 1096,
+      "default_lcid": 1096,
+      "neutral": false
+    },
+    {
+      "name": "os",
+      "record": 662,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "os-GE",
+      "record": 663,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "os-RU",
+      "record": 664,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "pa",
+      "record": 665,
+      "lcid": 70,
+      "default_lcid": 1094,
+      "neutral": true
+    },
+    {
+      "name": "pa-Arab",
+      "record": 666,
+      "lcid": 31814,
+      "default_lcid": 2118,
+      "neutral": true
+    },
+    {
+      "name": "pa-Arab-PK",
+      "record": 667,
+      "lcid": 2118,
+      "default_lcid": 2118,
+      "neutral": false
+    },
+    {
+      "name": "pa-Guru",
+      "record": 668,
+      "lcid": 4096,
+      "default_lcid": 1094,
+      "neutral": true
+    },
+    {
+      "name": "pa-Guru-IN",
+      "record": 669,
+      "lcid": 2147484742,
+      "default_lcid": 1094,
+      "neutral": false
+    },
+    {
+      "name": "pa-IN",
+      "record": 669,
+      "lcid": 1094,
+      "default_lcid": 1094,
+      "neutral": false
+    },
+    {
+      "name": "pap",
+      "record": 670,
+      "lcid": 121,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "pcm",
+      "record": 671,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "pcm-Latn",
+      "record": 672,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "pcm-Latn-NG",
+      "record": 673,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "pcm-NG",
+      "record": 673,
+      "lcid": 2147487744,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "pl",
+      "record": 674,
+      "lcid": 21,
+      "default_lcid": 1045,
+      "neutral": true
+    },
+    {
+      "name": "pl-PL",
+      "record": 675,
+      "lcid": 1045,
+      "default_lcid": 1045,
+      "neutral": false
+    },
+    {
+      "name": "prg",
+      "record": 676,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "prg-001",
+      "record": 677,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "prg-PL",
+      "record": 678,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "prs",
+      "record": 679,
+      "lcid": 140,
+      "default_lcid": 1164,
+      "neutral": true
+    },
+    {
+      "name": "prs-AF",
+      "record": 680,
+      "lcid": 1164,
+      "default_lcid": 1164,
+      "neutral": false
+    },
+    {
+      "name": "prs-Arab",
+      "record": 679,
+      "lcid": 2147483788,
+      "default_lcid": 1164,
+      "neutral": true
+    },
+    {
+      "name": "prs-Arab-AF",
+      "record": 680,
+      "lcid": 2147484812,
+      "default_lcid": 1164,
+      "neutral": false
+    },
+    {
+      "name": "ps",
+      "record": 681,
+      "lcid": 99,
+      "default_lcid": 1123,
+      "neutral": true
+    },
+    {
+      "name": "ps-AF",
+      "record": 682,
+      "lcid": 1123,
+      "default_lcid": 1123,
+      "neutral": false
+    },
+    {
+      "name": "ps-PK",
+      "record": 683,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "pt",
+      "record": 684,
+      "lcid": 22,
+      "default_lcid": 1046,
+      "neutral": true
+    },
+    {
+      "name": "pt-AO",
+      "record": 685,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "pt-BR",
+      "record": 686,
+      "lcid": 1046,
+      "default_lcid": 1046,
+      "neutral": false
+    },
+    {
+      "name": "pt-CH",
+      "record": 687,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "pt-CV",
+      "record": 688,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "pt-GQ",
+      "record": 689,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "pt-GW",
+      "record": 690,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "pt-LU",
+      "record": 691,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "pt-MO",
+      "record": 692,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "pt-MZ",
+      "record": 693,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "pt-PT",
+      "record": 694,
+      "lcid": 2070,
+      "default_lcid": 2070,
+      "neutral": false
+    },
+    {
+      "name": "pt-ST",
+      "record": 695,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "pt-TL",
+      "record": 696,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "qu",
+      "record": 700,
+      "lcid": 2147483755,
+      "default_lcid": 1131,
+      "neutral": true
+    },
+    {
+      "name": "qu-BO",
+      "record": 701,
+      "lcid": 2147484779,
+      "default_lcid": 1131,
+      "neutral": false
+    },
+    {
+      "name": "qu-EC",
+      "record": 702,
+      "lcid": 2147485803,
+      "default_lcid": 2155,
+      "neutral": false
+    },
+    {
+      "name": "qu-PE",
+      "record": 703,
+      "lcid": 2147486827,
+      "default_lcid": 3179,
+      "neutral": false
+    },
+    {
+      "name": "quc",
+      "record": 697,
+      "lcid": 134,
+      "default_lcid": 1158,
+      "neutral": true
+    },
+    {
+      "name": "quc-Latn",
+      "record": 698,
+      "lcid": 31878,
+      "default_lcid": 1158,
+      "neutral": true
+    },
+    {
+      "name": "quc-Latn-GT",
+      "record": 699,
+      "lcid": 1158,
+      "default_lcid": 1158,
+      "neutral": false
+    },
+    {
+      "name": "qut",
+      "record": 697,
+      "lcid": 2147483782,
+      "default_lcid": 1158,
+      "neutral": true
+    },
+    {
+      "name": "qut-GT",
+      "record": 699,
+      "lcid": 2147484806,
+      "default_lcid": 1158,
+      "neutral": false
+    },
+    {
+      "name": "quz",
+      "record": 700,
+      "lcid": 107,
+      "default_lcid": 1131,
+      "neutral": true
+    },
+    {
+      "name": "quz-BO",
+      "record": 701,
+      "lcid": 1131,
+      "default_lcid": 1131,
+      "neutral": false
+    },
+    {
+      "name": "quz-EC",
+      "record": 702,
+      "lcid": 2155,
+      "default_lcid": 2155,
+      "neutral": false
+    },
+    {
+      "name": "quz-Latn",
+      "record": 700,
+      "lcid": 2147483755,
+      "default_lcid": 1131,
+      "neutral": true
+    },
+    {
+      "name": "quz-Latn-BO",
+      "record": 701,
+      "lcid": 2147484779,
+      "default_lcid": 1131,
+      "neutral": false
+    },
+    {
+      "name": "quz-Latn-EC",
+      "record": 702,
+      "lcid": 2147485803,
+      "default_lcid": 2155,
+      "neutral": false
+    },
+    {
+      "name": "quz-Latn-PE",
+      "record": 703,
+      "lcid": 2147486827,
+      "default_lcid": 3179,
+      "neutral": false
+    },
+    {
+      "name": "quz-PE",
+      "record": 703,
+      "lcid": 3179,
+      "default_lcid": 3179,
+      "neutral": false
+    },
+    {
+      "name": "rm",
+      "record": 704,
+      "lcid": 23,
+      "default_lcid": 1047,
+      "neutral": true
+    },
+    {
+      "name": "rm-CH",
+      "record": 705,
+      "lcid": 1047,
+      "default_lcid": 1047,
+      "neutral": false
+    },
+    {
+      "name": "rn",
+      "record": 706,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "rn-BI",
+      "record": 707,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ro",
+      "record": 708,
+      "lcid": 24,
+      "default_lcid": 1048,
+      "neutral": true
+    },
+    {
+      "name": "ro-MD",
+      "record": 709,
+      "lcid": 2072,
+      "default_lcid": 2072,
+      "neutral": false
+    },
+    {
+      "name": "ro-RO",
+      "record": 710,
+      "lcid": 1048,
+      "default_lcid": 1048,
+      "neutral": false
+    },
+    {
+      "name": "rof",
+      "record": 711,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "rof-TZ",
+      "record": 712,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ru",
+      "record": 713,
+      "lcid": 25,
+      "default_lcid": 1049,
+      "neutral": true
+    },
+    {
+      "name": "ru-BY",
+      "record": 714,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ru-KG",
+      "record": 715,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ru-KZ",
+      "record": 716,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ru-MD",
+      "record": 717,
+      "lcid": 2073,
+      "default_lcid": 2073,
+      "neutral": false
+    },
+    {
+      "name": "ru-RU",
+      "record": 718,
+      "lcid": 1049,
+      "default_lcid": 1049,
+      "neutral": false
+    },
+    {
+      "name": "ru-UA",
+      "record": 719,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "rw",
+      "record": 720,
+      "lcid": 135,
+      "default_lcid": 1159,
+      "neutral": true
+    },
+    {
+      "name": "rw-RW",
+      "record": 721,
+      "lcid": 1159,
+      "default_lcid": 1159,
+      "neutral": false
+    },
+    {
+      "name": "rwk",
+      "record": 722,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "rwk-TZ",
+      "record": 723,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "sa",
+      "record": 724,
+      "lcid": 79,
+      "default_lcid": 1103,
+      "neutral": true
+    },
+    {
+      "name": "sa-Deva",
+      "record": 724,
+      "lcid": 2147483727,
+      "default_lcid": 1103,
+      "neutral": true
+    },
+    {
+      "name": "sa-Deva-IN",
+      "record": 725,
+      "lcid": 2147484751,
+      "default_lcid": 1103,
+      "neutral": false
+    },
+    {
+      "name": "sa-IN",
+      "record": 725,
+      "lcid": 1103,
+      "default_lcid": 1103,
+      "neutral": false
+    },
+    {
+      "name": "sah",
+      "record": 726,
+      "lcid": 133,
+      "default_lcid": 1157,
+      "neutral": true
+    },
+    {
+      "name": "sah-Cyrl",
+      "record": 726,
+      "lcid": 2147483781,
+      "default_lcid": 1157,
+      "neutral": true
+    },
+    {
+      "name": "sah-Cyrl-RU",
+      "record": 727,
+      "lcid": 2147484805,
+      "default_lcid": 1157,
+      "neutral": false
+    },
+    {
+      "name": "sah-RU",
+      "record": 727,
+      "lcid": 1157,
+      "default_lcid": 1157,
+      "neutral": false
+    },
+    {
+      "name": "saq",
+      "record": 728,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "saq-KE",
+      "record": 729,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "sat",
+      "record": 730,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "sat-Olck",
+      "record": 731,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "sat-Olck-IN",
+      "record": 732,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "sbp",
+      "record": 733,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "sbp-TZ",
+      "record": 734,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "sc",
+      "record": 735,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "sc-IT",
+      "record": 736,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "sd",
+      "record": 737,
+      "lcid": 89,
+      "default_lcid": 2137,
+      "neutral": true
+    },
+    {
+      "name": "sd-Arab",
+      "record": 738,
+      "lcid": 31833,
+      "default_lcid": 2137,
+      "neutral": true
+    },
+    {
+      "name": "sd-Arab-PK",
+      "record": 739,
+      "lcid": 2137,
+      "default_lcid": 2137,
+      "neutral": false
+    },
+    {
+      "name": "sd-Deva",
+      "record": 740,
+      "lcid": 4096,
+      "default_lcid": 1113,
+      "neutral": true
+    },
+    {
+      "name": "sd-Deva-IN",
+      "record": 741,
+      "lcid": 1113,
+      "default_lcid": 1113,
+      "neutral": false
+    },
+    {
+      "name": "sd-PK",
+      "record": 739,
+      "lcid": 2147485785,
+      "default_lcid": 2137,
+      "neutral": false
+    },
+    {
+      "name": "se",
+      "record": 742,
+      "lcid": 59,
+      "default_lcid": 1083,
+      "neutral": true
+    },
+    {
+      "name": "se-FI",
+      "record": 743,
+      "lcid": 3131,
+      "default_lcid": 3131,
+      "neutral": false
+    },
+    {
+      "name": "se-Latn",
+      "record": 742,
+      "lcid": 2147483707,
+      "default_lcid": 1083,
+      "neutral": true
+    },
+    {
+      "name": "se-Latn-FI",
+      "record": 743,
+      "lcid": 2147486779,
+      "default_lcid": 3131,
+      "neutral": false
+    },
+    {
+      "name": "se-Latn-NO",
+      "record": 744,
+      "lcid": 2147484731,
+      "default_lcid": 1083,
+      "neutral": false
+    },
+    {
+      "name": "se-Latn-SE",
+      "record": 745,
+      "lcid": 2147485755,
+      "default_lcid": 2107,
+      "neutral": false
+    },
+    {
+      "name": "se-NO",
+      "record": 744,
+      "lcid": 1083,
+      "default_lcid": 1083,
+      "neutral": false
+    },
+    {
+      "name": "se-SE",
+      "record": 745,
+      "lcid": 2107,
+      "default_lcid": 2107,
+      "neutral": false
+    },
+    {
+      "name": "seh",
+      "record": 746,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "seh-MZ",
+      "record": 747,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ses",
+      "record": 748,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "ses-ML",
+      "record": 749,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "sg",
+      "record": 750,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "sg-CF",
+      "record": 751,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "shi",
+      "record": 752,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "shi-Latn",
+      "record": 753,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "shi-Latn-MA",
+      "record": 754,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "shi-Tfng",
+      "record": 755,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "shi-Tfng-MA",
+      "record": 756,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "si",
+      "record": 757,
+      "lcid": 91,
+      "default_lcid": 1115,
+      "neutral": true
+    },
+    {
+      "name": "si-LK",
+      "record": 758,
+      "lcid": 1115,
+      "default_lcid": 1115,
+      "neutral": false
+    },
+    {
+      "name": "sk",
+      "record": 759,
+      "lcid": 27,
+      "default_lcid": 1051,
+      "neutral": true
+    },
+    {
+      "name": "sk-SK",
+      "record": 760,
+      "lcid": 1051,
+      "default_lcid": 1051,
+      "neutral": false
+    },
+    {
+      "name": "skr",
+      "record": 761,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "skr-PK",
+      "record": 762,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "sl",
+      "record": 763,
+      "lcid": 36,
+      "default_lcid": 1060,
+      "neutral": true
+    },
+    {
+      "name": "sl-SI",
+      "record": 764,
+      "lcid": 1060,
+      "default_lcid": 1060,
+      "neutral": false
+    },
+    {
+      "name": "sma",
+      "record": 765,
+      "lcid": 30779,
+      "default_lcid": 7227,
+      "neutral": true
+    },
+    {
+      "name": "sma-Latn",
+      "record": 765,
+      "lcid": 2147514427,
+      "default_lcid": 7227,
+      "neutral": true
+    },
+    {
+      "name": "sma-Latn-NO",
+      "record": 766,
+      "lcid": 2147489851,
+      "default_lcid": 6203,
+      "neutral": false
+    },
+    {
+      "name": "sma-Latn-SE",
+      "record": 767,
+      "lcid": 2147490875,
+      "default_lcid": 7227,
+      "neutral": false
+    },
+    {
+      "name": "sma-NO",
+      "record": 766,
+      "lcid": 6203,
+      "default_lcid": 6203,
+      "neutral": false
+    },
+    {
+      "name": "sma-SE",
+      "record": 767,
+      "lcid": 7227,
+      "default_lcid": 7227,
+      "neutral": false
+    },
+    {
+      "name": "smj",
+      "record": 768,
+      "lcid": 31803,
+      "default_lcid": 5179,
+      "neutral": true
+    },
+    {
+      "name": "smj-Latn",
+      "record": 768,
+      "lcid": 2147515451,
+      "default_lcid": 5179,
+      "neutral": true
+    },
+    {
+      "name": "smj-Latn-NO",
+      "record": 769,
+      "lcid": 2147487803,
+      "default_lcid": 4155,
+      "neutral": false
+    },
+    {
+      "name": "smj-Latn-SE",
+      "record": 770,
+      "lcid": 2147488827,
+      "default_lcid": 5179,
+      "neutral": false
+    },
+    {
+      "name": "smj-NO",
+      "record": 769,
+      "lcid": 4155,
+      "default_lcid": 4155,
+      "neutral": false
+    },
+    {
+      "name": "smj-SE",
+      "record": 770,
+      "lcid": 5179,
+      "default_lcid": 5179,
+      "neutral": false
+    },
+    {
+      "name": "smn",
+      "record": 771,
+      "lcid": 28731,
+      "default_lcid": 9275,
+      "neutral": true
+    },
+    {
+      "name": "smn-FI",
+      "record": 772,
+      "lcid": 9275,
+      "default_lcid": 9275,
+      "neutral": false
+    },
+    {
+      "name": "smn-Latn",
+      "record": 771,
+      "lcid": 2147512379,
+      "default_lcid": 9275,
+      "neutral": true
+    },
+    {
+      "name": "smn-Latn-FI",
+      "record": 772,
+      "lcid": 2147492923,
+      "default_lcid": 9275,
+      "neutral": false
+    },
+    {
+      "name": "sms",
+      "record": 773,
+      "lcid": 29755,
+      "default_lcid": 8251,
+      "neutral": true
+    },
+    {
+      "name": "sms-FI",
+      "record": 774,
+      "lcid": 8251,
+      "default_lcid": 8251,
+      "neutral": false
+    },
+    {
+      "name": "sms-Latn",
+      "record": 773,
+      "lcid": 2147513403,
+      "default_lcid": 8251,
+      "neutral": true
+    },
+    {
+      "name": "sms-Latn-FI",
+      "record": 774,
+      "lcid": 2147491899,
+      "default_lcid": 8251,
+      "neutral": false
+    },
+    {
+      "name": "sn",
+      "record": 775,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "sn-Latn",
+      "record": 776,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "sn-Latn-ZW",
+      "record": 777,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "sn-ZW",
+      "record": 777,
+      "lcid": 2147487744,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "so",
+      "record": 778,
+      "lcid": 119,
+      "default_lcid": 1143,
+      "neutral": true
+    },
+    {
+      "name": "so-DJ",
+      "record": 779,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "so-ET",
+      "record": 780,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "so-KE",
+      "record": 781,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "so-SO",
+      "record": 782,
+      "lcid": 1143,
+      "default_lcid": 1143,
+      "neutral": false
+    },
+    {
+      "name": "sq",
+      "record": 783,
+      "lcid": 28,
+      "default_lcid": 1052,
+      "neutral": true
+    },
+    {
+      "name": "sq-AL",
+      "record": 784,
+      "lcid": 1052,
+      "default_lcid": 1052,
+      "neutral": false
+    },
+    {
+      "name": "sq-MK",
+      "record": 785,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "sq-XK",
+      "record": 786,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "sr",
+      "record": 787,
+      "lcid": 31770,
+      "default_lcid": 9242,
+      "neutral": true
+    },
+    {
+      "name": "sr-Cyrl",
+      "record": 788,
+      "lcid": 27674,
+      "default_lcid": 10266,
+      "neutral": true
+    },
+    {
+      "name": "sr-Cyrl-BA",
+      "record": 789,
+      "lcid": 7194,
+      "default_lcid": 7194,
+      "neutral": false
+    },
+    {
+      "name": "sr-Cyrl-ME",
+      "record": 790,
+      "lcid": 12314,
+      "default_lcid": 12314,
+      "neutral": false
+    },
+    {
+      "name": "sr-Cyrl-RS",
+      "record": 791,
+      "lcid": 10266,
+      "default_lcid": 10266,
+      "neutral": false
+    },
+    {
+      "name": "sr-Cyrl-XK",
+      "record": 792,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "sr-Latn",
+      "record": 793,
+      "lcid": 28698,
+      "default_lcid": 9242,
+      "neutral": true
+    },
+    {
+      "name": "sr-Latn-BA",
+      "record": 794,
+      "lcid": 6170,
+      "default_lcid": 6170,
+      "neutral": false
+    },
+    {
+      "name": "sr-Latn-ME",
+      "record": 795,
+      "lcid": 11290,
+      "default_lcid": 11290,
+      "neutral": false
+    },
+    {
+      "name": "sr-Latn-RS",
+      "record": 796,
+      "lcid": 9242,
+      "default_lcid": 9242,
+      "neutral": false
+    },
+    {
+      "name": "sr-Latn-XK",
+      "record": 797,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ss",
+      "record": 798,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "ss-SZ",
+      "record": 799,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ss-ZA",
+      "record": 800,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ssy",
+      "record": 801,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "ssy-ER",
+      "record": 802,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "st",
+      "record": 803,
+      "lcid": 48,
+      "default_lcid": 1072,
+      "neutral": true
+    },
+    {
+      "name": "st-LS",
+      "record": 804,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "st-ZA",
+      "record": 805,
+      "lcid": 1072,
+      "default_lcid": 1072,
+      "neutral": false
+    },
+    {
+      "name": "su",
+      "record": 806,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "su-Latn",
+      "record": 807,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "su-Latn-ID",
+      "record": 808,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "sv",
+      "record": 809,
+      "lcid": 29,
+      "default_lcid": 1053,
+      "neutral": true
+    },
+    {
+      "name": "sv-AX",
+      "record": 810,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "sv-FI",
+      "record": 811,
+      "lcid": 2077,
+      "default_lcid": 2077,
+      "neutral": false
+    },
+    {
+      "name": "sv-SE",
+      "record": 812,
+      "lcid": 1053,
+      "default_lcid": 1053,
+      "neutral": false
+    },
+    {
+      "name": "sw",
+      "record": 813,
+      "lcid": 65,
+      "default_lcid": 1089,
+      "neutral": true
+    },
+    {
+      "name": "sw-CD",
+      "record": 814,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "sw-KE",
+      "record": 815,
+      "lcid": 1089,
+      "default_lcid": 1089,
+      "neutral": false
+    },
+    {
+      "name": "sw-TZ",
+      "record": 816,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "sw-UG",
+      "record": 817,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "swc-CD",
+      "record": 814,
+      "lcid": 2147487744,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "syr",
+      "record": 818,
+      "lcid": 90,
+      "default_lcid": 1114,
+      "neutral": true
+    },
+    {
+      "name": "syr-SY",
+      "record": 819,
+      "lcid": 1114,
+      "default_lcid": 1114,
+      "neutral": false
+    },
+    {
+      "name": "syr-Syrc",
+      "record": 818,
+      "lcid": 2147483738,
+      "default_lcid": 1114,
+      "neutral": true
+    },
+    {
+      "name": "syr-Syrc-SY",
+      "record": 819,
+      "lcid": 2147484762,
+      "default_lcid": 1114,
+      "neutral": false
+    },
+    {
+      "name": "ta",
+      "record": 820,
+      "lcid": 73,
+      "default_lcid": 1097,
+      "neutral": true
+    },
+    {
+      "name": "ta-IN",
+      "record": 821,
+      "lcid": 1097,
+      "default_lcid": 1097,
+      "neutral": false
+    },
+    {
+      "name": "ta-LK",
+      "record": 822,
+      "lcid": 2121,
+      "default_lcid": 2121,
+      "neutral": false
+    },
+    {
+      "name": "ta-MY",
+      "record": 823,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ta-SG",
+      "record": 824,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "te",
+      "record": 825,
+      "lcid": 74,
+      "default_lcid": 1098,
+      "neutral": true
+    },
+    {
+      "name": "te-IN",
+      "record": 826,
+      "lcid": 1098,
+      "default_lcid": 1098,
+      "neutral": false
+    },
+    {
+      "name": "teo",
+      "record": 827,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "teo-KE",
+      "record": 828,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "teo-UG",
+      "record": 829,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "tg",
+      "record": 830,
+      "lcid": 40,
+      "default_lcid": 1064,
+      "neutral": true
+    },
+    {
+      "name": "tg-Cyrl",
+      "record": 831,
+      "lcid": 31784,
+      "default_lcid": 1064,
+      "neutral": true
+    },
+    {
+      "name": "tg-Cyrl-TJ",
+      "record": 832,
+      "lcid": 1064,
+      "default_lcid": 1064,
+      "neutral": false
+    },
+    {
+      "name": "tg-TJ",
+      "record": 832,
+      "lcid": 2147484712,
+      "default_lcid": 1064,
+      "neutral": false
+    },
+    {
+      "name": "th",
+      "record": 833,
+      "lcid": 30,
+      "default_lcid": 1054,
+      "neutral": true
+    },
+    {
+      "name": "th-TH",
+      "record": 834,
+      "lcid": 1054,
+      "default_lcid": 1054,
+      "neutral": false
+    },
+    {
+      "name": "ti",
+      "record": 835,
+      "lcid": 115,
+      "default_lcid": 2163,
+      "neutral": true
+    },
+    {
+      "name": "ti-ER",
+      "record": 836,
+      "lcid": 2163,
+      "default_lcid": 2163,
+      "neutral": false
+    },
+    {
+      "name": "ti-ET",
+      "record": 837,
+      "lcid": 1139,
+      "default_lcid": 1139,
+      "neutral": false
+    },
+    {
+      "name": "tig",
+      "record": 838,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "tig-ER",
+      "record": 839,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "tig-Ethi-ER",
+      "record": 839,
+      "lcid": 2147487744,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "tk",
+      "record": 840,
+      "lcid": 66,
+      "default_lcid": 1090,
+      "neutral": true
+    },
+    {
+      "name": "tk-Latn",
+      "record": 840,
+      "lcid": 2147483714,
+      "default_lcid": 1090,
+      "neutral": true
+    },
+    {
+      "name": "tk-Latn-TM",
+      "record": 841,
+      "lcid": 2147484738,
+      "default_lcid": 1090,
+      "neutral": false
+    },
+    {
+      "name": "tk-TM",
+      "record": 841,
+      "lcid": 1090,
+      "default_lcid": 1090,
+      "neutral": false
+    },
+    {
+      "name": "tn",
+      "record": 842,
+      "lcid": 50,
+      "default_lcid": 1074,
+      "neutral": true
+    },
+    {
+      "name": "tn-BW",
+      "record": 843,
+      "lcid": 2098,
+      "default_lcid": 2098,
+      "neutral": false
+    },
+    {
+      "name": "tn-ZA",
+      "record": 844,
+      "lcid": 1074,
+      "default_lcid": 1074,
+      "neutral": false
+    },
+    {
+      "name": "to",
+      "record": 845,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "to-TO",
+      "record": 846,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "tr",
+      "record": 847,
+      "lcid": 31,
+      "default_lcid": 1055,
+      "neutral": true
+    },
+    {
+      "name": "tr-CY",
+      "record": 848,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "tr-TR",
+      "record": 849,
+      "lcid": 1055,
+      "default_lcid": 1055,
+      "neutral": false
+    },
+    {
+      "name": "ts",
+      "record": 850,
+      "lcid": 49,
+      "default_lcid": 1073,
+      "neutral": true
+    },
+    {
+      "name": "ts-ZA",
+      "record": 851,
+      "lcid": 1073,
+      "default_lcid": 1073,
+      "neutral": false
+    },
+    {
+      "name": "tt",
+      "record": 852,
+      "lcid": 68,
+      "default_lcid": 1092,
+      "neutral": true
+    },
+    {
+      "name": "tt-Cyrl",
+      "record": 852,
+      "lcid": 2147483716,
+      "default_lcid": 1092,
+      "neutral": true
+    },
+    {
+      "name": "tt-Cyrl-RU",
+      "record": 853,
+      "lcid": 2147484740,
+      "default_lcid": 1092,
+      "neutral": false
+    },
+    {
+      "name": "tt-RU",
+      "record": 853,
+      "lcid": 1092,
+      "default_lcid": 1092,
+      "neutral": false
+    },
+    {
+      "name": "twq",
+      "record": 854,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "twq-NE",
+      "record": 855,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "tyv",
+      "record": 856,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "tyv-RU",
+      "record": 857,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "tzm",
+      "record": 858,
+      "lcid": 95,
+      "default_lcid": 2143,
+      "neutral": true
+    },
+    {
+      "name": "tzm-DZ",
+      "record": 861,
+      "lcid": 2147485791,
+      "default_lcid": 2143,
+      "neutral": false
+    },
+    {
+      "name": "tzm-Latn",
+      "record": 859,
+      "lcid": 31839,
+      "default_lcid": 2143,
+      "neutral": true
+    },
+    {
+      "name": "tzm-Latn-DZ",
+      "record": 861,
+      "lcid": 2143,
+      "default_lcid": 2143,
+      "neutral": false
+    },
+    {
+      "name": "tzm-Latn-MA",
+      "record": 860,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "tzm-MA",
+      "record": 860,
+      "lcid": 2147487744,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ug",
+      "record": 862,
+      "lcid": 128,
+      "default_lcid": 1152,
+      "neutral": true
+    },
+    {
+      "name": "ug-Arab",
+      "record": 862,
+      "lcid": 2147483776,
+      "default_lcid": 1152,
+      "neutral": true
+    },
+    {
+      "name": "ug-Arab-CN",
+      "record": 863,
+      "lcid": 2147484800,
+      "default_lcid": 1152,
+      "neutral": false
+    },
+    {
+      "name": "ug-CN",
+      "record": 863,
+      "lcid": 1152,
+      "default_lcid": 1152,
+      "neutral": false
+    },
+    {
+      "name": "uk",
+      "record": 864,
+      "lcid": 34,
+      "default_lcid": 1058,
+      "neutral": true
+    },
+    {
+      "name": "uk-UA",
+      "record": 865,
+      "lcid": 1058,
+      "default_lcid": 1058,
+      "neutral": false
+    },
+    {
+      "name": "ur",
+      "record": 866,
+      "lcid": 32,
+      "default_lcid": 1056,
+      "neutral": true
+    },
+    {
+      "name": "ur-IN",
+      "record": 867,
+      "lcid": 2080,
+      "default_lcid": 2080,
+      "neutral": false
+    },
+    {
+      "name": "ur-PK",
+      "record": 868,
+      "lcid": 1056,
+      "default_lcid": 1056,
+      "neutral": false
+    },
+    {
+      "name": "uz",
+      "record": 869,
+      "lcid": 67,
+      "default_lcid": 1091,
+      "neutral": true
+    },
+    {
+      "name": "uz-Arab",
+      "record": 870,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "uz-Arab-AF",
+      "record": 871,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "uz-Cyrl",
+      "record": 872,
+      "lcid": 30787,
+      "default_lcid": 2115,
+      "neutral": true
+    },
+    {
+      "name": "uz-Cyrl-UZ",
+      "record": 873,
+      "lcid": 2115,
+      "default_lcid": 2115,
+      "neutral": false
+    },
+    {
+      "name": "uz-Latn",
+      "record": 874,
+      "lcid": 31811,
+      "default_lcid": 1091,
+      "neutral": true
+    },
+    {
+      "name": "uz-Latn-UZ",
+      "record": 875,
+      "lcid": 1091,
+      "default_lcid": 1091,
+      "neutral": false
+    },
+    {
+      "name": "vai",
+      "record": 876,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "vai-Latn",
+      "record": 877,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "vai-Latn-LR",
+      "record": 878,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "vai-Vaii",
+      "record": 879,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "vai-Vaii-LR",
+      "record": 880,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "ve",
+      "record": 881,
+      "lcid": 51,
+      "default_lcid": 1075,
+      "neutral": true
+    },
+    {
+      "name": "ve-ZA",
+      "record": 882,
+      "lcid": 1075,
+      "default_lcid": 1075,
+      "neutral": false
+    },
+    {
+      "name": "vi",
+      "record": 883,
+      "lcid": 42,
+      "default_lcid": 1066,
+      "neutral": true
+    },
+    {
+      "name": "vi-VN",
+      "record": 884,
+      "lcid": 1066,
+      "default_lcid": 1066,
+      "neutral": false
+    },
+    {
+      "name": "vmw",
+      "record": 885,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "vmw-MZ",
+      "record": 886,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "vo",
+      "record": 887,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "vo-001",
+      "record": 888,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "vun",
+      "record": 889,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "vun-TZ",
+      "record": 890,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "wa",
+      "record": 891,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "wa-BE",
+      "record": 892,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "wae",
+      "record": 893,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "wae-CH",
+      "record": 894,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "wal",
+      "record": 895,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "wal-ET",
+      "record": 896,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "wo",
+      "record": 897,
+      "lcid": 136,
+      "default_lcid": 1160,
+      "neutral": true
+    },
+    {
+      "name": "wo-Latn",
+      "record": 897,
+      "lcid": 2147483784,
+      "default_lcid": 1160,
+      "neutral": true
+    },
+    {
+      "name": "wo-Latn-SN",
+      "record": 898,
+      "lcid": 2147484808,
+      "default_lcid": 1160,
+      "neutral": false
+    },
+    {
+      "name": "wo-SN",
+      "record": 898,
+      "lcid": 1160,
+      "default_lcid": 1160,
+      "neutral": false
+    },
+    {
+      "name": "x-IV_mathan",
+      "record": 0,
+      "lcid": 65663,
+      "default_lcid": 1033,
+      "neutral": false
+    },
+    {
+      "name": "xh",
+      "record": 899,
+      "lcid": 52,
+      "default_lcid": 1076,
+      "neutral": true
+    },
+    {
+      "name": "xh-ZA",
+      "record": 900,
+      "lcid": 1076,
+      "default_lcid": 1076,
+      "neutral": false
+    },
+    {
+      "name": "xnr",
+      "record": 901,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "xnr-IN",
+      "record": 902,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "xog",
+      "record": 903,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "xog-UG",
+      "record": 904,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "yav",
+      "record": 905,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "yav-CM",
+      "record": 906,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "yi",
+      "record": 907,
+      "lcid": 61,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "yi-001",
+      "record": 908,
+      "lcid": 1085,
+      "default_lcid": 1085,
+      "neutral": false
+    },
+    {
+      "name": "yi-UA",
+      "record": 909,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "yo",
+      "record": 910,
+      "lcid": 106,
+      "default_lcid": 1130,
+      "neutral": true
+    },
+    {
+      "name": "yo-BJ",
+      "record": 911,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "yo-Latn",
+      "record": 910,
+      "lcid": 2147483754,
+      "default_lcid": 1130,
+      "neutral": true
+    },
+    {
+      "name": "yo-Latn-NG",
+      "record": 912,
+      "lcid": 2147484778,
+      "default_lcid": 1130,
+      "neutral": false
+    },
+    {
+      "name": "yo-NG",
+      "record": 912,
+      "lcid": 1130,
+      "default_lcid": 1130,
+      "neutral": false
+    },
+    {
+      "name": "yrl",
+      "record": 913,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "yrl-BR",
+      "record": 914,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "yrl-CO",
+      "record": 915,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "yrl-VE",
+      "record": 916,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "yue",
+      "record": 917,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "yue-Hans",
+      "record": 918,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "yue-Hans-CN",
+      "record": 919,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "yue-Hant",
+      "record": 920,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "yue-Hant-CN",
+      "record": 921,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "yue-Hant-HK",
+      "record": 922,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "za",
+      "record": 926,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "za-CN",
+      "record": 927,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "zgh",
+      "record": 923,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "zgh-MA",
+      "record": 925,
+      "lcid": 2147487744,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "zgh-Tfng",
+      "record": 924,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "zgh-Tfng-MA",
+      "record": 925,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "zh",
+      "record": 928,
+      "lcid": 30724,
+      "default_lcid": 2052,
+      "neutral": true
+    },
+    {
+      "name": "zh-CN",
+      "record": 929,
+      "lcid": 2052,
+      "default_lcid": 2052,
+      "neutral": false
+    },
+    {
+      "name": "zh-CN_phoneb",
+      "record": 929,
+      "lcid": 329732,
+      "default_lcid": 2052,
+      "neutral": false
+    },
+    {
+      "name": "zh-CN_stroke",
+      "record": 929,
+      "lcid": 133124,
+      "default_lcid": 2052,
+      "neutral": false
+    },
+    {
+      "name": "zh-Hans",
+      "record": 930,
+      "lcid": 4,
+      "default_lcid": 2052,
+      "neutral": true
+    },
+    {
+      "name": "zh-Hans-CN",
+      "record": 929,
+      "lcid": 2147485700,
+      "default_lcid": 2052,
+      "neutral": false
+    },
+    {
+      "name": "zh-Hans-CN-u-co-phonebk",
+      "record": 929,
+      "lcid": 2147813380,
+      "default_lcid": 2052,
+      "neutral": false
+    },
+    {
+      "name": "zh-Hans-CN-u-co-stroke",
+      "record": 929,
+      "lcid": 2147616772,
+      "default_lcid": 2052,
+      "neutral": false
+    },
+    {
+      "name": "zh-Hans-HK",
+      "record": 931,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "zh-Hans-MO",
+      "record": 932,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "zh-Hans-MY",
+      "record": 933,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "zh-Hans-SG",
+      "record": 940,
+      "lcid": 2147487748,
+      "default_lcid": 4100,
+      "neutral": false
+    },
+    {
+      "name": "zh-Hans-SG-u-co-phonebk",
+      "record": 940,
+      "lcid": 2147815428,
+      "default_lcid": 4100,
+      "neutral": false
+    },
+    {
+      "name": "zh-Hans-SG-u-co-stroke",
+      "record": 940,
+      "lcid": 2147618820,
+      "default_lcid": 4100,
+      "neutral": false
+    },
+    {
+      "name": "zh-Hant",
+      "record": 934,
+      "lcid": 31748,
+      "default_lcid": 3076,
+      "neutral": true
+    },
+    {
+      "name": "zh-Hant-HK",
+      "record": 938,
+      "lcid": 2147486724,
+      "default_lcid": 3076,
+      "neutral": false
+    },
+    {
+      "name": "zh-Hant-HK-u-co-unihan",
+      "record": 938,
+      "lcid": 2147748868,
+      "default_lcid": 3076,
+      "neutral": false
+    },
+    {
+      "name": "zh-Hant-MO",
+      "record": 939,
+      "lcid": 2147488772,
+      "default_lcid": 5124,
+      "neutral": false
+    },
+    {
+      "name": "zh-Hant-MO-u-co-stroke",
+      "record": 939,
+      "lcid": 2147619844,
+      "default_lcid": 5124,
+      "neutral": false
+    },
+    {
+      "name": "zh-Hant-MO-u-co-unihan",
+      "record": 939,
+      "lcid": 2147750916,
+      "default_lcid": 5124,
+      "neutral": false
+    },
+    {
+      "name": "zh-Hant-MY",
+      "record": 935,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "zh-Hant-TW",
+      "record": 941,
+      "lcid": 2147484676,
+      "default_lcid": 1028,
+      "neutral": false
+    },
+    {
+      "name": "zh-Hant-TW-u-co-phonetic",
+      "record": 941,
+      "lcid": 2147681284,
+      "default_lcid": 1028,
+      "neutral": false
+    },
+    {
+      "name": "zh-Hant-TW-u-co-unihan",
+      "record": 941,
+      "lcid": 2147746820,
+      "default_lcid": 1028,
+      "neutral": false
+    },
+    {
+      "name": "zh-HK",
+      "record": 938,
+      "lcid": 3076,
+      "default_lcid": 3076,
+      "neutral": false
+    },
+    {
+      "name": "zh-HK_radstr",
+      "record": 938,
+      "lcid": 265220,
+      "default_lcid": 3076,
+      "neutral": false
+    },
+    {
+      "name": "zh-Latn",
+      "record": 936,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": true
+    },
+    {
+      "name": "zh-Latn-CN",
+      "record": 937,
+      "lcid": 4096,
+      "default_lcid": 4096,
+      "neutral": false
+    },
+    {
+      "name": "zh-MO",
+      "record": 939,
+      "lcid": 5124,
+      "default_lcid": 5124,
+      "neutral": false
+    },
+    {
+      "name": "zh-MO_radstr",
+      "record": 939,
+      "lcid": 267268,
+      "default_lcid": 5124,
+      "neutral": false
+    },
+    {
+      "name": "zh-MO_stroke",
+      "record": 939,
+      "lcid": 136196,
+      "default_lcid": 5124,
+      "neutral": false
+    },
+    {
+      "name": "zh-SG",
+      "record": 940,
+      "lcid": 4100,
+      "default_lcid": 4100,
+      "neutral": false
+    },
+    {
+      "name": "zh-SG_phoneb",
+      "record": 940,
+      "lcid": 331780,
+      "default_lcid": 4100,
+      "neutral": false
+    },
+    {
+      "name": "zh-SG_stroke",
+      "record": 940,
+      "lcid": 135172,
+      "default_lcid": 4100,
+      "neutral": false
+    },
+    {
+      "name": "zh-TW",
+      "record": 941,
+      "lcid": 1028,
+      "default_lcid": 1028,
+      "neutral": false
+    },
+    {
+      "name": "zh-TW_pronun",
+      "record": 941,
+      "lcid": 197636,
+      "default_lcid": 1028,
+      "neutral": false
+    },
+    {
+      "name": "zh-TW_radstr",
+      "record": 941,
+      "lcid": 263172,
+      "default_lcid": 1028,
+      "neutral": false
+    },
+    {
+      "name": "zu",
+      "record": 942,
+      "lcid": 53,
+      "default_lcid": 1077,
+      "neutral": true
+    },
+    {
+      "name": "zu-ZA",
+      "record": 943,
+      "lcid": 1077,
+      "default_lcid": 1077,
+      "neutral": false
+    }
+  ],
+  "ids": [
+    {
+      "lcid": 1,
+      "canonical": "ar",
+      "specific": "ar-SA"
+    },
+    {
+      "lcid": 2,
+      "canonical": "bg",
+      "specific": "bg-BG"
+    },
+    {
+      "lcid": 3,
+      "canonical": "ca",
+      "specific": "ca-ES"
+    },
+    {
+      "lcid": 4,
+      "canonical": "zh-Hans",
+      "specific": "zh-CN"
+    },
+    {
+      "lcid": 5,
+      "canonical": "cs",
+      "specific": "cs-CZ"
+    },
+    {
+      "lcid": 6,
+      "canonical": "da",
+      "specific": "da-DK"
+    },
+    {
+      "lcid": 7,
+      "canonical": "de",
+      "specific": "de-DE"
+    },
+    {
+      "lcid": 8,
+      "canonical": "el",
+      "specific": "el-GR"
+    },
+    {
+      "lcid": 9,
+      "canonical": "en",
+      "specific": "en-US"
+    },
+    {
+      "lcid": 10,
+      "canonical": "es",
+      "specific": "es-ES"
+    },
+    {
+      "lcid": 11,
+      "canonical": "fi",
+      "specific": "fi-FI"
+    },
+    {
+      "lcid": 12,
+      "canonical": "fr",
+      "specific": "fr-FR"
+    },
+    {
+      "lcid": 13,
+      "canonical": "he",
+      "specific": "he-IL"
+    },
+    {
+      "lcid": 14,
+      "canonical": "hu",
+      "specific": "hu-HU"
+    },
+    {
+      "lcid": 15,
+      "canonical": "is",
+      "specific": "is-IS"
+    },
+    {
+      "lcid": 16,
+      "canonical": "it",
+      "specific": "it-IT"
+    },
+    {
+      "lcid": 17,
+      "canonical": "ja",
+      "specific": "ja-JP"
+    },
+    {
+      "lcid": 18,
+      "canonical": "ko",
+      "specific": "ko-KR"
+    },
+    {
+      "lcid": 19,
+      "canonical": "nl",
+      "specific": "nl-NL"
+    },
+    {
+      "lcid": 20,
+      "canonical": "no",
+      "specific": "nb-NO"
+    },
+    {
+      "lcid": 21,
+      "canonical": "pl",
+      "specific": "pl-PL"
+    },
+    {
+      "lcid": 22,
+      "canonical": "pt",
+      "specific": "pt-BR"
+    },
+    {
+      "lcid": 23,
+      "canonical": "rm",
+      "specific": "rm-CH"
+    },
+    {
+      "lcid": 24,
+      "canonical": "ro",
+      "specific": "ro-RO"
+    },
+    {
+      "lcid": 25,
+      "canonical": "ru",
+      "specific": "ru-RU"
+    },
+    {
+      "lcid": 26,
+      "canonical": "hr",
+      "specific": "hr-HR"
+    },
+    {
+      "lcid": 27,
+      "canonical": "sk",
+      "specific": "sk-SK"
+    },
+    {
+      "lcid": 28,
+      "canonical": "sq",
+      "specific": "sq-AL"
+    },
+    {
+      "lcid": 29,
+      "canonical": "sv",
+      "specific": "sv-SE"
+    },
+    {
+      "lcid": 30,
+      "canonical": "th",
+      "specific": "th-TH"
+    },
+    {
+      "lcid": 31,
+      "canonical": "tr",
+      "specific": "tr-TR"
+    },
+    {
+      "lcid": 32,
+      "canonical": "ur",
+      "specific": "ur-PK"
+    },
+    {
+      "lcid": 33,
+      "canonical": "id",
+      "specific": "id-ID"
+    },
+    {
+      "lcid": 34,
+      "canonical": "uk",
+      "specific": "uk-UA"
+    },
+    {
+      "lcid": 35,
+      "canonical": "be",
+      "specific": "be-BY"
+    },
+    {
+      "lcid": 36,
+      "canonical": "sl",
+      "specific": "sl-SI"
+    },
+    {
+      "lcid": 37,
+      "canonical": "et",
+      "specific": "et-EE"
+    },
+    {
+      "lcid": 38,
+      "canonical": "lv",
+      "specific": "lv-LV"
+    },
+    {
+      "lcid": 39,
+      "canonical": "lt",
+      "specific": "lt-LT"
+    },
+    {
+      "lcid": 40,
+      "canonical": "tg",
+      "specific": "tg-Cyrl-TJ"
+    },
+    {
+      "lcid": 41,
+      "canonical": "fa",
+      "specific": "fa-IR"
+    },
+    {
+      "lcid": 42,
+      "canonical": "vi",
+      "specific": "vi-VN"
+    },
+    {
+      "lcid": 43,
+      "canonical": "hy",
+      "specific": "hy-AM"
+    },
+    {
+      "lcid": 44,
+      "canonical": "az",
+      "specific": "az-Latn-AZ"
+    },
+    {
+      "lcid": 45,
+      "canonical": "eu",
+      "specific": "eu-ES"
+    },
+    {
+      "lcid": 46,
+      "canonical": "hsb",
+      "specific": "hsb-DE"
+    },
+    {
+      "lcid": 47,
+      "canonical": "mk",
+      "specific": "mk-MK"
+    },
+    {
+      "lcid": 48,
+      "canonical": "st",
+      "specific": "st-ZA"
+    },
+    {
+      "lcid": 49,
+      "canonical": "ts",
+      "specific": "ts-ZA"
+    },
+    {
+      "lcid": 50,
+      "canonical": "tn",
+      "specific": "tn-ZA"
+    },
+    {
+      "lcid": 51,
+      "canonical": "ve",
+      "specific": "ve-ZA"
+    },
+    {
+      "lcid": 52,
+      "canonical": "xh",
+      "specific": "xh-ZA"
+    },
+    {
+      "lcid": 53,
+      "canonical": "zu",
+      "specific": "zu-ZA"
+    },
+    {
+      "lcid": 54,
+      "canonical": "af",
+      "specific": "af-ZA"
+    },
+    {
+      "lcid": 55,
+      "canonical": "ka",
+      "specific": "ka-GE"
+    },
+    {
+      "lcid": 56,
+      "canonical": "fo",
+      "specific": "fo-FO"
+    },
+    {
+      "lcid": 57,
+      "canonical": "hi",
+      "specific": "hi-IN"
+    },
+    {
+      "lcid": 58,
+      "canonical": "mt",
+      "specific": "mt-MT"
+    },
+    {
+      "lcid": 59,
+      "canonical": "se",
+      "specific": "se-NO"
+    },
+    {
+      "lcid": 60,
+      "canonical": "ga",
+      "specific": "ga-IE"
+    },
+    {
+      "lcid": 61,
+      "canonical": "yi",
+      "specific": "yi-UA"
+    },
+    {
+      "lcid": 62,
+      "canonical": "ms",
+      "specific": "ms-MY"
+    },
+    {
+      "lcid": 63,
+      "canonical": "kk",
+      "specific": "kk-KZ"
+    },
+    {
+      "lcid": 64,
+      "canonical": "ky",
+      "specific": "ky-KG"
+    },
+    {
+      "lcid": 65,
+      "canonical": "sw",
+      "specific": "sw-KE"
+    },
+    {
+      "lcid": 66,
+      "canonical": "tk",
+      "specific": "tk-TM"
+    },
+    {
+      "lcid": 67,
+      "canonical": "uz",
+      "specific": "uz-Latn-UZ"
+    },
+    {
+      "lcid": 68,
+      "canonical": "tt",
+      "specific": "tt-RU"
+    },
+    {
+      "lcid": 69,
+      "canonical": "bn",
+      "specific": "bn-BD"
+    },
+    {
+      "lcid": 70,
+      "canonical": "pa",
+      "specific": "pa-IN"
+    },
+    {
+      "lcid": 71,
+      "canonical": "gu",
+      "specific": "gu-IN"
+    },
+    {
+      "lcid": 72,
+      "canonical": "or",
+      "specific": "or-IN"
+    },
+    {
+      "lcid": 73,
+      "canonical": "ta",
+      "specific": "ta-IN"
+    },
+    {
+      "lcid": 74,
+      "canonical": "te",
+      "specific": "te-IN"
+    },
+    {
+      "lcid": 75,
+      "canonical": "kn",
+      "specific": "kn-IN"
+    },
+    {
+      "lcid": 76,
+      "canonical": "ml",
+      "specific": "ml-IN"
+    },
+    {
+      "lcid": 77,
+      "canonical": "as",
+      "specific": "as-IN"
+    },
+    {
+      "lcid": 78,
+      "canonical": "mr",
+      "specific": "mr-IN"
+    },
+    {
+      "lcid": 79,
+      "canonical": "sa",
+      "specific": "sa-IN"
+    },
+    {
+      "lcid": 80,
+      "canonical": "mn",
+      "specific": "mn-MN"
+    },
+    {
+      "lcid": 81,
+      "canonical": "bo",
+      "specific": "bo-CN"
+    },
+    {
+      "lcid": 82,
+      "canonical": "cy",
+      "specific": "cy-GB"
+    },
+    {
+      "lcid": 83,
+      "canonical": "km",
+      "specific": "km-KH"
+    },
+    {
+      "lcid": 84,
+      "canonical": "lo",
+      "specific": "lo-LA"
+    },
+    {
+      "lcid": 85,
+      "canonical": "my",
+      "specific": "my-MM"
+    },
+    {
+      "lcid": 86,
+      "canonical": "gl",
+      "specific": "gl-ES"
+    },
+    {
+      "lcid": 87,
+      "canonical": "kok",
+      "specific": "kok-Deva-IN"
+    },
+    {
+      "lcid": 88,
+      "canonical": "mni",
+      "specific": "mni-IN"
+    },
+    {
+      "lcid": 89,
+      "canonical": "sd",
+      "specific": "sd-Arab-PK"
+    },
+    {
+      "lcid": 90,
+      "canonical": "syr",
+      "specific": "syr-SY"
+    },
+    {
+      "lcid": 91,
+      "canonical": "si",
+      "specific": "si-LK"
+    },
+    {
+      "lcid": 92,
+      "canonical": "chr",
+      "specific": "chr-Cher-US"
+    },
+    {
+      "lcid": 93,
+      "canonical": "iu",
+      "specific": "iu-Latn-CA"
+    },
+    {
+      "lcid": 94,
+      "canonical": "am",
+      "specific": "am-ET"
+    },
+    {
+      "lcid": 95,
+      "canonical": "tzm",
+      "specific": "tzm-Latn-DZ"
+    },
+    {
+      "lcid": 96,
+      "canonical": "ks",
+      "specific": "ks-Arab-IN"
+    },
+    {
+      "lcid": 97,
+      "canonical": "ne",
+      "specific": "ne-NP"
+    },
+    {
+      "lcid": 98,
+      "canonical": "fy",
+      "specific": "fy-NL"
+    },
+    {
+      "lcid": 99,
+      "canonical": "ps",
+      "specific": "ps-AF"
+    },
+    {
+      "lcid": 100,
+      "canonical": "fil",
+      "specific": "fil-PH"
+    },
+    {
+      "lcid": 101,
+      "canonical": "dv",
+      "specific": "dv-MV"
+    },
+    {
+      "lcid": 102,
+      "canonical": "bin",
+      "specific": "bin-NG"
+    },
+    {
+      "lcid": 103,
+      "canonical": "ff",
+      "specific": "ff-Latn-SN"
+    },
+    {
+      "lcid": 104,
+      "canonical": "ha",
+      "specific": "ha-Latn-NG"
+    },
+    {
+      "lcid": 106,
+      "canonical": "yo",
+      "specific": "yo-NG"
+    },
+    {
+      "lcid": 107,
+      "canonical": "quz",
+      "specific": "quz-BO"
+    },
+    {
+      "lcid": 108,
+      "canonical": "nso",
+      "specific": "nso-ZA"
+    },
+    {
+      "lcid": 109,
+      "canonical": "ba",
+      "specific": "ba-RU"
+    },
+    {
+      "lcid": 110,
+      "canonical": "lb",
+      "specific": "lb-LU"
+    },
+    {
+      "lcid": 111,
+      "canonical": "kl",
+      "specific": "kl-GL"
+    },
+    {
+      "lcid": 112,
+      "canonical": "ig",
+      "specific": "ig-NG"
+    },
+    {
+      "lcid": 113,
+      "canonical": "kr",
+      "specific": "kr-Latn-NG"
+    },
+    {
+      "lcid": 114,
+      "canonical": "om",
+      "specific": "om-ET"
+    },
+    {
+      "lcid": 115,
+      "canonical": "ti",
+      "specific": "ti-ER"
+    },
+    {
+      "lcid": 116,
+      "canonical": "gn",
+      "specific": "gn-PY"
+    },
+    {
+      "lcid": 117,
+      "canonical": "haw",
+      "specific": "haw-US"
+    },
+    {
+      "lcid": 118,
+      "canonical": "la",
+      "specific": "la-VA"
+    },
+    {
+      "lcid": 119,
+      "canonical": "so",
+      "specific": "so-SO"
+    },
+    {
+      "lcid": 120,
+      "canonical": "ii",
+      "specific": "ii-CN"
+    },
+    {
+      "lcid": 121,
+      "canonical": "pap",
+      "specific": "pap"
+    },
+    {
+      "lcid": 122,
+      "canonical": "arn",
+      "specific": "arn-CL"
+    },
+    {
+      "lcid": 124,
+      "canonical": "moh",
+      "specific": "moh-CA"
+    },
+    {
+      "lcid": 126,
+      "canonical": "br",
+      "specific": "br-FR"
+    },
+    {
+      "lcid": 127,
+      "canonical": "",
+      "specific": ""
+    },
+    {
+      "lcid": 128,
+      "canonical": "ug",
+      "specific": "ug-CN"
+    },
+    {
+      "lcid": 129,
+      "canonical": "mi",
+      "specific": "mi-NZ"
+    },
+    {
+      "lcid": 130,
+      "canonical": "oc",
+      "specific": "oc-FR"
+    },
+    {
+      "lcid": 131,
+      "canonical": "co",
+      "specific": "co-FR"
+    },
+    {
+      "lcid": 132,
+      "canonical": "gsw",
+      "specific": "gsw-CH"
+    },
+    {
+      "lcid": 133,
+      "canonical": "sah",
+      "specific": "sah-RU"
+    },
+    {
+      "lcid": 134,
+      "canonical": "quc",
+      "specific": "quc-Latn-GT"
+    },
+    {
+      "lcid": 135,
+      "canonical": "rw",
+      "specific": "rw-RW"
+    },
+    {
+      "lcid": 136,
+      "canonical": "wo",
+      "specific": "wo-SN"
+    },
+    {
+      "lcid": 140,
+      "canonical": "prs",
+      "specific": "prs-AF"
+    },
+    {
+      "lcid": 145,
+      "canonical": "gd",
+      "specific": "gd-GB"
+    },
+    {
+      "lcid": 146,
+      "canonical": "ku",
+      "specific": "ku-Arab-IQ"
+    },
+    {
+      "lcid": 1025,
+      "canonical": "ar-SA",
+      "specific": "ar-SA"
+    },
+    {
+      "lcid": 1026,
+      "canonical": "bg-BG",
+      "specific": "bg-BG"
+    },
+    {
+      "lcid": 1027,
+      "canonical": "ca-ES",
+      "specific": "ca-ES"
+    },
+    {
+      "lcid": 1028,
+      "canonical": "zh-TW",
+      "specific": "zh-TW"
+    },
+    {
+      "lcid": 1029,
+      "canonical": "cs-CZ",
+      "specific": "cs-CZ"
+    },
+    {
+      "lcid": 1030,
+      "canonical": "da-DK",
+      "specific": "da-DK"
+    },
+    {
+      "lcid": 1031,
+      "canonical": "de-DE",
+      "specific": "de-DE"
+    },
+    {
+      "lcid": 1032,
+      "canonical": "el-GR",
+      "specific": "el-GR"
+    },
+    {
+      "lcid": 1033,
+      "canonical": "en-US",
+      "specific": "en-US"
+    },
+    {
+      "lcid": 1034,
+      "canonical": "es-ES_tradnl",
+      "specific": "es-ES_tradnl"
+    },
+    {
+      "lcid": 1035,
+      "canonical": "fi-FI",
+      "specific": "fi-FI"
+    },
+    {
+      "lcid": 1036,
+      "canonical": "fr-FR",
+      "specific": "fr-FR"
+    },
+    {
+      "lcid": 1037,
+      "canonical": "he-IL",
+      "specific": "he-IL"
+    },
+    {
+      "lcid": 1038,
+      "canonical": "hu-HU",
+      "specific": "hu-HU"
+    },
+    {
+      "lcid": 1039,
+      "canonical": "is-IS",
+      "specific": "is-IS"
+    },
+    {
+      "lcid": 1040,
+      "canonical": "it-IT",
+      "specific": "it-IT"
+    },
+    {
+      "lcid": 1041,
+      "canonical": "ja-JP",
+      "specific": "ja-JP"
+    },
+    {
+      "lcid": 1042,
+      "canonical": "ko-KR",
+      "specific": "ko-KR"
+    },
+    {
+      "lcid": 1043,
+      "canonical": "nl-NL",
+      "specific": "nl-NL"
+    },
+    {
+      "lcid": 1044,
+      "canonical": "nb-NO",
+      "specific": "nb-NO"
+    },
+    {
+      "lcid": 1045,
+      "canonical": "pl-PL",
+      "specific": "pl-PL"
+    },
+    {
+      "lcid": 1046,
+      "canonical": "pt-BR",
+      "specific": "pt-BR"
+    },
+    {
+      "lcid": 1047,
+      "canonical": "rm-CH",
+      "specific": "rm-CH"
+    },
+    {
+      "lcid": 1048,
+      "canonical": "ro-RO",
+      "specific": "ro-RO"
+    },
+    {
+      "lcid": 1049,
+      "canonical": "ru-RU",
+      "specific": "ru-RU"
+    },
+    {
+      "lcid": 1050,
+      "canonical": "hr-HR",
+      "specific": "hr-HR"
+    },
+    {
+      "lcid": 1051,
+      "canonical": "sk-SK",
+      "specific": "sk-SK"
+    },
+    {
+      "lcid": 1052,
+      "canonical": "sq-AL",
+      "specific": "sq-AL"
+    },
+    {
+      "lcid": 1053,
+      "canonical": "sv-SE",
+      "specific": "sv-SE"
+    },
+    {
+      "lcid": 1054,
+      "canonical": "th-TH",
+      "specific": "th-TH"
+    },
+    {
+      "lcid": 1055,
+      "canonical": "tr-TR",
+      "specific": "tr-TR"
+    },
+    {
+      "lcid": 1056,
+      "canonical": "ur-PK",
+      "specific": "ur-PK"
+    },
+    {
+      "lcid": 1057,
+      "canonical": "id-ID",
+      "specific": "id-ID"
+    },
+    {
+      "lcid": 1058,
+      "canonical": "uk-UA",
+      "specific": "uk-UA"
+    },
+    {
+      "lcid": 1059,
+      "canonical": "be-BY",
+      "specific": "be-BY"
+    },
+    {
+      "lcid": 1060,
+      "canonical": "sl-SI",
+      "specific": "sl-SI"
+    },
+    {
+      "lcid": 1061,
+      "canonical": "et-EE",
+      "specific": "et-EE"
+    },
+    {
+      "lcid": 1062,
+      "canonical": "lv-LV",
+      "specific": "lv-LV"
+    },
+    {
+      "lcid": 1063,
+      "canonical": "lt-LT",
+      "specific": "lt-LT"
+    },
+    {
+      "lcid": 1064,
+      "canonical": "tg-Cyrl-TJ",
+      "specific": "tg-Cyrl-TJ"
+    },
+    {
+      "lcid": 1065,
+      "canonical": "fa-IR",
+      "specific": "fa-IR"
+    },
+    {
+      "lcid": 1066,
+      "canonical": "vi-VN",
+      "specific": "vi-VN"
+    },
+    {
+      "lcid": 1067,
+      "canonical": "hy-AM",
+      "specific": "hy-AM"
+    },
+    {
+      "lcid": 1068,
+      "canonical": "az-Latn-AZ",
+      "specific": "az-Latn-AZ"
+    },
+    {
+      "lcid": 1069,
+      "canonical": "eu-ES",
+      "specific": "eu-ES"
+    },
+    {
+      "lcid": 1070,
+      "canonical": "hsb-DE",
+      "specific": "hsb-DE"
+    },
+    {
+      "lcid": 1071,
+      "canonical": "mk-MK",
+      "specific": "mk-MK"
+    },
+    {
+      "lcid": 1072,
+      "canonical": "st-ZA",
+      "specific": "st-ZA"
+    },
+    {
+      "lcid": 1073,
+      "canonical": "ts-ZA",
+      "specific": "ts-ZA"
+    },
+    {
+      "lcid": 1074,
+      "canonical": "tn-ZA",
+      "specific": "tn-ZA"
+    },
+    {
+      "lcid": 1075,
+      "canonical": "ve-ZA",
+      "specific": "ve-ZA"
+    },
+    {
+      "lcid": 1076,
+      "canonical": "xh-ZA",
+      "specific": "xh-ZA"
+    },
+    {
+      "lcid": 1077,
+      "canonical": "zu-ZA",
+      "specific": "zu-ZA"
+    },
+    {
+      "lcid": 1078,
+      "canonical": "af-ZA",
+      "specific": "af-ZA"
+    },
+    {
+      "lcid": 1079,
+      "canonical": "ka-GE",
+      "specific": "ka-GE"
+    },
+    {
+      "lcid": 1080,
+      "canonical": "fo-FO",
+      "specific": "fo-FO"
+    },
+    {
+      "lcid": 1081,
+      "canonical": "hi-IN",
+      "specific": "hi-IN"
+    },
+    {
+      "lcid": 1082,
+      "canonical": "mt-MT",
+      "specific": "mt-MT"
+    },
+    {
+      "lcid": 1083,
+      "canonical": "se-NO",
+      "specific": "se-NO"
+    },
+    {
+      "lcid": 1085,
+      "canonical": "yi-001",
+      "specific": "yi-001"
+    },
+    {
+      "lcid": 1086,
+      "canonical": "ms-MY",
+      "specific": "ms-MY"
+    },
+    {
+      "lcid": 1087,
+      "canonical": "kk-KZ",
+      "specific": "kk-KZ"
+    },
+    {
+      "lcid": 1088,
+      "canonical": "ky-KG",
+      "specific": "ky-KG"
+    },
+    {
+      "lcid": 1089,
+      "canonical": "sw-KE",
+      "specific": "sw-KE"
+    },
+    {
+      "lcid": 1090,
+      "canonical": "tk-TM",
+      "specific": "tk-TM"
+    },
+    {
+      "lcid": 1091,
+      "canonical": "uz-Latn-UZ",
+      "specific": "uz-Latn-UZ"
+    },
+    {
+      "lcid": 1092,
+      "canonical": "tt-RU",
+      "specific": "tt-RU"
+    },
+    {
+      "lcid": 1093,
+      "canonical": "bn-IN",
+      "specific": "bn-IN"
+    },
+    {
+      "lcid": 1094,
+      "canonical": "pa-IN",
+      "specific": "pa-IN"
+    },
+    {
+      "lcid": 1095,
+      "canonical": "gu-IN",
+      "specific": "gu-IN"
+    },
+    {
+      "lcid": 1096,
+      "canonical": "or-IN",
+      "specific": "or-IN"
+    },
+    {
+      "lcid": 1097,
+      "canonical": "ta-IN",
+      "specific": "ta-IN"
+    },
+    {
+      "lcid": 1098,
+      "canonical": "te-IN",
+      "specific": "te-IN"
+    },
+    {
+      "lcid": 1099,
+      "canonical": "kn-IN",
+      "specific": "kn-IN"
+    },
+    {
+      "lcid": 1100,
+      "canonical": "ml-IN",
+      "specific": "ml-IN"
+    },
+    {
+      "lcid": 1101,
+      "canonical": "as-IN",
+      "specific": "as-IN"
+    },
+    {
+      "lcid": 1102,
+      "canonical": "mr-IN",
+      "specific": "mr-IN"
+    },
+    {
+      "lcid": 1103,
+      "canonical": "sa-IN",
+      "specific": "sa-IN"
+    },
+    {
+      "lcid": 1104,
+      "canonical": "mn-MN",
+      "specific": "mn-MN"
+    },
+    {
+      "lcid": 1105,
+      "canonical": "bo-CN",
+      "specific": "bo-CN"
+    },
+    {
+      "lcid": 1106,
+      "canonical": "cy-GB",
+      "specific": "cy-GB"
+    },
+    {
+      "lcid": 1107,
+      "canonical": "km-KH",
+      "specific": "km-KH"
+    },
+    {
+      "lcid": 1108,
+      "canonical": "lo-LA",
+      "specific": "lo-LA"
+    },
+    {
+      "lcid": 1109,
+      "canonical": "my-MM",
+      "specific": "my-MM"
+    },
+    {
+      "lcid": 1110,
+      "canonical": "gl-ES",
+      "specific": "gl-ES"
+    },
+    {
+      "lcid": 1111,
+      "canonical": "kok-Deva-IN",
+      "specific": "kok-Deva-IN"
+    },
+    {
+      "lcid": 1112,
+      "canonical": "mni-IN",
+      "specific": "mni-IN"
+    },
+    {
+      "lcid": 1113,
+      "canonical": "sd-Deva-IN",
+      "specific": "sd-Deva-IN"
+    },
+    {
+      "lcid": 1114,
+      "canonical": "syr-SY",
+      "specific": "syr-SY"
+    },
+    {
+      "lcid": 1115,
+      "canonical": "si-LK",
+      "specific": "si-LK"
+    },
+    {
+      "lcid": 1116,
+      "canonical": "chr-Cher-US",
+      "specific": "chr-Cher-US"
+    },
+    {
+      "lcid": 1117,
+      "canonical": "iu-Cans-CA",
+      "specific": "iu-Cans-CA"
+    },
+    {
+      "lcid": 1118,
+      "canonical": "am-ET",
+      "specific": "am-ET"
+    },
+    {
+      "lcid": 1120,
+      "canonical": "ks-Arab",
+      "specific": "ks-Arab-IN"
+    },
+    {
+      "lcid": 1121,
+      "canonical": "ne-NP",
+      "specific": "ne-NP"
+    },
+    {
+      "lcid": 1122,
+      "canonical": "fy-NL",
+      "specific": "fy-NL"
+    },
+    {
+      "lcid": 1123,
+      "canonical": "ps-AF",
+      "specific": "ps-AF"
+    },
+    {
+      "lcid": 1124,
+      "canonical": "fil-PH",
+      "specific": "fil-PH"
+    },
+    {
+      "lcid": 1125,
+      "canonical": "dv-MV",
+      "specific": "dv-MV"
+    },
+    {
+      "lcid": 1126,
+      "canonical": "bin-NG",
+      "specific": "bin-NG"
+    },
+    {
+      "lcid": 1127,
+      "canonical": "ff-Latn-NG",
+      "specific": "ff-Latn-NG"
+    },
+    {
+      "lcid": 1128,
+      "canonical": "ha-Latn-NG",
+      "specific": "ha-Latn-NG"
+    },
+    {
+      "lcid": 1130,
+      "canonical": "yo-NG",
+      "specific": "yo-NG"
+    },
+    {
+      "lcid": 1131,
+      "canonical": "quz-BO",
+      "specific": "quz-BO"
+    },
+    {
+      "lcid": 1132,
+      "canonical": "nso-ZA",
+      "specific": "nso-ZA"
+    },
+    {
+      "lcid": 1133,
+      "canonical": "ba-RU",
+      "specific": "ba-RU"
+    },
+    {
+      "lcid": 1134,
+      "canonical": "lb-LU",
+      "specific": "lb-LU"
+    },
+    {
+      "lcid": 1135,
+      "canonical": "kl-GL",
+      "specific": "kl-GL"
+    },
+    {
+      "lcid": 1136,
+      "canonical": "ig-NG",
+      "specific": "ig-NG"
+    },
+    {
+      "lcid": 1137,
+      "canonical": "kr-Latn-NG",
+      "specific": "kr-Latn-NG"
+    },
+    {
+      "lcid": 1138,
+      "canonical": "om-ET",
+      "specific": "om-ET"
+    },
+    {
+      "lcid": 1139,
+      "canonical": "ti-ET",
+      "specific": "ti-ET"
+    },
+    {
+      "lcid": 1140,
+      "canonical": "gn-PY",
+      "specific": "gn-PY"
+    },
+    {
+      "lcid": 1141,
+      "canonical": "haw-US",
+      "specific": "haw-US"
+    },
+    {
+      "lcid": 1142,
+      "canonical": "la-VA",
+      "specific": "la-VA"
+    },
+    {
+      "lcid": 1143,
+      "canonical": "so-SO",
+      "specific": "so-SO"
+    },
+    {
+      "lcid": 1144,
+      "canonical": "ii-CN",
+      "specific": "ii-CN"
+    },
+    {
+      "lcid": 1146,
+      "canonical": "arn-CL",
+      "specific": "arn-CL"
+    },
+    {
+      "lcid": 1148,
+      "canonical": "moh-CA",
+      "specific": "moh-CA"
+    },
+    {
+      "lcid": 1150,
+      "canonical": "br-FR",
+      "specific": "br-FR"
+    },
+    {
+      "lcid": 1152,
+      "canonical": "ug-CN",
+      "specific": "ug-CN"
+    },
+    {
+      "lcid": 1153,
+      "canonical": "mi-NZ",
+      "specific": "mi-NZ"
+    },
+    {
+      "lcid": 1154,
+      "canonical": "oc-FR",
+      "specific": "oc-FR"
+    },
+    {
+      "lcid": 1155,
+      "canonical": "co-FR",
+      "specific": "co-FR"
+    },
+    {
+      "lcid": 1156,
+      "canonical": "gsw-FR",
+      "specific": "gsw-FR"
+    },
+    {
+      "lcid": 1157,
+      "canonical": "sah-RU",
+      "specific": "sah-RU"
+    },
+    {
+      "lcid": 1158,
+      "canonical": "quc-Latn-GT",
+      "specific": "quc-Latn-GT"
+    },
+    {
+      "lcid": 1159,
+      "canonical": "rw-RW",
+      "specific": "rw-RW"
+    },
+    {
+      "lcid": 1160,
+      "canonical": "wo-SN",
+      "specific": "wo-SN"
+    },
+    {
+      "lcid": 1164,
+      "canonical": "prs-AF",
+      "specific": "prs-AF"
+    },
+    {
+      "lcid": 1169,
+      "canonical": "gd-GB",
+      "specific": "gd-GB"
+    },
+    {
+      "lcid": 1170,
+      "canonical": "ku-Arab-IQ",
+      "specific": "ku-Arab-IQ"
+    },
+    {
+      "lcid": 2049,
+      "canonical": "ar-IQ",
+      "specific": "ar-IQ"
+    },
+    {
+      "lcid": 2051,
+      "canonical": "ca-ES-valencia",
+      "specific": "ca-ES-valencia"
+    },
+    {
+      "lcid": 2052,
+      "canonical": "zh-CN",
+      "specific": "zh-CN"
+    },
+    {
+      "lcid": 2055,
+      "canonical": "de-CH",
+      "specific": "de-CH"
+    },
+    {
+      "lcid": 2057,
+      "canonical": "en-GB",
+      "specific": "en-GB"
+    },
+    {
+      "lcid": 2058,
+      "canonical": "es-MX",
+      "specific": "es-MX"
+    },
+    {
+      "lcid": 2060,
+      "canonical": "fr-BE",
+      "specific": "fr-BE"
+    },
+    {
+      "lcid": 2064,
+      "canonical": "it-CH",
+      "specific": "it-CH"
+    },
+    {
+      "lcid": 2067,
+      "canonical": "nl-BE",
+      "specific": "nl-BE"
+    },
+    {
+      "lcid": 2068,
+      "canonical": "nn-NO",
+      "specific": "nn-NO"
+    },
+    {
+      "lcid": 2070,
+      "canonical": "pt-PT",
+      "specific": "pt-PT"
+    },
+    {
+      "lcid": 2072,
+      "canonical": "ro-MD",
+      "specific": "ro-MD"
+    },
+    {
+      "lcid": 2073,
+      "canonical": "ru-MD",
+      "specific": "ru-MD"
+    },
+    {
+      "lcid": 2077,
+      "canonical": "sv-FI",
+      "specific": "sv-FI"
+    },
+    {
+      "lcid": 2080,
+      "canonical": "ur-IN",
+      "specific": "ur-IN"
+    },
+    {
+      "lcid": 2092,
+      "canonical": "az-Cyrl-AZ",
+      "specific": "az-Cyrl-AZ"
+    },
+    {
+      "lcid": 2094,
+      "canonical": "dsb-DE",
+      "specific": "dsb-DE"
+    },
+    {
+      "lcid": 2098,
+      "canonical": "tn-BW",
+      "specific": "tn-BW"
+    },
+    {
+      "lcid": 2107,
+      "canonical": "se-SE",
+      "specific": "se-SE"
+    },
+    {
+      "lcid": 2108,
+      "canonical": "ga-IE",
+      "specific": "ga-IE"
+    },
+    {
+      "lcid": 2110,
+      "canonical": "ms-BN",
+      "specific": "ms-BN"
+    },
+    {
+      "lcid": 2115,
+      "canonical": "uz-Cyrl-UZ",
+      "specific": "uz-Cyrl-UZ"
+    },
+    {
+      "lcid": 2117,
+      "canonical": "bn-BD",
+      "specific": "bn-BD"
+    },
+    {
+      "lcid": 2118,
+      "canonical": "pa-Arab-PK",
+      "specific": "pa-Arab-PK"
+    },
+    {
+      "lcid": 2121,
+      "canonical": "ta-LK",
+      "specific": "ta-LK"
+    },
+    {
+      "lcid": 2128,
+      "canonical": "mn-Mong-CN",
+      "specific": "mn-Mong-CN"
+    },
+    {
+      "lcid": 2137,
+      "canonical": "sd-Arab-PK",
+      "specific": "sd-Arab-PK"
+    },
+    {
+      "lcid": 2141,
+      "canonical": "iu-Latn-CA",
+      "specific": "iu-Latn-CA"
+    },
+    {
+      "lcid": 2143,
+      "canonical": "tzm-Latn-DZ",
+      "specific": "tzm-Latn-DZ"
+    },
+    {
+      "lcid": 2144,
+      "canonical": "ks-Deva-IN",
+      "specific": "ks-Deva-IN"
+    },
+    {
+      "lcid": 2145,
+      "canonical": "ne-IN",
+      "specific": "ne-IN"
+    },
+    {
+      "lcid": 2151,
+      "canonical": "ff-Latn-SN",
+      "specific": "ff-Latn-SN"
+    },
+    {
+      "lcid": 2155,
+      "canonical": "quz-EC",
+      "specific": "quz-EC"
+    },
+    {
+      "lcid": 2163,
+      "canonical": "ti-ER",
+      "specific": "ti-ER"
+    },
+    {
+      "lcid": 3073,
+      "canonical": "ar-EG",
+      "specific": "ar-EG"
+    },
+    {
+      "lcid": 3076,
+      "canonical": "zh-HK",
+      "specific": "zh-HK"
+    },
+    {
+      "lcid": 3079,
+      "canonical": "de-AT",
+      "specific": "de-AT"
+    },
+    {
+      "lcid": 3081,
+      "canonical": "en-AU",
+      "specific": "en-AU"
+    },
+    {
+      "lcid": 3082,
+      "canonical": "es-ES",
+      "specific": "es-ES"
+    },
+    {
+      "lcid": 3084,
+      "canonical": "fr-CA",
+      "specific": "fr-CA"
+    },
+    {
+      "lcid": 3131,
+      "canonical": "se-FI",
+      "specific": "se-FI"
+    },
+    {
+      "lcid": 3152,
+      "canonical": "mn-Mong-MN",
+      "specific": "mn-Mong-MN"
+    },
+    {
+      "lcid": 3153,
+      "canonical": "dz-BT",
+      "specific": "dz-BT"
+    },
+    {
+      "lcid": 3179,
+      "canonical": "quz-PE",
+      "specific": "quz-PE"
+    },
+    {
+      "lcid": 4097,
+      "canonical": "ar-LY",
+      "specific": "ar-LY"
+    },
+    {
+      "lcid": 4100,
+      "canonical": "zh-SG",
+      "specific": "zh-SG"
+    },
+    {
+      "lcid": 4103,
+      "canonical": "de-LU",
+      "specific": "de-LU"
+    },
+    {
+      "lcid": 4105,
+      "canonical": "en-CA",
+      "specific": "en-CA"
+    },
+    {
+      "lcid": 4106,
+      "canonical": "es-GT",
+      "specific": "es-GT"
+    },
+    {
+      "lcid": 4108,
+      "canonical": "fr-CH",
+      "specific": "fr-CH"
+    },
+    {
+      "lcid": 4122,
+      "canonical": "hr-BA",
+      "specific": "hr-BA"
+    },
+    {
+      "lcid": 4155,
+      "canonical": "smj-NO",
+      "specific": "smj-NO"
+    },
+    {
+      "lcid": 5121,
+      "canonical": "ar-DZ",
+      "specific": "ar-DZ"
+    },
+    {
+      "lcid": 5124,
+      "canonical": "zh-MO",
+      "specific": "zh-MO"
+    },
+    {
+      "lcid": 5127,
+      "canonical": "de-LI",
+      "specific": "de-LI"
+    },
+    {
+      "lcid": 5129,
+      "canonical": "en-NZ",
+      "specific": "en-NZ"
+    },
+    {
+      "lcid": 5130,
+      "canonical": "es-CR",
+      "specific": "es-CR"
+    },
+    {
+      "lcid": 5132,
+      "canonical": "fr-LU",
+      "specific": "fr-LU"
+    },
+    {
+      "lcid": 5146,
+      "canonical": "bs-Latn-BA",
+      "specific": "bs-Latn-BA"
+    },
+    {
+      "lcid": 5179,
+      "canonical": "smj-SE",
+      "specific": "smj-SE"
+    },
+    {
+      "lcid": 6145,
+      "canonical": "ar-MA",
+      "specific": "ar-MA"
+    },
+    {
+      "lcid": 6153,
+      "canonical": "en-IE",
+      "specific": "en-IE"
+    },
+    {
+      "lcid": 6154,
+      "canonical": "es-PA",
+      "specific": "es-PA"
+    },
+    {
+      "lcid": 6156,
+      "canonical": "fr-MC",
+      "specific": "fr-MC"
+    },
+    {
+      "lcid": 6170,
+      "canonical": "sr-Latn-BA",
+      "specific": "sr-Latn-BA"
+    },
+    {
+      "lcid": 6203,
+      "canonical": "sma-NO",
+      "specific": "sma-NO"
+    },
+    {
+      "lcid": 7169,
+      "canonical": "ar-TN",
+      "specific": "ar-TN"
+    },
+    {
+      "lcid": 7177,
+      "canonical": "en-ZA",
+      "specific": "en-ZA"
+    },
+    {
+      "lcid": 7178,
+      "canonical": "es-DO",
+      "specific": "es-DO"
+    },
+    {
+      "lcid": 7180,
+      "canonical": "fr-029",
+      "specific": "fr-029"
+    },
+    {
+      "lcid": 7194,
+      "canonical": "sr-Cyrl-BA",
+      "specific": "sr-Cyrl-BA"
+    },
+    {
+      "lcid": 7227,
+      "canonical": "sma-SE",
+      "specific": "sma-SE"
+    },
+    {
+      "lcid": 8193,
+      "canonical": "ar-OM",
+      "specific": "ar-OM"
+    },
+    {
+      "lcid": 8201,
+      "canonical": "en-JM",
+      "specific": "en-JM"
+    },
+    {
+      "lcid": 8202,
+      "canonical": "es-VE",
+      "specific": "es-VE"
+    },
+    {
+      "lcid": 8204,
+      "canonical": "fr-RE",
+      "specific": "fr-RE"
+    },
+    {
+      "lcid": 8218,
+      "canonical": "bs-Cyrl-BA",
+      "specific": "bs-Cyrl-BA"
+    },
+    {
+      "lcid": 8251,
+      "canonical": "sms-FI",
+      "specific": "sms-FI"
+    },
+    {
+      "lcid": 9217,
+      "canonical": "ar-YE",
+      "specific": "ar-YE"
+    },
+    {
+      "lcid": 9225,
+      "canonical": "en-029",
+      "specific": "en-029"
+    },
+    {
+      "lcid": 9226,
+      "canonical": "es-CO",
+      "specific": "es-CO"
+    },
+    {
+      "lcid": 9228,
+      "canonical": "fr-CD",
+      "specific": "fr-CD"
+    },
+    {
+      "lcid": 9242,
+      "canonical": "sr-Latn-RS",
+      "specific": "sr-Latn-RS"
+    },
+    {
+      "lcid": 9275,
+      "canonical": "smn-FI",
+      "specific": "smn-FI"
+    },
+    {
+      "lcid": 10241,
+      "canonical": "ar-SY",
+      "specific": "ar-SY"
+    },
+    {
+      "lcid": 10249,
+      "canonical": "en-BZ",
+      "specific": "en-BZ"
+    },
+    {
+      "lcid": 10250,
+      "canonical": "es-PE",
+      "specific": "es-PE"
+    },
+    {
+      "lcid": 10252,
+      "canonical": "fr-SN",
+      "specific": "fr-SN"
+    },
+    {
+      "lcid": 10266,
+      "canonical": "sr-Cyrl-RS",
+      "specific": "sr-Cyrl-RS"
+    },
+    {
+      "lcid": 11265,
+      "canonical": "ar-JO",
+      "specific": "ar-JO"
+    },
+    {
+      "lcid": 11273,
+      "canonical": "en-TT",
+      "specific": "en-TT"
+    },
+    {
+      "lcid": 11274,
+      "canonical": "es-AR",
+      "specific": "es-AR"
+    },
+    {
+      "lcid": 11276,
+      "canonical": "fr-CM",
+      "specific": "fr-CM"
+    },
+    {
+      "lcid": 11290,
+      "canonical": "sr-Latn-ME",
+      "specific": "sr-Latn-ME"
+    },
+    {
+      "lcid": 12289,
+      "canonical": "ar-LB",
+      "specific": "ar-LB"
+    },
+    {
+      "lcid": 12297,
+      "canonical": "en-ZW",
+      "specific": "en-ZW"
+    },
+    {
+      "lcid": 12298,
+      "canonical": "es-EC",
+      "specific": "es-EC"
+    },
+    {
+      "lcid": 12300,
+      "canonical": "fr-CI",
+      "specific": "fr-CI"
+    },
+    {
+      "lcid": 12314,
+      "canonical": "sr-Cyrl-ME",
+      "specific": "sr-Cyrl-ME"
+    },
+    {
+      "lcid": 13313,
+      "canonical": "ar-KW",
+      "specific": "ar-KW"
+    },
+    {
+      "lcid": 13321,
+      "canonical": "en-PH",
+      "specific": "en-PH"
+    },
+    {
+      "lcid": 13322,
+      "canonical": "es-CL",
+      "specific": "es-CL"
+    },
+    {
+      "lcid": 13324,
+      "canonical": "fr-ML",
+      "specific": "fr-ML"
+    },
+    {
+      "lcid": 14337,
+      "canonical": "ar-AE",
+      "specific": "ar-AE"
+    },
+    {
+      "lcid": 14345,
+      "canonical": "en-ID",
+      "specific": "en-ID"
+    },
+    {
+      "lcid": 14346,
+      "canonical": "es-UY",
+      "specific": "es-UY"
+    },
+    {
+      "lcid": 14348,
+      "canonical": "fr-MA",
+      "specific": "fr-MA"
+    },
+    {
+      "lcid": 15361,
+      "canonical": "ar-BH",
+      "specific": "ar-BH"
+    },
+    {
+      "lcid": 15369,
+      "canonical": "en-HK",
+      "specific": "en-HK"
+    },
+    {
+      "lcid": 15370,
+      "canonical": "es-PY",
+      "specific": "es-PY"
+    },
+    {
+      "lcid": 15372,
+      "canonical": "fr-HT",
+      "specific": "fr-HT"
+    },
+    {
+      "lcid": 16385,
+      "canonical": "ar-QA",
+      "specific": "ar-QA"
+    },
+    {
+      "lcid": 16393,
+      "canonical": "en-IN",
+      "specific": "en-IN"
+    },
+    {
+      "lcid": 16394,
+      "canonical": "es-BO",
+      "specific": "es-BO"
+    },
+    {
+      "lcid": 17417,
+      "canonical": "en-MY",
+      "specific": "en-MY"
+    },
+    {
+      "lcid": 17418,
+      "canonical": "es-SV",
+      "specific": "es-SV"
+    },
+    {
+      "lcid": 18441,
+      "canonical": "en-SG",
+      "specific": "en-SG"
+    },
+    {
+      "lcid": 18442,
+      "canonical": "es-HN",
+      "specific": "es-HN"
+    },
+    {
+      "lcid": 19465,
+      "canonical": "en-AE",
+      "specific": "en-AE"
+    },
+    {
+      "lcid": 19466,
+      "canonical": "es-NI",
+      "specific": "es-NI"
+    },
+    {
+      "lcid": 20490,
+      "canonical": "es-PR",
+      "specific": "es-PR"
+    },
+    {
+      "lcid": 21514,
+      "canonical": "es-US",
+      "specific": "es-US"
+    },
+    {
+      "lcid": 22538,
+      "canonical": "es-419",
+      "specific": "es-419"
+    },
+    {
+      "lcid": 23562,
+      "canonical": "es-CU",
+      "specific": "es-CU"
+    },
+    {
+      "lcid": 25626,
+      "canonical": "bs-Cyrl",
+      "specific": "bs-Cyrl-BA"
+    },
+    {
+      "lcid": 26650,
+      "canonical": "bs-Latn",
+      "specific": "bs-Latn-BA"
+    },
+    {
+      "lcid": 27674,
+      "canonical": "sr-Cyrl",
+      "specific": "sr-Cyrl-RS"
+    },
+    {
+      "lcid": 28698,
+      "canonical": "sr-Latn",
+      "specific": "sr-Latn-RS"
+    },
+    {
+      "lcid": 28731,
+      "canonical": "smn",
+      "specific": "smn-FI"
+    },
+    {
+      "lcid": 29740,
+      "canonical": "az-Cyrl",
+      "specific": "az-Cyrl-AZ"
+    },
+    {
+      "lcid": 29755,
+      "canonical": "sms",
+      "specific": "sms-FI"
+    },
+    {
+      "lcid": 30724,
+      "canonical": "zh",
+      "specific": "zh-CN"
+    },
+    {
+      "lcid": 30740,
+      "canonical": "nn",
+      "specific": "nn-NO"
+    },
+    {
+      "lcid": 30746,
+      "canonical": "bs",
+      "specific": "bs-Latn-BA"
+    },
+    {
+      "lcid": 30764,
+      "canonical": "az-Latn",
+      "specific": "az-Latn-AZ"
+    },
+    {
+      "lcid": 30779,
+      "canonical": "sma",
+      "specific": "sma-SE"
+    },
+    {
+      "lcid": 30787,
+      "canonical": "uz-Cyrl",
+      "specific": "uz-Cyrl-UZ"
+    },
+    {
+      "lcid": 30800,
+      "canonical": "mn-Cyrl",
+      "specific": "mn-MN"
+    },
+    {
+      "lcid": 30813,
+      "canonical": "iu-Cans",
+      "specific": "iu-Cans-CA"
+    },
+    {
+      "lcid": 31748,
+      "canonical": "zh-Hant",
+      "specific": "zh-HK"
+    },
+    {
+      "lcid": 31764,
+      "canonical": "nb",
+      "specific": "nb-NO"
+    },
+    {
+      "lcid": 31770,
+      "canonical": "sr",
+      "specific": "sr-Latn-RS"
+    },
+    {
+      "lcid": 31784,
+      "canonical": "tg-Cyrl",
+      "specific": "tg-Cyrl-TJ"
+    },
+    {
+      "lcid": 31790,
+      "canonical": "dsb",
+      "specific": "dsb-DE"
+    },
+    {
+      "lcid": 31803,
+      "canonical": "smj",
+      "specific": "smj-SE"
+    },
+    {
+      "lcid": 31811,
+      "canonical": "uz-Latn",
+      "specific": "uz-Latn-UZ"
+    },
+    {
+      "lcid": 31814,
+      "canonical": "pa-Arab",
+      "specific": "pa-Arab-PK"
+    },
+    {
+      "lcid": 31824,
+      "canonical": "mn-Mong",
+      "specific": "mn-Mong-CN"
+    },
+    {
+      "lcid": 31833,
+      "canonical": "sd-Arab",
+      "specific": "sd-Arab-PK"
+    },
+    {
+      "lcid": 31836,
+      "canonical": "chr-Cher",
+      "specific": "chr-Cher-US"
+    },
+    {
+      "lcid": 31837,
+      "canonical": "iu-Latn",
+      "specific": "iu-Latn-CA"
+    },
+    {
+      "lcid": 31839,
+      "canonical": "tzm-Latn",
+      "specific": "tzm-Latn-DZ"
+    },
+    {
+      "lcid": 31847,
+      "canonical": "ff-Latn",
+      "specific": "ff-Latn-SN"
+    },
+    {
+      "lcid": 31848,
+      "canonical": "ha-Latn",
+      "specific": "ha-Latn-NG"
+    },
+    {
+      "lcid": 31878,
+      "canonical": "quc-Latn",
+      "specific": "quc-Latn-GT"
+    },
+    {
+      "lcid": 31890,
+      "canonical": "ku-Arab",
+      "specific": "ku-Arab-IQ"
+    },
+    {
+      "lcid": 65663,
+      "canonical": "x-IV_mathan",
+      "specific": "x-IV_mathan"
+    },
+    {
+      "lcid": 66567,
+      "canonical": "de-DE_phoneb",
+      "specific": "de-DE_phoneb"
+    },
+    {
+      "lcid": 66574,
+      "canonical": "hu-HU_technl",
+      "specific": "hu-HU_technl"
+    },
+    {
+      "lcid": 66615,
+      "canonical": "ka-GE_modern",
+      "specific": "ka-GE_modern"
+    },
+    {
+      "lcid": 133124,
+      "canonical": "zh-CN_stroke",
+      "specific": "zh-CN_stroke"
+    },
+    {
+      "lcid": 135172,
+      "canonical": "zh-SG_stroke",
+      "specific": "zh-SG_stroke"
+    },
+    {
+      "lcid": 136196,
+      "canonical": "zh-MO_stroke",
+      "specific": "zh-MO_stroke"
+    },
+    {
+      "lcid": 197636,
+      "canonical": "zh-TW_pronun",
+      "specific": "zh-TW_pronun"
+    },
+    {
+      "lcid": 263172,
+      "canonical": "zh-TW_radstr",
+      "specific": "zh-TW_radstr"
+    },
+    {
+      "lcid": 263185,
+      "canonical": "ja-JP_radstr",
+      "specific": "ja-JP_radstr"
+    },
+    {
+      "lcid": 265220,
+      "canonical": "zh-HK_radstr",
+      "specific": "zh-HK_radstr"
+    },
+    {
+      "lcid": 267268,
+      "canonical": "zh-MO_radstr",
+      "specific": "zh-MO_radstr"
+    },
+    {
+      "lcid": 329732,
+      "canonical": "zh-CN_phoneb",
+      "specific": "zh-CN_phoneb"
+    },
+    {
+      "lcid": 331780,
+      "canonical": "zh-SG_phoneb",
+      "specific": "zh-SG_phoneb"
+    }
+  ],
+  "scope": "Pinned Wine locale indexes and neutral-resolution profile; shared/custom IDs are not bijective; default user/system profile en-US; no Windows execution claim"
+}

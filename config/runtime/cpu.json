@@ -1,0 +1,12 @@
+{
+  "vendor": "GenuineIntel",
+  "signature": 1587,
+  "maximum_basic_leaf": 1,
+  "maximum_extended_leaf": 2147483649,
+  "leaf_1_edx": 8388609,
+  "features": [
+    "x87",
+    "MMX"
+  ],
+  "qualification": "Fixed guest compatibility identity backed by native extended80 and MMX lowering tests; does not describe Apple hardware. TSC/CX8/CMOV/SSE/AVX/3DNow advertisement is disabled. Original CPU detection and later engine paths require differential validation. Intel out-of-range leaves return the highest basic leaf."
+}
