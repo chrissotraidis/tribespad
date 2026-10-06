@@ -57,7 +57,10 @@ extern void glDeleteQueriesARB(GLsizei n,const GLuint *ids);
 extern void tribes_enter(_cpu *,uint32_t);
 extern unsigned sdl_test_live,sdl_test_fail;
 #ifdef CHECKED
-extern void bad_window(void),bad_context(void),bad_frustum(void);
+extern void bad_window(void),bad_context(void);
+#if defined(GRAPHICS) && !TARGET_OS_IPHONE
+extern void bad_frustum(void),bad_mult_matrix(void);
+#endif
 #endif
 static unsigned char *memory;static _cpu cpu;
 static uint32_t call(unsigned id,const uint32_t *args,size_t count){
@@ -594,6 +597,42 @@ static void perspective_projection(void){
  GC(0xfffa0240,0,GL_PROJECTION);GC(0xfffa0250,0);GC(0xfffa0240,0,GL_MODELVIEW);GC(0xfffa0250,0);assert(!glGetError());
  puts("Perspective projection: original/asymmetric arguments, native matrix product, invalid-state preservation, retained error and projected pixels pass");
 }
+static void matrix_multiplication(const char *fault){
+ const uint32_t address=0xfffa05c0;
+ if(fault){
+  if(!strncmp(fault,"matrix-mult-",12)){
+   const GLfloat identity[16]={1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1};memcpy(memory+0x3ff1,identity,sizeof identity);
+   if(!strcmp(fault,"matrix-mult-unreadable")){assert(tribes_memory_permissions_set(0x4000,4096,0));GC(address,0,0x3ff1);}
+   else if(!strcmp(fault,"matrix-mult-overflow"))GC(address,0,0xfffffff0);
+   assert(0);
+  }return;
+ }
+ strcpy((char *)memory+0x24000,"opengl32");uint32_t module=CALL(60,0x24000);assert(module==0x20040000);
+ strcpy((char *)memory+0x24000,"glMultMatrixf");assert(CALL(63,0x24000)==address&&tribes_get_proc_address(cpu._pointer_offset,module,0x24000)==address);CALL(62,module);
+ const GLfloat original[16]={1,0,0,0,0,0,-1,0,0,1,0,0,0,0,0,1},asymmetric[16]={1,2,0,0,.25,1,0,0,0,.5,2,0,3,-2,1,1};
+ const GLenum modes[]={GL_PROJECTION,GL_MODELVIEW,GL_TEXTURE},queries[]={GL_PROJECTION_MATRIX,GL_MODELVIEW_MATRIX,GL_TEXTURE_MATRIX};
+ for(unsigned mode=0;mode<3;mode++){
+  GLdouble current[16]={2,0,0,0,0,3,0,0,0,0,4,0,.25,-.5,1,1},actual[16];
+  memcpy(memory+0x3000,current,sizeof current);GC(0xfffa0240,0,modes[mode]);GC(0xfffa0260,0,0x3000);
+  for(unsigned pass=0;pass<2;pass++){
+   const GLfloat *input=pass?asymmetric:original;memcpy(memory+0x3ff1,input,64);
+   unsigned char unchanged[64];memcpy(unchanged,memory+0x3ff1,64);assert(tribes_memory_permissions_set(0x4000,4096,1));
+   GC(address,0,0x3ff1);assert(!memcmp(unchanged,memory+0x3ff1,64));assert(tribes_memory_permissions_set(0x4000,4096,3));
+   GLdouble product[16];for(unsigned col=0;col<4;col++)for(unsigned row=0;row<4;row++){
+    double value=0;for(unsigned k=0;k<4;k++)value+=current[k*4+row]*input[col*4+k];product[col*4+row]=value;
+   }
+   glGetDoublev(queries[mode],actual);for(unsigned i=0;i<16;i++)assert(fabs(actual[i]-product[i])<1e-6*fmax(1,fabs(product[i])));
+   memcpy(current,product,sizeof current);assert(!glGetError());
+  }
+  /* GL keeps its own matrix value; changing guest storage cannot alter it. */
+  memset(memory+0x3ff1,0,64);GLdouble retained[16];glGetDoublev(queries[mode],retained);assert(!memcmp(actual,retained,sizeof actual));
+  GC(0xfffa0250,0);
+ }
+ GC(0xfffa0240,0,GL_MODELVIEW);memcpy(memory+0x3ff1,original,64);glGetString(0xffffffff);GC(address,0,0x3ff1);assert(GC(0xfffa0010,1)==GL_INVALID_ENUM&&!GC(0xfffa0010,1));
+ GLdouble before[16],after[16];glGetDoublev(GL_MODELVIEW_MATRIX,before);glBegin(GL_TRIANGLES);GC(address,0,0x3ff1);glEnd();assert(GC(0xfffa0010,1)==GL_INVALID_OPERATION&&!GC(0xfffa0010,1));
+ glGetDoublev(GL_MODELVIEW_MATRIX,after);assert(!memcmp(before,after,sizeof before));GC(0xfffa0250,0);
+ puts("Matrix multiplication: original coordinates, noncommuting repeated products in all modes, unaligned/read-only guest staging, retained values/errors and invalid-operation preservation pass");
+}
 static void legacy_route(uint32_t original_window,uint32_t original_context,const char *fault){
  assert(CALL(53,SDL_GL_CONTEXT_MAJOR_VERSION,3)&&CALL(53,SDL_GL_CONTEXT_MINOR_VERSION,2)&&CALL(53,SDL_GL_CONTEXT_PROFILE_MASK,SDL_GL_CONTEXT_PROFILE_COMPATIBILITY));
  uint32_t window=CALL(40,0x2000,64,64,SDL_WINDOW_OPENGL|SDL_WINDOW_HIDDEN,0);assert(window);
@@ -608,6 +647,7 @@ static void legacy_route(uint32_t original_window,uint32_t original_context,cons
  GC(0xfffa0240,0,GL_PROJECTION);GC(0xfffa0260,0,0x3f80);glGetDoublev(GL_PROJECTION_MATRIX,actual);assert(!memcmp(matrix,actual,sizeof matrix));
  assert(tribes_memory_permissions_set(0x4000,4096,3));
  if(!fault)perspective_projection();
+ matrix_multiplication(fault);
  GC(0xfffa0240,0,GL_MODELVIEW);GC(0xfffa0250,0);glGetDoublev(GL_MODELVIEW_MATRIX,actual);for(unsigned i=0;i<16;i++)assert(actual[i]==(i%5==0?1:0));
  GC(0xfffa0270,0,0,0,64,64);GLint viewport[4];glGetIntegerv(GL_VIEWPORT,viewport);assert(viewport[0]==0&&viewport[1]==0&&viewport[2]==64&&viewport[3]==64);
  GC(0xfffa0270,0,0,0,0xffffffff,64);assert(glGetError()==GL_INVALID_VALUE);
@@ -901,7 +941,10 @@ static int window_main(int argc,char **argv){
  tribes_memory_external_configure(cpu._pointer_offset,UINT64_C(0x100000000));tribes_memory_external_enable();
  if(argc==2&&!strcmp(argv[1],"bad-window")){bad_window();return 99;}
  if(argc==2&&!strcmp(argv[1],"bad-context")){bad_context();return 99;}
+#if defined(GRAPHICS) && !TARGET_OS_IPHONE
  if(argc==2&&!strcmp(argv[1],"bad-frustum")){bad_frustum();return 99;}
+ if(argc==2&&!strcmp(argv[1],"bad-mult-matrix")){bad_mult_matrix();return 99;}
+#endif
 #endif
  static const char env[]="TRIBESPAD_WINDOW_TEST=1\0";assert(tribes_environment_configure(cpu._pointer_offset,env,sizeof env));
  #ifdef GRAPHICS
@@ -948,7 +991,7 @@ static int window_main(int argc,char **argv){
  assert(CALL(54,SDL_GL_CONTEXT_PROFILE_MASK,0x3001)&&word(0x3001)==SDL_GL_CONTEXT_PROFILE_CORE);
  puts("explicit native core context retains existing modern graphics coverage");
 #ifdef GRAPHICS
- if(argc==1||(argc==2&&(!strncmp(argv[1],"sync-",5)||!strncmp(argv[1],"array-",6)||!strncmp(argv[1],"uniform-",8)||!strncmp(argv[1],"shader-",7)||!strncmp(argv[1],"quad-",5)||!strcmp(argv[1],"unreadable-matrix")||!strcmp(argv[1],"shared-copy-delete")||!strcmp(argv[1],"shared-array-delete"))))legacy_route(window,context,argc==2?argv[1]:NULL);
+ if(argc==1||(argc==2&&(!strncmp(argv[1],"sync-",5)||!strncmp(argv[1],"array-",6)||!strncmp(argv[1],"uniform-",8)||!strncmp(argv[1],"shader-",7)||!strncmp(argv[1],"quad-",5)||!strncmp(argv[1],"matrix-mult-",12)||!strcmp(argv[1],"unreadable-matrix")||!strcmp(argv[1],"shared-copy-delete")||!strcmp(argv[1],"shared-array-delete"))))legacy_route(window,context,argc==2?argv[1]:NULL);
  if(argc==2&&!strcmp(argv[1],"mipmap-nonzero-base")){
   GC(0xfffa0150,0,1,0x3001);GC(0xfffa0160,0,GL_TEXTURE_2D,word(0x3001));GC(0xfffa0170,0,GL_TEXTURE_2D,0x8191,1);GC(0xfffa0170,0,GL_TEXTURE_2D,GL_TEXTURE_BASE_LEVEL,1);
   const unsigned char color[]={1,2,3,255};mipmap_upload(1,2,color);assert(0);

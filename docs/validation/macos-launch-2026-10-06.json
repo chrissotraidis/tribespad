@@ -1,60 +1,47 @@
 {
   "date": "2026-10-06",
   "platform": "macOS ARM64",
-  "full_checked_engine_sha256": "d5884f965aa61fdf4235b8a8afb41f0c7b4ab4f751c3afae14bd2a4b8849c71a",
-  "signed_engine_sha256": "50521938089844fd0b7f67692c40828d3c21ef9ce4c835806f4525d0169bb920",
+  "full_checked_engine_sha256": "47fca8df62f922ace217f787517c6f2f86ce366c2b8b3b0a7b5b1d496e18af88",
+  "signed_engine_sha256": "dcf9c447043a4b00a306ec2e25e59ddbd3b9d762f446f9e473b6b84766353e5c",
   "observed": [
     "Original TribesNEXT UI launched",
     "Native EULA/Create Account navigation",
     "Actual account-server ONLINE and connectable response",
     "Agreement accepted; both reached math kernels passed",
-    "Original glFrustum executed through finite native bridge"
+    "Original glFrustum and glMultMatrixf executed through finite native bridge",
+    "Original preview clear and depth-function setup executed"
   ],
   "next_failure": "unsupported original guest PC 0x00000000",
   "next_call": {
-    "export": "glMultMatrixf",
-    "call": "0x447470",
-    "return": "0x447476",
-    "call_bytes": "ff157c829e00",
-    "lookup_slot": "0x9e827c",
-    "lookup_string": "0x78ab30",
-    "matrix_pointer": "0x7576e8",
-    "matrix_static_initial_values": [
-      1.0,
-      0.0,
-      0.0,
-      0.0,
-      0.0,
-      0.0,
-      -1.0,
-      0.0,
-      0.0,
-      1.0,
-      0.0,
-      0.0,
-      0.0,
-      0.0,
-      0.0,
-      1.0
-    ],
-    "capture_scope": "Reached original account-request thread state only; not whole-memory capture"
+    "export": "glFrontFace",
+    "call": "0x6a631d",
+    "return": "0x6a6323",
+    "call_bytes": "ff15088d9e00",
+    "lookup_slot": "0x9e8d08",
+    "lookup_string": "0x78a6b8",
+    "argument": "0x900",
+    "argument_name": "GL_CW",
+    "capture_scope": "Reached original account-request thread state only; not whole-memory capture",
+    "observed_coordinate_matrix_matches_fixture": true
   },
-  "frames": [
-    "abort",
-    "tribes_lookup",
-    "tribes_dispatch",
-    "tribes_enter",
-    "main",
-    "start"
+  "adjacent_render_group": [
+    "glFrontFace",
+    "GL_NORMAL_ARRAY state and checked normal arrays",
+    "glDepthMask",
+    "glIsEnabled",
+    "glColor4fv",
+    "glMaterialfv",
+    "glTexEnvfv",
+    "glTexEnvf"
   ],
   "validation": {
-    "native_projection_modes": [
+    "native_matrix_modes": [
       "normal",
       "tsan",
       "checked"
     ],
-    "checked_faults": 71,
-    "device_simulator_compilation": true
+    "checked_faults": 74,
+    "device_simulator_source_compilation": true
   },
   "acceptance": {
     "character_page_rendered": false,
@@ -69,5 +56,5 @@
     "audio_restored": 106,
     "simulator_booted": false
   },
-  "local_evidence": "generated/integration-review/perspective-projection/execution"
+  "local_evidence": "generated/integration-review/matrix-multiply/execution"
 }

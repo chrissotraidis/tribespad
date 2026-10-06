@@ -278,6 +278,7 @@
     "glMatrixMode",
     "glLoadIdentity",
     "glLoadMatrixd",
+    "glMultMatrixf",
     "glViewport",
     "glDisable",
     "glEnable",

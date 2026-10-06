@@ -1293,6 +1293,15 @@ void tribes_gl_load_matrix_d(_cpu *cpu,uint32_t input){
     glLoadMatrixd(matrix);DRAW_RETURN();
 #endif
 }
+void tribes_gl_mult_matrix_f(_cpu *cpu,uint32_t input){
+    WINDOW_ENTER();
+#if TARGET_OS_IPHONE
+    (void)input;(void)error;stop();
+#else
+    GLfloat matrix[16];checked_copy(matrix,guest(cpu,input,sizeof matrix),sizeof matrix);
+    glMultMatrixf(matrix);DRAW_RETURN();
+#endif
+}
 void tribes_gl_viewport(_cpu *cpu,uint32_t x,uint32_t y,uint32_t width,uint32_t height){
     WINDOW_ENTER();glViewport((int32_t)x,(int32_t)y,(int32_t)width,(int32_t)height);DRAW_RETURN();
 }
