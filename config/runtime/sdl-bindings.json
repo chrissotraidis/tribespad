@@ -655,5 +655,113 @@
     "guest_base": false,
     "cpu_argument": true,
     "calling_convention": "cdecl"
+  },
+  "SDL_OpenAudioDevice": {
+    "helper": "tribes_sdl_open_audio_device",
+    "arguments": 2,
+    "returns": true,
+    "helper_returns": "i32",
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_GetAudioDeviceFormat": {
+    "helper": "tribes_sdl_get_audio_device_format",
+    "arguments": 3,
+    "returns": true,
+    "helper_returns": "i32",
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_PauseAudioDevice": {
+    "helper": "tribes_sdl_pause_audio_device",
+    "arguments": 1,
+    "returns": true,
+    "helper_returns": "i32",
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_CloseAudioDevice": {
+    "helper": "tribes_sdl_close_audio_device",
+    "arguments": 1,
+    "returns": false,
+    "helper_returns": "void",
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_CreateAudioStream": {
+    "helper": "tribes_sdl_create_audio_stream",
+    "arguments": 2,
+    "returns": true,
+    "helper_returns": "i32",
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_BindAudioStream": {
+    "helper": "tribes_sdl_bind_audio_stream",
+    "arguments": 2,
+    "returns": true,
+    "helper_returns": "i32",
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_DestroyAudioStream": {
+    "helper": "tribes_sdl_destroy_audio_stream",
+    "arguments": 1,
+    "returns": false,
+    "helper_returns": "void",
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_ResumeAudioStreamDevice": {
+    "helper": "tribes_sdl_resume_audio_stream_device",
+    "arguments": 1,
+    "returns": true,
+    "helper_returns": "i32",
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_PauseAudioStreamDevice": {
+    "helper": "tribes_sdl_pause_audio_stream_device",
+    "arguments": 1,
+    "returns": true,
+    "helper_returns": "i32",
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_ClearAudioStream": {
+    "helper": "tribes_sdl_clear_audio_stream",
+    "arguments": 1,
+    "returns": true,
+    "helper_returns": "i32",
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_GetAudioStreamAvailable": {
+    "helper": "tribes_sdl_get_audio_stream_available",
+    "arguments": 1,
+    "returns": true,
+    "helper_returns": "i32",
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_GetAudioStreamData": {
+    "helper": "tribes_sdl_get_audio_stream_data",
+    "arguments": 3,
+    "returns": true,
+    "helper_returns": "i32",
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
   }
 }

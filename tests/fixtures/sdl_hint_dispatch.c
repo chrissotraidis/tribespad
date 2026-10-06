@@ -10,6 +10,20 @@ extern void tbimp_SDL_SetHint(void),tbimp_SDL_SetHintWithPriority(void),tbimp_SD
 extern void tbimp_SDL_SetMainReady(void),tbimp_SDL_SetLogOutputFunction(void),tbimp_TestLog(void);
 extern void tbimp_SDL_GetHint(void),tbimp_SDL_SetAppMetadata(void),tbimp_SDL_SetAppMetadataProperty(void);
 extern void tbimp_TestMalloc(void),tbimp_TestCalloc(void),tbimp_TestRealloc(void),tbimp_TestFree(void),tribes_return_to_host(void);
+extern void tbimp_SDL_OpenAudioDevice(void);
+extern void tbimp_SDL_GetAudioDeviceFormat(void);
+extern void tbimp_SDL_PauseAudioDevice(void);
+extern void tbimp_SDL_CloseAudioDevice(void);
+extern void tbimp_SDL_CreateAudioStream(void);
+extern void tbimp_SDL_BindAudioStream(void);
+extern void tbimp_SDL_DestroyAudioStream(void);
+extern void tbimp_SDL_ResumeAudioStreamDevice(void);
+extern void tbimp_SDL_PauseAudioStreamDevice(void);
+extern void tbimp_SDL_ClearAudioStream(void);
+extern void tbimp_SDL_GetAudioStreamAvailable(void);
+extern void tbimp_SDL_GetAudioStreamData(void);
+SDL_AudioStream *sdl_test_audio_stream;
+void sdl_test_audio_stream_observe(SDL_AudioStream *stream){sdl_test_audio_stream=stream;}
 unsigned sdl_test_allocations,sdl_test_frees,sdl_test_live,sdl_test_fail;
 uint32_t sdl_test_latest;
 void *tribes_lookup(uint32_t pc){
@@ -19,6 +33,18 @@ void *tribes_lookup(uint32_t pc){
  case 9:return tbimp_SDL_Init;case 10:return tbimp_SDL_WasInit;case 17:return tbimp_SDL_QuitSubSystem;case 18:return tbimp_SDL_InitSubSystem;case 19:return tbimp_SDL_Quit;
  case 11:return tbimp_TestMalloc;case 12:return tbimp_TestCalloc;case 13:return tbimp_TestRealloc;case 14:return tbimp_TestFree;
  case 20:return tbimp_SDL_GetPrimaryDisplay;case 21:return tbimp_SDL_GetDesktopDisplayMode;
+ case 22:return tbimp_SDL_OpenAudioDevice;
+ case 23:return tbimp_SDL_GetAudioDeviceFormat;
+ case 24:return tbimp_SDL_PauseAudioDevice;
+ case 25:return tbimp_SDL_CloseAudioDevice;
+ case 26:return tbimp_SDL_CreateAudioStream;
+ case 27:return tbimp_SDL_BindAudioStream;
+ case 28:return tbimp_SDL_DestroyAudioStream;
+ case 29:return tbimp_SDL_ResumeAudioStreamDevice;
+ case 30:return tbimp_SDL_PauseAudioStreamDevice;
+ case 31:return tbimp_SDL_ClearAudioStream;
+ case 32:return tbimp_SDL_GetAudioStreamAvailable;
+ case 33:return tbimp_SDL_GetAudioStreamData;
  case 0xfffff000:return tribes_return_to_host;default:abort();}
 }
 uint32_t sdl_test_malloc(_cpu *c,uint32_t size){

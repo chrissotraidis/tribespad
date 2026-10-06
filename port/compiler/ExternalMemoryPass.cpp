@@ -240,6 +240,21 @@ struct ExternalMemoryPass : PassInfoMixin<ExternalMemoryPass>{
      Allowed=Allowed&&!Target->isVarArg()&&Call->getType()==Result&&Call->arg_size()==Args.size();
      if(Allowed)for(unsigned i=0;i<Args.size();++i)if(Call->getArgOperand(i)->getType()!=Args[i])Allowed=false;
     }
+    if(Name=="SDL_OpenAudioDevice"||Name=="SDL_GetAudioDeviceFormat"||Name=="SDL_PauseAudioDevice"||Name=="SDL_CloseAudioDevice"||Name=="SDL_CreateAudioStream"||Name=="SDL_BindAudioStream"||Name=="SDL_DestroyAudioStream"||Name=="SDL_ResumeAudioStreamDevice"||Name=="SDL_PauseAudioStreamDevice"||Name=="SDL_ClearAudioStream"||Name=="SDL_GetAudioStreamAvailable"||Name=="SDL_GetAudioStreamData"){
+     SmallVector<Type *,3> Args;Type *Result=B.getInt1Ty();
+     if(Name=="SDL_OpenAudioDevice"){Args={I32,P};Result=I32;}
+     else if(Name=="SDL_GetAudioDeviceFormat")Args={I32,P,P};
+     else if(Name=="SDL_PauseAudioDevice")Args={I32};
+     else if(Name=="SDL_CloseAudioDevice"){Args={I32};Result=B.getVoidTy();}
+     else if(Name=="SDL_CreateAudioStream"){Args={P,P};Result=P;}
+     else if(Name=="SDL_BindAudioStream")Args={I32,P};
+     else if(Name=="SDL_DestroyAudioStream"){Args={P};Result=B.getVoidTy();}
+     else if(Name=="SDL_GetAudioStreamAvailable"){Args={P};Result=I32;}
+     else if(Name=="SDL_GetAudioStreamData"){Args={P,P,I32};Result=I32;}
+     else Args={P};
+     Allowed=Allowed&&!Target->isVarArg()&&Call->getType()==Result&&Call->arg_size()==Args.size();
+     if(Allowed)for(unsigned i=0;i<Args.size();++i)if(Call->getArgOperand(i)->getType()!=Args[i])Allowed=false;
+    }
     if(Name=="SDL_CreateSurfaceFrom"||Name=="SDL_ConvertSurface"||Name=="SDL_PremultiplySurfaceAlpha"||Name=="SDL_DestroySurface"||Name=="SDL_RemoveSurfaceAlternateImages"||Name=="SDL_CreateColorCursor"||Name=="SDL_SetCursor"||Name=="SDL_DestroyCursor"){
      SmallVector<Type *,5> Args;Type *Result=P;
      if(Name=="SDL_CreateSurfaceFrom")Args={I32,I32,I32,P,I32};

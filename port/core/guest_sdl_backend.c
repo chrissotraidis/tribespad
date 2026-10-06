@@ -70,6 +70,13 @@ extern void glUniform4i(GLint,GLint,GLint,GLint,GLint);
 typedef struct NativeFrame { _cpu *cpu; struct NativeFrame *previous; } NativeFrame;
 typedef struct PublicBuffer { void *host; uint32_t address,size,gamepad_owner; int hint,mutable_pixels,surface_header,event_data; struct PublicBuffer *next; } PublicBuffer;
 static PublicBuffer *public_buffers;
+typedef struct AudioDevice {SDL_AudioDeviceID native;struct AudioDevice *next;} AudioDevice;
+typedef struct AudioStream {SDL_AudioStream *native;uint32_t token;struct AudioStream *next;} AudioStream;
+static AudioDevice *audio_devices;
+static AudioStream *audio_streams;
+static uint32_t next_audio_stream_token=0xd7000001;
+static void clear_audio_records(void);
+_Static_assert(sizeof(SDL_AudioSpec)==12&&offsetof(SDL_AudioSpec,channels)==4&&offsetof(SDL_AudioSpec,freq)==8,"SDL i686 audio spec ABI");
 static int bound;
 static _Thread_local int in_guest_allocator;
 static uint64_t base;
@@ -306,7 +313,7 @@ void tribes_sdl_host_application_finished(void) {
     if(!pthread_main_np())stop();
     pthread_mutex_lock(&lock);
     if(!application_ready||active_frame||ready||SDL_WasInit(0)||
-       public_buffers||display_modes||closest_modes||keyboard_state||gamepads||windows||contexts||properties||surfaces||cursors)stop();
+       public_buffers||display_modes||closest_modes||keyboard_state||gamepads||windows||contexts||properties||surfaces||cursors||audio_devices||audio_streams)stop();
     application_ready=0;application_finished=1;
     pthread_mutex_lock(&log_lock);if(logs_head)stop();log_target=log_userdata=0;pthread_mutex_unlock(&log_lock);
     pthread_mutex_unlock(&lock);
@@ -602,6 +609,8 @@ void tribes_sdl_quit_subsystem(_cpu *cpu,uint32_t flags) {
     if(!enter(cpu,&frame))stop();
     if((flags&SDL_INIT_VIDEO)&&(windows||contexts||cursors)){fputs("TribesPad: SDL video subsystem quit with live graphics objects is not implemented\n",stderr);abort();}
     SDL_QuitSubSystem(flags);
+    /* Native SDL destroys streams/devices only when the final audio ref ends. */
+    if((flags&SDL_INIT_AUDIO)&&!SDL_WasInit(SDL_INIT_AUDIO))clear_audio_records();
     if(!SDL_WasInit(SDL_INIT_GAMEPAD))clear_gamepads();
     if((flags&SDL_INIT_VIDEO)&&!SDL_WasInit(SDL_INIT_VIDEO))clear_display_modes();
     leave(&frame);tribes_set_last_error(error);
@@ -658,7 +667,7 @@ uint32_t tribes_sdl_reset_hint(_cpu *cpu,uint32_t name) {
 void tribes_sdl_backend_quit(_cpu *cpu) {
     uint32_t error=tribes_get_last_error();NativeFrame frame;
     (void)enter(cpu,&frame);if(graphics_active)stop();graphics_active=1;
-    clear_graphics();clear_display_modes();tribes_sdl_tls_cleanup_begin(cpu);SDL_Quit();tribes_sdl_tls_cleanup_end();clear_gamepads();keyboard_state=NULL;
+    clear_graphics();clear_display_modes();tribes_sdl_tls_cleanup_begin(cpu);SDL_Quit();tribes_sdl_tls_cleanup_end();clear_audio_records();clear_gamepads();keyboard_state=NULL;
     while(public_buffers)public_free(&frame,public_buffers->host);
     leave(&frame);ready=0;graphics_active=0;event_cycle_finished=0;
     /* Native SDL may retain native library-lifetime storage. Guest copies are
@@ -681,6 +690,92 @@ uint32_t tribes_sdl_get_hint(_cpu *cpu,uint32_t name) {
     }
     leave(&frame);free(n);tribes_set_last_error(error);return result;
 }
+
+/* Original audio initialization (0x100569f0) uses private native streams.
+   SDL device IDs are scalar; stream pointers are represented by owned tokens.
+   Native worker threads never see guest sample/specification pointers. */
+#define AUDIO_ENTER() event_flags(SDL_INIT_AUDIO);uint32_t error=tribes_get_last_error();NativeFrame frame;if(!enter(cpu,&frame))stop()
+#define AUDIO_RETURN(value) do{uint32_t audio_result=(uint32_t)(value);leave(&frame);tribes_set_last_error(error);return audio_result;}while(0)
+#define AUDIO_DONE() do{leave(&frame);tribes_set_last_error(error);return;}while(0)
+static AudioStream **audio_stream_slot(uint32_t token){
+    AudioStream **slot=&audio_streams;while(*slot&&(*slot)->token!=token)slot=&(*slot)->next;
+    if(!*slot)stop();return slot;
+}
+static SDL_AudioStream *native_audio_stream(uint32_t token){return token?(*audio_stream_slot(token))->native:NULL;}
+static AudioDevice **audio_device_slot(uint32_t id){
+    AudioDevice **slot=&audio_devices;while(*slot&&(*slot)->native!=id)slot=&(*slot)->next;
+    if(!*slot)stop();return slot;
+}
+static void clear_audio_records(void){
+    /* SDL_QuitAudio has already destroyed every stream and logical device. */
+    while(audio_streams){AudioStream *v=audio_streams;audio_streams=v->next;free(v);}
+    while(audio_devices){AudioDevice *v=audio_devices;audio_devices=v->next;free(v);}
+}
+uint32_t tribes_sdl_open_audio_device(_cpu *cpu,uint32_t id,uint32_t specification){
+    AUDIO_ENTER();SDL_AudioSpec spec;SDL_AudioSpec *requested=NULL;
+    if(specification){checked_copy(&spec,guest(cpu,specification,sizeof spec),sizeof spec);requested=&spec;}
+    AudioDevice *record=calloc(1,sizeof *record);if(!record){SDL_OutOfMemory();AUDIO_RETURN(0);}
+    SDL_AudioDeviceID result=SDL_OpenAudioDevice(id,requested);
+    if(result){record->native=result;record->next=audio_devices;audio_devices=record;}else free(record);
+    AUDIO_RETURN(result);
+}
+uint32_t tribes_sdl_get_audio_device_format(_cpu *cpu,uint32_t id,uint32_t specification,uint32_t sample_frames){
+    AUDIO_ENTER();SDL_AudioSpec spec;int frames;
+    bool result=SDL_GetAudioDeviceFormat(id,specification?&spec:NULL,sample_frames?&frames:NULL);
+    if(result){checked_copy(guest(cpu,specification,sizeof spec),&spec,sizeof spec);if(sample_frames)checked_copy(guest(cpu,sample_frames,sizeof frames),&frames,sizeof frames);}
+    AUDIO_RETURN(result);
+}
+uint32_t tribes_sdl_pause_audio_device(_cpu *cpu,uint32_t id){
+    AUDIO_ENTER();if(id)(void)audio_device_slot(id);bool result=SDL_PauseAudioDevice(id);AUDIO_RETURN(result);
+}
+void tribes_sdl_close_audio_device(_cpu *cpu,uint32_t id){
+    AUDIO_ENTER();if(id){AudioDevice **slot=audio_device_slot(id);AudioDevice *v=*slot;SDL_CloseAudioDevice(id);*slot=v->next;free(v);}else SDL_CloseAudioDevice(0);AUDIO_DONE();
+}
+uint32_t tribes_sdl_create_audio_stream(_cpu *cpu,uint32_t source,uint32_t destination){
+    AUDIO_ENTER();SDL_AudioSpec src,dst;
+    if(source)checked_copy(&src,guest(cpu,source,sizeof src),sizeof src);
+    if(destination)checked_copy(&dst,guest(cpu,destination,sizeof dst),sizeof dst);
+    AudioStream *record=calloc(1,sizeof *record);if(!record){SDL_OutOfMemory();AUDIO_RETURN(0);}
+    record->native=SDL_CreateAudioStream(source?&src:NULL,destination?&dst:NULL);
+    uint32_t result=0;
+    if(record->native){if(next_audio_stream_token>=0xd8000000)stop();result=record->token=next_audio_stream_token++;record->next=audio_streams;audio_streams=record;
+#ifdef TRIBESPAD_SDL_TEST_OBSERVER
+        extern void sdl_test_audio_stream_observe(SDL_AudioStream *);sdl_test_audio_stream_observe(record->native);
+#endif
+    }else free(record);
+    AUDIO_RETURN(result);
+}
+uint32_t tribes_sdl_bind_audio_stream(_cpu *cpu,uint32_t id,uint32_t token){
+    AUDIO_ENTER();if(id)(void)audio_device_slot(id);bool result=SDL_BindAudioStream(id,native_audio_stream(token));AUDIO_RETURN(result);
+}
+void tribes_sdl_destroy_audio_stream(_cpu *cpu,uint32_t token){
+    AUDIO_ENTER();if(token){AudioStream **slot=audio_stream_slot(token);AudioStream *v=*slot;SDL_DestroyAudioStream(v->native);*slot=v->next;free(v);}else SDL_DestroyAudioStream(NULL);AUDIO_DONE();
+}
+uint32_t tribes_sdl_resume_audio_stream_device(_cpu *cpu,uint32_t token){
+    AUDIO_ENTER();bool result=SDL_ResumeAudioStreamDevice(native_audio_stream(token));AUDIO_RETURN(result);
+}
+uint32_t tribes_sdl_pause_audio_stream_device(_cpu *cpu,uint32_t token){
+    AUDIO_ENTER();bool result=SDL_PauseAudioStreamDevice(native_audio_stream(token));AUDIO_RETURN(result);
+}
+uint32_t tribes_sdl_clear_audio_stream(_cpu *cpu,uint32_t token){
+    AUDIO_ENTER();bool result=SDL_ClearAudioStream(native_audio_stream(token));AUDIO_RETURN(result);
+}
+uint32_t tribes_sdl_get_audio_stream_available(_cpu *cpu,uint32_t token){
+    AUDIO_ENTER();int result=SDL_GetAudioStreamAvailable(native_audio_stream(token));AUDIO_RETURN(result);
+}
+uint32_t tribes_sdl_get_audio_stream_data(_cpu *cpu,uint32_t token,uint32_t output,uint32_t length){
+    AUDIO_ENTER();SDL_AudioStream *stream=native_audio_stream(token);int size=(int32_t)length;
+    /* Preserve native NULL/negative/zero-length behavior without accessing any
+       guest bytes. Otherwise publish only the actual converted byte count. */
+    if(!output||size<=0){unsigned char unused;int result=SDL_GetAudioStreamData(stream,output?&unused:NULL,size);AUDIO_RETURN(result);}
+    void *data=malloc((size_t)size);if(!data){SDL_OutOfMemory();AUDIO_RETURN(-1);}
+    int result=SDL_GetAudioStreamData(stream,data,size);if(result>size)stop();
+    if(result>0)checked_copy(guest(cpu,output,(size_t)result),data,(size_t)result);
+    free(data);AUDIO_RETURN(result);
+}
+#undef AUDIO_ENTER
+#undef AUDIO_RETURN
+#undef AUDIO_DONE
 
 /* Guest window/context tokens own native objects; addresses never cross the
    i686 ABI. Calls stay on the established SDL application/guest owner thread. */

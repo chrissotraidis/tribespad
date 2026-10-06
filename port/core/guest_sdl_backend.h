@@ -214,4 +214,17 @@ void tribes_gl_normal_pointer(_cpu *,uint32_t,uint32_t,uint32_t);
 void tribes_gl_push_matrix(_cpu *);
 void tribes_gl_pop_matrix(_cpu *);
 void tribes_gl_scale_f(_cpu *,uint32_t,uint32_t,uint32_t);
+/* Checked original SDL audio specifications, samples and owned stream tokens. */
+uint32_t tribes_sdl_open_audio_device(_cpu *,uint32_t,uint32_t);
+uint32_t tribes_sdl_get_audio_device_format(_cpu *,uint32_t,uint32_t,uint32_t);
+uint32_t tribes_sdl_pause_audio_device(_cpu *,uint32_t);
+void tribes_sdl_close_audio_device(_cpu *,uint32_t);
+uint32_t tribes_sdl_create_audio_stream(_cpu *,uint32_t,uint32_t);
+uint32_t tribes_sdl_bind_audio_stream(_cpu *,uint32_t,uint32_t);
+void tribes_sdl_destroy_audio_stream(_cpu *,uint32_t);
+uint32_t tribes_sdl_resume_audio_stream_device(_cpu *,uint32_t);
+uint32_t tribes_sdl_pause_audio_stream_device(_cpu *,uint32_t);
+uint32_t tribes_sdl_clear_audio_stream(_cpu *,uint32_t);
+uint32_t tribes_sdl_get_audio_stream_available(_cpu *,uint32_t);
+uint32_t tribes_sdl_get_audio_stream_data(_cpu *,uint32_t,uint32_t,uint32_t);
 #endif

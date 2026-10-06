@@ -1,0 +1,63 @@
+{
+  "date": "2026-10-06",
+  "platform": "macOS ARM64",
+  "full_checked_engine_sha256": "b18cad0d30387371c045ef7280a4b1c08cbf8ba9bf9566f85b3544d9aa7c67e0",
+  "signed_engine_sha256": "706d7675bbe3a07b0658ce231b480821aadcad2da8b8b688b6ac40a958b94632",
+  "engine_entered": true,
+  "attach_returned": true,
+  "finite_revisions": 33,
+  "execution_timeout": true,
+  "playable": false,
+  "implemented": "12 original SDL audio device/stream APIs using private native objects and checked specification/sample staging",
+  "tests": {
+    "audio_modes": [
+      "normal",
+      "tsan",
+      "checked"
+    ],
+    "checked_audio_faults": 12,
+    "checked_graphics_faults": 89,
+    "mobile": "Changed sources compile for ARM64 iOS device and Simulator; no mobile execution",
+    "source_receipts_match": true,
+    "wrong_native_audio_signatures_rejected": 3
+  },
+  "actual_app_attempts": [
+    {
+      "pid": 56687,
+      "voice_capture": true,
+      "original_call": "0x10056a18",
+      "requested_device": "0xfffffffe (default recording)",
+      "result": "Real SDL_OpenAudioDevice entered but waited in COREAUDIO_OpenDevice/AudioQueueStart; sampled and manually terminated",
+      "device_open_returned": false
+    },
+    {
+      "pid": 57583,
+      "voice_capture": false,
+      "preference": "Supported original $pref::Audio::enableVoiceCapture=0 in isolated autoexec only",
+      "result": "Startup advanced to missing SHGetFolderPathA",
+      "original_call": "0x10038d7c",
+      "return_pc": "0x10038d82",
+      "arguments": [
+        "0x0",
+        "0x14",
+        "0x0",
+        "0x0",
+        "0x1046e150"
+      ],
+      "original_audio_globals": [
+        "0x0",
+        "0x0"
+      ]
+    }
+  ],
+  "next_action": "Implement the reached CSIDL_FONTS query through the configured filesystem and real available font assets, then launch toward the original menu/training map; independently diagnose native microphone opening.",
+  "cleanup": {
+    "diagnostic_autoexec_restored": true,
+    "main_online_profile_unchanged": true,
+    "audio_output": 106,
+    "audio_input": 113,
+    "no_live_diagnostic_processes": true
+  },
+  "evidence": "generated/integration-review/sdl-audio-bridge/",
+  "scope": "Component audio/graphics and original signed-app startup evidence. No microphone return, menu/map, gameplay/controls, HD, authenticated community match or full mobile acceptance."
+}
