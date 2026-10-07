@@ -632,5 +632,29 @@
       "scope": "74 finite instruction bindings checked-compiled for ARM64 device and Simulator; no mobile execution."
     },
     "full_engine": "Rebuild active exec29691, generated/integration-review/scene-math/second-kernel-full-engine.log. Second kernel not yet executed in the app."
+  },
+  "second_kernel_original_execution": {
+    "pid": 99833,
+    "engine_sha256": "0f88217c72f565c7b55f9931da4e92bfbc21047a4d7857ec46702ebb22d03a97",
+    "capture": "generated/integration-review/apple-render-dimensions/scene-second-math-stop-99833",
+    "trace_counts": {
+      "tribes_sdl_gl_swap_window": 3291,
+      "tribes_render_job_step": 4,
+      "tribes_gl_light_fv": 4,
+      "tribes_gl_light_model_fv": 4,
+      "loc_10043BBC": 1,
+      "loc_10043C76": 1,
+      "loc_10040FFF": 1,
+      "loc_10041026": 1
+    },
+    "returns": [
+      "0x10040fff",
+      "0x10041026"
+    ],
+    "next_call": "0x4d0b85",
+    "next_return": "0x4d0b8b",
+    "next_export": "gluProject",
+    "playable": false,
+    "visible_result": "No scene swap before the stop; final window black."
   }
 }

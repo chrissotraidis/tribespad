@@ -1,0 +1,122 @@
+{
+  "date": "2026-10-07",
+  "export": "gluProject",
+  "guest_address": "0xfffa0750",
+  "original_call": "0x4d0b85",
+  "original_return": "0x4d0b8b",
+  "prior_original_pid": 99833,
+  "scope": "Real CPU projection through finite checked guest ABI. Component results do not establish game rendering.",
+  "components": {
+    "passed": true,
+    "runs": [
+      {
+        "mode": "normal",
+        "fault_count": 0
+      },
+      {
+        "mode": "tsan",
+        "fault_count": 0
+      },
+      {
+        "mode": "checked",
+        "fault_count": 127
+      }
+    ],
+    "native_oracle_cases": 20,
+    "graphics_receipt_sha256": "1a79f1d69c4ac643bad5f06ef85ae480687858af83b45579417466ac8ab583df"
+  },
+  "mobile": {
+    "passed": true,
+    "rows": [
+      {
+        "platform": "device",
+        "target": "arm64-apple-ios16",
+        "receipt": "93f53a940978ee5bfa1d0a32b635777f1446cfb13a44b5c47a667f46b406785f",
+        "objects": [
+          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/glu-project/mobile-compile/iphoneos/00-guest_sdl_backend.o",
+          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/glu-project/mobile-compile/iphoneos/01-guest_render_job.o",
+          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/glu-project/mobile-compile/iphoneos/02-guest_graphics.o",
+          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/glu-project/mobile-compile/iphoneos/03-graphics-bindings.o"
+        ]
+      },
+      {
+        "platform": "simulator",
+        "target": "arm64-apple-ios16-simulator",
+        "receipt": "6b9fa6abfc86b208189c1429a0ecac4abeb493f74c0585a68caad795bfb40f64",
+        "objects": [
+          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/glu-project/mobile-compile/iphonesimulator/00-guest_sdl_backend.o",
+          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/glu-project/mobile-compile/iphonesimulator/01-guest_render_job.o",
+          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/glu-project/mobile-compile/iphonesimulator/02-guest_graphics.o",
+          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/glu-project/mobile-compile/iphonesimulator/03-graphics-bindings.o"
+        ]
+      }
+    ],
+    "scope": "Changed backend, finite GL provider and bindings checked-compiled for ARM64 iOS device and Simulator; no mobile launch."
+  },
+  "original_execution": {
+    "pid": 6426,
+    "engine_sha256": "45fde13775d3b50ae85394d7928a71afc9d5d5a189dc57a37cb614c12bdbb29f",
+    "initialized": true,
+    "attach_returned": true,
+    "finite_revisions": 33,
+    "startup_observation_timeout": true,
+    "actual_route": "EULA accepted, local tribespad warrior, original Training Charybdis Easy START through native HID, then original mission loading.",
+    "projection_returns": [
+      {
+        "eax": "0x1",
+        "xyz": [
+          735.1649543834546,
+          622.9634692037281,
+          0.99435507246522
+        ]
+      },
+      {
+        "eax": "0x1",
+        "xyz": [
+          735.1333393052169,
+          595.3202491231167,
+          0.9954660461188245
+        ]
+      },
+      {
+        "eax": "0x1",
+        "xyz": [
+          735.1651105008374,
+          622.9581955643101,
+          0.9943550544863531
+        ]
+      },
+      {
+        "eax": "0x1",
+        "xyz": [
+          735.1334393677953,
+          595.3158530724152,
+          0.995466058038752
+        ]
+      }
+    ],
+    "scene_swaps_observed": 4,
+    "visible_result": "Original scene with terrain, sky, player character and HUD. Visible rendering defects; no movement or gameplay-control acceptance.",
+    "next_stop": {
+      "pc": 0,
+      "call": "0x62415e",
+      "return": "0x624164",
+      "slot": "0x9e8ae8",
+      "export": "glVertex3fv",
+      "lookup_string": "0x78b380",
+      "lookup_store": "0x55ec19",
+      "argument_pointer": "0x2ff4f0"
+    },
+    "capture_files_sha256": {
+      "cpu.bin": "5aac7cb6c1458e68170ddcf3ace3563933ba8cba124e76f562c9959a18ffa41d",
+      "next-stop.json": "083db873582db00d821bfb12ea60e975938f4306364ac148ae6c04eda310319c",
+      "presentation-trace.json": "8105fbb33f0e6db31b3a3946bce21c968cf3ab125672a888f2e653b4297dce2a",
+      "stopped.png": "feababe4fdcddafc1601bb094cb4c621d5b616c0c6906073bc77e7eca2de17a3",
+      "observation.json": "bda184afbc230cc7de64085e5a00841fcfd9a2002053e7f1356b478444dcface"
+    },
+    "capture_root": "generated/integration-review/apple-render-dimensions/execution",
+    "scope": "Actual isolated offline app stop; selected-thread CPU/stack, exact renderer fields and native context identity, not a whole-memory snapshot.",
+    "cleanup": "App and debugger ended; prior audio57 and isolated voice preference restored. No Simulator booted."
+  },
+  "playable": false
+}

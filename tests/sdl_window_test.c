@@ -15,6 +15,7 @@
 #include <SDL3/SDL_opengles2.h>
 #else
 #include <SDL3/SDL_opengl.h>
+#include <OpenGL/glu.h>
 extern GLboolean glIsQueryARB(GLuint id);
 extern GLuint glCreateShader(GLenum);
 extern void glShaderSource(GLuint,GLsizei,const GLchar *const *,const GLint *);
@@ -98,6 +99,62 @@ static uint32_t gc(unsigned id,const uint32_t *args,size_t count,int returns){
  assert(!memcmp(&before,&cpu,sizeof cpu)&&tribes_get_last_error()==graphics_expected_error);return cpu._eax;
 }
 #define GC(id,ret,...) gc(id,(uint32_t[]){__VA_ARGS__},sizeof((uint32_t[]){__VA_ARGS__})/4,ret)
+/* Exercise the original twelve-DWORD stdcall without a current GL context. */
+static void project_point(const char *fault){
+#if !TARGET_OS_IPHONE
+ assert(!SDL_GL_GetCurrentContext());
+ const double point[3]={400.0,-861.79132080078125,222.054229736328125};
+ uint32_t args[12];memcpy(args,point,sizeof point);
+ args[6]=0x3001;args[7]=0x4001;args[8]=0x5001;
+ args[9]=0x6001;args[10]=0x6011;args[11]=0x6021;
+ for(unsigned sample=0;sample<20;sample++){
+  double model[16]={0},projection[16]={0};
+  for(unsigned i=0;i<4;i++)model[5*i]=projection[5*i]=1;
+  if(sample){
+   model[0]=1.5;model[5]=.75;model[10]=-2;model[12]=17;model[13]=-23;model[14]=45;
+   projection[0]=.8;projection[5]=1.2;projection[10]=-1.01;projection[14]=-.2;
+   if(sample>1){projection[11]=-1;projection[15]=0;}
+   if(sample>2)for(unsigned i=0;i<16;i++){
+    model[i]=((int)((i*11+sample*7)%31)-15)*.125;
+    projection[i]=((int)((i*17+sample*13)%37)-18)*.0625;
+   }
+  }
+  if(sample==19)memset(projection,0,sizeof projection);
+  GLint viewport[4]={-17,29,1470,956};double expected[3]={123,456,789},actual[3];
+  GLint ok=gluProject(point[0],point[1],point[2],model,projection,viewport,&expected[0],&expected[1],&expected[2]);
+  memcpy(memory+args[6],model,sizeof model);memcpy(memory+args[7],projection,sizeof projection);memcpy(memory+args[8],viewport,sizeof viewport);
+  memset(memory+0x6000,0xa5,48);
+  for(unsigned i=0;i<3;i++){double initial=(i+1)*123; if(i==1)initial=456;if(i==2)initial=789;memcpy(memory+args[9+i],&initial,8);}
+  if(fault&&sample==0){
+   if(!strcmp(fault,"project-model")){args[6]=0x3fc1;assert(tribes_memory_permissions_set(0x4000,4096,0));}
+   if(!strcmp(fault,"project-projection")){args[7]=0x4fc1;assert(tribes_memory_permissions_set(0x5000,4096,0));}
+   if(!strcmp(fault,"project-viewport")){args[8]=0x5ff9;assert(tribes_memory_permissions_set(0x6000,4096,0));}
+   if(!strcmp(fault,"project-output")){assert(tribes_memory_permissions_set(0x6000,4096,1));}
+   if(!strcmp(fault,"project-output-cross")){args[11]=0x6ffc;assert(tribes_memory_permissions_set(0x7000,4096,0));}
+   if(!strcmp(fault,"project-overflow"))args[6]=0xffffffc0;
+  }
+  assert(tribes_memory_permissions_set(0x3000,4096,1));
+  assert(gc(0xfffa0750,args,12,1)==(uint32_t)ok);
+  assert(tribes_memory_permissions_set(0x3000,4096,3));
+  for(unsigned i=0;i<3;i++){
+   memcpy(&actual[i],memory+args[9+i],8);
+   assert(fabs(actual[i]-expected[i])<=1e-11*fmax(1,fabs(expected[i])));
+   assert(memory[args[9+i]-1]==0xa5&&memory[args[9+i]+8]==0xa5);
+  }
+  assert(!memcmp(memory+args[6],model,sizeof model)&&!memcmp(memory+args[7],projection,sizeof projection)&&!memcmp(memory+args[8],viewport,sizeof viewport));
+  if(ok){ /* Output aliases matrix input; all inputs must already be staged. */
+   args[9]=args[6];assert(gc(0xfffa0750,args,12,1)==1);double alias;memcpy(&alias,memory+args[9],8);
+   assert(fabs(alias-expected[0])<=1e-11*fmax(1,fabs(expected[0])));args[9]=0x6001;
+  }else{ /* Failure does not access invalid output pointers. */
+   uint32_t failure[12];memcpy(failure,args,sizeof args);failure[9]=failure[10]=failure[11]=0xffffffff;
+   assert(!gc(0xfffa0750,failure,12,1));
+  }
+ }
+ puts("GLU projection: 20 native oracle cases, general/orthographic/perspective matrices, zero-W failure, checked unaligned/aliased buffers and stdcall CPU preservation pass");
+#else
+ (void)fault;
+#endif
+}
 static void guest_pixels(void){
  typedef void (*ReadPixels)(int,int,int,int,unsigned,unsigned,void *);
  ReadPixels read=(ReadPixels)SDL_GL_GetProcAddress("glReadPixels");assert(read);
@@ -1349,6 +1406,7 @@ static int window_main(int argc,char **argv){
  assert(tribes_graphics_configure(cpu._pointer_offset));
  strcpy((char *)memory+0x24000,"glu32");uint32_t module=CALL(60,0x24000);assert(module==0x20050000);
  strcpy((char *)memory+0x24000,"gluErrorString");assert(CALL(61,module,0x24000)==0xfffa0030);
+ strcpy((char *)memory+0x24000,"gluProject");assert(CALL(61,module,0x24000)==0xfffa0750);
  strcpy((char *)memory+0x24000,"unknown");assert(!CALL(61,module,0x24000)&&*SDL_GetError());CALL(62,module);
  assert(!CALL(61,module,0x24000));strcpy((char *)memory+0x24000,"unknown-library");assert(!CALL(60,0x24000)&&*SDL_GetError());
  /* The original passes a Win32-loaded GLU handle to SDL_LoadFunction. */
@@ -1357,6 +1415,7 @@ static int window_main(int argc,char **argv){
 #endif
  assert(tribes_sdl_set_memory_functions(cpu._pointer_offset,11,12,13,14));CALL(8);assert(CALL(18,SDL_INIT_VIDEO));
  #ifdef GRAPHICS
+ project_point(argc==2?argv[1]:NULL);
  strcpy((char *)memory+0x24000,"opengl32");module=tribes_load_library(cpu._pointer_offset,0x24000);assert(module==0x20040000);
  strcpy((char *)memory+0x24000,"wglGetProcAddress");assert(tribes_get_proc_address(cpu._pointer_offset,module,0x24000)==0xfffa00c0);
  strcpy((char *)memory+0x24000,"glActiveTextureARB");graphics_expected_error=6;assert(!GC(0xfffa00c0,1,0x24000));graphics_expected_error=0x19a5;

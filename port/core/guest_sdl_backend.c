@@ -2181,6 +2181,25 @@ void tribes_gl_get_float(_cpu *cpu,uint32_t name,uint32_t output){
     if(c&&c->core&&name==0x8192)value[0]=(GLfloat)c->mipmap_hint;else glGetFloatv(name,value);
     checked_copy(guest(cpu,output,bytes),value,bytes);graphics_active=0;leave(&frame);tribes_set_last_error(error);
 }
+uint32_t tribes_glu_project(_cpu *cpu,uint32_t xl,uint32_t xh,uint32_t yl,uint32_t yh,uint32_t zl,uint32_t zh,uint32_t model,uint32_t projection,uint32_t viewport,uint32_t wx,uint32_t wy,uint32_t wz){
+    WINDOW_ENTER();
+    /* GLU projection is CPU math and does not need a current GL context.
+       Stage complete column-major matrices before any possibly aliased output. */
+    double m[16],p[16],eye[4],clip[4];int32_t view[4];
+    double point[4]={gl_double_words(xl,xh),gl_double_words(yl,yh),gl_double_words(zl,zh),1.0};
+    checked_copy(m,guest(cpu,model,sizeof m),sizeof m);
+    checked_copy(p,guest(cpu,projection,sizeof p),sizeof p);
+    checked_copy(view,guest(cpu,viewport,sizeof view),sizeof view);
+    for(unsigned i=0;i<4;i++)eye[i]=m[i]*point[0]+m[i+4]*point[1]+m[i+8]*point[2]+m[i+12]*point[3];
+    for(unsigned i=0;i<4;i++)clip[i]=p[i]*eye[0]+p[i+4]*eye[1]+p[i+8]*eye[2]+p[i+12]*eye[3];
+    if(clip[3]==0.0)WINDOW_RETURN(0);
+    double inverse=1.0/clip[3];
+    double result[3]={(clip[0]*inverse*0.5+0.5)*view[2]+view[0],(clip[1]*inverse*0.5+0.5)*view[3]+view[1],clip[2]*inverse*0.5+0.5};
+    checked_copy(guest(cpu,wx,8),&result[0],8);
+    checked_copy(guest(cpu,wy,8),&result[1],8);
+    checked_copy(guest(cpu,wz,8),&result[2],8);
+    WINDOW_RETURN(1);
+}
 uint32_t tribes_glu_error_string(_cpu *cpu,uint32_t code){
     WINDOW_ENTER();const char *text=NULL;
 #if !TARGET_OS_IPHONE
