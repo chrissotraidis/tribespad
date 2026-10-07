@@ -64,7 +64,7 @@ extern unsigned sdl_test_live,sdl_test_fail;
 extern void bad_window(void),bad_context(void);
 #if defined(GRAPHICS) && !TARGET_OS_IPHONE
 extern void bad_frustum(void),bad_mult_matrix(void),bad_mult_matrix_double(void),bad_depth_mask(void),bad_is_enabled(void),bad_scale(void),bad_polygon_offset(void);
-extern void bad_alpha_func(void);
+extern void bad_alpha_func(void),bad_polygon_mode(void);
 extern void bad_fog_i(void),bad_fog_f(void),bad_fog_fv(void);
 extern void bad_light_fv(void),bad_light_f(void),bad_light_model_fv(void);
 extern void bad_rotate_f(void),bad_translate_f(void),bad_tex_coord2f(void);
@@ -910,6 +910,28 @@ static void matrix_stack(void){
  GC(0xfffa0660,0);glBegin(GL_TRIANGLE_FAN);glVertex2f(-1,-1);glVertex2f(1,-1);glVertex2f(1,1);glVertex2f(-1,1);glEnd();glReadPixels(8,8,1,1,GL_RGBA,GL_UNSIGNED_BYTE,px);assert(px[1]==255&&!glGetError());
  puts("Model matrix stack: native per-mode push/scale/pop, finite limits, error preservation, rejected begin-state changes and projected coverage PASS");
 }
+static void scene_polygon_mode(void){
+ strcpy((char *)memory+0x24000,"glPolygonMode");assert(CALL(63,0x24000)==0xfffa07c0);
+ GLenum faces[]={GL_FRONT,GL_BACK,GL_FRONT_AND_BACK},modes[]={GL_POINT,GL_LINE,GL_FILL};
+ for(unsigned f=0;f<3;f++)for(unsigned m=0;m<3;m++){
+  GLint expected[2],actual[2];glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);glPolygonMode(faces[f],modes[m]);glGetIntegerv(GL_POLYGON_MODE,expected);
+  glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);GC(0xfffa07c0,0,faces[f],modes[m]);glGetIntegerv(GL_POLYGON_MODE,actual);assert(!memcmp(actual,expected,sizeof actual));
+ }
+ GC(0xfffa07c0,0,GL_FRONT_AND_BACK,GL_FILL);GC(0xfffa07c0,0,0xffffffff,GL_LINE);assert(glGetError()==GL_INVALID_ENUM);GC(0xfffa07c0,0,GL_FRONT_AND_BACK,0xffffffff);assert(glGetError()==GL_INVALID_ENUM);
+ glBegin(GL_POINTS);GC(0xfffa07c0,0,GL_FRONT_AND_BACK,GL_LINE);glEnd();assert(glGetError()==GL_INVALID_OPERATION);GLint mode[2];glGetIntegerv(GL_POLYGON_MODE,mode);assert(mode[0]==GL_FILL&&mode[1]==GL_FILL);
+ glUseProgram(0);glDisable(GL_LIGHTING);glDisable(GL_TEXTURE_2D);glDisable(GL_BLEND);glDisable(GL_DEPTH_TEST);glDisable(GL_FOG);glDisable(GL_ALPHA_TEST);glDisable(GL_CULL_FACE);
+ glMatrixMode(GL_PROJECTION);glLoadIdentity();glMatrixMode(GL_MODELVIEW);glLoadIdentity();glViewport(0,0,64,64);glColor4f(0,1,0,1);unsigned char pixels[2][64*64*4];unsigned coverage[3]={0};
+ for(unsigned m=0;m<3;m++){
+  for(unsigned route=0;route<2;route++){
+   glClearColor(0,0,1,1);glClear(GL_COLOR_BUFFER_BIT);glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
+   if(!route)glPolygonMode(GL_FRONT_AND_BACK,modes[m]);else{glEnable(0xffffffff);GC(0xfffa07c0,0,GL_FRONT_AND_BACK,modes[m]);assert(glGetError()==GL_INVALID_ENUM);}
+   glBegin(GL_TRIANGLES);glVertex2f(-.75f,-.75f);glVertex2f(.75f,-.75f);glVertex2f(0,.75f);glEnd();glReadPixels(0,0,64,64,GL_RGBA,GL_UNSIGNED_BYTE,pixels[route]);
+  }
+  assert(!memcmp(pixels[0],pixels[1],sizeof pixels[0]));for(unsigned i=0;i<64*64;i++)if(pixels[1][i*4+1])coverage[m]++;
+ }
+ assert(coverage[0]>0&&coverage[1]>coverage[0]&&coverage[2]>coverage[1]);glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);glColor4f(1,1,1,1);assert(!glGetError());
+ puts("Polygon mode: independent faces, fill/line/point native framebuffer coverage, invalid and begin-state errors, retained errors and CPU ABI PASS");
+}
 static void scene_alpha(void){
  strcpy((char *)memory+0x24000,"glAlphaFunc");assert(CALL(63,0x24000)==0xfffa07b0);
  GLfloat refs[]={-1,0,.1f,.5f,1,2};
@@ -1220,7 +1242,7 @@ static void legacy_route(uint32_t original_window,uint32_t original_context,cons
  matrix_multiplication(fault,0);
  matrix_multiplication(fault,1);
  render_state(fault);
- scene_alpha();fog_arrays(fault);scene_fog(fault);scene_lighting(fault);
+ scene_alpha();scene_polygon_mode();fog_arrays(fault);scene_fog(fault);scene_lighting(fault);
  if(!fault){matrix_stack();polygon_offset();}
  GC(0xfffa0240,0,GL_MODELVIEW);GC(0xfffa0250,0);glGetDoublev(GL_MODELVIEW_MATRIX,actual);for(unsigned i=0;i<16;i++)assert(actual[i]==(i%5==0?1:0));
  GC(0xfffa0270,0,0,0,64,64);GLint viewport[4];glGetIntegerv(GL_VIEWPORT,viewport);assert(viewport[0]==0&&viewport[1]==0&&viewport[2]==64&&viewport[3]==64);
@@ -1523,6 +1545,7 @@ static int window_main(int argc,char **argv){
  if(argc==2&&!strcmp(argv[1],"bad-is-enabled")){bad_is_enabled();return 99;}
  if(argc==2&&!strcmp(argv[1],"bad-polygon-offset")){bad_polygon_offset();return 99;}
  if(argc==2&&!strcmp(argv[1],"bad-tex-coord2f")){bad_tex_coord2f();return 99;}
+ if(argc==2&&!strcmp(argv[1],"bad-polygon-mode")){bad_polygon_mode();return 99;}
  if(argc==2&&!strcmp(argv[1],"bad-alpha-func")){bad_alpha_func();return 99;}
  if(argc==2&&!strcmp(argv[1],"bad-fog-i")){bad_fog_i();return 99;}
  if(argc==2&&!strcmp(argv[1],"bad-fog-f")){bad_fog_f();return 99;}
@@ -1594,6 +1617,7 @@ static int window_main(int argc,char **argv){
  if(argc==2&&!strcmp(argv[1],"rotate-f-core")){GC(0xfffa0710,0,0,0,0,0x3f800000);assert(0);}
  if(argc==2&&!strcmp(argv[1],"translate-f-core")){GC(0xfffa06f0,0,0,0,0);assert(0);}
  if(argc==2&&!strcmp(argv[1],"color3ub-core")){GC(0xfffa06d0,0,128,128,128);assert(0);}
+ if(argc==2&&!strcmp(argv[1],"polygon-core")){GC(0xfffa07c0,0,GL_FRONT_AND_BACK,GL_FILL);assert(0);}
  if(argc==2&&!strcmp(argv[1],"alpha-core")){GC(0xfffa07b0,0,GL_GREATER,0);assert(0);}
  if(argc==2&&!strcmp(argv[1],"fog-array-core")){GC(0xfffa07a0,0,GL_FLOAT,32,0x3000);assert(0);}
  if(argc==2&&!strcmp(argv[1],"fog-i-core")){GC(0xfffa0770,0,GL_FOG_MODE,0x3001);assert(0);}

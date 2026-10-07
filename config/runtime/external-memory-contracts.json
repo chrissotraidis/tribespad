@@ -471,6 +471,7 @@
     "glFogi",
     "glFogf",
     "glAlphaFunc",
+    "glPolygonMode",
     "glFogfv",
     "glLightf",
     "glLightModelfv",

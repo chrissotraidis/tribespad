@@ -1560,6 +1560,14 @@ void tribes_gl_light_model_fv(_cpu *cpu,uint32_t name,uint32_t input){
     glLightModelfv(name,value);DRAW_RETURN();
 #endif
 }
+void tribes_gl_polygon_mode(_cpu *cpu,uint32_t face,uint32_t mode){
+    WINDOW_ENTER();
+#if TARGET_OS_IPHONE
+    (void)face;(void)mode;(void)error;stop();
+#else
+    (void)legacy_context();glPolygonMode(face,mode);DRAW_RETURN();
+#endif
+}
 void tribes_gl_alpha_func(_cpu *cpu,uint32_t function,uint32_t bits){
     WINDOW_ENTER();
 #if TARGET_OS_IPHONE

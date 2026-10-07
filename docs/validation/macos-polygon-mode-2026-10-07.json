@@ -1,0 +1,185 @@
+{
+  "date": "2026-10-07",
+  "original_execution": {
+    "pid": 51409,
+    "engine_sha256": "f2ef309d950d247f9203d69487b7cdf2b87b9359525fe463cdd41fcb1e87a446",
+    "next_stop": {
+      "pid": 51409,
+      "frames": [
+        "abort",
+        "tribes_lookup",
+        "tribes_dispatch",
+        "tribes_enter",
+        "main",
+        "start"
+      ],
+      "scope": "Actual isolated offline app stop; selected-thread CPU/stack, exact renderer fields and native context identity, not a whole-memory snapshot.",
+      "cpu_address": "0x110bd0d00",
+      "base": "0x7000000000",
+      "esp": "0x2ff4d4",
+      "registers": [
+        11058,
+        36,
+        36,
+        1648294984,
+        3142868,
+        3142940,
+        8641392,
+        3142928
+      ],
+      "stack_from": "0x2ff4c4",
+      "stack": [
+        "0xbe111562",
+        "0x2ff510",
+        "0x83db70",
+        "0x623efc48",
+        "0x5b96fa",
+        "0x408",
+        "0x1b02",
+        "0x3f60f66a",
+        "0xbcf577fb",
+        "0xbf7fb251",
+        "0x0",
+        "0x3caaaaab",
+        "0x0",
+        "0x0",
+        "0x0",
+        "0x0",
+        "0x3caaaaab",
+        "0x0",
+        "0x0",
+        "0x0",
+        "0x623efa00",
+        "0x65032600",
+        "0x2ff628",
+        "0x5b4ed2",
+        "0x2ff547",
+        "0xbd4ccccd",
+        "0x3f544f31",
+        "0x3e2e4b6a",
+        "0x0",
+        "0x0",
+        "0x5be",
+        "0x3bc",
+        "0x0",
+        "0x3f800000",
+        "0x0",
+        "0x0",
+        "0xc4800000",
+        "0x0",
+        "0x3f800000",
+        "0x0"
+      ],
+      "mission_literal_bytes": "c745cc3acd13bfc745c43acd133fc745c83acd133f",
+      "mission_literal_values": [
+        "0xbf13cd3a",
+        "0x3f13cd3a",
+        "0x3f13cd3a"
+      ],
+      "renderer_globals": {
+        "0x1046ce48": "0x0",
+        "0x1046ce60": "0x0",
+        "0x1046ceec": "0xdb000002",
+        "0x1046e258": "0x0",
+        "0x1046ce50": "0x0",
+        "0x1046c8a4": "0x0",
+        "0x1046ca80": "0x0",
+        "0x1046c9b0": "0xfffa0070",
+        "0x1046c9d0": "0x1",
+        "0x1046ca90": "0x0",
+        "0x1046c6f4": "0x0",
+        "0x1046cb74": "0x0",
+        "0x1046cb40": "0x1",
+        "0x101d6828": "0x9e826c"
+      },
+      "owner_vtable": "0x7e",
+      "window_dimensions": [
+        1470,
+        956
+      ],
+      "native_gl": {
+        "context": {
+          "error": "success",
+          "value": "0x00000079360a3b60",
+          "summary": null
+        }
+      }
+    },
+    "trace_counts": {
+      "tribes_sdl_gl_swap_window": 7095,
+      "tribes_render_job_step": 12,
+      "tribes_gl_light_fv": 4,
+      "tribes_gl_light_model_fv": 4,
+      "loc_10043BBC": 4,
+      "loc_10043C76": 4,
+      "loc_10040FFF": 4,
+      "loc_10041026": 4,
+      "loc_4D0B8B": 4,
+      "loc_624164": 4
+    },
+    "scope": "Original Charybdis third-person opening frame, HUD 00:16, terrain/sky/player present but severe stale silhouettes and terrain/HUD artifacts. No control acceptance. No post-scene glClear call recorded before stop.",
+    "capture": "generated/integration-review/apple-render-dimensions/scene-polygon-stop-51409",
+    "screenshot_sha256": "194ca4e8fe6f3fe3f4b091a1eb177af35a33397f8ba84f045a96e386558f82c9",
+    "cleanup": {
+      "pid": 51409,
+      "original_audio": "default 106\n113 MacBook Air Microphone\n106 MacBook Air Speakers\n118 eqMac\n88 Microsoft Teams Audio\n84 Jump Desktop Microphone\n57 Jump Desktop Audio\n",
+      "restored": "default 106\n113 MacBook Air Microphone\n106 MacBook Air Speakers\n118 eqMac\n88 Microsoft Teams Audio\n84 Jump Desktop Microphone\n57 Jump Desktop Audio\n",
+      "scope": "Actual signed isolated original offline app; diagnostic stop/manual termination is not gameplay acceptance."
+    }
+  },
+  "implementation": {
+    "api": "glPolygonMode",
+    "token": "0xfffa07c0",
+    "original_call": "0x5b96f4",
+    "original_return": "0x5b96fa",
+    "slot": "0x9e9cc8",
+    "arguments": [
+      "GL_FRONT_AND_BACK (0x408)",
+      "GL_FILL (0x1b02)"
+    ],
+    "lookup": {
+      "string": "0x78ac7c",
+      "push": "0x55df4a",
+      "get_proc": "0x55df50",
+      "store": "0x55df56"
+    },
+    "semantics": "Native compatibility GL with two DWORD stdcall arguments; original state, invalid enum/begin errors and CPU/LastError preserved. GLES remains unavailable."
+  },
+  "tests": {
+    "graphics_passed": true,
+    "graphics_receipt_sha256": "168e6a6cd5c01c469edc50583f9a8d158536292b126fa07a65ca4e260548f0c6",
+    "runs": [
+      {
+        "mode": "normal",
+        "passed": true,
+        "fault_count": 0
+      },
+      {
+        "mode": "tsan",
+        "passed": true,
+        "fault_count": 0
+      },
+      {
+        "mode": "checked",
+        "passed": true,
+        "fault_count": 149
+      }
+    ],
+    "scope": "Actual native point/line/fill framebuffer equality and distinct coverage, independent front/back state, error retention, ABI and core-context rejection; not original-game execution of the new call.",
+    "mobile_compile": true,
+    "mission_literals": true,
+    "render_job_handoff": true
+  },
+  "full_build": {
+    "state": "running",
+    "pid": 55887,
+    "session": 9368,
+    "log": "generated/integration-review/fog-state/polygon-full-engine.log"
+  },
+  "next_action": "Finish live full build, package and relaunch directly to Charybdis. Confirm original polygon/alpha returns and inspect clear/presentation depth state; test WASD after tutorial lockout.",
+  "limitations": [
+    "New glPolygonMode has not yet executed in the original app.",
+    "Read-only probes now enable clear/swap at first renderer job, avoiding loading-screen breakpoint overhead; presentation depth capture not yet exercised.",
+    "Complete rendering, controls, HD, community multiplayer and Apple mobile acceptance remain unfinished."
+  ]
+}

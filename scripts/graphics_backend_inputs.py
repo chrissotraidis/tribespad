@@ -56,6 +56,7 @@ EXPORTS += [('glVertex3fv','tribes_gl_vertex3fv',1,False,0x20040000)]
 EXPORTS += [('glFogi','tribes_gl_fog_i',2,False,0x20040000),('glFogf','tribes_gl_fog_f',2,False,0x20040000),('glFogfv','tribes_gl_fog_fv',2,False,0x20040000)]
 EXPORTS += [('glFogCoordPointerEXT','tribes_gl_fog_coord_pointer',3,False,0x20040000)]
 EXPORTS += [('glAlphaFunc','tribes_gl_alpha_func',2,False,0x20040000)]
+EXPORTS += [('glPolygonMode','tribes_gl_polygon_mode',2,False,0x20040000)]
 def prepare(out):
  bindings={};rows=[]
  for i,(name,helper,n,returns,module) in enumerate(EXPORTS):
