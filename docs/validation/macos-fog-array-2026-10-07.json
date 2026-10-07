@@ -1,0 +1,59 @@
+{
+  "date": "2026-10-07",
+  "pid": 34187,
+  "binary_sha256": "c1f431845837c90a334901cda888c98fddb59e2bdaedbf141b77c54a5b85bc78",
+  "signed_engine_sha256": "623cc15b305ef52dec67f16e12850b4e5b37aa68fc462f993d43cf9a381a59a7",
+  "initialized": true,
+  "checked_subpages": true,
+  "finite_revisions": 33,
+  "capture": "generated/integration-review/apple-render-dimensions/scene-alpha-stop-34187",
+  "actual_returns": {
+    "loc_51685B": 4,
+    "loc_5168BE": 4,
+    "loc_518136": 4,
+    "loc_518147": 4,
+    "tb_fp_control_query_pair": 4,
+    "loc_10115165": 4
+  },
+  "next_stop": {
+    "api": "glAlphaFunc",
+    "original_call": "0x594a17",
+    "original_return": "0x594a1d",
+    "slot": "0x9e8aa0",
+    "function": "GL_GREATER (0x204)",
+    "reference_bits": "0x3dcccccd"
+  },
+  "input": {
+    "native_hid_delivered": [
+      "mouse look",
+      "E forward",
+      "Tab camera toggle",
+      "left mouse fire",
+      "right mouse jet",
+      "F1 HUD help"
+    ],
+    "verified_response": "Compass orientation changes after mouse look; original Training script advances through HUD tutorial to health-patch objective.",
+    "unverified": [
+      "independent forward movement",
+      "firing result",
+      "jetting result",
+      "camera toggle",
+      "HUD help toggle"
+    ],
+    "confound": "Training temporarily immobilizes player; major persistent geometry/UI rendering corruption prevents clear acceptance."
+  },
+  "rendering_correct": false,
+  "controls_accepted": false,
+  "hd_accepted": false,
+  "multiplayer_accepted": false,
+  "mobile_game_accepted": false,
+  "scope": "Actual original signed app. Selected-thread snapshots are not whole-memory snapshots. A planned read-only clear/depth probe was not installed before this app reached the alpha call; no clear/depth result is claimed.",
+  "subsequent_alpha_component_tests": {
+    "passed": true,
+    "checked_guard_cases": 147,
+    "normal_checked_tsan": true,
+    "mobile_checked_compilation_only": true,
+    "full_engine_validation_pending": true,
+    "result_sha256": "24f7328d224ca64017ea606303e980320a58456b3d0b6375ea8ed46b728fa93b"
+  }
+}

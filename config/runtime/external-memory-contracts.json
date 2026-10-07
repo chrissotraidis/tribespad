@@ -470,6 +470,7 @@
     "glLightfv",
     "glFogi",
     "glFogf",
+    "glAlphaFunc",
     "glFogfv",
     "glLightf",
     "glLightModelfv",

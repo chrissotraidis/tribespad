@@ -1560,6 +1560,15 @@ void tribes_gl_light_model_fv(_cpu *cpu,uint32_t name,uint32_t input){
     glLightModelfv(name,value);DRAW_RETURN();
 #endif
 }
+void tribes_gl_alpha_func(_cpu *cpu,uint32_t function,uint32_t bits){
+    WINDOW_ENTER();
+#if TARGET_OS_IPHONE
+    (void)function;(void)bits;(void)error;stop();
+#else
+    (void)legacy_context();GLfloat reference;memcpy(&reference,&bits,sizeof reference);
+    glAlphaFunc(function,reference);DRAW_RETURN();
+#endif
+}
 void tribes_gl_fog_i(_cpu *cpu,uint32_t name,uint32_t value){
     WINDOW_ENTER();
 #if TARGET_OS_IPHONE

@@ -64,6 +64,7 @@ extern unsigned sdl_test_live,sdl_test_fail;
 extern void bad_window(void),bad_context(void);
 #if defined(GRAPHICS) && !TARGET_OS_IPHONE
 extern void bad_frustum(void),bad_mult_matrix(void),bad_mult_matrix_double(void),bad_depth_mask(void),bad_is_enabled(void),bad_scale(void),bad_polygon_offset(void);
+extern void bad_alpha_func(void);
 extern void bad_fog_i(void),bad_fog_f(void),bad_fog_fv(void);
 extern void bad_light_fv(void),bad_light_f(void),bad_light_model_fv(void);
 extern void bad_rotate_f(void),bad_translate_f(void),bad_tex_coord2f(void);
@@ -909,6 +910,27 @@ static void matrix_stack(void){
  GC(0xfffa0660,0);glBegin(GL_TRIANGLE_FAN);glVertex2f(-1,-1);glVertex2f(1,-1);glVertex2f(1,1);glVertex2f(-1,1);glEnd();glReadPixels(8,8,1,1,GL_RGBA,GL_UNSIGNED_BYTE,px);assert(px[1]==255&&!glGetError());
  puts("Model matrix stack: native per-mode push/scale/pop, finite limits, error preservation, rejected begin-state changes and projected coverage PASS");
 }
+static void scene_alpha(void){
+ strcpy((char *)memory+0x24000,"glAlphaFunc");assert(CALL(63,0x24000)==0xfffa07b0);
+ GLfloat refs[]={-1,0,.1f,.5f,1,2};
+ for(unsigned fn=GL_NEVER;fn<=GL_ALWAYS;fn++)for(unsigned i=0;i<6;i++){
+  GLfloat expected,actual;uint32_t bits;memcpy(&bits,&refs[i],4);glAlphaFunc(fn,refs[i]);glGetFloatv(GL_ALPHA_TEST_REF,&expected);
+  GC(0xfffa07b0,0,fn,bits);GLint function;glGetIntegerv(GL_ALPHA_TEST_FUNC,&function);glGetFloatv(GL_ALPHA_TEST_REF,&actual);assert(function==(GLint)fn&&actual==expected);
+ }
+ GC(0xfffa07b0,0,GL_GREATER,0x3dcccccd);GC(0xfffa07b0,0,0xffffffff,0);assert(glGetError()==GL_INVALID_ENUM);GLint fn;glGetIntegerv(GL_ALPHA_TEST_FUNC,&fn);assert(fn==GL_GREATER);
+ glBegin(GL_POINTS);GC(0xfffa07b0,0,GL_LESS,0);glEnd();assert(glGetError()==GL_INVALID_OPERATION);glGetIntegerv(GL_ALPHA_TEST_FUNC,&fn);assert(fn==GL_GREATER);
+ glUseProgram(0);glDisable(GL_LIGHTING);glDisable(GL_TEXTURE_2D);glDisable(GL_BLEND);glDisable(GL_DEPTH_TEST);glDisable(GL_FOG);glEnable(GL_ALPHA_TEST);
+ glMatrixMode(GL_PROJECTION);glLoadIdentity();glMatrixMode(GL_MODELVIEW);glLoadIdentity();glViewport(0,0,64,64);unsigned char pixels[2][64*64*4];
+ for(unsigned route=0;route<2;route++){
+  glClearColor(0,0,1,1);glClear(GL_COLOR_BUFFER_BIT);glAlphaFunc(GL_ALWAYS,0);
+  if(!route)glAlphaFunc(GL_GREATER,.1f);else{glEnable(0xffffffff);GC(0xfffa07b0,0,GL_GREATER,0x3dcccccd);assert(glGetError()==GL_INVALID_ENUM);}
+  glBegin(GL_QUADS);glColor4f(1,0,0,.05f);glVertex2f(-1,-1);glVertex2f(0,-1);glVertex2f(0,1);glVertex2f(-1,1);glColor4f(0,1,0,.5f);glVertex2f(0,-1);glVertex2f(1,-1);glVertex2f(1,1);glVertex2f(0,1);glEnd();
+  glReadPixels(0,0,64,64,GL_RGBA,GL_UNSIGNED_BYTE,pixels[route]);
+ }
+ assert(!memcmp(pixels[0],pixels[1],sizeof pixels[0]));assert(pixels[1][(32*64+16)*4+2]==255&&pixels[1][(32*64+48)*4+1]==255);
+ glDisable(GL_ALPHA_TEST);glAlphaFunc(GL_ALWAYS,0);glColor4f(1,1,1,1);assert(!glGetError());
+ puts("Alpha test: all comparisons and clamped references, original GREATER/0.1 pixel rejection, native framebuffer equality, retained errors and CPU ABI PASS");
+}
 static void fog_arrays(const char *fault){
  strcpy((char *)memory+0x24000,"glFogCoordPointerEXT");assert(CALL(63,0x24000)==0xfffa07a0);
  GLfloat vertices[]={-.8f,-.8f,.8f,-.8f,.8f,.8f,-.8f,.8f},blue[]={0,0,1,1};
@@ -1198,7 +1220,7 @@ static void legacy_route(uint32_t original_window,uint32_t original_context,cons
  matrix_multiplication(fault,0);
  matrix_multiplication(fault,1);
  render_state(fault);
- fog_arrays(fault);scene_fog(fault);scene_lighting(fault);
+ scene_alpha();fog_arrays(fault);scene_fog(fault);scene_lighting(fault);
  if(!fault){matrix_stack();polygon_offset();}
  GC(0xfffa0240,0,GL_MODELVIEW);GC(0xfffa0250,0);glGetDoublev(GL_MODELVIEW_MATRIX,actual);for(unsigned i=0;i<16;i++)assert(actual[i]==(i%5==0?1:0));
  GC(0xfffa0270,0,0,0,64,64);GLint viewport[4];glGetIntegerv(GL_VIEWPORT,viewport);assert(viewport[0]==0&&viewport[1]==0&&viewport[2]==64&&viewport[3]==64);
@@ -1501,6 +1523,7 @@ static int window_main(int argc,char **argv){
  if(argc==2&&!strcmp(argv[1],"bad-is-enabled")){bad_is_enabled();return 99;}
  if(argc==2&&!strcmp(argv[1],"bad-polygon-offset")){bad_polygon_offset();return 99;}
  if(argc==2&&!strcmp(argv[1],"bad-tex-coord2f")){bad_tex_coord2f();return 99;}
+ if(argc==2&&!strcmp(argv[1],"bad-alpha-func")){bad_alpha_func();return 99;}
  if(argc==2&&!strcmp(argv[1],"bad-fog-i")){bad_fog_i();return 99;}
  if(argc==2&&!strcmp(argv[1],"bad-fog-f")){bad_fog_f();return 99;}
  if(argc==2&&!strcmp(argv[1],"bad-fog-fv")){bad_fog_fv();return 99;}
@@ -1571,6 +1594,7 @@ static int window_main(int argc,char **argv){
  if(argc==2&&!strcmp(argv[1],"rotate-f-core")){GC(0xfffa0710,0,0,0,0,0x3f800000);assert(0);}
  if(argc==2&&!strcmp(argv[1],"translate-f-core")){GC(0xfffa06f0,0,0,0,0);assert(0);}
  if(argc==2&&!strcmp(argv[1],"color3ub-core")){GC(0xfffa06d0,0,128,128,128);assert(0);}
+ if(argc==2&&!strcmp(argv[1],"alpha-core")){GC(0xfffa07b0,0,GL_GREATER,0);assert(0);}
  if(argc==2&&!strcmp(argv[1],"fog-array-core")){GC(0xfffa07a0,0,GL_FLOAT,32,0x3000);assert(0);}
  if(argc==2&&!strcmp(argv[1],"fog-i-core")){GC(0xfffa0770,0,GL_FOG_MODE,0x3001);assert(0);}
  if(argc==2&&!strcmp(argv[1],"fog-f-core")){GC(0xfffa0780,0,GL_FOG_MODE,0x3001);assert(0);}
