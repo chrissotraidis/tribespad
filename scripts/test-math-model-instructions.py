@@ -105,11 +105,15 @@ for index,(pc,raw,op,dest,src) in enumerate(MATH_MODEL_SITES):
     right=(edges[(sample//16+1)%len(edges)] if sample<len(edges)*16 else rng.getrandbits(64),edges[(sample//16+15)%len(edges)] if sample<len(edges)*16 else rng.getrandbits(64))
     if op.startswith('mulmem'):operand=struct.pack('<2Q',*right)
     elif src!=dest:struct.pack_into('<2Q',state,176+src*16,*right)
+  if op=='subd' and sample<16:
+   values=[0,1,0x7fffffff,0x80000000,0xffffffff]
+   struct.pack_into('<4I',state,176+dest*16,*[values[(sample+i)%5] for i in range(4)])
+   struct.pack_into('<4I',state,176+src*16,*[values[(sample+i+1)%5] for i in range(4)])
   if op=='mulmemeax':struct.pack_into('<I',state,0,([0x10,0xff0,0x1000][sample%3]-src)&0xffffffff)
   requests+=struct.pack('<4I',index,control,*struct.unpack_from('<I',state,0),*struct.unpack_from('<I',state,8))+state[176:304]+operand
   inputs.append((index,state,operand))
  # Replay both reached CPU/control/vector states separately.
- for actual_capture in [capture,next_capture,(R/'generated/integration-review/apple-render-dimensions/execution/cpu.bin').read_bytes()]:
+ for actual_capture in [capture,next_capture,(R/'generated/integration-review/apple-render-dimensions/scene-present-stop-87731/cpu.bin').read_bytes()]:
   state=bytearray(actual_capture);struct.pack_into('<I',state,16,4090);struct.pack_into('<Q',state,112,base)
   control=struct.unpack_from('<I',state,304)[0]
   operand=struct.pack('<2d',.5,-2.)
@@ -166,5 +170,5 @@ for name,address,permission,control,operand in [
  if name.startswith('unmasked'):struct.pack_into('<I',expected,304,control|1)
  assert os.WIFEXITED(status) and os.WEXITSTATUS(status)==99 and snapshot==bytes(expected),(name,status,snapshot.hex())
  memory_faults.append(name)
-report=dict(passed=True,memory_faults=memory_faults,cases=len(inputs),sites=len(MATH_MODEL_SITES),per_site=per_site,source_rejections=rejections,unmasked_destination_preservation=faults,captured_cpu_sha256=sha(captured),next_captured_cpu_sha256=sha(next_captured),captured_conversion_input=hex(captured_xmm1),sources_sha256={str(p.relative_to(R)):sha(p) for p in [pathlib.Path(__file__).resolve(),R/'scripts/patch_runtime_inputs.py',R/'port/llasm-support/tribes_sse.c',R/'port/llasm-support/tribes_sse.h',image]},oracle_source_sha256=sha(oracle_source),oracle_binary_sha256=sha(oracle),requests_sha256=sha(out/'requests.bin'),reference_sha256=sha(out/'reference.bin'),library_sha256=sha(library),math=math['evidence'],scope='Fifty pinned emitted sites against fresh Rosetta x86 instructions; two memory operands relocated to aligned oracle storage. Original guest effective addresses independently exercised, including EAX wrap and page-edge reads. All rounding/DAZ/FTZ combinations, boundaries, NaN/invalid/precision/sticky status and register aliases. Full440 CPU including flags/x87/YMM and8192 memory canaries. Four deliberate unmasked stops preserve destination. Fallback stack save independently checked with existing protected-store test. No precise unmasked Windows delivery, complete math routine, gameplay or physical Intel claim.')
+report=dict(passed=True,memory_faults=memory_faults,cases=len(inputs),sites=len(MATH_MODEL_SITES),per_site=per_site,source_rejections=rejections,unmasked_destination_preservation=faults,captured_cpu_sha256=sha(captured),next_captured_cpu_sha256=sha(next_captured),captured_conversion_input=hex(captured_xmm1),sources_sha256={str(p.relative_to(R)):sha(p) for p in [pathlib.Path(__file__).resolve(),R/'scripts/patch_runtime_inputs.py',R/'port/llasm-support/tribes_sse.c',R/'port/llasm-support/tribes_sse.h',image]},oracle_source_sha256=sha(oracle_source),oracle_binary_sha256=sha(oracle),requests_sha256=sha(out/'requests.bin'),reference_sha256=sha(out/'reference.bin'),library_sha256=sha(library),math=math['evidence'],scope='Seventy-four pinned emitted sites against fresh Rosetta x86 instructions; two memory operands relocated to aligned oracle storage. Original guest effective addresses independently exercised, including EAX wrap and page-edge reads. All rounding/DAZ/FTZ combinations, boundaries, NaN/invalid/precision/sticky status and register aliases. Full440 CPU including flags/x87/YMM and8192 memory canaries. Four deliberate unmasked stops preserve destination. Fallback stack save independently checked with existing protected-store test. No precise unmasked Windows delivery, complete math routine, gameplay or physical Intel claim.')
 (out/'result.json').write_text(json.dumps(report,indent=2)+'\n');print('PASS:',len(inputs),'checked ARM64/x86 cases across',len(per_site),'original math sites;',len(faults),'unmasked destination-preservation stops')

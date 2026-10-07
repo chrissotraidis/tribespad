@@ -134,6 +134,31 @@ MATH_MODEL_SITES=[
  (0x101262c2,'660f59d8','mul',3,0),
  (0x101262ca,'660f598890000000','mulmemeax',1,0x90),
  (0x101262d2,'660f59e3','mul',4,3),
+ # Second math call in the original scene continuation at0x10041021.
+ (0x10125e83,'0fae5c2404','save',0,0),
+ (0x10125ef6,'660f59ca','mul',1,2),
+ (0x10125efe,'660f59d9','mul',3,1),
+ (0x10125f0a,'660f59eb','mul',5,3),
+ (0x10125f16,'660f59eb','mul',5,3),
+ (0x10125f22,'660f59eb','mul',5,3),
+ (0x10125f36,'660fc6db01','swapq',3,3),
+ (0x10125f5d,'660f59ca','mul',1,2),
+ (0x10125f65,'660f59d9','mul',3,1),
+ (0x10125f71,'660f59eb','mul',5,3),
+ (0x10125f7d,'660f59eb','mul',5,3),
+ (0x10125f89,'660f59eb','mul',5,3),
+ (0x10125f95,'660f59eb','mul',5,3),
+ (0x10125fa1,'660f59eb','mul',5,3),
+ (0x10125fad,'660f59eb','mul',5,3),
+ (0x10125fb9,'660f59eb','mul',5,3),
+ (0x10125fcd,'660fc6db01','swapq',3,3),
+ (0x10126011,'660ffadd','subd',3,5),
+ (0x10126072,'660f59ca','mul',1,2),
+ (0x1012607a,'660f59d9','mul',3,1),
+ (0x10126086,'660f59eb','mul',5,3),
+ (0x10126092,'660f59eb','mul',5,3),
+ (0x1012609e,'660f59eb','mul',5,3),
+ (0x101260b2,'660fc6db01','swapq',3,3),
 ]
 def translate_math_model(dll,image):
  assert sha(image)=='eaf5a42d301cc64a6e526aa49a82dbaefe655ed1ac0ba67939d0bab2fb6ab607'
@@ -158,6 +183,24 @@ call void @tb_sse_insertw(%_cpu* %cpu, i32 0, i32 %math_word, i32 3)'''
   elif op=='save':
    helper='tb_math_stmxcsr_1010cef3';declarations[helper]='declare void @'+helper+'(%_cpu*)'
    body='call void @'+helper+'(%_cpu* %cpu)'
+  elif op in ['swapq','subd']:
+   # These finite register-only instructions do not modify flags/MXCSR/YMM.
+   # Stage both operands before publishing; vector subtraction wraps per lane.
+   vector='<2 x i64>' if op=='swapq' else '<4 x i32>'
+   body=f'''%math_cpu = bitcast %_cpu* %cpu to i8*
+%math_left_bytes = getelementptr i8, i8* %math_cpu, i64 {176+16*dest}
+%math_left_pointer = bitcast i8* %math_left_bytes to {vector}*
+%math_left = load {vector}, {vector}* %math_left_pointer, align 4'''
+   if op=='swapq':
+    assert dest==source and raw=='660fc6db01'
+    body+='\n%math_result = shufflevector <2 x i64> %math_left, <2 x i64> %math_left, <2 x i32> <i32 1, i32 0>'
+   else:
+    body+=f'''
+%math_right_bytes = getelementptr i8, i8* %math_cpu, i64 {176+16*source}
+%math_right_pointer = bitcast i8* %math_right_bytes to {vector}*
+%math_right = load {vector}, {vector}* %math_right_pointer, align 4
+%math_result = sub {vector} %math_left, %math_right'''
+   body+=f'\nstore {vector} %math_result, {vector}* %math_left_pointer, align 4'
   elif op in ['mulmemabs','mulmemeax']:
    helper='tb_sse_mulpdmem';declarations[helper]='declare void @'+helper+'(%_cpu*, i32, i32)'
    if op=='mulmemabs':

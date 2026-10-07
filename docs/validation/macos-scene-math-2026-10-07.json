@@ -182,9 +182,455 @@
     "mission literals normal/checked/TSan",
     "mission entry normal/checked",
     "renderer dimensions normal/checked with30 protected cases",
-    "MXCSR584 cases and3 checked faults"
+    "MXCSR584 cases and3 checked faults",
+    "console fade:256 CALL +3392 whole-fade cases",
+    "post-file patch:2816 cases",
+    "collision patch:896 cases",
+    "console animation:2560 cases;228 recorded Unicorn/Rosetta MXCSR differences retained"
   ],
   "mobile": "Changed SSE support and instruction bindings checked-compiled for ARM64 device/Simulator; no mobile execution.",
-  "full_engine": "Running exec session7901; log generated/integration-review/scene-math/full-engine.log",
-  "playable": false
+  "full_engine": {
+    "state": "finished",
+    "binary_sha256": "29a8bf5094bfd73dda495483dd500325ccdf906bcad63cf460f335b10f6ea940",
+    "initialized": true,
+    "attach_returned": true,
+    "execution_timeout": true,
+    "playable": false,
+    "scope": "60-second startup observation, not playable acceptance. Native and checked runtime rebuilt:80 objects each."
+  },
+  "playable": false,
+  "actual_app": {
+    "pid": 94967,
+    "window": 18018,
+    "native_hid": [
+      "EULA accepted",
+      "local alias tribespad",
+      "Alt+Enter window mode",
+      "Training Charybdis Easy START"
+    ],
+    "first_math_return": "0x10040fff",
+    "observed_render_job_steps": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "scene_swaps_observed": 0,
+    "next_stop": {
+      "pid": 94967,
+      "frames": [
+        "halopad_trap_unimplemented",
+        "loc_10125E80",
+        "tribes_enter",
+        "main",
+        "start"
+      ],
+      "scope": "Actual isolated offline app stop; selected-thread CPU/stack, exact renderer fields and native context identity, not a whole-memory snapshot.",
+      "cpu_address": "0x111144d00",
+      "base": "0x7000000000",
+      "esp": "0x2ff2ac",
+      "registers": [
+        270324320,
+        64,
+        1408,
+        1646690816,
+        3142316,
+        3142336,
+        1646690816,
+        3143084
+      ],
+      "stack_from": "0x2ff29c",
+      "stack": [
+        "0x0",
+        "0x0",
+        "0x0",
+        "0x0",
+        "0x37f",
+        "0x1fb3",
+        "0x10041026",
+        "0x62268200",
+        "0x62268200",
+        "0x2ff404",
+        "0x50470d",
+        "0x65021400",
+        "0x2ff5ac",
+        "0x43c80000",
+        "0x3e23e8c0",
+        "0x2ff5b8",
+        "0x3fc90fdb",
+        "0x0",
+        "0x0",
+        "0x0",
+        "0x369f4efd",
+        "0xbffa238d",
+        "0xc000562a",
+        "0x2ff540",
+        "0x2ff3ec",
+        "0x5d9c35",
+        "0x3e4ccccd",
+        "0x40400000",
+        "0x0",
+        "0x0",
+        "0x0",
+        "0x3f800000",
+        "0xb5e39569",
+        "0xaf6b14a6",
+        "0x3e23e8c0",
+        "0x359ed140",
+        "0x3f32abae",
+        "0xbf375685",
+        "0xc462891e",
+        "0x35a301d8"
+      ],
+      "mission_literal_bytes": "c745cc3acd13bfc745c43acd133fc745c83acd133f",
+      "mission_literal_values": [
+        "0xbf13cd3a",
+        "0x3f13cd3a",
+        "0x3f13cd3a"
+      ],
+      "instruction_pc": "0x10125e83",
+      "renderer_globals": {
+        "0x1046ce48": "0x0",
+        "0x1046ce60": "0x0",
+        "0x1046ceec": "0xdb000002",
+        "0x1046e258": "0x0",
+        "0x1046ce50": "0x0",
+        "0x1046c8a4": "0x0",
+        "0x1046ca80": "0x0",
+        "0x1046c9b0": "0xfffa0070",
+        "0x1046c9d0": "0x1",
+        "0x1046ca90": "0x0",
+        "0x1046c6f4": "0x0",
+        "0x1046cb74": "0x0",
+        "0x1046cb40": "0x1",
+        "0x101d6828": "0x9e826c"
+      },
+      "owner_vtable": "0x77d128",
+      "window_dimensions": [
+        1470,
+        956
+      ],
+      "native_gl": {
+        "context": {
+          "error": "success",
+          "value": "0x0000007ae0643bb0",
+          "summary": null
+        }
+      }
+    },
+    "final_window": "black; no playable map",
+    "audio_retry": "PID94424 stalled in real CoreAudio AudioComponentInstanceNew before menus; owned process stopped and audio restored. Retry94967 succeeded without code or service changes.",
+    "restoration": {
+      "pid": 94967,
+      "original_audio": "default 57\n113 MacBook Air Microphone\n106 MacBook Air Speakers\n118 eqMac\n88 Microsoft Teams Audio\n84 Jump Desktop Microphone\n57 Jump Desktop Audio\n",
+      "restored": "default 57\n113 MacBook Air Microphone\n106 MacBook Air Speakers\n118 eqMac\n88 Microsoft Teams Audio\n84 Jump Desktop Microphone\n57 Jump Desktop Audio\n",
+      "scope": "Actual signed isolated original offline app; diagnostic stop/manual termination is not gameplay acceptance."
+    },
+    "evidence_sha256": {
+      "next-stop.json": "e37a8f0d0630a25a7d046d9b563747b96916b65f4507d258e6643fe441fe2694",
+      "cpu.bin": "d28ba9ea9671bc02a2ccc2abab019b1ab2158c4a84fc205d5ae2c24bb77b8158",
+      "presentation-trace.json": "f577cca8dd1478053ff927c04a33aa9ffea2ecf7c15e7a81eab5913191d1dc5e",
+      "stopped.png": "df5a44cceecdc00c04971825af56fe6b3b44d2947c4624b0949ce6020ce207e1",
+      "app-build.json": "9fd92c90b535a0efe44346e4e4185c894e5738a8bb07c4fe60f1d9a996ca6c21",
+      "observation.json": "cd51dcb9dd63b58447f6313e392157bf1d92203f16efdc32af09a28e87af0a42"
+    }
+  },
+  "second_kernel": {
+    "entry": "0x10125e80",
+    "caller": "0x10041021",
+    "return_pc": "0x10041026",
+    "new_sites": [
+      {
+        "pc": "0x10125e83",
+        "bytes": "0fae5c2404",
+        "mnemonic": "stmxcsr",
+        "operands": "dword ptr [esp + 4]"
+      },
+      {
+        "pc": "0x10125ef6",
+        "bytes": "660f59ca",
+        "mnemonic": "mulpd",
+        "operands": "xmm1, xmm2"
+      },
+      {
+        "pc": "0x10125efe",
+        "bytes": "660f59d9",
+        "mnemonic": "mulpd",
+        "operands": "xmm3, xmm1"
+      },
+      {
+        "pc": "0x10125f0a",
+        "bytes": "660f59eb",
+        "mnemonic": "mulpd",
+        "operands": "xmm5, xmm3"
+      },
+      {
+        "pc": "0x10125f16",
+        "bytes": "660f59eb",
+        "mnemonic": "mulpd",
+        "operands": "xmm5, xmm3"
+      },
+      {
+        "pc": "0x10125f22",
+        "bytes": "660f59eb",
+        "mnemonic": "mulpd",
+        "operands": "xmm5, xmm3"
+      },
+      {
+        "pc": "0x10125f36",
+        "bytes": "660fc6db01",
+        "mnemonic": "shufpd",
+        "operands": "xmm3, xmm3, 1"
+      },
+      {
+        "pc": "0x10125f5d",
+        "bytes": "660f59ca",
+        "mnemonic": "mulpd",
+        "operands": "xmm1, xmm2"
+      },
+      {
+        "pc": "0x10125f65",
+        "bytes": "660f59d9",
+        "mnemonic": "mulpd",
+        "operands": "xmm3, xmm1"
+      },
+      {
+        "pc": "0x10125f71",
+        "bytes": "660f59eb",
+        "mnemonic": "mulpd",
+        "operands": "xmm5, xmm3"
+      },
+      {
+        "pc": "0x10125f7d",
+        "bytes": "660f59eb",
+        "mnemonic": "mulpd",
+        "operands": "xmm5, xmm3"
+      },
+      {
+        "pc": "0x10125f89",
+        "bytes": "660f59eb",
+        "mnemonic": "mulpd",
+        "operands": "xmm5, xmm3"
+      },
+      {
+        "pc": "0x10125f95",
+        "bytes": "660f59eb",
+        "mnemonic": "mulpd",
+        "operands": "xmm5, xmm3"
+      },
+      {
+        "pc": "0x10125fa1",
+        "bytes": "660f59eb",
+        "mnemonic": "mulpd",
+        "operands": "xmm5, xmm3"
+      },
+      {
+        "pc": "0x10125fad",
+        "bytes": "660f59eb",
+        "mnemonic": "mulpd",
+        "operands": "xmm5, xmm3"
+      },
+      {
+        "pc": "0x10125fb9",
+        "bytes": "660f59eb",
+        "mnemonic": "mulpd",
+        "operands": "xmm5, xmm3"
+      },
+      {
+        "pc": "0x10125fcd",
+        "bytes": "660fc6db01",
+        "mnemonic": "shufpd",
+        "operands": "xmm3, xmm3, 1"
+      },
+      {
+        "pc": "0x10126011",
+        "bytes": "660ffadd",
+        "mnemonic": "psubd",
+        "operands": "xmm3, xmm5"
+      },
+      {
+        "pc": "0x10126072",
+        "bytes": "660f59ca",
+        "mnemonic": "mulpd",
+        "operands": "xmm1, xmm2"
+      },
+      {
+        "pc": "0x1012607a",
+        "bytes": "660f59d9",
+        "mnemonic": "mulpd",
+        "operands": "xmm3, xmm1"
+      },
+      {
+        "pc": "0x10126086",
+        "bytes": "660f59eb",
+        "mnemonic": "mulpd",
+        "operands": "xmm5, xmm3"
+      },
+      {
+        "pc": "0x10126092",
+        "bytes": "660f59eb",
+        "mnemonic": "mulpd",
+        "operands": "xmm5, xmm3"
+      },
+      {
+        "pc": "0x1012609e",
+        "bytes": "660f59eb",
+        "mnemonic": "mulpd",
+        "operands": "xmm5, xmm3"
+      },
+      {
+        "pc": "0x101260b2",
+        "bytes": "660fc6db01",
+        "mnemonic": "shufpd",
+        "operands": "xmm3, xmm3, 1"
+      }
+    ],
+    "implementation": "24 finite bindings:existing STMXCSR/MULPD plus staged LLVM quadword swap and wrapping packed dword subtract; CPU flags/MXCSR/YMM preserved; no native runtime/header changes or guest revisions.",
+    "validation": {
+      "passed": true,
+      "memory_faults": [
+        "aligned-protected",
+        "unaligned",
+        "unmasked-memory-second-lane"
+      ],
+      "cases": 48766,
+      "sites": 74,
+      "per_site": {
+        "0x1010cf4c": 659,
+        "0x1010cf90": 659,
+        "0x1010cfb5": 659,
+        "0x1010cfb9": 659,
+        "0x1010cfcd": 659,
+        "0x1010cfd1": 659,
+        "0x1010cff2": 659,
+        "0x1010cffa": 659,
+        "0x1010cffe": 659,
+        "0x1010d016": 659,
+        "0x1010d045": 659,
+        "0x1010d079": 659,
+        "0x1010d0b3": 659,
+        "0x1010d167": 659,
+        "0x1010c803": 659,
+        "0x1010c85c": 659,
+        "0x1010c8a0": 659,
+        "0x1010c8c5": 659,
+        "0x1010c8c9": 659,
+        "0x1010c8dd": 659,
+        "0x1010c8e1": 659,
+        "0x1010c902": 659,
+        "0x1010c90a": 659,
+        "0x1010c90e": 659,
+        "0x1010c926": 659,
+        "0x1010c955": 659,
+        "0x1010c9d3": 659,
+        "0x10126173": 659,
+        "0x101261c4": 659,
+        "0x101261c8": 659,
+        "0x101261e0": 659,
+        "0x101261fa": 659,
+        "0x10126207": 659,
+        "0x1012620d": 659,
+        "0x10126211": 659,
+        "0x10126228": 659,
+        "0x1012624b": 659,
+        "0x10126257": 659,
+        "0x10126264": 659,
+        "0x10126268": 659,
+        "0x10126271": 659,
+        "0x1012627a": 659,
+        "0x10126286": 659,
+        "0x10126293": 659,
+        "0x101262a5": 659,
+        "0x101262a9": 659,
+        "0x101262b6": 659,
+        "0x101262c2": 659,
+        "0x101262ca": 659,
+        "0x101262d2": 659,
+        "0x10125e83": 659,
+        "0x10125ef6": 659,
+        "0x10125efe": 659,
+        "0x10125f0a": 659,
+        "0x10125f16": 659,
+        "0x10125f22": 659,
+        "0x10125f36": 659,
+        "0x10125f5d": 659,
+        "0x10125f65": 659,
+        "0x10125f71": 659,
+        "0x10125f7d": 659,
+        "0x10125f89": 659,
+        "0x10125f95": 659,
+        "0x10125fa1": 659,
+        "0x10125fad": 659,
+        "0x10125fb9": 659,
+        "0x10125fcd": 659,
+        "0x10126011": 659,
+        "0x10126072": 659,
+        "0x1012607a": 659,
+        "0x10126086": 659,
+        "0x10126092": 659,
+        "0x1012609e": 659,
+        "0x101260b2": 659
+      },
+      "source_rejections": 149,
+      "unmasked_destination_preservation": [
+        "conversion-precision",
+        "conversion-invalid",
+        "multiply-second-lane",
+        "subtract-second-lane"
+      ],
+      "captured_cpu_sha256": "77dc25bbeb7bec1bd594c7b878ac5936c420e0a3605f4898119a11e39b82a18c",
+      "next_captured_cpu_sha256": "9b564226ddfb24a3785896e40b2054200787edcc016a16ec94c5b6d3ffad76cf",
+      "captured_conversion_input": "0x401249013fe892cf",
+      "sources_sha256": {
+        "scripts/test-math-model-instructions.py": "2a0095954026eda1c95318209b16cfaebbbfe5ad6cdac45c2fa70c0b1924129a",
+        "scripts/patch_runtime_inputs.py": "535c8524e26eeab5c42436cbc22bad3930cc0dc51837a4c6a48a6dd2ce8b9050",
+        "port/llasm-support/tribes_sse.c": "b23372bd8016bbc05d3b0066dcdd768efda660033d31cc1db03475385865e6ae",
+        "port/llasm-support/tribes_sse.h": "efb00007e337dc4c4668e59a517d30255425cb60939632045e307e351cf2e5b8",
+        "ref/qol/IFC22.dll": "eaf5a42d301cc64a6e526aa49a82dbaefe655ed1ac0ba67939d0bab2fb6ab607"
+      },
+      "oracle_source_sha256": "08d24eb98e60c1aaf976a48352dba1697cf223d9aa5af8a4cfcf1844a91fd17e",
+      "oracle_binary_sha256": "cf0336d552d76f1fbf13a9e7a6bdae8903a7325fad8b230c512639fe26446536",
+      "requests_sha256": "be591e2030a84cd7ff1604651e98abf610aaec6b3f4488cc4382363411d92613",
+      "reference_sha256": "a12168a5f9645249cfc6aa46dc628bc81e2256b80a0236af7b87b837800b0095",
+      "library_sha256": "ffa0cdd92a3f098ba88bf1323cd5c93c261a00d46081762325791b6928b39d70",
+      "math": {
+        "platform": "macos",
+        "archive_sha256": "21130ce885d35c1fe73fc1e1bf2244178167e05c6747cad5f450cc991714c746",
+        "library_sha256": "f0a5208669eb75579c0b0cc947dcf7605d41a47c828434cf3ef90baca397ed0b",
+        "headers_sha256": {
+          "ref/softfloat/SoftFloat-3e/source/include/internals.h": "e7205630a8087895388cb6c6afbc5dfe8a8c201f4eb3eab2586e91a73e36bd4e",
+          "ref/softfloat/SoftFloat-3e/source/include/opts-GCC.h": "b3766ad02173012a8b58df2c43b424dc387fbca241104b931e91365f59b36001",
+          "ref/softfloat/SoftFloat-3e/source/include/primitiveTypes.h": "ab4e4209a90b07dcc7600636dcf1c04f910ba4ff63d0eec64b0141769c16a221",
+          "ref/softfloat/SoftFloat-3e/source/include/primitives.h": "146644301372c13af893119485269d54f3d718df9ce8b1a96cb908d3b828b1ed",
+          "ref/softfloat/SoftFloat-3e/source/include/softfloat.h": "0359d1f1c5bef11bcb728b5f065655bf0f144c918692f1350d5f44e25d68acd4",
+          "ref/softfloat/SoftFloat-3e/source/include/softfloat_types.h": "d0876f30a0d3dde97dd16007dbf635d98ef8262476ab8913930548a70f140afa"
+        },
+        "adapter_sha256": "a3fa606b116168cba4ceb30d689a31f3b2c7d034a10102efa343ee3871b13e83",
+        "adapter_header_sha256": "7fbfdd7dce1d91f651b0c25f6a064865dc4c68c20bcdcf166f5015d19342d80f",
+        "build_helper_sha256": "e4207debfd2c9b83aed22de747bbefbc45906decdc657151179f68fa577e7add"
+      },
+      "scope": "Seventy-four pinned emitted sites against fresh Rosetta x86 instructions; two memory operands relocated to aligned oracle storage. Original guest effective addresses independently exercised, including EAX wrap and page-edge reads. All rounding/DAZ/FTZ combinations, boundaries, NaN/invalid/precision/sticky status and register aliases. Full440 CPU including flags/x87/YMM and8192 memory canaries. Four deliberate unmasked stops preserve destination. Fallback stack save independently checked with existing protected-store test. No precise unmasked Windows delivery, complete math routine, gameplay or physical Intel claim."
+    },
+    "mobile": {
+      "passed": true,
+      "rows": [
+        {
+          "platform": "device",
+          "objects": [
+            "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/scene-math/second-kernel-mobile/device/00-fixture.o"
+          ],
+          "receipt": "476a775c5ec8ea1f885df53f46c0ae0516f1b385229b5c6f2ee39b3d9e66c5f5"
+        },
+        {
+          "platform": "simulator",
+          "objects": [
+            "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/scene-math/second-kernel-mobile/simulator/00-fixture.o"
+          ],
+          "receipt": "bbb4b0164f3f0a5e1d3e809de96030b7d70b180c81ffeb28ecd7f66b959e4b66"
+        }
+      ],
+      "scope": "74 finite instruction bindings checked-compiled for ARM64 device and Simulator; no mobile execution."
+    },
+    "full_engine": "Rebuild active exec29691, generated/integration-review/scene-math/second-kernel-full-engine.log. Second kernel not yet executed in the app."
+  }
 }
