@@ -16,3 +16,14 @@ static uint32_t copy(uint64_t base,uint32_t dst,uint32_t src,int append){
 }
 uint32_t tribes_lstrcat_a(uint64_t base,uint32_t dst,uint32_t src){return copy(base,dst,src,1);}
 uint32_t tribes_lstrcpy_a(uint64_t base,uint32_t dst,uint32_t src){return copy(base,dst,src,0);}
+
+/* Return a guest address, including the terminator for c == 0. A match
+   does not excuse an inaccessible terminator later in the string. */
+uint32_t tribes_sdl_strrchr(uint64_t base,uint32_t src,uint32_t c){
+ uint32_t found=0;unsigned char wanted=(unsigned char)c;
+ for(uint64_t p=src;;p++){
+  unsigned char value=*at(base,p);
+  if(value==wanted)found=(uint32_t)p;
+  if(!value)return found;
+ }
+}

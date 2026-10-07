@@ -1,0 +1,237 @@
+{
+  "date": "2026-10-07",
+  "change": "Checked SDL_strrchr cdecl import backed by guest byte loads and guest-address return.",
+  "component": {
+    "passed": true,
+    "runs": [
+      {
+        "mode": "normal",
+        "passed": true,
+        "binary_sha256": "d1d6c6ed8d735e151facb852be886dd1a9afea6e4d01af20f4e0623f583e770e"
+      },
+      {
+        "mode": "checked",
+        "passed": true,
+        "binary_sha256": "ea91f6db0a7b7aa52705310f07cc6462edb965a3d0820d570dfd51e2f3430e90"
+      }
+    ],
+    "source_sha256": {
+      "tests/guest_strings_test.c": "2fb4072e5e9e92a5788be57d7fc166f5213a114df70cb41a224c4cd624700f4e",
+      "tests/fixtures/native_enter.ll": "78597a5a3030a7a7e0d6746358a6f3489ff8e8c395fba21383c200133f2f1f9d",
+      "port/core/guest_memory_checks.c": "ee00fcff6979a3f4480835115d10db5dddf5fabf089a04c80f4a55e0ea82ec7c",
+      "port/llasm-support/tribes_absolute_memory.c": "6a6e98d3e1447f011ba83ae74a3a155edc957e064e9c44dcd28f3aad7a7e1b0d",
+      "port/core/guest_strings.c": "9daa1b951b118f88bc45df3b0122d3523f1af4d0d9035819e9778f3468d42141",
+      "port/llasm-runtime/win32-bindings.json": "ca2dbfb2aef5e2d089dc6f2a7ea97b71c599ed7e32056f05a32ff12d493183ff",
+      "scripts/test-guest-strings.py": "fbf2bf075d8b560c66d07a94ad5b7b75ec78d22bdb0aefc4828462ba2660a095"
+    },
+    "scope": "Actual generated string ABI and checked guest buffer faults; no whole-engine acceptance."
+  },
+  "mobile": {
+    "passed": true,
+    "rows": [
+      {
+        "platform": "device",
+        "objects": [
+          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/guest-strings/mobile/device/00-guest_strings.o",
+          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/guest-strings/mobile/device/01-binding.o"
+        ],
+        "receipt": "ee5adbcb77e074ed204a65e1c572d8ba62fd108b007625dc9d58020fdd37c33a"
+      },
+      {
+        "platform": "simulator",
+        "objects": [
+          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/guest-strings/mobile/simulator/00-guest_strings.o",
+          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/guest-strings/mobile/simulator/01-binding.o"
+        ],
+        "receipt": "3c33bcece8ca3dd3822b08da5afb4f0cef909f5e681b3749fdb9c68547f67ec0"
+      }
+    ],
+    "scope": "Checked ARM64 compile only, no mobile execution"
+  },
+  "full_engine": {
+    "initialized": true,
+    "state": "finished",
+    "binary_sha256": "f2ef309d950d247f9203d69487b7cdf2b87b9359525fe463cdd41fcb1e87a446",
+    "scope": "Original startup diagnostic; execution observation timeout is not playable acceptance."
+  },
+  "actual": {
+    "pid": 49489,
+    "trace": {
+      "rows": [
+        {
+          "symbol": "loc_100D3EC3",
+          "thread": 7474774,
+          "cpu": "0x10d28cd00",
+          "registers": [
+            "0x6272c942",
+            "0x0",
+            "0x60690000",
+            "0x3218",
+            "0x2fec48",
+            "0x2fec58",
+            "0x6272c934",
+            "0x0"
+          ],
+          "stack": [
+            "0x6272c934",
+            "0x2e",
+            "0x0",
+            "0x6272c934",
+            "0x2fec74",
+            "0x100578d8",
+            "0x6272c934",
+            "0x104713bc"
+          ],
+          "globals": {
+            "0x1046ce44": "0x0",
+            "0x1046ce48": "0x0",
+            "0x1046ce60": "0x0",
+            "0x1046e258": "0x0",
+            "0x1046ce50": "0x0"
+          }
+        }
+      ],
+      "counts": {
+        "tribes_sdl_gl_swap_window": 5774,
+        "loc_100D3EC3": 1
+      },
+      "scope": "Read-only selected-thread entry observations; not a coherent whole-memory snapshot."
+    },
+    "next_stop": {
+      "pid": 49489,
+      "frames": [
+        "qol_missing_import",
+        "tbimp_SDL_IOFromFile",
+        "tribes_enter",
+        "main",
+        "start"
+      ],
+      "scope": "Actual isolated offline app stop; selected-thread CPU/stack, exact renderer fields and native context identity, not a whole-memory snapshot.",
+      "cpu_address": "0x10d28cd00",
+      "base": "0x7000000000",
+      "esp": "0x2fec3c",
+      "registers": [
+        1651689794,
+        0,
+        1617494016,
+        12824,
+        3140668,
+        3140696,
+        1651689780,
+        1651689794
+      ],
+      "stack_from": "0x2fec2c",
+      "stack": [
+        "0x0",
+        "0x6272c934",
+        "0x60579684",
+        "0x2fec5c",
+        "0x100d3ed0",
+        "0x6272c934",
+        "0x1012b140",
+        "0x6272c934",
+        "0x2e",
+        "0x0",
+        "0x6272c934",
+        "0x2fec74",
+        "0x100578d8",
+        "0x6272c934",
+        "0x104713bc",
+        "0x10000",
+        "0x60631568",
+        "0x60429880",
+        "0x2fec80",
+        "0x4094cd",
+        "0x6272c934",
+        "0x2fedd8",
+        "0x42f03a",
+        "0x6042bc80",
+        "0x2",
+        "0x8456c0",
+        "0x62722a60",
+        "0x0",
+        "0x60486d48",
+        "0x60436d60",
+        "0x2fecc4",
+        "0x4351f1",
+        "0x614d8000",
+        "0x755058",
+        "0x604afa7c",
+        "0x604afa7c",
+        "0x7e4ff8",
+        "0x6042bc80",
+        "0x2fede8",
+        "0x436601"
+      ],
+      "return_pc": "0x100d3ed0",
+      "arguments": [
+        "0x6272c934",
+        "0x1012b140",
+        "0x6272c934",
+        "0x2e",
+        "0x0",
+        "0x6272c934",
+        "0x2fec74",
+        "0x100578d8",
+        "0x6272c934",
+        "0x104713bc",
+        "0x10000",
+        "0x60631568"
+      ],
+      "mission_literal_bytes": "c745cc85eb11bfc745c485eb113fc745c885eb113f",
+      "mission_literal_values": [
+        "0xbf11eb85",
+        "0x3f11eb85",
+        "0x3f11eb85"
+      ],
+      "renderer_globals": {
+        "0x1046ce48": "0x0",
+        "0x1046ce60": "0x0",
+        "0x1046ceec": "0xdb000002",
+        "0x1046e258": "0x0",
+        "0x1046ce50": "0x0",
+        "0x1046c8a4": "0x0",
+        "0x1046ca80": "0x0",
+        "0x1046c9b0": "0xfffa0070",
+        "0x1046c9d0": "0x1",
+        "0x1046ca90": "0x0",
+        "0x1046c6f4": "0x0",
+        "0x1046cb74": "0x0",
+        "0x1046cb40": "0x1",
+        "0x101d6828": "0x9e826c"
+      },
+      "owner_vtable": null,
+      "window_dimensions": [
+        1470,
+        956
+      ],
+      "native_gl": {
+        "context": {
+          "error": "success",
+          "value": "0x00000078620d3b60",
+          "summary": null
+        }
+      }
+    },
+    "cleanup": {
+      "pid": 49489,
+      "original_audio": "default 106\n113 MacBook Air Microphone\n106 MacBook Air Speakers\n118 eqMac\n88 Microsoft Teams Audio\n84 Jump Desktop Microphone\n57 Jump Desktop Audio\n",
+      "restored": "default 106\n113 MacBook Air Microphone\n106 MacBook Air Speakers\n118 eqMac\n88 Microsoft Teams Audio\n84 Jump Desktop Microphone\n57 Jump Desktop Audio\n",
+      "scope": "Actual signed isolated original offline app; diagnostic stop/manual termination is not gameplay acceptance."
+    },
+    "capture_directory": "generated/integration-review/apple-render-dimensions/settings-io-stop-49489"
+  },
+  "control_profile": {
+    "source": "generated/integration-review/offline-menu/game-profile/base/prefs/WASDConfig.cs",
+    "destination": "generated/integration-review/offline-menu/game-profile/base/prefs/MyConfig.cs",
+    "sha256": "9baa7e18e0a1fc5da12b70e49ec7bd5c8e207c219323fd83ad5f4a140faaf4c7",
+    "scope": "Isolated test profile selects MyConfig; populate its absent file with the unmodified shipped WASD preset. Actual load and gameplay effects await verification."
+  },
+  "limitations": [
+    "Original alpha-test return and post-scene clear/depth probe remain unobserved in this turn; opening Settings stopped before a map.",
+    "SDL_IOFromFile is the next observed Settings failure; adjacent original audio-loader calls require a bounded IO/decode implementation.",
+    "Repeated fullscreen toggles in prior PID45661 produced scaled UI and mouse targeting mismatch; that app was intentionally terminated, not a guest failure. One toggle after EULA initialization restored normal menu interaction in PID49489.",
+    "WASD preset installed only in isolated test profile; actual binding load and gameplay effects unverified.",
+    "Correct rendering, complete controls, HD, authenticated community multiplayer and mobile gameplay remain incomplete."
+  ]
+}

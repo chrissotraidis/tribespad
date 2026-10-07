@@ -1862,5 +1862,12 @@
     "arguments": 4,
     "returns": true,
     "guest_base": true
+  },
+  "SDL_strrchr": {
+    "helper": "tribes_sdl_strrchr",
+    "arguments": 2,
+    "returns": true,
+    "guest_base": true,
+    "calling_convention": "cdecl"
   }
 }
