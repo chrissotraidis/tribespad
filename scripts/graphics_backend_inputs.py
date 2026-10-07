@@ -53,6 +53,7 @@ EXPORTS += [('glRotatef','tribes_gl_rotate_f',4,False,0x20040000)]
 EXPORTS += [('glLightfv','tribes_gl_light_fv',3,False,0x20040000),('glLightf','tribes_gl_light_f',3,False,0x20040000),('glLightModelfv','tribes_gl_light_model_fv',2,False,0x20040000)]
 EXPORTS += [('gluProject','tribes_glu_project',12,True,0x20050000)]
 EXPORTS += [('glVertex3fv','tribes_gl_vertex3fv',1,False,0x20040000)]
+EXPORTS += [('glFogi','tribes_gl_fog_i',2,False,0x20040000),('glFogf','tribes_gl_fog_f',2,False,0x20040000),('glFogfv','tribes_gl_fog_fv',2,False,0x20040000)]
 def prepare(out):
  bindings={};rows=[]
  for i,(name,helper,n,returns,module) in enumerate(EXPORTS):

@@ -1561,6 +1561,38 @@ void tribes_gl_light_model_fv(_cpu *cpu,uint32_t name,uint32_t input){
     glLightModelfv(name,value);DRAW_RETURN();
 #endif
 }
+void tribes_gl_fog_i(_cpu *cpu,uint32_t name,uint32_t value){
+    WINDOW_ENTER();
+#if TARGET_OS_IPHONE
+    (void)name;(void)value;(void)error;stop();
+#else
+    (void)legacy_context();glFogi(name,(GLint)(int32_t)value);DRAW_RETURN();
+#endif
+}
+void tribes_gl_fog_f(_cpu *cpu,uint32_t name,uint32_t bits){
+    WINDOW_ENTER();
+#if TARGET_OS_IPHONE
+    (void)name;(void)bits;(void)error;stop();
+#else
+    (void)legacy_context();GLfloat value;memcpy(&value,&bits,sizeof value);
+    glFogf(name,value);DRAW_RETURN();
+#endif
+}
+void tribes_gl_fog_fv(_cpu *cpu,uint32_t name,uint32_t input){
+    WINDOW_ENTER();
+#if TARGET_OS_IPHONE
+    (void)name;(void)input;(void)error;stop();
+#else
+    (void)legacy_context();unsigned count=0;GLfloat value[4]={0};
+    switch(name){
+    case GL_FOG_COLOR:count=4;break;
+    case GL_FOG_MODE:case GL_FOG_DENSITY:case GL_FOG_START:case GL_FOG_END:
+    case GL_FOG_INDEX:case GL_FOG_COORDINATE_SOURCE:count=1;break;
+    }
+    if(count)checked_copy(value,guest(cpu,input,count*sizeof *value),count*sizeof *value);
+    glFogfv(name,value);DRAW_RETURN();
+#endif
+}
 #if !TARGET_OS_IPHONE
 static unsigned tex_env_count(uint32_t target,uint32_t name){
     if(target==GL_TEXTURE_FILTER_CONTROL)return name==GL_TEXTURE_LOD_BIAS?1:0;

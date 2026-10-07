@@ -478,12 +478,15 @@ struct ExternalMemoryPass : PassInfoMixin<ExternalMemoryPass>{
      Allowed=Allowed&&!Target->isVarArg()&&Call->getType()->isVoidTy()&&Call->arg_size()==Args.size();
      if(Allowed)for(unsigned i=0;i<Args.size();++i)if(Call->getArgOperand(i)->getType()!=Args[i])Allowed=false;
     }
-    if(Name=="glLightfv"||Name=="glLightf"||Name=="glLightModelfv"||Name=="glFrontFace"||Name=="glDepthMask"||Name=="glPolygonOffset"||Name=="glIsEnabled"||Name=="glColor4fv"||Name=="glMaterialfv"||Name=="glTexEnvfv"||Name=="glTexEnvf"||Name=="glNormalPointer"){
+    if(Name=="glFogi"||Name=="glFogf"||Name=="glFogfv"||Name=="glLightfv"||Name=="glLightf"||Name=="glLightModelfv"||Name=="glFrontFace"||Name=="glDepthMask"||Name=="glPolygonOffset"||Name=="glIsEnabled"||Name=="glColor4fv"||Name=="glMaterialfv"||Name=="glTexEnvfv"||Name=="glTexEnvf"||Name=="glNormalPointer"){
      SmallVector<Type *,3> Args={I32};Type *Result=B.getVoidTy();
      if(Name=="glDepthMask")Args={B.getInt8Ty()};
      else if(Name=="glPolygonOffset")Args={B.getFloatTy(),B.getFloatTy()};
      else if(Name=="glIsEnabled")Result=B.getInt8Ty();
      else if(Name=="glColor4fv")Args={P};
+     else if(Name=="glFogi")Args={I32,I32};
+     else if(Name=="glFogf")Args={I32,B.getFloatTy()};
+     else if(Name=="glFogfv")Args={I32,P};
      else if(Name=="glMaterialfv"||Name=="glLightfv"||Name=="glTexEnvfv"||Name=="glNormalPointer")Args={I32,I32,P};
      else if(Name=="glLightModelfv")Args={I32,P};
      else if(Name=="glTexEnvf"||Name=="glLightf")Args={I32,I32,B.getFloatTy()};

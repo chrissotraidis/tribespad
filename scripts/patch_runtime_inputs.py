@@ -332,6 +332,8 @@ original:
  dll=translate_compression_tzcnt(dll,R/'ref/qol/IFC22.dll')
  dll=translate_math_mxcsr_save(dll,R/'ref/qol/IFC22.dll')
  dll=translate_math_model(dll,R/'ref/qol/IFC22.dll')
+ from fp_control_query_inputs import translate as translate_fp_control_query
+ dll,fp_control_query_metadata=translate_fp_control_query(dll)
  from apple_render_dimensions import prepare as prepare_apple_render_dimensions
  dll,apple_render_dimensions_metadata=prepare_apple_render_dimensions(dll)
  from apple_render_present import prepare as prepare_apple_render_present
@@ -447,6 +449,7 @@ define hidden fastcc void @tbimp_FlushInstructionCache(ptr %cpu) {
  (out/'engine_bootstrap.inc').write_text('\n'.join(config)+'\n')
  sources=[out/'qol-patched.ll',engine_source,bank/'module.ll',cont/'qol/module.ll',cont/'bridges.ll',out/'publication-bindings.ll',out/'cross-imports.ll',late_source,followup_source,network_source,http_source,string_source,console_fade_source,console_animation_source,post_file_patch_source,collision_patch_source,allocation_patch_source,clock_patch_source,post_video_prefix_source,post_video_nop_source,post_video_nop_second_source,post_video_tail_source,display_immediates_source,startup_calls_source,input_nop_source,renderer_call_source,renderer_startup_source,renderer_redirects_source,renderer_dimensions_source,renderer_batch_source,renderer_nested_source,renderer_outer_source]+pending_hook_sources+renderer_hook_sources
  sources+=[font_size_source,audio_tables_source]+miles_sources+codec_sources+audio_hook_sources+mission_entry_sources
+ sources += [R/'port/llasm-support/tribes_fp_query.c']
  metadata=dict(plan_sha256=sha(plan_path),linked_imports=linked,miles=miles_metadata,codecs=codec_metadata,whole_engine_object_sha256=ec['object_sha256'],manifest_sha256=sha(out/'published-code.bin'),ranges=[dict(address=v,bytes=len(b)) for v,b in ranges],dispatch_entries=len(entries),sources_sha256={str(p.relative_to(R)):sha(p) for p in sources+[out/'merged-dispatch.ll',out/'patch_publication.inc',out/'engine_bootstrap.inc',out/'miles_bootstrap.inc',out/'codec_bootstrap.inc',R/'scripts/codec_runtime_inputs.py',R/'scripts/miles_runtime_inputs.py',keyboard,devices,pathlib.Path(__file__).resolve()]})
  metadata['late_patch']=late_metadata
  metadata['mission_literals']=mission_literal_metadata
@@ -487,5 +490,6 @@ define hidden fastcc void @tbimp_FlushInstructionCache(ptr %cpu) {
  metadata['audio_hooks']=audio_hook_metadata
  metadata['startup_pause']=dict(pc=0x1005fcbd,bytes_hex='f390',native='yield',image_sha256=sha(R/'ref/qol/IFC22.dll'))
  metadata['math_model_instructions']=dict(image_sha256=sha(R/'ref/qol/IFC22.dll'),sites=[dict(pc=pc,bytes_hex=raw,operation=op,destination=dest,source=src) for pc,raw,op,dest,src in MATH_MODEL_SITES])
+ metadata['fp_control_query']=fp_control_query_metadata
  (out/'patch-inputs.json').write_text(json.dumps(metadata,indent=2)+'\n')
  return sources,out/'merged-dispatch.ll',imports,metadata

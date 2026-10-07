@@ -19,6 +19,7 @@ typedef struct {const char *name;uint32_t address,module;void *function;} Graphi
 static int available(const GraphicsExport *e){
 #if TARGET_OS_IPHONE
     if(!strcmp(e->name,"glVertex3fv"))return 0;
+    if(!strcmp(e->name,"glFogi")||!strcmp(e->name,"glFogf")||!strcmp(e->name,"glFogfv"))return 0;
     if(!strcmp(e->name,"glLightfv")||!strcmp(e->name,"glLightf")||!strcmp(e->name,"glLightModelfv"))return 0;
     if(!strcmp(e->name,"glRotatef")||!strcmp(e->name,"glTexCoord2f")||!strcmp(e->name,"glTranslatef")||!strcmp(e->name,"glColor3ub")||!strcmp(e->name,"glVertex3f")||!strcmp(e->name,"glColor4f")||!strcmp(e->name,"glVertex2i"))return 0;
     if(!strcmp(e->name,"glPushMatrix")||!strcmp(e->name,"glPopMatrix")||!strcmp(e->name,"glScalef")||!strcmp(e->name,"glFrustum")||!strcmp(e->name,"glMultMatrixf")||!strcmp(e->name,"glMultMatrixd")||!strcmp(e->name,"glColor4fv")||!strcmp(e->name,"glMaterialfv")||!strcmp(e->name,"glTexEnvfv")||!strcmp(e->name,"glTexEnvf")||!strcmp(e->name,"glNormalPointer"))return 0;
