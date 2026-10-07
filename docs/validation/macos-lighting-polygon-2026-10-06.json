@@ -112,7 +112,7 @@
     "simulator_booted": false,
     "microphone_permission": "Declined for isolated offline run."
   },
-  "next_action": "Full checked viewport-family rebuild, signed packaging and native Training launch; trace the default viewport branch and exercise original controls when a map renders.",
+  "next_action": "Implement the reached checked legacy GL_MODELVIEW_MATRIX 16-float query, validate native results and protected output boundaries, rebuild and relaunch Training toward a rendered map and original controls.",
   "acceptance": {
     "playable": false,
     "hd_and_authenticated_multiplayer": false,
@@ -189,11 +189,11 @@
     "observation.json": "e9062bed2ef04004b48cdeee853d11158c45fc0652bb50169528c782bcbcea57"
   },
   "local_evidence_sha256": {
-    "app-build.json": "1b288c9b89c2c7a9517e493da781ba95d4edf00cc02ee6699d0c17c5bcf29bca",
-    "render-target-trace.json": "0ae3d521614817d8d9b3b43eac74d1b7e4dd82eccc2d703eae982ba8c3159112",
-    "native-file-timestamps.json": "27983c47938f48fbd754ca913f37e31543f8406d4daeddeb77deab579ed00908",
-    "next-stop.json": "64891a0fa7f9b74f5e34dc27ec6d50a627b6aacc4c394c87b8bafa5783e43d24",
-    "observation.json": "39d79552101c11d993754c844920486afe71f26d9f97bc1c829438999625b169"
+    "app-build.json": "0b551b3d045df374905d69427493646557887ac7a3cb28cc56f7130d239c99cf",
+    "render-target-trace.json": "b536739f4e7cf63b2803f35aa44fcd95e7d907ff245d4bff195bcf634e13fbf6",
+    "native-file-timestamps.json": "4433d2eaa38e6efc4bffbda942d2c3bcb5168a22e82acd47d41f8c32502456ee",
+    "next-stop.json": "acfec51c6d5548dbdf2ba5cdec876a34c759f52fbe416af7e65810749f54e5f7",
+    "observation.json": "1246ec157de5b64cfb994e9996e3c8739b6edef10b93c994045891173842eba6"
   },
   "viewport_original_execution": {
     "pid": 26220,
@@ -276,6 +276,57 @@
     ],
     "proof_sha256": "3a5cb754aac7faaf6babf9388dea208524ec4d8a0e6731cf531dfc7a759b347f",
     "scope": "Seven actual renderer blocks and original viewport continuation with real SSE/SoftFloat helpers; original nonzero target behavior preserved, default dimensions compared to original object dimensions, full440 CPU/512-byte stack comparison with only surviving absent object pointers normalized, independent viewport rectangles and thirty checked invalid/protected reads. Component test; no playable-map acceptance.",
-    "full_original_execution_after_addition": false
+    "full_original_execution_after_addition": true
+  },
+  "viewport_family_original_execution": {
+    "pid": 30960,
+    "binary_sha256": "c035d5c379aa57de6d01b0bb9a615efeee1e4f461d0d9f6b9b525f694c267261",
+    "signed_engine_sha256": "70795d6cc5de5bede2c241faa65b57bc60781bde90240a4a91a8e2d01eb58c16",
+    "startup_initialized": true,
+    "deliberate_startup_observation_seconds": 60,
+    "menus_and_textured_player": true,
+    "native_hid_training_start": true,
+    "completed_polygon_count": 2,
+    "observed_viewport_entries": [
+      "loc_10042B29",
+      "loc_10042B9E",
+      "loc_10042BAC",
+      "loc_10042790",
+      "loc_100427C5"
+    ],
+    "published_and_native_viewport": [
+      0,
+      0,
+      2048,
+      1332
+    ],
+    "native_framebuffer": 0,
+    "scissor_original_execution_observed": false,
+    "next_stop": {
+      "function": "glGetFloatv",
+      "enum": "0x0ba6",
+      "name": "GL_MODELVIEW_MATRIX",
+      "output_floats": 16,
+      "original_return": "0x447323",
+      "output": "0x2ff654",
+      "implemented": false
+    },
+    "rendered_playable_map": false,
+    "scope": "Actual isolated offline app stop; selected-thread CPU/stack, exact renderer fields and read-only native GL queries, not a whole-memory snapshot."
+  },
+  "viewport_local_evidence_sha256": {
+    "app-build.json": "1b288c9b89c2c7a9517e493da781ba95d4edf00cc02ee6699d0c17c5bcf29bca",
+    "render-target-trace.json": "0ae3d521614817d8d9b3b43eac74d1b7e4dd82eccc2d703eae982ba8c3159112",
+    "native-file-timestamps.json": "27983c47938f48fbd754ca913f37e31543f8406d4daeddeb77deab579ed00908",
+    "next-stop.json": "64891a0fa7f9b74f5e34dc27ec6d50a627b6aacc4c394c87b8bafa5783e43d24",
+    "observation.json": "39d79552101c11d993754c844920486afe71f26d9f97bc1c829438999625b169"
+  },
+  "native_input_helper": {
+    "source": "scripts/macos-engine-input.m",
+    "strict_compile_passed": true,
+    "owned_window_probe_passed": true,
+    "observed_window_id": 14702,
+    "observed_window_layer": 25,
+    "gameplay_acceptance": false
   }
 }
