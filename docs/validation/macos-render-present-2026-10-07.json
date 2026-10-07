@@ -1,0 +1,137 @@
+{
+  "date": "2026-10-07",
+  "implementation": "Pinned original scene completion at0x10043bbc now goes to its original dirty-state update0x10043c76 for target/interop/current-target/framebuffer all0; otherwise original resolve remains.",
+  "reason": "Original scene entry0x10043a14 explicitly binds framebuffer0 when target is absent; the later off-screen resolve at0x10043c00 dereferenced that absent target.",
+  "previous_actual_stop": {
+    "pid": 83372,
+    "frames": [
+      "abort",
+      "violation",
+      "require",
+      "tribes_memory_access_begin",
+      "loc_10043BE1",
+      "tribes_enter",
+      "main",
+      "start"
+    ],
+    "scope": "Actual isolated offline app stop; selected-thread CPU/stack, exact renderer fields and native context identity, not a whole-memory snapshot.",
+    "cpu_address": "0x10d2b4d00",
+    "base": "0x7000000000",
+    "esp": "0x2ff634",
+    "registers": [
+      0,
+      0,
+      7955124,
+      1616482240,
+      3143220,
+      3143232,
+      1694699776,
+      2
+    ],
+    "stack_from": "0x2ff624",
+    "stack": [
+      "0x60598fc0",
+      "0x10043be1",
+      "0x8d40",
+      "0x0",
+      "0x60598fc0",
+      "0x2ff724",
+      "0x65031100",
+      "0x2ff760",
+      "0x569f64",
+      "0x65031100",
+      "0x0",
+      "0x1",
+      "0x3f800000",
+      "0x35e17dcf",
+      "0x34d8634b",
+      "0xc3c7ff6b",
+      "0xb5e17dd5",
+      "0x3f800000",
+      "0x35e17dd0",
+      "0x44723d99",
+      "0xb4d862e9",
+      "0xb5e17dd6",
+      "0x3f800000",
+      "0xc346ce8e",
+      "0x0",
+      "0x0",
+      "0x0",
+      "0x3f800000",
+      "0x3f800000",
+      "0xb5e17dd5",
+      "0xb4d862e8",
+      "0x43c7ff9e",
+      "0x35e17dcf",
+      "0x3f800000",
+      "0xb5e17dd6",
+      "0xc4723d93",
+      "0x34d8634c",
+      "0x35e17dd0",
+      "0x3f800000",
+      "0x4346ce2e"
+    ],
+    "mission_literal_bytes": "c745cc3acd13bfc745c43acd133fc745c83acd133f",
+    "mission_literal_values": [
+      "0xbf13cd3a",
+      "0x3f13cd3a",
+      "0x3f13cd3a"
+    ],
+    "renderer_globals": {
+      "0x1046ce48": "0x0",
+      "0x1046ce60": "0x0",
+      "0x1046ceec": "0xdb000002",
+      "0x1046e258": "0x0",
+      "0x1046ce50": "0x0",
+      "0x1046c8a4": "0x0",
+      "0x1046ca80": "0x0",
+      "0x1046c9b0": "0xfffa0070",
+      "0x1046c9d0": "0x1",
+      "0x1046ca90": "0x0",
+      "0x1046c6f4": "0x0",
+      "0x1046cb74": "0x0",
+      "0x1046cb40": "0x1",
+      "0x101d6828": "0x9e826c"
+    },
+    "owner_vtable": "0x6500e9c0",
+    "window_dimensions": [
+      1470,
+      956
+    ],
+    "native_gl": {
+      "context": {
+        "error": "success",
+        "value": "0x0000007a7fcafbb0",
+        "summary": null
+      }
+    }
+  },
+  "components": {
+    "passed": true,
+    "normal": {
+      "cases": 1024,
+      "binary_sha256": "65c2381622cd441705a02058b9fdabf9ca18851f819f5a36a63c95ff49f3b885"
+    },
+    "checked": {
+      "cases": 1024,
+      "binary_sha256": "10a3a74dbe3e10fbf26e508c79f936b2d37e08b3691abad0a73216d3c2ace84c"
+    },
+    "checked_faults": 4,
+    "original_blocks_sha256": {
+      "loc_10043BBC": "11b0b800e97db91091c7d487f8f6e59fff262542d70a3bf34681092bcc13676d",
+      "loc_10043C76": "95b9b13e7f3d6ed25d67396983d21f2228500e57487ccd0b5901d4d5a9191ddb",
+      "loc_10043C7D": "bec4609446c867a7bca633ca6d1cbeb2c4f8c6000e4802fcb885b70fa337bb06",
+      "loc_10043C7E": "df6b9f2d43beebff3550a0d8a9e1b102722fccfc443b5e9bd462b5d28447897b"
+    },
+    "sources_sha256": {
+      "scripts/test-apple-render-present.py": "59744b66c0083566ca503952135d7b5b31664b50baf084b9adcd27dd58bd27d8",
+      "scripts/apple_render_present.py": "33d5e0ac6656515109fbd859934798139e29117c0115eacc5e0e952350d2d874",
+      "port/core/guest_memory_checks.c": "ee00fcff6979a3f4480835115d10db5dddf5fabf089a04c80f4a55e0ea82ec7c",
+      "port/core/guest_external_checks.c": "2ecaf0cf09462d76b293ab70860c9245ae46536959e81fd2549ad7675ad63523"
+    },
+    "scope": "Original branch and epilogue, 1024 state combinations per mode; full CPU/stack and nonzero target routing preserved. No native GL or playable acceptance claimed."
+  },
+  "mobile": "Changed branch/epilogue checked-compiles for ARM64 iOS device and Simulator; no mobile execution.",
+  "full_engine": "Build running, exec54793",
+  "playable": false
+}
