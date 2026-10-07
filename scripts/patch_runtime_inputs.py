@@ -241,6 +241,8 @@ original:
  dll,audio_hook_sources,audio_hook_metadata=prepare_audio_hooks(dll,engine_source,out)
  from mission_literal_runtime_inputs import prepare as prepare_mission_literals
  dll,mission_literal_metadata=prepare_mission_literals(dll,engine_source,renderer_batch_source,out)
+ from render_job_runtime_inputs import prepare as prepare_render_job
+ dll,render_job_metadata=prepare_render_job(dll,out)
  from mission_entry_runtime_inputs import prepare as prepare_mission_entry
  mission_entry_sources,mission_entry_metadata=prepare_mission_entry(native,out)
  input_variant_metadata["engine_before_library_sha256"]=input_variant_metadata["engine_sha256"]
@@ -369,6 +371,7 @@ define hidden fastcc void @tbimp_FlushInstructionCache(ptr %cpu) {
  metadata=dict(plan_sha256=sha(plan_path),linked_imports=linked,miles=miles_metadata,codecs=codec_metadata,whole_engine_object_sha256=ec['object_sha256'],manifest_sha256=sha(out/'published-code.bin'),ranges=[dict(address=v,bytes=len(b)) for v,b in ranges],dispatch_entries=len(entries),sources_sha256={str(p.relative_to(R)):sha(p) for p in sources+[out/'merged-dispatch.ll',out/'patch_publication.inc',out/'engine_bootstrap.inc',out/'miles_bootstrap.inc',out/'codec_bootstrap.inc',R/'scripts/codec_runtime_inputs.py',R/'scripts/miles_runtime_inputs.py',keyboard,devices,pathlib.Path(__file__).resolve()]})
  metadata['late_patch']=late_metadata
  metadata['mission_literals']=mission_literal_metadata
+ metadata['render_job']=render_job_metadata
  metadata['mission_entry']=mission_entry_metadata
  metadata['apple_render_dimensions']=apple_render_dimensions_metadata
  metadata['startup_input_code']=input_variant_metadata

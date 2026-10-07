@@ -1,6 +1,7 @@
 {
   "scope": "Diagnostic native runtime. Host-only calls reject every direct guest pointer argument. Unknown calls and unregistered indirect targets stop before invocation. Buffer operations are allowed only with verified compiler-inserted brackets. Nested-buffer APIs such as recvmsg and zlib streams have no exemption.",
   "host_only": [
+    "tribes_memory_code_revision",
     "curl_version",
     "curl_global_init_mem",
     "curl_global_cleanup",
@@ -271,6 +272,7 @@
     "glColor4f",
     "glColor3ub",
     "glVertex3f",
+    "glTranslatef",
     "glEnableClientState",
     "glDisableClientState",
     "glColorPointer",

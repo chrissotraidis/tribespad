@@ -1,0 +1,129 @@
+{
+  "date": "2026-10-07",
+  "checkpoint": "GitHub source backup; signed-app mission validation pending",
+  "render_job": {
+    "passed": true,
+    "state": "finished",
+    "records": [
+      {
+        "name": "loc_10043A71",
+        "pc": 268712566,
+        "step": 0,
+        "before_sha256": "6571f247e59dedc764c1187bb36192ba717e4285c8bd7e156e7b4ccf1ec69069",
+        "after_sha256": "5f7a69e234de36a616f74ec538b241c7b85cf0a614ad14d797f23724e77d4b03"
+      },
+      {
+        "name": "loc_100439B0",
+        "pc": 268712373,
+        "step": 1,
+        "before_sha256": "f69378fdb8f7e36b979881144dbbd8451444ba0e22d5736d9dc325068e59e8dc",
+        "after_sha256": "794ed933c61de59a304916a81620a4a7142501a4f03d75df04ce0ff2fa6117ad"
+      },
+      {
+        "name": "loc_10043AF3",
+        "pc": 268712696,
+        "step": 2,
+        "before_sha256": "2b8353b9650199f3f3b52566e6a156b416bd69b8c2edf6c5a8520d330c48c4a2",
+        "after_sha256": "300e4d08a69708c6c88dfcaecd6739f179d05a839ff2a4a7edeeb61df8435ce2"
+      },
+      {
+        "name": "loc_10043B81",
+        "pc": 268712838,
+        "step": 3,
+        "before_sha256": "9baef21ea1cbe36ca174c1c36277f36fd279c59ee9bc4dd36efa3b1a85649335",
+        "after_sha256": "f960d63d59a65b4fb4f3276e33796de9e42fd7ff13da8ee2a054495735dbfb80"
+      }
+    ],
+    "runs": [
+      {
+        "mode": "normal",
+        "passed": true,
+        "binary_sha256": "7887ebf2ee3cb08cef5bd9e408e684655c4c906b52cdc44e1cb6a4e460514813",
+        "faults": []
+      },
+      {
+        "mode": "checked",
+        "passed": true,
+        "binary_sha256": "90922dbf2eeb6097f60cb98948dfd0bc1d81e5d61dedba9d0fec666a2151ffa1",
+        "faults": [
+          "bad-phase",
+          "bad-step",
+          "readonly",
+          "dirty",
+          "early-complete",
+          "bad-stack",
+          "repeat-begin",
+          "early-finish",
+          "wrong-wait",
+          "bad-callback",
+          "bad-job",
+          "duplicate-complete",
+          "modified"
+        ]
+      },
+      {
+        "mode": "tsan",
+        "passed": true,
+        "binary_sha256": "a79e82d0ea576729a6a3a4579c41c4eb122e0028e5bda9775fabf6bc5bf3ef1d",
+        "faults": []
+      }
+    ],
+    "sources_sha256": {
+      "scripts/test-render-job-handoff.py": "6a88ad234a389970c65c1706f075e4a93221a01231898f070c7db47107392e35",
+      "scripts/render_job_runtime_inputs.py": "ea5308c6da279cbccee65f05b43592cca55373930548447288829fb37dd0c6b4",
+      "port/core/guest_render_job.c": "19e9f123b9183bb2cce31a7a0729a05f3d81ec9d187b20878325a2abb1da1e9f",
+      "tests/render_job_test.c": "8ea753cbf4181247b95058dff384929b1437fa3f4f4a84bcce40edb2f2b2f523",
+      "tests/mission_literal_test.c": "f7e3925dd23343c7762129e55cf1252ffcaa24b6d8ab3dd30e374766666a5928",
+      "port/core/guest_memory_checks.c": "ee00fcff6979a3f4480835115d10db5dddf5fabf089a04c80f4a55e0ea82ec7c",
+      "port/core/guest_external_checks.c": "2ecaf0cf09462d76b293ab70860c9245ae46536959e81fd2549ad7675ad63523",
+      "port/core/guest_memory_checks.h": "09f6bd6162b9cb989f6ab9ef5090597ddb4573a95301c6784d3940a9e65ef1df",
+      "config/runtime/external-memory-contracts.json": "93d2c9fad86e83b5bb8d31b18dfad681615ba8d62e2a1d3ef33b74964a4f2525"
+    },
+    "scope": "Four exact translated original call prefixes with checked native completion fence, real workers, 200 reusable before/after-wait cycles, data visibility, CPU/live-stack canaries and invalid handoff/memory guards. Fixture startup revisions test phase gating, not original startup."
+  },
+  "graphics": {
+    "passed": true,
+    "modes": [
+      "normal",
+      "checked",
+      "tsan"
+    ],
+    "checked_rejections": 108,
+    "receipt_sha256": "2336812ef8eb2d60e79f288866822357712ea9836ce322d9dfdf94b29afa15fb"
+  },
+  "regressions": [
+    "generic SRW",
+    "mission literals",
+    "mission entry"
+  ],
+  "mobile": {
+    "checked_compile": true,
+    "platforms": [
+      "ARM64 iOS device",
+      "ARM64 iOS simulator"
+    ],
+    "execution": false
+  },
+  "full_engine": {
+    "sha256": "f18c4b620e552ccd79556b27bc6b96a281ece1f69289912344bed2fa419a252c",
+    "initialized": true,
+    "attach_returned": true,
+    "finite_revisions": 33,
+    "observation_timeout_seconds": 60,
+    "playable": false
+  },
+  "signed_app": {
+    "packaging_verified": true,
+    "pid_at_checkpoint": 63108,
+    "observed": "EULA rendered and accepted; local warrior setup rendered",
+    "new_mission_paths_verified": false
+  },
+  "remaining": [
+    "actual render-job fence and translation execution",
+    "rendered map and gameplay controls",
+    "HD visual acceptance",
+    "authenticated community multiplayer",
+    "full iPad/iPhone app acceptance"
+  ],
+  "local_evidence": "generated/integration-review/render-job-handoff/"
+}

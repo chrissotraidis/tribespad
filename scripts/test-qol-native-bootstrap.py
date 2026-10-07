@@ -146,7 +146,7 @@ wrapper='declare void @qol_monitor_result(ptr, i32, i32, i32)\n'+wrapper
 
 observed.write_text('declare void @qol_protect_checkpoint(ptr, i32, i32, i32, i32)\ndeclare void @qol_protect_result(i32, i32, i32, i32, i32)\ndeclare void @qol_alloc_request(ptr, i32, i32, i32, i32)\ndeclare void @qol_alloc_result(i32, i32, i32, i32)\n'+wrapper)
 # Ordinary support objects come from the same runtime used by engine bootstrap.
-sources=[R/p for p in ['port/llasm-support/tribes_absolute_memory.c','port/llasm-support/tribes_atomic.c','port/core/ext80.c','port/core/mmx.c','port/core/x87_status.c','port/core/guest_zlib.c','port/core/guest_zlib_chunk.c','port/llasm-support/tribes_float80.c','port/llasm-support/tribes_mmx.c','port/llasm-support/tribes_scan.c','port/llasm-support/tribes_x87.c','tests/qol_native_bootstrap.c']]
+sources=[R/p for p in ['port/llasm-support/tribes_absolute_memory.c','port/llasm-support/tribes_atomic.c','port/core/ext80.c','port/core/mmx.c','port/core/x87_status.c','port/core/guest_render_job.c','port/core/guest_zlib.c','port/core/guest_zlib_chunk.c','port/llasm-support/tribes_float80.c','port/llasm-support/tribes_mmx.c','port/llasm-support/tribes_scan.c','port/llasm-support/tribes_x87.c','tests/qol_native_bootstrap.c']]
 sources += [R/'ref/halopad/port/llasm-support'/('llasm_'+name+'.c') for name in ['divide','pushx','movs','cmps','scas','stos']]
 sources += [dispatch_source,out/'stops.ll',work/'native-zlib-routes/bindings.ll',observed]+published_sources
 sources += curl_sources+sdl_sources

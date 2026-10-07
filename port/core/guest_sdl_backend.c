@@ -1587,6 +1587,15 @@ void tribes_gl_color3ub(_cpu *cpu,uint32_t r,uint32_t g,uint32_t b){
     (void)legacy_context();glColor3ub((GLubyte)r,(GLubyte)g,(GLubyte)b);DRAW_RETURN();
 #endif
 }
+void tribes_gl_translate_f(_cpu *cpu,uint32_t x,uint32_t y,uint32_t z){
+    WINDOW_ENTER();
+#if TARGET_OS_IPHONE
+    (void)x;(void)y;(void)z;(void)error;stop();
+#else
+    (void)legacy_context();uint32_t bits[]={x,y,z};GLfloat value[3];memcpy(value,bits,sizeof value);
+    glTranslatef(value[0],value[1],value[2]);DRAW_RETURN();
+#endif
+}
 void tribes_gl_vertex3f(_cpu *cpu,uint32_t x,uint32_t y,uint32_t z){
     WINDOW_ENTER();
 #if TARGET_OS_IPHONE

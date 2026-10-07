@@ -61,6 +61,7 @@ extern unsigned sdl_test_live,sdl_test_fail;
 extern void bad_window(void),bad_context(void);
 #if defined(GRAPHICS) && !TARGET_OS_IPHONE
 extern void bad_frustum(void),bad_mult_matrix(void),bad_mult_matrix_double(void),bad_depth_mask(void),bad_is_enabled(void),bad_scale(void),bad_polygon_offset(void);
+extern void bad_translate_f(void);
 extern void bad_color3ub(void),bad_vertex3f(void);
 extern void bad_color4f(void),bad_vertex2i(void),bad_tex_sub_image_2d(void);
 #endif
@@ -650,6 +651,16 @@ static void immediate_rectangle(void){
  glReadPixels(32,32,1,1,GL_RGBA,GL_UNSIGNED_BYTE,pixel);assert(pixel[0]==0&&pixel[1]==255&&pixel[2]==0&&pixel[3]==255);
  glReadPixels(4,4,1,1,GL_RGBA,GL_UNSIGNED_BYTE,pixel);assert(pixel[0]==0&&pixel[1]==0&&pixel[2]==0&&glGetError()==0);
  glDisable(GL_DEPTH_TEST);GC(0xfffa0250,0);GC(0xfffa02d0,0,255,255,255,255);
+ strcpy((char *)memory+0x24000,"glTranslatef");assert(CALL(63,0x24000)==0xfffa06f0);
+ /* Native post-multiplication oracle with nonidentity scale catches order,
+    sign and bit-conversion mistakes. Error must survive the helper. */
+ GLfloat transform[16],translated[16];glLoadIdentity();glScalef(2,3,4);
+ glTranslatef(.25f,-.5f,2);glGetFloatv(GL_MODELVIEW_MATRIX,transform);
+ glLoadIdentity();glScalef(2,3,4);glEnable(0xffffffff);
+ GC(0xfffa06f0,0,0x3e800000,0xbf000000,0x40000000);glGetFloatv(GL_MODELVIEW_MATRIX,translated);
+ assert(!memcmp(transform,translated,sizeof transform));assert(translated[12]==.5f&&translated[13]==-1.5f&&translated[14]==8);
+ assert(glGetError()==GL_INVALID_ENUM&&glGetError()==0);glLoadIdentity();
+ puts("Original translation: float XYZ, native post-multiplied matrix, CPU ABI and retained error PASS");
  puts("Original 3D fan: low-byte colour/alpha, float XYZ/depth, bounded native pixels, CPU ABI and retained error PASS");
  puts("Original lighting polygon: float colour state/alpha and signed integer vertices through guest ABI, bounded native pixels PASS");
  puts("Original GUI rectangle: guest immediate vertices, alpha blending, bounded coverage and native errors PASS");
@@ -1208,6 +1219,7 @@ static int window_main(int argc,char **argv){
  if(argc==2&&!strcmp(argv[1],"bad-depth-mask")){bad_depth_mask();return 99;}
  if(argc==2&&!strcmp(argv[1],"bad-is-enabled")){bad_is_enabled();return 99;}
  if(argc==2&&!strcmp(argv[1],"bad-polygon-offset")){bad_polygon_offset();return 99;}
+ if(argc==2&&!strcmp(argv[1],"bad-translate-f")){bad_translate_f();return 99;}
  if(argc==2&&!strcmp(argv[1],"bad-color3ub")){bad_color3ub();return 99;}
  if(argc==2&&!strcmp(argv[1],"bad-vertex3f")){bad_vertex3f();return 99;}
  if(argc==2&&!strcmp(argv[1],"bad-color4f")){bad_color4f();return 99;}
@@ -1261,6 +1273,7 @@ static int window_main(int argc,char **argv){
  assert(CALL(54,SDL_GL_CONTEXT_PROFILE_MASK,0x3001)&&word(0x3001)==SDL_GL_CONTEXT_PROFILE_CORE);
  puts("explicit native core context retains existing modern graphics coverage");
 #ifdef GRAPHICS
+ if(argc==2&&!strcmp(argv[1],"translate-f-core")){GC(0xfffa06f0,0,0,0,0);assert(0);}
  if(argc==2&&!strcmp(argv[1],"color3ub-core")){GC(0xfffa06d0,0,128,128,128);assert(0);}
  if(argc==2&&!strcmp(argv[1],"vertex3f-core")){GC(0xfffa06e0,0,0,0,0);assert(0);}
  if(argc==2&&!strcmp(argv[1],"matrix-query-core")){GC(0xfffa0120,0,GL_MODELVIEW_MATRIX,0x3001);assert(0);}
