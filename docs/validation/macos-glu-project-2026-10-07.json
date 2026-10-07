@@ -114,7 +114,7 @@
       "stopped.png": "feababe4fdcddafc1601bb094cb4c621d5b616c0c6906073bc77e7eca2de17a3",
       "observation.json": "bda184afbc230cc7de64085e5a00841fcfd9a2002053e7f1356b478444dcface"
     },
-    "capture_root": "generated/integration-review/apple-render-dimensions/execution",
+    "capture_root": "generated/integration-review/apple-render-dimensions/scene-glu-project-6426",
     "scope": "Actual isolated offline app stop; selected-thread CPU/stack, exact renderer fields and native context identity, not a whole-memory snapshot.",
     "cleanup": "App and debugger ended; prior audio57 and isolated voice preference restored. No Simulator booted."
   },

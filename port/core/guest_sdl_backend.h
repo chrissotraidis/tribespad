@@ -126,6 +126,7 @@ uint32_t tribes_gl_get_error(_cpu *);
 void tribes_gl_get_integer(_cpu *,uint32_t,uint32_t);
 void tribes_gl_get_float(_cpu *,uint32_t,uint32_t);
 uint32_t tribes_glu_error_string(_cpu *,uint32_t);
+void tribes_gl_vertex3fv(_cpu *,uint32_t);
 uint32_t tribes_glu_project(_cpu *,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t);
 uint32_t tribes_sdl_get_pointer_property(_cpu *,uint32_t,uint32_t,uint32_t);
 uint32_t tribes_wgl_extensions_arb(_cpu *,uint32_t);

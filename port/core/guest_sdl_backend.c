@@ -1664,6 +1664,16 @@ void tribes_gl_vertex3f(_cpu *cpu,uint32_t x,uint32_t y,uint32_t z){
     glVertex3f(value[0],value[1],value[2]);DRAW_RETURN();
 #endif
 }
+void tribes_gl_vertex3fv(_cpu *cpu,uint32_t address){
+    WINDOW_ENTER();
+#if TARGET_OS_IPHONE
+    (void)address;(void)error;stop();
+#else
+    (void)legacy_context();GLfloat value[3];
+    checked_copy(value,guest(cpu,address,sizeof value),sizeof value);
+    glVertex3f(value[0],value[1],value[2]);DRAW_RETURN();
+#endif
+}
 void tribes_gl_blend_func(_cpu *cpu,uint32_t source,uint32_t destination){WINDOW_ENTER();glBlendFunc(source,destination);DRAW_RETURN();}
 void tribes_gl_color4f(_cpu *cpu,uint32_t r,uint32_t g,uint32_t b,uint32_t a){
     WINDOW_ENTER();

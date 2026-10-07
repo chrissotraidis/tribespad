@@ -647,6 +647,40 @@ static void matrix_queries(const char *fault){
  glMatrixMode(GL_MODELVIEW);
  puts("Model-view/projection queries: native sixteen-float matrices, unaligned output/canaries, retained errors, full guest CPU/stack/LastError and invalid-operation preservation PASS");
 }
+static void vector_vertices(const char *fault){
+ strcpy((char *)memory+0x24000,"glVertex3fv");assert(CALL(63,0x24000)==0xfffa0760);
+ if(fault&&!strcmp(fault,"vertex-vector-read")){assert(tribes_memory_permissions_set(0x4000,4096,0));GC(0xfffa0760,0,0x3ff5);assert(0);}
+ if(fault&&!strcmp(fault,"vertex-vector-null")){GC(0xfffa0760,0,0);assert(0);}
+ if(fault&&!strcmp(fault,"vertex-vector-overflow")){GC(0xfffa0760,0,0xfffffff8);assert(0);}
+ glMatrixMode(GL_PROJECTION);glLoadIdentity();glMatrixMode(GL_MODELVIEW);glLoadIdentity();
+ glDisable(GL_BLEND);glDisable(GL_TEXTURE_2D);glEnable(GL_DEPTH_TEST);glDepthFunc(GL_LESS);glDepthMask(GL_TRUE);glClearDepth(1);
+ const GLfloat corners[4][2]={{-.5f,-.5f},{.5f,-.5f},{.5f,.5f},{-.5f,.5f}};
+ unsigned char native[64*64*4],actual[sizeof native];
+ for(unsigned route=0;route<2;route++){
+  glClearColor(0,0,0,1);glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);glEnable(0xffffffff);
+  for(unsigned pass=0;pass<3;pass++){
+   glColor3ub(pass==0?255:0,pass==1?255:0,pass==2?255:0);glBegin(GL_QUADS);
+   for(unsigned i=0;i<4;i++){
+    GLfloat v[3]={corners[i][0],corners[i][1],pass==1?-.5f:.5f};
+    if(!route)glVertex3fv(v);
+    else{
+     uint32_t address=i&1?0x3ff4:0x3001;memcpy(memory+address,v,sizeof v);
+     assert(tribes_memory_permissions_set(0x3000,4096,1)&&tribes_memory_permissions_set(0x4000,4096,0));
+     GC(0xfffa0760,0,address);
+     assert(!memcmp(memory+address,v,sizeof v));
+     assert(tribes_memory_permissions_set(0x3000,4096,3)&&tribes_memory_permissions_set(0x4000,4096,3));
+    }
+   }glEnd();
+  }
+  assert(glGetError()==GL_INVALID_ENUM&&glGetError()==0);
+  glReadPixels(0,0,64,64,GL_RGBA,GL_UNSIGNED_BYTE,route?actual:native);
+ }
+ assert(!memcmp(native,actual,sizeof native));
+ unsigned center=(32*64+32)*4;assert(actual[center]==0&&actual[center+1]==255&&actual[center+2]==0&&actual[center+3]==255);
+ assert(actual[0]==0&&actual[1]==0&&actual[2]==0);
+ glDisable(GL_DEPTH_TEST);glColor4f(1,1,1,1);
+ puts("Vector vertices: native full-frame quad/depth comparison, unaligned and exact-page-end readonly sources, preserved errors and CPU ABI PASS");
+}
 static void immediate_rectangle(void){
  const char *names[]={"glBlendFunc","glBegin","glVertex2f","glEnd"};
  for(unsigned i=0;i<4;i++){strcpy((char *)memory+0x24000,names[i]);assert(CALL(63,0x24000)==0xfffa04f0+16*i);}
@@ -1119,7 +1153,7 @@ static void legacy_route(uint32_t original_window,uint32_t original_context,cons
  glBindBuffer(GL_ARRAY_BUFFER,names[2]);glGetBufferSubData(GL_ARRAY_BUFFER,0,4,readback);assert(!memcmp(data,readback,4));glBindBuffer(GL_ARRAY_BUFFER,names[0]);
  GC(0xfffa01e0,0,3,0x3001);GC(0xfffa0020,0,0x8f36,0x3021);assert(word(0x3021)==0);GC(0xfffa0020,0,0x8f37,0x3021);assert(word(0x3021)==0);
  GC(0xfffa01d0,0,0x8f37,4,0,GL_STATIC_DRAW);assert(glGetError()==GL_INVALID_OPERATION);
- texture_subregions(fault);matrix_queries(fault);gpu_sync(window,context,fault);immediate_rectangle();texture_array(fault);quad_draw(fault);shader_lifecycle(fault);
+ texture_subregions(fault);matrix_queries(fault);gpu_sync(window,context,fault);vector_vertices(fault);immediate_rectangle();texture_array(fault);quad_draw(fault);shader_lifecycle(fault);
  assert(CALL(48,context));CALL(41,window);assert(CALL(49,original_window,original_context));
  assert(CALL(53,SDL_GL_CONTEXT_MAJOR_VERSION,3)&&CALL(53,SDL_GL_CONTEXT_MINOR_VERSION,2)&&CALL(53,SDL_GL_CONTEXT_PROFILE_MASK,SDL_GL_CONTEXT_PROFILE_CORE));
  puts("legacy fallback: guest matrices/viewport/depth state render red pixel; 32MiB copy-target storage, binding isolation, errors, sharing and cleanup PASS");
@@ -1455,9 +1489,10 @@ static int window_main(int argc,char **argv){
  if(argc==2&&!strcmp(argv[1],"rotate-f-core")){GC(0xfffa0710,0,0,0,0,0x3f800000);assert(0);}
  if(argc==2&&!strcmp(argv[1],"translate-f-core")){GC(0xfffa06f0,0,0,0,0);assert(0);}
  if(argc==2&&!strcmp(argv[1],"color3ub-core")){GC(0xfffa06d0,0,128,128,128);assert(0);}
+ if(argc==2&&!strcmp(argv[1],"vertex-vector-core")){GC(0xfffa0760,0,0x3001);assert(0);}
  if(argc==2&&!strcmp(argv[1],"vertex3f-core")){GC(0xfffa06e0,0,0,0,0);assert(0);}
  if(argc==2&&!strcmp(argv[1],"matrix-query-core")){GC(0xfffa0120,0,GL_MODELVIEW_MATRIX,0x3001);assert(0);}
- if(argc==1||(argc==2&&(!strncmp(argv[1],"matrix-query-",13)||!strncmp(argv[1],"sync-",5)||!strncmp(argv[1],"array-",6)||!strncmp(argv[1],"uniform-",8)||!strncmp(argv[1],"shader-",7)||!strncmp(argv[1],"quad-",5)||!strncmp(argv[1],"matrix-mult-",12)||!strncmp(argv[1],"matrix-double-",14)||!strncmp(argv[1],"state-",6)||!strncmp(argv[1],"normal-",7)||!strncmp(argv[1],"light-",6)||!strcmp(argv[1],"unreadable-matrix")||!strcmp(argv[1],"shared-copy-delete")||!strcmp(argv[1],"shared-array-delete"))))legacy_route(window,context,argc==2?argv[1]:NULL);
+ if(argc==1||(argc==2&&(!strncmp(argv[1],"vertex-vector-",14)||!strncmp(argv[1],"matrix-query-",13)||!strncmp(argv[1],"sync-",5)||!strncmp(argv[1],"array-",6)||!strncmp(argv[1],"uniform-",8)||!strncmp(argv[1],"shader-",7)||!strncmp(argv[1],"quad-",5)||!strncmp(argv[1],"matrix-mult-",12)||!strncmp(argv[1],"matrix-double-",14)||!strncmp(argv[1],"state-",6)||!strncmp(argv[1],"normal-",7)||!strncmp(argv[1],"light-",6)||!strcmp(argv[1],"unreadable-matrix")||!strcmp(argv[1],"shared-copy-delete")||!strcmp(argv[1],"shared-array-delete"))))legacy_route(window,context,argc==2?argv[1]:NULL);
  if(argc==2&&!strcmp(argv[1],"mipmap-nonzero-base")){
   GC(0xfffa0150,0,1,0x3001);GC(0xfffa0160,0,GL_TEXTURE_2D,word(0x3001));GC(0xfffa0170,0,GL_TEXTURE_2D,0x8191,1);GC(0xfffa0170,0,GL_TEXTURE_2D,GL_TEXTURE_BASE_LEVEL,1);
   const unsigned char color[]={1,2,3,255};mipmap_upload(1,2,color);assert(0);

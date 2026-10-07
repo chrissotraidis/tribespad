@@ -1,0 +1,93 @@
+{
+  "date": "2026-10-07",
+  "export": "glVertex3fv",
+  "guest_address": "0xfffa0760",
+  "implementation": "Checked 12-byte input staging into real legacy glVertex3f, retaining the original vector ABI and float values. Unsupported GLES/core paths remain guarded.",
+  "components": {
+    "passed": true,
+    "runs": [
+      {
+        "mode": "normal",
+        "fault_count": 0
+      },
+      {
+        "mode": "tsan",
+        "fault_count": 0
+      },
+      {
+        "mode": "checked",
+        "fault_count": 131
+      }
+    ],
+    "coverage": "Full native-versus-guest quad framebuffer comparison, overlapping depth, unaligned and readonly page-end inputs, preserved source/error/CPU/ESP/LastError; null, overflow, crossed page and core-context rejection.",
+    "receipt_sha256": "2f497482f087f2f9d8c3d8feac9e23e27747445daeeb2781dbf748f580370112"
+  },
+  "mobile": {
+    "passed": true,
+    "rows": [
+      {
+        "platform": "device",
+        "target": "arm64-apple-ios16",
+        "receipt": "f898fff6a407dd991828641bc39fdde39da0b2779b308778aeffbdeb9b72bbcb",
+        "objects": [
+          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/vertex-vector/mobile-compile/iphoneos/00-guest_sdl_backend.o",
+          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/vertex-vector/mobile-compile/iphoneos/01-guest_render_job.o",
+          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/vertex-vector/mobile-compile/iphoneos/02-guest_graphics.o",
+          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/vertex-vector/mobile-compile/iphoneos/03-graphics-bindings.o"
+        ]
+      },
+      {
+        "platform": "simulator",
+        "target": "arm64-apple-ios16-simulator",
+        "receipt": "b7a2c06dda1383ae4b4e117b36e978583ae385bf413f500fdbf55903b794f371",
+        "objects": [
+          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/vertex-vector/mobile-compile/iphonesimulator/00-guest_sdl_backend.o",
+          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/vertex-vector/mobile-compile/iphonesimulator/01-guest_render_job.o",
+          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/vertex-vector/mobile-compile/iphonesimulator/02-guest_graphics.o",
+          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/vertex-vector/mobile-compile/iphonesimulator/03-graphics-bindings.o"
+        ]
+      }
+    ],
+    "scope": "Changed backend, finite GL provider and bindings checked-compiled for ARM64 iOS device and Simulator; no mobile launch."
+  },
+  "original_execution": {
+    "pid": 12388,
+    "engine_sha256": "65cdd26612ab7286af2341d2368b181b8a159db44ada3292f1585241d2e708c3",
+    "initialized": true,
+    "attach_returned": true,
+    "startup_observation_timeout": true,
+    "finite_revisions": 33,
+    "vertex_return": "0x624164",
+    "vertex_return_observations": 4,
+    "post_scene_swaps": 4,
+    "visible_result": "Original Charybdis scene now also shows first-person weapon; substantial terrain/sky, silhouette and UI rendering defects remain.",
+    "gameplay_controls_tested": false,
+    "next_stop": {
+      "pc": "0x1011d76e",
+      "instruction": "FNSTENV [EBP-0x20]",
+      "bytes": "d975e0",
+      "routine": "0x1011d750",
+      "adjacent_untranslated": [
+        "FLDENV at0x1011d771",
+        "STMXCSR at0x1011d836"
+      ]
+    },
+    "capture_root": "generated/integration-review/apple-render-dimensions/scene-vertex-vector-12388",
+    "capture_files_sha256": {
+      "cpu.bin": "527e2449717e3ef40cacec58f6aa66c20b544e9b817bfe2f5a3526cdcd2c4729",
+      "next-stop.json": "2eeeed46249c7466309cccbcad350a68d8f1a0c0a81180f8778449a01adcec28",
+      "presentation-trace.json": "178d7634805c5ea360e8e00b0fc3e6e09c950fef7960a43692d97ad5b4b83a02",
+      "stopped.png": "80a5976c2c7668a5ead5efd7c20e84b03b39f3a9dd954b7a47076ca89ca9d2e1",
+      "observation.json": "f21405e21aa2218a351df70723e0a12a2c858fe98f9c42b87dea363a356b8810"
+    },
+    "scope": "Actual isolated offline app stop; selected-thread CPU/stack, exact renderer fields and native context identity, not a whole-memory snapshot.",
+    "probe_correction": "PID11960 intentionally ended during startup to remove GL queries from the new in-glBegin vertex-return probe. Corrected PID12388 only reads guest CPU/stack at that return.",
+    "cleanup": {
+      "pid": 12388,
+      "original_audio": "default 57\n113 MacBook Air Microphone\n106 MacBook Air Speakers\n118 eqMac\n88 Microsoft Teams Audio\n84 Jump Desktop Microphone\n57 Jump Desktop Audio\n",
+      "restored": "default 57\n113 MacBook Air Microphone\n106 MacBook Air Speakers\n118 eqMac\n88 Microsoft Teams Audio\n84 Jump Desktop Microphone\n57 Jump Desktop Audio\n",
+      "scope": "Actual signed isolated original offline app; diagnostic stop/manual termination is not gameplay acceptance."
+    }
+  },
+  "playable": false
+}
