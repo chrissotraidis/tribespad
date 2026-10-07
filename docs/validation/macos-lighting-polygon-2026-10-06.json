@@ -75,7 +75,7 @@
     "preserved_existing_export_tokens": true,
     "real_native_calls": true,
     "mobile_exports_unavailable": true,
-    "full_original_execution_after_addition": false
+    "full_original_execution_after_addition": true
   },
   "components": {
     "graphics_passed": true,
@@ -111,16 +111,86 @@
     "isolated_voice_preference_restored": true,
     "simulator_booted": false
   },
-  "next_action": "Finish full checked rebuild PID19914/session38232, package/sign/relaunch Training and exercise the actual colour/integer-vertex draw toward the rendered map and controls.",
+  "next_action": "Finish live checked viewport rebuild PID25016/session37720 (viewport-full-engine.log), package/sign/relaunch Training and verify original viewport publication, map and controls.",
   "acceptance": {
     "playable": false,
     "hd_and_authenticated_multiplayer": false,
     "full_mobile_gameplay": false
   },
-  "local_evidence_sha256": {
+  "polygon_original_execution": {
+    "pid": 21893,
+    "binary_sha256": "6e882e0424335976db9b645cfdf0cc466fa585c898206af18e9e103e2888aab4",
+    "signed_engine_sha256": "4f1af28503e5532120a74889d229728cffc7b1e6dad8e59d1e1a838d0fae8af5",
+    "captured_loading": "All321 mission objects; original lighting draw then viewport setup.",
+    "completed_polygon_count": 2,
+    "float_colour_argument_bits": [
+      "0x0",
+      "0x0",
+      "0x0",
+      "0x3f800000"
+    ],
+    "first_integer_vertex": [
+      -1,
+      -1
+    ],
+    "observed_return_entries": [
+      "loc_1004362F",
+      "loc_10043641",
+      "loc_10043665"
+    ],
+    "window_dimensions": [
+      1470,
+      956
+    ],
+    "next_stop": {
+      "block": "loc_10042B29",
+      "original_instruction": "0x10042b3f",
+      "original_bytes": "8b4124",
+      "operation": "MOV EAX,[ECX+0x24]",
+      "target": 0,
+      "address": "0x24",
+      "size": 4,
+      "access": 1,
+      "adjacent_height_instruction": "0x10042b46"
+    },
+    "rendered_playable_map": false,
+    "scope": "Actual isolated offline app stop; selected-thread CPU/stack, exact renderer fields and read-only native GL queries, not a whole-memory snapshot."
+  },
+  "viewport_implementation": {
+    "original_block": "loc_10042B29",
+    "exact_reads": [
+      "0x10042b3f",
+      "0x10042b46"
+    ],
+    "checked_original_body_sha256": "08b42655ba50d70f1741554271f71348e409a2acf7ce80f4a74648c92d2e0e11",
+    "normal_cases": 768,
+    "checked_cases": 768,
+    "checked_faults": [
+      "nonzero",
+      "protected",
+      "interop",
+      "current",
+      "dimensions",
+      "viewport-nonzero",
+      "viewport-protected",
+      "viewport-interop",
+      "viewport-current",
+      "viewport-dimensions"
+    ],
+    "proof_sha256": "e382326a1dea061a4ee79c0902ed9a89f6e5f85703aab924f00590f5a164396c",
+    "scope": "Three actual renderer blocks and the original viewport continuation; original nonzero target behavior preserved, default dimensions compared to original object dimensions, full CPU/stack comparison with only the deliberately absent object pointer normalized, independently checked viewport rectangle and ten real checked invalid/protected reads. Component test; no playable-map acceptance.",
+    "full_original_execution_after_addition": false
+  },
+  "prior_local_evidence_sha256": {
     "render-target-trace.json": "eba581a8035db254f9c4173e52ff194626fd8b4254ccc2c53edd9a73911e44ee",
     "native-file-timestamps.json": "1f7b175402a7000413babea937b8d93b6141b5feb1291cc8c60fb5451527638f",
     "next-stop.json": "52132ad675bc6b50ca391e9e7675bcaaa90038da8c01fb9af61326e3f2a49ac8",
     "observation.json": "e9062bed2ef04004b48cdeee853d11158c45fc0652bb50169528c782bcbcea57"
+  },
+  "local_evidence_sha256": {
+    "render-target-trace.json": "a2459c9c6d83e7fe24c2745f724e553bb1c19e46e7f802ac7ebb71b90b26248f",
+    "native-file-timestamps.json": "26040f0c3d234f83ef0eb21f001318358fde610c380f594b55285cbfa85db55e",
+    "next-stop.json": "1ba99ff07044640daaf0b66ec43f1d8e010c0e744aeafc7733bd06ec17642633",
+    "observation.json": "f69e045cc72e1736bf2a42bde5b8588e9352ef511f3d86b64153a5e312651121"
   }
 }

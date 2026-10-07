@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compare the two actual original renderer blocks and checked default routing."""
+"""Compare actual original renderer blocks and checked default routing."""
 import ctypes,hashlib,json,os,pathlib,random,struct,subprocess,sys
 from apple_render_dimensions import translate,BODY_SHA
 from console_fade_inputs import definition
@@ -13,12 +13,14 @@ original=R/'generated/srw/run-20261003T190924-ifc22/native-diagnostic/module.ll'
 text=original.read_text();adapted=translate(text)
 types=next(s for s in text.splitlines() if s.startswith('%_cpu = type'))
 parts=[types]
+continuations=['loc_10043265','loc_100432F3','loc_100325B0']
+entry_count=len(BODY_SHA)
 for prefix,module in [('original',text),('apple',adapted)]:
- blocks=''.join(definition(module,n) for n in BODY_SHA)
- for n in [*BODY_SHA,'loc_10043265','loc_100432F3']:
+ blocks=''.join(definition(module,n) for n in [*BODY_SHA,'loc_10042B9E'])
+ for n in [*BODY_SHA,'loc_10042B9E',*continuations]:
   blocks=blocks.replace('@'+n+'(', '@'+prefix+'_'+n+'(')
  parts.append(blocks)
- for n in ['loc_10043265','loc_100432F3']:
+ for n in continuations:
   parts.append(f'define hidden fastcc void @{prefix}_{n}(%_cpu* %cpu) {{ ret void }}')
  for i,n in enumerate(BODY_SHA):
   parts.append(f'define void @{prefix}_{i}(%_cpu* %cpu) {{ call fastcc void @{prefix}_{n}(%_cpu* %cpu)\n ret void }}')
@@ -47,15 +49,17 @@ def exercise(mode,fault=None):
  lib.tribes_memory_permissions_set.argtypes=[ctypes.c_uint32,ctypes.c_uint64,ctypes.c_uint32]
  assert lib.tribes_memory_permissions_set(0,size,0)
  for p in pages:assert lib.tribes_memory_permissions_set(p,page_size,3)
- targets=(ctypes.c_void_p*4)(*[ctypes.cast(getattr(lib,f'{prefix}_{i}'),ctypes.c_void_p).value for prefix in ['original','apple'] for i in range(2)])
- lib.tribes_memory_register_targets.argtypes=[ctypes.POINTER(ctypes.c_void_p),ctypes.c_uint64];lib.tribes_memory_register_targets(targets,4)
+ targets=(ctypes.c_void_p*(entry_count*2))(*[ctypes.cast(getattr(lib,f'{prefix}_{i}'),ctypes.c_void_p).value for prefix in ['original','apple'] for i in range(entry_count)])
+ lib.tribes_memory_register_targets.argtypes=[ctypes.POINTER(ctypes.c_void_p),ctypes.c_uint64];lib.tribes_memory_register_targets(targets,entry_count*2)
  lib.tribes_memory_external_configure.argtypes=[ctypes.c_uint64,ctypes.c_uint64];lib.tribes_memory_external_configure(base,size);lib.tribes_memory_external_enable()
  for prefix in ['original','apple']:
-  for i in range(2):getattr(lib,f'{prefix}_{i}').argtypes=[ctypes.c_void_p]
+  for i in range(entry_count):getattr(lib,f'{prefix}_{i}').argtypes=[ctypes.c_void_p]
  def store(p,v):ctypes.memmove(base+p,struct.pack('<I',v),4)
  store(0x101d6828,0x300001);store(0x1046ce60,0);store(0x1046e258,0)
  cpu=ctypes.create_string_buffer(bytes(440),440);struct.pack_into('<Q',cpu,112,base);struct.pack_into('<I',cpu,12,0x200080);struct.pack_into('<I',cpu,16,0x100800)
  if fault:
+  entry=0
+  if fault.startswith('viewport-'):entry=2;fault=fault[len('viewport-'):]
   target=0
   if fault=='nonzero':target=0x400000
   elif fault=='protected':
@@ -64,7 +68,7 @@ def exercise(mode,fault=None):
   elif fault=='current':store(0x1046e258,0x200100)
   elif fault=='dimensions':store(0x101d6828,0x400000)
   else:raise AssertionError(fault)
-  store(0x1046ce48,target);getattr(lib,'apple_0')(cpu);raise AssertionError('fault returned')
+  store(0x1046ce48,target);getattr(lib,f'apple_{entry}')(cpu);raise AssertionError('fault returned')
  rng=random.Random(25034);cases=0
  for i in range(128):
   width,height=rng.randrange(1,4096),rng.randrange(1,4096);target_width,target_height=rng.randrange(1,4096),rng.randrange(1,4096)
@@ -76,16 +80,21 @@ def exercise(mode,fault=None):
   for default in [False,True]:
    store(0x1046ce60,0 if default else i%3);store(0x1046e258,0 if default else (0x200100 if i%2 else 0))
    store(0x200124,width if default else target_width);store(0x200128,height if default else target_height)
-   for entry in range(2):
+   for entry in range(entry_count):
     results=[]
     for prefix in ['original','apple']:
-     c=ctypes.create_string_buffer(seed.raw,440);struct.pack_into('<I',c,8,0 if default and prefix=='apple' else 0x200100)
+     c=ctypes.create_string_buffer(seed.raw,440)
+     if entry<2:struct.pack_into('<I',c,8,0 if default and prefix=='apple' else 0x200100)
      store(0x1046ce48,0 if default and prefix=='apple' else 0x200100)
      ctypes.memmove(base+0x1007e0,stack,128);getattr(lib,f'{prefix}_{entry}')(c)
      # The reference supplies an object with the window's real dimensions;
      # the Apple path deliberately keeps EDX/global target null. Normalize
-     # that input pointer alone; all other CPU/flags/FP and stack must match.
-     if default:struct.pack_into('<I',c,8,0)
+     # that pointer alone (EDX in the lighting blocks, ECX in the viewport
+     # block); all other CPU/flags/FP and stack must match.
+     if default:struct.pack_into('<I',c,4 if entry==2 else 8,0)
+     if entry==2:
+      expected=(0,0,width if default else target_width,height if default else target_height)
+      assert struct.unpack('<4I',ctypes.string_at(base+0x100820,16))==expected,(mode,i,default,prefix)
      results.append((c.raw,ctypes.string_at(base+0x1007e0,128)))
     assert results[0]==results[1],(mode,i,default,entry);cases+=1
  assert native.munmap(base,size)==0
@@ -97,10 +106,10 @@ report=dict(passed=False)
 for mode in ['normal','checked']:
  cases=exercise(mode);report[mode]=dict(passed=True,cases=cases,binary_sha256=sha(out/(mode+'.dylib')));print('PASS:',mode,cases,'original-object and window-dimension CPU/stack comparisons',flush=True)
 faults=[]
-for name in ['nonzero','protected','interop','current','dimensions']:
+for name in ['nonzero','protected','interop','current','dimensions','viewport-nonzero','viewport-protected','viewport-interop','viewport-current','viewport-dimensions']:
  run=subprocess.run([sys.executable,str(pathlib.Path(__file__).resolve()),name],capture_output=True,text=True,timeout=30)
  (out/(name+'.log')).write_text(run.stdout+run.stderr)
  assert run.returncode==-6 and 'memory violation' in run.stderr,(name,run.returncode,run.stderr)
  faults.append(name)
-report.update(passed=True,checked_faults=faults,sources_sha256={str(p.relative_to(R)):sha(p) for p in [pathlib.Path(__file__).resolve(),R/'scripts/apple_render_dimensions.py',*barriers]},original_blocks_sha256=BODY_SHA,scope='Two actual renderer blocks; original nonzero target behavior preserved, default dimensions compared to original object dimensions, full CPU/stack comparison with only the deliberately absent object pointer normalized, five real checked invalid/protected reads. Component test; no playable-map acceptance.')
+report.update(passed=True,checked_faults=faults,sources_sha256={str(p.relative_to(R)):sha(p) for p in [pathlib.Path(__file__).resolve(),R/'scripts/apple_render_dimensions.py',*barriers]},original_blocks_sha256=BODY_SHA,scope='Three actual renderer blocks and the original viewport continuation; original nonzero target behavior preserved, default dimensions compared to original object dimensions, full CPU/stack comparison with only the deliberately absent object pointer normalized, independently checked viewport rectangle and ten real checked invalid/protected reads. Component test; no playable-map acceptance.')
 (out/'result.json').write_text(json.dumps(report,indent=2)+'\n')
