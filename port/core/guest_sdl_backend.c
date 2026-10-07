@@ -2054,14 +2054,24 @@ void tribes_gl_get_integer(_cpu *cpu,uint32_t name,uint32_t output){
     if(copy)value=(GLint)*copy;else if(c&&c->core&&name==0x8192)value=(GLint)c->mipmap_hint;else glGetIntegerv(name,&value);
     checked_copy(guest(cpu,output,4),&value,4);graphics_active=0;leave(&frame);tribes_set_last_error(error);
 }
-/* These reached limits are single floats. Other enums may be vectors and
-   remain guarded until their exact output extent is supported. */
+/* The original model-view/projection queries have exactly sixteen floats. Keep
+   every other vector enum guarded until its output extent is supported. */
 void tribes_gl_get_float(_cpu *cpu,uint32_t name,uint32_t output){
     WINDOW_ENTER();if(!SDL_GL_GetCurrentContext())stop();
-    if(name!=0x84ff&&name!=GL_MAX_TEXTURE_SIZE&&name!=0x8192)stop();
-    GLfloat value;checked_copy(&value,guest(cpu,output,4),4);GLContext *c=current_context();
-    if(c&&c->core&&name==0x8192)value=(GLfloat)c->mipmap_hint;else glGetFloatv(name,&value);
-    checked_copy(guest(cpu,output,4),&value,4);graphics_active=0;leave(&frame);tribes_set_last_error(error);
+    size_t count=1;
+    if(name==0x0ba6||name==0x0ba7){
+#if TARGET_OS_IPHONE
+        stop();
+#else
+        (void)legacy_context();count=16;
+#endif
+    }else if(name!=0x84ff&&name!=GL_MAX_TEXTURE_SIZE&&name!=0x8192)stop();
+    GLfloat value[16];size_t bytes=count*sizeof(*value);
+    /* Native errors leave the supplied destination unchanged. Stage its
+       full initial contents and retain GL's actual error state. */
+    checked_copy(value,guest(cpu,output,bytes),bytes);GLContext *c=current_context();
+    if(c&&c->core&&name==0x8192)value[0]=(GLfloat)c->mipmap_hint;else glGetFloatv(name,value);
+    checked_copy(guest(cpu,output,bytes),value,bytes);graphics_active=0;leave(&frame);tribes_set_last_error(error);
 }
 uint32_t tribes_glu_error_string(_cpu *cpu,uint32_t code){
     WINDOW_ENTER();const char *text=NULL;

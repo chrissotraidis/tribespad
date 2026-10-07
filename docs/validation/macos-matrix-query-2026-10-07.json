@@ -1,0 +1,114 @@
+{
+  "date": "2026-10-07",
+  "implementation": {
+    "queries": [
+      "GL_MODELVIEW_MATRIX",
+      "GL_PROJECTION_MATRIX"
+    ],
+    "output_bytes": 64,
+    "guest_token": "0xfffa0120",
+    "scope": "Bounded checked host staging in the existing Mac legacy context; real native values and error behavior, scalar queries retained. Core/GLES matrix queries remain guarded.",
+    "finite_startup_revisions": 33,
+    "sources_sha256": {
+      "port/core/guest_sdl_backend.c": "ac6e74e3cadadc6257e186f19532a44306d7e6c7240d348a46e53e67321260be",
+      "tests/sdl_window_test.c": "1546522580b986cee4173c6f1cac0e5ed43fe036f3ba3b094a2562238b8a7e80",
+      "scripts/test-sdl-window.py": "106896ee3ccc9205d87e52da37016f457916bc2a0667c75b7be115172c85147f"
+    }
+  },
+  "components": {
+    "proof_sha256": "5fbbef53efb32bbe3239c010887cdae605208e6d25328f1446ab6b96fdb855c0",
+    "runs": [
+      {
+        "mode": "normal",
+        "passed": true,
+        "expected_guard_stops": 0
+      },
+      {
+        "mode": "tsan",
+        "passed": true,
+        "expected_guard_stops": 0
+      },
+      {
+        "mode": "checked",
+        "passed": true,
+        "expected_guard_stops": 96
+      }
+    ],
+    "checks": "Native model-view/projection identity, asymmetric and transformed matrices; unaligned 64-byte results and adjacent canaries; complete CPU/ESP/LastError preservation; retained native errors and unchanged output after invalid operation; read-only, protected-tail, unreadable, overflowing outputs and core-context rejection.",
+    "mobile_checked_compile_receipt_sha256": "12225b8c81bc0538407e8617acbf47ffa199a70d0b01d5250302d335ae9b61db",
+    "mobile_scope": "ARM64 device/Simulator source compilation only."
+  },
+  "original_execution": {
+    "pid": 40638,
+    "binary_sha256": "15d575ce7ec15b14e4d0ffeebc64c06cfa834a529649b6e8a1c384b1897e8633",
+    "signed_engine_sha256": "d1e8563a3989e8dbb84603246cb1fdc64a12f505c2c2c92385308961a84e59ee",
+    "startup_initialized": true,
+    "deliberate_startup_observation_seconds": 60,
+    "packaging_signature_verified": true,
+    "native_input_helper": "scripts/macos-engine-input.m",
+    "native_input_actions_observed": [
+      "EULA acceptance",
+      "local tribespad alias",
+      "Training selection",
+      "native mouse START"
+    ],
+    "window_dimensions": [
+      1920,
+      1200
+    ],
+    "lighting_polygons_completed": 2,
+    "default_and_full_viewport_executed": true,
+    "modelview_query": {
+      "name": "GL_MODELVIEW_MATRIX",
+      "output": "0x2ff654",
+      "bytes": "0000803f2924deb54bb8d5b4000000002324de350000803f2b24deb500000000abb8d5342524de350000803f000000006cffc7c37f49724477d646c30000803f",
+      "native_compare": {
+        "error": "success",
+        "value": "0"
+      }
+    },
+    "projection_query_observed": false,
+    "next_stop": {
+      "guest_pc": "0x0",
+      "original_call": "0x44b294",
+      "original_call_bytes": "ff150c4b9e00",
+      "original_return": "0x44b29a",
+      "pointer_slot": "0x9e4b0c",
+      "lookup_name_va": "0x78b2cc",
+      "lookup_name": "glTexSubImage2D",
+      "arguments": [
+        "0xde1",
+        "0",
+        "0",
+        "0",
+        "64",
+        "64",
+        "0x1908",
+        "0x1401",
+        "0x62620000"
+      ]
+    },
+    "capture_scope": "Actual isolated offline app stop; selected-thread CPU/stack, exact renderer fields and read-only native GL queries, not a whole-memory snapshot."
+  },
+  "local_evidence_sha256": {
+    "app-build.json": "bcc3c3c098a543ab5b90af2eb4e6ad644f5aebc53b29ce71c07188a0e61072ad",
+    "render-target-trace.json": "41c4a1d2b02eb752e3de0c943cc7e103674604d9324331b63ff767f713d6c4ed",
+    "next-stop.json": "94a79df456df71329b0c5fe67195e22d4b3f06c2c3a876e79325e0ed43c45dbd",
+    "observation.json": "99af4eb18596b42279e3b003e54fbf7109cff5b3c03d92b56804359b37b4ce66",
+    "stopped.png": "5c18bece17b41077f2e779f2594d2c2aafa4ec317d2ca518bf18d976ea782b20"
+  },
+  "cleanup": {
+    "app_build_debugger_ended": true,
+    "original_audio_restored": "57",
+    "isolated_voice_preference_restored_byte_exact": true,
+    "microphone_permission": "Declined for isolated offline run.",
+    "simulator_booted": false
+  },
+  "acceptance": {
+    "rendered_playable_map": false,
+    "gameplay_controls": false,
+    "hd_and_authenticated_multiplayer": false,
+    "full_mobile_gameplay": false
+  },
+  "next_action": "Implement finite glTexSubImage2D through the existing checked 2D unpack staging, validate actual subregion pixels and read bounds/native errors, then rebuild and launch Training toward rendered gameplay."
+}

@@ -494,6 +494,36 @@ static void texture_array(const char *fault){
  glPixelStorei(GL_PACK_ALIGNMENT,4);memcpy(memory+0x3001,&name,4);GC(0xfffa01a0,0,1,0x3001);assert(!glIsTexture(name)&&glGetError()==0);
  puts("Original font texture array: native 256 layers/red storage, exact staged pixels, sublayers, float components, skipped-page isolation and native errors PASS");
 }
+static void matrix_queries(const char *fault){
+ const uint32_t query=0xfffa0120,output=0x3001;
+ glMatrixMode(GL_MODELVIEW);
+ if(fault&&!strcmp(fault,"matrix-query-readonly")){assert(tribes_memory_permissions_set(0x3000,4096,1));GC(query,0,GL_MODELVIEW_MATRIX,output);assert(0);}
+ if(fault&&!strcmp(fault,"matrix-query-cross-page")){assert(tribes_memory_permissions_set(0x4000,4096,1));GC(query,0,GL_MODELVIEW_MATRIX,0x3fc1);assert(0);}
+ if(fault&&!strcmp(fault,"matrix-query-unreadable")){assert(tribes_memory_permissions_set(0x3000,4096,0));GC(query,0,GL_MODELVIEW_MATRIX,output);assert(0);}
+ if(fault&&!strcmp(fault,"matrix-query-overflow")){GC(query,0,GL_MODELVIEW_MATRIX,0xffffffe1);assert(0);}
+ const GLdouble matrix[16]={1.25,-.125,.5,.25,2,1.5,-.75,.125,-2,.25,.625,.5,.75,-.5,3,1};
+ const GLenum modes[]={GL_MODELVIEW,GL_PROJECTION},names[]={GL_MODELVIEW_MATRIX,GL_PROJECTION_MATRIX};
+ for(unsigned mode=0;mode<2;mode++){
+ glMatrixMode(modes[mode]);glPushMatrix();GLfloat expected[16];
+ for(unsigned i=0;i<3;i++){
+  if(i==0)glLoadIdentity();else if(i==1)glLoadMatrixd(matrix);else{glTranslated(.25,-.75,2);glRotated(23,1,2,3);}
+  glGetFloatv(names[mode],expected);assert(glGetError()==GL_NO_ERROR);
+  memset(memory+0x3000,0xa5,66);GC(query,0,names[mode],output);
+  assert(!memcmp(memory+output,expected,sizeof expected)&&memory[0x3000]==0xa5&&memory[0x3041]==0xa5);
+  assert(GC(0xfffa0010,1)==GL_NO_ERROR);
+ }
+ glEnable(0xffffffff);GC(query,0,names[mode],output);
+ assert(!memcmp(memory+output,expected,sizeof expected)&&GC(0xfffa0010,1)==GL_INVALID_ENUM&&GC(0xfffa0010,1)==GL_NO_ERROR);
+ /* A native invalid operation must preserve every supplied output byte. */
+ memset(expected,0x5a,sizeof expected);glBegin(GL_TRIANGLES);glGetFloatv(names[mode],expected);glEnd();
+ assert(glGetError()==GL_INVALID_OPERATION);memset(memory+output,0x5a,sizeof expected);
+ glBegin(GL_TRIANGLES);GC(query,0,names[mode],output);glEnd();
+ assert(!memcmp(memory+output,expected,sizeof expected)&&GC(0xfffa0010,1)==GL_INVALID_OPERATION&&GC(0xfffa0010,1)==GL_NO_ERROR);
+ assert(memory[0x3000]==0xa5&&memory[0x3041]==0xa5);glPopMatrix();
+ }
+ glMatrixMode(GL_MODELVIEW);
+ puts("Model-view/projection queries: native sixteen-float matrices, unaligned output/canaries, retained errors, full guest CPU/stack/LastError and invalid-operation preservation PASS");
+}
 static void immediate_rectangle(void){
  const char *names[]={"glBlendFunc","glBegin","glVertex2f","glEnd"};
  for(unsigned i=0;i<4;i++){strcpy((char *)memory+0x24000,names[i]);assert(CALL(63,0x24000)==0xfffa04f0+16*i);}
@@ -819,7 +849,7 @@ static void legacy_route(uint32_t original_window,uint32_t original_context,cons
  glBindBuffer(GL_ARRAY_BUFFER,names[2]);glGetBufferSubData(GL_ARRAY_BUFFER,0,4,readback);assert(!memcmp(data,readback,4));glBindBuffer(GL_ARRAY_BUFFER,names[0]);
  GC(0xfffa01e0,0,3,0x3001);GC(0xfffa0020,0,0x8f36,0x3021);assert(word(0x3021)==0);GC(0xfffa0020,0,0x8f37,0x3021);assert(word(0x3021)==0);
  GC(0xfffa01d0,0,0x8f37,4,0,GL_STATIC_DRAW);assert(glGetError()==GL_INVALID_OPERATION);
- gpu_sync(window,context,fault);immediate_rectangle();texture_array(fault);quad_draw(fault);shader_lifecycle(fault);
+ matrix_queries(fault);gpu_sync(window,context,fault);immediate_rectangle();texture_array(fault);quad_draw(fault);shader_lifecycle(fault);
  assert(CALL(48,context));CALL(41,window);assert(CALL(49,original_window,original_context));
  assert(CALL(53,SDL_GL_CONTEXT_MAJOR_VERSION,3)&&CALL(53,SDL_GL_CONTEXT_MINOR_VERSION,2)&&CALL(53,SDL_GL_CONTEXT_PROFILE_MASK,SDL_GL_CONTEXT_PROFILE_CORE));
  puts("legacy fallback: guest matrices/viewport/depth state render red pixel; 32MiB copy-target storage, binding isolation, errors, sharing and cleanup PASS");
@@ -885,7 +915,7 @@ static void graphics_queries(uint32_t window,const char *fault){
  GLint units=0;glGetIntegerv(0x84e2,&units);GC(0xfffa0020,0,0x84e2,0x3001);assert(word(0x3001)==(uint32_t)units&&units>=2);
 #endif
  if(fault&&!strcmp(fault,"readonly-gl-float")){assert(tribes_memory_permissions_set(0x3000,4096,1));GC(0xfffa0120,0,GL_MAX_TEXTURE_SIZE,0x3001);assert(0);}
- if(fault&&!strcmp(fault,"unsupported-gl-float")){GC(0xfffa0120,0,0x0ba6,0x3001);assert(0);}
+ if(fault&&!strcmp(fault,"unsupported-gl-float")){GC(0xfffa0120,0,0x0ba8,0x3001);assert(0);}
  GLint expected=0;glGetIntegerv(GL_MAX_TEXTURE_SIZE,&expected);GC(0xfffa0020,0,GL_MAX_TEXTURE_SIZE,0x3001);assert(word(0x3001)==(uint32_t)expected);
  while(glGetError()!=GL_NO_ERROR){}
  assert(!GC(string,1,0xffffffff));assert(GC(0xfffa0010,1)==GL_INVALID_ENUM&&GC(0xfffa0010,1)==0);
@@ -1137,7 +1167,8 @@ static int window_main(int argc,char **argv){
  assert(CALL(54,SDL_GL_CONTEXT_PROFILE_MASK,0x3001)&&word(0x3001)==SDL_GL_CONTEXT_PROFILE_CORE);
  puts("explicit native core context retains existing modern graphics coverage");
 #ifdef GRAPHICS
- if(argc==1||(argc==2&&(!strncmp(argv[1],"sync-",5)||!strncmp(argv[1],"array-",6)||!strncmp(argv[1],"uniform-",8)||!strncmp(argv[1],"shader-",7)||!strncmp(argv[1],"quad-",5)||!strncmp(argv[1],"matrix-mult-",12)||!strncmp(argv[1],"matrix-double-",14)||!strncmp(argv[1],"state-",6)||!strncmp(argv[1],"normal-",7)||!strcmp(argv[1],"unreadable-matrix")||!strcmp(argv[1],"shared-copy-delete")||!strcmp(argv[1],"shared-array-delete"))))legacy_route(window,context,argc==2?argv[1]:NULL);
+ if(argc==2&&!strcmp(argv[1],"matrix-query-core")){GC(0xfffa0120,0,GL_MODELVIEW_MATRIX,0x3001);assert(0);}
+ if(argc==1||(argc==2&&(!strncmp(argv[1],"matrix-query-",13)||!strncmp(argv[1],"sync-",5)||!strncmp(argv[1],"array-",6)||!strncmp(argv[1],"uniform-",8)||!strncmp(argv[1],"shader-",7)||!strncmp(argv[1],"quad-",5)||!strncmp(argv[1],"matrix-mult-",12)||!strncmp(argv[1],"matrix-double-",14)||!strncmp(argv[1],"state-",6)||!strncmp(argv[1],"normal-",7)||!strcmp(argv[1],"unreadable-matrix")||!strcmp(argv[1],"shared-copy-delete")||!strcmp(argv[1],"shared-array-delete"))))legacy_route(window,context,argc==2?argv[1]:NULL);
  if(argc==2&&!strcmp(argv[1],"mipmap-nonzero-base")){
   GC(0xfffa0150,0,1,0x3001);GC(0xfffa0160,0,GL_TEXTURE_2D,word(0x3001));GC(0xfffa0170,0,GL_TEXTURE_2D,0x8191,1);GC(0xfffa0170,0,GL_TEXTURE_2D,GL_TEXTURE_BASE_LEVEL,1);
   const unsigned char color[]={1,2,3,255};mipmap_upload(1,2,color);assert(0);
