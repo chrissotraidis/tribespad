@@ -1,0 +1,126 @@
+{
+  "date": "2026-10-06",
+  "original_execution": {
+    "pid": 15854,
+    "binary_sha256": "dfceb8690ba8f5b5b0fa08327c843c0bbe4b56fb691b04f0afd6e768624a9f6e",
+    "signed_engine_sha256": "63cf9edd5791a299e3cde6e476b852688d1f30e3e1a361ff6d26528049dfbbd0",
+    "scope": "Signed full original engine with SetFileTime, before the new float-colour/integer-vertex exports.",
+    "startup_initialized": true,
+    "deliberate_startup_observation_seconds": 60,
+    "menus_and_textured_player": true,
+    "native_hid_training_start": true,
+    "captured_loading": "object317/321",
+    "set_file_time": {
+      "original_return": "0x6fcd22",
+      "eax": 1,
+      "native_call": "fsetattrlist",
+      "cache_path": "base/lighting/Training1_dbe092e7.ml",
+      "native_times": [
+        [
+          1791331379,
+          0
+        ],
+        [
+          1791331379,
+          0
+        ]
+      ],
+      "observed_access_ns": 1791331379000000000,
+      "observed_write_ns": 1791331379000000000
+    },
+    "default_dimensions": {
+      "observed_entries": [
+        "loc_1004324C",
+        "loc_10043362",
+        "loc_10043379"
+      ],
+      "target": 0,
+      "interop": 0,
+      "current_target": 0,
+      "native_framebuffer": 0,
+      "window_dimensions": [
+        2940,
+        1912
+      ],
+      "native_viewport": [
+        2940,
+        1912
+      ]
+    },
+    "next_stop": {
+      "guest_pc": "0x0",
+      "original_call": "0x10043629",
+      "original_return": "0x1004362f",
+      "pointer_slot": "0x1046c758",
+      "original_lookup_string": "glColor4f",
+      "adjacent_required_slot": "0x1046ca54",
+      "adjacent_lookup_string": "glVertex2i"
+    },
+    "rendered_playable_map": false,
+    "scope_of_capture": "Selected-thread CPU and exact fields; concurrent guest threads preclude coherent whole-memory snapshots."
+  },
+  "new_implementation": {
+    "exports": [
+      {
+        "name": "glColor4f",
+        "guest_token": "0xfffa06a0",
+        "native_signature": "void(float,float,float,float)"
+      },
+      {
+        "name": "glVertex2i",
+        "guest_token": "0xfffa06b0",
+        "native_signature": "void(int,int)"
+      }
+    ],
+    "preserved_existing_export_tokens": true,
+    "real_native_calls": true,
+    "mobile_exports_unavailable": true,
+    "full_original_execution_after_addition": false
+  },
+  "components": {
+    "graphics_passed": true,
+    "modes": [
+      {
+        "mode": "normal",
+        "passed": true,
+        "faults": 0
+      },
+      {
+        "mode": "tsan",
+        "passed": true,
+        "faults": 0
+      },
+      {
+        "mode": "checked",
+        "passed": true,
+        "faults": 91
+      }
+    ],
+    "checks": "Native colour state, alpha-blended signed integer polygon pixels, bounded coverage, full guest CPU/stack/LastError preservation and two wrong-signature rejections; existing graphics/lifecycle guards retained.",
+    "proof_sha256": "c73613b18acd70d6cb35c5aa6452cc19b29c3b2e7e9d6075a543c1f44ef75020",
+    "mobile_compilation_only": true,
+    "integration_gates": [
+      "mission-literals",
+      "mission-entry-test",
+      "apple-render-dimensions"
+    ]
+  },
+  "cleanup": {
+    "app_and_debugger_ended": true,
+    "audio_restored": "57",
+    "isolated_voice_preference_restored": true,
+    "simulator_booted": false
+  },
+  "next_action": "Finish full checked rebuild PID19914/session38232, package/sign/relaunch Training and exercise the actual colour/integer-vertex draw toward the rendered map and controls.",
+  "acceptance": {
+    "playable": false,
+    "hd_and_authenticated_multiplayer": false,
+    "full_mobile_gameplay": false
+  },
+  "local_evidence_sha256": {
+    "render-target-trace.json": "eba581a8035db254f9c4173e52ff194626fd8b4254ccc2c53edd9a73911e44ee",
+    "native-file-timestamps.json": "1f7b175402a7000413babea937b8d93b6141b5feb1291cc8c60fb5451527638f",
+    "next-stop.json": "52132ad675bc6b50ca391e9e7675bcaaa90038da8c01fb9af61326e3f2a49ac8",
+    "observation.json": "e9062bed2ef04004b48cdeee853d11158c45fc0652bb50169528c782bcbcea57"
+  }
+}

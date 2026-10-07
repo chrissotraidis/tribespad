@@ -61,6 +61,7 @@ extern unsigned sdl_test_live,sdl_test_fail;
 extern void bad_window(void),bad_context(void);
 #if defined(GRAPHICS) && !TARGET_OS_IPHONE
 extern void bad_frustum(void),bad_mult_matrix(void),bad_mult_matrix_double(void),bad_depth_mask(void),bad_is_enabled(void),bad_scale(void),bad_polygon_offset(void);
+extern void bad_color4f(void),bad_vertex2i(void);
 #endif
 #endif
 static unsigned char *memory;static _cpu cpu;
@@ -514,6 +515,22 @@ static void immediate_rectangle(void){
  GC(0xfffa0520,0);GC(0xfffa0530,0);assert(glGetError()==GL_INVALID_OPERATION);
  GC(0xfffa0500,0,GL_TRIANGLES);GC(0xfffa0500,0,GL_TRIANGLES);GC(0xfffa0520,0);GC(0xfffa0530,0);assert(glGetError()==GL_INVALID_OPERATION);
  GC(0xfffa0280,0,GL_BLEND);GC(0xfffa02d0,0,255,255,255,255);
+ /* The original renderer's next draw uses float colour and signed integer
+    polygon corners. Compare native colour state and actual bounded pixels. */
+ const char *additional[]={"glColor4f","glVertex2i"};
+ for(unsigned i=0;i<2;i++){strcpy((char *)memory+0x24000,additional[i]);assert(CALL(63,0x24000)==0xfffa06a0+16*i);}
+ GLfloat expected[4],actual[4];glColor4f(-.25f,.25f,2,.5f);glGetFloatv(GL_CURRENT_COLOR,expected);
+ GC(0xfffa06a0,0,0xbe800000,0x3e800000,0x40000000,0x3f000000);glGetFloatv(GL_CURRENT_COLOR,actual);assert(!memcmp(expected,actual,sizeof actual));
+ GC(0xfffa0060,0,0,0,0,0x3f800000);GC(0xfffa0080,0,GL_COLOR_BUFFER_BIT);
+ GC(0xfffa0290,0,GL_BLEND);glScalef(.5f,.5f,1);
+ GC(0xfffa0500,0,GL_POLYGON);
+ GC(0xfffa06a0,0,0,0x3f000000,0x3f800000,0x3f000000);
+ GC(0xfffa06b0,0,UINT32_MAX,UINT32_MAX);GC(0xfffa06b0,0,1,UINT32_MAX);
+ GC(0xfffa06b0,0,1,1);GC(0xfffa06b0,0,UINT32_MAX,1);GC(0xfffa0520,0);
+ glReadPixels(32,32,1,1,GL_RGBA,GL_UNSIGNED_BYTE,pixel);assert(pixel[0]==0&&pixel[1]>=63&&pixel[1]<=65&&pixel[2]>=127&&pixel[2]<=129);
+ glReadPixels(4,4,1,1,GL_RGBA,GL_UNSIGNED_BYTE,pixel);assert(pixel[0]==0&&pixel[1]==0&&pixel[2]==0&&glGetError()==0);
+ GC(0xfffa0240,0,GL_MODELVIEW);GC(0xfffa0250,0);GC(0xfffa0280,0,GL_BLEND);GC(0xfffa02d0,0,255,255,255,255);
+ puts("Original lighting polygon: float colour state/alpha and signed integer vertices through guest ABI, bounded native pixels PASS");
  puts("Original GUI rectangle: guest immediate vertices, alpha blending, bounded coverage and native errors PASS");
 }
 static void gpu_sync(uint32_t window,uint32_t context,const char *fault){
@@ -1070,6 +1087,8 @@ static int window_main(int argc,char **argv){
  if(argc==2&&!strcmp(argv[1],"bad-depth-mask")){bad_depth_mask();return 99;}
  if(argc==2&&!strcmp(argv[1],"bad-is-enabled")){bad_is_enabled();return 99;}
  if(argc==2&&!strcmp(argv[1],"bad-polygon-offset")){bad_polygon_offset();return 99;}
+ if(argc==2&&!strcmp(argv[1],"bad-color4f")){bad_color4f();return 99;}
+ if(argc==2&&!strcmp(argv[1],"bad-vertex2i")){bad_vertex2i();return 99;}
  if(argc==2&&!strcmp(argv[1],"bad-scale")){bad_scale();return 99;}
 #endif
 #endif

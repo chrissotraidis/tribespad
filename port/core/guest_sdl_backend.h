@@ -164,6 +164,8 @@ void tribes_gl_vertex2f(_cpu *,uint32_t,uint32_t);
 void tribes_gl_end(_cpu *);
 void tribes_gl_blend_func_separate(_cpu *,uint32_t,uint32_t,uint32_t,uint32_t);
 void tribes_gl_color4ub(_cpu *,uint32_t,uint32_t,uint32_t,uint32_t);
+void tribes_gl_color4f(_cpu *,uint32_t,uint32_t,uint32_t,uint32_t);
+void tribes_gl_vertex2i(_cpu *,uint32_t,uint32_t);
 void tribes_gl_enable_client_state(_cpu *,uint32_t);
 void tribes_gl_disable_client_state(_cpu *,uint32_t);
 void tribes_gl_vertex_pointer(_cpu *,uint32_t,uint32_t,uint32_t,uint32_t);
