@@ -1579,6 +1579,23 @@ void tribes_gl_color4ub(_cpu *cpu,uint32_t r,uint32_t g,uint32_t b,uint32_t a){
     glColor4ub((GLubyte)r,(GLubyte)g,(GLubyte)b,(GLubyte)a);DRAW_RETURN();
 #endif
 }
+void tribes_gl_color3ub(_cpu *cpu,uint32_t r,uint32_t g,uint32_t b){
+    WINDOW_ENTER();
+#if TARGET_OS_IPHONE
+    (void)r;(void)g;(void)b;(void)error;stop();
+#else
+    (void)legacy_context();glColor3ub((GLubyte)r,(GLubyte)g,(GLubyte)b);DRAW_RETURN();
+#endif
+}
+void tribes_gl_vertex3f(_cpu *cpu,uint32_t x,uint32_t y,uint32_t z){
+    WINDOW_ENTER();
+#if TARGET_OS_IPHONE
+    (void)x;(void)y;(void)z;(void)error;stop();
+#else
+    (void)legacy_context();uint32_t bits[]={x,y,z};GLfloat value[3];memcpy(value,bits,sizeof value);
+    glVertex3f(value[0],value[1],value[2]);DRAW_RETURN();
+#endif
+}
 void tribes_gl_blend_func(_cpu *cpu,uint32_t source,uint32_t destination){WINDOW_ENTER();glBlendFunc(source,destination);DRAW_RETURN();}
 void tribes_gl_color4f(_cpu *cpu,uint32_t r,uint32_t g,uint32_t b,uint32_t a){
     WINDOW_ENTER();

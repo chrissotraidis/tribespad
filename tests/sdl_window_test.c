@@ -61,6 +61,7 @@ extern unsigned sdl_test_live,sdl_test_fail;
 extern void bad_window(void),bad_context(void);
 #if defined(GRAPHICS) && !TARGET_OS_IPHONE
 extern void bad_frustum(void),bad_mult_matrix(void),bad_mult_matrix_double(void),bad_depth_mask(void),bad_is_enabled(void),bad_scale(void),bad_polygon_offset(void);
+extern void bad_color3ub(void),bad_vertex3f(void);
 extern void bad_color4f(void),bad_vertex2i(void),bad_tex_sub_image_2d(void);
 #endif
 #endif
@@ -623,6 +624,33 @@ static void immediate_rectangle(void){
  glReadPixels(32,32,1,1,GL_RGBA,GL_UNSIGNED_BYTE,pixel);assert(pixel[0]==0&&pixel[1]>=63&&pixel[1]<=65&&pixel[2]>=127&&pixel[2]<=129);
  glReadPixels(4,4,1,1,GL_RGBA,GL_UNSIGNED_BYTE,pixel);assert(pixel[0]==0&&pixel[1]==0&&pixel[2]==0&&glGetError()==0);
  GC(0xfffa0240,0,GL_MODELVIEW);GC(0xfffa0250,0);GC(0xfffa0280,0,GL_BLEND);GC(0xfffa02d0,0,255,255,255,255);
+ /* Original fan uses byte arguments with live high register bits and
+    three binary32 coordinates. Depth overlap distinguishes a real z path. */
+ const char *fan_names[]={"glColor3ub","glVertex3f"};
+ for(unsigned i=0;i<2;i++){strcpy((char *)memory+0x24000,fan_names[i]);assert(CALL(63,0x24000)==0xfffa06d0+16*i);}
+ glColor3ub(128,128,128);glGetFloatv(GL_CURRENT_COLOR,expected);
+ GC(0xfffa06d0,0,0xb80,0x580,0xb80);glGetFloatv(GL_CURRENT_COLOR,actual);
+ assert(!memcmp(actual,expected,sizeof actual)&&actual[3]==1);
+ glColor3ub(17,65,255);glGetFloatv(GL_CURRENT_COLOR,expected);
+ GC(0xfffa06d0,0,0xdead0011,0xbeef0041,0xffffffff);glGetFloatv(GL_CURRENT_COLOR,actual);
+ assert(!memcmp(actual,expected,sizeof actual));
+ glEnable(GL_DEPTH_TEST);glDepthFunc(GL_LESS);glDepthMask(GL_TRUE);glClearDepth(1);
+ GC(0xfffa0080,0,GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+ glScalef(.5f,.5f,1);glEnable(0xffffffff);
+ for(unsigned pass=0;pass<3;pass++){
+  /* Near green must survive the final farther blue fan. */
+  GC(0xfffa06d0,0,pass==0?255:0,pass==1?255:0,pass==2?255:0);
+  GC(0xfffa0500,0,GL_TRIANGLE_FAN);
+  uint32_t z=pass==1?0xbf000000:0x3f000000;
+  GC(0xfffa06e0,0,0xbf800000,0xbf800000,z);GC(0xfffa06e0,0,0x3f800000,0xbf800000,z);
+  GC(0xfffa06e0,0,0x3f800000,0x3f800000,z);GC(0xfffa06e0,0,0xbf800000,0x3f800000,z);
+  GC(0xfffa0520,0);
+ }
+ assert(glGetError()==GL_INVALID_ENUM&&glGetError()==0);
+ glReadPixels(32,32,1,1,GL_RGBA,GL_UNSIGNED_BYTE,pixel);assert(pixel[0]==0&&pixel[1]==255&&pixel[2]==0&&pixel[3]==255);
+ glReadPixels(4,4,1,1,GL_RGBA,GL_UNSIGNED_BYTE,pixel);assert(pixel[0]==0&&pixel[1]==0&&pixel[2]==0&&glGetError()==0);
+ glDisable(GL_DEPTH_TEST);GC(0xfffa0250,0);GC(0xfffa02d0,0,255,255,255,255);
+ puts("Original 3D fan: low-byte colour/alpha, float XYZ/depth, bounded native pixels, CPU ABI and retained error PASS");
  puts("Original lighting polygon: float colour state/alpha and signed integer vertices through guest ABI, bounded native pixels PASS");
  puts("Original GUI rectangle: guest immediate vertices, alpha blending, bounded coverage and native errors PASS");
 }
@@ -1180,6 +1208,8 @@ static int window_main(int argc,char **argv){
  if(argc==2&&!strcmp(argv[1],"bad-depth-mask")){bad_depth_mask();return 99;}
  if(argc==2&&!strcmp(argv[1],"bad-is-enabled")){bad_is_enabled();return 99;}
  if(argc==2&&!strcmp(argv[1],"bad-polygon-offset")){bad_polygon_offset();return 99;}
+ if(argc==2&&!strcmp(argv[1],"bad-color3ub")){bad_color3ub();return 99;}
+ if(argc==2&&!strcmp(argv[1],"bad-vertex3f")){bad_vertex3f();return 99;}
  if(argc==2&&!strcmp(argv[1],"bad-color4f")){bad_color4f();return 99;}
  if(argc==2&&!strcmp(argv[1],"bad-vertex2i")){bad_vertex2i();return 99;}
  if(argc==2&&!strcmp(argv[1],"bad-tex-sub-image-2d")){bad_tex_sub_image_2d();return 99;}
@@ -1231,6 +1261,8 @@ static int window_main(int argc,char **argv){
  assert(CALL(54,SDL_GL_CONTEXT_PROFILE_MASK,0x3001)&&word(0x3001)==SDL_GL_CONTEXT_PROFILE_CORE);
  puts("explicit native core context retains existing modern graphics coverage");
 #ifdef GRAPHICS
+ if(argc==2&&!strcmp(argv[1],"color3ub-core")){GC(0xfffa06d0,0,128,128,128);assert(0);}
+ if(argc==2&&!strcmp(argv[1],"vertex3f-core")){GC(0xfffa06e0,0,0,0,0);assert(0);}
  if(argc==2&&!strcmp(argv[1],"matrix-query-core")){GC(0xfffa0120,0,GL_MODELVIEW_MATRIX,0x3001);assert(0);}
  if(argc==1||(argc==2&&(!strncmp(argv[1],"matrix-query-",13)||!strncmp(argv[1],"sync-",5)||!strncmp(argv[1],"array-",6)||!strncmp(argv[1],"uniform-",8)||!strncmp(argv[1],"shader-",7)||!strncmp(argv[1],"quad-",5)||!strncmp(argv[1],"matrix-mult-",12)||!strncmp(argv[1],"matrix-double-",14)||!strncmp(argv[1],"state-",6)||!strncmp(argv[1],"normal-",7)||!strcmp(argv[1],"unreadable-matrix")||!strcmp(argv[1],"shared-copy-delete")||!strcmp(argv[1],"shared-array-delete"))))legacy_route(window,context,argc==2?argv[1]:NULL);
  if(argc==2&&!strcmp(argv[1],"mipmap-nonzero-base")){

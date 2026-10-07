@@ -269,6 +269,8 @@
     "glBlendFuncSeparate",
     "glColor4ub",
     "glColor4f",
+    "glColor3ub",
+    "glVertex3f",
     "glEnableClientState",
     "glDisableClientState",
     "glColorPointer",

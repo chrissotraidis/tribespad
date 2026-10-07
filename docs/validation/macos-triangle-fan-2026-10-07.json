@@ -1,0 +1,272 @@
+{
+  "date": "2026-10-07",
+  "platform": "ARM64 macOS",
+  "change": "Finite native legacy glColor3ub and glVertex3f with exact low-byte/float-bit ABI and existing context guards",
+  "finite_exports": {
+    "glColor3ub": "0xfffa06d0",
+    "glVertex3f": "0xfffa06e0"
+  },
+  "sources_sha256": {
+    "port/core/guest_sdl_backend.c": "d123567c4ae1a7fccc2afec5e5384edcc3348df53e5f56a781f3ec426be30b8d",
+    "port/core/guest_graphics.c": "bb605554910582c5888d5dc7d00a63c4c6d1725aec1ee11f779970376373b77c",
+    "scripts/graphics_backend_inputs.py": "9fb6f293c748ac721967e02aa68605a8f64db6cba5597f2ec120894b038fb38a",
+    "port/compiler/ExternalMemoryPass.cpp": "4e43c92dbe21a8b6f21ae92fadd95b7036a94725db111cbb210fae718449da9d",
+    "config/runtime/external-memory-contracts.json": "f12e12dc73f1826f0bbf69e088eda1b96d669aae96f0432097a5d45644ea2d14",
+    "tests/sdl_window_test.c": "96063209d0f8bff3f96e344c5346a8a7fb3f2728c058fbff943206b8b46b82f2",
+    "scripts/test-sdl-window.py": "dba8b1f9e268fc09afb08bf080b42f7e8ccd1f63781a00669e2e5775e957734e"
+  },
+  "component": {
+    "receipt": "generated/integration-review/triangle-fan/graphics-result.json",
+    "receipt_sha256": "090351a834d06e7ba721a64049d95bf6f83ddfdfa68bb7f01f9db7a6c51ff552",
+    "runs": [
+      {
+        "mode": "normal",
+        "passed": true,
+        "guard_stops": 0
+      },
+      {
+        "mode": "tsan",
+        "passed": true,
+        "guard_stops": 0
+      },
+      {
+        "mode": "checked",
+        "passed": true,
+        "guard_stops": 106
+      }
+    ],
+    "scope": "Native colour state including alpha reset, arbitrary high argument bits, bounded fan pixels and depth overlap, retained native error, emitted full CPU/ESP/LastError preservation; malformed native signatures and core-context guards. No whole-stack canary claim."
+  },
+  "mobile_compile": {
+    "receipt": "generated/integration-review/triangle-fan/mobile-compile/result.json",
+    "receipt_sha256": "7c57d9e465ec34c8d652bd39706632213cf65998a6efd4cdfc6cf3fce7a42ec7",
+    "scope": "Changed checked backend/provider/bindings compile for ARM64 device/Simulator; no mobile execution."
+  },
+  "mission_literal_regression": {
+    "passed": true,
+    "receipt_sha256": "86c4b4d1218cf8c938c82bd91465d613abd280d6494b86302db460c06db1dfa6"
+  },
+  "full_build": {
+    "state": "finished",
+    "initialized": true,
+    "attach_returned": true,
+    "execution_timeout": true,
+    "playable": false,
+    "binary_sha256": "0c93440aa39f7ce76ddef2d35117dd9f4b14bd638a290cd5800f83759d02ce65"
+  },
+  "original_app": {
+    "pid": 53658,
+    "signature_verified": true,
+    "signed_engine_sha256": "eab4b1ff5f5ec49ed514ae963c436a00864d08999f6ac4c2aef7a4ebcccda2d3",
+    "route": "EULA, local tribespad alias/model, Training, original Alt+Enter, native HID START on Charybdis; original loader reaches texture subregion and fan color.",
+    "fan_returns": [
+      {
+        "symbol": "loc_5AC91D",
+        "cpu_address": "0x10f3a4c70",
+        "registers": [
+          "0xb80",
+          "0x2ff5c8",
+          "0x580",
+          "0x65031100",
+          "0x2ff610",
+          "0x2ff628",
+          "0x64b0d000",
+          "0x0"
+        ],
+        "stack": [
+          "0x0",
+          "0x0",
+          "0x5be",
+          "0x3bc",
+          "0x65031100",
+          "0x60598fc0",
+          "0x2ff640",
+          "0x10043abc",
+          "0x65031100",
+          "0x64afc880",
+          "0x2ff724",
+          "0x65031100"
+        ],
+        "globals": {
+          "0x1046ce48": "0x0",
+          "0x1046ce60": "0x0",
+          "0x1046ceec": "0xdb000002",
+          "0x1046e258": "0x0",
+          "0x1046c8a4": "0x0",
+          "0x1046ca80": "0x0",
+          "0x1046c9b0": "0xfffa0070",
+          "0x101d6828": "0x9e826c",
+          "0x1046c894": "0x1",
+          "0x1046ce5c": "0x1",
+          "0x1046c758": "0xfffa06a0",
+          "0x1046ca54": "0xfffa06b0"
+        },
+        "fan_call": {
+          "arguments": [
+            "0xb80",
+            "0x580",
+            "0xb80"
+          ],
+          "resolved_token": "0xfffa06d0"
+        }
+      }
+    ],
+    "vertex_executed": false,
+    "final_window": "Black; no rendered map/control acceptance.",
+    "next_stop": {
+      "pid": 53658,
+      "frames": [
+        "abort",
+        "stop",
+        "release",
+        "tbimp_ReleaseSRWLockExclusive",
+        "tribes_enter",
+        "call_guest",
+        "run",
+        "_pthread_start"
+      ],
+      "scope": "Actual isolated offline app stop; selected-thread CPU/stack, exact renderer fields and read-only native GL queries, not a whole-memory snapshot.",
+      "cpu_address": "0x17232e8e8",
+      "base": "0x7000000000",
+      "esp": "0x6018ff1c",
+      "registers": [
+        268712368,
+        273081360,
+        273081444,
+        0,
+        1612250908,
+        4294963215,
+        0,
+        1627423184
+      ],
+      "stack_from": "0x6018ff0c",
+      "stack": [
+        "0x1046dc38",
+        "0x10075735",
+        "0x1046dc38",
+        "0x10001737",
+        "0x10075b5a",
+        "0x1046e3dc",
+        "0x100439ba",
+        "0x1046e3dc",
+        "0x10076526",
+        "0x1046e410",
+        "0x0",
+        "0x0",
+        "0x0",
+        "0x61008140",
+        "0x61008200",
+        "0x6018ff48",
+        "0x6018ff48",
+        "0x1007fec1",
+        "0x610081d0",
+        "0x100750b3",
+        "0x61008140",
+        "0x610081d0",
+        "0x61008200",
+        "0x500079e8",
+        "0x100759a0",
+        "0x6018fff4",
+        "0x0",
+        "0x10001a2f",
+        "0x61008140",
+        "0x0",
+        "0x1046dc38",
+        "0x10001720",
+        "0x80",
+        "0x0",
+        "0x1388",
+        "0x0",
+        "0x61008140",
+        "0x1046dc38",
+        "0x61018018",
+        "0x108"
+      ],
+      "mission_literal_bytes": "c745cc3acd13bfc745c43acd133fc745c83acd133f",
+      "mission_literal_values": [
+        "0xbf13cd3a",
+        "0x3f13cd3a",
+        "0x3f13cd3a"
+      ],
+      "renderer_globals": {
+        "0x1046ce48": "0x0",
+        "0x1046ce60": "0x0",
+        "0x1046ceec": "0xdb000002",
+        "0x1046e258": "0x0",
+        "0x1046ce50": "0x0",
+        "0x1046c8a4": "0x0",
+        "0x1046ca80": "0x0",
+        "0x1046c9b0": "0xfffa0070",
+        "0x1046c9d0": "0x1",
+        "0x1046ca90": "0x0",
+        "0x1046c6f4": "0x0",
+        "0x1046cb74": "0x0",
+        "0x1046cb40": "0x1",
+        "0x101d6828": "0x9e826c"
+      },
+      "owner_vtable": null,
+      "window_dimensions": [
+        1470,
+        956
+      ],
+      "native_gl": {
+        "context": {
+          "error": "success",
+          "value": "0x0000000000000000",
+          "summary": null
+        },
+        "version": {
+          "error": "error: error: Expression execution was interrupted: EXC_BAD_ACCESS (code=1, address=0x3b0).\nThe process has been returned to the state before expression evaluation.",
+          "value": null,
+          "summary": null
+        },
+        "extensions": {
+          "error": "error: error: Expression execution was interrupted: EXC_BAD_ACCESS (code=1, address=0x3b0).\nThe process has been returned to the state before expression evaluation.",
+          "value": null,
+          "summary": null
+        },
+        "framebuffer": {
+          "error": "error: error: Expression execution was interrupted: EXC_BAD_ACCESS (code=1, address=0x348).\nThe process has been returned to the state before expression evaluation.",
+          "value": null,
+          "summary": null
+        }
+      }
+    },
+    "static_handoff": {
+      "acquisition_call": "0x10043a76 -> 0x10075b40",
+      "after_acquire": "0x10043a7b",
+      "job_submission": "0x10043a90 -> 0x100765b0",
+      "job_record": "0x1046e410",
+      "worker": "0x10043960",
+      "completion": "0x100439b0 -> 0x10075b50",
+      "completion_storage": "job+0x44 at 0x100765ed",
+      "next_shared_wait": "0x10043af8 -> 0x10075ae0",
+      "scope": "Pinned original disassembly plus observed worker release; acquisition thread/native lock state not captured in this run."
+    },
+    "diagnostic_caveat": "Read-only GL queries on stopped worker had no current context and faulted during LLDB expression evaluation; debugger restored pre-expression state. Observer now skips those queries for null context, not yet re-exercised.",
+    "evidence_sha256": {
+      "next-stop.json": "756bbac86e293e326b1546e4a139ba77669117a2a05db98d582292530c18ca5d",
+      "render-target-trace.json": "a73c691e304822fa6f4d581380b66600e4cdba401df9a7961bceb929fb0fee0a",
+      "observation.json": "e3c191b4b584c710ef934d02497f4bb8bd637f0b7bff837c47fe451648f88cbb",
+      "app-build.json": "bc35e578427fbe942b52e15ff3a759c0e278a73b38379a2a826eb0bd4a32e903",
+      "stopped.png": "df5a44cceecdc00c04971825af56fe6b3b44d2947c4624b0949ce6020ce207e1"
+    }
+  },
+  "cleanup": {
+    "owned_app_ended": true,
+    "owned_debugger_ended": true,
+    "audio_restored": "default 57",
+    "isolated_voice_preference_restored": true,
+    "simulators_booted": 0,
+    "microphone_access": "declined"
+  },
+  "next_action": "Trace original lock acquisition, job submission and worker completion with native thread IDs; implement the bounded rendering-job synchronization semantics without weakening general SRW ownership, then resume original fan/translate rendering.",
+  "reference": "https://learn.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-releasesrwlockexclusive",
+  "remaining": [
+    "Rendered playable map",
+    "Original gameplay controls",
+    "HD comparison",
+    "Authenticated existing-community multiplayer",
+    "Full iPad/iPhone application and physical acceptance"
+  ]
+}
