@@ -14,69 +14,6 @@
       "main",
       "start"
     ],
-    "scope": "Actual isolated offline app stop; selected-thread CPU/stack, exact renderer fields and native context identity, not a whole-memory snapshot.",
-    "cpu_address": "0x10d2b4d00",
-    "base": "0x7000000000",
-    "esp": "0x2ff634",
-    "registers": [
-      0,
-      0,
-      7955124,
-      1616482240,
-      3143220,
-      3143232,
-      1694699776,
-      2
-    ],
-    "stack_from": "0x2ff624",
-    "stack": [
-      "0x60598fc0",
-      "0x10043be1",
-      "0x8d40",
-      "0x0",
-      "0x60598fc0",
-      "0x2ff724",
-      "0x65031100",
-      "0x2ff760",
-      "0x569f64",
-      "0x65031100",
-      "0x0",
-      "0x1",
-      "0x3f800000",
-      "0x35e17dcf",
-      "0x34d8634b",
-      "0xc3c7ff6b",
-      "0xb5e17dd5",
-      "0x3f800000",
-      "0x35e17dd0",
-      "0x44723d99",
-      "0xb4d862e9",
-      "0xb5e17dd6",
-      "0x3f800000",
-      "0xc346ce8e",
-      "0x0",
-      "0x0",
-      "0x0",
-      "0x3f800000",
-      "0x3f800000",
-      "0xb5e17dd5",
-      "0xb4d862e8",
-      "0x43c7ff9e",
-      "0x35e17dcf",
-      "0x3f800000",
-      "0xb5e17dd6",
-      "0xc4723d93",
-      "0x34d8634c",
-      "0x35e17dd0",
-      "0x3f800000",
-      "0x4346ce2e"
-    ],
-    "mission_literal_bytes": "c745cc3acd13bfc745c43acd133fc745c83acd133f",
-    "mission_literal_values": [
-      "0xbf13cd3a",
-      "0x3f13cd3a",
-      "0x3f13cd3a"
-    ],
     "renderer_globals": {
       "0x1046ce48": "0x0",
       "0x1046ce60": "0x0",
@@ -93,18 +30,7 @@
       "0x1046cb40": "0x1",
       "0x101d6828": "0x9e826c"
     },
-    "owner_vtable": "0x6500e9c0",
-    "window_dimensions": [
-      1470,
-      956
-    ],
-    "native_gl": {
-      "context": {
-        "error": "success",
-        "value": "0x0000007a7fcafbb0",
-        "summary": null
-      }
-    }
+    "scope": "Actual isolated offline app stop; selected-thread CPU/stack, exact renderer fields and native context identity, not a whole-memory snapshot."
   },
   "components": {
     "passed": true,
@@ -132,6 +58,195 @@
     "scope": "Original branch and epilogue, 1024 state combinations per mode; full CPU/stack and nonzero target routing preserved. No native GL or playable acceptance claimed."
   },
   "mobile": "Changed branch/epilogue checked-compiles for ARM64 iOS device and Simulator; no mobile execution.",
-  "full_engine": "Build running, exec54793",
-  "playable": false
+  "full_engine": {
+    "state": "finished",
+    "binary_sha256": "2938d4fe681020c6c01883ac7723fbd6cfeeb50b1c167ee6f373293e4ec021a6",
+    "initialized": true,
+    "attach_returned": true,
+    "execution_timeout": true,
+    "playable": false,
+    "finite_revisions": 33
+  },
+  "playable": false,
+  "signed_packaging_passed": true,
+  "regressions": [
+    "mission literals normal/checked/TSan passed after integration-script change",
+    "mission entry normal/checked:800 SQRTSS comparisons each and two unmasked stops"
+  ],
+  "actual_execution": {
+    "pid": 87731,
+    "window": 17893,
+    "mission": "Charybdis",
+    "native_hid_start_utc": "09:28:57",
+    "next_stop": {
+      "frames": [
+        "halopad_trap_unimplemented",
+        "loc_10126170",
+        "tribes_enter",
+        "main",
+        "start"
+      ],
+      "instruction_pc": "0x10126173",
+      "scope": "Actual isolated offline app stop; selected-thread CPU/stack, exact renderer fields and native context identity, not a whole-memory snapshot."
+    },
+    "final_window": "black; no scene swap observed after completion",
+    "cleanup": {
+      "pid": 87731,
+      "original_audio": "default 57\n113 MacBook Air Microphone\n106 MacBook Air Speakers\n118 eqMac\n88 Microsoft Teams Audio\n84 Jump Desktop Microphone\n57 Jump Desktop Audio\n",
+      "restored": "default 57\n113 MacBook Air Microphone\n106 MacBook Air Speakers\n118 eqMac\n88 Microsoft Teams Audio\n84 Jump Desktop Microphone\n57 Jump Desktop Audio\n",
+      "scope": "Actual signed isolated original offline app; diagnostic stop/manual termination is not gameplay acceptance."
+    },
+    "render_job_steps": [
+      {
+        "step": 0,
+        "thread": 6650164,
+        "return_pc": "0x10043a7b"
+      },
+      {
+        "step": 1,
+        "thread": 6652141,
+        "return_pc": "0x100439ba"
+      },
+      {
+        "step": 2,
+        "thread": 6650164,
+        "return_pc": "0x10043afd"
+      },
+      {
+        "step": 3,
+        "thread": 6650164,
+        "return_pc": "0x10043b8b"
+      }
+    ],
+    "lighting_calls": [
+      {
+        "symbol": "tribes_gl_light_fv",
+        "return_pc": "0x573c1d",
+        "args": [
+          "0x4000",
+          "0x1203",
+          "0x2ff4e0"
+        ]
+      },
+      {
+        "symbol": "tribes_gl_light_fv",
+        "return_pc": "0x573c2d",
+        "args": [
+          "0x4000",
+          "0x1201",
+          "0x2ff4b0"
+        ]
+      },
+      {
+        "symbol": "tribes_gl_light_fv",
+        "return_pc": "0x573c3d",
+        "args": [
+          "0x4000",
+          "0x1200",
+          "0x2ff4c0"
+        ]
+      },
+      {
+        "symbol": "tribes_gl_light_fv",
+        "return_pc": "0x573c4e",
+        "args": [
+          "0x4000",
+          "0x1202",
+          "0x78f9d8"
+        ]
+      },
+      {
+        "symbol": "tribes_gl_light_model_fv",
+        "return_pc": "0x5739e2",
+        "args": [
+          "0xb53",
+          "0x2ff508",
+          "0x0"
+        ]
+      },
+      {
+        "symbol": "tribes_gl_light_model_fv",
+        "return_pc": "0x573a36",
+        "args": [
+          "0xb53",
+          "0x83cb70",
+          "0x64b70e00"
+        ]
+      },
+      {
+        "symbol": "tribes_gl_light_model_fv",
+        "return_pc": "0x5739e2",
+        "args": [
+          "0xb53",
+          "0x2ff498",
+          "0x0"
+        ]
+      },
+      {
+        "symbol": "tribes_gl_light_model_fv",
+        "return_pc": "0x573a36",
+        "args": [
+          "0xb53",
+          "0x83cb70",
+          "0x6518b400"
+        ]
+      }
+    ],
+    "completion": [
+      {
+        "symbol": "loc_10043BBC",
+        "globals": {
+          "0x1046ce44": "0x0",
+          "0x1046ce48": "0x0",
+          "0x1046ce60": "0x0",
+          "0x1046e258": "0x0",
+          "0x1046ce50": "0x0"
+        },
+        "native_framebuffer": {
+          "value": "0",
+          "error": "success"
+        },
+        "draw_buffer": {
+          "value": "1029",
+          "error": "success"
+        },
+        "read_buffer": {
+          "value": "1029",
+          "error": "success"
+        },
+        "program": {
+          "value": "0",
+          "error": "success"
+        }
+      },
+      {
+        "symbol": "loc_10043C76",
+        "globals": {
+          "0x1046ce44": "0x0",
+          "0x1046ce48": "0x0",
+          "0x1046ce60": "0x0",
+          "0x1046e258": "0x0",
+          "0x1046ce50": "0x0"
+        },
+        "native_framebuffer": {
+          "value": "0",
+          "error": "success"
+        },
+        "draw_buffer": {
+          "value": "1029",
+          "error": "success"
+        },
+        "read_buffer": {
+          "value": "1029",
+          "error": "success"
+        },
+        "program": {
+          "value": "0",
+          "error": "success"
+        }
+      }
+    ],
+    "raw_evidence": "generated/integration-review/apple-render-dimensions/execution/"
+  },
+  "next_action": "Batch the reached math kernel0x10126170 instruction gaps using existing SSE/MXCSR helpers, including checked MULPD memory forms; test then rebuild and launch original Training."
 }
