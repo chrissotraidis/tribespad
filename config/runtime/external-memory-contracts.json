@@ -471,6 +471,8 @@
     "glFogi",
     "glFogf",
     "glAlphaFunc",
+    "glTexGeni",
+    "glTexGenfv",
     "glPolygonMode",
     "glFogfv",
     "glLightf",

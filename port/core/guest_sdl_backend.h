@@ -237,4 +237,6 @@ uint32_t tribes_sdl_get_audio_stream_data(_cpu *,uint32_t,uint32_t,uint32_t);
 void tribes_gl_polygon_mode(_cpu *,uint32_t,uint32_t);
 void tribes_gl_alpha_func(_cpu *,uint32_t,uint32_t);
 void tribes_gl_fog_coord_pointer(_cpu *,uint32_t,uint32_t,uint32_t);
+void tribes_gl_tex_gen_i(_cpu *,uint32_t,uint32_t,uint32_t);
+void tribes_gl_tex_gen_fv(_cpu *,uint32_t,uint32_t,uint32_t);
 #endif

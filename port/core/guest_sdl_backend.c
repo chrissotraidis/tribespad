@@ -1560,6 +1560,28 @@ void tribes_gl_light_model_fv(_cpu *cpu,uint32_t name,uint32_t input){
     glLightModelfv(name,value);DRAW_RETURN();
 #endif
 }
+void tribes_gl_tex_gen_i(_cpu *cpu,uint32_t coord,uint32_t name,uint32_t value){
+    WINDOW_ENTER();
+#if TARGET_OS_IPHONE
+    (void)coord;(void)name;(void)value;(void)error;stop();
+#else
+    (void)legacy_context();glTexGeni(coord,name,(GLint)(int32_t)value);DRAW_RETURN();
+#endif
+}
+void tribes_gl_tex_gen_fv(_cpu *cpu,uint32_t coord,uint32_t name,uint32_t input){
+    WINDOW_ENTER();
+#if TARGET_OS_IPHONE
+    (void)coord;(void)name;(void)input;(void)error;stop();
+#else
+    (void)legacy_context();unsigned count=0;GLfloat value[4]={0};
+    if(coord==GL_S||coord==GL_T||coord==GL_R||coord==GL_Q){
+        if(name==GL_TEXTURE_GEN_MODE)count=1;
+        else if(name==GL_OBJECT_PLANE||name==GL_EYE_PLANE)count=4;
+    }
+    if(count)checked_copy(value,guest(cpu,input,count*sizeof *value),count*sizeof *value);
+    glTexGenfv(coord,name,value);DRAW_RETURN();
+#endif
+}
 void tribes_gl_polygon_mode(_cpu *cpu,uint32_t face,uint32_t mode){
     WINDOW_ENTER();
 #if TARGET_OS_IPHONE

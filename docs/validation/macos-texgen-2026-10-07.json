@@ -1,0 +1,228 @@
+{
+  "date": "2026-10-07",
+  "original_execution": {
+    "pid": 57786,
+    "engine_sha256": "4c8c177a85992746602aa5fbe11693dd684baeca7dc54a0901f15d7e42e58ba7",
+    "capture": "generated/integration-review/apple-render-dimensions/scene-texgen-stop-57786",
+    "screenshot_sha256": "634c0ec1994c0bd7a8741bfc844dc48b73926e6690c27bd21e1efa921dbe1c97",
+    "next_stop": {
+      "pid": 57786,
+      "frames": [
+        "abort",
+        "tribes_lookup",
+        "tribes_dispatch",
+        "tribes_enter",
+        "main",
+        "start"
+      ],
+      "scope": "Actual isolated offline app stop; selected-thread CPU/stack, exact renderer fields and native context identity, not a whole-memory snapshot.",
+      "cpu_address": "0x10d3d8d00",
+      "base": "0x7000000000",
+      "esp": "0x2ff4d0",
+      "registers": [
+        3169,
+        4,
+        4,
+        1648294984,
+        3142864,
+        3142940,
+        8641392,
+        3142928
+      ],
+      "stack_from": "0x2ff4c0",
+      "stack": [
+        "0x3f19587a",
+        "0x3f4cfbb9",
+        "0x2ff510",
+        "0x5b971a",
+        "0x5b97a2",
+        "0x2000",
+        "0x2500",
+        "0x2401",
+        "0x3f549cf3",
+        "0x3c32c990",
+        "0x3eba3ca1",
+        "0x0",
+        "0x3caaaaab",
+        "0x0",
+        "0x0",
+        "0x0",
+        "0x0",
+        "0x3caaaaab",
+        "0x0",
+        "0x0",
+        "0x2",
+        "0x623efa00",
+        "0x65030bc0",
+        "0x2ff628",
+        "0x5b4ed2",
+        "0x2ff547",
+        "0xbd4ccccd",
+        "0x5",
+        "0x64c1c500",
+        "0x0",
+        "0x0",
+        "0x5be",
+        "0x3bc",
+        "0x0",
+        "0x3f800000",
+        "0x0",
+        "0x0",
+        "0xc4800000",
+        "0x0",
+        "0x3f800000"
+      ],
+      "mission_literal_bytes": "c745cc3acd13bfc745c43acd133fc745c83acd133f",
+      "mission_literal_values": [
+        "0xbf13cd3a",
+        "0x3f13cd3a",
+        "0x3f13cd3a"
+      ],
+      "renderer_globals": {
+        "0x1046ce48": "0x0",
+        "0x1046ce60": "0x0",
+        "0x1046ceec": "0xdb000002",
+        "0x1046e258": "0x0",
+        "0x1046ce50": "0x0",
+        "0x1046c8a4": "0x0",
+        "0x1046ca80": "0x0",
+        "0x1046c9b0": "0xfffa0070",
+        "0x1046c9d0": "0x1",
+        "0x1046ca90": "0x0",
+        "0x1046c6f4": "0x0",
+        "0x1046cb74": "0x0",
+        "0x1046cb40": "0x1",
+        "0x101d6828": "0x9e826c"
+      },
+      "owner_vtable": "0x7e",
+      "window_dimensions": [
+        1470,
+        956
+      ],
+      "native_gl": {
+        "context": {
+          "error": "success",
+          "value": "0x00000079a7957b60",
+          "summary": null
+        }
+      }
+    },
+    "trace_counts": {
+      "tribes_render_job_step": 12,
+      "tribes_gl_light_fv": 4,
+      "tribes_gl_light_model_fv": 4,
+      "loc_10043BBC": 4,
+      "loc_10043C76": 4,
+      "loc_10040FFF": 4,
+      "loc_10041026": 4,
+      "loc_4D0B8B": 4,
+      "tribes_sdl_gl_swap_window": 4,
+      "loc_624164": 4,
+      "loc_51685B": 3,
+      "loc_5168BE": 3,
+      "loc_518136": 3,
+      "loc_518147": 3,
+      "loc_5B96FA": 1
+    },
+    "scope": "Original polygon-mode return0x5b96fa observed; first-person Charybdis at00:23, terrain/weapon/vehicle/HUD rendered with severe artifacts. No gameplay input acceptance.",
+    "cleanup": {
+      "pid": 57786,
+      "original_audio": "default 106\n113 MacBook Air Microphone\n106 MacBook Air Speakers\n118 eqMac\n88 Microsoft Teams Audio\n84 Jump Desktop Microphone\n57 Jump Desktop Audio\n",
+      "restored": "default 106\n113 MacBook Air Microphone\n106 MacBook Air Speakers\n118 eqMac\n88 Microsoft Teams Audio\n84 Jump Desktop Microphone\n57 Jump Desktop Audio\n",
+      "scope": "Actual signed isolated original offline app; diagnostic stop/manual termination is not gameplay acceptance."
+    }
+  },
+  "implementation": [
+    {
+      "api": "glTexGeni",
+      "token": "0xfffa07d0",
+      "actual_call": "0x5b979c",
+      "actual_return": "0x5b97a2",
+      "slot": "0x9e8ff4",
+      "args": [
+        "GL_S (0x2000)",
+        "GL_TEXTURE_GEN_MODE (0x2500)",
+        "GL_OBJECT_LINEAR (0x2401)"
+      ],
+      "lookup": {
+        "string": "0x78b23c",
+        "push": "0x55e9a0",
+        "get_proc": "0x55e9a6",
+        "store": "0x55e9ac"
+      }
+    },
+    {
+      "api": "glTexGenfv",
+      "token": "0xfffa07e0",
+      "adjacent_static_calls": [
+        "0x5b97c5",
+        "0x5b97d9"
+      ],
+      "returns": [
+        "0x5b97cb",
+        "0x5b97df"
+      ],
+      "slot": "0x9e8bb0",
+      "lookup": {
+        "string": "0x78b230",
+        "push": "0x55e985",
+        "get_proc": "0x55e98b",
+        "store": "0x55e991"
+      },
+      "semantics": "Three-DWORD stdcall; checked float vector staging: one mode value or four object/eye plane coefficients; real native GL transforms eye planes. Invalid selectors preserve native errors without reading guest vectors."
+    }
+  ],
+  "tests": {
+    "graphics_passed": true,
+    "graphics_receipt_sha256": "6cb1a87190858a2fe8558c3a8f000ea52d86f7670a3094e3f70790cd5018caf9",
+    "runs": [
+      {
+        "mode": "normal",
+        "passed": true,
+        "fault_count": 0
+      },
+      {
+        "mode": "tsan",
+        "passed": true,
+        "fault_count": 0
+      },
+      {
+        "mode": "checked",
+        "passed": true,
+        "fault_count": 156
+      }
+    ],
+    "scope": "Native mode/object/eye-plane queries including transformed modelview, exact readonly page ends and unaligned planes, retained errors, begin errors, CPU/ESP/LastError and full textured framebuffer equality with four independently asserted colored quadrants.",
+    "mobile_compile": true,
+    "mission_literals": true,
+    "render_job_handoff": true
+  },
+  "depth_observation": {
+    "samples": 8,
+    "all_at": "tribes_sdl_gl_swap_window",
+    "native_query_errors": false,
+    "depth_bits": 32,
+    "depth_mask": 1,
+    "depth_test": 0,
+    "depth_func": "GL_LEQUAL",
+    "viewport": [
+      0,
+      356,
+      690,
+      600
+    ],
+    "scope": "First-render-job presentation samples may include menu preview/transitional frames. No post-trigger clear observed before stop; neither this nor depth disabled at presentation proves a scene-depth defect. Next probe arms at actual original polygon return instead."
+  },
+  "full_build": {
+    "state": "running",
+    "pid": 62554,
+    "session": 74723,
+    "log": "generated/integration-review/fog-state/texgen-full-engine.log"
+  },
+  "next_action": "Finish the existing full build, package and launch the signed original app. Verify texture-generation returns, observe actual scene clear/presentation state and test shipped WASD controls after tutorial lockout.",
+  "limitations": [
+    "New texture-generation calls have not executed in the original app yet.",
+    "GLES routes deliberately unavailable; mobile source compilation only.",
+    "Rendering correctness, controls, HD, authenticated multiplayer and full Apple-platform acceptance remain incomplete."
+  ]
+}

@@ -64,7 +64,7 @@ extern unsigned sdl_test_live,sdl_test_fail;
 extern void bad_window(void),bad_context(void);
 #if defined(GRAPHICS) && !TARGET_OS_IPHONE
 extern void bad_frustum(void),bad_mult_matrix(void),bad_mult_matrix_double(void),bad_depth_mask(void),bad_is_enabled(void),bad_scale(void),bad_polygon_offset(void);
-extern void bad_alpha_func(void),bad_polygon_mode(void);
+extern void bad_alpha_func(void),bad_polygon_mode(void),bad_tex_gen_i(void),bad_tex_gen_fv(void);
 extern void bad_fog_i(void),bad_fog_f(void),bad_fog_fv(void);
 extern void bad_light_fv(void),bad_light_f(void),bad_light_model_fv(void);
 extern void bad_rotate_f(void),bad_translate_f(void),bad_tex_coord2f(void);
@@ -910,6 +910,47 @@ static void matrix_stack(void){
  GC(0xfffa0660,0);glBegin(GL_TRIANGLE_FAN);glVertex2f(-1,-1);glVertex2f(1,-1);glVertex2f(1,1);glVertex2f(-1,1);glEnd();glReadPixels(8,8,1,1,GL_RGBA,GL_UNSIGNED_BYTE,px);assert(px[1]==255&&!glGetError());
  puts("Model matrix stack: native per-mode push/scale/pop, finite limits, error preservation, rejected begin-state changes and projected coverage PASS");
 }
+static void scene_texgen(const char *fault){
+ const char *names[]={"glTexGeni","glTexGenfv"};
+ for(unsigned i=0;i<2;i++){strcpy((char *)memory+0x24000,names[i]);assert(CALL(63,0x24000)==0xfffa07d0+16*i);}
+ if(fault&&!strcmp(fault,"texgen-range")){assert(tribes_memory_permissions_set(0x4000,4096,0));GC(0xfffa07e0,0,GL_S,GL_OBJECT_PLANE,0x3ff1);assert(0);}
+ if(fault&&!strcmp(fault,"texgen-null")){GC(0xfffa07e0,0,GL_S,GL_OBJECT_PLANE,0);assert(0);}
+ if(fault&&!strcmp(fault,"texgen-overflow")){GC(0xfffa07e0,0,GL_S,GL_OBJECT_PLANE,0xfffffff8);assert(0);}
+ GLfloat plane[]={.5f,.25f,.125f,.5f},zero[4]={0},expected[4],actual[4];
+ GLenum coords[]={GL_S,GL_T,GL_R,GL_Q};
+ glMatrixMode(GL_MODELVIEW);glLoadIdentity();glTranslatef(2,3,4);glScalef(2,3,4);
+ for(unsigned c=0;c<4;c++)for(unsigned p=0;p<3;p++){
+  GLenum name=p==0?GL_TEXTURE_GEN_MODE:p==1?GL_OBJECT_PLANE:GL_EYE_PLANE;unsigned count=p?4:1;GLfloat value[4];memcpy(value,plane,16);if(!p)value[0]=GL_OBJECT_LINEAR;
+  glTexGenfv(coords[c],name,value);glGetTexGenfv(coords[c],name,expected);
+  if(p)glTexGenfv(coords[c],name,zero);else glTexGeni(coords[c],name,GL_EYE_LINEAR);
+  uint32_t address=0x4000-count*4;memcpy(memory+address,value,count*4);
+  assert(tribes_memory_permissions_set(0x3000,4096,1)&&tribes_memory_permissions_set(0x4000,4096,0));
+  glEnable(0xffffffff);GC(0xfffa07e0,0,coords[c],name,address);glGetTexGenfv(coords[c],name,actual);
+  assert(!memcmp(actual,expected,count*4)&&!memcmp(memory+address,value,count*4));assert(glGetError()==GL_INVALID_ENUM&&!glGetError());
+  assert(tribes_memory_permissions_set(0x3000,4096,3)&&tribes_memory_permissions_set(0x4000,4096,3));
+  if(!p){GC(0xfffa07d0,0,coords[c],name,GL_EYE_LINEAR);GLint mode;glGetTexGeniv(coords[c],name,&mode);assert(mode==GL_EYE_LINEAR);}
+ }
+ assert(tribes_memory_permissions_set(0x4000,4096,0));GC(0xfffa07e0,0,0xffffffff,GL_OBJECT_PLANE,0x4000);assert(glGetError()==GL_INVALID_ENUM);GC(0xfffa07e0,0,GL_S,0xffffffff,0x4000);assert(glGetError()==GL_INVALID_ENUM);assert(tribes_memory_permissions_set(0x4000,4096,3));
+ GC(0xfffa07d0,0,GL_Q,GL_TEXTURE_GEN_MODE,GL_SPHERE_MAP);assert(glGetError()==GL_INVALID_ENUM);
+ memcpy(memory+0x3001,plane,16);glGetTexGenfv(GL_S,GL_OBJECT_PLANE,expected);glBegin(GL_POINTS);GC(0xfffa07e0,0,GL_S,GL_OBJECT_PLANE,0x3001);GC(0xfffa07d0,0,GL_S,GL_TEXTURE_GEN_MODE,GL_OBJECT_LINEAR);glEnd();assert(glGetError()==GL_INVALID_OPERATION);glGetTexGenfv(GL_S,GL_OBJECT_PLANE,actual);assert(!memcmp(expected,actual,16));
+ glUseProgram(0);glDisable(GL_LIGHTING);glDisable(GL_FOG);glDisable(GL_BLEND);glDisable(GL_DEPTH_TEST);glDisable(GL_ALPHA_TEST);glDisable(GL_CULL_FACE);
+ glMatrixMode(GL_TEXTURE);glLoadIdentity();glMatrixMode(GL_PROJECTION);glLoadIdentity();glMatrixMode(GL_MODELVIEW);glLoadIdentity();glViewport(0,0,64,64);glActiveTexture(GL_TEXTURE0);
+ GLuint texture;glGenTextures(1,&texture);glBindTexture(GL_TEXTURE_2D,texture);glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+ unsigned char texels[]={255,0,0,255,0,255,0,255,0,0,255,255,255,255,0,255},pixels[2][64*64*4];glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,2,2,0,GL_RGBA,GL_UNSIGNED_BYTE,texels);glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_REPLACE);glEnable(GL_TEXTURE_2D);glEnable(GL_TEXTURE_GEN_S);glEnable(GL_TEXTURE_GEN_T);
+ GLfloat planes[2][4]={{.5f,0,0,.5f},{0,.5f,0,.5f}};
+ for(unsigned route=0;route<2;route++){
+  for(unsigned c=0;c<2;c++){
+   glTexGenfv(coords[c],GL_OBJECT_PLANE,zero);glTexGeni(coords[c],GL_TEXTURE_GEN_MODE,GL_EYE_LINEAR);
+   if(!route){glTexGeni(coords[c],GL_TEXTURE_GEN_MODE,GL_OBJECT_LINEAR);glTexGenfv(coords[c],GL_OBJECT_PLANE,planes[c]);}
+   else{memcpy(memory+0x3001,planes[c],16);GC(0xfffa07d0,0,coords[c],GL_TEXTURE_GEN_MODE,GL_OBJECT_LINEAR);GC(0xfffa07e0,0,coords[c],GL_OBJECT_PLANE,0x3001);}
+  }
+  glClearColor(0,0,0,1);glClear(GL_COLOR_BUFFER_BIT);glBegin(GL_QUADS);glVertex2f(-1,-1);glVertex2f(1,-1);glVertex2f(1,1);glVertex2f(-1,1);glEnd();glReadPixels(0,0,64,64,GL_RGBA,GL_UNSIGNED_BYTE,pixels[route]);
+ }
+ assert(!memcmp(pixels[0],pixels[1],sizeof pixels[0]));
+ for(unsigned y=0;y<2;y++)for(unsigned x=0;x<2;x++)assert(!memcmp(pixels[1]+((16+y*32)*64+16+x*32)*4,texels+(y*2+x)*4,4));
+ glDisable(GL_TEXTURE_GEN_S);glDisable(GL_TEXTURE_GEN_T);glDisable(GL_TEXTURE_2D);glDeleteTextures(1,&texture);glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_MODULATE);assert(!glGetError());
+ puts("Texgen: checked mode/object/eye planes, transformed eye state, protected page ends, native textured framebuffer, invalid/begin errors and CPU ABI PASS");
+}
 static void scene_polygon_mode(void){
  strcpy((char *)memory+0x24000,"glPolygonMode");assert(CALL(63,0x24000)==0xfffa07c0);
  GLenum faces[]={GL_FRONT,GL_BACK,GL_FRONT_AND_BACK},modes[]={GL_POINT,GL_LINE,GL_FILL};
@@ -1242,7 +1283,7 @@ static void legacy_route(uint32_t original_window,uint32_t original_context,cons
  matrix_multiplication(fault,0);
  matrix_multiplication(fault,1);
  render_state(fault);
- scene_alpha();scene_polygon_mode();fog_arrays(fault);scene_fog(fault);scene_lighting(fault);
+ scene_alpha();scene_polygon_mode();scene_texgen(fault);fog_arrays(fault);scene_fog(fault);scene_lighting(fault);
  if(!fault){matrix_stack();polygon_offset();}
  GC(0xfffa0240,0,GL_MODELVIEW);GC(0xfffa0250,0);glGetDoublev(GL_MODELVIEW_MATRIX,actual);for(unsigned i=0;i<16;i++)assert(actual[i]==(i%5==0?1:0));
  GC(0xfffa0270,0,0,0,64,64);GLint viewport[4];glGetIntegerv(GL_VIEWPORT,viewport);assert(viewport[0]==0&&viewport[1]==0&&viewport[2]==64&&viewport[3]==64);
@@ -1545,6 +1586,8 @@ static int window_main(int argc,char **argv){
  if(argc==2&&!strcmp(argv[1],"bad-is-enabled")){bad_is_enabled();return 99;}
  if(argc==2&&!strcmp(argv[1],"bad-polygon-offset")){bad_polygon_offset();return 99;}
  if(argc==2&&!strcmp(argv[1],"bad-tex-coord2f")){bad_tex_coord2f();return 99;}
+ if(argc==2&&!strcmp(argv[1],"bad-tex-gen-i")){bad_tex_gen_i();return 99;}
+ if(argc==2&&!strcmp(argv[1],"bad-tex-gen-fv")){bad_tex_gen_fv();return 99;}
  if(argc==2&&!strcmp(argv[1],"bad-polygon-mode")){bad_polygon_mode();return 99;}
  if(argc==2&&!strcmp(argv[1],"bad-alpha-func")){bad_alpha_func();return 99;}
  if(argc==2&&!strcmp(argv[1],"bad-fog-i")){bad_fog_i();return 99;}
@@ -1617,6 +1660,8 @@ static int window_main(int argc,char **argv){
  if(argc==2&&!strcmp(argv[1],"rotate-f-core")){GC(0xfffa0710,0,0,0,0,0x3f800000);assert(0);}
  if(argc==2&&!strcmp(argv[1],"translate-f-core")){GC(0xfffa06f0,0,0,0,0);assert(0);}
  if(argc==2&&!strcmp(argv[1],"color3ub-core")){GC(0xfffa06d0,0,128,128,128);assert(0);}
+ if(argc==2&&!strcmp(argv[1],"texgen-i-core")){GC(0xfffa07d0,0,GL_S,GL_TEXTURE_GEN_MODE,GL_OBJECT_LINEAR);assert(0);}
+ if(argc==2&&!strcmp(argv[1],"texgen-fv-core")){GC(0xfffa07e0,0,GL_S,GL_OBJECT_PLANE,0x3001);assert(0);}
  if(argc==2&&!strcmp(argv[1],"polygon-core")){GC(0xfffa07c0,0,GL_FRONT_AND_BACK,GL_FILL);assert(0);}
  if(argc==2&&!strcmp(argv[1],"alpha-core")){GC(0xfffa07b0,0,GL_GREATER,0);assert(0);}
  if(argc==2&&!strcmp(argv[1],"fog-array-core")){GC(0xfffa07a0,0,GL_FLOAT,32,0x3000);assert(0);}
@@ -1626,7 +1671,7 @@ static int window_main(int argc,char **argv){
  if(argc==2&&!strcmp(argv[1],"vertex-vector-core")){GC(0xfffa0760,0,0x3001);assert(0);}
  if(argc==2&&!strcmp(argv[1],"vertex3f-core")){GC(0xfffa06e0,0,0,0,0);assert(0);}
  if(argc==2&&!strcmp(argv[1],"matrix-query-core")){GC(0xfffa0120,0,GL_MODELVIEW_MATRIX,0x3001);assert(0);}
- if(argc==1||(argc==2&&(!strncmp(argv[1],"fog-",4)||!strncmp(argv[1],"vertex-vector-",14)||!strncmp(argv[1],"matrix-query-",13)||!strncmp(argv[1],"sync-",5)||!strncmp(argv[1],"array-",6)||!strncmp(argv[1],"uniform-",8)||!strncmp(argv[1],"shader-",7)||!strncmp(argv[1],"quad-",5)||!strncmp(argv[1],"matrix-mult-",12)||!strncmp(argv[1],"matrix-double-",14)||!strncmp(argv[1],"state-",6)||!strncmp(argv[1],"normal-",7)||!strncmp(argv[1],"light-",6)||!strcmp(argv[1],"unreadable-matrix")||!strcmp(argv[1],"shared-copy-delete")||!strcmp(argv[1],"shared-array-delete"))))legacy_route(window,context,argc==2?argv[1]:NULL);
+ if(argc==1||(argc==2&&(!strncmp(argv[1],"texgen-",7)||!strncmp(argv[1],"fog-",4)||!strncmp(argv[1],"vertex-vector-",14)||!strncmp(argv[1],"matrix-query-",13)||!strncmp(argv[1],"sync-",5)||!strncmp(argv[1],"array-",6)||!strncmp(argv[1],"uniform-",8)||!strncmp(argv[1],"shader-",7)||!strncmp(argv[1],"quad-",5)||!strncmp(argv[1],"matrix-mult-",12)||!strncmp(argv[1],"matrix-double-",14)||!strncmp(argv[1],"state-",6)||!strncmp(argv[1],"normal-",7)||!strncmp(argv[1],"light-",6)||!strcmp(argv[1],"unreadable-matrix")||!strcmp(argv[1],"shared-copy-delete")||!strcmp(argv[1],"shared-array-delete"))))legacy_route(window,context,argc==2?argv[1]:NULL);
  if(argc==2&&!strcmp(argv[1],"mipmap-nonzero-base")){
   GC(0xfffa0150,0,1,0x3001);GC(0xfffa0160,0,GL_TEXTURE_2D,word(0x3001));GC(0xfffa0170,0,GL_TEXTURE_2D,0x8191,1);GC(0xfffa0170,0,GL_TEXTURE_2D,GL_TEXTURE_BASE_LEVEL,1);
   const unsigned char color[]={1,2,3,255};mipmap_upload(1,2,color);assert(0);
