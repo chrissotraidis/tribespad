@@ -61,6 +61,7 @@ extern unsigned sdl_test_live,sdl_test_fail;
 extern void bad_window(void),bad_context(void);
 #if defined(GRAPHICS) && !TARGET_OS_IPHONE
 extern void bad_frustum(void),bad_mult_matrix(void),bad_mult_matrix_double(void),bad_depth_mask(void),bad_is_enabled(void),bad_scale(void),bad_polygon_offset(void);
+extern void bad_light_fv(void),bad_light_f(void),bad_light_model_fv(void);
 extern void bad_rotate_f(void),bad_translate_f(void),bad_tex_coord2f(void);
 extern void bad_color3ub(void),bad_vertex3f(void);
 extern void bad_color4f(void),bad_vertex2i(void),bad_tex_sub_image_2d(void);
@@ -814,6 +815,69 @@ static void matrix_stack(void){
  GC(0xfffa0660,0);glBegin(GL_TRIANGLE_FAN);glVertex2f(-1,-1);glVertex2f(1,-1);glVertex2f(1,1);glVertex2f(-1,1);glEnd();glReadPixels(8,8,1,1,GL_RGBA,GL_UNSIGNED_BYTE,px);assert(px[1]==255&&!glGetError());
  puts("Model matrix stack: native per-mode push/scale/pop, finite limits, error preservation, rejected begin-state changes and projected coverage PASS");
 }
+static void scene_lighting(const char *fault){
+ const char *names[]={"glLightfv","glLightf","glLightModelfv"};
+ for(unsigned i=0;i<3;i++){strcpy((char *)memory+0x24000,names[i]);assert(CALL(63,0x24000)==0xfffa0720+16*i);}
+ GLfloat actual[4],expected[4],zero[4]={0},value[4]={.25f,.5f,.75f,1};
+ memcpy(memory+0x3ff0,value,16);
+ if(fault&&!strcmp(fault,"light-vector-range")){assert(tribes_memory_permissions_set(0x4000,4096,0));GC(0xfffa0720,0,GL_LIGHT0,GL_POSITION,0x3ff1);assert(0);}
+ if(fault&&!strcmp(fault,"light-model-range")){assert(tribes_memory_permissions_set(0x4000,4096,0));GC(0xfffa0740,0,GL_LIGHT_MODEL_AMBIENT,0x3ff1);assert(0);}
+ if(fault&&!strcmp(fault,"light-vector-overflow")){GC(0xfffa0720,0,GL_LIGHT0,GL_POSITION,0xfffffff8);assert(0);}
+ GC(0xfffa0240,0,GL_MODELVIEW);GC(0xfffa0250,0);glTranslatef(2,-3,4);glRotatef(31,1,2,3);
+ const GLenum props[]={GL_AMBIENT,GL_DIFFUSE,GL_SPECULAR,GL_POSITION,GL_SPOT_DIRECTION,GL_SPOT_EXPONENT,GL_SPOT_CUTOFF,GL_CONSTANT_ATTENUATION,GL_LINEAR_ATTENUATION,GL_QUADRATIC_ATTENUATION};
+ for(unsigned i=0;i<10;i++){
+  unsigned count=i<4?4:i==4?3:1;GLenum name=props[i];
+  value[0]=i==6?45:.25f;value[1]=-.5f;value[2]=.75f;value[3]=1;
+  glLightfv(GL_LIGHT0,name,value);glGetLightfv(GL_LIGHT0,name,expected);
+  glLightfv(GL_LIGHT0,name,zero);
+  uint32_t address=0x4000-4*count;memcpy(memory+address,value,4*count);
+  assert(tribes_memory_permissions_set(0x3000,4096,1)&&tribes_memory_permissions_set(0x4000,4096,0));
+  glEnable(0xffffffff);GC(0xfffa0720,0,GL_LIGHT0,name,address);glGetLightfv(GL_LIGHT0,name,actual);
+  assert(!memcmp(actual,expected,4*count)&&glGetError()==GL_INVALID_ENUM&&!glGetError());
+  assert(tribes_memory_permissions_set(0x3000,4096,3)&&tribes_memory_permissions_set(0x4000,4096,3));
+ }
+ for(unsigned i=5;i<10;i++){
+  GLfloat scalar=i==6?90:2;uint32_t bits;memcpy(&bits,&scalar,4);
+  glLightf(GL_LIGHT1,props[i],scalar);glGetLightfv(GL_LIGHT1,props[i],expected);glLightf(GL_LIGHT1,props[i],0);
+  GC(0xfffa0730,0,GL_LIGHT1,props[i],bits);glGetLightfv(GL_LIGHT1,props[i],actual);assert(actual[0]==expected[0]);
+ }
+ assert(!glGetError());GC(0xfffa0730,0,GL_LIGHT1,GL_LINEAR_ATTENUATION,0xbf800000);assert(glGetError()==GL_INVALID_VALUE);
+ GC(0xfffa0730,0,GL_LIGHT1,GL_POSITION,0);assert(glGetError()==GL_INVALID_ENUM);
+ assert(tribes_memory_permissions_set(0x4000,4096,0));
+ GC(0xfffa0720,0,0xffffffff,GL_POSITION,0x4000);assert(glGetError()==GL_INVALID_ENUM);
+ GC(0xfffa0720,0,GL_LIGHT0,0xffffffff,0x4000);assert(glGetError()==GL_INVALID_ENUM);
+ GC(0xfffa0740,0,0xffffffff,0x4000);assert(glGetError()==GL_INVALID_ENUM);
+ assert(tribes_memory_permissions_set(0x4000,4096,3));
+ const GLenum models[]={GL_LIGHT_MODEL_AMBIENT,GL_LIGHT_MODEL_LOCAL_VIEWER,GL_LIGHT_MODEL_TWO_SIDE,GL_LIGHT_MODEL_COLOR_CONTROL};
+ for(unsigned i=0;i<4;i++){
+  GLfloat model[4]={i==3?(GLfloat)GL_SEPARATE_SPECULAR_COLOR:1,.2f,.3f,1};unsigned count=i?1:4;
+  glLightModelfv(models[i],model);glGetFloatv(models[i],expected);
+  GLfloat reset[4]={i==3?(GLfloat)GL_SINGLE_COLOR:0,0,0,0};glLightModelfv(models[i],reset);
+  uint32_t address=0x4000-count*4;memcpy(memory+address,model,count*4);assert(tribes_memory_permissions_set(0x4000,4096,0));
+  GC(0xfffa0740,0,models[i],address);glGetFloatv(models[i],actual);assert(!memcmp(expected,actual,count*4));
+  assert(tribes_memory_permissions_set(0x4000,4096,3));
+ }
+ /* A real lit triangle: ambient-only illumination isolates the light from
+    normals and proves that native lighting affects framebuffer pixels. */
+ glLoadIdentity();glMatrixMode(GL_PROJECTION);glLoadIdentity();glMatrixMode(GL_MODELVIEW);
+ glDisable(GL_TEXTURE_2D);glDisable(GL_BLEND);glDisable(GL_DEPTH_TEST);glDisable(GL_COLOR_MATERIAL);glDisable(GL_CULL_FACE);
+ glViewport(0,0,64,64);GLint maximum=0;glGetIntegerv(GL_MAX_LIGHTS,&maximum);for(GLint i=0;i<maximum;i++)glDisable(GL_LIGHT0+i);
+ GLfloat white[4]={1,1,1,1},ambient[4]={.5f,.25f,.75f,1};glMaterialfv(GL_FRONT_AND_BACK,GL_AMBIENT,white);
+ glMaterialfv(GL_FRONT_AND_BACK,GL_DIFFUSE,zero);glMaterialfv(GL_FRONT_AND_BACK,GL_SPECULAR,zero);glMaterialfv(GL_FRONT_AND_BACK,GL_EMISSION,zero);
+ glLightModelfv(GL_LIGHT_MODEL_AMBIENT,zero);glLightModeli(GL_LIGHT_MODEL_TWO_SIDE,0);glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER,0);glLightModeli(GL_LIGHT_MODEL_COLOR_CONTROL,GL_SINGLE_COLOR);
+ glLightfv(GL_LIGHT0,GL_DIFFUSE,zero);glLightfv(GL_LIGHT0,GL_SPECULAR,zero);glLightfv(GL_LIGHT0,GL_AMBIENT,zero);
+ GLfloat directional[4]={0,0,1,0};glLightfv(GL_LIGHT0,GL_POSITION,directional);glLightf(GL_LIGHT0,GL_SPOT_CUTOFF,180);
+ memcpy(memory+0x3001,ambient,16);GC(0xfffa0720,0,GL_LIGHT0,GL_AMBIENT,0x3001);
+ glEnable(GL_LIGHT0);glEnable(GL_LIGHTING);glClearColor(0,0,0,1);glClear(GL_COLOR_BUFFER_BIT);
+ glBegin(GL_TRIANGLES);glVertex2f(-.8f,-.8f);glVertex2f(.8f,-.8f);glVertex2f(0,.8f);glEnd();
+ unsigned char pixel[4];glReadPixels(32,32,1,1,GL_RGBA,GL_UNSIGNED_BYTE,pixel);
+ assert(pixel[0]>=127&&pixel[0]<=129&&pixel[1]>=63&&pixel[1]<=65&&pixel[2]>=190&&pixel[2]<=192);
+ glReadPixels(1,1,1,1,GL_RGBA,GL_UNSIGNED_BYTE,pixel);assert(!pixel[0]&&!pixel[1]&&!pixel[2]);assert(!glGetError());
+ glGetLightfv(GL_LIGHT0,GL_AMBIENT,expected);glBegin(GL_TRIANGLES);GC(0xfffa0720,0,GL_LIGHT0,GL_AMBIENT,0x3001);GC(0xfffa0730,0,GL_LIGHT0,GL_SPOT_CUTOFF,0);GC(0xfffa0740,0,GL_LIGHT_MODEL_AMBIENT,0x3001);glEnd();
+ assert(glGetError()==GL_INVALID_OPERATION);glGetLightfv(GL_LIGHT0,GL_AMBIENT,actual);assert(!memcmp(actual,expected,16));
+ glDisable(GL_LIGHTING);glDisable(GL_LIGHT0);assert(!glGetError());
+ puts("Original scene lights: exact checked vector widths, transformed position/direction, scalar attenuation, model state, lit pixels, errors and CPU ABI PASS");
+}
 static void render_state(const char *fault){
  /* Original reset at0x447239: native fog disable retains pointer/other state
     and consumes no inaccessible client data. Enabling is still unsupported. */
@@ -964,6 +1028,7 @@ static void legacy_route(uint32_t original_window,uint32_t original_context,cons
  matrix_multiplication(fault,0);
  matrix_multiplication(fault,1);
  render_state(fault);
+ scene_lighting(fault);
  if(!fault){matrix_stack();polygon_offset();}
  GC(0xfffa0240,0,GL_MODELVIEW);GC(0xfffa0250,0);glGetDoublev(GL_MODELVIEW_MATRIX,actual);for(unsigned i=0;i<16;i++)assert(actual[i]==(i%5==0?1:0));
  GC(0xfffa0270,0,0,0,64,64);GLint viewport[4];glGetIntegerv(GL_VIEWPORT,viewport);assert(viewport[0]==0&&viewport[1]==0&&viewport[2]==64&&viewport[3]==64);
@@ -1266,6 +1331,9 @@ static int window_main(int argc,char **argv){
  if(argc==2&&!strcmp(argv[1],"bad-is-enabled")){bad_is_enabled();return 99;}
  if(argc==2&&!strcmp(argv[1],"bad-polygon-offset")){bad_polygon_offset();return 99;}
  if(argc==2&&!strcmp(argv[1],"bad-tex-coord2f")){bad_tex_coord2f();return 99;}
+ if(argc==2&&!strcmp(argv[1],"bad-light-fv")){bad_light_fv();return 99;}
+ if(argc==2&&!strcmp(argv[1],"bad-light-f")){bad_light_f();return 99;}
+ if(argc==2&&!strcmp(argv[1],"bad-light-model-fv")){bad_light_model_fv();return 99;}
  if(argc==2&&!strcmp(argv[1],"bad-rotate-f")){bad_rotate_f();return 99;}
  if(argc==2&&!strcmp(argv[1],"bad-translate-f")){bad_translate_f();return 99;}
  if(argc==2&&!strcmp(argv[1],"bad-color3ub")){bad_color3ub();return 99;}
@@ -1322,12 +1390,15 @@ static int window_main(int argc,char **argv){
  puts("explicit native core context retains existing modern graphics coverage");
 #ifdef GRAPHICS
  if(argc==2&&!strcmp(argv[1],"tex-coord2f-core")){GC(0xfffa0700,0,0,0);assert(0);}
+ if(argc==2&&!strcmp(argv[1],"light-fv-core")){GC(0xfffa0720,0,GL_LIGHT0,GL_POSITION,0x3001);assert(0);}
+ if(argc==2&&!strcmp(argv[1],"light-f-core")){GC(0xfffa0730,0,GL_LIGHT0,GL_SPOT_CUTOFF,0);assert(0);}
+ if(argc==2&&!strcmp(argv[1],"light-model-core")){GC(0xfffa0740,0,GL_LIGHT_MODEL_AMBIENT,0x3001);assert(0);}
  if(argc==2&&!strcmp(argv[1],"rotate-f-core")){GC(0xfffa0710,0,0,0,0,0x3f800000);assert(0);}
  if(argc==2&&!strcmp(argv[1],"translate-f-core")){GC(0xfffa06f0,0,0,0,0);assert(0);}
  if(argc==2&&!strcmp(argv[1],"color3ub-core")){GC(0xfffa06d0,0,128,128,128);assert(0);}
  if(argc==2&&!strcmp(argv[1],"vertex3f-core")){GC(0xfffa06e0,0,0,0,0);assert(0);}
  if(argc==2&&!strcmp(argv[1],"matrix-query-core")){GC(0xfffa0120,0,GL_MODELVIEW_MATRIX,0x3001);assert(0);}
- if(argc==1||(argc==2&&(!strncmp(argv[1],"matrix-query-",13)||!strncmp(argv[1],"sync-",5)||!strncmp(argv[1],"array-",6)||!strncmp(argv[1],"uniform-",8)||!strncmp(argv[1],"shader-",7)||!strncmp(argv[1],"quad-",5)||!strncmp(argv[1],"matrix-mult-",12)||!strncmp(argv[1],"matrix-double-",14)||!strncmp(argv[1],"state-",6)||!strncmp(argv[1],"normal-",7)||!strcmp(argv[1],"unreadable-matrix")||!strcmp(argv[1],"shared-copy-delete")||!strcmp(argv[1],"shared-array-delete"))))legacy_route(window,context,argc==2?argv[1]:NULL);
+ if(argc==1||(argc==2&&(!strncmp(argv[1],"matrix-query-",13)||!strncmp(argv[1],"sync-",5)||!strncmp(argv[1],"array-",6)||!strncmp(argv[1],"uniform-",8)||!strncmp(argv[1],"shader-",7)||!strncmp(argv[1],"quad-",5)||!strncmp(argv[1],"matrix-mult-",12)||!strncmp(argv[1],"matrix-double-",14)||!strncmp(argv[1],"state-",6)||!strncmp(argv[1],"normal-",7)||!strncmp(argv[1],"light-",6)||!strcmp(argv[1],"unreadable-matrix")||!strcmp(argv[1],"shared-copy-delete")||!strcmp(argv[1],"shared-array-delete"))))legacy_route(window,context,argc==2?argv[1]:NULL);
  if(argc==2&&!strcmp(argv[1],"mipmap-nonzero-base")){
   GC(0xfffa0150,0,1,0x3001);GC(0xfffa0160,0,GL_TEXTURE_2D,word(0x3001));GC(0xfffa0170,0,GL_TEXTURE_2D,0x8191,1);GC(0xfffa0170,0,GL_TEXTURE_2D,GL_TEXTURE_BASE_LEVEL,1);
   const unsigned char color[]={1,2,3,255};mipmap_upload(1,2,color);assert(0);

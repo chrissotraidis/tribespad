@@ -1520,6 +1520,47 @@ void tribes_gl_material_fv(_cpu *cpu,uint32_t face,uint32_t name,uint32_t input)
     glMaterialfv(face,name,value);DRAW_RETURN();
 #endif
 }
+void tribes_gl_light_fv(_cpu *cpu,uint32_t light,uint32_t name,uint32_t input){
+    WINDOW_ENTER();
+#if TARGET_OS_IPHONE
+    (void)light;(void)name;(void)input;(void)error;stop();
+#else
+    (void)legacy_context();unsigned count=0;GLfloat value[4]={0};
+    switch(name){
+    case GL_AMBIENT:case GL_DIFFUSE:case GL_SPECULAR:case GL_POSITION:count=4;break;
+    case GL_SPOT_DIRECTION:count=3;break;
+    case GL_SPOT_EXPONENT:case GL_SPOT_CUTOFF:case GL_CONSTANT_ATTENUATION:
+    case GL_LINEAR_ATTENUATION:case GL_QUADRATIC_ATTENUATION:count=1;break;
+    }
+    GLint maximum=0;glGetIntegerv(GL_MAX_LIGHTS,&maximum);
+    if(count&&light>=GL_LIGHT0&&light-GL_LIGHT0<(uint32_t)maximum)
+        checked_copy(value,guest(cpu,input,count*sizeof *value),count*sizeof *value);
+    glLightfv(light,name,value);DRAW_RETURN();
+#endif
+}
+void tribes_gl_light_f(_cpu *cpu,uint32_t light,uint32_t name,uint32_t bits){
+    WINDOW_ENTER();
+#if TARGET_OS_IPHONE
+    (void)light;(void)name;(void)bits;(void)error;stop();
+#else
+    (void)legacy_context();GLfloat value;memcpy(&value,&bits,sizeof value);
+    glLightf(light,name,value);DRAW_RETURN();
+#endif
+}
+void tribes_gl_light_model_fv(_cpu *cpu,uint32_t name,uint32_t input){
+    WINDOW_ENTER();
+#if TARGET_OS_IPHONE
+    (void)name;(void)input;(void)error;stop();
+#else
+    (void)legacy_context();unsigned count=0;GLfloat value[4]={0};
+    switch(name){
+    case GL_LIGHT_MODEL_AMBIENT:count=4;break;
+    case GL_LIGHT_MODEL_LOCAL_VIEWER:case GL_LIGHT_MODEL_TWO_SIDE:case GL_LIGHT_MODEL_COLOR_CONTROL:count=1;break;
+    }
+    if(count)checked_copy(value,guest(cpu,input,count*sizeof *value),count*sizeof *value);
+    glLightModelfv(name,value);DRAW_RETURN();
+#endif
+}
 #if !TARGET_OS_IPHONE
 static unsigned tex_env_count(uint32_t target,uint32_t name){
     if(target==GL_TEXTURE_FILTER_CONTROL)return name==GL_TEXTURE_LOD_BIAS?1:0;

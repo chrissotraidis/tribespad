@@ -50,6 +50,7 @@ EXPORTS += [('glColor3ub','tribes_gl_color3ub',3,False,0x20040000),('glVertex3f'
 EXPORTS += [('glTranslatef','tribes_gl_translate_f',3,False,0x20040000)]
 EXPORTS += [('glTexCoord2f','tribes_gl_tex_coord2f',2,False,0x20040000)]
 EXPORTS += [('glRotatef','tribes_gl_rotate_f',4,False,0x20040000)]
+EXPORTS += [('glLightfv','tribes_gl_light_fv',3,False,0x20040000),('glLightf','tribes_gl_light_f',3,False,0x20040000),('glLightModelfv','tribes_gl_light_model_fv',2,False,0x20040000)]
 def prepare(out):
  bindings={};rows=[]
  for i,(name,helper,n,returns,module) in enumerate(EXPORTS):

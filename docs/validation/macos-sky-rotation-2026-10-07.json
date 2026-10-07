@@ -79,7 +79,59 @@
     "mission literals normal/checked/TSan"
   ],
   "mobile": "Changed sources checked-compile for ARM64 device and Simulator; no execution",
-  "full_engine": "Rebuild running in exec session85808; new original rotation execution pending",
+  "full_engine": {
+    "state": "finished",
+    "initialized": true,
+    "attach_returned": true,
+    "execution_timeout": true,
+    "binary_sha256": "6653d518eb2eb11f733433a5e36e0b8de0dd1e189c1b105d2de003ca13f56f7e",
+    "finite_revisions": 33,
+    "scope": "60-second diagnostic startup, not gameplay acceptance"
+  },
   "playable": false,
-  "local_evidence": "generated/integration-review/sky-rotation/"
+  "local_evidence": "generated/integration-review/sky-rotation/",
+  "app_execution": {
+    "pid": 76665,
+    "signed_package_verified": true,
+    "state": "Stopped at next missing native lighting call after completed sky rotations",
+    "rotation_return_observed": true,
+    "rotation_returns": [
+      {
+        "symbol": "loc_5ADCBB",
+        "native_thread_id": 6504562,
+        "argument_bits": [
+          "0x0",
+          "0x0",
+          "0x0",
+          "0x3f800000"
+        ]
+      },
+      {
+        "symbol": "loc_5ADCBB",
+        "native_thread_id": 6504562,
+        "argument_bits": [
+          "0x42b40000",
+          "0x0",
+          "0x0",
+          "0x3f800000"
+        ]
+      },
+      {
+        "symbol": "loc_5ADCBB",
+        "native_thread_id": 6504562,
+        "argument_bits": [
+          "0x43340000",
+          "0x0",
+          "0x0",
+          "0x3f800000"
+        ]
+      }
+    ],
+    "rotation_return_count": 3,
+    "next_call": "0x573c17",
+    "next_return": "0x573c1d",
+    "next_api": "glLightfv",
+    "visible_result": "black window, no playable map",
+    "audio_default_restored": 57
+  }
 }
