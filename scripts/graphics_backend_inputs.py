@@ -49,6 +49,7 @@ EXPORTS += [('glTexSubImage2D','tribes_gl_tex_sub_image_2d',9,False,0x20040000)]
 EXPORTS += [('glColor3ub','tribes_gl_color3ub',3,False,0x20040000),('glVertex3f','tribes_gl_vertex3f',3,False,0x20040000)]
 EXPORTS += [('glTranslatef','tribes_gl_translate_f',3,False,0x20040000)]
 EXPORTS += [('glTexCoord2f','tribes_gl_tex_coord2f',2,False,0x20040000)]
+EXPORTS += [('glRotatef','tribes_gl_rotate_f',4,False,0x20040000)]
 def prepare(out):
  bindings={};rows=[]
  for i,(name,helper,n,returns,module) in enumerate(EXPORTS):

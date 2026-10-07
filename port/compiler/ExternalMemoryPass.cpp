@@ -489,7 +489,7 @@ struct ExternalMemoryPass : PassInfoMixin<ExternalMemoryPass>{
      Allowed=Allowed&&!Target->isVarArg()&&Call->getType()==Result&&Call->arg_size()==Args.size();
      if(Allowed)for(unsigned i=0;i<Args.size();++i)if(Call->getArgOperand(i)->getType()!=Args[i])Allowed=false;
     }
-    if(Name=="glTexCoord2f"||Name=="glTranslatef"||Name=="glColor3ub"||Name=="glVertex3f"||Name=="glBlendFunc"||Name=="glBegin"||Name=="glVertex2f"||Name=="glVertex2i"||Name=="glColor4f"||Name=="glEnd"||Name=="glTexEnvi"||Name=="glBlendFuncSeparate"||Name=="glColor4ub"||Name=="glEnableClientState"||Name=="glDisableClientState"||Name=="glColorPointer"||Name=="glVertexPointer"||Name=="glTexCoordPointer"||Name=="glUseProgram"||Name=="glUniform2i"||Name=="glUniform4i"||Name=="glDrawElements"){
+    if(Name=="glRotatef"||Name=="glTexCoord2f"||Name=="glTranslatef"||Name=="glColor3ub"||Name=="glVertex3f"||Name=="glBlendFunc"||Name=="glBegin"||Name=="glVertex2f"||Name=="glVertex2i"||Name=="glColor4f"||Name=="glEnd"||Name=="glTexEnvi"||Name=="glBlendFuncSeparate"||Name=="glColor4ub"||Name=="glEnableClientState"||Name=="glDisableClientState"||Name=="glColorPointer"||Name=="glVertexPointer"||Name=="glTexCoordPointer"||Name=="glUseProgram"||Name=="glUniform2i"||Name=="glUniform4i"||Name=="glDrawElements"){
      SmallVector<Type *,5> Args={I32};
      if(Name=="glTexEnvi"||Name=="glUniform2i")Args={I32,I32,I32};
      else if(Name=="glBlendFunc")Args={I32,I32};
@@ -497,7 +497,7 @@ struct ExternalMemoryPass : PassInfoMixin<ExternalMemoryPass>{
      else if(Name=="glVertex3f"||Name=="glTranslatef")Args={B.getFloatTy(),B.getFloatTy(),B.getFloatTy()};
      else if(Name=="glVertex2f"||Name=="glTexCoord2f")Args={B.getFloatTy(),B.getFloatTy()};
      else if(Name=="glVertex2i")Args={I32,I32};
-     else if(Name=="glColor4f")Args={B.getFloatTy(),B.getFloatTy(),B.getFloatTy(),B.getFloatTy()};
+     else if(Name=="glColor4f"||Name=="glRotatef")Args={B.getFloatTy(),B.getFloatTy(),B.getFloatTy(),B.getFloatTy()};
      else if(Name=="glEnd")Args.clear();
      else if(Name=="glBlendFuncSeparate")Args={I32,I32,I32,I32};
      else if(Name=="glUniform4i")Args={I32,I32,I32,I32,I32};

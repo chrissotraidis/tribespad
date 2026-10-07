@@ -77,7 +77,36 @@
     "mission literals normal/checked/TSan"
   ],
   "mobile": "Changed sources checked-compile for ARM64 device and Simulator; no launch",
-  "full_engine": "Build running; new full-engine and signed-app execution pending",
+  "full_engine": {
+    "binary_sha256": "6e1fd8f4bc7ccbba21d1e3358ee3e86dae5b0516ba564fb68684da0e18eda016",
+    "initialized": true,
+    "attach_returned": true,
+    "finite_revisions": 33,
+    "observation_timeout_seconds": 60,
+    "playable": false
+  },
   "playable": false,
-  "local_evidence": "generated/integration-review/sky-texcoord"
+  "local_evidence": "generated/integration-review/sky-rotation/before-71280/",
+  "signed_app": {
+    "pid": 71280,
+    "packaging_verified": true,
+    "observed": "EULA, local warrior model, Training, Charybdis lighting; four sky texcoord returns and quad-end return each traced three times.",
+    "resolved_token": "0xfffa0700",
+    "next_call": "0x5adcb5",
+    "next_return": "0x5adcbb",
+    "next_slot": "0x9e9644",
+    "next_name": "glRotatef",
+    "next_name_address": "0x78af4c",
+    "next_arguments": [
+      "0x0",
+      "0x0",
+      "0x0",
+      "0x3f800000"
+    ],
+    "window": "black at stop",
+    "render_job_wait_finish": "not reached",
+    "restored_audio": 57,
+    "restored_preference": true
+  },
+  "audio_retry": "PID70290 blocked inside CoreAudio after host default switched back to Jump Desktop Audio. Sample captured; owned app stopped. PID71280 passed after built-in speakers were reselected/verified immediately before debugger continue."
 }

@@ -61,7 +61,7 @@ extern unsigned sdl_test_live,sdl_test_fail;
 extern void bad_window(void),bad_context(void);
 #if defined(GRAPHICS) && !TARGET_OS_IPHONE
 extern void bad_frustum(void),bad_mult_matrix(void),bad_mult_matrix_double(void),bad_depth_mask(void),bad_is_enabled(void),bad_scale(void),bad_polygon_offset(void);
-extern void bad_translate_f(void),bad_tex_coord2f(void);
+extern void bad_rotate_f(void),bad_translate_f(void),bad_tex_coord2f(void);
 extern void bad_color3ub(void),bad_vertex3f(void);
 extern void bad_color4f(void),bad_vertex2i(void),bad_tex_sub_image_2d(void);
 #endif
@@ -688,6 +688,24 @@ static void immediate_rectangle(void){
  glReadPixels(4,4,1,1,GL_RGBA,GL_UNSIGNED_BYTE,pixel);assert(pixel[0]==0&&pixel[1]==0&&pixel[2]==0);
  glDisable(GL_TEXTURE_2D);glDeleteTextures(1,&sky_texture);glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_MODULATE);assert(glGetError()==0);
  puts("Original sky texcoords: unit-zero state, implicit R/Q, signed floats, native textured quad pixels, CPU ABI and retained errors PASS");
+ strcpy((char *)memory+0x24000,"glRotatef");assert(CALL(63,0x24000)==0xfffa0710);
+ /* Reached zero-angle Z rotation and nonunit/negative-axis cases, in all
+    three legacy matrix modes. Nonidentity input detects multiplication order. */
+ const GLenum rotation_modes[]={GL_MODELVIEW,GL_PROJECTION,GL_TEXTURE};
+ const GLfloat rotations[3][4]={{0,0,0,1},{31.25f,2,-3,4},{-90,0,1,0}};
+ for(unsigned mode=0;mode<3;mode++)for(unsigned i=0;i<3;i++){
+  GLenum query=mode==0?GL_MODELVIEW_MATRIX:mode==1?GL_PROJECTION_MATRIX:GL_TEXTURE_MATRIX;
+  glMatrixMode(rotation_modes[mode]);glLoadIdentity();glScalef(2,3,4);glTranslatef(.25f,-.5f,2);
+  glRotatef(rotations[i][0],rotations[i][1],rotations[i][2],rotations[i][3]);glGetFloatv(query,transform);
+  glLoadIdentity();glScalef(2,3,4);glTranslatef(.25f,-.5f,2);glEnable(0xffffffff);
+  uint32_t bits[4];memcpy(bits,rotations[i],sizeof bits);GC(0xfffa0710,0,bits[0],bits[1],bits[2],bits[3]);glGetFloatv(query,translated);
+  assert(!memcmp(transform,translated,sizeof transform));assert(glGetError()==GL_INVALID_ENUM&&glGetError()==0);
+  glBegin(GL_TRIANGLES);GC(0xfffa0710,0,0x42b40000,0,0,0x3f800000);glEnd();
+  glGetFloatv(query,translated);assert(!memcmp(transform,translated,sizeof transform)&&glGetError()==GL_INVALID_OPERATION);
+  glLoadIdentity();
+ }
+ glMatrixMode(GL_MODELVIEW);assert(glGetError()==0);
+ puts("Original sky rotation: native matrix product in three modes, degree angles/nonunit axes, invalid-state preservation and CPU ABI/errors PASS");
  puts("Original translation: float XYZ, native post-multiplied matrix, CPU ABI and retained error PASS");
  puts("Original 3D fan: low-byte colour/alpha, float XYZ/depth, bounded native pixels, CPU ABI and retained error PASS");
  puts("Original lighting polygon: float colour state/alpha and signed integer vertices through guest ABI, bounded native pixels PASS");
@@ -1248,6 +1266,7 @@ static int window_main(int argc,char **argv){
  if(argc==2&&!strcmp(argv[1],"bad-is-enabled")){bad_is_enabled();return 99;}
  if(argc==2&&!strcmp(argv[1],"bad-polygon-offset")){bad_polygon_offset();return 99;}
  if(argc==2&&!strcmp(argv[1],"bad-tex-coord2f")){bad_tex_coord2f();return 99;}
+ if(argc==2&&!strcmp(argv[1],"bad-rotate-f")){bad_rotate_f();return 99;}
  if(argc==2&&!strcmp(argv[1],"bad-translate-f")){bad_translate_f();return 99;}
  if(argc==2&&!strcmp(argv[1],"bad-color3ub")){bad_color3ub();return 99;}
  if(argc==2&&!strcmp(argv[1],"bad-vertex3f")){bad_vertex3f();return 99;}
@@ -1303,6 +1322,7 @@ static int window_main(int argc,char **argv){
  puts("explicit native core context retains existing modern graphics coverage");
 #ifdef GRAPHICS
  if(argc==2&&!strcmp(argv[1],"tex-coord2f-core")){GC(0xfffa0700,0,0,0);assert(0);}
+ if(argc==2&&!strcmp(argv[1],"rotate-f-core")){GC(0xfffa0710,0,0,0,0,0x3f800000);assert(0);}
  if(argc==2&&!strcmp(argv[1],"translate-f-core")){GC(0xfffa06f0,0,0,0,0);assert(0);}
  if(argc==2&&!strcmp(argv[1],"color3ub-core")){GC(0xfffa06d0,0,128,128,128);assert(0);}
  if(argc==2&&!strcmp(argv[1],"vertex3f-core")){GC(0xfffa06e0,0,0,0,0);assert(0);}

@@ -274,6 +274,7 @@
     "glColor3ub",
     "glVertex3f",
     "glTranslatef",
+    "glRotatef",
     "glEnableClientState",
     "glDisableClientState",
     "glColorPointer",

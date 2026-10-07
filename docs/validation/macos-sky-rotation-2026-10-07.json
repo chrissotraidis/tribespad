@@ -1,0 +1,85 @@
+{
+  "date": "2026-10-07",
+  "feature": "Finite native glRotatef",
+  "token": "0xfffa0710",
+  "original_call": "0x5adcb5",
+  "original_return": "0x5adcbb",
+  "original_slot": "0x9e9644",
+  "original_name_address": "0x78af4c",
+  "observed_argument_bits": [
+    "0x0",
+    "0x0",
+    "0x0",
+    "0x3f800000"
+  ],
+  "contract_source": "https://raw.githubusercontent.com/KhronosGroup/OpenGL-Refpages/main/gl2.1/glRotate.xml",
+  "component_passed": true,
+  "modes": [
+    {
+      "mode": "normal",
+      "passed": true,
+      "checked_rejections": 0
+    },
+    {
+      "mode": "tsan",
+      "passed": true,
+      "checked_rejections": 0
+    },
+    {
+      "mode": "checked",
+      "passed": true,
+      "checked_rejections": 112
+    }
+  ],
+  "scope": "Native matrix products in model-view/projection/texture modes, degree angles/nonunit signed axes, invalid Begin state preservation, CPU/ESP/LastError and retained errors; unavailable in core/GLES contexts.",
+  "sources_sha256": {
+    "port/core/guest_sdl_backend.c": "6a650ad89084df0da5c2b4c33ea93ec28f4900b052ef2761e9824519636a27f6",
+    "port/core/guest_window_catalog.c": "6ac5dc7741f7a87109d9e97f573a4ab279d6dee605ee36b1b3629129c6583510",
+    "port/core/ext80.c": "8f78a2e550aede93935833384a8c4afd07cafd31f064988bbaa3cffa373d5c2b",
+    "port/llasm-support/tribes_float80.c": "fec58c465f2b20523b723dc851a325f8d2ad5d5d3dbf414569563612a7b0409a",
+    "port/llasm-support/tribes_result.c": "983b85e4760dfbabccf08711b6007f8bdd0612f037164e6698aaeabf9b00bed5",
+    "port/core/guest_sdl_allocator.c": "574825d6b993879ac0b4dae47b654c7d0ed905a3ec2e832610af706744f1b7e0",
+    "port/core/guest_sdl_sync.c": "6acaa5065015a384d811ea4c830f0a87aa7d50a16974bf0bed38a42a9c8c3096",
+    "port/core/guest_sdl_tls.c": "27cf9c65f2afb7c16c285fefc330144dca659d9b5b8cdf196960665f47ff0171",
+    "port/core/guest_sdl_memory.c": "f1cac46d905cbec4ec3b9844c41319656789f711259d25c6bf13c6325e45317c",
+    "port/core/guest_curl_allocator.c": "ad28b5725d361ddc87d32bb74e85d9934a7598d910a09b9d21101013838c6231",
+    "port/core/guest_callback.c": "5e647f11ac9849e0cf927e1917183b81e64382a7b7d91cc2a97016673494e444",
+    "port/core/guest_heap.c": "791c26c9fd72984fc53f0f5f1447df5f1dd43e38af08a529b1efc0b3e65dd96b",
+    "port/core/process_environment.c": "58f2ad7f11c2d3c79e21af8408ffde46954ef2ec97114035f74dcaaf529e91d7",
+    "port/core/guest_filesystem.c": "dccc9e2c3fc003ca6beff79eb004bdc544eb2e227a7757cb79b6692a828d03ae",
+    "tests/fixtures/sdl_window_dispatch.c": "d1d8f50c380d6aa1e4ba21f739fa86a9d03297360f1f274b5dec3d0a01e394d9",
+    "tests/fixtures/native_enter.ll": "78597a5a3030a7a7e0d6746358a6f3489ff8e8c395fba21383c200133f2f1f9d",
+    "generated/integration-review/gl-query-init/macos/bindings.ll": "c6fff16ab128a609ef1aee442090b74ca67de53dde2677ad5e2b5fe3994c2b44",
+    "port/core/guest_graphics.c": "fdf7b260865bb34320547bb9224332f9e2cd4bc20cb18aaea95d9714fe2abb95",
+    "generated/integration-review/gl-query-init/macos/graphics-bindings.ll": "dedab8b165bbfde5426bf3629cb1c968de93cb42bc40be3c645c70445413030e",
+    "port/core/guest_modules.c": "7070be04eb8827c2f00855a91f0046e891c5332ec0620060e5bf513db3e177c4",
+    "tests/sdl_window_test.c": "4c76538d82d19e421ec32fe016aa9ccd2cb325e4e2d1bce33def2e71be1abbf9",
+    "port/apple/sdl_main.c": "bf39cc97a37f352e0a1e3c890b1304116af6b724a94332ccdf7babab1652ee1c",
+    "port/core/guest_memory_checks.c": "ee00fcff6979a3f4480835115d10db5dddf5fabf089a04c80f4a55e0ea82ec7c",
+    "port/core/guest_external_checks.c": "2ecaf0cf09462d76b293ab70860c9245ae46536959e81fd2549ad7675ad63523",
+    "generated/integration-review/gl-query-init/macos/wrong-signatures.ll": "578644575da4a4554df6ebc6be1eca6f2717992b095977a1abb40883ce05137f",
+    "generated/integration-review/cursor-surface/execution/cursor-rgba.bin": "130a25b7967d4e73a113cc55f0c273dad4caba60eef07fd505393ab2830eb1d7",
+    "generated/integration-review/gl-query-init/macos/cursor-fixture.h": "fa382af10bc48a09946efea05cb11af8f40b6bf41b1ac6277cba9046e8b6301d",
+    "generated/integration-review/gl-query-init/macos/graphics-exports.inc": "801187e6b12dffebbe258109a5b2e7b0a8f4e6dd49380cfbc8a8267487391c8a",
+    "generated/integration-review/gl-query-init/macos/original-shader-fixture.h": "8b9855683562568b943aca45f9e87e5fcfc244d75366978906f0e17a847df7eb",
+    "port/core/legacy_shader_sources.inc": "374f406348906a042d4a5c31f2f41597484407f1ca4408b0f980bed2db50f5a8",
+    "scripts/generate-legacy-shaders.py": "16801d438dbd34f630e567767e1ccb063506eca37f90fce4c579793a6fb686a0",
+    "scripts/graphics_backend_inputs.py": "77ecc99a40109dbe9ab9514c590c80e5e706380b6d5d8b3669769ea0a3ee201b",
+    "port/core/guest_graphics.h": "8ae3e4644ebfc75339b5d77e4fc7ffcda1da528a21d27a838fe332e80aa7d3f7",
+    "port/apple/sdl_main.h": "8ca027ba6092a53915c999da5950323f39c1cfc18ba0d6c67eb07195f435bf1c",
+    "port/core/guest_sdl_backend.h": "d9ca364700e2d73892fa6547a910b0a5727ae8d0b65510628387021143c5765b",
+    "config/runtime/sdl-bindings.json": "10f94d35d408391faf1fd69304a05f71e5f79ca8be2f54ad829eb6db178f1c97",
+    "port/compiler/ExternalMemoryPass.cpp": "3b44df04eaea6eecc9dae7c81accda2e47af7e88e8c5ced2b058ac3e54ad07f3",
+    "config/runtime/external-memory-contracts.json": "37ba9cf8bb6c64f64a0ea0ac8a1d55f841ccb5f2211ff635ccb7fcf88478a4f3",
+    "scripts/sdl_backend_inputs.py": "0f921f920ffdac3b2b23272b881ead9eaa4fd095df7525ed998521d7adbe25aa",
+    "scripts/test-sdl-window.py": "01b9a584c6d28b208db3fc55614c1db8da465e79736808ad78d3e37d8c4d8d95"
+  },
+  "regressions": [
+    "render-job handoff normal/checked/TSan",
+    "mission literals normal/checked/TSan"
+  ],
+  "mobile": "Changed sources checked-compile for ARM64 device and Simulator; no execution",
+  "full_engine": "Rebuild running in exec session85808; new original rotation execution pending",
+  "playable": false,
+  "local_evidence": "generated/integration-review/sky-rotation/"
+}
