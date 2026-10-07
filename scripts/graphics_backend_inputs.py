@@ -54,6 +54,7 @@ EXPORTS += [('glLightfv','tribes_gl_light_fv',3,False,0x20040000),('glLightf','t
 EXPORTS += [('gluProject','tribes_glu_project',12,True,0x20050000)]
 EXPORTS += [('glVertex3fv','tribes_gl_vertex3fv',1,False,0x20040000)]
 EXPORTS += [('glFogi','tribes_gl_fog_i',2,False,0x20040000),('glFogf','tribes_gl_fog_f',2,False,0x20040000),('glFogfv','tribes_gl_fog_fv',2,False,0x20040000)]
+EXPORTS += [('glFogCoordPointerEXT','tribes_gl_fog_coord_pointer',3,False,0x20040000)]
 def prepare(out):
  bindings={};rows=[]
  for i,(name,helper,n,returns,module) in enumerate(EXPORTS):

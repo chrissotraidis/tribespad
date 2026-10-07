@@ -476,6 +476,7 @@
     "glTexEnvfv",
     "glTexEnvf",
     "glNormalPointer",
+    "glFogCoordPointerEXT",
     "glPushMatrix",
     "glPopMatrix",
     "glScalef",

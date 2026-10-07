@@ -21,7 +21,7 @@ out=native/('checked/bootstrap-published' if a.publish_patches else 'checked/boo
 runtime_receipt=R/'generated/native-win32/macos/result.json'
 assert json.loads(runtime_receipt.read_text())['sse_header_sha256']==sha(R/'port/llasm-support/tribes_sse.h'),'Rebuild native Win32 objects after an SSE header change'
 if a.publish_patches:
-    for check in ['mission-literals','mission-entry-test']:
+    for check in ['mission-literals','mission-entry-test','render-job-handoff']:
         proof=json.loads((R/'generated/integration-review'/check/'result.json').read_text())
         assert proof['passed'],check
         for name,digest in proof['sources_sha256'].items():

@@ -1,0 +1,102 @@
+{
+  "date": "2026-10-07",
+  "pid": 27990,
+  "binary_sha256": "18775b250ec5c5d05843da0cce563774acf26fac006c85c1792fb741f195e1f6",
+  "signed_engine_sha256": "109d511688eda427fada664311303543c2952c31581c6a48fa94af150fa625a9",
+  "initialized": true,
+  "checked_subpages": true,
+  "finite_revisions": 33,
+  "actual_fog_returns": [
+    {
+      "symbol": "loc_51685B",
+      "thread": 7196810,
+      "cpu": "0x10f314d00",
+      "registers": [
+        "0xb60",
+        "0x6450a800",
+        "0x650313dc",
+        "0x650312c0",
+        "0x2ff53c",
+        "0x2ff550",
+        "0x2ff5c8",
+        "0x61541824"
+      ],
+      "stack": [
+        "0x405fe5d3",
+        "0x0",
+        "0x3ff00000",
+        "0x2ff628",
+        "0x64c37700",
+        "0x2ff628",
+        "0x5227e7",
+        "0x650312c0"
+      ],
+      "globals": {
+        "0x1046ce44": "0x0",
+        "0x1046ce48": "0x0",
+        "0x1046ce60": "0x0",
+        "0x1046e258": "0x0",
+        "0x1046ce50": "0x0"
+      }
+    },
+    {
+      "symbol": "loc_5168BE",
+      "thread": 7196810,
+      "cpu": "0x10f314d00",
+      "registers": [
+        "0x2ff53c",
+        "0x6450a800",
+        "0x3f000000",
+        "0x650312c0",
+        "0x2ff53c",
+        "0x2ff550",
+        "0x2ff5c8",
+        "0x61541824"
+      ],
+      "stack": [
+        "0x3f000000",
+        "0x3f000000",
+        "0x3f000000",
+        "0x3f800000",
+        "0x64c37700",
+        "0x2ff628",
+        "0x5227e7",
+        "0x650312c0"
+      ],
+      "globals": {
+        "0x1046ce44": "0x0",
+        "0x1046ce48": "0x0",
+        "0x1046ce60": "0x0",
+        "0x1046e258": "0x0",
+        "0x1046ce50": "0x0"
+      }
+    }
+  ],
+  "fp_query_observed": false,
+  "next_stop": {
+    "api": "glEnableClientState",
+    "argument": "GL_FOG_COORD_ARRAY (0x8457)",
+    "original_call": "0x518130",
+    "original_return": "0x518136",
+    "adjacent_pointer_call": "0x518141",
+    "adjacent_pointer_slot": "0x9e9744",
+    "type": "GL_FLOAT",
+    "stride": 32,
+    "address": "0x9e0abc"
+  },
+  "capture": "generated/integration-review/apple-render-dimensions/scene-fog-array-stop-27990",
+  "visual": "Original scene, terrain, characters, weapon and HUD visible; major terrain/sky, silhouette and UI defects remain.",
+  "gameplay_controls_accepted": false,
+  "hd_accepted": false,
+  "authenticated_multiplayer_accepted": false,
+  "mobile_game_accepted": false,
+  "scope": "Actual signed Mac app, native HID EULA/warrior/Training navigation. Selected-thread capture is not a whole-memory snapshot. Adjacent fog pointer call identified statically, not executed in this app. FP query remains component-tested only.",
+  "subsequent_fog_array_component_tests": {
+    "passed": true,
+    "checked_guard_cases": 145,
+    "normal_checked_tsan": true,
+    "mobile_checked_compilation_only": true,
+    "full_engine_validation_pending": true,
+    "result_sha256": "27e2f4a7264f60190828e8a52fcbcc5cc4321884b6e30a4f37399bcd26491cbc"
+  }
+}

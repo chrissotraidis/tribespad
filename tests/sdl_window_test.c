@@ -29,6 +29,7 @@ extern GLint glGetUniformLocation(GLuint,const GLchar *);
 extern void glGetUniformiv(GLuint,GLint,GLint *);
 extern void glGetUniformfv(GLuint,GLint,GLfloat *);
 extern void glGetShaderSource(GLuint,GLsizei,GLsizei *,GLchar *);
+extern void glGenBuffers(GLsizei,GLuint *);
 extern void glFogCoordPointerEXT(GLenum,GLsizei,const GLvoid *);
 extern void glVertexAttribPointer(GLuint,GLint,GLenum,GLboolean,GLsizei,const void *);
 extern void glEnableVertexAttribArray(GLuint);
@@ -908,6 +909,39 @@ static void matrix_stack(void){
  GC(0xfffa0660,0);glBegin(GL_TRIANGLE_FAN);glVertex2f(-1,-1);glVertex2f(1,-1);glVertex2f(1,1);glVertex2f(-1,1);glEnd();glReadPixels(8,8,1,1,GL_RGBA,GL_UNSIGNED_BYTE,px);assert(px[1]==255&&!glGetError());
  puts("Model matrix stack: native per-mode push/scale/pop, finite limits, error preservation, rejected begin-state changes and projected coverage PASS");
 }
+static void fog_arrays(const char *fault){
+ strcpy((char *)memory+0x24000,"glFogCoordPointerEXT");assert(CALL(63,0x24000)==0xfffa07a0);
+ GLfloat vertices[]={-.8f,-.8f,.8f,-.8f,.8f,.8f,-.8f,.8f},blue[]={0,0,1,1};
+ unsigned char indices[]={0,1,2,0,2,3},pixels[2][64*64*4];
+ memcpy(memory+0x7200,vertices,sizeof vertices);memcpy(memory+0x7300,indices,sizeof indices);
+ GC(0xfffa0300,0,2,GL_FLOAT,0,0x7200);GC(0xfffa02e0,0,GL_VERTEX_ARRAY);GC(0xfffa02e0,0,GL_FOG_COORD_ARRAY);
+ if(fault&&!strcmp(fault,"fog-array-undefined")){GC(0xfffa0350,0,GL_TRIANGLES,6,GL_UNSIGNED_BYTE,0x7300);assert(0);}
+ if(fault&&!strcmp(fault,"fog-array-vbo")){GLuint b;glGenBuffers(1,&b);glBindBuffer(GL_ARRAY_BUFFER,b);GC(0xfffa07a0,0,GL_FLOAT,32,0x8f9c);assert(0);}
+ if(fault&&!strcmp(fault,"fog-array-null")){GC(0xfffa07a0,0,GL_FLOAT,0,0);GC(0xfffa0350,0,GL_TRIANGLES,6,GL_UNSIGNED_BYTE,0x7300);assert(0);}
+ if(fault&&!strcmp(fault,"fog-array-overflow")){GC(0xfffa07a0,0,GL_DOUBLE,32,0xfffffff8);GC(0xfffa0350,0,GL_TRIANGLES,6,GL_UNSIGNED_BYTE,0x7300);assert(0);}
+ if(fault&&!strcmp(fault,"fog-array-range")){assert(tribes_memory_permissions_set(0x9000,4096,0));GC(0xfffa07a0,0,GL_FLOAT,32,0x8f9d);GC(0xfffa0350,0,GL_TRIANGLES,6,GL_UNSIGNED_BYTE,0x7300);assert(0);}
+ glUseProgram(0);glDisable(GL_LIGHTING);glDisable(GL_TEXTURE_2D);glDisable(GL_BLEND);glDisable(GL_DEPTH_TEST);glEnable(GL_FOG);
+ glMatrixMode(GL_PROJECTION);glLoadIdentity();glMatrixMode(GL_MODELVIEW);glLoadIdentity();glViewport(0,0,64,64);
+ glFogi(GL_FOG_COORDINATE_SOURCE,GL_FOG_COORDINATE);glFogi(GL_FOG_MODE,GL_LINEAR);glFogf(GL_FOG_START,0);glFogf(GL_FOG_END,1);glFogfv(GL_FOG_COLOR,blue);glColor4f(1,0,0,1);
+ for(unsigned kind=0;kind<3;kind++){
+  GLenum type=kind==1?GL_DOUBLE:GL_FLOAT;unsigned bytes=kind==1?8:4,address=0x9000-96-bytes-(kind==2);unsigned char source[104]={0};
+  for(unsigned i=0;i<4;i++){double d=i/3.;float f=(float)d;memcpy(source+32*i,kind==1?(void *)&d:(void *)&f,bytes);}
+  memcpy(memory+address,source,96+bytes);
+  assert(tribes_memory_permissions_set(0x8000,4096,1)&&tribes_memory_permissions_set(0x9000,4096,0));
+  for(unsigned route=0;route<2;route++){
+   glClearColor(0,0,0,1);glClear(GL_COLOR_BUFFER_BIT);
+   if(!route){glVertexPointer(2,GL_FLOAT,0,vertices);glFogCoordPointerEXT(type,32,source);glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_BYTE,indices);}
+   else{GC(0xfffa07a0,0,type,32,address);GC(0xfffa07a0,0,GL_INT,32,0xffffffff);assert(glGetError()==GL_INVALID_ENUM);GC(0xfffa07a0,0,type,0xffffffff,0xffffffff);assert(glGetError()==GL_INVALID_VALUE);glEnable(0xffffffff);GC(0xfffa0350,0,GL_TRIANGLES,6,GL_UNSIGNED_BYTE,0x7300);assert(glGetError()==GL_INVALID_ENUM);void *ptr=(void *)1;glGetPointerv(GL_FOG_COORD_ARRAY_POINTER,&ptr);assert(!ptr);}
+   glReadPixels(0,0,64,64,GL_RGBA,GL_UNSIGNED_BYTE,pixels[route]);assert(!glGetError());
+  }
+  assert(!memcmp(pixels[0],pixels[1],sizeof pixels[0]));unsigned center=(32*64+32)*4;
+  assert(pixels[1][center]>20&&pixels[1][center]<235&&pixels[1][center+2]>20&&pixels[1][center+2]<235);
+  assert(!memcmp(memory+address,source,96+bytes));
+  assert(tribes_memory_permissions_set(0x8000,4096,3)&&tribes_memory_permissions_set(0x9000,4096,3));
+ }
+ GC(0xfffa02f0,0,GL_FOG_COORD_ARRAY);GC(0xfffa02f0,0,GL_VERTEX_ARRAY);glDisable(GL_FOG);glFogi(GL_FOG_COORDINATE_SOURCE,GL_FRAGMENT_DEPTH);glColor4f(1,1,1,1);
+ puts("Fog arrays: checked indexed float/double stride32, unaligned/page-end reads, native framebuffer equality, errors, pointer detachment and CPU ABI PASS");
+}
 static void scene_fog(const char *fault){
  const char *names[]={"glFogi","glFogf","glFogfv"};
  for(unsigned i=0;i<3;i++){strcpy((char *)memory+0x24000,names[i]);assert(CALL(63,0x24000)==0xfffa0770+16*i);}
@@ -1017,8 +1051,7 @@ static void scene_lighting(const char *fault){
 }
 static void render_state(const char *fault){
  /* Original reset at0x447239: native fog disable retains pointer/other state
-    and consumes no inaccessible client data. Enabling is still unsupported. */
- if(fault&&!strcmp(fault,"state-fog-enable")){GC(0xfffa02e0,0,GL_FOG_COORD_ARRAY);assert(0);}
+    and consumes no inaccessible client data. */
  glFogCoordPointerEXT(GL_FLOAT,0,memory+0x23000);glEnableClientState(GL_FOG_COORD_ARRAY);
  glEnableClientState(GL_VERTEX_ARRAY);GC(0xfffa00e0,0,GL_TEXTURE1);
  assert(tribes_memory_permissions_set(0x23000,4096,0));
@@ -1165,7 +1198,7 @@ static void legacy_route(uint32_t original_window,uint32_t original_context,cons
  matrix_multiplication(fault,0);
  matrix_multiplication(fault,1);
  render_state(fault);
- scene_fog(fault);scene_lighting(fault);
+ fog_arrays(fault);scene_fog(fault);scene_lighting(fault);
  if(!fault){matrix_stack();polygon_offset();}
  GC(0xfffa0240,0,GL_MODELVIEW);GC(0xfffa0250,0);glGetDoublev(GL_MODELVIEW_MATRIX,actual);for(unsigned i=0;i<16;i++)assert(actual[i]==(i%5==0?1:0));
  GC(0xfffa0270,0,0,0,64,64);GLint viewport[4];glGetIntegerv(GL_VIEWPORT,viewport);assert(viewport[0]==0&&viewport[1]==0&&viewport[2]==64&&viewport[3]==64);
@@ -1538,6 +1571,7 @@ static int window_main(int argc,char **argv){
  if(argc==2&&!strcmp(argv[1],"rotate-f-core")){GC(0xfffa0710,0,0,0,0,0x3f800000);assert(0);}
  if(argc==2&&!strcmp(argv[1],"translate-f-core")){GC(0xfffa06f0,0,0,0,0);assert(0);}
  if(argc==2&&!strcmp(argv[1],"color3ub-core")){GC(0xfffa06d0,0,128,128,128);assert(0);}
+ if(argc==2&&!strcmp(argv[1],"fog-array-core")){GC(0xfffa07a0,0,GL_FLOAT,32,0x3000);assert(0);}
  if(argc==2&&!strcmp(argv[1],"fog-i-core")){GC(0xfffa0770,0,GL_FOG_MODE,0x3001);assert(0);}
  if(argc==2&&!strcmp(argv[1],"fog-f-core")){GC(0xfffa0780,0,GL_FOG_MODE,0x3001);assert(0);}
  if(argc==2&&!strcmp(argv[1],"fog-fv-core")){GC(0xfffa0790,0,GL_FOG_MODE,0x3001);assert(0);}

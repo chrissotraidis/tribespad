@@ -13,6 +13,7 @@
 #include <SDL3/SDL_opengl.h>
 #include <OpenGL/glu.h>
 /* SDL declares extension types but omits legacy Apple prototypes. */
+extern void glFogCoordPointerEXT(GLenum,GLsizei,const GLvoid *);
 extern GLsync glFenceSync(GLenum,GLbitfield);
 extern GLenum glClientWaitSync(GLsync,GLbitfield,GLuint64);
 extern void glDeleteSync(GLsync);
@@ -116,7 +117,7 @@ static uint32_t next_sync_token=0xdd000001;
 #endif
 typedef struct TextureState {unsigned refs;AutoMipmap *automatic;SyncObject *syncs;} TextureState;
 typedef struct ClientArray {uint32_t address,size,type,stride;int enabled,defined;} ClientArray;
-typedef struct GLContext {SDL_GLContext native;uint32_t token;int core;GLuint copy_bindings[2];ClientArray vertex,color,normal,texcoord[32];GLenum mipmap_hint;unsigned errors;TextureState *textures;struct GLContext *next;} GLContext;
+typedef struct GLContext {SDL_GLContext native;uint32_t token;int core;GLuint copy_bindings[2];ClientArray vertex,color,normal,fog,texcoord[32];GLenum mipmap_hint;unsigned errors;TextureState *textures;struct GLContext *next;} GLContext;
 typedef struct Properties {SDL_PropertiesID native;struct Properties *next;} Properties;
 static Properties *properties;
 static Window *windows;
@@ -1419,12 +1420,10 @@ static GLContext *legacy_context(void){GLContext *c=current_context();if(!c||c->
 static unsigned client_texture_unit(void){GLint unit=0;glGetIntegerv(GL_CLIENT_ACTIVE_TEXTURE,&unit);if(unit<GL_TEXTURE0||unit>=GL_TEXTURE0+32)stop();return (unsigned)(unit-GL_TEXTURE0);}
 static void client_state(uint32_t cap,int enabled){
     GLContext *c=legacy_context();ClientArray *a;
-    /* Original reset routine 0x447239 disables this optional array. Disabling
-       consumes no pointer; enabling still needs a checked draw descriptor. */
-    if(cap==GL_FOG_COORD_ARRAY&&!enabled){glDisableClientState(cap);return;}
     if(cap==GL_VERTEX_ARRAY)a=&c->vertex;
     else if(cap==GL_COLOR_ARRAY)a=&c->color;
     else if(cap==GL_NORMAL_ARRAY)a=&c->normal;
+    else if(cap==GL_FOG_COORD_ARRAY)a=&c->fog;
     else if(cap==GL_TEXTURE_COORD_ARRAY)a=&c->texcoord[client_texture_unit()];
     else stop();
     if(enabled)glEnableClientState(cap);else glDisableClientState(cap);a->enabled=enabled;
@@ -1797,6 +1796,17 @@ void tribes_gl_texcoord_pointer(_cpu *cpu,uint32_t size,uint32_t type,uint32_t s
     client_pointer(size,type,stride,address,1);DRAW_RETURN();
 #endif
 }
+void tribes_gl_fog_coord_pointer(_cpu *cpu,uint32_t type,uint32_t stride,uint32_t address){
+    WINDOW_ENTER();
+#if TARGET_OS_IPHONE
+    (void)type;(void)stride;(void)address;(void)error;stop();
+#else
+    GLContext *c=legacy_context();
+    if((type!=GL_FLOAT&&type!=GL_DOUBLE)||(int32_t)stride<0){glFogCoordPointerEXT(type,(int32_t)stride,NULL);DRAW_RETURN();}
+    GLint buffer=0;glGetIntegerv(GL_ARRAY_BUFFER_BINDING,&buffer);if(buffer)stop();
+    ClientArray *a=&c->fog;a->address=address;a->size=1;a->type=type;a->stride=stride;a->defined=1;DRAW_RETURN();
+#endif
+}
 void tribes_gl_draw_elements(_cpu *cpu,uint32_t mode,uint32_t count,uint32_t type,uint32_t input){
     WINDOW_ENTER();
 #if TARGET_OS_IPHONE
@@ -1811,22 +1821,25 @@ void tribes_gl_draw_elements(_cpu *cpu,uint32_t mode,uint32_t count,uint32_t typ
     if(count>UINT32_MAX/width)stop();size_t bytes=(size_t)count*width;
     unsigned char *indices=malloc(bytes);if(!indices)stop();checked_copy(indices,guest(cpu,input,bytes),bytes);
     uint32_t maximum=0;for(uint32_t i=0;i<count;i++){uint32_t index=draw_index(indices,width,i);if(index>maximum)maximum=index;}
-    void *vertex=NULL,*color=NULL,*normal=NULL,*texcoords[32]={0};
+    void *vertex=NULL,*color=NULL,*normal=NULL,*fog=NULL,*texcoords[32]={0};
     if(c->vertex.enabled)vertex=stage_array(cpu,&c->vertex,indices,width,count,maximum);
     if(c->color.enabled)color=stage_array(cpu,&c->color,indices,width,count,maximum);
     if(c->normal.enabled)normal=stage_array(cpu,&c->normal,indices,width,count,maximum);
+    if(c->fog.enabled)fog=stage_array(cpu,&c->fog,indices,width,count,maximum);
     for(unsigned i=0;i<32;i++)if(c->texcoord[i].enabled)texcoords[i]=stage_array(cpu,&c->texcoord[i],indices,width,count,maximum);
     unsigned unit=client_texture_unit();glGetIntegerv(GL_ARRAY_BUFFER_BINDING,&previous);glBindBuffer(GL_ARRAY_BUFFER,0);
     if(vertex)glVertexPointer((GLint)c->vertex.size,c->vertex.type,0,vertex);
     if(color)glColorPointer((GLint)c->color.size,c->color.type,0,color);
     if(normal)glNormalPointer(c->normal.type,0,normal);
+    if(fog)glFogCoordPointerEXT(c->fog.type,0,fog);
     for(unsigned i=0;i<32;i++)if(texcoords[i]){glClientActiveTexture(GL_TEXTURE0+i);glTexCoordPointer((GLint)c->texcoord[i].size,c->texcoord[i].type,0,texcoords[i]);}
     glClientActiveTexture(GL_TEXTURE0+unit);glDrawElements(mode,(GLsizei)count,type,indices);
     if(vertex)glVertexPointer((GLint)c->vertex.size,c->vertex.type,0,NULL);
     if(color)glColorPointer((GLint)c->color.size,c->color.type,0,NULL);
     if(normal)glNormalPointer(c->normal.type,0,NULL);
+    if(fog)glFogCoordPointerEXT(c->fog.type,0,NULL);
     for(unsigned i=0;i<32;i++)if(texcoords[i]){glClientActiveTexture(GL_TEXTURE0+i);glTexCoordPointer((GLint)c->texcoord[i].size,c->texcoord[i].type,0,NULL);free(texcoords[i]);}
-    glClientActiveTexture(GL_TEXTURE0+unit);glBindBuffer(GL_ARRAY_BUFFER,(GLuint)previous);free(normal);free(color);free(vertex);free(indices);DRAW_RETURN();
+    glClientActiveTexture(GL_TEXTURE0+unit);glBindBuffer(GL_ARRAY_BUFFER,(GLuint)previous);free(fog);free(normal);free(color);free(vertex);free(indices);DRAW_RETURN();
 #endif
 }
 /* Texture names are the native context's GLuint values. No host pointers or
