@@ -201,6 +201,7 @@ void tb_sse_bits128(CPU,unsigned op,unsigned dest,unsigned source);
 void tb_sse_bits128mem(CPU,unsigned op,unsigned dest,uint32_t address);
 uint32_t tb_sse_cvtsd2si(CPU,unsigned source);
 void tb_sse_mulpd(CPU,unsigned dest,unsigned source);
+void tb_sse_mulpdmem(CPU,unsigned dest,uint32_t address);
 void tb_sse_subpd(CPU,unsigned dest,unsigned source);
 void tb_sse_insertw(CPU,unsigned dest,uint32_t value,unsigned control);
 void tb_sse_psubq(CPU,unsigned dest,unsigned source);

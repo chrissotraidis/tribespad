@@ -1,0 +1,190 @@
+{
+  "date": "2026-10-07",
+  "previous_stop": {
+    "pid": 87731,
+    "pc": "0x10126173",
+    "instruction": "STMXCSR [ESP+4]",
+    "caller": "0x10040ffa",
+    "return_pc": "0x10040fff",
+    "cpu_sha256": "99e19491746fa9a89e270c3e688693a7a6ae180f48d65bfc4950520a09e45b89"
+  },
+  "new_sites": [
+    {
+      "pc": "0x10126173",
+      "bytes": "0fae5c2404",
+      "mnemonic": "stmxcsr",
+      "operands": "dword ptr [esp + 4]"
+    },
+    {
+      "pc": "0x101261c4",
+      "bytes": "660f59c8",
+      "mnemonic": "mulpd",
+      "operands": "xmm1, xmm0"
+    },
+    {
+      "pc": "0x101261c8",
+      "bytes": "f20f2dd1",
+      "mnemonic": "cvtsd2si",
+      "operands": "edx, xmm1"
+    },
+    {
+      "pc": "0x101261e0",
+      "bytes": "660f5cca",
+      "mnemonic": "subpd",
+      "operands": "xmm1, xmm2"
+    },
+    {
+      "pc": "0x101261fa",
+      "bytes": "660f59d9",
+      "mnemonic": "mulpd",
+      "operands": "xmm3, xmm1"
+    },
+    {
+      "pc": "0x10126207",
+      "bytes": "660f59e1",
+      "mnemonic": "mulpd",
+      "operands": "xmm4, xmm1"
+    },
+    {
+      "pc": "0x1012620d",
+      "bytes": "660f5cc3",
+      "mnemonic": "subpd",
+      "operands": "xmm0, xmm3"
+    },
+    {
+      "pc": "0x10126211",
+      "bytes": "660f590d20b41c10",
+      "mnemonic": "mulpd",
+      "operands": "xmm1, xmmword ptr [0x101cb420]"
+    },
+    {
+      "pc": "0x10126228",
+      "bytes": "660f5cc4",
+      "mnemonic": "subpd",
+      "operands": "xmm0, xmm4"
+    },
+    {
+      "pc": "0x1012624b",
+      "bytes": "660f5cd0",
+      "mnemonic": "subpd",
+      "operands": "xmm2, xmm0"
+    },
+    {
+      "pc": "0x10126257",
+      "bytes": "660f5cd4",
+      "mnemonic": "subpd",
+      "operands": "xmm2, xmm4"
+    },
+    {
+      "pc": "0x10126264",
+      "bytes": "660f59f8",
+      "mnemonic": "mulpd",
+      "operands": "xmm7, xmm0"
+    },
+    {
+      "pc": "0x10126268",
+      "bytes": "660f5cd1",
+      "mnemonic": "subpd",
+      "operands": "xmm2, xmm1"
+    },
+    {
+      "pc": "0x10126271",
+      "bytes": "660f59c8",
+      "mnemonic": "mulpd",
+      "operands": "xmm1, xmm0"
+    },
+    {
+      "pc": "0x1012627a",
+      "bytes": "660f59e0",
+      "mnemonic": "mulpd",
+      "operands": "xmm4, xmm0"
+    },
+    {
+      "pc": "0x10126286",
+      "bytes": "660f59c0",
+      "mnemonic": "mulpd",
+      "operands": "xmm0, xmm0"
+    },
+    {
+      "pc": "0x10126293",
+      "bytes": "660f59c8",
+      "mnemonic": "mulpd",
+      "operands": "xmm1, xmm0"
+    },
+    {
+      "pc": "0x101262a5",
+      "bytes": "660f59c8",
+      "mnemonic": "mulpd",
+      "operands": "xmm1, xmm0"
+    },
+    {
+      "pc": "0x101262a9",
+      "bytes": "660f59c0",
+      "mnemonic": "mulpd",
+      "operands": "xmm0, xmm0"
+    },
+    {
+      "pc": "0x101262b6",
+      "bytes": "660f59c8",
+      "mnemonic": "mulpd",
+      "operands": "xmm1, xmm0"
+    },
+    {
+      "pc": "0x101262c2",
+      "bytes": "660f59d8",
+      "mnemonic": "mulpd",
+      "operands": "xmm3, xmm0"
+    },
+    {
+      "pc": "0x101262ca",
+      "bytes": "660f598890000000",
+      "mnemonic": "mulpd",
+      "operands": "xmm1, xmmword ptr [eax + 0x90]"
+    },
+    {
+      "pc": "0x101262d2",
+      "bytes": "660f59e3",
+      "mnemonic": "mulpd",
+      "operands": "xmm4, xmm3"
+    }
+  ],
+  "component_validation": {
+    "passed": true,
+    "cases": 32950,
+    "sites": 50,
+    "memory_faults": [
+      "aligned-protected",
+      "unaligned",
+      "unmasked-memory-second-lane"
+    ],
+    "unmasked_destination_preservation": [
+      "conversion-precision",
+      "conversion-invalid",
+      "multiply-second-lane",
+      "subtract-second-lane"
+    ],
+    "source_rejections": 101,
+    "library_sha256": "bffc63213892edc3738190ed56ceb7c1801d82783bcaba6d712276d598af1bd8",
+    "oracle_source_sha256": "2ebe817e7afdc9d55ffa18813b70d2884fba55a18d92b6096221434022995b0a",
+    "oracle_binary_sha256": "b152198ce077623466cce8c910c88761d99b4f2388b4bf47de476bc989dca26d",
+    "requests_sha256": "a609434b1569f26f5c0313fbe77aee562924ebc8281df05892fcbb35a224b79e",
+    "reference_sha256": "a1824d328ed669d318132ae3546f9c4dc52a97e64350c5a64721dabdf8de41d0",
+    "sources_sha256": {
+      "scripts/test-math-model-instructions.py": "397e6b4521346ba23de917e02a8ecc700136ae51fe9c679dd03bc4acf1fb2a9e",
+      "scripts/patch_runtime_inputs.py": "4c847a1e2338b95946ad6682e35d0f75359ea79d96f49955d598c35849e83cbd",
+      "port/llasm-support/tribes_sse.c": "b23372bd8016bbc05d3b0066dcdd768efda660033d31cc1db03475385865e6ae",
+      "port/llasm-support/tribes_sse.h": "efb00007e337dc4c4668e59a517d30255425cb60939632045e307e351cf2e5b8",
+      "ref/qol/IFC22.dll": "eaf5a42d301cc64a6e526aa49a82dbaefe655ed1ac0ba67939d0bab2fb6ab607"
+    },
+    "scope": "Fifty pinned emitted sites against fresh Rosetta x86 instructions; two memory operands relocated to aligned oracle storage. Original guest effective addresses independently exercised, including EAX wrap and page-edge reads. All rounding/DAZ/FTZ combinations, boundaries, NaN/invalid/precision/sticky status and register aliases. Full440 CPU including flags/x87/YMM and8192 memory canaries. Four deliberate unmasked stops preserve destination. Fallback stack save independently checked with existing protected-store test. No precise unmasked Windows delivery, complete math routine, gameplay or physical Intel claim."
+  },
+  "regressions": [
+    "mission literals normal/checked/TSan",
+    "mission entry normal/checked",
+    "renderer dimensions normal/checked with30 protected cases",
+    "MXCSR584 cases and3 checked faults"
+  ],
+  "mobile": "Changed SSE support and instruction bindings checked-compiled for ARM64 device/Simulator; no mobile execution.",
+  "full_engine": "Running exec session7901; log generated/integration-review/scene-math/full-engine.log",
+  "playable": false
+}

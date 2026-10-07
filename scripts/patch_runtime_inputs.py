@@ -109,6 +109,31 @@ MATH_MODEL_SITES=[
  (0x1010c926,'660f59e8','mul',5,0),
  (0x1010c955,'660f59f2','mul',6,2),
  (0x1010c9d3,'0fae5c2404','save',0,0),
+ # Scene projection kernel reached by original CALL0x10040ffa. Its complete
+ # finite trap group shares the existing math semantics, including table reads.
+ (0x10126173,'0fae5c2404','save',0,0),
+ (0x101261c4,'660f59c8','mul',1,0),
+ (0x101261c8,'f20f2dd1','cvtsd',2,1),
+ (0x101261e0,'660f5cca','sub',1,2),
+ (0x101261fa,'660f59d9','mul',3,1),
+ (0x10126207,'660f59e1','mul',4,1),
+ (0x1012620d,'660f5cc3','sub',0,3),
+ (0x10126211,'660f590d20b41c10','mulmemabs',1,0x101cb420),
+ (0x10126228,'660f5cc4','sub',0,4),
+ (0x1012624b,'660f5cd0','sub',2,0),
+ (0x10126257,'660f5cd4','sub',2,4),
+ (0x10126264,'660f59f8','mul',7,0),
+ (0x10126268,'660f5cd1','sub',2,1),
+ (0x10126271,'660f59c8','mul',1,0),
+ (0x1012627a,'660f59e0','mul',4,0),
+ (0x10126286,'660f59c0','mul',0,0),
+ (0x10126293,'660f59c8','mul',1,0),
+ (0x101262a5,'660f59c8','mul',1,0),
+ (0x101262a9,'660f59c0','mul',0,0),
+ (0x101262b6,'660f59c8','mul',1,0),
+ (0x101262c2,'660f59d8','mul',3,0),
+ (0x101262ca,'660f598890000000','mulmemeax',1,0x90),
+ (0x101262d2,'660f59e3','mul',4,3),
 ]
 def translate_math_model(dll,image):
  assert sha(image)=='eaf5a42d301cc64a6e526aa49a82dbaefe655ed1ac0ba67939d0bab2fb6ab607'
@@ -133,6 +158,15 @@ call void @tb_sse_insertw(%_cpu* %cpu, i32 0, i32 %math_word, i32 3)'''
   elif op=='save':
    helper='tb_math_stmxcsr_1010cef3';declarations[helper]='declare void @'+helper+'(%_cpu*)'
    body='call void @'+helper+'(%_cpu* %cpu)'
+  elif op in ['mulmemabs','mulmemeax']:
+   helper='tb_sse_mulpdmem';declarations[helper]='declare void @'+helper+'(%_cpu*, i32, i32)'
+   if op=='mulmemabs':
+    body='call void @tb_sse_mulpdmem(%%_cpu* %%cpu, i32 %d, i32 %d)'%(dest,source)
+   else:
+    body=f'''%math_eax_pointer = bitcast %_cpu* %cpu to i32*
+%math_eax_value = load i32, i32* %math_eax_pointer, align 4
+%math_memory_address = add i32 %math_eax_value, {source}
+call void @tb_sse_mulpdmem(%_cpu* %cpu, i32 {dest}, i32 %math_memory_address)'''
   else:
    helper={'mul':'tb_sse_mulpd','sub':'tb_sse_subpd','subq':'tb_sse_psubq'}[op]
    declarations[helper]='declare void @'+helper+'(%_cpu*, i32, i32)'

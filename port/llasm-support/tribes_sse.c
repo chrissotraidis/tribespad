@@ -1498,9 +1498,8 @@ void tb_sse_addpdmem(CPU,unsigned dest,uint32_t address) {
     unsigned char a[16],b[16];memcpy(a,reg(cpu,dest),16);const volatile unsigned char *source=memory(cpu,address,TB_SSE_A128);for(unsigned i=0;i<16;++i)b[i]=source[i];legacy_addpd_publish(cpu,dest,a,b);
 }
 
-static void legacy_mathpd_publish(CPU,unsigned multiply,unsigned dest,unsigned source) {
-    unsigned char left[16],right[16],value[16];uint32_t control=cpu->_mxcsr,raised=0;
-    memcpy(left,reg(cpu,dest),16);memcpy(right,reg(cpu,source),16);
+static void legacy_mathpd_publish(CPU,unsigned multiply,unsigned dest,const unsigned char left[16],const unsigned char right[16]) {
+    unsigned char value[16];uint32_t control=cpu->_mxcsr,raised=0;
     for(unsigned lane=0;lane<2;++lane) {
         uint64_t a,b,result;uint32_t status;memcpy(&a,left+lane*8,8);memcpy(&b,right+lane*8,8);
         int ok=multiply?tb_sse_multiply64(a,b,control,&result,&status):tb_sse_arithmetic(TB_SSE_SUB64,a,b,control,&result,&status);
@@ -1511,8 +1510,18 @@ static void legacy_mathpd_publish(CPU,unsigned multiply,unsigned dest,unsigned s
        Stage both lanes and stop before publishing an unserviced fault. */
     if(raised&~(control>>7))abort();memcpy(reg(cpu,dest),value,16);
 }
-void tb_sse_mulpd(CPU,unsigned dest,unsigned source) {legacy_mathpd_publish(cpu,1,dest,source);}
-void tb_sse_subpd(CPU,unsigned dest,unsigned source) {legacy_mathpd_publish(cpu,0,dest,source);}
+void tb_sse_mulpd(CPU,unsigned dest,unsigned source) {
+    unsigned char a[16],b[16];memcpy(a,reg(cpu,dest),16);memcpy(b,reg(cpu,source),16);legacy_mathpd_publish(cpu,1,dest,a,b);
+}
+void tb_sse_mulpdmem(CPU,unsigned dest,uint32_t address) {
+    unsigned char a[16],b[16];memcpy(a,reg(cpu,dest),16);
+    const volatile unsigned char *source=memory(cpu,address,TB_SSE_A128);
+    for(unsigned i=0;i<16;++i)b[i]=source[i];
+    legacy_mathpd_publish(cpu,1,dest,a,b);
+}
+void tb_sse_subpd(CPU,unsigned dest,unsigned source) {
+    unsigned char a[16],b[16];memcpy(a,reg(cpu,dest),16);memcpy(b,reg(cpu,source),16);legacy_mathpd_publish(cpu,0,dest,a,b);
+}
 void tb_sse_insertw(CPU,unsigned dest,uint32_t value,unsigned control) {
     if(control>255)abort();uint16_t word=(uint16_t)value;memcpy(reg(cpu,dest)+(control&7)*2,&word,2);
 }
