@@ -1587,6 +1587,15 @@ void tribes_gl_color3ub(_cpu *cpu,uint32_t r,uint32_t g,uint32_t b){
     (void)legacy_context();glColor3ub((GLubyte)r,(GLubyte)g,(GLubyte)b);DRAW_RETURN();
 #endif
 }
+void tribes_gl_tex_coord2f(_cpu *cpu,uint32_t s,uint32_t t){
+    WINDOW_ENTER();
+#if TARGET_OS_IPHONE
+    (void)s;(void)t;(void)error;stop();
+#else
+    (void)legacy_context();uint32_t bits[]={s,t};GLfloat value[2];memcpy(value,bits,sizeof value);
+    glTexCoord2f(value[0],value[1]);DRAW_RETURN();
+#endif
+}
 void tribes_gl_translate_f(_cpu *cpu,uint32_t x,uint32_t y,uint32_t z){
     WINDOW_ENTER();
 #if TARGET_OS_IPHONE

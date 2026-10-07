@@ -61,7 +61,7 @@ extern unsigned sdl_test_live,sdl_test_fail;
 extern void bad_window(void),bad_context(void);
 #if defined(GRAPHICS) && !TARGET_OS_IPHONE
 extern void bad_frustum(void),bad_mult_matrix(void),bad_mult_matrix_double(void),bad_depth_mask(void),bad_is_enabled(void),bad_scale(void),bad_polygon_offset(void);
-extern void bad_translate_f(void);
+extern void bad_translate_f(void),bad_tex_coord2f(void);
 extern void bad_color3ub(void),bad_vertex3f(void);
 extern void bad_color4f(void),bad_vertex2i(void),bad_tex_sub_image_2d(void);
 #endif
@@ -660,6 +660,34 @@ static void immediate_rectangle(void){
  GC(0xfffa06f0,0,0x3e800000,0xbf000000,0x40000000);glGetFloatv(GL_MODELVIEW_MATRIX,translated);
  assert(!memcmp(transform,translated,sizeof transform));assert(translated[12]==.5f&&translated[13]==-1.5f&&translated[14]==8);
  assert(glGetError()==GL_INVALID_ENUM&&glGetError()==0);glLoadIdentity();
+ /* Texture coordinates address unit zero even when another unit is active.
+    Use distinct four-component sentinels and non-normalized coordinates. */
+ strcpy((char *)memory+0x24000,"glTexCoord2f");assert(CALL(63,0x24000)==0xfffa0700);
+ glMultiTexCoord4f(GL_TEXTURE1,7,8,9,10);glActiveTexture(GL_TEXTURE1);
+ glTexCoord2f(-.25f,2);glActiveTexture(GL_TEXTURE0);glGetFloatv(GL_CURRENT_TEXTURE_COORDS,expected);
+ glTexCoord4f(9,8,7,6);glActiveTexture(GL_TEXTURE1);glEnable(0xffffffff);
+ GC(0xfffa0700,0,0xbe800000,0x40000000);
+ glGetFloatv(GL_CURRENT_TEXTURE_COORDS,actual);assert(actual[0]==7&&actual[1]==8&&actual[2]==9&&actual[3]==10);
+ glActiveTexture(GL_TEXTURE0);glGetFloatv(GL_CURRENT_TEXTURE_COORDS,actual);
+ assert(!memcmp(actual,expected,sizeof actual)&&actual[2]==0&&actual[3]==1);
+ assert(glGetError()==GL_INVALID_ENUM&&glGetError()==0);
+ /* The reached sky quad interleaves texcoords and 3D vertices inside Begin.
+    Four different texels prove coordinates reach actual native sampling. */
+ GLuint sky_texture;glGenTextures(1,&sky_texture);glBindTexture(GL_TEXTURE_2D,sky_texture);
+ const unsigned char texels[]={255,0,0,255, 0,255,0,255, 0,0,255,255, 255,255,0,255};
+ glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,2,2,0,GL_RGBA,GL_UNSIGNED_BYTE,texels);
+ glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+ glEnable(GL_TEXTURE_2D);glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_REPLACE);glClear(GL_COLOR_BUFFER_BIT);
+ const uint32_t uv[4][2]={{0,0},{0x3f800000,0},{0x3f800000,0x3f800000},{0,0x3f800000}};
+ const uint32_t xy[4][2]={{0xbf000000,0xbf000000},{0x3f000000,0xbf000000},{0x3f000000,0x3f000000},{0xbf000000,0x3f000000}};
+ glEnable(0xffffffff);GC(0xfffa0500,0,GL_QUADS);
+ for(unsigned i=0;i<4;i++){GC(0xfffa0700,0,uv[i][0],uv[i][1]);GC(0xfffa06e0,0,xy[i][0],xy[i][1],0);}
+ GC(0xfffa0520,0);assert(glGetError()==GL_INVALID_ENUM&&glGetError()==0);
+ const int sample[4][2]={{24,24},{40,24},{24,40},{40,40}};
+ for(unsigned i=0;i<4;i++){glReadPixels(sample[i][0],sample[i][1],1,1,GL_RGBA,GL_UNSIGNED_BYTE,pixel);assert(!memcmp(pixel,texels+4*i,4));}
+ glReadPixels(4,4,1,1,GL_RGBA,GL_UNSIGNED_BYTE,pixel);assert(pixel[0]==0&&pixel[1]==0&&pixel[2]==0);
+ glDisable(GL_TEXTURE_2D);glDeleteTextures(1,&sky_texture);glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_MODULATE);assert(glGetError()==0);
+ puts("Original sky texcoords: unit-zero state, implicit R/Q, signed floats, native textured quad pixels, CPU ABI and retained errors PASS");
  puts("Original translation: float XYZ, native post-multiplied matrix, CPU ABI and retained error PASS");
  puts("Original 3D fan: low-byte colour/alpha, float XYZ/depth, bounded native pixels, CPU ABI and retained error PASS");
  puts("Original lighting polygon: float colour state/alpha and signed integer vertices through guest ABI, bounded native pixels PASS");
@@ -1219,6 +1247,7 @@ static int window_main(int argc,char **argv){
  if(argc==2&&!strcmp(argv[1],"bad-depth-mask")){bad_depth_mask();return 99;}
  if(argc==2&&!strcmp(argv[1],"bad-is-enabled")){bad_is_enabled();return 99;}
  if(argc==2&&!strcmp(argv[1],"bad-polygon-offset")){bad_polygon_offset();return 99;}
+ if(argc==2&&!strcmp(argv[1],"bad-tex-coord2f")){bad_tex_coord2f();return 99;}
  if(argc==2&&!strcmp(argv[1],"bad-translate-f")){bad_translate_f();return 99;}
  if(argc==2&&!strcmp(argv[1],"bad-color3ub")){bad_color3ub();return 99;}
  if(argc==2&&!strcmp(argv[1],"bad-vertex3f")){bad_vertex3f();return 99;}
@@ -1273,6 +1302,7 @@ static int window_main(int argc,char **argv){
  assert(CALL(54,SDL_GL_CONTEXT_PROFILE_MASK,0x3001)&&word(0x3001)==SDL_GL_CONTEXT_PROFILE_CORE);
  puts("explicit native core context retains existing modern graphics coverage");
 #ifdef GRAPHICS
+ if(argc==2&&!strcmp(argv[1],"tex-coord2f-core")){GC(0xfffa0700,0,0,0);assert(0);}
  if(argc==2&&!strcmp(argv[1],"translate-f-core")){GC(0xfffa06f0,0,0,0,0);assert(0);}
  if(argc==2&&!strcmp(argv[1],"color3ub-core")){GC(0xfffa06d0,0,128,128,128);assert(0);}
  if(argc==2&&!strcmp(argv[1],"vertex3f-core")){GC(0xfffa06e0,0,0,0,0);assert(0);}

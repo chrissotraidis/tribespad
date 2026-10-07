@@ -265,6 +265,7 @@
     "glBlendFunc",
     "glBegin",
     "glVertex2f",
+    "glTexCoord2f",
     "glVertex2i",
     "glEnd",
     "glBlendFuncSeparate",

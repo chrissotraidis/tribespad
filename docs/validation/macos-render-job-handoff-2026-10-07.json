@@ -1,6 +1,6 @@
 {
   "date": "2026-10-07",
-  "checkpoint": "GitHub source backup; signed-app mission validation pending",
+  "checkpoint": "Signed app exercised through mission lighting and sky draw",
   "render_job": {
     "passed": true,
     "state": "finished",
@@ -115,8 +115,34 @@
   "signed_app": {
     "packaging_verified": true,
     "pid_at_checkpoint": 63108,
-    "observed": "EULA rendered and accepted; local warrior setup rendered",
-    "new_mission_paths_verified": false
+    "observed": "EULA, local warrior model, Training and Charybdis loading; acquisition and cross-thread completion return verified. Four fan vertex calls and translation return verified. Window black at next unresolved sky texcoord call.",
+    "new_mission_paths_verified": [
+      "fence begin",
+      "fence completion",
+      "four glVertex3f calls",
+      "glTranslatef"
+    ],
+    "unobserved": [
+      "fence wait",
+      "fence finish"
+    ],
+    "next_stop": {
+      "guest_pc": "0x0",
+      "call": "0x5ad5b5",
+      "return": "0x5ad5bb",
+      "slot": "0x9e4c3c",
+      "name": "glTexCoord2f",
+      "name_address": "0x78b068",
+      "argument_bits": [
+        "0x3b000000",
+        "0x3b000000"
+      ]
+    },
+    "acquisition_native_thread": 6328038,
+    "completion_native_thread": 6330682,
+    "completion_lock_word": "0x0",
+    "process_ended": true,
+    "audio_restored": 57
   },
   "remaining": [
     "actual render-job fence and translation execution",
@@ -125,5 +151,5 @@
     "authenticated community multiplayer",
     "full iPad/iPhone app acceptance"
   ],
-  "local_evidence": "generated/integration-review/render-job-handoff/"
+  "local_evidence": "generated/integration-review/sky-texcoord/before-63108/"
 }
