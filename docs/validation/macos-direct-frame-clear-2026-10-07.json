@@ -1,0 +1,265 @@
+{
+  "date": "2026-10-07",
+  "original_execution": {
+    "pid": 64472,
+    "engine_sha256": "103ebbf94ace4e97ee385d48479e21ec39a6b950d61da9461deab07efbc62074",
+    "capture": "generated/integration-review/apple-render-dimensions/scene-matrix-load-stop-64472",
+    "screenshot_sha256": "95b8b64c537c075000c62d98a799dbcd14f66aa4e3fa5396ee39e702841d07d0",
+    "trace_counts": {
+      "tribes_render_job_step": 12,
+      "tribes_gl_light_fv": 4,
+      "tribes_gl_light_model_fv": 4,
+      "loc_10043BBC": 4,
+      "loc_10043C76": 4,
+      "loc_10040FFF": 4,
+      "loc_10041026": 4,
+      "loc_4D0B8B": 4,
+      "loc_624164": 4,
+      "loc_51685B": 4,
+      "loc_5168BE": 4,
+      "loc_518136": 4,
+      "loc_518147": 4,
+      "loc_5B96FA": 2,
+      "loc_5B97A2": 2,
+      "loc_5B97B7": 2,
+      "loc_5B97CB": 2,
+      "loc_5B97DF": 2,
+      "tribes_sdl_gl_swap_window": 4,
+      "tb_fp_control_query_pair": 4,
+      "loc_10115165": 4
+    },
+    "next_stop": {
+      "pid": 64472,
+      "frames": [
+        "abort",
+        "tribes_lookup",
+        "tribes_dispatch",
+        "tribes_enter",
+        "main",
+        "start"
+      ],
+      "scope": "Actual isolated offline app stop; selected-thread CPU/stack, exact renderer fields and native context identity, not a whole-memory snapshot.",
+      "cpu_address": "0x1111b8d00",
+      "base": "0x7000000000",
+      "esp": "0x2ff340",
+      "registers": [
+        0,
+        3142488,
+        2147483648,
+        3142488,
+        3142464,
+        3142476,
+        0,
+        0
+      ],
+      "stack_from": "0x2ff330",
+      "stack": [
+        "0x0",
+        "0xbfefff80",
+        "0x0",
+        "0x3e000000",
+        "0x4472c6",
+        "0x2ff358",
+        "0x6339f548",
+        "0x2ff398",
+        "0x6a4c7b",
+        "0x2ff358",
+        "0x3f800000",
+        "0x0",
+        "0x0",
+        "0x0",
+        "0x0",
+        "0x3f800000",
+        "0x0",
+        "0x0",
+        "0x0",
+        "0x0",
+        "0x3f800000",
+        "0x0",
+        "0x4310d49e",
+        "0xc3d7384e",
+        "0xc2de7c07",
+        "0x3f800000",
+        "0x2ff3b4",
+        "0x6a54aa",
+        "0x2ff3ac",
+        "0x3f158998",
+        "0x6508bc80",
+        "0x65033b54",
+        "0x7c3a80",
+        "0x2ff3d4",
+        "0x6b74fe",
+        "0x0",
+        "0x0",
+        "0x644eaee0",
+        "0x7c3e28",
+        "0x3"
+      ],
+      "mission_literal_bytes": "c745cc3acd13bfc745c43acd133fc745c83acd133f",
+      "mission_literal_values": [
+        "0xbf13cd3a",
+        "0x3f13cd3a",
+        "0x3f13cd3a"
+      ],
+      "renderer_globals": {
+        "0x1046ce48": "0x0",
+        "0x1046ce60": "0x0",
+        "0x1046ceec": "0xdb000002",
+        "0x1046e258": "0x0",
+        "0x1046ce50": "0x0",
+        "0x1046c8a4": "0x0",
+        "0x1046ca80": "0x0",
+        "0x1046c9b0": "0xfffa0070",
+        "0x1046c9d0": "0x1",
+        "0x1046ca90": "0x0",
+        "0x1046c6f4": "0x0",
+        "0x1046cb74": "0x0",
+        "0x1046cb40": "0x1",
+        "0x101d6828": "0x9e826c"
+      },
+      "owner_vtable": "0x3f800000",
+      "window_dimensions": [
+        1470,
+        956
+      ],
+      "native_gl": {
+        "context": {
+          "error": "success",
+          "value": "0x0000007b0b787b60",
+          "summary": null
+        }
+      }
+    },
+    "cleanup": {
+      "pid": 64472,
+      "original_audio": "default 106\n113 MacBook Air Microphone\n106 MacBook Air Speakers\n118 eqMac\n88 Microsoft Teams Audio\n84 Jump Desktop Microphone\n57 Jump Desktop Audio\n",
+      "restored": "default 106\n113 MacBook Air Microphone\n106 MacBook Air Speakers\n118 eqMac\n88 Microsoft Teams Audio\n84 Jump Desktop Microphone\n57 Jump Desktop Audio\n",
+      "scope": "Actual signed isolated original offline app; diagnostic stop/manual termination is not gameplay acceptance."
+    },
+    "scope": "Original scene texture-generation integer/vector returns each observed twice. Original FP-query returns four times. Rendered scene still corrupt; no gameplay control acceptance."
+  },
+  "clear_evidence": {
+    "capture_sha256": "a348959109b3b3adc413465799bb475d96886cead3d836a672afee1e8058476f",
+    "samples": {
+      "tribes_sdl_gl_swap_window": 6,
+      "loc_100421A2": 6
+    },
+    "globals": {
+      "0x1046ce48": "0x0",
+      "0x1046ce44": "0x0",
+      "0x1046ce60": "0x0",
+      "0x1046e258": "0x0",
+      "0x1046ce50": "0x0",
+      "0x1046c8dc": "0xfffa0080"
+    },
+    "native_queries": {
+      "depth_mask": [
+        {
+          "value": "1",
+          "error": "success"
+        }
+      ],
+      "scissor_test": [
+        {
+          "value": "0",
+          "error": "success"
+        }
+      ],
+      "color_mask": [
+        {
+          "value": "1",
+          "error": "success"
+        },
+        {
+          "value": "1",
+          "error": "success"
+        },
+        {
+          "value": "1",
+          "error": "success"
+        },
+        {
+          "value": "1",
+          "error": "success"
+        }
+      ],
+      "framebuffer": [
+        {
+          "value": "0",
+          "error": "success"
+        }
+      ],
+      "draw_buffer": [
+        {
+          "value": "1029",
+          "error": "success"
+        }
+      ]
+    },
+    "scope": "Six presentations and six original frame-clear continuations after actual scene polygon call, all cached targets/mode/current/framebuffer zero and native FBO zero. No glClear recorded. Original null scene-target branch at0x10042116 skips original clear at0x10042154. Missing direct-window clearing explains persistence but visual improvement remains unverified."
+  },
+  "changes": {
+    "matrix_load": {
+      "api": "glLoadMatrixf",
+      "token": "0xfffa07f0",
+      "call": "0x4472c0",
+      "return": "0x4472c6",
+      "slot": "0x9e8b60",
+      "input": "0x2ff358",
+      "lookup_string": "0x78aa60",
+      "lookup_store": "0x55db03",
+      "semantics": "One-pointer stdcall; checked64-byte float matrix staging into real native GL."
+    },
+    "frame_clear": {
+      "script": "scripts/apple_render_present.py",
+      "branch": "loc_1004210E",
+      "clear_block": "loc_1004214F",
+      "continuation": "0x1004215a",
+      "mask": "0x4500",
+      "condition": "Scene target, UI target, interop mode, current target and cached framebuffer all zero. Original nonzero branches preserved.",
+      "semantics": "Uses existing original GL clear call and continuation; no fabricated framebuffer or capability, and all added global reads remain checked."
+    }
+  },
+  "tests": {
+    "graphics_passed": true,
+    "graphics_receipt_sha256": "fe6c0efdc7b85068bf5b4063195cd84265322a84ab02984bac3837cf154765b5",
+    "graphics_runs": [
+      {
+        "mode": "normal",
+        "passed": true,
+        "fault_count": 0
+      },
+      {
+        "mode": "tsan",
+        "passed": true,
+        "fault_count": 0
+      },
+      {
+        "mode": "checked",
+        "passed": true,
+        "fault_count": 160
+      }
+    ],
+    "matrix_scope": "Full matrix replacement in all native matrix modes, readonly exact64-byte page end and unaligned sources, native retained matrix/error/begin-state/CPU/stack semantics; four new guard cases.",
+    "branch_passed": true,
+    "branch_receipt_sha256": "ba67058d3e037abce3bfae55af6e0479289975d4570718f58a581676e182823d",
+    "branch_cases_per_mode": 2048,
+    "branch_faults": 8,
+    "branch_scope": "Original CPU/stack/state for all nonzero combinations; all-zero route emits exactly original clear mask, return and dispatch token. No native GL execution in branch fixture.",
+    "mission_literals": true,
+    "render_job_handoff": true,
+    "mobile_checked_compile": true
+  },
+  "full_build": {
+    "state": "running",
+    "pid": 68486,
+    "session": 43152,
+    "log": "generated/integration-review/fog-state/frame-full-engine.log"
+  },
+  "next_action": "Finish existing full build, package, launch actual app. Confirm original clear dispatch and glLoadMatrixf return, compare menu silhouettes/terrain across frames, then verify native controls.",
+  "limitations": [
+    "Clear fix and matrix load have not executed in the original app yet.",
+    "Persistent silhouette/terrain/UI defects remain in prior capture.",
+    "Mobile compilation only; full rendering, controls, HD and authenticated community multiplayer remain incomplete."
+  ]
+}

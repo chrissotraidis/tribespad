@@ -23,6 +23,15 @@ for prefix, text in [('original', source), ('apple', translate(source))]:
     parts += [blocks,
         f'define hidden fastcc void @{prefix}_loc_10043BC9(%_cpu* %cpu) {{ store i32 1, i32* @route\n ret void }}',
         f'define void @{prefix}(%_cpu* %cpu) {{ call fastcc void @{prefix}_loc_10043BBC(%_cpu* %cpu)\n ret void }}']
+for prefix, text in [('original', source), ('apple', translate(source))]:
+    clear_names = ['loc_1004210E', 'loc_1004214F']
+    blocks = ''.join(definition(text, name) for name in clear_names)
+    for name in clear_names + ['loc_1004211C', 'loc_100421A2']:
+        blocks = blocks.replace('@' + name + '(', '@' + prefix + '_' + name + '(')
+    parts += [blocks,
+        f'define hidden fastcc void @{prefix}_loc_1004211C(%_cpu* %cpu) {{ store i32 2, i32* @route\n ret void }}',
+        f'define hidden fastcc void @{prefix}_loc_100421A2(%_cpu* %cpu) {{ store i32 3, i32* @route\n ret void }}',
+        f'define void @{prefix}_clear(%_cpu* %cpu) {{ call fastcc void @{prefix}_loc_1004210E(%_cpu* %cpu)\n ret void }}']
 ir = out / 'blocks.ll'
 ir.write_text('\n'.join(parts) + '\n')
 barriers = [R / 'port/core/guest_memory_checks.c', R / 'port/core/guest_external_checks.c']
@@ -57,10 +66,10 @@ def exercise(mode, fault=None):
     for p in pages:
         assert native.mprotect(base + p, page, 3) == 0
         assert lib.tribes_memory_permissions_set(p, page, 3)
-    functions = [getattr(lib, prefix) for prefix in ['original', 'apple']]
-    targets = (ctypes.c_void_p * 2)(*[ctypes.cast(f, ctypes.c_void_p).value for f in functions])
+    functions = [getattr(lib, prefix) for prefix in ['original', 'apple', 'original_clear', 'apple_clear']]
+    targets = (ctypes.c_void_p * 4)(*[ctypes.cast(f, ctypes.c_void_p).value for f in functions])
     lib.tribes_memory_register_targets.argtypes = [ctypes.POINTER(ctypes.c_void_p), ctypes.c_uint64]
-    lib.tribes_memory_register_targets(targets, 2)
+    lib.tribes_memory_register_targets(targets, 4)
     lib.tribes_memory_external_configure.argtypes = [ctypes.c_uint64, ctypes.c_uint64]
     lib.tribes_memory_external_configure(base, size)
     lib.tribes_memory_external_enable()
@@ -81,7 +90,7 @@ def exercise(mode, fault=None):
         seed = bytearray(rng.getrandbits(8) for _ in range(440))
         struct.pack_into('<Q', seed, 112, base)
         struct.pack_into('<I', seed, 16, 0x100820)
-        if fault:
+        if fault and not fault.startswith('clear-'):
             for p in fields:
                 store(p, 0)
             address = {'globals': 0x1046ce44, 'current': 0x1046e258,
@@ -113,8 +122,46 @@ def exercise(mode, fault=None):
         for p, v in zip(fields, values):
             assert struct.unpack('<I', ctypes.string_at(base + p, 4))[0] == v
         cases += 1
+    clear_cases = 0
+    for values in itertools.product([0, 1, 0x80000000, 0xffffffff], repeat=5):
+        for p, v in zip(fields, values):
+            store(p, v)
+        store(0x1046c8dc, 0xfffa0080)
+        stack = bytes(rng.getrandbits(8) for _ in range(128))
+        seed = bytearray(rng.getrandbits(8) for _ in range(440))
+        struct.pack_into('<Q', seed, 112, base)
+        struct.pack_into('<I', seed, 16, 0x100820)
+        if fault and fault.startswith('clear-'):
+            for p in fields:
+                store(p, 0)
+            address = {'clear-globals': 0x1046ce48, 'clear-current': 0x1046e258,
+                       'clear-slot': 0x1046c8dc, 'clear-stack': 0x100818}[fault]
+            assert lib.tribes_memory_permissions_set(address // 4096 * 4096, 4096, 1 if fault == 'clear-stack' else 0)
+            lib.apple_clear(ctypes.create_string_buffer(bytes(seed), 440))
+            raise AssertionError('clear guard returned')
+        results = []
+        for prefix in ['original_clear', 'apple_clear']:
+            ctypes.memmove(base + 0x100800, stack, len(stack))
+            route.value = returned.value = 0
+            cpu = ctypes.create_string_buffer(bytes(seed), 440)
+            getattr(lib, prefix)(cpu)
+            results.append((cpu.raw, route.value, returned.value, ctypes.string_at(base + 0x100800, 128)))
+        if any(values):
+            assert results[0] == results[1], values
+            assert results[1][1] == (2 if values[1] else 3)
+        else:
+            expected = bytearray(results[0][0])
+            struct.pack_into('<I', expected, 16, 0x100818)
+            pushed = bytearray(stack)
+            struct.pack_into('<2I', pushed, 24, 0x1004215a, 0x4500)
+            assert results[0][1:] == (3, 0, stack)
+            assert results[1] == (bytes(expected), 0, 0xfffa0080, bytes(pushed))
+        for p, v in zip(fields, values):
+            assert struct.unpack('<I', ctypes.string_at(base + p, 4))[0] == v
+        clear_cases += 1
+    assert clear_cases == 1024
     assert native.munmap(base, size) == 0
-    return cases
+    return cases + clear_cases
 
 
 if len(sys.argv) > 1:
@@ -125,12 +172,12 @@ for mode in ['normal', 'checked']:
     cases = exercise(mode)
     report[mode] = dict(cases=cases, binary_sha256=sha(out / (mode + '.dylib')))
     print('PASS', mode, cases, 'original branch/CPU/stack comparisons', flush=True)
-for fault in ['globals', 'current', 'dirty-write', 'stack']:
+for fault in ['globals', 'current', 'dirty-write', 'stack', 'clear-globals', 'clear-current', 'clear-slot', 'clear-stack']:
     result = subprocess.run([sys.executable, __file__, fault], capture_output=True, text=True, timeout=30)
     (out / (fault + '.log')).write_text(result.stdout + result.stderr)
     assert result.returncode == -6 and 'memory violation' in result.stderr, (fault, result.stderr)
-report.update(passed=True, checked_faults=4,
+report.update(passed=True, checked_faults=8,
     original_blocks_sha256={n: hashlib.sha256(definition(source, n).encode()).hexdigest() for n in names},
     sources_sha256={str(p.relative_to(R)): sha(p) for p in [pathlib.Path(__file__).resolve(), R / 'scripts/apple_render_present.py', *barriers]},
-    scope='Original branch and epilogue, 1024 state combinations per mode; full CPU/stack and nonzero target routing preserved. No native GL or playable acceptance claimed.')
+    scope='Original clear-call dispatch and completion epilogue, 2048 state combinations per mode; full CPU/stack and nonzero target routing preserved. Only all-zero direct-window state pushes original clear mask/continuation. No native GL or playable acceptance claimed.')
 (out / 'result.json').write_text(json.dumps(report, indent=2) + '\n')

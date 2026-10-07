@@ -1380,6 +1380,15 @@ void tribes_gl_load_identity(_cpu *cpu){
     glLoadIdentity();DRAW_RETURN();
 #endif
 }
+void tribes_gl_load_matrix_f(_cpu *cpu,uint32_t input){
+    WINDOW_ENTER();
+#if TARGET_OS_IPHONE
+    (void)input;(void)error;stop();
+#else
+    GLfloat matrix[16];checked_copy(matrix,guest(cpu,input,sizeof matrix),sizeof matrix);
+    glLoadMatrixf(matrix);DRAW_RETURN();
+#endif
+}
 void tribes_gl_load_matrix_d(_cpu *cpu,uint32_t input){
     WINDOW_ENTER();
 #if TARGET_OS_IPHONE

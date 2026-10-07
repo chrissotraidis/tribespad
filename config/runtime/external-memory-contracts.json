@@ -286,6 +286,7 @@
     "glDrawElements",
     "glMatrixMode",
     "glLoadIdentity",
+    "glLoadMatrixf",
     "glLoadMatrixd",
     "glMultMatrixf",
     "glMultMatrixd",

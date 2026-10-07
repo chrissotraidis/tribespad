@@ -214,15 +214,26 @@
     "scope": "First-render-job presentation samples may include menu preview/transitional frames. No post-trigger clear observed before stop; neither this nor depth disabled at presentation proves a scene-depth defect. Next probe arms at actual original polygon return instead."
   },
   "full_build": {
-    "state": "running",
-    "pid": 62554,
-    "session": 74723,
-    "log": "generated/integration-review/fog-state/texgen-full-engine.log"
+    "state": "finished",
+    "initialized": true,
+    "independent_subpages_enabled": true,
+    "binary_sha256": "103ebbf94ace4e97ee385d48479e21ec39a6b950d61da9461deab07efbc62074",
+    "scope": "Full original initialization succeeded; deliberate60-second startup observation diagnostic."
   },
-  "next_action": "Finish the existing full build, package and launch the signed original app. Verify texture-generation returns, observe actual scene clear/presentation state and test shipped WASD controls after tutorial lockout.",
+  "next_action": "Finish existing full build, package, launch actual app. Confirm original clear dispatch and glLoadMatrixf return, compare menu silhouettes/terrain across frames, then verify native controls.",
   "limitations": [
-    "New texture-generation calls have not executed in the original app yet.",
     "GLES routes deliberately unavailable; mobile source compilation only.",
     "Rendering correctness, controls, HD, authenticated multiplayer and full Apple-platform acceptance remain incomplete."
-  ]
+  ],
+  "subsequent_execution": {
+    "pid": 64472,
+    "capture": "generated/integration-review/apple-render-dimensions/scene-matrix-load-stop-64472",
+    "returns": {
+      "loc_5B97A2": 2,
+      "loc_5B97B7": 2,
+      "loc_5B97CB": 2,
+      "loc_5B97DF": 2
+    },
+    "next_stop": "glLoadMatrixf at original return0x4472c6"
+  }
 }

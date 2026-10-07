@@ -511,10 +511,10 @@ struct ExternalMemoryPass : PassInfoMixin<ExternalMemoryPass>{
      Allowed=Allowed&&!Target->isVarArg()&&Call->getType()->isVoidTy()&&Call->arg_size()==Args.size();
      if(Allowed)for(unsigned i=0;i<Args.size();++i)if(Call->getArgOperand(i)->getType()!=Args[i])Allowed=false;
     }
-    if(Name=="glMatrixMode"||Name=="glLoadIdentity"||Name=="glLoadMatrixd"||Name=="glMultMatrixf"||Name=="glMultMatrixd"||Name=="glViewport"||Name=="glDisable"||Name=="glEnable"){
+    if(Name=="glMatrixMode"||Name=="glLoadIdentity"||Name=="glLoadMatrixf"||Name=="glLoadMatrixd"||Name=="glMultMatrixf"||Name=="glMultMatrixd"||Name=="glViewport"||Name=="glDisable"||Name=="glEnable"){
      SmallVector<Type *,4> Args={I32};
      if(Name=="glLoadIdentity")Args.clear();
-     else if(Name=="glLoadMatrixd"||Name=="glMultMatrixf"||Name=="glMultMatrixd")Args={P};
+     else if(Name=="glLoadMatrixf"||Name=="glLoadMatrixd"||Name=="glMultMatrixf"||Name=="glMultMatrixd")Args={P};
      else if(Name=="glViewport")Args={I32,I32,I32,I32};
      Allowed=Allowed&&!Target->isVarArg()&&Call->getType()->isVoidTy()&&Call->arg_size()==Args.size();
      if(Allowed)for(unsigned i=0;i<Args.size();++i)if(Call->getArgOperand(i)->getType()!=Args[i])Allowed=false;

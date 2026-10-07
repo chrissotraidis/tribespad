@@ -58,6 +58,7 @@ EXPORTS += [('glFogCoordPointerEXT','tribes_gl_fog_coord_pointer',3,False,0x2004
 EXPORTS += [('glAlphaFunc','tribes_gl_alpha_func',2,False,0x20040000)]
 EXPORTS += [('glPolygonMode','tribes_gl_polygon_mode',2,False,0x20040000)]
 EXPORTS += [('glTexGeni','tribes_gl_tex_gen_i',3,False,0x20040000),('glTexGenfv','tribes_gl_tex_gen_fv',3,False,0x20040000)]
+EXPORTS += [('glLoadMatrixf','tribes_gl_load_matrix_f',1,False,0x20040000)]
 def prepare(out):
  bindings={};rows=[]
  for i,(name,helper,n,returns,module) in enumerate(EXPORTS):
