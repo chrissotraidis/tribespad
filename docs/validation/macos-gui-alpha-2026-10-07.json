@@ -1,0 +1,158 @@
+{
+  "date": "2026-10-07",
+  "state": "signed_app_hud_fix_verified_controls_incomplete",
+  "diagnosis": {
+    "signed_pid": 77334,
+    "capture": "generated/integration-review/apple-render-dimensions/hud-alpha-77334",
+    "original_draw_return": "0x10032558",
+    "texture": {
+      "symbol": "tribes_gl_draw_elements",
+      "texture": 41,
+      "program": 1,
+      "call": 17,
+      "stack": [
+        "0x10032558",
+        "0x4",
+        "0x6",
+        "0x1403",
+        "0x60808080",
+        "0x8",
+        "0x1a",
+        "0x8e"
+      ],
+      "blend": 1,
+      "src_rgb": 1,
+      "dst_rgb": 771,
+      "src_alpha": 1,
+      "dst_alpha": 771,
+      "alpha_test": 0,
+      "alpha_func": 519,
+      "texture_enabled": 1,
+      "active_texture": 33984,
+      "pack_buffer": 0,
+      "pack_row_length": 0,
+      "pack_skip_rows": 0,
+      "pack_skip_pixels": 0,
+      "pack_alignment": 4,
+      "env_mode": 8448,
+      "combine_rgb": 8448,
+      "combine_alpha": 8448,
+      "color": [
+        "1",
+        "1",
+        "1",
+        "1"
+      ],
+      "width": 10,
+      "height": 58,
+      "internal": 32856,
+      "alpha_bits": 8,
+      "pixels": "texture-41-16.rgba",
+      "sha256": "7bf435327dafc9f14c6cc57ab2cf416d3fc3a71acdaaa5f9246b0279f66b85f4",
+      "alpha_range": [
+        0,
+        255
+      ],
+      "alpha_zero": 33,
+      "alpha_255": 537
+    },
+    "rgb_exceeds_alpha_pixels": 37,
+    "native_shader_sha256": "b673e0f2f74fe89f52c6684a3c3a49dc4ffbe23cebd32c09c42195355325df85",
+    "native_shader_has_premultiply_define": false
+  },
+  "change": "All-zero direct-window original shader init executes existing 1004B317 formatter; it emits PREMULTIPLY_ALPHA 0, enabled by original gui.frag #ifdef. Nonzero fields retain original route. Checked memory and 33 finite revisions retained.",
+  "component": {
+    "branches": {
+      "passed": true,
+      "normal": {
+        "cases": 3072,
+        "binary_sha256": "28f5e9eda5f078ed110232d7713ffcbbe8369f0222818e70bd1d8a12f418b4c7"
+      },
+      "checked": {
+        "cases": 3072,
+        "binary_sha256": "95dab5277543f3dd8cfa7891d54cf59789b6cf9cb997b738b89d9dd19cbdfdcc"
+      },
+      "checked_faults": 11,
+      "original_blocks_sha256": {
+        "loc_10043BBC": "11b0b800e97db91091c7d487f8f6e59fff262542d70a3bf34681092bcc13676d",
+        "loc_10043C76": "95b9b13e7f3d6ed25d67396983d21f2228500e57487ccd0b5901d4d5a9191ddb",
+        "loc_10043C7D": "bec4609446c867a7bca633ca6d1cbeb2c4f8c6000e4802fcb885b70fa337bb06",
+        "loc_10043C7E": "df6b9f2d43beebff3550a0d8a9e1b102722fccfc443b5e9bd462b5d28447897b"
+      },
+      "sources_sha256": {
+        "scripts/test-apple-render-present.py": "ef2f7804a7360ffc7c324aecc8c57754a0edbf0639ceb8d812e302a864791e41",
+        "scripts/apple_render_present.py": "f71e93c5bd67757a859e6a986baa7015b331c92fc0c65876b3c91f72c48ef2d7",
+        "port/core/guest_memory_checks.c": "ee00fcff6979a3f4480835115d10db5dddf5fabf089a04c80f4a55e0ea82ec7c",
+        "port/core/guest_external_checks.c": "2ecaf0cf09462d76b293ab70860c9245ae46536959e81fd2549ad7675ad63523"
+      },
+      "scope": "Original clear-call dispatch and completion epilogue, 3072 state combinations per mode; full CPU/stack and nonzero target routing preserved. Only all-zero direct-window state adds original clear and premultiply formatting calls; nonzero modes and fields retain original behavior. No native GL or playable acceptance claimed."
+    },
+    "native_gui_pixels": "Opaque, alpha-zero bright RGB and half-alpha texture times half-alpha vertex tested with ONE/ONE_MINUS_SRC_ALPHA against independent blend arithmetic. No-define control reproduces bright output; both define 0 and define 1 produce premultiplied output.",
+    "graphics_modes": [
+      {
+        "mode": "normal",
+        "passed": true,
+        "faults": 0
+      },
+      {
+        "mode": "tsan",
+        "passed": true,
+        "faults": 0
+      },
+      {
+        "mode": "checked",
+        "passed": true,
+        "faults": 160
+      }
+    ],
+    "graphics_receipt_sha256": "86d5c810d8716b382654248960d1dd31fd3b5bd4ec4054f8698a46c241284823",
+    "guard_scope_note": "The alpha-buffer rejection shares the test stack guest page, so it proves write rejection but does not independently isolate the shader buffer store."
+  },
+  "acceptance": {
+    "full_app_fix": true,
+    "mobile_execution": false,
+    "hd": false,
+    "authenticated_multiplayer": false
+  },
+  "original_execution": {
+    "pid": 83794,
+    "engine_sha256": "d4406759b529aa4998c81f442f8756e817d167241ba194f31c3f40b7040462c9",
+    "signed_engine_sha256": "f91429da719139ac831be156a61c935d787a96a831df8396e18b27c4a665a4dd",
+    "initialized": true,
+    "attach_returned": true,
+    "independent_subpages_enabled": true,
+    "shader_has_define_zero": true,
+    "native_shader_sha256": "e9f0fb8262ad387a9f54ad7a1d23389707f6aa6c9e2cbb67f89c6c8c351374ac",
+    "fields_at_initialization": {
+      "0x1046ce44": 0,
+      "0x1046ce48": 0,
+      "0x1046ce60": 0,
+      "0x1046e258": 0,
+      "0x1046ce50": 0
+    },
+    "visual": "Original EULA focus and dialog edges blend correctly. Charybdis renders the original reticle, compass, weapon/inventory icons and translucent HUD without prior opaque white/cyan rectangles; observed through mission time 01:51. Other scene rendering and complete controls remain unaccepted.",
+    "capture": "generated/integration-review/apple-render-dimensions/execution",
+    "probe_scope": "Selected-thread immediate renderer fields and read-only native shader source. Optimized symbols coalesce B302/B32D, so callback function names do not independently prove the formatter return.",
+    "screenshots_sha256": {
+      "eula-after.png": "0bfb4989dfd7b94494d607527de13fcea5bc0ce86eb2a582bdbda5aaf762f15b",
+      "warrior-name.png": "a21850ed3a9c6cb20e4dfb7277dce4acc4117c4ce4f25defff221f61090037c3",
+      "training.png": "41a4e5077bf75365a00ee2fbd420d55e6ba56bd7f8cd54d2445d6fbddf5355ff",
+      "scene2.png": "bdeb41e7b6c39aa47caaeafbed6a4ed5d83954f317f8936ca9dbe865f1570274",
+      "scene3.png": "404bcc8ab7be8d845bdaea7c86bc9d610d25f0dc6b01c73e91a13ce5529ec920",
+      "aim-up.png": "7b6d532b2b62fdcef4eecf52e44862f4a4e531dff9c56eaad0e76f072e04a6c4",
+      "jet-before.png": "41a4e5077bf75365a00ee2fbd420d55e6ba56bd7f8cd54d2445d6fbddf5355ff"
+    }
+  },
+  "controls": {
+    "result": "incomplete",
+    "aim_attempts": "Removing the initial mouse move did not visibly change pitch with either sign of synthetic delta. Helper experiment reverted entirely to prior tested source and recompiled.",
+    "jet_attempt": "The before/during/after captures already show Training. The map had returned to menu before jet input; cause not captured, no jet/energy acceptance.",
+    "next": "Complete the currently active reload, verify native SDL input delivery and energy/altitude/ammunition transitions; capture the reason if map returns to menu again."
+  },
+  "lifecycle": {
+    "pid": 83794,
+    "state": "live_reloading_charybdis_in_same_signed_app",
+    "debugger": "Attached, continuing, all breakpoints removed.",
+    "launcher": "25-minute deadline, restores voice preference and default audio106 on exit. Revalidate live PID before any new launch."
+  }
+}

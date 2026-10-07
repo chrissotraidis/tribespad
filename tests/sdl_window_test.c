@@ -465,7 +465,7 @@ static void original_shader_variants(void){
    GC(0xfffa0410,0,program,shader);GC(0xfffa03f0,0,shader);
   }
   GC(0xfffa0420,0,program);GC(0xfffa0430,0,program,GL_LINK_STATUS,0x3001);assert(word(0x3001));
-  if(i==0){
+  if(!strcmp(original_shaders[i].name,"gui")){
    /* Draw with the actual original GUI program, native fixed-function inputs,
       guest uniform setters and an independently checked solid texture. */
    GC(0xfffa0320,0,program);
@@ -474,13 +474,32 @@ static void original_shader_variants(void){
    strcpy((char *)memory+0x8000,"srcRect");uint32_t rect=GC(0xfffa0480,1,program,0x8000);GC(0xfffa0340,0,rect,0,0,2,2);
    strcpy((char *)memory+0x8000,"colorTex");uint32_t texloc=GC(0xfffa0480,1,program,0x8000);GC(0xfffa04a0,0,texloc,0);
    GLuint tex=0;glGenTextures(1,&tex);glActiveTexture(GL_TEXTURE0);glBindTexture(GL_TEXTURE_2D,tex);unsigned char data[16]={0,255,0,255,0,255,0,255,0,255,0,255,0,255,0,255};glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,2,2,0,GL_RGBA,GL_UNSIGNED_BYTE,data);
-   glMatrixMode(GL_PROJECTION);glLoadIdentity();glMatrixMode(GL_MODELVIEW);glLoadIdentity();glColor4ub(255,255,255,255);glClear(GL_COLOR_BUFFER_BIT);glBegin(GL_QUADS);glTexCoord4f(0,0,0,0);glVertex2f(-1,-1);glTexCoord4f(1,0,1,0);glVertex2f(1,-1);glTexCoord4f(1,1,1,1);glVertex2f(1,1);glTexCoord4f(0,1,0,1);glVertex2f(-1,1);glEnd();unsigned char pixel[4];glReadPixels(32,32,1,1,GL_RGBA,GL_UNSIGNED_BYTE,pixel);assert(pixel[0]==0&&pixel[1]==255&&pixel[2]==0&&pixel[3]==255);GC(0xfffa0320,0,0);glDeleteTextures(1,&tex);
+   glMatrixMode(GL_PROJECTION);glLoadIdentity();glMatrixMode(GL_MODELVIEW);glLoadIdentity();glColor4ub(255,255,255,255);glClear(GL_COLOR_BUFFER_BIT);glBegin(GL_QUADS);glTexCoord4f(0,0,0,0);glVertex2f(-1,-1);glTexCoord4f(1,0,1,0);glVertex2f(1,-1);glTexCoord4f(1,1,1,1);glVertex2f(1,1);glTexCoord4f(0,1,0,1);glVertex2f(-1,1);glEnd();unsigned char pixel[4];glReadPixels(32,32,1,1,GL_RGBA,GL_UNSIGNED_BYTE,pixel);assert(pixel[0]==0&&pixel[1]==255&&pixel[2]==0&&pixel[3]==255);
+   /* Original ONE blend requires premultiplied output even for mode zero.
+      Test transparent bright RGB and fractional texture/vertex alpha against
+      independent blend arithmetic. The no-define control must reproduce the
+      observed bright-pixel failure, not accidentally pass as transparent. */
+   int premultiply = strstr(sources[1], "#define PREMULTIPLY_ALPHA") != NULL;
+   glEnable(GL_BLEND);glBlendFunc(GL_ONE,GL_ONE_MINUS_SRC_ALPHA);
+   for(unsigned a=0;a<3;a++){
+    unsigned char alpha[]={0,128,255};
+    for(unsigned k=0;k<4;k++){data[4*k]=200;data[4*k+1]=100;data[4*k+2]=50;data[4*k+3]=alpha[a];}
+    glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,2,2,0,GL_RGBA,GL_UNSIGNED_BYTE,data);
+    glClearColor(16.0f/255,32.0f/255,48.0f/255,1);glClear(GL_COLOR_BUFFER_BIT);glColor4ub(255,255,255,128);
+    glBegin(GL_QUADS);glTexCoord4f(0,0,0,0);glVertex2f(-1,-1);glTexCoord4f(1,0,1,0);glVertex2f(1,-1);glTexCoord4f(1,1,1,1);glVertex2f(1,1);glTexCoord4f(0,1,0,1);glVertex2f(-1,1);glEnd();
+    glReadPixels(32,32,1,1,GL_RGBA,GL_UNSIGNED_BYTE,pixel);
+    float opacity=(alpha[a]/255.0f)*(128.0f/255.0f);unsigned char bg[]={16,32,48};
+    for(unsigned c=0;c<3;c++){int expected=(int)lroundf(data[c]*(premultiply?opacity:1)+bg[c]*(1-opacity));int delta=(int)pixel[c]-expected;assert(delta>=-2&&delta<=2);}
+    assert(pixel[3]==255);
+   }
+   glDisable(GL_BLEND);glBlendFunc(GL_ONE,GL_ZERO);glClearColor(0,0,0,0);glColor4ub(255,255,255,255);
+   GC(0xfffa0320,0,0);glDeleteTextures(1,&tex);
   }
   GC(0xfffa0450,0,program);assert(glGetError()==0);
  }
  /* A body edit must not be silently substituted with a known template. */
  GLuint changed=GC(0xfffa03a0,1,GL_VERTEX_SHADER);strcpy((char *)memory+0x10000,original_shaders[0].vertex);strcat((char *)memory+0x10000,"\n// edited source\n");uint32_t pointer=0x10000;memcpy(memory+0x7800,&pointer,4);GC(0xfffa03b0,0,changed,1,0x7800,0);GC(0xfffa03c0,0,changed);GC(0xfffa03d0,0,changed,GL_COMPILE_STATUS,0x3001);assert(!word(0x3001));GC(0xfffa03f0,0,changed);
- puts("original shader dialect: 11 injected variants across 6 pairs compile/link, original GUI green pixel, source preservation and edited-source rejection PASS");
+ puts("original shader dialect: 12 injected variants across 6 pairs compile/link, GUI opaque/transparent/fractional pixels including define zero, source preservation and edited-source rejection PASS");
 }
 static void shader_lifecycle(const char *fault){
  const uint32_t create=0xfffa03a0,source=0xfffa03b0,compile=0xfffa03c0,shaderiv=0xfffa03d0,shaderlog=0xfffa03e0;

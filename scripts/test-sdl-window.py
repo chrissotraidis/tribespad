@@ -25,7 +25,7 @@ if a.graphics:
  import pefile,io,zipfile
  image=R/'ref/qol/IFC22.dll';assert sha(image)=='eaf5a42d301cc64a6e526aa49a82dbaefe655ed1ac0ba67939d0bab2fb6ab607'
  pe=pefile.PE(str(image));archive=zipfile.ZipFile(io.BytesIO(pe.get_data(4677872,21234)))
- variants=[('gui',''),('gui','#define PREMULTIPLY_ALPHA 1\n'),('blender',''),('post',''),('post','#define GUI 1\n'),('post','#define DEPTH 1\n#define GAMMA 1\n'),('post','#define DEPTH 2\n#define GUI 1\n#define GAMMA 1\n'),('terrain',''),('terrain','#define DEPTH_ONLY 1\n'),('text',''),('textMSDF','')]
+ variants=[('gui',''),('gui','#define PREMULTIPLY_ALPHA 1\n'),('gui','#define PREMULTIPLY_ALPHA 0\n'),('blender',''),('post',''),('post','#define GUI 1\n'),('post','#define DEPTH 1\n#define GAMMA 1\n'),('post','#define DEPTH 2\n#define GUI 1\n#define GAMMA 1\n'),('terrain',''),('terrain','#define DEPTH_ONLY 1\n'),('text',''),('textMSDF','')]
  shader_rows=[]
  for stem,defines in variants:
   sources=[archive.read(stem+'.'+ext).decode().replace('#inject','#line       1        1 \n'+defines+'\n#line      4        0 ') for ext in ['vert','frag']]
