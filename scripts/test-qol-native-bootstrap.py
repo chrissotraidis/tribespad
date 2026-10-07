@@ -16,6 +16,16 @@ if a.checked_image:
     assert checked_meta['state']=='compiled' and checked_meta['diagnostic_only'] and not checked_meta['link_coverage_complete']
     assert sha(module)==checked_meta['object_sha256'] and sha(native/'module.ll')==checked_meta['source_sha256']
 out=native/('checked/bootstrap-published' if a.publish_patches else 'checked/bootstrap-patches' if a.capture_patches else 'checked/bootstrap-subpages' if a.checked_subpages else 'checked/bootstrap-guarded' if a.guard_externals else 'checked/bootstrap-support' if a.checked_support else 'checked/bootstrap-runtime' if a.checked_runtime else 'checked/bootstrap' if a.checked_image else 'bootstrap');out=out.with_name(out.name+'-ntdll-probe') if a.probe_ntdll else out;out.mkdir(exist_ok=True);report_path=out/'result.json';report_path.write_text(json.dumps(dict(state='building',diagnostic_only=True,playable=False))+'\n')
+# Check the dependencies that otherwise fail only after minutes of image
+# preparation. Their full checks remain at the point of use below.
+runtime_receipt=R/'generated/native-win32/macos/result.json'
+assert json.loads(runtime_receipt.read_text())['sse_header_sha256']==sha(R/'port/llasm-support/tribes_sse.h'),'Rebuild native Win32 objects after an SSE header change'
+if a.publish_patches:
+    for check in ['mission-literals','mission-entry-test']:
+        proof=json.loads((R/'generated/integration-review'/check/'result.json').read_text())
+        assert proof['passed'],check
+        for name,digest in proof['sources_sha256'].items():
+            assert sha(R/name)==digest,(check,'rerun its test for changed source',name)
 game_root=R/'ref/product';game_profile=None
 if a.publish_patches:
     from apple_game_profile import prepare as prepare_game_profile
