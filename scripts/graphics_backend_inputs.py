@@ -45,6 +45,7 @@ EXPORTS += [('glScalef', 'tribes_gl_scale_f', 3, False, 537133056)]
 EXPORTS += [('glMultMatrixd','tribes_gl_mult_matrix_d',1,False,0x20040000)]
 EXPORTS += [('glPolygonOffset','tribes_gl_polygon_offset',2,False,0x20040000)]
 EXPORTS += [('glColor4f','tribes_gl_color4f',4,False,0x20040000),('glVertex2i','tribes_gl_vertex2i',2,False,0x20040000)]
+EXPORTS += [('glTexSubImage2D','tribes_gl_tex_sub_image_2d',9,False,0x20040000)]
 def prepare(out):
  bindings={};rows=[]
  for i,(name,helper,n,returns,module) in enumerate(EXPORTS):

@@ -297,6 +297,7 @@
     "glGenerateMipmap",
     "glGetTexParameteriv",
     "glTexImage2D",
+    "glTexSubImage2D",
     "glTexImage3D",
     "glTexSubImage3D",
     "glGenBuffers",

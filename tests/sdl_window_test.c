@@ -61,7 +61,7 @@ extern unsigned sdl_test_live,sdl_test_fail;
 extern void bad_window(void),bad_context(void);
 #if defined(GRAPHICS) && !TARGET_OS_IPHONE
 extern void bad_frustum(void),bad_mult_matrix(void),bad_mult_matrix_double(void),bad_depth_mask(void),bad_is_enabled(void),bad_scale(void),bad_polygon_offset(void);
-extern void bad_color4f(void),bad_vertex2i(void);
+extern void bad_color4f(void),bad_vertex2i(void),bad_tex_sub_image_2d(void);
 #endif
 #endif
 static unsigned char *memory;static _cpu cpu;
@@ -202,6 +202,57 @@ static void texture_objects(const char *fault){
  GC(0xfffa01a0,0,2,0x3001);assert(!glIsTexture(textures[0])&&!glIsTexture(textures[1]));
  puts("Native texture names, parameters, bounded padded RGB upload, pixel readback and deletion verified through guest ABI");
 }
+/* Independent native readback checks the exact reached 64x64 update and
+   a partial rectangle with unreadable skipped/padding pages. */
+static void subregion_pixels(unsigned char *pixels){
+#if TARGET_OS_IPHONE
+ GLuint fbo=0;GLint previous=0,texture=0;glGetIntegerv(GL_FRAMEBUFFER_BINDING,&previous);glGetIntegerv(GL_TEXTURE_BINDING_2D,&texture);
+ glGenFramebuffers(1,&fbo);glBindFramebuffer(GL_FRAMEBUFFER,fbo);glFramebufferTexture2D(GL_FRAMEBUFFER,GL_COLOR_ATTACHMENT0,GL_TEXTURE_2D,texture,0);
+ assert(glCheckFramebufferStatus(GL_FRAMEBUFFER)==GL_FRAMEBUFFER_COMPLETE);glReadPixels(0,0,64,64,GL_RGBA,GL_UNSIGNED_BYTE,pixels);
+ glBindFramebuffer(GL_FRAMEBUFFER,previous);glDeleteFramebuffers(1,&fbo);
+#else
+ glGetTexImage(GL_TEXTURE_2D,0,GL_RGBA,GL_UNSIGNED_BYTE,pixels);
+#endif
+ assert(glGetError()==GL_NO_ERROR);
+}
+static void texture_subregions(const char *fault){
+ strcpy((char *)memory+0x24000,"glTexSubImage2D");uint32_t sub=CALL(63,0x24000);assert(sub==0xfffa06c0);
+ GC(0xfffa0150,0,1,0x3001);uint32_t texture=word(0x3001);GC(0xfffa0160,0,GL_TEXTURE_2D,texture);
+ GC(0xfffa00b0,0,GL_UNPACK_ALIGNMENT,4);
+ GC(0xfffa0190,0,GL_TEXTURE_2D,0,GL_RGBA,64,64,0,GL_RGBA,GL_UNSIGNED_BYTE,0);
+ if(fault&&!strcmp(fault,"subregion-unreadable")){assert(tribes_memory_permissions_set(0x4000,4096,0));GC(sub,0,GL_TEXTURE_2D,0,0,0,2,2,GL_RGBA,GL_UNSIGNED_BYTE,0x3ff9);assert(0);}
+ if(fault&&!strcmp(fault,"subregion-overflow")){GC(sub,0,GL_TEXTURE_2D,0,0,0,2,2,GL_RGBA,GL_UNSIGNED_BYTE,0xfffffff9);assert(0);}
+ if(fault&&!strcmp(fault,"subregion-null")){GC(sub,0,GL_TEXTURE_2D,0,0,0,2,2,GL_RGBA,GL_UNSIGNED_BYTE,0);assert(0);}
+#if !TARGET_OS_IPHONE
+ if(fault&&!strcmp(fault,"subregion-pbo")){GC(0xfffa01b0,0,1,0x3101);GC(0xfffa01c0,0,GL_PIXEL_UNPACK_BUFFER,word(0x3101));GC(sub,0,GL_TEXTURE_2D,0,0,0,2,2,GL_RGBA,GL_UNSIGNED_BYTE,0x3101);assert(0);}
+ if(fault&&!strcmp(fault,"subregion-stride-overflow")){GC(0xfffa00b0,0,GL_UNPACK_ROW_LENGTH,0x7fffffff);GC(sub,0,GL_TEXTURE_2D,0,0,0,2,2,GL_RGBA,GL_UNSIGNED_BYTE,0x3101);assert(0);}
+#endif
+ unsigned char expected[64*64*4],actual[sizeof expected];
+ for(unsigned i=0;i<64*64;i++){expected[4*i]=(unsigned char)i;expected[4*i+1]=(unsigned char)(i/64);expected[4*i+2]=(unsigned char)(i*7);expected[4*i+3]=255;}
+ memcpy(memory+0x3101,expected,sizeof expected);assert(tribes_memory_permissions_set(0x3000,4096,1));
+ GC(sub,0,GL_TEXTURE_2D,0,0,0,64,64,GL_RGBA,GL_UNSIGNED_BYTE,0x3101);
+ assert(tribes_memory_permissions_set(0x3000,4096,3));subregion_pixels(actual);assert(!memcmp(actual,expected,sizeof expected)&&!memcmp(memory+0x3101,expected,sizeof expected));
+#if !TARGET_OS_IPHONE
+ const unsigned char patch[]={251,3,9,255,17,241,11,255,31,7,229,255,193,83,41,255};
+ memcpy(memory+0xa005,patch,8);memcpy(memory+0xc005,patch+8,8);
+ GC(0xfffa00b0,0,GL_UNPACK_ALIGNMENT,8);GC(0xfffa00b0,0,GL_UNPACK_ROW_LENGTH,2048);GC(0xfffa00b0,0,GL_UNPACK_SKIP_ROWS,1);GC(0xfffa00b0,0,GL_UNPACK_SKIP_PIXELS,1);
+ assert(tribes_memory_permissions_set(0x8000,4096,0)&&tribes_memory_permissions_set(0xb000,4096,0));
+ GC(sub,0,GL_TEXTURE_2D,0,7,11,2,2,GL_RGBA,GL_UNSIGNED_BYTE,0x8001);
+ assert(tribes_memory_permissions_set(0x8000,4096,3)&&tribes_memory_permissions_set(0xb000,4096,3));
+ memcpy(expected+(11*64+7)*4,patch,8);memcpy(expected+(12*64+7)*4,patch+8,8);
+ subregion_pixels(actual);assert(!memcmp(actual,expected,sizeof expected)&&!memcmp(memory+0xa005,patch,8)&&!memcmp(memory+0xc005,patch+8,8));
+ GLint state=0;glGetIntegerv(GL_UNPACK_ROW_LENGTH,&state);assert(state==2048);
+ GC(0xfffa00b0,0,GL_UNPACK_ALIGNMENT,4);GC(0xfffa00b0,0,GL_UNPACK_ROW_LENGTH,0);GC(0xfffa00b0,0,GL_UNPACK_SKIP_ROWS,0);GC(0xfffa00b0,0,GL_UNPACK_SKIP_PIXELS,0);
+#endif
+ assert(tribes_memory_permissions_set(0x9000,4096,0));GC(sub,0,GL_TEXTURE_2D,0,0,0,0,1,GL_RGBA,GL_UNSIGNED_BYTE,0x9000);assert(!GC(0xfffa0010,1));
+ GC(sub,0,GL_TEXTURE_2D,0,0,0,0xffffffff,1,GL_RGBA,GL_UNSIGNED_BYTE,0x9000);assert(GC(0xfffa0010,1)==GL_INVALID_VALUE&&!GC(0xfffa0010,1));assert(tribes_memory_permissions_set(0x9000,4096,3));
+ GC(sub,0,GL_TEXTURE_2D,0,0xffffffff,0,1,1,GL_RGBA,GL_UNSIGNED_BYTE,0x3101);assert(GC(0xfffa0010,1)==GL_INVALID_VALUE&&!GC(0xfffa0010,1));
+ GC(sub,0,GL_TEXTURE_2D,0,64,0,1,1,GL_RGBA,GL_UNSIGNED_BYTE,0x3101);assert(GC(0xfffa0010,1)==GL_INVALID_VALUE&&!GC(0xfffa0010,1));
+ subregion_pixels(actual);assert(!memcmp(actual,expected,sizeof expected));
+ glGetString(0xffffffff);GC(sub,0,GL_TEXTURE_2D,0,0,0,1,1,GL_RGBA,GL_UNSIGNED_BYTE,0x3101);assert(GC(0xfffa0010,1)==GL_INVALID_ENUM&&!GC(0xfffa0010,1));
+ GC(0xfffa01a0,0,1,0x3001);assert(!glIsTexture(texture)&&glGetError()==0);
+ puts("2D subregions: original 64x64 RGBA pixels, partial rectangle, unreadable skipped/padding pages, source preservation, native errors and guest ABI pass");
+}
 static void buffer_objects(const char *fault){
  const char *names[]={"glGenBuffers","glBindBuffer","glBufferData","glDeleteBuffers"};
  for(unsigned i=0;i<4;i++){strcpy((char *)memory+0x24000,names[i]);assert(CALL(63,0x24000)==0xfffa01b0+16*i);}
@@ -266,6 +317,13 @@ static void explicit_mipmaps(void){
  GC(generate,0,0xffffffff);assert(GC(0xfffa0010,1)==GL_INVALID_ENUM&&!GC(0xfffa0010,1));mipmap_level(1,2,red);
  GC(generate,0,GL_TEXTURE_2D);assert(!GC(0xfffa0010,1));
  mipmap_level(0,4,blue);mipmap_level(1,2,blue);mipmap_level(2,1,blue);
+ for(int i=0;i<16;i++)memcpy(memory+0x3100+4*i,red,4);
+ GC(0xfffa06c0,0,GL_TEXTURE_2D,0,0,0,4,4,GL_RGBA,GL_UNSIGNED_BYTE,0x3100);mipmap_level(0,4,red);mipmap_level(2,1,blue);
+ GC(generate,0,GL_TEXTURE_2D);mipmap_level(2,1,red);
+ if(!strncmp((char *)glGetString(GL_VERSION),"2.1",3)){
+  GC(0xfffa0170,0,GL_TEXTURE_2D,0x8191,1);for(int i=0;i<16;i++)memcpy(memory+0x3100+4*i,blue,4);
+  GC(0xfffa06c0,0,GL_TEXTURE_2D,0,0,0,4,4,GL_RGBA,GL_UNSIGNED_BYTE,0x3100);mipmap_level(0,4,blue);mipmap_level(1,2,blue);mipmap_level(2,1,blue);
+ }
  memcpy(memory+0x3001,&texture,4);GC(0xfffa01a0,0,1,0x3001);assert(!GC(0xfffa0010,1));
  puts("Explicit mipmaps: native levels/pixels, replacement, base retention and preserved errors through finite ABI pass");
 }
@@ -278,6 +336,11 @@ static void automatic_mipmaps(uint32_t window,uint32_t context){
  GC(0xfffa0150,0,2,0x3001);GLuint names[2];memcpy(names,memory+0x3001,8);
  GC(0xfffa0160,0,GL_TEXTURE_2D,names[0]);GC(0xfffa0170,0,GL_TEXTURE_2D,0x8191,1);
  mipmap_upload(0,4,red);mipmap_level(0,4,red);mipmap_level(1,2,red);mipmap_level(2,1,red);
+ for(int i=0;i<16;i++)memcpy(memory+0x3100+4*i,blue,4);
+ GC(0xfffa06c0,0,GL_TEXTURE_2D,0,0,0,4,4,GL_RGBA,GL_UNSIGNED_BYTE,0x3100);mipmap_level(0,4,blue);mipmap_level(1,2,blue);mipmap_level(2,1,blue);
+ GC(0xfffa06c0,0,GL_TEXTURE_2D,0,4,0,1,1,GL_RGBA,GL_UNSIGNED_BYTE,0x3100);assert(GC(0xfffa0010,1)==GL_INVALID_VALUE&&!GC(0xfffa0010,1));mipmap_level(2,1,blue);
+ for(int i=0;i<16;i++)memcpy(memory+0x3100+4*i,red,4);glGetString(0xffffffff);
+ GC(0xfffa06c0,0,GL_TEXTURE_2D,0,0,0,4,4,GL_RGBA,GL_UNSIGNED_BYTE,0x3100);assert(GC(0xfffa0010,1)==GL_INVALID_ENUM&&!GC(0xfffa0010,1));mipmap_level(1,2,red);mipmap_level(2,1,red);
  /* A non-base upload must retain its own pixels and not regenerate others. */
  mipmap_upload(1,2,blue);mipmap_level(1,2,blue);mipmap_level(2,1,red);
  /* Invalid upload must neither lose the native error nor overwrite level 1. */
@@ -849,7 +912,7 @@ static void legacy_route(uint32_t original_window,uint32_t original_context,cons
  glBindBuffer(GL_ARRAY_BUFFER,names[2]);glGetBufferSubData(GL_ARRAY_BUFFER,0,4,readback);assert(!memcmp(data,readback,4));glBindBuffer(GL_ARRAY_BUFFER,names[0]);
  GC(0xfffa01e0,0,3,0x3001);GC(0xfffa0020,0,0x8f36,0x3021);assert(word(0x3021)==0);GC(0xfffa0020,0,0x8f37,0x3021);assert(word(0x3021)==0);
  GC(0xfffa01d0,0,0x8f37,4,0,GL_STATIC_DRAW);assert(glGetError()==GL_INVALID_OPERATION);
- matrix_queries(fault);gpu_sync(window,context,fault);immediate_rectangle();texture_array(fault);quad_draw(fault);shader_lifecycle(fault);
+ texture_subregions(fault);matrix_queries(fault);gpu_sync(window,context,fault);immediate_rectangle();texture_array(fault);quad_draw(fault);shader_lifecycle(fault);
  assert(CALL(48,context));CALL(41,window);assert(CALL(49,original_window,original_context));
  assert(CALL(53,SDL_GL_CONTEXT_MAJOR_VERSION,3)&&CALL(53,SDL_GL_CONTEXT_MINOR_VERSION,2)&&CALL(53,SDL_GL_CONTEXT_PROFILE_MASK,SDL_GL_CONTEXT_PROFILE_CORE));
  puts("legacy fallback: guest matrices/viewport/depth state render red pixel; 32MiB copy-target storage, binding isolation, errors, sharing and cleanup PASS");
@@ -898,7 +961,7 @@ static void swap_intervals(uint32_t window,uint32_t context){
 #endif
 static void graphics_queries(uint32_t window,const char *fault){
  light_limit_query();
- multitexture(fault);query_objects(fault);texture_objects(fault);buffer_objects(fault);
+ multitexture(fault);query_objects(fault);texture_objects(fault);texture_subregions(fault);buffer_objects(fault);
  strcpy((char *)memory+0x24000,"glGetString");uint32_t string=CALL(63,0x24000);assert(string==0xfffa0000);
  uint32_t version=GC(string,1,GL_VERSION);assert(version&&!strcmp((char *)memory+version,(char *)glGetString(GL_VERSION)));
  assert(GC(string,1,GL_VERSION)==version);printf("guest GL_VERSION=%s\n",memory+version);
@@ -1119,6 +1182,7 @@ static int window_main(int argc,char **argv){
  if(argc==2&&!strcmp(argv[1],"bad-polygon-offset")){bad_polygon_offset();return 99;}
  if(argc==2&&!strcmp(argv[1],"bad-color4f")){bad_color4f();return 99;}
  if(argc==2&&!strcmp(argv[1],"bad-vertex2i")){bad_vertex2i();return 99;}
+ if(argc==2&&!strcmp(argv[1],"bad-tex-sub-image-2d")){bad_tex_sub_image_2d();return 99;}
  if(argc==2&&!strcmp(argv[1],"bad-scale")){bad_scale();return 99;}
 #endif
 #endif

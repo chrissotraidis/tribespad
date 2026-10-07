@@ -1,0 +1,150 @@
+{
+  "date": "2026-10-07",
+  "platform": "ARM64 macOS",
+  "change": "Finite glTexSubImage2D with shared checked 2D unpack staging and native/owned-core automatic mipmaps",
+  "finite_export": "0xfffa06c0",
+  "sources_sha256": {
+    "port/core/guest_sdl_backend.c": "3458a0c0efd5688d936f5447a79bc7daa6b995c8f7524986dd8098f19eb3f812",
+    "scripts/graphics_backend_inputs.py": "20f6d4748acb8acad6958337ca07c96a89d71133cd1273cab1a2b430bbeb5cad",
+    "port/compiler/ExternalMemoryPass.cpp": "ba68c8a0c047b14052f985362332f399d54ac558889f01e987f770c70b303536",
+    "config/runtime/external-memory-contracts.json": "a75c24745b8163c0a38f4211e1baa2f8722c6d41db345f5c8bdb877b7b8a31e8",
+    "tests/sdl_window_test.c": "8a140b298e4327171a4c472a3bbe54fbcb3f41c02ac2a1189bfaf4b7388980ef",
+    "scripts/test-sdl-window.py": "51aee620733d1640849ce82837106e03a0d32a48dc1f37cd439a7c173d114051"
+  },
+  "component": {
+    "receipt": "generated/integration-review/texture-subregion/graphics-result.json",
+    "receipt_sha256": "5ed548e5acde7032664753c2d3d1e1a7211260fe7e09af2330c168173e5284c1",
+    "runs": [
+      {
+        "mode": "normal",
+        "passed": true,
+        "guard_stops": 0
+      },
+      {
+        "mode": "tsan",
+        "passed": true,
+        "guard_stops": 0
+      },
+      {
+        "mode": "checked",
+        "passed": true,
+        "guard_stops": 102
+      }
+    ],
+    "new_faults": [
+      "subregion-unreadable",
+      "subregion-overflow",
+      "subregion-null",
+      "subregion-pbo",
+      "subregion-stride-overflow",
+      "bad-tex-sub-image-2d"
+    ],
+    "scope": "Native exact 64x64 RGBA and partial subregion pixel readback in core/legacy; unreadable skipped/padding pages, read-only unaligned source preservation, signed/zero dimensions, native errors, automatic and explicit mipmap pixels, emitted CPU/ESP/LastError ABI. No full stack-byte canary claim."
+  },
+  "mobile_compile": {
+    "receipt": "generated/integration-review/texture-subregion/mobile-compile/result.json",
+    "receipt_sha256": "7c7ac4d3ed921092ca09403848398683a9b6636c597243396a619eb1c09f210d",
+    "passed": true,
+    "scope": "Changed backend, provider and finite bindings checked-compiled for ARM64 device and Simulator; no mobile execution."
+  },
+  "mission_literal_regression": {
+    "receipt": "generated/integration-review/mission-literals/result.json",
+    "receipt_sha256": "93a52b33449935e113a27cce9a17940fa8d5923b2a9ac8e549915b778a4dff6f",
+    "passed": true,
+    "reason": "Contract change made the prior source-bound receipt stale; reran normal/checked/TSan regression before full build."
+  },
+  "full_build": {
+    "receipt": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/result.json",
+    "receipt_sha256": "f5a236f5787f97b323485ad76ffc9ce5426313c70723ace19d5a9865a711dabc",
+    "binary_sha256": "b84bbf861c0d4aedb4ffb15b26509af5aef7a9147fb6e91c7c8a9f489f378dd7",
+    "state": "finished",
+    "initialized": true,
+    "attach_returned": true,
+    "execution_timeout": true,
+    "finite_revisions": 33,
+    "playable": false
+  },
+  "original_app": {
+    "pid": 47367,
+    "signature_verified": true,
+    "signed_engine_sha256": "c134f24685a8d650d6b25299cdd1e7fbf593d3a609d3508a5ec485613d8c1a80",
+    "route": "EULA, local tribespad alias, Training, original Alt+Enter into on-screen window, native HID START at fractions .875/.84; original Charybdis loader completes 321 objects and lighting.",
+    "original_texture_call": "0x44b294",
+    "original_texture_return": "loc_44B29A",
+    "subregion": {
+      "arguments": [
+        "0xde1",
+        "0x0",
+        "0x0",
+        "0x0",
+        "0x40",
+        "0x40",
+        "0x1908",
+        "0x1401",
+        "0x62620000"
+      ],
+      "resolved_token": "0xfffa06c0"
+    },
+    "native_gpu_readback_in_this_app": false,
+    "matrix_query_native_compare": {
+      "error": "success",
+      "value": "0"
+    },
+    "published_viewport": [
+      0,
+      0,
+      1470,
+      956
+    ],
+    "final_window": "Black at original guest PC0; no rendered map/control acceptance",
+    "next_call": {
+      "name": "glColor3ub",
+      "call_pc": "0x5ac917",
+      "return_pc": "0x5ac91d",
+      "slot": "0x9e4c1c",
+      "original_lookup_string": "0x78a308",
+      "stack_words": [
+        "0xb80",
+        "0x580",
+        "0xb80"
+      ],
+      "low_byte_rgb": [
+        128,
+        128,
+        128
+      ]
+    },
+    "adjacent_static_call": {
+      "name": "glVertex3f",
+      "call_pc": "0x5ac937",
+      "return_pc": "0x5ac93d",
+      "slot": "0x9e8f10",
+      "original_lookup_string": "0x78b374",
+      "executed": false
+    },
+    "scope": "Actual isolated offline app stop; selected-thread CPU/stack, exact renderer fields and read-only native GL queries, not a whole-memory snapshot.",
+    "evidence_sha256": {
+      "next-stop.json": "78dc1dc28cc1b2608c67b0d3a694b5112259ba604174baada76718264acacf1e",
+      "render-target-trace.json": "2c1a3a3132fb100d28a1e9715d51bd6945cd7bb9901270e17a6905247460ff97",
+      "observation.json": "de0a8f4c9987bd0f8a9f476b15e3ddf0de59417d821689df2cc71f12e5c4359a",
+      "stopped.png": "234c77722c457a70385c57965acdfce91efe5b195fb74f59bd71b036815122e8",
+      "app-build.json": "f79965662a90345df17cf083a3d15a94092c97d8448f4b3ecef408349b0b5daa"
+    }
+  },
+  "cleanup": {
+    "owned_app_ended": true,
+    "owned_debugger_ended": true,
+    "default_audio_restored": "default 57",
+    "isolated_voice_preference_restored": true,
+    "microphone_access": "declined",
+    "simulators_booted": 0
+  },
+  "acceptance": {
+    "rendered_playable_map": false,
+    "gameplay_controls": false,
+    "hd_visual_comparison": false,
+    "authenticated_community_match": false,
+    "full_mobile_execution": false
+  },
+  "next_action": "Batch the statically adjacent original glColor3ub and glVertex3f scalar legacy routes, prove actual fan pixels and low-byte/float-bit ABI/native errors, then rebuild and relaunch Training."
+}

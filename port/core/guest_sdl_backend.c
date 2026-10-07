@@ -1754,8 +1754,7 @@ void tribes_gl_tex_parameter_f(_cpu *cpu,uint32_t target,uint32_t parameter,uint
 void tribes_gl_generate_mipmap(_cpu *cpu,uint32_t target){
     WINDOW_ENTER();glGenerateMipmap(target);DRAW_RETURN();
 }
-void tribes_gl_tex_image_2d(_cpu *cpu,uint32_t target,uint32_t level,uint32_t internal,uint32_t width,uint32_t height,uint32_t border,uint32_t format,uint32_t type,uint32_t input){
-    WINDOW_ENTER();if(!SDL_GL_GetCurrentContext())stop();
+static void *texture_2d_pixels(_cpu *cpu,uint32_t width,uint32_t height,uint32_t format,uint32_t type,uint32_t input,int allocation){
     GLint alignment=4,row_length=0,skip_rows=0,skip_pixels=0;
 #if !TARGET_OS_IPHONE
     GLint pbo=0;glGetIntegerv(GL_PIXEL_UNPACK_BUFFER_BINDING,&pbo);if(pbo)stop();
@@ -1775,7 +1774,8 @@ void tribes_gl_tex_image_2d(_cpu *cpu,uint32_t target,uint32_t level,uint32_t in
 #endif
     glGetIntegerv(GL_UNPACK_ALIGNMENT,&alignment);
     void *pixels=NULL;
-    if(input&&(int32_t)width>0&&(int32_t)height>0){
+    if((int32_t)width>0&&(int32_t)height>0){
+        if(!input){if(!allocation)stop();return NULL;}
         /* Reached original bitmap formats: byte channels and packed RGBA5551.
            Other pixel layouts remain explicit stops until their bounds are audited. */
         uint32_t bpp=0;
@@ -1804,10 +1804,10 @@ void tribes_gl_tex_image_2d(_cpu *cpu,uint32_t target,uint32_t level,uint32_t in
             checked_copy((unsigned char *)pixels+at,guest(cpu,input+(uint32_t)at,(size_t)used),(size_t)used);
         }
     }
-#ifdef TB_CAPTURE_PATCHES
-    fprintf(stderr,"Observed texture upload target=0x%x level=%d internal=0x%x size=%ux%u format=0x%x type=0x%x input=0x%08x\n",target,(int32_t)level,internal,width,height,format,type,input);
-#endif
-    GLContext *c=current_context();int generate=0;
+    return pixels;
+}
+static int texture_2d_automatic(GLContext *c,uint32_t target,uint32_t level){
+    int generate=0;
 #if !TARGET_OS_IPHONE
     if(c&&c->core&&target==GL_TEXTURE_2D){
         GLint name=0,base_level=0;glGetIntegerv(GL_TEXTURE_BINDING_2D,&name);
@@ -1820,7 +1820,18 @@ void tribes_gl_tex_image_2d(_cpu *cpu,uint32_t target,uint32_t level,uint32_t in
             if(base_level!=0)stop();generate=(int32_t)level==0;
         }
     }
+#else
+    (void)c;(void)target;(void)level;
 #endif
+    return generate;
+}
+void tribes_gl_tex_image_2d(_cpu *cpu,uint32_t target,uint32_t level,uint32_t internal,uint32_t width,uint32_t height,uint32_t border,uint32_t format,uint32_t type,uint32_t input){
+    WINDOW_ENTER();if(!SDL_GL_GetCurrentContext())stop();
+    void *pixels=texture_2d_pixels(cpu,width,height,format,type,input,1);
+#ifdef TB_CAPTURE_PATCHES
+    fprintf(stderr,"Observed texture upload target=0x%x level=%d internal=0x%x size=%ux%u format=0x%x type=0x%x input=0x%08x\n",target,(int32_t)level,internal,width,height,format,type,input);
+#endif
+    GLContext *c=current_context();int generate=texture_2d_automatic(c,target,level);
     if(generate)collect_gl_errors(c);
     glTexImage2D(target,(int32_t)level,(int32_t)internal,(int32_t)width,(int32_t)height,(int32_t)border,format,type,pixels);
     if(generate&&!collect_gl_errors(c)&&(int32_t)width>0&&(int32_t)height>0){
@@ -1829,6 +1840,18 @@ void tribes_gl_tex_image_2d(_cpu *cpu,uint32_t target,uint32_t level,uint32_t in
         fprintf(stderr,"Observed native automatic mipmap generation target=0x%x base=%d\n",target,(int32_t)level);
 #endif
     }
+    free(pixels);DRAW_RETURN();
+}
+void tribes_gl_tex_sub_image_2d(_cpu *cpu,uint32_t target,uint32_t level,uint32_t x,uint32_t y,uint32_t width,uint32_t height,uint32_t format,uint32_t type,uint32_t input){
+    WINDOW_ENTER();if(!SDL_GL_GetCurrentContext())stop();
+    void *pixels=texture_2d_pixels(cpu,width,height,format,type,input,0);
+    GLContext *c=current_context();int generate=texture_2d_automatic(c,target,level);
+    if(generate)collect_gl_errors(c);
+    glTexSubImage2D(target,(int32_t)level,(int32_t)x,(int32_t)y,(int32_t)width,(int32_t)height,format,type,pixels);
+    if(generate&&!collect_gl_errors(c)&&(int32_t)width>0&&(int32_t)height>0)glGenerateMipmap(target);
+#ifdef TB_CAPTURE_PATCHES
+    fprintf(stderr,"Observed texture subregion target=0x%x level=%d offsets=%d/%d size=%ux%u format=0x%x type=0x%x input=0x%08x\n",target,(int32_t)level,(int32_t)x,(int32_t)y,width,height,format,type,input);
+#endif
     free(pixels);DRAW_RETURN();
 }
 /* Array textures use the same checked row staging as 2D uploads, extended

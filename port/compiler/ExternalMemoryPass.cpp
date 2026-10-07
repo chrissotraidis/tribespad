@@ -322,12 +322,12 @@ struct ExternalMemoryPass : PassInfoMixin<ExternalMemoryPass>{
      Allowed=Allowed&&!Target->isVarArg()&&Call->getType()==Result&&Call->arg_size()==Args.size();
      if(Allowed)for(unsigned i=0;i<Args.size();++i)if(Call->getArgOperand(i)->getType()!=Args[i])Allowed=false;
     }
-    if(Name=="glGenTextures"||Name=="glDeleteTextures"||Name=="glBindTexture"||Name=="glTexParameteri"||Name=="glTexParameterf"||Name=="glTexImage2D"||Name=="glGenerateMipmap"||Name=="glGetTexParameteriv"){
+    if(Name=="glGenTextures"||Name=="glDeleteTextures"||Name=="glBindTexture"||Name=="glTexParameteri"||Name=="glTexParameterf"||Name=="glTexImage2D"||Name=="glTexSubImage2D"||Name=="glGenerateMipmap"||Name=="glGetTexParameteriv"){
      SmallVector<Type *,9> Args={I32,I32};
      if(Name=="glGenTextures"||Name=="glDeleteTextures")Args={I32,P};
      else if(Name=="glTexParameteri")Args.push_back(I32);
      else if(Name=="glTexParameterf")Args.push_back(B.getFloatTy());
-     else if(Name=="glTexImage2D")Args={I32,I32,I32,I32,I32,I32,I32,I32,P};
+     else if(Name=="glTexImage2D"||Name=="glTexSubImage2D")Args={I32,I32,I32,I32,I32,I32,I32,I32,P};
      else if(Name=="glGenerateMipmap")Args={I32};
      else if(Name=="glGetTexParameteriv")Args={I32,I32,P};
      Allowed=Allowed&&!Target->isVarArg()&&Call->getType()->isVoidTy()&&Call->arg_size()==Args.size();
