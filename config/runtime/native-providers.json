@@ -276,6 +276,18 @@
     {
       "name": "CancelIo",
       "guest_va": 4294644368
+    },
+    {
+      "name": "NtDeviceIoControlFile",
+      "guest_va": 4294644384
+    },
+    {
+      "name": "WSARecvFrom",
+      "guest_va": 4294644400
+    },
+    {
+      "name": "WSASendTo",
+      "guest_va": 4294644416
     }
   ],
   "providers": [
@@ -360,7 +372,8 @@
         "RtlNtStatusToDosError",
         "NtQuerySystemInformation",
         "NtQueryVolumeInformationFile",
-        "NtQueryInformationFile"
+        "NtQueryInformationFile",
+        "NtDeviceIoControlFile"
       ],
       "initial_references": 1
     },
@@ -409,7 +422,9 @@
         "getsockopt",
         "setsockopt",
         "WSARecv",
-        "WSASend"
+        "WSASend",
+        "WSARecvFrom",
+        "WSASendTo"
       ],
       "initial_references": 1
     },

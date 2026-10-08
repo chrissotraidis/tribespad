@@ -230,7 +230,6 @@
     "SDL_TellIO",
     "SDL_GetIOSize",
     "SDL_ReadIO",
-
     "SDL_GetWindowDisplayScale",
     "SDL_ceilf",
     "SDL_GetClosestFullscreenDisplayMode",
@@ -523,7 +522,9 @@
     "CTFontGetDescent",
     "CTFontGetGlyphsForCharacters",
     "CTFontGetLeading",
-    "CTFontGetSize"
+    "CTFontGetSize",
+    "sendto",
+    "recvfrom"
   ],
   "range_checked": [
     "memcpy",
@@ -683,7 +684,7 @@
     "port/llasm-support/tribes_sse.c"
   ],
   "barrier_asm_contract": "Only void zero-operand side-effecting dsb sy and isb with exactly a memory clobber inside the source-pinned tb_sse_fence helper. Other assembly stays blocked.",
-  "socket_host_contract": "Fixed Darwin i32-returning nonvariadic signatures checked by ExternalMemoryPass: socket(i32,i32,i32), shutdown(i32,i32), getrlimit(i32,ptr), setsockopt(i32,i32,i32,ptr,i32), bind/connect(i32,ptr,i32), getsockname/getpeername(i32,ptr,ptr), getsockopt(i32,i32,i32,ptr,ptr). All pointer arguments must lie outside guest backing. Native Winsock marshals sockaddr/options/length/resource-limit storage into host-owned objects. No ioctl, sendto, recvmsg or nested-buffer exemption. Darwin send/recv use the exact i64(i32,ptr,i64,i32) signature with private payload staging; direct guest payload pointers remain rejected.",
+  "socket_host_contract": "Fixed Darwin i32-returning nonvariadic signatures checked by ExternalMemoryPass: socket(i32,i32,i32), shutdown(i32,i32), getrlimit(i32,ptr), setsockopt(i32,i32,i32,ptr,i32), bind/connect(i32,ptr,i32), getsockname/getpeername(i32,ptr,ptr), getsockopt(i32,i32,i32,ptr,ptr). All pointer arguments must lie outside guest backing. Native Winsock marshals sockaddr/options/length/resource-limit storage into host-owned objects. No ioctl, recvmsg or nested-buffer exemption. Flat Darwin sendto i64(i32,ptr,i64,i32,ptr,i32) and recvfrom i64(i32,ptr,i64,i32,ptr,ptr) require native-owned payload, sockaddr and length storage. Darwin send/recv use the exact i64(i32,ptr,i64,i32) signature with private payload staging; direct guest payload pointers remain rejected.",
   "curl_host_contract": "Exact signatures and finite constant variadic selectors are checked in ExternalMemoryPass. Native callback targets must be registered checked code; all pointer arguments remain host-only. Runtime registries and staged buffers marshal guest handles, strings and output values. curl_version is the separately reviewed allocator-free, static-buffer path of the pinned curl/LibreSSL/zlib backend; it can run before global initialization. Other allocating/lifecycle APIs require an allocator frame.",
   "processor_snapshot_sources": [
     "port/core/guest_system_query.c"

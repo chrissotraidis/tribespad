@@ -1887,5 +1887,23 @@
     "returns": false,
     "helper_returns": "void",
     "calling_convention": "cdecl"
+  },
+  "NtDeviceIoControlFile": {
+    "helper": "tribes_nt_device_io_control_file",
+    "arguments": 10,
+    "returns": true,
+    "guest_base": true
+  },
+  "WSARecvFrom": {
+    "helper": "tribes_wsa_recv_from",
+    "arguments": 9,
+    "returns": true,
+    "guest_base": true
+  },
+  "WSASendTo": {
+    "helper": "tribes_wsa_send_to",
+    "arguments": 9,
+    "returns": true,
+    "guest_base": true
   }
 }

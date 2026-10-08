@@ -68,6 +68,9 @@ extern void tbimp_WSARecv(void);
 extern void tbimp_WSASend(void);
 extern void tbimp_CancelIoEx(void);
 extern void tbimp_CancelIo(void);
+extern void tbimp_NtDeviceIoControlFile(void);
+extern void tbimp_WSARecvFrom(void);
+extern void tbimp_WSASendTo(void);
 typedef struct {uint32_t guest_va;void *host_function;} SystemRoute;
 static const SystemRoute system_routes[]={
     {0xfffb0000u,(void *)tbimp_TlsAlloc},
@@ -139,6 +142,9 @@ static const SystemRoute system_routes[]={
     {0xfffb1270u,(void *)tbimp_WSASend},
     {0xfffb1280u,(void *)tbimp_CancelIoEx},
     {0xfffb1290u,(void *)tbimp_CancelIo},
+    {0xfffb12a0u,(void *)tbimp_NtDeviceIoControlFile},
+    {0xfffb12b0u,(void *)tbimp_WSARecvFrom},
+    {0xfffb12c0u,(void *)tbimp_WSASendTo},
 };
 static const TribesNativeExport system_exports_0[]={
     {"TlsAlloc",0,0xfffb0000u},
@@ -206,6 +212,7 @@ static const TribesNativeExport system_exports_2[]={
     {"NtQuerySystemInformation",0,0xfffb1200u},
     {"NtQueryVolumeInformationFile",0,0xfffb1220u},
     {"NtQueryInformationFile",0,0xfffb1230u},
+    {"NtDeviceIoControlFile",0,0xfffb12a0u},
 };
 static const TribesNativeExport system_exports_3[]={
     {"CreateWindowExA",0,0xfffb1020u},
@@ -243,6 +250,8 @@ static const TribesNativeExport system_exports_4[]={
     {"setsockopt",0,0xfffb1250u},
     {"WSARecv",0,0xfffb1260u},
     {"WSASend",0,0xfffb1270u},
+    {"WSARecvFrom",0,0xfffb12b0u},
+    {"WSASendTo",0,0xfffb12c0u},
 };
 static const TribesNativeExport system_exports_5[]={
     {"BCryptGenRandom",0,0xfffb1210u},
@@ -251,8 +260,8 @@ typedef struct {uint32_t image;const char *path;const TribesNativeExport *export
 static const SystemProvider system_providers[]={
     {0x60010000u,"C:\\Windows\\System32\\kernel32.dll",system_exports_0,29,1},
     {0x60020000u,"C:\\Windows\\System32\\kernelbase.dll",system_exports_1,27,0},
-    {0x20000000u,"C:\\Windows\\System32\\ntdll.dll",system_exports_2,5,1},
+    {0x20000000u,"C:\\Windows\\System32\\ntdll.dll",system_exports_2,6,1},
     {0x20010000u,"C:\\Windows\\System32\\user32.dll",system_exports_3,14,1},
-    {0x20020000u,"C:\\Windows\\System32\\ws2_32.dll",system_exports_4,19,1},
+    {0x20020000u,"C:\\Windows\\System32\\ws2_32.dll",system_exports_4,21,1},
     {0x20030000u,"C:\\Windows\\System32\\bcrypt.dll",system_exports_5,1,1},
 };

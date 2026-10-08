@@ -439,7 +439,7 @@ uint32_t tribes_connect_ex(uint64_t base,uint32_t handle,uint32_t address,uint32
 /* Original libuv waits with a zero-byte overlapped receive, then performs
    nonblocking synchronous reads. Stack WSABUF/flags/count pointers cannot be
    retained by a pending operation. Native I/O sees only private staging. */
-struct SocketIo {Socket *socket;int fd,canceled;uint32_t overlapped,length;uint64_t issuer;unsigned char *data;SocketIo *next;};
+struct SocketIo {Socket *socket;int fd,canceled;uint32_t overlapped,length;uint64_t issuer;unsigned char *data;SocketIo *next;struct sockaddr_storage destination;socklen_t destination_size;};
 static int detached(void *(*entry)(void *),void *operation){
     pthread_attr_t attr;int error=pthread_attr_init(&attr);
     if(!error){error=pthread_attr_setdetachstate(&attr,PTHREAD_CREATE_DETACHED);if(!error){pthread_t t;error=pthread_create(&t,&attr,entry,operation);}pthread_attr_destroy(&attr);}
@@ -470,6 +470,42 @@ static void *run_zero_read(void *opaque){
     io_completion(op,0,error);if(s->closed&&!s->connecting&&!s->write_head)free_socket(s);
     pthread_mutex_unlock(&lock);return NULL;
 }
+static SocketIo *new_io(Socket *,uint32_t);
+/* Original libuv's zero-byte UDP receive workaround uses AFD_RECEIVE with
+   OVERLAPPED/normal/peek flags. Poll the owned descriptor without consuming a
+   datagram, then publish through the same retained IOCP/cancellation lifetime
+   as Winsock zero reads. NT calls preserve the caller's Win32 LastError. */
+uint32_t tribes_nt_device_io_control_file(uint64_t base,uint32_t handle,uint32_t event,uint32_t apc,uint32_t context,uint32_t iosb,uint32_t code,uint32_t input,uint32_t input_size,uint32_t output,uint32_t output_size){
+    if(code!=0x12017||event||apc||context!=iosb||output||output_size){
+        fputs("TribesPad: unsupported NT device I/O contract\n",stderr);abort();
+    }
+    if(input_size!=16)return 0xc000000du;
+    uint32_t request[4];void *p=guest(base,input,16);if(!p)return 0xc0000005u;memcpy(request,p,16);
+    if(request[1]!=1||request[2]!=2||(request[3]!=0xa0&&request[3]!=0x20)){
+        fputs("TribesPad: unsupported AFD receive flags/count\n",stderr);abort();
+    }
+    uint32_t buffer[2];p=guest(base,request[0],8);if(!p)return 0xc0000005u;memcpy(buffer,p,8);
+    if(buffer[0]){fputs("TribesPad: nonzero AFD receive is not implemented\n",stderr);abort();}
+    void *header=guest(base,iosb,8);if(!header)return 0xc0000005u;
+    uint32_t saved_error=tribes_get_last_error(),status=0,old[2];memcpy(old,header,8);
+    pthread_mutex_lock(&lock);Context *c=find(base);Socket *s=sockets;
+    while(s&&(s->base!=base||s->handle!=handle))s=s->next;
+    if(!c||!c->references||!s){status=0xc0000008u;goto done;}
+    if(s->owner)ownership_stop();
+    if(s->type!=2){status=0xc0000024u;goto done;}
+    if(s->reading){status=0xc00000a3u;goto done;}
+    int flags=fcntl(s->fd,F_GETFL);
+    if(flags<0){status=0xc0000008u;goto done;}
+    if(!(flags&O_NONBLOCK)){fputs("TribesPad: blocking AFD receive is not implemented\n",stderr);abort();}
+    SocketIo *op=new_io(s,iosb);
+    if(!op){status=0xc000009au;goto done;}
+    uint32_t pending[]={0x103,0};memcpy(header,pending,8);s->reading=op;++pending_io;
+    if(detached(run_zero_read,op)){
+        s->reading=NULL;--pending_io;close(op->fd);free(op);memcpy(header,old,8);status=0xc000009au;
+    }else status=0x103;
+done:
+    pthread_mutex_unlock(&lock);tribes_set_last_error(saved_error);return status;
+}
 /* One writer per socket preserves submission order under backpressure. Each
    submitted request owns a captured descriptor and private payload until its
    actual send count/error has been published to the real completion queue. */
@@ -478,10 +514,11 @@ static void *run_writes(void *opaque){
     for(;;){
         pthread_mutex_lock(&lock);SocketIo *op=s->write_head;pthread_mutex_unlock(&lock);
         uint32_t sent=0;int error=0;
-        while(sent<op->length){
+        while(sent<op->length||op->destination_size){
             pthread_mutex_lock(&lock);int canceled=s->closed||op->canceled;pthread_mutex_unlock(&lock);
             if(canceled){error=ECANCELED;break;}
-            ssize_t n=send(op->fd,op->data+sent,op->length-sent,0);
+            ssize_t n=op->destination_size?sendto(op->fd,op->data,op->length,0,(const struct sockaddr *)&op->destination,op->destination_size):send(op->fd,op->data+sent,op->length-sent,0);
+            if(n>=0&&op->destination_size){sent=(uint32_t)n;if(sent!=op->length)error=EMSGSIZE;break;}
             if(n>0){sent+=(uint32_t)n;continue;}
             if(!n){error=EPIPE;break;}
             error=errno;if(error==EINTR){error=0;continue;}
@@ -523,15 +560,15 @@ static int wsabufs(uint64_t base,uint32_t address,uint32_t count,uint32_t rows[6
     for(uint32_t i=0;i<count;i++){total+=rows[i][0];if(total>INT32_MAX)return 10055;if(rows[i][0]&&!guest(base,rows[i][1],rows[i][0]))return 10014;}
     *length=(uint32_t)total;return 0;
 }
-static Socket *io_socket(uint64_t base,uint32_t handle){
+static Socket *io_socket(uint64_t base,uint32_t handle,uint32_t type){
     Context *c=find(base);if(!c||!c->references){fail(10093);return NULL;}
     Socket *s=sockets;while(s&&(s->base!=base||s->handle!=handle))s=s->next;
     if(!s){fail(10038);return NULL;}if(s->owner)ownership_stop();
-    if(s->type!=1){fail(10045);return NULL;}
+    if(s->type!=type){fail(10045);return NULL;}
     int flags=fcntl(s->fd,F_GETFL);if(flags<0){fail(error_number(errno));return NULL;}
     if(!(flags&O_NONBLOCK)){fputs("TribesPad: blocking WSA socket I/O is not implemented\n",stderr);abort();}
     struct sockaddr_storage peer;socklen_t n=sizeof peer;
-    if(getpeername(s->fd,(struct sockaddr *)&peer,&n)){fail(error_number(errno));return NULL;}
+    if(type==1&&getpeername(s->fd,(struct sockaddr *)&peer,&n)){fail(error_number(errno));return NULL;}
     return s;
 }
 static SocketIo *new_io(Socket *s,uint32_t overlapped){
@@ -550,7 +587,7 @@ uint32_t tribes_wsa_recv(uint64_t base,uint32_t handle,uint32_t buffers,uint32_t
     void *flagp=guest(base,flags,4);uint32_t value;if(!flagp)return fail(10014);memcpy(&value,flagp,4);if(value)return fail(10045);
     uint32_t rows[64][2],length;int error=wsabufs(base,buffers,count,rows,&length);if(error)return fail(error);
     void *bytep=bytes?guest(base,bytes,4):NULL;if((bytes&&!bytep)||(!overlapped&&!bytep))return fail(10014);
-    pthread_mutex_lock(&lock);Socket *s=io_socket(base,handle);if(!s){pthread_mutex_unlock(&lock);return UINT32_MAX;}
+    pthread_mutex_lock(&lock);Socket *s=io_socket(base,handle,1);if(!s){pthread_mutex_unlock(&lock);return UINT32_MAX;}
     if(overlapped){
         if(length){fputs("TribesPad: nonzero overlapped WSARecv is not implemented\n",stderr);abort();}
         if(s->reading){pthread_mutex_unlock(&lock);return fail(10035);}
@@ -576,7 +613,7 @@ uint32_t tribes_wsa_send(uint64_t base,uint32_t handle,uint32_t buffers,uint32_t
     void *bytep=bytes?guest(base,bytes,4):NULL;if((bytes&&!bytep)||(!overlapped&&!bytep))return fail(10014);
     unsigned char *data=malloc(length?length:1);if(!data)return fail(10055);
     uint32_t offset=0;for(uint32_t i=0;i<count;i++){if(rows[i][0])memcpy(data+offset,guest(base,rows[i][1],rows[i][0]),rows[i][0]);offset+=rows[i][0];}
-    pthread_mutex_lock(&lock);Socket *s=io_socket(base,handle);if(!s){pthread_mutex_unlock(&lock);free(data);return UINT32_MAX;}
+    pthread_mutex_lock(&lock);Socket *s=io_socket(base,handle,1);if(!s){pthread_mutex_unlock(&lock);free(data);return UINT32_MAX;}
     if(overlapped){
         uint32_t old[5];void *header;error=io_header(base,overlapped,old,&header);if(error){pthread_mutex_unlock(&lock);free(data);return fail(error);}
         SocketIo *op=new_io(s,overlapped);if(!op){pthread_mutex_unlock(&lock);free(data);return UINT32_MAX;}op->data=data;op->length=length;
@@ -590,6 +627,59 @@ uint32_t tribes_wsa_send(uint64_t base,uint32_t handle,uint32_t buffers,uint32_t
     int fd=fcntl(s->fd,F_DUPFD_CLOEXEC,3);pthread_mutex_unlock(&lock);if(fd<0){free(data);return fail(10055);}
     ssize_t n=send(fd,data,length,0);error=errno;close(fd);free(data);if(n<0)return fail(error_number(error));
     uint32_t actual=(uint32_t)n;memcpy(bytep,&actual,4);return 0;
+}
+/* Original UDP packet consumers: synchronous scatter receive after AFD
+   readiness, and ordered IOCP sends. Native syscalls use private payloads. */
+uint32_t tribes_wsa_recv_from(uint64_t base,uint32_t handle,uint32_t buffers,uint32_t count,uint32_t bytes,uint32_t flags,uint32_t from,uint32_t from_length,uint32_t overlapped,uint32_t callback){
+    if(overlapped||callback){fputs("TribesPad: overlapped WSARecvFrom is not implemented\n",stderr);abort();}
+    void *flagp=guest(base,flags,4),*bytep=guest(base,bytes,4);uint32_t value;
+    if(!flagp||!bytep)return fail(10014);memcpy(&value,flagp,4);if(value&~2u)return fail(10045);
+    uint32_t rows[64][2],length;int error=wsabufs(base,buffers,count,rows,&length);if(error)return fail(error);
+    void *sizep=NULL;int32_t capacity=0;
+    if(from){sizep=guest(base,from_length,4);if(!sizep)return fail(10014);memcpy(&capacity,sizep,4);}
+    pthread_mutex_lock(&lock);Socket *s=io_socket(base,handle,2);if(!s){pthread_mutex_unlock(&lock);return UINT32_MAX;}
+    uint32_t size=s->family==23?28:16;
+    if(from&&(capacity<(int32_t)size||!guest(base,from,size))){pthread_mutex_unlock(&lock);return fail(10014);}
+    int fd=fcntl(s->fd,F_DUPFD_CLOEXEC,3);pthread_mutex_unlock(&lock);if(fd<0)return fail(10055);
+    /* One extra private byte detects truncation without a nested msghdr/iovec
+       exemption. recvfrom still consumes one complete native datagram. */
+    unsigned char *data=malloc((size_t)length+1);if(!data){close(fd);return fail(10055);}
+    struct sockaddr_storage source={0};socklen_t source_size=sizeof source;
+    ssize_t n=recvfrom(fd,data,(size_t)length+1,value?MSG_PEEK:0,(struct sockaddr *)&source,&source_size);error=errno;close(fd);
+    if(n<0){free(data);return fail(error_number(error));}
+    uint32_t used=(uint32_t)n;if(used>length)used=length;uint32_t offset=0;
+    for(uint32_t i=0;i<count&&offset<used;i++){uint32_t part=rows[i][0]<used-offset?rows[i][0]:used-offset;memcpy(guest(base,rows[i][1],part),data+offset,part);offset+=part;}
+    free(data);
+    if(from){unsigned char packed[28]={0};uint16_t family=source.ss_family==AF_INET6?23:2;
+        memcpy(packed,&family,2);size=family==23?28:16;
+        if(family==23)memcpy(packed+2,(unsigned char *)&source+2,26);
+        else {const struct sockaddr_in *v=(const void *)&source;memcpy(packed+2,&v->sin_port,2);memcpy(packed+4,&v->sin_addr,4);}
+        memcpy(guest(base,from,size),packed,size);memcpy(sizep,&size,4);
+    }
+    memcpy(bytep,&used,4);value=0;memcpy(flagp,&value,4);return (uint64_t)n>length?fail(10040):0;
+}
+uint32_t tribes_wsa_send_to(uint64_t base,uint32_t handle,uint32_t buffers,uint32_t count,uint32_t bytes,uint32_t flags,uint32_t to,uint32_t to_length,uint32_t overlapped,uint32_t callback){
+    if(callback){fputs("TribesPad: WSASendTo completion callbacks are not implemented\n",stderr);abort();}
+    if(flags)return fail(10045);
+    struct sockaddr_storage destination;socklen_t size;if(!socket_address_guest(base,to,to_length,&destination,&size))return UINT32_MAX;
+    uint32_t rows[64][2],length;int error=wsabufs(base,buffers,count,rows,&length);if(error)return fail(error);
+    void *bytep=bytes?guest(base,bytes,4):NULL;if((bytes&&!bytep)||(!overlapped&&!bytep))return fail(10014);
+    unsigned char *data=malloc(length?length:1);if(!data)return fail(10055);
+    uint32_t offset=0;for(uint32_t i=0;i<count;i++){if(rows[i][0])memcpy(data+offset,guest(base,rows[i][1],rows[i][0]),rows[i][0]);offset+=rows[i][0];}
+    pthread_mutex_lock(&lock);Socket *s=io_socket(base,handle,2);if(!s){pthread_mutex_unlock(&lock);free(data);return UINT32_MAX;}
+    if(overlapped){
+        uint32_t old[5];void *header;error=io_header(base,overlapped,old,&header);if(error){pthread_mutex_unlock(&lock);free(data);return fail(error);}
+        SocketIo *op=new_io(s,overlapped);if(!op){pthread_mutex_unlock(&lock);free(data);return UINT32_MAX;}
+        op->data=data;op->length=length;op->destination=destination;op->destination_size=size;
+        uint32_t pending[]={0x103,0};memcpy(header,pending,8);int first=!s->write_head;
+        if(first)s->write_head=op;else s->write_tail->next=op;s->write_tail=op;++pending_io;
+        if(first&&detached(run_writes,s)){s->write_head=s->write_tail=NULL;--pending_io;close(op->fd);free(data);free(op);memcpy(header,old,8);pthread_mutex_unlock(&lock);return fail(10055);}
+        pthread_mutex_unlock(&lock);return fail(997);
+    }
+    if(s->write_head){pthread_mutex_unlock(&lock);free(data);return fail(10035);}
+    int fd=fcntl(s->fd,F_DUPFD_CLOEXEC,3);pthread_mutex_unlock(&lock);if(fd<0){free(data);return fail(10055);}
+    ssize_t n=sendto(fd,data,length,0,(const struct sockaddr *)&destination,size);error=errno;close(fd);free(data);
+    if(n<0)return fail(error_number(error));uint32_t sent=(uint32_t)n;memcpy(bytep,&sent,4);return 0;
 }
 /* Windows commits the connected socket context here; BSD already has its
    endpoint. Verify the actual connection before recording that commit. */

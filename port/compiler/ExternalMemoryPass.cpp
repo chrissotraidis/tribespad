@@ -127,6 +127,12 @@ struct ExternalMemoryPass : PassInfoMixin<ExternalMemoryPass>{
      Allowed=Allowed&&!Target->isVarArg()&&Call->getType()==I64&&Call->arg_size()==4;
      if(Allowed)Allowed=Call->getArgOperand(0)->getType()==I32&&Call->getArgOperand(1)->getType()==P&&Call->getArgOperand(2)->getType()==I64&&Call->getArgOperand(3)->getType()==I32;
     }
+    if(Name=="sendto"||Name=="recvfrom"){
+     // Flat Darwin datagram ABI. Payload, sockaddr and length pointers must
+     // all be native-owned; nested recvmsg remains unsupported.
+     Allowed=Allowed&&!Target->isVarArg()&&Call->getType()==I64&&Call->arg_size()==6;
+     if(Allowed)Allowed=Call->getArgOperand(0)->getType()==I32&&Call->getArgOperand(1)->getType()==P&&Call->getArgOperand(2)->getType()==I64&&Call->getArgOperand(3)->getType()==I32&&Call->getArgOperand(4)->getType()==P&&(Name=="sendto"?Call->getArgOperand(5)->getType()==I32:Call->getArgOperand(5)->getType()==P);
+    }
     if(Name=="fstatfs"){
      Allowed=Allowed&&!Target->isVarArg()&&Call->getType()==I32&&Call->arg_size()==2;
      if(Allowed)Allowed=Call->getArgOperand(0)->getType()==I32&&Call->getArgOperand(1)->getType()==P;

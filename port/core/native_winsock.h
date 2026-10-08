@@ -40,4 +40,7 @@ uint32_t tribes_wsa_recv(uint64_t base,uint32_t socket,uint32_t buffers,uint32_t
 uint32_t tribes_wsa_send(uint64_t base,uint32_t socket,uint32_t buffers,uint32_t count,uint32_t bytes,uint32_t flags,uint32_t overlapped,uint32_t callback);
 /* Host operation adapter, called only after successful real native I/O. */
 uint32_t tribes_socket_post_completion(uint64_t base,uint32_t socket,uint32_t bytes,uint32_t overlapped,uint32_t immediate);
+uint32_t tribes_nt_device_io_control_file(uint64_t,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t);
+uint32_t tribes_wsa_recv_from(uint64_t,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t);
+uint32_t tribes_wsa_send_to(uint64_t,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t);
 #endif

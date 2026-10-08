@@ -1,0 +1,135 @@
+{
+  "state": "component_validated_original_rebuild_pending",
+  "original_engine": "77e878395b8322bae37eee9245ff15be103cacde93ebfc7e6519bd7c757926aa",
+  "original_execution": {
+    "first_pid": 48709,
+    "capture_pid": 49278,
+    "first_stop": "NtDeviceIoControlFile / IOCTL_AFD_RECEIVE 0x12017",
+    "capture": {
+      "pid": 49278,
+      "cpu": "0x10f340d90",
+      "base": "0x7000000000",
+      "esp": "0x2fea38",
+      "stack": [
+        "0x10087baf",
+        "0xb1000003",
+        "0x0",
+        "0x0",
+        "0x60598da4",
+        "0x60598da4",
+        "0x12017",
+        "0x2fea6c",
+        "0x10",
+        "0x0",
+        "0x0"
+      ],
+      "request": [
+        "0x2feaac",
+        "0x1",
+        "0x2",
+        "0xa0"
+      ],
+      "wsabuf": [
+        "0x0",
+        "0x1045f861"
+      ],
+      "iosb_hex": "0000000000000000000000000000000000000000"
+    },
+    "scope": "New IPv6 setup reaches original UDP readiness during initialization; texture-coordinate bridge not yet reached in this build."
+  },
+  "changes": [
+    "Finite NtDeviceIoControlFile accepts captured zero-byte overlapped normal/peek UDP readiness and uses real poll/IOCP/cancellation lifetimes.",
+    "WSARecvFrom synchronously scatters actual native packets and sender addresses; WSASendTo submits atomic datagrams through retained ordered completion workers.",
+    "Flat native sendto/recvfrom exact Darwin signatures with private payload/address/length storage; direct guest pointers rejected, recvmsg remains unsupported."
+  ],
+  "validation": {
+    "passed": true,
+    "state": "finished",
+    "runs": [
+      {
+        "mode": "normal",
+        "passed": true,
+        "binary_sha256": "18e0cb467ab7b9936f8a81fd28427a4a9a7ddaad5ad4d1a5b247df4861bf5e16",
+        "checked_sha256": null,
+        "guarded_sha256": null,
+        "faults": 0
+      },
+      {
+        "mode": "tsan",
+        "passed": true,
+        "binary_sha256": "902ee0a079fe1298b6bc185ad140fcd74f13505c65a7b68c32a4e3bd3a8a286c",
+        "checked_sha256": null,
+        "guarded_sha256": null,
+        "faults": 0
+      },
+      {
+        "mode": "checked",
+        "passed": true,
+        "binary_sha256": "1010e0a304485e11e7f4b9a414dee821efe0d5dc84dd0b96cdb6d1566164259a",
+        "checked_sha256": "ed0f5e912e592e8523c615a961b8cf2c9b476661265dff7d166595521f768922",
+        "guarded_sha256": "c2e24d9579d37daa6e060f7229c3433d769466e89ea1860ae372d9fd7efa5a24",
+        "faults": 7
+      }
+    ],
+    "sources_sha256": {
+      "port/core/native_winsock.c": "a6e6a890b5f4f4133ecc459e75180fa38c50236ac496ddf4292a691751491b45",
+      "port/core/native_handles.c": "7b28bfbfb1edfbc9a00a1228f3417d45502935ce767d16c0b83cedd56428df75",
+      "port/core/guest_heap.c": "791c26c9fd72984fc53f0f5f1447df5f1dd43e38af08a529b1efc0b3e65dd96b",
+      "port/core/guest_encoding.c": "9ebda33a1f1bd89f9b80c0d22aebb1a4ad2c3ced15fd3201c3b057df6309d190",
+      "tests/fixtures/afd_receive_dispatch.c": "3bb8b4e2c6c6fbe93949b8dcd09f545d2f90ceedb414cb8bf3e89a0ae28c1141",
+      "tests/fixtures/native_enter.ll": "78597a5a3030a7a7e0d6746358a6f3489ff8e8c395fba21383c200133f2f1f9d",
+      "tests/fixtures/connect_observation.c": "1c961eb2ac68cab7fcfb078426874573ad171c251f583dff8c30b010bde93b70",
+      "generated/integration-review/afd-receive/bindings.ll": "f009daa1a7a9c1d7b8f9ced46528c391b015b166a52d9350a19de38c9c9bb6a2",
+      "tests/afd_receive_test.c": "b211ce144a86da43d563a41996d163d95a210e1463b73c69e40d4d4974a2563b",
+      "port/core/guest_memory_checks.c": "ee00fcff6979a3f4480835115d10db5dddf5fabf089a04c80f4a55e0ea82ec7c",
+      "port/core/guest_external_checks.c": "2ecaf0cf09462d76b293ab70860c9245ae46536959e81fd2549ad7675ad63523",
+      "port/llasm-runtime/win32-bindings.json": "b1a8211d2e3fc0a84591002b45fbccbac2ae44c1fa3b5a0f7338e235235511f6",
+      "port/core/native_winsock.h": "d5d56f3d05a8a7d266855d3ec5cfe8a97028d7aa92de91c7ce06ea88f10e6987",
+      "port/core/guest_encoding.h": "9981fb0a56543a37b52b6f7a2bf0ccb2b25e8588e8f23c97fa0ab22f77d0576b",
+      "port/core/native_handles.h": "5e0f6cb3dd588f7c90afc387f05bcc39290f3efafbfeabe96279ef4c7bf97337",
+      "port/compiler/ExternalMemoryPass.cpp": "8386d64ff61c6554001eca0d8768a70b76e828bf815636c679dd54d2a6893f6c",
+      "config/runtime/external-memory-contracts.json": "6ea6a62abd2bfcc778f6b2278100599ca1ef4ffae10b74dabb9028b4a77d9173",
+      "scripts/test-afd-receive.py": "e298ecafc2192b78d1e93c8e11ccb52ca293c72dc5c379365c230d11f205b739"
+    },
+    "scope": "Original AFD zero-byte UDP readiness, packet retention and cancellation ownership through emitted NT ABI. No original-game packet transport or authenticated multiplayer acceptance."
+  },
+  "mobile": {
+    "passed": true,
+    "rows": [
+      {
+        "platform": "device",
+        "target": "arm64-apple-ios16",
+        "receipt": "1512f3dd3fb7792b97e9bc5b51c9f6482eddfd642c9edc6ab37166ec862a8c44",
+        "objects": [
+          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/afd-receive/mobile-compile/iphoneos/00-guest_sdl_backend.o",
+          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/afd-receive/mobile-compile/iphoneos/01-native_winsock.o",
+          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/afd-receive/mobile-compile/iphoneos/02-guest_graphics.o",
+          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/afd-receive/mobile-compile/iphoneos/03-graphics-bindings.o"
+        ]
+      },
+      {
+        "platform": "simulator",
+        "target": "arm64-apple-ios16-simulator",
+        "receipt": "14659096ac7c033e684cc551f91a6f086a160a5bccfda85b2a7a1b40ac36ca9b",
+        "objects": [
+          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/afd-receive/mobile-compile/iphonesimulator/00-guest_sdl_backend.o",
+          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/afd-receive/mobile-compile/iphonesimulator/01-native_winsock.o",
+          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/afd-receive/mobile-compile/iphonesimulator/02-guest_graphics.o",
+          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/afd-receive/mobile-compile/iphonesimulator/03-graphics-bindings.o"
+        ]
+      }
+    ],
+    "scope": "Changed backend, finite GL provider and bindings checked-compiled for ARM64 iOS device and Simulator; no mobile launch."
+  },
+  "limits": [
+    "No authenticated community match or original-game packet exchange verified yet.",
+    "Nonzero NT AFD receive, overlapped WSARecvFrom, event and APC completion modes remain explicit stops.",
+    "ARM64 mobile compilation only; no full mobile gameplay acceptance.",
+    "No selected HD sampling or completed Katabatic scene acceptance."
+  ],
+  "references": [
+    "https://raw.githubusercontent.com/libuv/libuv/v1.51.0/src/win/winsock.c",
+    "https://learn.microsoft.com/en-us/windows/win32/api/winsock2/nf-winsock2-wsarecvfrom",
+    "https://learn.microsoft.com/en-us/windows/win32/api/winsock2/nf-winsock2-wsasendto"
+  ]
+}
