@@ -266,11 +266,14 @@ int tribes_socket_detach(uint64_t base,uint32_t handle,const void *owner) {
 }
 uint32_t tribes_socket(uint64_t base,uint32_t family,uint32_t type,uint32_t protocol) {
     pthread_mutex_lock(&lock);Context *c=find(base);if(!c||!c->references){pthread_mutex_unlock(&lock);return fail(10093);}
-    if(family!=2){pthread_mutex_unlock(&lock);return fail(10047);}if(type!=1&&type!=2){pthread_mutex_unlock(&lock);return fail(10044);}if(protocol&&protocol!=(type==1?6u:17u)){pthread_mutex_unlock(&lock);return fail(10043);}
-    int fd=socket(AF_INET,type==1?SOCK_STREAM:SOCK_DGRAM,(int)protocol);if(fd<0){int error=errno;pthread_mutex_unlock(&lock);return fail(error_number(error));}
+    if(family!=2&&family!=23){pthread_mutex_unlock(&lock);return fail(10047);}if(type!=1&&type!=2){pthread_mutex_unlock(&lock);return fail(10044);}if(protocol&&protocol!=(type==1?6u:17u)){pthread_mutex_unlock(&lock);return fail(10043);}
+    int fd=socket(family==23?AF_INET6:AF_INET,type==1?SOCK_STREAM:SOCK_DGRAM,(int)protocol);if(fd<0){int error=errno;pthread_mutex_unlock(&lock);return fail(error_number(error));}
     int enabled=1;if(fcntl(fd,F_SETFD,FD_CLOEXEC)||setsockopt(fd,SOL_SOCKET,SO_NOSIGPIPE,&enabled,sizeof enabled)){int error=errno;close(fd);pthread_mutex_unlock(&lock);return fail(error_number(error));}
+    /* Windows IPv6 sockets start IPv6-only; the original UDP setup explicitly
+       clears IPV6_V6ONLY before binding for IPv4-mapped community traffic. */
+    if(family==23&&setsockopt(fd,IPPROTO_IPV6,IPV6_V6ONLY,&enabled,sizeof enabled)){int error=errno;close(fd);pthread_mutex_unlock(&lock);return fail(error_number(error));}
     Socket *s=calloc(1,sizeof *s);if(!s||next_handle>=0xb2000000){free(s);close(fd);pthread_mutex_unlock(&lock);return fail(10055);}
-    s->base=base;s->handle=next_handle++;s->fd=fd;s->type=type;s->family=2;s->next=sockets;sockets=s;uint32_t result=s->handle;pthread_mutex_unlock(&lock);return result;
+    s->base=base;s->handle=next_handle++;s->fd=fd;s->type=type;s->family=family;s->next=sockets;sockets=s;uint32_t result=s->handle;pthread_mutex_unlock(&lock);return result;
 }
 /* Native provider description, with Windows' 32-bit WSAPROTOCOL_INFO layout.
    The descriptors are private socket handles, not NT IFS/file handles. Keep
@@ -323,9 +326,21 @@ static int sockaddr_in_guest(uint64_t base,uint32_t pointer,uint32_t length,stru
     memset(address,0,sizeof *address);address->sin_len=sizeof *address;address->sin_family=AF_INET;memcpy(&address->sin_port,p+2,2);memcpy(&address->sin_addr,p+4,4);return 1;
 }
 static void write_address(void *output,const struct sockaddr_in *address) { unsigned char data[16]={2,0};memcpy(data+2,&address->sin_port,2);memcpy(data+4,&address->sin_addr,4);memcpy(output,data,16); }
+static int socket_address_guest(uint64_t base,uint32_t pointer,uint32_t length,struct sockaddr_storage *address,socklen_t *native_length){
+    const unsigned char *p=guest(base,pointer,2);uint16_t family;
+    if(!p||length<2||length>INT32_MAX){fail(10014);return 0;}memcpy(&family,p,2);
+    memset(address,0,sizeof *address);
+    if(family==2){*native_length=sizeof(struct sockaddr_in);return sockaddr_in_guest(base,pointer,length,(struct sockaddr_in *)address);}
+    if(family!=23){fail(10047);return 0;}
+    if(length<28||!(p=guest(base,pointer,28))){fail(10014);return 0;}
+    struct sockaddr_in6 *v=(struct sockaddr_in6 *)address;v->sin6_len=sizeof *v;v->sin6_family=AF_INET6;
+    memcpy(&v->sin6_port,p+2,2);memcpy(&v->sin6_flowinfo,p+4,4);memcpy(&v->sin6_addr,p+8,16);memcpy(&v->sin6_scope_id,p+24,4);
+    *native_length=sizeof *v;return 1;
+}
 uint32_t tribes_bind_socket(uint64_t base,uint32_t handle,uint32_t pointer,uint32_t length) {
-    int fd=borrow(base,handle);if(fd<0)return UINT32_MAX;struct sockaddr_in address;if(!sockaddr_in_guest(base,pointer,length,&address)){close(fd);return UINT32_MAX;}
-    int result=bind(fd,(struct sockaddr *)&address,sizeof address),error=errno;close(fd);return result?fail(error_number(error)):0;
+    int fd=borrow(base,handle);if(fd<0)return UINT32_MAX;struct sockaddr_storage address;socklen_t n;
+    if(!socket_address_guest(base,pointer,length,&address,&n)){close(fd);return UINT32_MAX;}
+    int result=bind(fd,(struct sockaddr *)&address,n),error=errno;close(fd);return result?fail(error_number(error)):0;
 }
 uint32_t tribes_getsockname(uint64_t base,uint32_t handle,uint32_t pointer,uint32_t length_pointer) {
     int fd=borrow(base,handle);if(fd<0)return UINT32_MAX;void *lengthp=guest(base,length_pointer,4);int32_t capacity=0;if(lengthp)memcpy(&capacity,lengthp,4);
@@ -579,6 +594,15 @@ uint32_t tribes_wsa_send(uint64_t base,uint32_t handle,uint32_t buffers,uint32_t
 /* Windows commits the connected socket context here; BSD already has its
    endpoint. Verify the actual connection before recording that commit. */
 uint32_t tribes_setsockopt(uint64_t base,uint32_t handle,uint32_t level,uint32_t option,uint32_t value,uint32_t length){
+    if((level==0xffff&&(option==4||option==0x20))||(level==41&&option==27)){
+        int fd=borrow(base,handle);if(fd<0)return UINT32_MAX;
+        const void *p=guest(base,value,4);if(!p||length<4||length>INT32_MAX){close(fd);return fail(10014);}
+        uint32_t raw;memcpy(&raw,p,4);int enabled=raw!=0;
+        int native_level=level==41?IPPROTO_IPV6:SOL_SOCKET;
+        int native_option=level==41?IPV6_V6ONLY:option==4?SO_REUSEADDR:SO_BROADCAST;
+        int result=setsockopt(fd,native_level,native_option,&enabled,sizeof enabled),error=errno;close(fd);
+        return result?fail(error_number(error)):0;
+    }
     if(level!=0xffff||option!=0x7010||value||length){fprintf(stderr,"TribesPad: unsupported setsockopt level=0x%x option=0x%x\n",level,option);abort();}
     pthread_mutex_lock(&lock);Context *c=find(base);if(!c||!c->references){pthread_mutex_unlock(&lock);return fail(10093);}
     Socket *s=sockets;while(s&&(s->base!=base||s->handle!=handle))s=s->next;

@@ -35,6 +35,7 @@ for name in ['guest_encoding','native_fls','process_heap','guest_file','guest_fi
   if name=='process_heap':extras.append(str(R/'port/core/guest_virtual_memory.c'))
   if name=='guest_file':extras += [str(R/'port/core/guest_filesystem.c'),str(R/'port/core/native_handles.c')]
   if name=='guest_find':extras.append(str(R/'port/core/guest_filesystem.c'))
+  if name=='native_winsock':extras.append(str(R/'port/core/guest_encoding.c'))
   if name=='keyboard_state':extras.append(str(R/'port/core/keyboard_translation.c'))
   if name=='keyboard_translation':extras += [str(R/'port/core/keyboard_state.c'),str(R/'port/core/guest_heap.c')]
   if name in ['guest_dinput','guest_dinput_abi']:extras.append(str(R/'port/core/input_buffer.c'))

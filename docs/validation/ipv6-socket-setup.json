@@ -1,0 +1,61 @@
+{
+  "scope": "IPv6 socket setup component validation; not original-game network or multiplayer acceptance",
+  "native": {
+    "pass": true,
+    "tests": {
+      "native_winsock": {
+        "source_sha256": "e95ecddb1429eb1a1bcda3015ad5a7666dc5fba6b56404634dc1e183bb784351",
+        "test_sha256": "360e8293c197b8b5de3c239b2a509b059727c0b81f903271de65d5e45feada45",
+        "dependency_sha256": {
+          "port/core/guest_heap.c": "791c26c9fd72984fc53f0f5f1447df5f1dd43e38af08a529b1efc0b3e65dd96b",
+          "port/core/guest_encoding.c": "9ebda33a1f1bd89f9b80c0d22aebb1a4ad2c3ced15fd3201c3b057df6309d190"
+        },
+        "runs": [
+          {
+            "mode": "normal",
+            "pass": true,
+            "output": "PASS: all 65536 short and 100000 long network-order conversions, LastError preservation, real bidirectional native/guest UDP using converted ports/addresses, nonblocking/peek/truncation/zero datagrams, startup negotiation/refcounts, cleanup and 8000 concurrent socket lifetimes with protocol queries",
+            "binary_sha256": "676c5c62aaf1a1b326b2487357bf33716a94d81b2badf5b97410aa2e88ddea96"
+          },
+          {
+            "mode": "tsan",
+            "pass": true,
+            "output": "PASS: all 65536 short and 100000 long network-order conversions, LastError preservation, real bidirectional native/guest UDP using converted ports/addresses, nonblocking/peek/truncation/zero datagrams, startup negotiation/refcounts, cleanup and 8000 concurrent socket lifetimes with protocol queries",
+            "binary_sha256": "832f3ea2e2aa703f2ca87b358ec6141ffbcc2b2949d2af890cca68fae3551010"
+          }
+        ]
+      }
+    },
+    "scope": "Selected native regressions only; no historical unrelated report reuse or complete game-session claim",
+    "cpu_header_sha256": "8c3cd17ee706cd3768d793c21d4f553b981cb45d3845dd9a93793d16f1bcc356"
+  },
+  "checked": {
+    "passed": true,
+    "checked_build_sha256": "39df1100d3381d4764b195053ea3617e29040364532d05a7bce2ff5b2b8cb193",
+    "guarded_build_sha256": "f5f309b1a6427ea7d3c39f19ac2c8c2c41f1f6e5ca4b4f26aeed99ca4ebd6ef2",
+    "binary_sha256": "11791db2e00068b94910cdfb6b1bc62fdb44151a762178e8acc5d3445c4eabab",
+    "sources_sha256": {
+      "port/core/native_winsock.c": "e95ecddb1429eb1a1bcda3015ad5a7666dc5fba6b56404634dc1e183bb784351",
+      "port/core/guest_encoding.c": "9ebda33a1f1bd89f9b80c0d22aebb1a4ad2c3ced15fd3201c3b057df6309d190",
+      "port/core/guest_heap.c": "791c26c9fd72984fc53f0f5f1447df5f1dd43e38af08a529b1efc0b3e65dd96b",
+      "tests/fixtures/network_host_calls.c": "424e414c4d43fd1a2e9eef47a9d9d2b106a061f2f470735368bf231f212cc989",
+      "tests/fixtures/network_bad_abi.ll": "c8fa6842e11703e60b69bf0f350dcfc2bca3d962e9502497dc5e99a0a5d396ac",
+      "tests/fixtures/network_startup_dispatch.c": "453540950260774ee26e4c64340d7010f28b08e28652b768edc5b13c2870ac80",
+      "tests/fixtures/native_enter.ll": "78597a5a3030a7a7e0d6746358a6f3489ff8e8c395fba21383c200133f2f1f9d",
+      "generated/integration-review/network-startup-checked/bindings.ll": "af625e28842c71cde376889614f6d7762c0408cc98c1b44468c5084232de8288",
+      "tests/network_startup_checked_test.c": "beff292c332252a881260a78bbf76f2f3c8048589e631e57c92f9b0a958f73dd",
+      "port/core/guest_memory_checks.c": "ee00fcff6979a3f4480835115d10db5dddf5fabf089a04c80f4a55e0ea82ec7c",
+      "port/core/guest_external_checks.c": "2ecaf0cf09462d76b293ab70860c9245ae46536959e81fd2549ad7675ad63523",
+      "port/llasm-runtime/win32-bindings.json": "68d14705fcf8ac3b67def64a8a9cd2d2357259abaecd0a89ca7704373e6dd378",
+      "port/core/native_winsock.h": "af79dea3da5f56250f9a0fe657a834a91ae3325be2074c1abec4dbfdebf62100",
+      "port/llasm-support/llasm_cpu.h": "8c3cd17ee706cd3768d793c21d4f553b981cb45d3845dd9a93793d16f1bcc356",
+      "scripts/test-network-startup-checked.py": "399ff509c7b7bdca124d45af45c36786d8edec33ffafd0983fb496e20b2d71ea"
+    },
+    "scope": "Actual Winsock startup, socket creation/bind/name/close through both compiler guards and emitted ABI. Host kernel port ownership and release verified. Five guest-pointer and six mismatched-ABI calls stop before the kernel; no payload-transfer/overlapped/authentication claim."
+  },
+  "limitations": [
+    "Launched original app predates IPv6 setup changes",
+    "Guest overlapped UDP send/receive remains unfinished",
+    "No authenticated community multiplayer acceptance"
+  ]
+}

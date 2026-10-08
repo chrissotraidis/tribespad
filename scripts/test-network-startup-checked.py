@@ -3,7 +3,7 @@ import hashlib,importlib.util,json,pathlib,subprocess
 from checked_support import compile_support
 from guard_checked_link import guard_link
 R=pathlib.Path(__file__).resolve().parents[1];sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest();out=R/'generated/integration-review/network-startup-checked';out.mkdir(exist_ok=True)
-spec=importlib.util.spec_from_file_location('bindings',R/'scripts/gen-win32-bindings.py');gen=importlib.util.module_from_spec(spec);spec.loader.exec_module(gen);bindings=R/'port/llasm-runtime/win32-bindings.json';wrapper=out/'bindings.ll';wrapper.write_text(gen.generate({name:json.loads(bindings.read_text())[name] for name in ['WSAStartup','WSACleanup','socket','closesocket','bind','getsockname','getsockopt','SetHandleInformation']},False))
+spec=importlib.util.spec_from_file_location('bindings',R/'scripts/gen-win32-bindings.py');gen=importlib.util.module_from_spec(spec);spec.loader.exec_module(gen);bindings=R/'port/llasm-runtime/win32-bindings.json';wrapper=out/'bindings.ll';wrapper.write_text(gen.generate({name:json.loads(bindings.read_text())[name] for name in ['WSAStartup','WSACleanup','socket','closesocket','bind','getsockname','getsockopt','SetHandleInformation','setsockopt']},False))
 sources=[R/name for name in ['port/core/native_winsock.c','port/core/guest_encoding.c','port/core/guest_heap.c','tests/fixtures/network_host_calls.c','tests/fixtures/network_bad_abi.ll','tests/fixtures/network_startup_dispatch.c','tests/fixtures/native_enter.ll']]+[wrapper]
 objects,checked=compile_support(sources,out/'checked',[]);meta=json.loads((out/'checked/result.json').read_text());entries=[]
 for obj in objects:

@@ -61,6 +61,35 @@ static void protocol_fault(_cpu *cpu,uint32_t s,int length_fault){
  int status;assert(waitpid(child,&status,0)==child&&WIFSIGNALED(status)&&WTERMSIG(status)==SIGABRT);
  assert(!memcmp(saved,memory+page,4096));assert(tribes_memory_permissions_set(page,4096,3));
 }
+static void ipv6_setup(_cpu *cpu){
+ for(unsigned dual=0;dual<2;dual++){
+  uint32_t args[]={23,2,0},s=invoke(cpu,3,3,args);assert(s!=UINT32_MAX);
+  int fd=tribes_socket_duplicate(cpu->_pointer_offset,s);assert(fd>=0);int v=-1;socklen_t n=sizeof v;
+  assert(!getsockopt(fd,IPPROTO_IPV6,IPV6_V6ONLY,&v,&n)&&v==1);
+  put(0x27001,dual?0:1);uint32_t option[]={s,41,27,0x27001,4};assert(!invoke(cpu,9,5,option));
+  n=sizeof v;assert(!getsockopt(fd,IPPROTO_IPV6,IPV6_V6ONLY,&v,&n)&&v==(dual?0:1));
+  for(unsigned j=0;j<2;j++){
+   put(0x27001,1);uint32_t opt[]={s,0xffff,j?0x20:4,0x27001,4};assert(!invoke(cpu,9,5,opt));
+   n=sizeof v;assert(!getsockopt(fd,SOL_SOCKET,j?SO_BROADCAST:SO_REUSEADDR,&v,&n)&&v);
+  }
+  unsigned char addr[28]={23};memcpy(memory+0x21001,addr,28);
+  uint32_t b[]={s,0x21001,27};assert(invoke(cpu,5,3,b)==UINT32_MAX&&tribes_get_last_error()==10014);
+  b[2]=28;assert(!invoke(cpu,5,3,b));
+  put(0x22001,28);memset(memory+0x23fe0,0xa7,32);assert(tribes_memory_permissions_set(0x24000,4096,0));
+  uint32_t name[]={s,0x23fe4,0x22001};assert(!invoke(cpu,6,3,name));assert(word(0x22001)==28&&memory[0x23fe3]==0xa7&&memory[0x23fe4]==23);
+  assert(tribes_memory_permissions_set(0x24000,4096,3));uint16_t port;memcpy(&port,memory+0x23fe6,2);assert(port);
+  int peer=socket(dual?AF_INET:AF_INET6,SOCK_DGRAM,0);assert(peer>=0);struct timeval timeout={1,0};
+  assert(!setsockopt(peer,SOL_SOCKET,SO_RCVTIMEO,&timeout,sizeof timeout));assert(!setsockopt(fd,SOL_SOCKET,SO_RCVTIMEO,&timeout,sizeof timeout));
+  struct sockaddr_storage destination={0};socklen_t size;
+  if(dual){struct sockaddr_in *a=(void *)&destination;a->sin_len=sizeof *a;a->sin_family=AF_INET;a->sin_port=port;a->sin_addr.s_addr=htonl(INADDR_LOOPBACK);size=sizeof *a;}
+  else {struct sockaddr_in6 *a=(void *)&destination;a->sin6_len=sizeof *a;a->sin6_family=AF_INET6;a->sin6_port=port;a->sin6_addr=in6addr_loopback;size=sizeof *a;}
+  assert(sendto(peer,"ipv6 setup",10,0,(void *)&destination,size)==10);
+  struct sockaddr_in6 from={0};n=sizeof from;char bytes[16]={0};assert(recvfrom(fd,bytes,sizeof bytes,0,(void *)&from,&n)==10&&!memcmp(bytes,"ipv6 setup",10));
+  assert(from.sin6_family==AF_INET6&&(dual?IN6_IS_ADDR_V4MAPPED(&from.sin6_addr):IN6_IS_ADDR_LOOPBACK(&from.sin6_addr)));
+  assert(sendto(fd,"reply",5,0,(void *)&from,n)==5&&recv(peer,bytes,sizeof bytes,0)==5&&!memcmp(bytes,"reply",5));
+  assert(!close(peer)&&!close(fd));assert(!invoke(cpu,4,1,&s));
+ }
+}
 int main(void){
  memory=mmap(NULL,UINT64_C(0x100000000),PROT_NONE,MAP_SHARED|MAP_ANON,-1,0);assert(memory!=MAP_FAILED);uint64_t base=(uintptr_t)memory;
  assert(!mprotect(memory+0x10000,0x40000,PROT_READ|PROT_WRITE));assert(tribes_memory_checks_configure(base,UINT64_C(0x100000000)));tribes_memory_external_configure(base,UINT64_C(0x100000000));tribes_memory_external_enable();
@@ -100,8 +129,9 @@ int main(void){
   assert(bind(peer,(void *)&local,sizeof local)==-1&&errno==EADDRINUSE);assert(!invoke(&cpu,4,1,&s));assert(!bind(peer,(void *)&local,sizeof local));assert(!close(peer));
   assert(tribes_get_last_error()==12345);put(0x27001,999);uint32_t closed[]={s,0xffff,0x2005,0x28001,0x27001};assert(invoke(&cpu,7,5,closed)==UINT32_MAX&&tribes_get_last_error()==10038&&word(0x27001)==999);tribes_set_last_error(12345);
  }
+ ipv6_setup(&cpu);
  assert(!invoke(&cpu,2,0,NULL));int fd=socket(AF_INET,SOCK_DGRAM,0);assert(fd>=0);
  for(unsigned i=0;i<5;i++)child_stop(i,fd,0);
  for(unsigned i=0;i<6;i++)child_stop(i,fd,1);
- assert(!close(fd));puts("PASS: actual socket inheritance flags and masked no-op preserve nonblocking state, stale identity fails; guarded Winsock startup, 32 emitted-ABI TCP/UDP socket/bind/name/close cycles with real kernel port ownership/release, ANSI/UTF16 protocol records, explicit non-IFS capabilities, short-buffer size negotiation, closed/uninitialized handle errors, two protected-output faults, CPU/stack/LastError preservation, five guest-pointer rejections and six wrong-ABI pre-call stops");return 0;
+ assert(!close(fd));puts("PASS: IPv6-only defaults, dual-stack/reuse/broadcast options, exact28-byte guest sockaddr and real native IPv6/IPv4-mapped packet exchange; actual socket inheritance flags and masked no-op preserve nonblocking state, stale identity fails; guarded Winsock startup, 32 emitted-ABI TCP/UDP socket/bind/name/close cycles with real kernel port ownership/release, ANSI/UTF16 protocol records, explicit non-IFS capabilities, short-buffer size negotiation, closed/uninitialized handle errors, two protected-output faults, CPU/stack/LastError preservation, five guest-pointer rejections and six wrong-ABI pre-call stops");return 0;
 }
