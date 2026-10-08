@@ -65,11 +65,16 @@ int main(int argc, const char **argv) {
             CGEventPost(kCGHIDEventTap, up); CFRelease(up);
         } else {
             CGMouseButton button = jet ? kCGMouseButtonRight : kCGMouseButtonLeft;
-            CGEventRef current = CGEventCreate(NULL);
-            CGPoint point = CGEventGetLocation(current); CFRelease(current);
-            if (click) point = CGPointMake(bounds.origin.x + bounds.size.width * a, bounds.origin.y + bounds.size.height * b);
-            else if (!CGRectContainsPoint(bounds, point)) point = CGPointMake(CGRectGetMidX(bounds), CGRectGetMidY(bounds));
+            CGPoint point = click
+                ? CGPointMake(bounds.origin.x + bounds.size.width * a, bounds.origin.y + bounds.size.height * b)
+                : CGPointMake(CGRectGetMidX(bounds), CGRectGetMidY(bounds));
             CGEventRef move = CGEventCreateMouseEvent(NULL, kCGEventMouseMoved, point, button);
+            // Relative gameplay actions must not inherit a cursor-position delta
+            // from the focus move. Keep the event inside the owned window.
+            if (!click) {
+                CGEventSetIntegerValueField(move, kCGMouseEventDeltaX, 0);
+                CGEventSetIntegerValueField(move, kCGMouseEventDeltaY, 0);
+            }
             CGEventPost(kCGHIDEventTap, move); CFRelease(move);
             usleep(150000);
             if (aim) {

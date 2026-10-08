@@ -1,0 +1,34 @@
+{
+  "date": "2026-10-07",
+  "pid": 94785,
+  "engine_sha256": "d4406759b529aa4998c81f442f8756e817d167241ba194f31c3f40b7040462c9",
+  "helper_source_sha256": "6d53c309197435d0eee0c446f349d7e0b92580ed0d2cf0f78b31665f12b2a88c",
+  "validation": {
+    "build": "Mac native input helper compiles with -Wall -Wextra; no engine source changed.",
+    "native_input": "SDL_PushEvent read-only capture has exact requested deltas (0,100), (0,100), (100,-100), (0,-60), followed by right-button down/up approximately 2.94 seconds apart; no additional focus-move delta during relative gameplay actions.",
+    "aim": "Actual original view and compass change. Short screenshot delays do not establish input latency or vertical sign; earlier inverted-pitch commentary was premature.",
+    "jet": "Mission time02:19 full energy/no heat;02:21 energy visibly reduced and heat increased after native right-button hold. By02:24 energy still below full. Altitude and recovery are not independently established.",
+    "fire": "This attempt began after the original return to Training, so it is not a firing test.",
+    "teardown": "Original console records package deactivation, local client drop and server reset. No Escape key appears in the captured native events. Original Training1 hurryPlayerUp timer40s then45s and spdialog ANY_abort scheduling disconnect3s provide a strong explanation; exact runtime callback not captured.",
+    "host_network": "Startup console reports Net::openPort bind failed: address family not supported. Bind argument not captured yet.",
+    "hd": "Deployed archive matches pinned SHA256 9c54108b2f598010d2f586ab96e748dfe0445dc2f22461df48a2de23e1fea255; selection/sampling remain unverified."
+  },
+  "artifacts": {
+    "generated/integration-review/apple-render-dimensions/input-validation/native-input-events.json": "34bb4eca0e41dd09235c5a0c74cf33b22a681aa6f8870002c882f2f694ed2f7f",
+    "generated/integration-review/apple-render-dimensions/input-validation/aim-active100.png": "70469184d0df62d6e2149deb66aad5b10ab7262cde38f3af178b42e0ea0105e1",
+    "generated/integration-review/apple-render-dimensions/input-validation/aim-opposite.png": "16c8dc9ce0dfcf6f39e8ea4f7f4dc3612ded319d41e7f45d6bd530244d4c1a8d",
+    "generated/integration-review/apple-render-dimensions/input-validation/jet-before.png": "6a380a1fd72163502f8acf1a8afe3c4eff9f3892c662106dc6bea1f4ab905f42",
+    "generated/integration-review/apple-render-dimensions/input-validation/jet-during2.png": "dbb79ffcdfa4f3d42aca0392a8b86d45b7f09ce21bef50b5ad063cb488ddafdf",
+    "generated/integration-review/apple-render-dimensions/input-validation/jet-after.png": "86330102c603b329217fe6e8d0d9f4d805e7fad324032d13fb875bfb1bca403c",
+    "generated/integration-review/apple-render-dimensions/input-validation/fire-before.png": "5f66ad8c3aee17d087e271e8b5d7a82bdc2a1fe1900faf3ba7908d62e00e63af",
+    "generated/integration-review/apple-render-dimensions/input-validation/console.log": "2c773230ae7e97f6d55faaa135b3f3f0330147d5327c29e10b084397835b68fc",
+    "generated/integration-review/apple-render-dimensions/input-validation/loading-sample.txt": "cb137c293313fda43118117bc5f69960084ce6ec4bfd35e9673d134ee79fbe10"
+  },
+  "remaining": [
+    "controlled jet altitude/recovery and fire/ammunition",
+    "original LAN map controls and host bind arguments",
+    "HD selection/rendering",
+    "authenticated existing-community match",
+    "full mobile gameplay and platform performance"
+  ]
+}
