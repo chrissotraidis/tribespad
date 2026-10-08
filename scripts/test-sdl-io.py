@@ -28,7 +28,7 @@ for mode in ['normal','checked','tsan']:
  run=subprocess.run([str(exe)],capture_output=True,text=True,timeout=30);(out/(mode+'.log')).write_text(run.stdout+run.stderr);assert run.returncode==0 and run.stdout.startswith('PASS:') and not run.stderr,(mode,run.returncode,run.stdout,run.stderr)
  faults=[]
  if mode=='checked':
-  for fault in ['unreadable-path','stale','foreign','readonly-output','short-output']:
+  for fault in ['unreadable-path','stale','foreign','readonly-output','short-output','string-unreadable','string-readonly-output','string-short-output']:
    run=subprocess.run([str(exe),fault],capture_output=True,text=True,timeout=30);assert run.returncode==-6 and 'TribesPad:' in run.stderr,(fault,run.returncode,run.stderr);faults.append(fault)
  runs.append(dict(mode=mode,passed=True,faults=faults,binary_sha256=sha(exe)));print('PASS:',mode,flush=True)
 paths=[*sources[:3],fixture,pathlib.Path(__file__).resolve(),R/'config/runtime/sdl-io-bindings.json',R/'port/compiler/ExternalMemoryPass.cpp',R/'config/runtime/external-memory-contracts.json']

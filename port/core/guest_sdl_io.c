@@ -95,3 +95,29 @@ uint32_t tribes_sdl_get_simd_alignment(_cpu *cpu){
     (void)cpu;uint32_t error=tribes_get_last_error();size_t result=SDL_GetSIMDAlignment();
     if(result>UINT32_MAX)stop();tribes_set_last_error(error);return (uint32_t)result;
 }
+/* Adjacent original decoder extension selection and error text. SDL's
+   comparison folds UTF-8, so host strcasecmp is not interchangeable. */
+static char *decoder_string(_cpu *cpu,uint32_t address,uint32_t *length){
+    uint32_t n=0;unsigned char value;
+    for(;;n++){
+        if(n==1048576||(uint64_t)address+n>UINT32_MAX)stop();
+        copy(&value,guest(cpu,address+n,1),1);if(!value)break;
+    }
+    char *text=malloc((size_t)n+1);if(!text)stop();
+    copy(text,guest(cpu,address,(size_t)n+1),(size_t)n+1);*length=n;return text;
+}
+uint32_t tribes_sdl_strcasecmp(_cpu *cpu,uint32_t left,uint32_t right){
+    uint32_t error=tribes_get_last_error(),n;
+    char *a=decoder_string(cpu,left,&n),*b=decoder_string(cpu,right,&n);
+    int result=SDL_strcasecmp(a,b);free(a);free(b);
+    tribes_set_last_error(error);return (uint32_t)result;
+}
+uint32_t tribes_sdl_strlcpy(_cpu *cpu,uint32_t destination,uint32_t source,uint32_t capacity){
+    uint32_t error=tribes_get_last_error(),length;
+    char *text=decoder_string(cpu,source,&length);
+    if(capacity){
+        uint32_t n=length<capacity?length:capacity-1;text[n]=0;
+        copy(guest(cpu,destination,(size_t)n+1),text,(size_t)n+1);
+    }
+    free(text);tribes_set_last_error(error);return length;
+}

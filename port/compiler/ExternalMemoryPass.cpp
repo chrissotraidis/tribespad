@@ -230,6 +230,7 @@ struct ExternalMemoryPass : PassInfoMixin<ExternalMemoryPass>{
     if(Name=="SDL_GetWindowDisplayScale"||Name=="SDL_ceilf")
      Allowed=Allowed&&!Target->isVarArg()&&Call->getType()==B.getFloatTy()&&Call->arg_size()==1&&Call->getArgOperand(0)->getType()==(Name=="SDL_ceilf"?B.getFloatTy():P);
     if(Name=="SDL_GetSIMDAlignment")Allowed=Allowed&&!Target->isVarArg()&&Call->getType()==I64&&Call->arg_size()==0;
+    if(Name=="SDL_strcasecmp")Allowed=Allowed&&!Target->isVarArg()&&Call->getType()==I32&&Call->arg_size()==2&&Call->getArgOperand(0)->getType()==P&&Call->getArgOperand(1)->getType()==P;
     if(Name=="SDL_ReadU32LE")Allowed=Allowed&&!Target->isVarArg()&&Call->getType()==B.getInt1Ty()&&Call->arg_size()==2&&Call->getArgOperand(0)->getType()==P&&Call->getArgOperand(1)->getType()==P;
     if(Name=="SDL_GetError")Allowed=Allowed&&!Target->isVarArg()&&Call->getType()==P&&Call->arg_size()==0;
     if(Name=="SDL_IOFromFile"||Name=="SDL_CloseIO"||Name=="SDL_SeekIO"||Name=="SDL_TellIO"||Name=="SDL_GetIOSize"||Name=="SDL_ReadIO"){

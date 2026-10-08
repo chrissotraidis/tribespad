@@ -6,7 +6,7 @@
       "mode": "normal",
       "passed": true,
       "faults": [],
-      "binary_sha256": "792c85ce24f6233ff1a76e1dbc14411df1da6f96fe9d30c4b6e7819ed45f3c0b"
+      "binary_sha256": "6cd17b3b9bd63d2272447708f60b4d2fdc5a5e3a4dae033083d76c1d48ee444c"
     },
     {
       "mode": "checked",
@@ -16,34 +16,31 @@
         "stale",
         "foreign",
         "readonly-output",
-        "short-output"
+        "short-output",
+        "string-unreadable",
+        "string-readonly-output",
+        "string-short-output"
       ],
-      "binary_sha256": "e328f2d8035adafc1cb894d99d85388cf0311e408850885b7e9b2bc25829e2f2"
+      "binary_sha256": "3143f180037faec01ea148a83ce55c18f6f9fd089974a1c1210dfe2426cadc56"
     },
     {
       "mode": "tsan",
       "passed": true,
       "faults": [],
-      "binary_sha256": "99b8ebb485b0124914dbd9b46cf067812efb3cefcb0d25fa671a8a45124f1345"
+      "binary_sha256": "28892fc11bad86dcafd302ba6c3a31a961deac7b192aeada48ad0b790526fa0d"
     }
   ],
   "sources_sha256": {
-    "port/core/guest_sdl_io.c": "b75d625b5156ebb4f0495cdc53f073195a89b885d9cfa3fc39323b1dae266f6f",
+    "port/core/guest_sdl_io.c": "efdd038cfff11f1dfa64e51b5f8a904d306a6b2bf66d5d784215bd53c6d22872",
     "port/core/guest_filesystem.c": "dccc9e2c3fc003ca6beff79eb004bdc544eb2e227a7757cb79b6692a828d03ae",
     "port/core/guest_heap.c": "791c26c9fd72984fc53f0f5f1447df5f1dd43e38af08a529b1efc0b3e65dd96b",
-    "tests/sdl_io_test.c": "c962e2a98ddcc3d8b3c01d4abf62cd0342f0e01a4c63f15432957c6f310d5d0a",
-    "scripts/test-sdl-io.py": "c33a61c09f142097619af92b2877c18bc1657c5244a64c26db4ceb2829fb7f02",
-    "config/runtime/sdl-io-bindings.json": "4728492ef1c16befc72c632bbab45f7ea6e59c42536bb160f9297eb4b05e95f7",
-    "port/compiler/ExternalMemoryPass.cpp": "f162720c22d3aca3845bc94f54040f1f03146f94d645aa4859c691cf95c084c9",
-    "config/runtime/external-memory-contracts.json": "6a2a57528a60960ad20c4c27ccafbb988306335228b88b92a1cf411b65075872",
-    "port/core/guest_sdl_backend.c": "9ba88beeefe7b7152498f9ec48caba1e035e2e785bd953e11cb6f1321a97074c",
-    "port/core/guest_sdl_backend.h": "762c8bc01b1e78bcc26febe90e23f577d66514a0c10dc863988ca1f85f464c71",
-    "tests/sdl_audio_test.c": "215ff5ac07bb64c88a3ac262a62bf381dfd804cf02cddba453b0572c651da919",
-    "tests/fixtures/sdl_hint_dispatch.c": "97cc2ac48bd2725d3b9e16b4baa56e602520952eb75888bd5d1e3eae73649326",
-    "scripts/test-sdl-audio.py": "7f2731176591d3689833a727b382c33ce11a1302a4c370c4db4e3066a36b5bfa",
-    "config/runtime/sdl-bindings.json": "f786437099e56e0dc150d2d439c7ce95db673f33928f9094c99c38667d3dee21"
+    "tests/sdl_io_test.c": "d33c6a2bf19c3992ada6808f8eabb3e16c0da01d7bb83ed431ef601261118532",
+    "scripts/test-sdl-io.py": "4efd6f3eda1f31905459606542d354b8727482d16b2f23d1e35b43086bd83c33",
+    "config/runtime/sdl-io-bindings.json": "86c71be6ab1e08a329eca3a3c03b52f5ef1a9c880f6dd180b3c206cda32305e3",
+    "port/compiler/ExternalMemoryPass.cpp": "30e307c26282f1f9845f60c11f32e13eddc7bfd6e56ef2d859d3d9f265b6acfd",
+    "config/runtime/external-memory-contracts.json": "029a12e0c6be289caed18937e6e4d27e9ab2df3399b19d2c18a8961ad36c7b81"
   },
-  "scope": "Real read-only file IO and emitted guest ABI; original decoder execution and full music playback unverified.",
+  "scope": "Real SDL file IO, alignment and allocator original execution; decoder string comparison/copy component-tested against pinned native SDL with checked ABI and bounded memory. Full music playback pending.",
   "original_failure": {
     "diagnostic_stop": true,
     "native_patch_publication": true,
@@ -85,39 +82,111 @@
     "return_hex": "0x100d3ed0",
     "scope": "Actual original decoder file open; filename bytes not captured; no subsequent scene acceptance."
   },
-  "full_engine": "Decoder-group rebuild active in session69802, PID20545. Prior read-only file group executed successfully in original app; new alignment/read32/PCM helpers remain component-tested.",
+  "full_engine": "Full string-helper rebuild live in session20769 PID30003; aligned allocator executed successfully in signed app.",
   "limitations": [
     "Only rb file mode admitted; writes stop explicitly.",
-    "New decoder-group original execution pending; original music playback unverified.",
+    "Decoder string inputs require valid NUL-terminated strings up to1MiB.",
+    "Original string helpers and decoded PCM remain unverified.",
     "IPv6 UDP creation fails in current provider; authenticated community play not accepted.",
-    "No new Katabatic scene, HD or mobile execution acceptance."
+    "No Katabatic scene, HD or mobile gameplay acceptance in this run."
   ],
   "evidence_sha256": {
-    "generated/integration-review/sdl-io/result.json": "8e65d92600f4924f22d6ec909d2d9648f0a83c64b5601d32da570a9cb7b764fc",
+    "generated/integration-review/sdl-io/result.json": "210d1b959aaf1f8af762568c137ab09976e3ec5f4e7bcf9be6bd60a8d514152e",
     "generated/integration-review/sdl-io/mobile-compile/result.json": "d4e72b4f087bbbc10af5c25725e15b6c6b7afef6776b2ec2fb6305c2149b4eda",
     "generated/integration-review/sdl-io/original-before-fix/stop.json": "e2ff6e019f16f3dcfcb4fa55a9cbb6b6807747662f5bf743311c0a0bcbfb41fb",
     "generated/integration-review/sdl-io/decoder-mobile-compile/result.json": "1004ef7b58aeefe91a7092b9d68081c4df4addd9df4c4ba4e9e5ea3af07c0864",
     "generated/integration-review/sdl-audio/macos/result.json": "2ecaf25d5ad013e53617e2c4ff876c3afb75cc88ea90e26d1bd6a80de8d57829",
     "generated/integration-review/sdl-io/execution/next-stop.json": "570b905a8cb1aabbc85fb31fb2f9285504b0f99f15d69e90f917b55df74b0857",
     "generated/integration-review/sdl-io/execution/io-calls.json": "7e496fb6ea84ac509b9cae18a6e6e48f57c4cda2cd0e5aea2aa82484350e0e9a",
-    "generated/integration-review/sdl-io/execution/network-calls.json": "b64bdf369ed41c7b83b6bf2134465f99d5395c9c2fa015598969a141c35d81b2"
+    "generated/integration-review/sdl-io/execution/network-calls.json": "b64bdf369ed41c7b83b6bf2134465f99d5395c9c2fa015598969a141c35d81b2",
+    "generated/integration-review/sdl-io/strings-mobile-compile/result.json": "6b5b1ce09f5fa88415e11ecf0a1285a49f145da7bc7be55e6e1ed9d45cf021d6",
+    "generated/integration-review/sdl-io/aligned-execution/app-build.json": "dd0751a7d6f49d7d2398d60b6b6518d0e1c02b8d9a1049fafd46201c7868c43c",
+    "generated/integration-review/sdl-io/aligned-execution/full-engine-result.json": "31e9020145a210e857711013e3efb97bee52daac77c49781c285d37af6b1fd49",
+    "generated/integration-review/sdl-io/aligned-execution/io-calls.json": "c83ce6446ea10c41d176ba390a2407cad7d1d778f262b64a251ef43d3e308a95",
+    "generated/integration-review/sdl-io/aligned-execution/next-stop.json": "ac3b17786c839391a28de063704326dc0282a4e580acb78f55309e427f2981c9",
+    "generated/integration-review/sdl-io/aligned-execution/console.log": "4f11bd83f6c2708f118b60eb674bdbb9298f62333977c33fd4f0eb2871dad45e",
+    "generated/integration-review/sdl-io/aligned-execution/app-stderr.log": "5ef5ec7e025934f73bfe0619a65fbe8ec330774ab2ae20570900a9f52dae5977",
+    "generated/integration-review/sdl-io/aligned-execution/observation.json": "10748a287116ef9f421609fd032d297343df607315bb69b50bf8476e8d5cbdbd"
   },
   "original_execution": {
-    "pid": 17764,
-    "binary_sha256": "ecab4e0ecc32351e35ba900efcde4ecfb7374a99aa81544fe27cc06f784b8400",
+    "pid": 27730,
+    "binary_sha256": "50b38ac8d37b7caf47daa50705caa4b9a6d03af601b99beec6aaa4510c40dda1",
     "initialized": true,
     "attach_returned": true,
     "independent_subpages": true,
-    "file": "base/music/ice.mp3",
-    "mode": "rb",
-    "original_return": "0x100d3ed0",
-    "owned_stream": "0xd6000001",
+    "io_calls": [
+      {
+        "name": "tribes_sdl_io_from_file",
+        "time": 1791426719.6795452,
+        "return_pc": "0x100d3ed0",
+        "arguments": [
+          "0x64304af0",
+          "0x1012b140"
+        ],
+        "path": "base\\music\\ice.mp3",
+        "mode": "rb",
+        "native_return_low": "0xd6000001",
+        "returned_time": 1791426719.692804
+      },
+      {
+        "name": "tribes_sdl_get_simd_alignment",
+        "time": 1791426719.7027462,
+        "return_pc": "0x100d3c32",
+        "arguments": [],
+        "native_return_low": "0x10",
+        "returned_time": 1791426719.711379
+      },
+      {
+        "name": "tribes_sdl_aligned_alloc",
+        "time": 1791426719.7196102,
+        "return_pc": "0x100d3c38",
+        "arguments": [
+          "0x10",
+          "0x10000"
+        ],
+        "native_return_low": "0x64270010",
+        "returned_time": 1791426719.7277172
+      }
+    ],
     "next_stop": {
-      "pid": 17764,
-      "index": 336,
-      "name": "SDL_GetSIMDAlignment",
-      "return_pc": "0x100d3c32",
-      "scope": "Stopped main-thread CPU/stack only; not a coherent whole-memory snapshot."
+      "pid": 27730,
+      "import_name": "SDL_strcasecmp",
+      "index": 327,
+      "cpu": "0x10cf98d50",
+      "base": "0x7000000000",
+      "esp": "0x2ff394",
+      "stack": [
+        "0x100d3cc8",
+        "0x101a7e44",
+        "0x64304aff",
+        "0x64304afe",
+        "0x64304af0",
+        "0x3218",
+        "0x6041b5c0",
+        "0x2ff3d0",
+        "0x100d3f02",
+        "0xd6000001",
+        "0x64304aff",
+        "0x104713bc",
+        "0x10000",
+        "0x0",
+        "0x64304af0",
+        "0x2ff3ec",
+        "0x100578d8",
+        "0x64304af0",
+        "0x104713bc",
+        "0x10000",
+        "0x60631568",
+        "0x60429800",
+        "0x2ff3f8",
+        "0x4094cd"
+      ],
+      "strings": [
+        "MP3",
+        "mp3"
+      ],
+      "allocation_metadata": "00002764",
+      "scope": "Selected main thread CPU and bounded stack only; active workers mean no coherent whole-memory snapshot."
     },
     "pcm_read": false,
     "scene_visible": false

@@ -62,5 +62,21 @@
     "guest_base": false,
     "cpu_argument": true,
     "calling_convention": "cdecl"
+  },
+  "SDL_strcasecmp": {
+    "helper": "tribes_sdl_strcasecmp",
+    "arguments": 2,
+    "returns": true,
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_strlcpy": {
+    "helper": "tribes_sdl_strlcpy",
+    "arguments": 3,
+    "returns": true,
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
   }
 }

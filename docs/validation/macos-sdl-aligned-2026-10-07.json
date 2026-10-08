@@ -158,14 +158,17 @@
     "port/core/guest_sdl_allocator.h": "c270bac59db8e6e5ca5d294f2c21f72b540706dbd71cc60f717d62cd71ebd996"
   },
   "bindings_sha256": "68d14705fcf8ac3b67def64a8a9cd2d2357259abaecd0a89ca7704373e6dd378",
-  "scope": "Component validation of pinned SDL i686 aligned allocator using original registered callback mechanism; full original aligned allocation execution pending.",
+  "scope": "Component allocator checks plus actual original aligned allocation through registered guest callback; full decoder/playback pending.",
   "original_execution": {
-    "binary_sha256": "edcf8209f58120e5b66e6bbfd7c2d3194e9797bd62852e955aa295fdd0df8a81",
-    "pid": 22655,
+    "pid": 27730,
+    "binary_sha256": "50b38ac8d37b7caf47daa50705caa4b9a6d03af601b99beec6aaa4510c40dda1",
+    "initialized": true,
+    "attach_returned": true,
+    "independent_subpages": true,
     "io_calls": [
       {
         "name": "tribes_sdl_io_from_file",
-        "time": 1791425371.9414232,
+        "time": 1791426719.6795452,
         "return_pc": "0x100d3ed0",
         "arguments": [
           "0x64304af0",
@@ -174,32 +177,43 @@
         "path": "base\\music\\ice.mp3",
         "mode": "rb",
         "native_return_low": "0xd6000001",
-        "returned_time": 1791425371.955286
+        "returned_time": 1791426719.692804
       },
       {
         "name": "tribes_sdl_get_simd_alignment",
-        "time": 1791425371.965015,
+        "time": 1791426719.7027462,
         "return_pc": "0x100d3c32",
         "arguments": [],
         "native_return_low": "0x10",
-        "returned_time": 1791425371.9740312
+        "returned_time": 1791426719.711379
+      },
+      {
+        "name": "tribes_sdl_aligned_alloc",
+        "time": 1791426719.7196102,
+        "return_pc": "0x100d3c38",
+        "arguments": [
+          "0x10",
+          "0x10000"
+        ],
+        "native_return_low": "0x64270010",
+        "returned_time": 1791426719.7277172
       }
     ],
     "next_stop": {
-      "pid": 22655,
-      "import_name": "SDL_aligned_alloc",
-      "index": 323,
-      "cpu": "0x110cc8d50",
+      "pid": 27730,
+      "import_name": "SDL_strcasecmp",
+      "index": 327,
+      "cpu": "0x10cf98d50",
       "base": "0x7000000000",
       "esp": "0x2ff394",
       "stack": [
-        "0x100d3c38",
-        "0x10",
-        "0x10000",
+        "0x100d3cc8",
+        "0x101a7e44",
+        "0x64304aff",
         "0x64304afe",
         "0x64304af0",
         "0x3218",
-        "0xd6000001",
+        "0x6041b5c0",
         "0x2ff3d0",
         "0x100d3f02",
         "0xd6000001",
@@ -218,8 +232,15 @@
         "0x2ff3f8",
         "0x4094cd"
       ],
+      "strings": [
+        "MP3",
+        "mp3"
+      ],
+      "allocation_metadata": "00002764",
       "scope": "Selected main thread CPU and bounded stack only; active workers mean no coherent whole-memory snapshot."
-    }
+    },
+    "pcm_read": false,
+    "scene_visible": false
   },
   "evidence_sha256": {
     "generated/integration-review/sdl-io/decoder-execution/app-build.json": "a5c1bb8ba0be7cda19f3e5edd01b02822adff9bb85ba351e3608b98e74cef95b",
@@ -229,7 +250,11 @@
     "generated/integration-review/sdl-io/decoder-execution/app-stderr.log": "3764e4f9bf374669f570f377655bedabf998d1160a4bc1215872ccbe36860933",
     "generated/integration-review/sdl-io/decoder-execution/observation.json": "888b38c13574c3dc6141cd50fb615eb65a628d77dbdb4c9d85fad8b846e95642",
     "generated/integration-review/sdl-io/aligned-mobile-compile/result.json": "a6950d80d9e8700daa6ee8c64b6bad481c573397344d5e8972ca3c5f46bd3a73",
-    "ref/sdl3/SDL3-3.2.18/src/stdlib/SDL_stdlib.c": "192cfe8d9c94ee651e7e8a0c035962ffd21ae84d8f5ad914ddcef035c94181ea"
+    "ref/sdl3/SDL3-3.2.18/src/stdlib/SDL_stdlib.c": "192cfe8d9c94ee651e7e8a0c035962ffd21ae84d8f5ad914ddcef035c94181ea",
+    "generated/integration-review/sdl-io/aligned-execution/app-build.json": "dd0751a7d6f49d7d2398d60b6b6518d0e1c02b8d9a1049fafd46201c7868c43c",
+    "generated/integration-review/sdl-io/aligned-execution/io-calls.json": "c83ce6446ea10c41d176ba390a2407cad7d1d778f262b64a251ef43d3e308a95",
+    "generated/integration-review/sdl-io/aligned-execution/next-stop.json": "ac3b17786c839391a28de063704326dc0282a4e580acb78f55309e427f2981c9",
+    "generated/integration-review/sdl-io/aligned-execution/observation.json": "10748a287116ef9f421609fd032d297343df607315bb69b50bf8476e8d5cbdbd"
   },
-  "full_engine": "Aligned allocator full rebuild live: session7458 PID25739. No new original aligned allocation/PCM/scene/HD/mobile acceptance."
+  "full_engine": "Complete checked engine50b38ac8 initialized with attach returned; signed PID27730 allocated0x64270010 from original0x64270000, then stopped at SDL_strcasecmp(MP3,mp3), return0x100d3cc8. Aligned free and decoded PCM not executed."
 }
