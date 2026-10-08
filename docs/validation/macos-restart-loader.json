@@ -1,5 +1,5 @@
 {
-  "state": "loader_fix_component_validated_full_build_pending",
+  "state": "original_restart_executed_next_missing_sdl_randf",
   "original_failure": {
     "pid": 54207,
     "cpu": "0x10ca24d90",
@@ -93,5 +93,18 @@
     },
     "scope": "Checked branch fixture ARM64 compilation only; no mobile app execution."
   },
-  "limitations": "Branch tests isolate provider return; existing native primitive-restart tests establish native pixels and query. Changed full original execution pending. No Katabatic scene, HD sampling or multiplayer acceptance."
+  "limitations": "Original restart provider executes; subsequent rendering stops at missing SDL_randf before any captured draw-elements call. No Katabatic scene, HD sampling or multiplayer acceptance.",
+  "original_execution": {
+    "pid": 60056,
+    "engine_sha256": "4843fdda0b36d39323f383733d28027829e075363251a40deff37ff3f1a7bd13",
+    "restart_return_pc": "0x10034817",
+    "restart_index": "0xffff",
+    "restart_slot": "0xfffa0800",
+    "gl31_flag": "0x0",
+    "next_missing_import": "SDL_randf",
+    "next_import_index": 301,
+    "next_call": "0x10034a99",
+    "next_return": "0x10034a9f",
+    "scope": "Bounded original signed-app observations; no coherent whole-memory snapshot or Katabatic scene acceptance."
+  }
 }
