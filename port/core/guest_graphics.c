@@ -18,7 +18,7 @@ typedef struct {const char *name;uint32_t address,module;void *function;} Graphi
    that export on mobile until its state semantics are implemented. */
 static int available(const GraphicsExport *e){
 #if TARGET_OS_IPHONE
-    if(!strcmp(e->name,"glPrimitiveRestartIndex"))return 0;
+    if(!strcmp(e->name,"glTexCoord2fv")||!strcmp(e->name,"glPrimitiveRestartIndex"))return 0;
     if(!strcmp(e->name,"glLoadMatrixf")||!strcmp(e->name,"glTexGeni")||!strcmp(e->name,"glTexGenfv")||!strcmp(e->name,"glPolygonMode")||!strcmp(e->name,"glAlphaFunc")||!strcmp(e->name,"glFogCoordPointerEXT")||!strcmp(e->name,"glVertex3fv"))return 0;
     if(!strcmp(e->name,"glFogi")||!strcmp(e->name,"glFogf")||!strcmp(e->name,"glFogfv"))return 0;
     if(!strcmp(e->name,"glLightfv")||!strcmp(e->name,"glLightf")||!strcmp(e->name,"glLightModelfv"))return 0;

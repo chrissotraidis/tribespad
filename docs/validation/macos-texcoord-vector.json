@@ -1,0 +1,77 @@
+{
+  "state": "component_validated_original_rebuild_running",
+  "reached_failure": {
+    "original_engine": "22f9a51444ffa74700bd8f3f09bcaf3dcf8a23ef4ce44cfde33fc0a29ad8412e",
+    "pid": 36498,
+    "kind": "null graphics export",
+    "name": "glTexCoord2fv",
+    "slot": "0x9e4d14",
+    "caller": "0x5a7734",
+    "return": "0x5a773a",
+    "guest_input": "0x60854d10",
+    "scope": "Original Katabatic logs START MATCH and reaches graphics call; last visible frame remains loading screen."
+  },
+  "change": "Finite stdcall export 0xfffa0810 reads exactly eight checked guest bytes into private floats and calls native glTexCoord2f. Desktop legacy-context semantics preserved; unavailable GLES implementation remains gated.",
+  "validation": {
+    "receipt": "generated/integration-review/gl-query-init/macos/result.json",
+    "sha256": "ae55abb2937b27f8a0eea76d9e51c6e808e3830a1c9e5deb5b01e907c220a6eb",
+    "runs": [
+      {
+        "mode": "normal",
+        "passed": true,
+        "fault_count": 0
+      },
+      {
+        "mode": "tsan",
+        "passed": true,
+        "fault_count": 0
+      },
+      {
+        "mode": "checked",
+        "passed": true,
+        "fault_count": 164
+      }
+    ],
+    "scope": "Native textured framebuffer comparison, current-coordinate defaults, readonly unaligned and exact page-end inputs, retained GL errors, CPU/stack/LastError; three new guards."
+  },
+  "mobile": {
+    "passed": true,
+    "rows": [
+      {
+        "platform": "device",
+        "target": "arm64-apple-ios16",
+        "receipt": "73ed4161555d30acf1c497bd299fe3a130cd801df847863c93c42de36cfd8a06",
+        "objects": [
+          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/texcoord-vector/mobile-compile/iphoneos/00-guest_sdl_backend.o",
+          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/texcoord-vector/mobile-compile/iphoneos/01-native_winsock.o",
+          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/texcoord-vector/mobile-compile/iphoneos/02-guest_graphics.o",
+          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/texcoord-vector/mobile-compile/iphoneos/03-graphics-bindings.o"
+        ]
+      },
+      {
+        "platform": "simulator",
+        "target": "arm64-apple-ios16-simulator",
+        "receipt": "20d8d25fc900da5aaff746df585b3287c930c8ff6ad6a1f10b9adaa2c46b9333",
+        "objects": [
+          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/texcoord-vector/mobile-compile/iphonesimulator/00-guest_sdl_backend.o",
+          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/texcoord-vector/mobile-compile/iphonesimulator/01-native_winsock.o",
+          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/texcoord-vector/mobile-compile/iphonesimulator/02-guest_graphics.o",
+          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/texcoord-vector/mobile-compile/iphonesimulator/03-graphics-bindings.o"
+        ]
+      }
+    ],
+    "scope": "Changed backend, finite GL provider and bindings checked-compiled for ARM64 iOS device and Simulator; no mobile launch."
+  },
+  "sources_sha256": {
+    "port/core/guest_sdl_backend.c": "b4a2674ee54ca4eb0c95eb86cae1930e624142626769d99d7bfa8177b737b3ef",
+    "port/core/guest_sdl_backend.h": "0441a8155e2ee4902e52ea43935bd9483754519888a892716bbbe563176d746b",
+    "port/core/guest_graphics.c": "9de356554d0748e622a2c21748d54f7b8e5f621f4a3a20da6abfd2e07250f47c",
+    "scripts/graphics_backend_inputs.py": "8a04cf1f53b8ae6fc47f604ec1c7bee8ff93e94cf825183fd76a6127c30acb06",
+    "scripts/test-sdl-window.py": "3d6109e7b8de4a9032ad6dee8c3b468eb4d9eef52ccf4cfe0ea814c3c9f819b1",
+    "tests/sdl_window_test.c": "65d714b8885a4c0175ae4dbd03fa011fc7948eb853f1878043777b74116b5e3d"
+  },
+  "limitations": [
+    "Original scene with this bridge not yet executed",
+    "HD, community multiplayer and full mobile gameplay unfinished"
+  ]
+}

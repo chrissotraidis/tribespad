@@ -703,6 +703,38 @@ static void primitive_restart(void){
  GC(0xfffa02f0,0,GL_VERTEX_ARRAY);assert(tribes_memory_permissions_set(0x4000,4096,3));glColor4f(1,1,1,1);assert(!GC(0xfffa0010,1));
  puts("Primitive restart: native split-strip framebuffer oracle, 8/16/32-bit markers, no marker vertex reads, all-marker draw, unaligned indices, disabled state and retained errors PASS");
 }
+static void vector_texcoords(const char *fault){
+ strcpy((char *)memory+0x24000,"glTexCoord2fv");assert(CALL(63,0x24000)==0xfffa0810);
+ if(fault&&!strcmp(fault,"texcoord-vector-read")){assert(tribes_memory_permissions_set(0x4000,4096,0));GC(0xfffa0810,0,0x3ff9);assert(0);}
+ if(fault&&!strcmp(fault,"texcoord-vector-null")){GC(0xfffa0810,0,0);assert(0);}
+ if(fault&&!strcmp(fault,"texcoord-vector-overflow")){GC(0xfffa0810,0,0xfffffffc);assert(0);}
+ glActiveTexture(GL_TEXTURE0);glMatrixMode(GL_TEXTURE);glLoadIdentity();
+ glMatrixMode(GL_PROJECTION);glLoadIdentity();glMatrixMode(GL_MODELVIEW);glLoadIdentity();
+ glDisable(GL_BLEND);glDisable(GL_DEPTH_TEST);glColor4f(1,1,1,1);
+ GLuint texture;glGenTextures(1,&texture);glBindTexture(GL_TEXTURE_2D,texture);
+ const unsigned char pixels[]={255,0,0,255,0,255,0,255,0,0,255,255,255,255,255,255};
+ glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,2,2,0,GL_RGBA,GL_UNSIGNED_BYTE,pixels);
+ glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+ glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_REPLACE);glEnable(GL_TEXTURE_2D);
+ const GLfloat uv[4][2]={{0,0},{1,0},{1,1},{0,1}};unsigned char expected[64*64*4],actual[sizeof expected];
+ for(unsigned route=0;route<2;route++){
+  glClearColor(0,0,0,1);glClear(GL_COLOR_BUFFER_BIT);glEnable(0xffffffff);glBegin(GL_QUADS);
+  for(unsigned i=0;i<4;i++){
+   if(!route)glTexCoord2f(uv[i][0],uv[i][1]);
+   else {uint32_t address=i&1?0x3ff8:0x3001;memcpy(memory+address,uv[i],8);
+    assert(tribes_memory_permissions_set(0x3000,4096,1)&&tribes_memory_permissions_set(0x4000,4096,0));
+    GC(0xfffa0810,0,address);assert(!memcmp(memory+address,uv[i],8));
+    assert(tribes_memory_permissions_set(0x3000,4096,3)&&tribes_memory_permissions_set(0x4000,4096,3));}
+   glVertex2f(uv[i][0]*2-1,uv[i][1]*2-1);
+  }glEnd();assert(glGetError()==GL_INVALID_ENUM&&glGetError()==0);
+  GLfloat current[4];glGetFloatv(GL_CURRENT_TEXTURE_COORDS,current);assert(current[0]==0&&current[1]==1&&current[2]==0&&current[3]==1);
+  glReadPixels(0,0,64,64,GL_RGBA,GL_UNSIGNED_BYTE,route?actual:expected);
+ }
+ assert(!memcmp(actual,expected,sizeof actual));
+ assert(actual[(16*64+16)*4]==255&&actual[(16*64+48)*4+1]==255&&actual[(48*64+16)*4+2]==255);
+ glDisable(GL_TEXTURE_2D);glDeleteTextures(1,&texture);glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_MODULATE);
+ puts("Vector texture coordinates: native textured framebuffer, current coordinate defaults, exact-page-end readonly/unaligned input, retained errors and guest ABI PASS");
+}
 static void vector_vertices(const char *fault){
  strcpy((char *)memory+0x24000,"glVertex3fv");assert(CALL(63,0x24000)==0xfffa0760);
  if(fault&&!strcmp(fault,"vertex-vector-read")){assert(tribes_memory_permissions_set(0x4000,4096,0));GC(0xfffa0760,0,0x3ff5);assert(0);}
@@ -1372,7 +1404,7 @@ static void legacy_route(uint32_t original_window,uint32_t original_context,cons
  glBindBuffer(GL_ARRAY_BUFFER,names[2]);glGetBufferSubData(GL_ARRAY_BUFFER,0,4,readback);assert(!memcmp(data,readback,4));glBindBuffer(GL_ARRAY_BUFFER,names[0]);
  GC(0xfffa01e0,0,3,0x3001);GC(0xfffa0020,0,0x8f36,0x3021);assert(word(0x3021)==0);GC(0xfffa0020,0,0x8f37,0x3021);assert(word(0x3021)==0);
  GC(0xfffa01d0,0,0x8f37,4,0,GL_STATIC_DRAW);assert(glGetError()==GL_INVALID_OPERATION);
- texture_subregions(fault);matrix_queries(fault);gpu_sync(window,context,fault);vector_vertices(fault);primitive_restart();immediate_rectangle();texture_array(fault);quad_draw(fault);shader_lifecycle(fault);
+ texture_subregions(fault);matrix_queries(fault);gpu_sync(window,context,fault);vector_vertices(fault);vector_texcoords(fault);primitive_restart();immediate_rectangle();texture_array(fault);quad_draw(fault);shader_lifecycle(fault);
  assert(CALL(48,context));CALL(41,window);assert(CALL(49,original_window,original_context));
  assert(CALL(53,SDL_GL_CONTEXT_MAJOR_VERSION,3)&&CALL(53,SDL_GL_CONTEXT_MINOR_VERSION,2)&&CALL(53,SDL_GL_CONTEXT_PROFILE_MASK,SDL_GL_CONTEXT_PROFILE_CORE));
  puts("legacy fallback: guest matrices/viewport/depth state render red pixel; 32MiB copy-target storage, binding isolation, errors, sharing and cleanup PASS");
@@ -1728,7 +1760,7 @@ static int window_main(int argc,char **argv){
  if(argc==2&&!strcmp(argv[1],"vertex-vector-core")){GC(0xfffa0760,0,0x3001);assert(0);}
  if(argc==2&&!strcmp(argv[1],"vertex3f-core")){GC(0xfffa06e0,0,0,0,0);assert(0);}
  if(argc==2&&!strcmp(argv[1],"matrix-query-core")){GC(0xfffa0120,0,GL_MODELVIEW_MATRIX,0x3001);assert(0);}
- if(argc==1||(argc==2&&(!strncmp(argv[1],"texgen-",7)||!strncmp(argv[1],"fog-",4)||!strncmp(argv[1],"vertex-vector-",14)||!strncmp(argv[1],"matrix-query-",13)||!strncmp(argv[1],"sync-",5)||!strncmp(argv[1],"array-",6)||!strncmp(argv[1],"uniform-",8)||!strncmp(argv[1],"shader-",7)||!strncmp(argv[1],"quad-",5)||!strncmp(argv[1],"matrix-load-",12)||!strncmp(argv[1],"matrix-mult-",12)||!strncmp(argv[1],"matrix-double-",14)||!strncmp(argv[1],"state-",6)||!strncmp(argv[1],"normal-",7)||!strncmp(argv[1],"light-",6)||!strcmp(argv[1],"unreadable-matrix")||!strcmp(argv[1],"shared-copy-delete")||!strcmp(argv[1],"shared-array-delete"))))legacy_route(window,context,argc==2?argv[1]:NULL);
+ if(argc==1||(argc==2&&(!strncmp(argv[1],"texgen-",7)||!strncmp(argv[1],"fog-",4)||!strncmp(argv[1],"texcoord-vector-",16)||!strncmp(argv[1],"vertex-vector-",14)||!strncmp(argv[1],"matrix-query-",13)||!strncmp(argv[1],"sync-",5)||!strncmp(argv[1],"array-",6)||!strncmp(argv[1],"uniform-",8)||!strncmp(argv[1],"shader-",7)||!strncmp(argv[1],"quad-",5)||!strncmp(argv[1],"matrix-load-",12)||!strncmp(argv[1],"matrix-mult-",12)||!strncmp(argv[1],"matrix-double-",14)||!strncmp(argv[1],"state-",6)||!strncmp(argv[1],"normal-",7)||!strncmp(argv[1],"light-",6)||!strcmp(argv[1],"unreadable-matrix")||!strcmp(argv[1],"shared-copy-delete")||!strcmp(argv[1],"shared-array-delete"))))legacy_route(window,context,argc==2?argv[1]:NULL);
  if(argc==2&&!strcmp(argv[1],"mipmap-nonzero-base")){
   GC(0xfffa0150,0,1,0x3001);GC(0xfffa0160,0,GL_TEXTURE_2D,word(0x3001));GC(0xfffa0170,0,GL_TEXTURE_2D,0x8191,1);GC(0xfffa0170,0,GL_TEXTURE_2D,GL_TEXTURE_BASE_LEVEL,1);
   const unsigned char color[]={1,2,3,255};mipmap_upload(1,2,color);assert(0);

@@ -1795,6 +1795,16 @@ void tribes_gl_tex_coord2f(_cpu *cpu,uint32_t s,uint32_t t){
     glTexCoord2f(value[0],value[1]);DRAW_RETURN();
 #endif
 }
+void tribes_gl_tex_coord2fv(_cpu *cpu,uint32_t address){
+    WINDOW_ENTER();
+#if TARGET_OS_IPHONE
+    (void)address;(void)error;stop();
+#else
+    (void)legacy_context();GLfloat value[2];
+    checked_copy(value,guest(cpu,address,sizeof value),sizeof value);
+    glTexCoord2f(value[0],value[1]);DRAW_RETURN();
+#endif
+}
 void tribes_gl_rotate_f(_cpu *cpu,uint32_t angle,uint32_t x,uint32_t y,uint32_t z){
     WINDOW_ENTER();
 #if TARGET_OS_IPHONE

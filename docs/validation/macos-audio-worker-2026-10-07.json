@@ -1,53 +1,5 @@
 {
-  "state": "component_validated_original_rebuild_running",
-  "original_engine": "d348a518d55dac41a2bd646cced5f910ebb40f557ec6aa608ba24c7f0b8cac0e",
-  "original_execution": {
-    "pid": 32104,
-    "artifact_directory": "generated/integration-review/sdl-io/strings-execution",
-    "comparison_result": 0,
-    "music_file": "base\\music\\ice.mp3",
-    "observed_read_calls": 8,
-    "observed_seek_calls": 8,
-    "next_stop": {
-      "pid": 32104,
-      "kind": "worker audio main-thread guard",
-      "helper": "SDL_GetAudioStreamAvailable",
-      "thread": 29,
-      "cpu": "0x175b0a8e8",
-      "base": "0x7000000000",
-      "esp": "0x602bff60",
-      "token": "0xd7000001",
-      "stack": [
-        "0x100d3872",
-        "0xd7000001",
-        "0x1103",
-        "0x10471258",
-        "0x1103",
-        "0x602bffa8",
-        "0x100573df",
-        "0x6041b770",
-        "0x0",
-        "0x505fe9c0",
-        "0x100759a0",
-        "0x1103",
-        "0x64e0c180",
-        "0x1",
-        "0x40",
-        "0x100759dd",
-        "0x4",
-        "0x12fcfd0a",
-        "0x602bfff4",
-        "0x100759f7",
-        "0x64e0c180",
-        "0x100572f0",
-        "0x64e0c180",
-        "0x101141fb"
-      ],
-      "scope": "Selected worker CPU and bounded stack; not a coherent whole-memory snapshot"
-    },
-    "decoded_pcm_observed": false,
-    "rendered_katabatic_observed": false
-  },
+  "state": "original_worker_pcm_observed",
   "change": "Serialize native audio device/stream lookup and use against destruction and shutdown. Admit original worker audio calls for the established process/allocator identity, preserve checked PCM copies and queue logs to owner. Apple subsystem/video initialization remains main-thread bound.",
   "validation": {
     "receipt": "generated/integration-review/sdl-audio/macos/result.json",
@@ -118,9 +70,77 @@
     "scripts/test-sdl-audio.py": "0e642c88a195bbf00b78b533ae64d6084dac9582ac18d46d023cf08857e6d987"
   },
   "limitations": [
-    "Worker fix not yet executed by original game; full rebuild PID35455/session9742 active.",
-    "First test run timed out in native CoreAudio open after default-device selection was changed too late. Selected speakers before retry; all test modes passed. Default57 restored.",
-    "LLDB observer encountered stale cached frame names and repeated one-shot callbacks; corrected to resolve the actual PC and ignore already-consumed return IDs. No guest-state writes.",
-    "No decoded PCM, primitive-restart rendering, HD sampling, authenticated community multiplayer or mobile gameplay acceptance."
-  ]
+    "Katabatic reaches START MATCH in console then null glTexCoord2fv call before scene presentation.",
+    "HD sampling, authenticated multiplayer and mobile gameplay remain unfinished.",
+    "Selected-thread CPU/stack capture is not a coherent whole-memory snapshot."
+  ],
+  "prior_original_execution": {
+    "pid": 32104,
+    "artifact_directory": "generated/integration-review/sdl-io/strings-execution",
+    "comparison_result": 0,
+    "music_file": "base\\music\\ice.mp3",
+    "observed_read_calls": 8,
+    "observed_seek_calls": 8,
+    "next_stop": {
+      "pid": 32104,
+      "kind": "worker audio main-thread guard",
+      "helper": "SDL_GetAudioStreamAvailable",
+      "thread": 29,
+      "cpu": "0x175b0a8e8",
+      "base": "0x7000000000",
+      "esp": "0x602bff60",
+      "token": "0xd7000001",
+      "stack": [
+        "0x100d3872",
+        "0xd7000001",
+        "0x1103",
+        "0x10471258",
+        "0x1103",
+        "0x602bffa8",
+        "0x100573df",
+        "0x6041b770",
+        "0x0",
+        "0x505fe9c0",
+        "0x100759a0",
+        "0x1103",
+        "0x64e0c180",
+        "0x1",
+        "0x40",
+        "0x100759dd",
+        "0x4",
+        "0x12fcfd0a",
+        "0x602bfff4",
+        "0x100759f7",
+        "0x64e0c180",
+        "0x100572f0",
+        "0x64e0c180",
+        "0x101141fb"
+      ],
+      "scope": "Selected worker CPU and bounded stack; not a coherent whole-memory snapshot"
+    },
+    "decoded_pcm_observed": false,
+    "rendered_katabatic_observed": false
+  },
+  "prior_original_engine": "d348a518d55dac41a2bd646cced5f910ebb40f557ec6aa608ba24c7f0b8cac0e",
+  "original_engine": "22f9a51444ffa74700bd8f3f09bcaf3dcf8a23ef4ce44cfde33fc0a29ad8412e",
+  "original_execution": {
+    "pid": 36498,
+    "artifact_directory": "generated/integration-review/sdl-io/worker-execution",
+    "music_file": "base\\music\\ice.mp3",
+    "successful_pcm_puts": 8,
+    "pcm_gets_returning_65536_bytes": 9,
+    "decoded_pcm_observed": true,
+    "pcm_prefix_bytes": 4096,
+    "pcm_prefix_nonzero_bytes": 4013,
+    "pcm_prefix_sha256": "2d79828b8ac14c9aa5ebb9db14d45b3e19a2fc19cf78b75dad8718a2fd5d59cb",
+    "rendered_katabatic_observed": false,
+    "next_stop": {
+      "kind": "null glTexCoord2fv export",
+      "guest_return": "0x5a773a",
+      "slot": "0x9e4d14",
+      "slot_value": 0
+    },
+    "audio_default_restored": 57,
+    "scope": "Original music decoder and native stream PCM conversion observed; independently audible music not established."
+  }
 }
