@@ -22,13 +22,14 @@ def inputs(platform='macos'):
 def prepare(destination):
     report,flags,libraries=inputs()
     bindings=json.loads((R/'config/runtime/sdl-bindings.json').read_text())
+    bindings.update(json.loads((R/'config/runtime/sdl-io-bindings.json').read_text()))
     spec=importlib.util.spec_from_file_location('sdl_binding_generator',R/'scripts/gen-win32-bindings.py')
     gen=importlib.util.module_from_spec(spec);spec.loader.exec_module(gen)
     wrapper=destination/'sdl-bindings.ll';wrapper.write_text(gen.generate(bindings,False))
     sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
     metadata=dict(backend_report_sha256=sha(R/'generated/sdl-backend/macos/result.json'),
                   libraries=report['libraries'],bindings_sha256=sha(R/'config/runtime/sdl-bindings.json'),
-                  script_sha256=sha(pathlib.Path(__file__)),scope='Native private SDL storage, checked guest public results, Apple audio initialization, typed synchronization, TLS/cdecl cleanup, keyboard/controller startup, and typed native windows/GL contexts. Finite GL/GLU queries, initial native clear/framebuffer drawing and window/DC adaptation are included; general rendering, mobile draw-buffer selection, event conversion and audio streams remain unfinished.')
+                  script_sha256=sha(pathlib.Path(__file__)),io_bindings_sha256=sha(R/'config/runtime/sdl-io-bindings.json'),io_source_sha256=sha(R/'port/core/guest_sdl_io.c'),scope='Native private SDL storage, checked guest public results, Apple audio initialization, typed synchronization, TLS/cdecl cleanup, keyboard/controller startup, and typed native windows/GL contexts. Finite GL/GLU queries, initial native clear/framebuffer drawing and window/DC adaptation are included; general rendering, mobile draw-buffer selection, event conversion and audio streams remain unfinished.')
     from graphics_backend_inputs import prepare as prepare_graphics
     graphics_sources,graphics_bindings=prepare_graphics(destination)
     bindings.update(graphics_bindings)
@@ -46,4 +47,4 @@ def prepare(destination):
     flags+=openal_flags;libraries+=openal_libraries;bindings.update(openal_bindings)
     metadata['openal_backend']=openal_report
     metadata['openal_inputs_sha256']={str(p.relative_to(R)):sha(p) for p in [R/'scripts/openal_backend_inputs.py',R/'port/core/guest_openal.c',R/'port/core/guest_openal.h']}
-    return graphics_sources+dsound_sources+openal_sources+[R/'port/core/guest_sdl_backend.c',R/'port/core/guest_sdl_sync.c',R/'port/core/guest_sdl_tls.c',wrapper],flags,libraries,bindings,metadata
+    return graphics_sources+dsound_sources+openal_sources+[R/'port/core/guest_sdl_io.c',R/'port/core/guest_sdl_backend.c',R/'port/core/guest_sdl_sync.c',R/'port/core/guest_sdl_tls.c',wrapper],flags,libraries,bindings,metadata

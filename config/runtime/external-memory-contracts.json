@@ -219,6 +219,13 @@
     "SDL_SetWindowFullscreenMode",
     "SDL_GL_SetSwapInterval",
     "SDL_GetError",
+    "SDL_IOFromFile",
+    "SDL_CloseIO",
+    "SDL_SeekIO",
+    "SDL_TellIO",
+    "SDL_GetIOSize",
+    "SDL_ReadIO",
+
     "SDL_GetWindowDisplayScale",
     "SDL_ceilf",
     "SDL_GetClosestFullscreenDisplayMode",

@@ -1,0 +1,50 @@
+{
+  "SDL_IOFromFile": {
+    "helper": "tribes_sdl_io_from_file",
+    "arguments": 2,
+    "returns": true,
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_CloseIO": {
+    "helper": "tribes_sdl_close_io",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_SeekIO": {
+    "helper": "tribes_sdl_seek_io",
+    "arguments": 4,
+    "returns": true,
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_TellIO": {
+    "helper": "tribes_sdl_tell_io",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_GetIOSize": {
+    "helper": "tribes_sdl_get_io_size",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_ReadIO": {
+    "helper": "tribes_sdl_read_io",
+    "arguments": 3,
+    "returns": true,
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  }
+}

@@ -230,6 +230,16 @@ struct ExternalMemoryPass : PassInfoMixin<ExternalMemoryPass>{
     if(Name=="SDL_GetWindowDisplayScale"||Name=="SDL_ceilf")
      Allowed=Allowed&&!Target->isVarArg()&&Call->getType()==B.getFloatTy()&&Call->arg_size()==1&&Call->getArgOperand(0)->getType()==(Name=="SDL_ceilf"?B.getFloatTy():P);
     if(Name=="SDL_GetError")Allowed=Allowed&&!Target->isVarArg()&&Call->getType()==P&&Call->arg_size()==0;
+    if(Name=="SDL_IOFromFile"||Name=="SDL_CloseIO"||Name=="SDL_SeekIO"||Name=="SDL_TellIO"||Name=="SDL_GetIOSize"||Name=="SDL_ReadIO"){
+     SmallVector<Type *,3> Args;Type *Result=I64;
+     if(Name=="SDL_IOFromFile"){Args={P,P};Result=P;}
+     else if(Name=="SDL_CloseIO"){Args={P};Result=B.getInt1Ty();}
+     else if(Name=="SDL_SeekIO")Args={P,I64,I32};
+     else if(Name=="SDL_ReadIO")Args={P,P,I64};
+     else Args={P};
+     Allowed=Allowed&&!Target->isVarArg()&&Call->getType()==Result&&Call->arg_size()==Args.size();
+     if(Allowed)for(unsigned i=0;i<Args.size();++i)if(Call->getArgOperand(i)->getType()!=Args[i])Allowed=false;
+    }
     if(Name=="SDL_GetDisplayForWindow"||Name=="SDL_SetWindowFullscreenMode"||Name=="SDL_GL_SetSwapInterval"){
      SmallVector<Type *,2> Args;Type *Result=B.getInt1Ty();
      if(Name=="SDL_GetDisplayForWindow"){Args={P};Result=I32;}

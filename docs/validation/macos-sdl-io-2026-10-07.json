@@ -1,0 +1,93 @@
+{
+  "passed": true,
+  "state": "finished",
+  "runs": [
+    {
+      "mode": "normal",
+      "passed": true,
+      "faults": [],
+      "binary_sha256": "792c85ce24f6233ff1a76e1dbc14411df1da6f96fe9d30c4b6e7819ed45f3c0b"
+    },
+    {
+      "mode": "checked",
+      "passed": true,
+      "faults": [
+        "unreadable-path",
+        "stale",
+        "foreign",
+        "readonly-output",
+        "short-output"
+      ],
+      "binary_sha256": "e328f2d8035adafc1cb894d99d85388cf0311e408850885b7e9b2bc25829e2f2"
+    },
+    {
+      "mode": "tsan",
+      "passed": true,
+      "faults": [],
+      "binary_sha256": "99b8ebb485b0124914dbd9b46cf067812efb3cefcb0d25fa671a8a45124f1345"
+    }
+  ],
+  "sources_sha256": {
+    "port/core/guest_sdl_io.c": "bc5703c0f9b5675046d2434bbf1ea02d3b7b0e94cda2390b78d8ed05c5d2ec0d",
+    "port/core/guest_filesystem.c": "dccc9e2c3fc003ca6beff79eb004bdc544eb2e227a7757cb79b6692a828d03ae",
+    "port/core/guest_heap.c": "791c26c9fd72984fc53f0f5f1447df5f1dd43e38af08a529b1efc0b3e65dd96b",
+    "tests/sdl_io_test.c": "86e76ae4e878cb2cc55f2209a170c9bc49ff841f52b169557415cd439d2f6c98",
+    "scripts/test-sdl-io.py": "c33a61c09f142097619af92b2877c18bc1657c5244a64c26db4ceb2829fb7f02",
+    "config/runtime/sdl-io-bindings.json": "9d0af145202cc971b458c67c901a22f93f8da3d1ef9bf755c58df5a43838cdad",
+    "port/compiler/ExternalMemoryPass.cpp": "b3ac2b29d2c5506e7cd11d55a617de3c62b282f379574a4b4cde3496a234ffb6",
+    "config/runtime/external-memory-contracts.json": "d19685550233a8a753164d2b4a035d5ef61bccd7322bcd835a655436c3d3fead"
+  },
+  "scope": "Real read-only file IO and emitted guest ABI; original decoder execution and full music playback unverified.",
+  "original_failure": {
+    "diagnostic_stop": true,
+    "native_patch_publication": true,
+    "attach_return": 1,
+    "engine_entered": true,
+    "kind": "import",
+    "index": 330,
+    "stage": 2,
+    "return_pc": 269303504,
+    "esp": 3142580,
+    "eax": 1680886526,
+    "stack_arguments": [
+      1680886512,
+      269660480,
+      1680886512,
+      46,
+      0,
+      1680886512,
+      3142636,
+      268794072,
+      1680886512,
+      273093564,
+      65536
+    ],
+    "registers": {
+      "eax": 1680886526,
+      "ecx": 0,
+      "edx": 1617494016,
+      "ebx": 12824,
+      "esp": 3142580,
+      "ebp": 3142608,
+      "esi": 1680886512,
+      "edi": 1680886526
+    },
+    "pid": 12575,
+    "import_name": "SDL_IOFromFile",
+    "mode": "rb",
+    "original_call": "0x100d3ecb",
+    "return_hex": "0x100d3ed0",
+    "scope": "Actual original decoder file open; filename bytes not captured; no subsequent scene acceptance."
+  },
+  "full_engine": "Build active in session14505; new original calls not yet exercised.",
+  "limitations": [
+    "Only reached rb file mode admitted; write/append modes stop explicitly.",
+    "Original decoder completion and music playback not verified.",
+    "No new Katabatic scene, HD, authenticated multiplayer or mobile execution acceptance."
+  ],
+  "evidence_sha256": {
+    "generated/integration-review/sdl-io/result.json": "9eba8c4766be549f258ebda8d7aedca6e7fe0a1a084317d370269e6b5977cc46",
+    "generated/integration-review/sdl-io/mobile-compile/result.json": "d4e72b4f087bbbc10af5c25725e15b6c6b7afef6776b2ec2fb6305c2149b4eda",
+    "generated/integration-review/sdl-io/original-before-fix/stop.json": "e2ff6e019f16f3dcfcb4fa55a9cbb6b6807747662f5bf743311c0a0bcbfb41fb"
+  }
+}
