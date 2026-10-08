@@ -83,3 +83,15 @@ uint32_t tribes_sdl_read_io(_cpu *cpu,uint32_t token,uint32_t output,uint32_t si
     }
     pthread_mutex_unlock(&io_lock);tribes_set_last_error(error);return (uint32_t)result;
 }
+uint32_t tribes_sdl_read_u32le(_cpu *cpu,uint32_t token,uint32_t output){
+    uint32_t error=tribes_get_last_error(),value=0;pthread_mutex_lock(&io_lock);
+    SDL_IOStream *stream=token?(*slot(cpu,token))->stream:NULL;
+    bool result=SDL_ReadU32LE(stream,output?&value:NULL);
+    /* SDL publishes its zero-initialized partial value even at EOF. */
+    if(output)copy(guest(cpu,output,4),&value,4);
+    pthread_mutex_unlock(&io_lock);tribes_set_last_error(error);return result;
+}
+uint32_t tribes_sdl_get_simd_alignment(_cpu *cpu){
+    (void)cpu;uint32_t error=tribes_get_last_error();size_t result=SDL_GetSIMDAlignment();
+    if(result>UINT32_MAX)stop();tribes_set_last_error(error);return (uint32_t)result;
+}

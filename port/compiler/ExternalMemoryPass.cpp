@@ -229,6 +229,8 @@ struct ExternalMemoryPass : PassInfoMixin<ExternalMemoryPass>{
     }
     if(Name=="SDL_GetWindowDisplayScale"||Name=="SDL_ceilf")
      Allowed=Allowed&&!Target->isVarArg()&&Call->getType()==B.getFloatTy()&&Call->arg_size()==1&&Call->getArgOperand(0)->getType()==(Name=="SDL_ceilf"?B.getFloatTy():P);
+    if(Name=="SDL_GetSIMDAlignment")Allowed=Allowed&&!Target->isVarArg()&&Call->getType()==I64&&Call->arg_size()==0;
+    if(Name=="SDL_ReadU32LE")Allowed=Allowed&&!Target->isVarArg()&&Call->getType()==B.getInt1Ty()&&Call->arg_size()==2&&Call->getArgOperand(0)->getType()==P&&Call->getArgOperand(1)->getType()==P;
     if(Name=="SDL_GetError")Allowed=Allowed&&!Target->isVarArg()&&Call->getType()==P&&Call->arg_size()==0;
     if(Name=="SDL_IOFromFile"||Name=="SDL_CloseIO"||Name=="SDL_SeekIO"||Name=="SDL_TellIO"||Name=="SDL_GetIOSize"||Name=="SDL_ReadIO"){
      SmallVector<Type *,3> Args;Type *Result=I64;
@@ -283,7 +285,7 @@ struct ExternalMemoryPass : PassInfoMixin<ExternalMemoryPass>{
      Allowed=Allowed&&!Target->isVarArg()&&Call->getType()==Result&&Call->arg_size()==Args.size();
      if(Allowed)for(unsigned i=0;i<Args.size();++i)if(Call->getArgOperand(i)->getType()!=Args[i])Allowed=false;
     }
-    if(Name=="SDL_OpenAudioDevice"||Name=="SDL_GetAudioDeviceFormat"||Name=="SDL_PauseAudioDevice"||Name=="SDL_CloseAudioDevice"||Name=="SDL_CreateAudioStream"||Name=="SDL_BindAudioStream"||Name=="SDL_DestroyAudioStream"||Name=="SDL_ResumeAudioStreamDevice"||Name=="SDL_PauseAudioStreamDevice"||Name=="SDL_ClearAudioStream"||Name=="SDL_GetAudioStreamAvailable"||Name=="SDL_GetAudioStreamData"){
+    if(Name=="SDL_OpenAudioDevice"||Name=="SDL_GetAudioDeviceFormat"||Name=="SDL_PauseAudioDevice"||Name=="SDL_CloseAudioDevice"||Name=="SDL_CreateAudioStream"||Name=="SDL_BindAudioStream"||Name=="SDL_DestroyAudioStream"||Name=="SDL_ResumeAudioStreamDevice"||Name=="SDL_PauseAudioStreamDevice"||Name=="SDL_ClearAudioStream"||Name=="SDL_GetAudioStreamAvailable"||Name=="SDL_GetAudioStreamData"||Name=="SDL_PutAudioStreamData"||Name=="SDL_FlushAudioStream"){
      SmallVector<Type *,3> Args;Type *Result=B.getInt1Ty();
      if(Name=="SDL_OpenAudioDevice"){Args={I32,P};Result=I32;}
      else if(Name=="SDL_GetAudioDeviceFormat")Args={I32,P,P};
@@ -294,6 +296,7 @@ struct ExternalMemoryPass : PassInfoMixin<ExternalMemoryPass>{
      else if(Name=="SDL_DestroyAudioStream"){Args={P};Result=B.getVoidTy();}
      else if(Name=="SDL_GetAudioStreamAvailable"){Args={P};Result=I32;}
      else if(Name=="SDL_GetAudioStreamData"){Args={P,P,I32};Result=I32;}
+     else if(Name=="SDL_PutAudioStreamData")Args={P,P,I32};
      else Args={P};
      Allowed=Allowed&&!Target->isVarArg()&&Call->getType()==Result&&Call->arg_size()==Args.size();
      if(Allowed)for(unsigned i=0;i<Args.size();++i)if(Call->getArgOperand(i)->getType()!=Args[i])Allowed=false;

@@ -775,6 +775,16 @@ uint32_t tribes_sdl_get_audio_stream_data(_cpu *cpu,uint32_t token,uint32_t outp
     if(result>0)checked_copy(guest(cpu,output,(size_t)result),data,(size_t)result);
     free(data);AUDIO_RETURN(result);
 }
+uint32_t tribes_sdl_put_audio_stream_data(_cpu *cpu,uint32_t token,uint32_t input,uint32_t length){
+    AUDIO_ENTER();SDL_AudioStream *stream=native_audio_stream(token);int size=(int32_t)length;
+    if(!input||size<=0){unsigned char unused;bool result=SDL_PutAudioStreamData(stream,input?&unused:NULL,size);AUDIO_RETURN(result);}
+    void *data=malloc((size_t)size);if(!data){SDL_OutOfMemory();AUDIO_RETURN(0);}
+    checked_copy(data,guest(cpu,input,(size_t)size),(size_t)size);
+    bool result=SDL_PutAudioStreamData(stream,data,size);free(data);AUDIO_RETURN(result);
+}
+uint32_t tribes_sdl_flush_audio_stream(_cpu *cpu,uint32_t token){
+    AUDIO_ENTER();bool result=SDL_FlushAudioStream(native_audio_stream(token));AUDIO_RETURN(result);
+}
 #undef AUDIO_ENTER
 #undef AUDIO_RETURN
 #undef AUDIO_DONE

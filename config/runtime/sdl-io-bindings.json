@@ -46,5 +46,21 @@
     "guest_base": false,
     "cpu_argument": true,
     "calling_convention": "cdecl"
+  },
+  "SDL_ReadU32LE": {
+    "helper": "tribes_sdl_read_u32le",
+    "arguments": 2,
+    "returns": true,
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_GetSIMDAlignment": {
+    "helper": "tribes_sdl_get_simd_alignment",
+    "arguments": 0,
+    "returns": true,
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
   }
 }

@@ -21,7 +21,7 @@ extern void tbimp_SDL_ResumeAudioStreamDevice(void);
 extern void tbimp_SDL_PauseAudioStreamDevice(void);
 extern void tbimp_SDL_ClearAudioStream(void);
 extern void tbimp_SDL_GetAudioStreamAvailable(void);
-extern void tbimp_SDL_GetAudioStreamData(void);
+extern void tbimp_SDL_GetAudioStreamData(void),tbimp_SDL_PutAudioStreamData(void),tbimp_SDL_FlushAudioStream(void);
 SDL_AudioStream *sdl_test_audio_stream;
 void sdl_test_audio_stream_observe(SDL_AudioStream *stream){sdl_test_audio_stream=stream;}
 unsigned sdl_test_allocations,sdl_test_frees,sdl_test_live,sdl_test_fail;
@@ -45,6 +45,8 @@ void *tribes_lookup(uint32_t pc){
  case 31:return tbimp_SDL_ClearAudioStream;
  case 32:return tbimp_SDL_GetAudioStreamAvailable;
  case 33:return tbimp_SDL_GetAudioStreamData;
+ case 34:return tbimp_SDL_PutAudioStreamData;
+ case 35:return tbimp_SDL_FlushAudioStream;
  case 0xfffff000:return tribes_return_to_host;default:abort();}
 }
 uint32_t sdl_test_malloc(_cpu *c,uint32_t size){

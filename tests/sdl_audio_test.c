@@ -82,21 +82,25 @@ static int video_main(int argc,char **argv){
  if(argc==2&&!strcmp(argv[1],"stale-device")){call(25,device,0);call(24,device,0);return 99;}
  if(argc==2&&!strcmp(argv[1],"unreadable-spec")){assert(tribes_memory_permissions_set(0x60000,0x1000,0));call(26,0x60000,0x3100);return 99;}
  if(argc==2&&!strcmp(argv[1],"readonly-format")){assert(tribes_memory_permissions_set(0x60000,0x1000,1));THREE(23,device,0x60000,0);return 99;}
- /* Host-only test observer supplies genuine SDL input. Converted output still
-    crosses exclusively through the guest wrapper and checked private staging. */
+ /* Exercise copied guest PCM through both directions of the native stream. */
  call(28,stream,0);
  SDL_AudioSpec src={SDL_AUDIO_S16LE,1,8000},dst={SDL_AUDIO_F32LE,1,8000};
  memcpy(memory+0x3000,&src,12);memcpy(memory+0x3100,&dst,12);
  uint32_t converted=call(26,0x3000,0x3100);assert(converted!=stream);
  const int16_t samples[]={-32768,-16384,0,16384};float values[]={-1,-.5f,0,.5f};
- assert(SDL_PutAudioStreamData(sdl_test_audio_stream,samples,sizeof samples));assert(call(32,converted,0)==sizeof values);
+ memcpy(memory+0x5001,samples,sizeof samples);
+ if(argc==2&&!strcmp(argv[1],"unreadable-pcm")){assert(tribes_memory_permissions_set(0x5000,0x1000,0));THREE(34,converted,0x5001,sizeof samples);return 99;}
+ if(argc==2&&!strcmp(argv[1],"overflow-pcm")){THREE(34,converted,0xfffffffc,sizeof samples);return 99;}
+ assert(!THREE(34,converted,0,8));assert(!THREE(34,converted,0x5001,UINT32_MAX));assert(THREE(34,converted,0x5001,0));
+ assert(THREE(34,converted,0x5001,sizeof samples));memset(memory+0x5001,0,sizeof samples);
+ assert(call(35,converted,0));assert(call(32,converted,0)==sizeof values);
  if(argc==2&&!strcmp(argv[1],"readonly-data")){assert(tribes_memory_permissions_set(0x60000,0x1000,1));THREE(33,converted,0x60000,64);return 99;}
  if(argc==2&&!strcmp(argv[1],"overflow-data")){THREE(33,converted,0xfffffff8,64);return 99;}
  /* A protected tail outside the actual returned extent must stay untouched. */
  assert(tribes_memory_permissions_set(0x80000,0x1000,0));memset(memory+0x7fff0,0x5a,16);
  assert(THREE(33,converted,0x7fff0,64)==sizeof values);assert(!memcmp(memory+0x7fff0,values,sizeof values));
  assert(tribes_memory_permissions_set(0x80000,0x1000,3));
- assert(SDL_PutAudioStreamData(sdl_test_audio_stream,samples,sizeof samples));
+ memcpy(memory+0x5001,samples,sizeof samples);assert(THREE(34,converted,0x5001,sizeof samples));assert(call(35,converted,0));
  memset(memory+0x4000,0x5a,64);assert(THREE(33,converted,0x4000,64)==sizeof values);
  assert(!memcmp(memory+0x4000,values,sizeof values));for(unsigned i=16;i<64;i++)assert(memory[0x4000+i]==0x5a);
  call(28,converted,0);
@@ -104,7 +108,7 @@ static int video_main(int argc,char **argv){
     storage; no dummy device or fabricated completion. */
  SDL_AudioSpec spec={SDL_AUDIO_F32,2,48000};memcpy(memory+0x3000,&spec,12);
  stream=call(26,0x3000,0x3000);assert(stream);SDL_AudioStream *native=sdl_test_audio_stream;
- float silence[4800]={0};assert(SDL_PutAudioStreamData(native,silence,sizeof silence));assert(SDL_GetAudioStreamQueued(native)==sizeof silence);
+ float silence[4800]={0};memcpy(memory+0x9000,silence,sizeof silence);assert(THREE(34,stream,0x9000,sizeof silence));assert(call(35,stream,0));assert(SDL_GetAudioStreamQueued(native)==sizeof silence);
  assert(call(27,device,stream)&&call(29,stream,0));
  for(unsigned i=0;i<200&&SDL_GetAudioStreamQueued(native);i++)SDL_Delay(10);
  assert(!SDL_GetAudioStreamQueued(native));assert(call(30,stream,0));assert(call(31,stream,0));

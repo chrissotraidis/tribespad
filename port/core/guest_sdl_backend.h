@@ -236,6 +236,8 @@ uint32_t tribes_sdl_pause_audio_stream_device(_cpu *,uint32_t);
 uint32_t tribes_sdl_clear_audio_stream(_cpu *,uint32_t);
 uint32_t tribes_sdl_get_audio_stream_available(_cpu *,uint32_t);
 uint32_t tribes_sdl_get_audio_stream_data(_cpu *,uint32_t,uint32_t,uint32_t);
+uint32_t tribes_sdl_put_audio_stream_data(_cpu *,uint32_t,uint32_t,uint32_t);
+uint32_t tribes_sdl_flush_audio_stream(_cpu *,uint32_t);
 void tribes_gl_polygon_mode(_cpu *,uint32_t,uint32_t);
 void tribes_gl_alpha_func(_cpu *,uint32_t,uint32_t);
 void tribes_gl_fog_coord_pointer(_cpu *,uint32_t,uint32_t,uint32_t);

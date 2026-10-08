@@ -763,5 +763,21 @@
     "guest_base": false,
     "cpu_argument": true,
     "calling_convention": "cdecl"
+  },
+  "SDL_PutAudioStreamData": {
+    "helper": "tribes_sdl_put_audio_stream_data",
+    "arguments": 3,
+    "returns": true,
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_FlushAudioStream": {
+    "helper": "tribes_sdl_flush_audio_stream",
+    "arguments": 1,
+    "returns": true,
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
   }
 }
