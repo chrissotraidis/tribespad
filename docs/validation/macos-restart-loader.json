@@ -1,0 +1,97 @@
+{
+  "state": "loader_fix_component_validated_full_build_pending",
+  "original_failure": {
+    "pid": 54207,
+    "cpu": "0x10ca24d90",
+    "base": "0x7000000000",
+    "esp": "0x2ff508",
+    "registers": [
+      "0x7d",
+      "0x653633e0",
+      "0x7d",
+      "0x657cc01c",
+      "0x2ff508",
+      "0x2ff5f4",
+      "0x65a08000",
+      "0x2"
+    ],
+    "stack": [
+      "0x10034817",
+      "0xffff",
+      "0x2",
+      "0x65a08000",
+      "0x8457",
+      "0x2ff618",
+      "0x5ed233",
+      "0xbf800000",
+      "0x80000000",
+      "0x4067db57",
+      "0x447446",
+      "0x1d730966",
+      "0xbfb3b573",
+      "0x1d730966",
+      "0x26b1c1b8",
+      "0xb2c61e4b",
+      "0xbfa99999",
+      "0xb2c61e4b",
+      "0x3fa99999",
+      "0x0",
+      "0x2ff614",
+      "0x447476",
+      "0x7576e8",
+      "0x43eeffff",
+      "0x2931c1b8",
+      "0x2ff5f4",
+      "0x56fa15",
+      "0x1d730966",
+      "0x65a08000",
+      "0x1d730966",
+      "0x3fb3b573",
+      "0x100325f4"
+    ],
+    "scope": "Selected main-thread CPU and bounded stack only; no coherent whole-memory snapshot.",
+    "primitive_restart_slot": "0x0",
+    "gl31_flag": "0x0"
+  },
+  "cause": "Original loader branches around GL3.1 procedure group when 0x1046c880 is zero. Consequently 0x1046cb08 remains null despite the implemented primitive-restart provider. Original rendering calls it at0x10034811 with index0xffff.",
+  "change": "Only on skipped GL3.1 path and an empty slot, resolve original glPrimitiveRestartIndex name via finite graphics registry and store an actual nonzero result. Existing slots, guest CPU and capability flags preserved; no code-page writes.",
+  "validation": {
+    "normal": {
+      "cases": 384,
+      "binary_sha256": "262be29e47b5bbdb658152018f3144f29a0f9391cbd26607e1e4f995fe821b13"
+    },
+    "checked": {
+      "cases": 384,
+      "binary_sha256": "e76837883a7d155984162f15b3bfcbe289d4fdec1765b76fabea7c68f7bfecd7"
+    },
+    "passed": true,
+    "checked_faults": 2,
+    "original_blocks_sha256": {
+      "loc_1001B445": "81f40482a1d860e5eb6cd6a1319da99dc6ef7993240ecfd9bbe51cac768eb12f",
+      "loc_1001B463": "11d88fecafc5bacc2842a3a6142f024954ae2e4873d7fdfa269e4c96f60a23e4",
+      "loc_1001B46A": "94a52f85826a4fede2d97766a0d2164b2b3c1a02a3587087b0fa0454e1d99791"
+    },
+    "sources_sha256": {
+      "scripts/test-apple-primitive-restart.py": "ac94d20e7de4a1771b0fbf37736228d16033c6676a1f612571fe86fa25bddf3e",
+      "scripts/apple_primitive_restart.py": "7d1468ee1f6a6887cc4fd94e6b03af0204a7f43c8d57ff0f10c3eda02bb9e9be",
+      "port/core/guest_memory_checks.c": "ee00fcff6979a3f4480835115d10db5dddf5fabf089a04c80f4a55e0ea82ec7c",
+      "port/core/guest_external_checks.c": "2ecaf0cf09462d76b293ab70860c9245ae46536959e81fd2549ad7675ad63523"
+    },
+    "scope": "Original GL3.1 branch and full CPU preservation; only missing restart slot uses actual resolver result. Provider stub isolates branch behavior; native provider/pixels covered by existing primitive-restart graphics tests."
+  },
+  "mobile": {
+    "passed": true,
+    "results": {
+      "device": {
+        "target": "arm64-apple-ios16",
+        "receipt_sha256": "0d07d456aed47786cfb29d4ff7852bf19ee18ff265a385a510f4a4aac20f3b90"
+      },
+      "simulator": {
+        "target": "arm64-apple-ios16-simulator",
+        "receipt_sha256": "b940d409a03eb05f0df72da96f10dd3526f9c2f3cd2bcdb47a7ed189cf255623"
+      }
+    },
+    "scope": "Checked branch fixture ARM64 compilation only; no mobile app execution."
+  },
+  "limitations": "Branch tests isolate provider return; existing native primitive-restart tests establish native pixels and query. Changed full original execution pending. No Katabatic scene, HD sampling or multiplayer acceptance."
+}

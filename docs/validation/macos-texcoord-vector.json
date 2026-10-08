@@ -1,5 +1,5 @@
 {
-  "state": "full_build_validated_original_execution_stopped_earlier_in_network_setup",
+  "state": "original_calls_returned_next_restart_lookup_missing",
   "reached_failure": {
     "original_engine": "22f9a51444ffa74700bd8f3f09bcaf3dcf8a23ef4ce44cfde33fc0a29ad8412e",
     "pid": 36498,
@@ -75,5 +75,98 @@
     "HD, community multiplayer and full mobile gameplay unfinished"
   ],
   "new_engine": "77e878395b8322bae37eee9245ff15be103cacde93ebfc7e6519bd7c757926aa",
-  "original_next_stop": "Original IPv6 startup reaches NtDeviceIoControlFile/AFD readiness before glTexCoord2fv is exercised."
+  "original_next_stop": "Original IPv6 startup reaches NtDeviceIoControlFile/AFD readiness before glTexCoord2fv is exercised.",
+  "original_execution": {
+    "pid": 54207,
+    "engine_sha256": "8faf4d7c404f88c7f647c500627081344a1cb73e20216e5f2183fb60e904aba2",
+    "calls": [
+      {
+        "time": 1791433477.7850308,
+        "return_pc": "0x5a773a",
+        "input": "0x60855168",
+        "float_values": [
+          -4.657783031463623,
+          -0.49172243475914
+        ],
+        "native_return_observed": true,
+        "returned_time": 1791433477.913475
+      },
+      {
+        "time": 1791433477.9217658,
+        "return_pc": "0x5a7755",
+        "input": "0x6085517c",
+        "float_values": [
+          -2.678075075149536,
+          -0.4917224049568176
+        ],
+        "native_return_observed": true,
+        "returned_time": 1791433478.0443661
+      },
+      {
+        "time": 1791433478.0538602,
+        "return_pc": "0x5a7770",
+        "input": "0x60855190",
+        "float_values": [
+          -2.743490219116211,
+          -1.9604350328445435
+        ],
+        "native_return_observed": true,
+        "returned_time": 1791433478.1735501
+      }
+    ],
+    "next_stop": {
+      "pid": 54207,
+      "cpu": "0x10ca24d90",
+      "base": "0x7000000000",
+      "esp": "0x2ff508",
+      "registers": [
+        "0x7d",
+        "0x653633e0",
+        "0x7d",
+        "0x657cc01c",
+        "0x2ff508",
+        "0x2ff5f4",
+        "0x65a08000",
+        "0x2"
+      ],
+      "stack": [
+        "0x10034817",
+        "0xffff",
+        "0x2",
+        "0x65a08000",
+        "0x8457",
+        "0x2ff618",
+        "0x5ed233",
+        "0xbf800000",
+        "0x80000000",
+        "0x4067db57",
+        "0x447446",
+        "0x1d730966",
+        "0xbfb3b573",
+        "0x1d730966",
+        "0x26b1c1b8",
+        "0xb2c61e4b",
+        "0xbfa99999",
+        "0xb2c61e4b",
+        "0x3fa99999",
+        "0x0",
+        "0x2ff614",
+        "0x447476",
+        "0x7576e8",
+        "0x43eeffff",
+        "0x2931c1b8",
+        "0x2ff5f4",
+        "0x56fa15",
+        "0x1d730966",
+        "0x65a08000",
+        "0x1d730966",
+        "0x3fb3b573",
+        "0x100325f4"
+      ],
+      "scope": "Selected main-thread CPU and bounded stack only; no coherent whole-memory snapshot.",
+      "primitive_restart_slot": "0x0",
+      "gl31_flag": "0x0"
+    },
+    "scope": "Three original texture-coordinate calls return successfully. Katabatic logs START MATCH but stops at a null primitive-restart slot before scene presentation."
+  }
 }

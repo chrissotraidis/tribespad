@@ -338,6 +338,8 @@ original:
  dll,apple_render_dimensions_metadata=prepare_apple_render_dimensions(dll)
  from apple_render_present import prepare as prepare_apple_render_present
  dll,apple_render_present_metadata=prepare_apple_render_present(dll)
+ from apple_primitive_restart import prepare as prepare_apple_primitive_restart
+ dll,apple_primitive_restart_metadata=prepare_apple_primitive_restart(dll)
  (out/'qol-patched.ll').write_text(dll)
  spec=importlib.util.spec_from_file_location('patch_va',R/'scripts/prepare-va-model.py');va=importlib.util.module_from_spec(spec);spec.loader.exec_module(va)
  entries=[]
@@ -457,6 +459,7 @@ define hidden fastcc void @tbimp_FlushInstructionCache(ptr %cpu) {
  metadata['mission_entry']=mission_entry_metadata
  metadata['apple_render_dimensions']=apple_render_dimensions_metadata
  metadata['apple_render_present']=apple_render_present_metadata
+ metadata['apple_primitive_restart']=apple_primitive_restart_metadata
  metadata['startup_input_code']=input_variant_metadata
  metadata['library_patch']=library_metadata
  metadata['followup_patch']=followup_metadata

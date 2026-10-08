@@ -1,5 +1,5 @@
 {
-  "state": "original_readiness_returned_katabatic_loading",
+  "state": "original_readiness_returned_next_graphics_stop",
   "original_engine": "77e878395b8322bae37eee9245ff15be103cacde93ebfc7e6519bd7c757926aa",
   "original_execution": {
     "first_pid": 48709,
@@ -192,7 +192,7 @@
         "returned_time": 1791432942.37662
       }
     ],
-    "visible_behavior": "EULA accepted, original LAN/New Warrior menus rendered, tribespad alias entered via native HID, Katabatic selected with bots disabled and Start Game clicked; server loading in progress.",
-    "scope": "Original AFD readiness calls return STATUS_PENDING; actual guest WSA packet exchange, texture-coordinate execution, rendered Katabatic and authenticated multiplayer remain unverified."
+    "visible_behavior": "Reached original LAN/New Warrior menus and Katabatic START MATCH through native HID. Next stop is null primitive-restart slot at original return0x10034817. App/debugger closed; audio57 and isolated autoexec restored.",
+    "scope": "Original AFD readiness calls return STATUS_PENDING; actual guest WSA packet exchange and authenticated multiplayer remain unverified."
   }
 }
