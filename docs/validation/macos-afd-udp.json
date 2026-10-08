@@ -1,5 +1,5 @@
 {
-  "state": "component_validated_original_rebuild_pending",
+  "state": "original_readiness_returned_katabatic_loading",
   "original_engine": "77e878395b8322bae37eee9245ff15be103cacde93ebfc7e6519bd7c757926aa",
   "original_execution": {
     "first_pid": 48709,
@@ -131,5 +131,68 @@
     "https://raw.githubusercontent.com/libuv/libuv/v1.51.0/src/win/winsock.c",
     "https://learn.microsoft.com/en-us/windows/win32/api/winsock2/nf-winsock2-wsarecvfrom",
     "https://learn.microsoft.com/en-us/windows/win32/api/winsock2/nf-winsock2-wsasendto"
-  ]
+  ],
+  "integration": {
+    "engine_sha256": "8faf4d7c404f88c7f647c500627081344a1cb73e20216e5f2183fb60e904aba2",
+    "initialized": true,
+    "independent_subpages_enabled": true,
+    "startup_observation": "60-second diagnostic timeout after attach returned 1 and original engine entered",
+    "signed_app_pid": 54207,
+    "original_udp_calls": [
+      {
+        "time": 1791432849.261804,
+        "function": "tribes_nt_device_io_control_file",
+        "thread": 8916872,
+        "base": 481036337152,
+        "socket": "0xb1000003",
+        "native_arguments": [
+          "0xb1000003",
+          "0x0",
+          "0x0",
+          "0x60598da4",
+          "0x60598da4",
+          "0x12017",
+          "0x2fea6c"
+        ],
+        "ioctl": "0x12017",
+        "iosb": "0x60598da4",
+        "request": [
+          "0x2feaac",
+          "0x1",
+          "0x2",
+          "0xa0"
+        ],
+        "result": "0x103",
+        "returned_time": 1791432849.273681
+      },
+      {
+        "time": 1791432942.367877,
+        "function": "tribes_nt_device_io_control_file",
+        "thread": 8916872,
+        "base": 481036337152,
+        "socket": "0xb1000005",
+        "native_arguments": [
+          "0xb1000005",
+          "0x0",
+          "0x0",
+          "0x6220c724",
+          "0x6220c724",
+          "0x12017",
+          "0x2ff688"
+        ],
+        "ioctl": "0x12017",
+        "iosb": "0x6220c724",
+        "request": [
+          "0x2ff6c8",
+          "0x1",
+          "0x2",
+          "0xa0"
+        ],
+        "result": "0x103",
+        "returned_time": 1791432942.37662
+      }
+    ],
+    "visible_behavior": "EULA accepted, original LAN/New Warrior menus rendered, tribespad alias entered via native HID, Katabatic selected with bots disabled and Start Game clicked; server loading in progress.",
+    "scope": "Original AFD readiness calls return STATUS_PENDING; actual guest WSA packet exchange, texture-coordinate execution, rendered Katabatic and authenticated multiplayer remain unverified."
+  }
 }
