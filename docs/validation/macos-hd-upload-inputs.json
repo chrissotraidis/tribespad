@@ -1,0 +1,100 @@
+{
+  "state": "original_hd_upload_inputs_matched",
+  "original_pid": 36498,
+  "capture_sha256": "a50300e0e8a351d60229a2a867592339746070f8779aa4153a5adfa47dba0514",
+  "analysis_sha256": "08823b89f1b651b19c0c2f4e593f071d176571592d1a198473f85cfd0a2564dc",
+  "analysis_script_sha256": "5e8ceb2a27ac07a5a1026f0827ecc7b57a7d513de0b9c278a87e0f35f41943c5",
+  "archive": {
+    "name": "yHDTextures2.0.vl2",
+    "sha256": "9c54108b2f598010d2f586ab96e748dfe0445dc2f22461df48a2de23e1fea255",
+    "bytes": 224650286
+  },
+  "observed_buffers": 237,
+  "examined_images": 1100,
+  "matching_archive_entries": 236,
+  "distinct_matching_buffers": 235,
+  "errors": [],
+  "examples": [
+    {
+      "path": "textures/skins/barrel_aa_large.png",
+      "width": 512,
+      "height": 512,
+      "mode": "RGBA",
+      "file_sha256": "2d09e56c01f95ea89c04106f021c89e244fc9f1fc8b0d08a83a10bcb9af7c284",
+      "pixels_sha256": "d5f0579c50948a6fd895f86a4d8b632f8c5d5171118ceda3ffdfb780863d3400"
+    },
+    {
+      "path": "textures/skins/barrel_elf_large.png",
+      "width": 512,
+      "height": 512,
+      "mode": "RGBA",
+      "file_sha256": "51db01df6fd0d2de5c69767908d5468162f089c6e193cf8a26c7fd4bce4b8290",
+      "pixels_sha256": "e786a481c20f88b85fde4b0e7cf9ee326421387f8a7c7f89cf6b41b938d088c1"
+    },
+    {
+      "path": "textures/skins/barrel_fusion_large.png",
+      "width": 512,
+      "height": 512,
+      "mode": "RGBA",
+      "file_sha256": "3be4ff8da73b8186ff32bb16cb280c85ea2bc7341a16d4bc73e40a6f55b2c1a6",
+      "pixels_sha256": "66801cdae2999b64f6f9c401230e8ec011aa87bc0433e583aa5ec8a12a72d5aa"
+    },
+    {
+      "path": "textures/skins/barrel_missile_large.png",
+      "width": 512,
+      "height": 512,
+      "mode": "RGBA",
+      "file_sha256": "474d94713b5c4a21c0c8688b3f3959ac8de95449feb71cbf537fd55f44a1d88a",
+      "pixels_sha256": "95e50b128a1f89b5fa8b8ec4d0ed3d339874c7382eb4b93310b8b84b20dac764"
+    },
+    {
+      "path": "textures/skins/barrel_mortar_large.png",
+      "width": 512,
+      "height": 512,
+      "mode": "RGBA",
+      "file_sha256": "6d555cef07a2841963cb576acb0c08ee759514c2425a76b0ec88ddd38ed645b3",
+      "pixels_sha256": "48a3e536be223a08986f988fdde751f25e1c02ec0f7f3fc70fa67bf802e7f949"
+    },
+    {
+      "path": "textures/skins/base.flag.png",
+      "width": 512,
+      "height": 512,
+      "mode": "RGB",
+      "file_sha256": "d60b5aa2df17438cdfb56e7c6fe47faa022b68c3473bb95937d0350bf8b4abe4",
+      "pixels_sha256": "8737971a18719da47e768bb283b97be6c39fd5e9e7aa4a058a247c8360576abb"
+    },
+    {
+      "path": "textures/skins/base.hflag.png",
+      "width": 512,
+      "height": 512,
+      "mode": "RGBA",
+      "file_sha256": "b351a1a57f1216d7173e0988325fda4eb1188d470d7931e4186cf7544688cc2c",
+      "pixels_sha256": "ce4d21306d16a3eada8d8bb7a08d93d73d19de2ee90316105ed8ea77b1629893"
+    },
+    {
+      "path": "textures/skins/base.lbioderm.png",
+      "width": 512,
+      "height": 512,
+      "mode": "RGBA",
+      "file_sha256": "c36165416f964b57a93455237d1b96720e03b72fb87c43f7d729e7f5280654d3",
+      "pixels_sha256": "43811545814928abd3087085f89bc888916a4fdf3a2c4caf0d0b217a5bea8c60"
+    },
+    {
+      "path": "textures/skins/camera.png",
+      "width": 512,
+      "height": 512,
+      "mode": "RGBA",
+      "file_sha256": "f0d3d0bbb76e4eb3028ae5bd62c7a7cd3fcba6afb44c35c9433418720fac0645",
+      "pixels_sha256": "d2ae9a31abc907bc1045cef4dcf305cce63e46b40df43e990800bf3c49a6e5b8"
+    },
+    {
+      "path": "textures/skins/chg_fmzl.png",
+      "width": 512,
+      "height": 512,
+      "mode": "RGBA",
+      "file_sha256": "a562ef8c2d89585a3fbf4b0057b8cbaae0b64712cc3cd367f655e6f044ea8e28",
+      "pixels_sha256": "804c0270325ce8a0e785e9ab8fea66982e63857ae0c313c6830beaa6ad388704"
+    }
+  ],
+  "scope": "Exact decoded RGB/RGBA bytes and dimensions match prior original glTexImage2D input captures. Does not establish completed native upload, sampling, terrain replacements or visual HD acceptance. Full diagnostic output remains local under generated/integration-review/afd-receive/hd-upload-matches.json."
+}
