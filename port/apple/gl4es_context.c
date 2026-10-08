@@ -1,0 +1,109 @@
+/* SDL's EAGL drawable is a borrowed framebuffer, whereas desktop GL uses zero.
+   Keep that mapping in the pinned GL4ES state; SDL retains drawable ownership.
+   These private structure accesses require the exact dependency revision in
+   build-gl4es-mobile.py. No library-generated procedure reaches the guest. */
+#include "gl4es_context.h"
+#include "gl4esinit.h"
+#include "gl/glstate.h"
+#include "gl/gl4es.h"
+#include "gl/framebuffers.h"
+#include "glx/hardext.h"
+#include <pthread.h>
+#include <stdlib.h>
+
+extern void *NewGLState(void *, int);
+extern void ActivateGLState(void *);
+extern void DeleteGLState(void *);
+
+struct TribesGL4ESContext {
+    SDL_Window *window;
+    SDL_GLContext native;
+    glstate_t *state;
+};
+static int initialized;
+
+static void require_current(TribesGL4ESContext *context) {
+    if (!pthread_main_np() || !context || SDL_GL_GetCurrentContext()!=context->native ||
+        SDL_GL_GetCurrentWindow()!=context->window) abort();
+}
+static void *native_proc(const char *name) { return (void *)SDL_GL_GetProcAddress(name); }
+static void framebuffer_size(int *width, int *height) {
+    SDL_Window *window=SDL_GL_GetCurrentWindow();
+    if (!window || !SDL_GetWindowSizeInPixels(window,width,height)) abort();
+}
+
+void tribes_gl4es_context_activate(TribesGL4ESContext *context) {
+    require_current(context);
+    int switched=glstate!=context->state;
+    ActivateGLState(context->state);
+    if (switched) {
+        /* GL4ES shares its texture-binding cache with shared objects, but
+           native EAGL binding state belongs to each individual context. */
+        void (*getInteger)(GLenum,GLint *)=(void (*)(GLenum,GLint *))SDL_GL_GetProcAddress("glGetIntegerv");
+        void (*activeTexture)(GLenum)=(void (*)(GLenum))SDL_GL_GetProcAddress("glActiveTexture");
+        if (!getInteger || !activeTexture) abort();
+        GLint active;
+        getInteger(GL_ACTIVE_TEXTURE,&active);
+        for (int i=0;i<hardext.maxtex;i++) {
+            GLint texture;
+            activeTexture(GL_TEXTURE0+i);
+            getInteger(GL_TEXTURE_BINDING_2D,&texture);
+            context->state->actual_tex2d[i]=(GLuint)texture;
+        }
+        activeTexture((GLenum)active);
+        context->state->bound_changed=hardext.maxtex;
+    }
+    Sint64 framebuffer=SDL_GetNumberProperty(SDL_GetWindowProperties(context->window),
+        SDL_PROP_WINDOW_UIKIT_OPENGL_FRAMEBUFFER_NUMBER,0);
+    int width,height;
+    framebuffer_size(&width,&height);
+    if (framebuffer<=0 || framebuffer>UINT32_MAX || width<=0 || height<=0) abort();
+    /* mainfbo_fbo maps GL default zero to SDL's current native drawable.
+       globals4es.usefbo stays false: GL4ES must not allocate/delete this FBO. */
+    context->state->fbo.mainfbo_fbo=(GLuint)framebuffer;
+    context->state->fbo.mainfbo_width=width;
+    context->state->fbo.mainfbo_height=height;
+    context->state->fbo.fbo_0->width=width;
+    context->state->fbo.fbo_0->height=height;
+    gl4es_setCurrentFBO();
+}
+
+TribesGL4ESContext *tribes_gl4es_context_create(SDL_Window *window, SDL_GLContext native,
+                                               TribesGL4ESContext *shared) {
+    TribesGL4ESContext *context=calloc(1,sizeof *context);
+    if (!context) return NULL;
+    context->window=window; context->native=native;
+    require_current(context);
+    if (!initialized) {
+        set_getprocaddress(native_proc);
+        set_getmainfbsize(framebuffer_size);
+        setenv("LIBGL_FBOFORCETEX","0",1);
+        setenv("LIBGL_FB","0",1);
+        initialize_gl4es();
+        initialized=1;
+    }
+    context->state=NewGLState(shared ? shared->state : NULL,0);
+    if (!context->state) abort();
+    tribes_gl4es_context_activate(context);
+    return context;
+}
+
+bool tribes_gl4es_context_swap(TribesGL4ESContext *context) {
+    require_current(context);
+    if (glstate!=context->state) abort();
+    gl4es_glFlush();
+    bool result=SDL_GL_SwapWindow(context->window);
+    tribes_gl4es_context_activate(context);
+    return result;
+}
+
+void tribes_gl4es_context_destroy(TribesGL4ESContext *context) {
+    require_current(context);
+    if (glstate!=context->state) abort();
+    gl4es_glFinish();
+    /* Do not let library cleanup treat the borrowed drawable as its own. */
+    context->state->fbo.mainfbo_fbo=0;
+    DeleteGLState(context->state);
+    ActivateGLState(NULL);
+    free(context);
+}
