@@ -1,0 +1,93 @@
+{
+  "passed": true,
+  "height": 1180,
+  "background_pixel": [
+    0,
+    0,
+    255,
+    255
+  ],
+  "original_engine_executed": false,
+  "width": 820,
+  "immediate_pixel": [
+    255,
+    0,
+    0,
+    255
+  ],
+  "indexed_pixel": [
+    0,
+    128,
+    0,
+    255
+  ],
+  "error": 0,
+  "initialization_error": 0,
+  "framebuffer_status": 36053,
+  "dependency": {
+    "url": "https://github.com/ptitSeb/gl4es.git",
+    "commit": "ec16bedd8819c475326f4f1a3063772c6d986e06",
+    "platform": "simulator",
+    "configure": [
+      "cmake",
+      "-S",
+      "/Users/chrissotraidis/GitHub/tribespad/generated/gl4es/source",
+      "-B",
+      "/Users/chrissotraidis/GitHub/tribespad/generated/gl4es/simulator/apple-build",
+      "-DCMAKE_SYSTEM_NAME=iOS",
+      "-DCMAKE_OSX_SYSROOT=iphonesimulator",
+      "-DCMAKE_OSX_ARCHITECTURES=arm64",
+      "-DCMAKE_OSX_DEPLOYMENT_TARGET=16.0",
+      "-DCMAKE_BUILD_TYPE=Release",
+      "-DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE=/Users/chrissotraidis/GitHub/tribespad/generated/gl4es/simulator/lib",
+      "-DNOX11=ON",
+      "-DNOEGL=ON",
+      "-DSTATICLIB=ON",
+      "-DNO_LOADER=ON",
+      "-DNO_INIT_CONSTRUCTOR=ON",
+      "-DDEFAULT_ES=2"
+    ],
+    "private_patch_sha256": "8190f2cef1860c7a67155d30aab5682fc218232b7fa78f366883597c5a1b2e70",
+    "library_sha256": "a37cfb9bcccb720a2dcae90264ff8f74bdff04f7885682259230e8a889151973",
+    "execution_tested": false
+  },
+  "device": "iPad Air 11-inch (M4)",
+  "simulator_udid": "F05D2D40-0A01-47C9-9BD7-0C0E19F7512C",
+  "source_sha256": "bbf8c30f28505e5068a25200e55c32f66f85a2ca3693916f9cdb169cd2aa7f54",
+  "executable_sha256": "a09fd3336d3c66423d0f2ee60f54bee6f4d1b5f20abc08f3959ffb709c63a1cb",
+  "device_build": {
+    "url": "https://github.com/ptitSeb/gl4es.git",
+    "commit": "ec16bedd8819c475326f4f1a3063772c6d986e06",
+    "platform": "device",
+    "configure": [
+      "cmake",
+      "-S",
+      "/Users/chrissotraidis/GitHub/tribespad/generated/gl4es/source",
+      "-B",
+      "/Users/chrissotraidis/GitHub/tribespad/generated/gl4es/device/apple-build",
+      "-DCMAKE_SYSTEM_NAME=iOS",
+      "-DCMAKE_OSX_SYSROOT=iphoneos",
+      "-DCMAKE_OSX_ARCHITECTURES=arm64",
+      "-DCMAKE_OSX_DEPLOYMENT_TARGET=16.0",
+      "-DCMAKE_BUILD_TYPE=Release",
+      "-DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE=/Users/chrissotraidis/GitHub/tribespad/generated/gl4es/device/lib",
+      "-DNOX11=ON",
+      "-DNOEGL=ON",
+      "-DSTATICLIB=ON",
+      "-DNO_LOADER=ON",
+      "-DNO_INIT_CONSTRUCTOR=ON",
+      "-DDEFAULT_ES=2"
+    ],
+    "private_patch_sha256": "8190f2cef1860c7a67155d30aab5682fc218232b7fa78f366883597c5a1b2e70",
+    "library_sha256": "9e58def79e3a36d8aedc9b5059479db1b682f411ced68944965cb15a0b2b8143",
+    "execution_tested": false
+  },
+  "device_executable_sha256": "eee18ae616ff3e7b11a42113d282a23b4ebe99672c6517dd5d651638ed13e127",
+  "physical_device_executed": false,
+  "scope": "Native GLES2 through pinned GL4ES: translated fixed-function matrices, texture modulation, immediate GL_QUADS and indexed client arrays. Not linked to the checked original engine yet.",
+  "screenshot_sha256": "29dc753c5a918e781136eb065e66ad17837d3abbf8b98180971fff5e2c19bdfe",
+  "scripts_sha256": {
+    "scripts/build-gl4es-mobile.py": "f61f7cb782b18aaef016dcad4cd3362e6858938a89e11f40e540e5eb6536ca12",
+    "scripts/test-gl4es-mobile.py": "3f6fea60eefb195328403e4af0cf509d4a9d52960123912a76a1a948364065ec"
+  }
+}

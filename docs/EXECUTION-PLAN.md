@@ -4,6 +4,8 @@ The target is the original Tribes2 build25034 with the selected TribesNEXT clien
 
 ## Immediate integration work
 
+**Next mobile implementation:** the pinned GL4ES renderer now passes actual iPad Simulator textured immediate/indexed drawing with zero GL errors (`docs/validation/ipad-gl4es-renderer.json`). Reuse it through SDL's EAGL lifecycle and existing checked guest graphics bridge. Preserve finite verified exports; do not expose GL4ES stubs or equate its native renderer probe with full-engine mobile execution. ARM64 device link also passes, without device execution.
+
 The full original Mac engine now publishes **33 finite revisions**, including the renderer's 26-hook commit after61 original stores and27 flushes. Its actual return, final detours, callbacks, bank and continuation bytes are verified. The exact `EB16` offcut at `0x6b0c21` is compiled and differentially checked. The original GarageGames splash now renders; see STATUS for the latest signed-app evidence.
 
 Original Miles startup now returns **1** at `0x100555cc`. All 11 original plugins initialize successfully: four ASI codecs, six M3D providers and Reverb3.flt. The new M3D/filter group reuses existing checked AOT/loader infrastructure and adds 20,065 finite entries with eight explicit diagnostic stops. Normalized aliases work. Plugin preparation now rejects reserved/duplicate import namespaces after the first full run exposed and the corrected run resolved a collision with native system lookup.
