@@ -60,7 +60,7 @@ for mode in (['checked'] if a.simulator_device else ['normal','tsan','checked'])
  code,text,error=execute(app,exe,identifier,mode);assert code==0 and text.startswith('PASS:') and 'TribesPad:' not in error and 'ThreadSanitizer:' not in error,(mode,code,text,error)
  faults=[]
  if mode=='checked':
-  for case in ['no-host-entry','wrong-thread','unclean-return','after-finish','foreign-stream','stale-stream','stale-device','unreadable-spec','readonly-format','readonly-data','overflow-data','after-audio-quit','unreadable-pcm','overflow-pcm']:
+  for case in ['no-host-entry','wrong-thread','unclean-return','after-finish','foreign-stream','stale-stream','stale-device','unreadable-spec','readonly-format','readonly-data','overflow-data','after-audio-quit','unreadable-pcm','overflow-pcm','stale-worker-stream']:
    code,_,error=execute(app,exe,identifier,mode+'-'+case,case);assert code==-6 and ('SDL video requires Apple main application entry' in error if case in ['no-host-entry','wrong-thread'] else 'TribesPad:' in error),(case,code,error);faults.append(case)
  runs.append(dict(mode=mode,passed=True,stdout=text,app=str(app.relative_to(R)),binary_sha256=sha(exe),faults=faults));print(mode,text.strip(),flush=True)
 paths=sources+host+guards+[R/'port/apple/sdl_main.h',R/'port/core/guest_sdl_backend.h',R/'config/runtime/sdl-bindings.json',R/'port/compiler/ExternalMemoryPass.cpp',R/'config/runtime/external-memory-contracts.json',R/'scripts/sdl_backend_inputs.py',pathlib.Path(__file__).resolve()]

@@ -77,6 +77,10 @@ typedef struct AudioStream {SDL_AudioStream *native;uint32_t token;struct AudioS
 static AudioDevice *audio_devices;
 static AudioStream *audio_streams;
 static uint32_t next_audio_stream_token=0xd7000001;
+/* Serialize token lookup/use against device/stream destruction and SDL quit. */
+static pthread_mutex_t audio_lock=PTHREAD_MUTEX_INITIALIZER;
+static uint64_t audio_base;
+static uint32_t audio_callbacks[4];
 static void clear_audio_records(void);
 _Static_assert(sizeof(SDL_AudioSpec)==12&&offsetof(SDL_AudioSpec,channels)==4&&offsetof(SDL_AudioSpec,freq)==8,"SDL i686 audio spec ABI");
 static int bound;
@@ -610,9 +614,11 @@ void tribes_sdl_quit_subsystem(_cpu *cpu,uint32_t flags) {
     event_flags(flags);uint32_t error=tribes_get_last_error();NativeFrame frame;
     if(!enter(cpu,&frame))stop();
     if((flags&SDL_INIT_VIDEO)&&(windows||contexts||cursors)){fputs("TribesPad: SDL video subsystem quit with live graphics objects is not implemented\n",stderr);abort();}
+    active_frame=NULL;pthread_mutex_lock(&audio_lock);
     SDL_QuitSubSystem(flags);
     /* Native SDL destroys streams/devices only when the final audio ref ends. */
     if((flags&SDL_INIT_AUDIO)&&!SDL_WasInit(SDL_INIT_AUDIO))clear_audio_records();
+    pthread_mutex_unlock(&audio_lock);active_frame=&frame;
     if(!SDL_WasInit(SDL_INIT_GAMEPAD))clear_gamepads();
     if((flags&SDL_INIT_VIDEO)&&!SDL_WasInit(SDL_INIT_VIDEO))clear_display_modes();
     leave(&frame);tribes_set_last_error(error);
@@ -669,7 +675,9 @@ uint32_t tribes_sdl_reset_hint(_cpu *cpu,uint32_t name) {
 void tribes_sdl_backend_quit(_cpu *cpu) {
     uint32_t error=tribes_get_last_error();NativeFrame frame;
     (void)enter(cpu,&frame);if(graphics_active)stop();graphics_active=1;
-    clear_graphics();clear_display_modes();tribes_sdl_tls_cleanup_begin(cpu);SDL_Quit();tribes_sdl_tls_cleanup_end();clear_audio_records();clear_gamepads();keyboard_state=NULL;
+    clear_graphics();clear_display_modes();tribes_sdl_tls_cleanup_begin(cpu);
+    active_frame=NULL;pthread_mutex_lock(&audio_lock);SDL_Quit();clear_audio_records();pthread_mutex_unlock(&audio_lock);active_frame=&frame;
+    tribes_sdl_tls_cleanup_end();clear_gamepads();keyboard_state=NULL;
     while(public_buffers)public_free(&frame,public_buffers->host);
     leave(&frame);ready=0;graphics_active=0;event_cycle_finished=0;
     /* Native SDL may retain native library-lifetime storage. Guest copies are
@@ -696,9 +704,31 @@ uint32_t tribes_sdl_get_hint(_cpu *cpu,uint32_t name) {
 /* Original audio initialization (0x100569f0) uses private native streams.
    SDL device IDs are scalar; stream pointers are represented by owned tokens.
    Native worker threads never see guest sample/specification pointers. */
-#define AUDIO_ENTER() event_flags(SDL_INIT_AUDIO);uint32_t error=tribes_get_last_error();NativeFrame frame;if(!enter(cpu,&frame))stop()
-#define AUDIO_RETURN(value) do{uint32_t audio_result=(uint32_t)(value);leave(&frame);tribes_set_last_error(error);return audio_result;}while(0)
-#define AUDIO_DONE() do{leave(&frame);tribes_set_last_error(error);return;}while(0)
+/* SDL audio APIs are thread-safe; the original music worker uses the same
+   owned stream as the main thread. Only Apple subsystem startup remains main
+   thread bound. Workers neither inspect public video buffers nor invoke the
+   guest logger/allocator: native log output is queued for the owner instead. */
+static void audio_enter(_cpu *cpu,NativeFrame *frame) {
+    uint32_t current[4];
+    if(!cpu||in_guest_allocator||!tribes_sdl_memory_functions(cpu->_pointer_offset,current))stop();
+    *frame=(NativeFrame){0};
+    if(pthread_main_np()) {
+        event_flags(SDL_INIT_AUDIO);if(!enter(cpu,frame))stop();
+        /* Queue logs until after the audio lock is released, including logs
+           on the owner thread, so a guest logger can safely reenter SDL. */
+        active_frame=NULL;
+    } else if(active_frame)stop();
+    pthread_mutex_lock(&audio_lock);
+    if(frame->cpu&&!audio_base){audio_base=cpu->_pointer_offset;memcpy(audio_callbacks,current,sizeof current);}
+    if(!audio_base||audio_base!=cpu->_pointer_offset||memcmp(audio_callbacks,current,sizeof current))stop();
+}
+static void audio_leave(NativeFrame *frame) {
+    pthread_mutex_unlock(&audio_lock);
+    if(frame->cpu){active_frame=frame;leave(frame);}
+}
+#define AUDIO_ENTER() uint32_t error=tribes_get_last_error();NativeFrame frame;audio_enter(cpu,&frame)
+#define AUDIO_RETURN(value) do{uint32_t audio_result=(uint32_t)(value);audio_leave(&frame);tribes_set_last_error(error);return audio_result;}while(0)
+#define AUDIO_DONE() do{audio_leave(&frame);tribes_set_last_error(error);return;}while(0)
 static AudioStream **audio_stream_slot(uint32_t token){
     AudioStream **slot=&audio_streams;while(*slot&&(*slot)->token!=token)slot=&(*slot)->next;
     if(!*slot)stop();return slot;
@@ -709,7 +739,8 @@ static AudioDevice **audio_device_slot(uint32_t id){
     if(!*slot)stop();return slot;
 }
 static void clear_audio_records(void){
-    /* SDL_QuitAudio has already destroyed every stream and logical device. */
+    /* Caller holds audio_lock; SDL_QuitAudio has destroyed native objects. */
+    audio_base=0;memset(audio_callbacks,0,sizeof audio_callbacks);
     while(audio_streams){AudioStream *v=audio_streams;audio_streams=v->next;free(v);}
     while(audio_devices){AudioDevice *v=audio_devices;audio_devices=v->next;free(v);}
 }

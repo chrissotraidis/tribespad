@@ -1,0 +1,126 @@
+{
+  "state": "component_validated_original_rebuild_running",
+  "original_engine": "d348a518d55dac41a2bd646cced5f910ebb40f557ec6aa608ba24c7f0b8cac0e",
+  "original_execution": {
+    "pid": 32104,
+    "artifact_directory": "generated/integration-review/sdl-io/strings-execution",
+    "comparison_result": 0,
+    "music_file": "base\\music\\ice.mp3",
+    "observed_read_calls": 8,
+    "observed_seek_calls": 8,
+    "next_stop": {
+      "pid": 32104,
+      "kind": "worker audio main-thread guard",
+      "helper": "SDL_GetAudioStreamAvailable",
+      "thread": 29,
+      "cpu": "0x175b0a8e8",
+      "base": "0x7000000000",
+      "esp": "0x602bff60",
+      "token": "0xd7000001",
+      "stack": [
+        "0x100d3872",
+        "0xd7000001",
+        "0x1103",
+        "0x10471258",
+        "0x1103",
+        "0x602bffa8",
+        "0x100573df",
+        "0x6041b770",
+        "0x0",
+        "0x505fe9c0",
+        "0x100759a0",
+        "0x1103",
+        "0x64e0c180",
+        "0x1",
+        "0x40",
+        "0x100759dd",
+        "0x4",
+        "0x12fcfd0a",
+        "0x602bfff4",
+        "0x100759f7",
+        "0x64e0c180",
+        "0x100572f0",
+        "0x64e0c180",
+        "0x101141fb"
+      ],
+      "scope": "Selected worker CPU and bounded stack; not a coherent whole-memory snapshot"
+    },
+    "decoded_pcm_observed": false,
+    "rendered_katabatic_observed": false
+  },
+  "change": "Serialize native audio device/stream lookup and use against destruction and shutdown. Admit original worker audio calls for the established process/allocator identity, preserve checked PCM copies and queue logs to owner. Apple subsystem/video initialization remains main-thread bound.",
+  "validation": {
+    "receipt": "generated/integration-review/sdl-audio/macos/result.json",
+    "receipt_sha256": "ea343a3fc3a409b357e519b2528bc7d90aa720b0ca5d4249e780ebf68f602462",
+    "runs": [
+      {
+        "mode": "normal",
+        "passed": true,
+        "binary_sha256": "cd88bb5c6d6093a8cac3c1b203e194d8b037ac5f2b3d209de968ae6e2d7377e2",
+        "faults": []
+      },
+      {
+        "mode": "tsan",
+        "passed": true,
+        "binary_sha256": "30539a1eb33b0f55fdc826cf97892b899d57b6a540b3ac883e023ac4a96d2f3c",
+        "faults": []
+      },
+      {
+        "mode": "checked",
+        "passed": true,
+        "binary_sha256": "17a4a4b750c342ca32d29a5ace16793e929414e2fd72249c6d0d85074bbf9e4b",
+        "faults": [
+          "no-host-entry",
+          "wrong-thread",
+          "unclean-return",
+          "after-finish",
+          "foreign-stream",
+          "stale-stream",
+          "stale-device",
+          "unreadable-spec",
+          "readonly-format",
+          "readonly-data",
+          "overflow-data",
+          "after-audio-quit",
+          "unreadable-pcm",
+          "overflow-pcm",
+          "stale-worker-stream"
+        ]
+      }
+    ],
+    "worker": "128 exact S16 PCM put/flush/available/get/clear rounds through emitted cdecl wrappers, independent worker CPU/stack, concurrent main-thread queries and worker destruction; CPU/stack/LastError preserved.",
+    "mobile": {
+      "passed": true,
+      "rows": [
+        {
+          "platform": "device",
+          "target": "arm64-apple-ios16",
+          "receipt": "8912b80980dd88e93dfe2d7c54fd6c54b7700860f7f854139582f9294c8fcf5e",
+          "objects": [
+            "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/sdl-audio/worker-mobile-compile/iphoneos/00-guest_sdl_backend.o"
+          ]
+        },
+        {
+          "platform": "simulator",
+          "target": "arm64-apple-ios16-simulator",
+          "receipt": "065c1d826e20cc06d925161e721fa6ca4ad22bdcfa2278a64866bf1c33982c2b",
+          "objects": [
+            "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/sdl-audio/worker-mobile-compile/iphonesimulator/00-guest_sdl_backend.o"
+          ]
+        }
+      ],
+      "scope": "Changed audio worker backend checked-compiles; no mobile execution."
+    }
+  },
+  "sources_sha256": {
+    "port/core/guest_sdl_backend.c": "3ccb7eb591ae28fbc4e504575a1bba0502cd0b76989a52c6df4ae35d2e606056",
+    "tests/sdl_audio_test.c": "95d8e7df2ed5161310f2f71ba4afc20199f7f2535282fd60779b951c40c93a2a",
+    "scripts/test-sdl-audio.py": "0e642c88a195bbf00b78b533ae64d6084dac9582ac18d46d023cf08857e6d987"
+  },
+  "limitations": [
+    "Worker fix not yet executed by original game; full rebuild PID35455/session9742 active.",
+    "First test run timed out in native CoreAudio open after default-device selection was changed too late. Selected speakers before retry; all test modes passed. Default57 restored.",
+    "LLDB observer encountered stale cached frame names and repeated one-shot callbacks; corrected to resolve the actual PC and ignore already-consumed return IDs. No guest-state writes.",
+    "No decoded PCM, primitive-restart rendering, HD sampling, authenticated community multiplayer or mobile gameplay acceptance."
+  ]
+}

@@ -8,6 +8,7 @@
 #include <SDL3/SDL.h>
 #include <assert.h>
 #include <pthread.h>
+#include <stdatomic.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -16,12 +17,15 @@
 extern void tribes_enter(_cpu *,uint32_t);
 extern unsigned sdl_test_allocations,sdl_test_frees,sdl_test_live,sdl_test_fail;
 static unsigned char *memory;static _cpu cpu;
+static uint32_t call_cpu(_cpu *state,unsigned id,unsigned n,const uint32_t *args){
+ memcpy(memory+state->_esp,args,n*4);_cpu before=*state;
+ tribes_set_last_error(0x19a5);tribes_enter(state,id);
+ if(id==8||id==17||id==19||id==7||id==25||id==28)assert(before._eax==state->_eax);before._eax=state->_eax;
+ assert(!memcmp(&before,state,sizeof *state)&&!memcmp(memory+state->_esp,args,n*4)&&tribes_get_last_error()==0x19a5);
+ return state->_eax;
+}
 static uint32_t call_args(unsigned id,unsigned n,const uint32_t *args){
- cpu._esp=0xf0000;memcpy(memory+cpu._esp,args,n*4);_cpu before=cpu;
- tribes_set_last_error(0x19a5);tribes_enter(&cpu,id);
- if(id==8||id==17||id==19||id==7||id==25||id==28)assert(before._eax==cpu._eax);before._eax=cpu._eax;
- assert(!memcmp(&before,&cpu,sizeof cpu)&&!memcmp(memory+cpu._esp,args,n*4)&&tribes_get_last_error()==0x19a5);
- return cpu._eax;
+ cpu._esp=0xf0000;return call_cpu(&cpu,id,n,args);
 }
 static uint32_t call(unsigned id,uint32_t value,uint32_t second){
  uint32_t args[]={value,second};unsigned n=(id==8||id==19)?0:(id==1||id==7||id==22||id==26||id==27)?2:1;
@@ -33,6 +37,39 @@ extern unsigned sdl_test_log_count;
 extern char sdl_test_log_message[4096];
 static void *emit_worker_log(void *unused){(void)unused;SDL_LogMessage(19,SDL_LOG_PRIORITY_ERROR,"%s","audio worker log");return NULL;}
 static void *wrong_thread(void *ignored){(void)ignored;call(18,SDL_INIT_VIDEO,0);return NULL;}
+typedef struct { _cpu cpu;uint32_t stream;atomic_int done;int stale; } AudioWorker;
+static void *stream_worker(void *opaque){
+ AudioWorker *w=opaque;uint32_t token=w->stream;
+ #define WORK(id,n,...) call_cpu(&w->cpu,id,n,(uint32_t[]){__VA_ARGS__})
+ assert(WORK(32,1,token)==0);
+ if(w->stale)return NULL; /* The stale query above must abort. */
+ int16_t samples[256];for(unsigned i=0;i<256;i++)samples[i]=(int16_t)(i*97-12000);
+ memcpy(memory+0x20000,samples,sizeof samples);
+ for(unsigned i=0;i<128;i++){
+  assert(WORK(34,3,token,0x20000,sizeof samples));assert(WORK(35,1,token));
+  assert(WORK(32,1,token)==sizeof samples);
+  memset(memory+0x22000,0x5a,sizeof samples+16);
+  assert(WORK(33,3,token,0x22000,sizeof samples+16)==sizeof samples);
+  assert(!memcmp(memory+0x22000,samples,sizeof samples));
+  for(unsigned j=sizeof samples;j<sizeof samples+16;j++)assert(memory[0x22000+j]==0x5a);
+  assert(WORK(31,1,token));
+ }
+ /* Original decoder cleanup can also run on its worker. */
+ WORK(28,1,token);atomic_store(&w->done,1);
+ #undef WORK
+ return NULL;
+}
+static void worker_roundtrip(int stale){
+ SDL_AudioSpec spec={SDL_AUDIO_S16LE,1,8000};memcpy(memory+0x3200,&spec,12);
+ uint32_t token=call(26,0x3200,0x3200);assert(token);
+ AudioWorker w={.cpu=cpu,.stream=token,.stale=stale};w.cpu._esp=0xe0000;atomic_init(&w.done,0);
+ if(stale)call(28,token,0);
+ pthread_t t;assert(!pthread_create(&t,NULL,stream_worker,&w));
+ /* Concurrent main-thread audio calls exercise the shared registry lock;
+    never query a token after its worker has destroyed it. */
+ while(!atomic_load(&w.done)&&!stale){assert(call(32,0,0)==UINT32_MAX);SDL_Delay(1);}
+ assert(!pthread_join(t,NULL));
+}
 static int video_main(int argc,char **argv){
  assert(pthread_main_np());
  memory=mmap(NULL,UINT64_C(0x100000000),PROT_NONE,MAP_PRIVATE|MAP_ANON,-1,0);assert(memory!=MAP_FAILED);
@@ -104,6 +141,7 @@ static int video_main(int argc,char **argv){
  memset(memory+0x4000,0x5a,64);assert(THREE(33,converted,0x4000,64)==sizeof values);
  assert(!memcmp(memory+0x4000,values,sizeof values));for(unsigned i=16;i<64;i++)assert(memory[0x4000+i]==0x5a);
  call(28,converted,0);
+ worker_roundtrip(argc==2&&!strcmp(argv[1],"stale-worker-stream"));
  /* Actual device consumption, using a guest-owned stream and native callback
     storage; no dummy device or fabricated completion. */
  SDL_AudioSpec spec={SDL_AUDIO_F32,2,48000};memcpy(memory+0x3000,&spec,12);
@@ -132,7 +170,7 @@ static int video_main(int argc,char **argv){
  call(19,0,0);assert(!sdl_test_live);assert(call(10,0,0)==0);
  assert(call(18,SDL_INIT_VIDEO,0));assert(SDL_GetPrimaryDisplay());call(19,0,0);assert(!sdl_test_live);
  if(argc==2&&!strcmp(argv[1],"after-finish")){tribes_sdl_host_application_finished();call(10,0,0);return 99;}
- printf("PASS: native %s video and CoreAudio guest device/stream setup, PCM conversion and bounded output, playback/pause, stale-token and shutdown lifetimes, queued worker logs via Apple application main; display=%u; failed-init retry, subsystem refs/quit/full quit/reinit, guest cdecl CPU/LastError and allocator; %u allocations, %u frees, %u live\n",driver,display,sdl_test_allocations,sdl_test_frees,sdl_test_live);fflush(stdout);return 0;
+ printf("PASS: native %s video and CoreAudio guest device/stream setup, PCM conversion and bounded output, worker PCM roundtrip and destruction, playback/pause, stale-token and shutdown lifetimes, queued worker logs via Apple application main; display=%u; failed-init retry, subsystem refs/quit/full quit/reinit, guest cdecl CPU/LastError and allocator; %u allocations, %u frees, %u live\n",driver,display,sdl_test_allocations,sdl_test_frees,sdl_test_live);fflush(stdout);return 0;
 }
 int main(int argc,char **argv){
  if(argc==2&&!strcmp(argv[1],"no-host-entry"))return video_main(argc,argv);
