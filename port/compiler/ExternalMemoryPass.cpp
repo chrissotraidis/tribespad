@@ -630,7 +630,7 @@ struct ExternalMemoryPass : PassInfoMixin<ExternalMemoryPass>{
     if(Name=="curl_url_set")Allowed=Allowed&&!Target->isVarArg()&&Call->arg_size()==4&&Call->getType()==I32&&Call->getArgOperand(0)->getType()==P&&Call->getArgOperand(1)->getType()==I32&&Call->getArgOperand(2)->getType()==P&&Call->getArgOperand(3)->getType()==I32;
     if(Name=="curl_slist_append")Allowed=Allowed&&!Target->isVarArg()&&Call->arg_size()==2&&Call->getType()==P&&Call->getArgOperand(0)->getType()==P&&Call->getArgOperand(1)->getType()==P;
     if(Name=="curl_slist_free_all"||Name=="curl_url_cleanup")Allowed=Allowed&&!Target->isVarArg()&&Call->arg_size()==1&&Call->getType()->isVoidTy()&&Call->getArgOperand(0)->getType()==P;
-    if(Name=="curl_easy_cleanup"){
+    if(Name=="curl_easy_cleanup"||Name=="curl_easy_reset"){
      Allowed=Allowed&&!Target->isVarArg()&&Call->arg_size()==1&&Call->getArgOperand(0)->getType()==P&&Call->getType()->isVoidTy();
     }
     if(Name=="curl_multi_add_handle"||Name=="curl_multi_remove_handle"){

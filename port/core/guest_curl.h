@@ -9,6 +9,7 @@ uint32_t tribes_curl_multi_init(_cpu *cpu);
 uint32_t tribes_curl_multi_cleanup(_cpu *cpu,uint32_t handle);
 void tribes_curl_global_cleanup(_cpu *cpu);
 uint32_t tribes_curl_easy_init(_cpu *cpu);
+void tribes_curl_easy_reset(_cpu *cpu,uint32_t handle);
 void tribes_curl_easy_cleanup(_cpu *cpu,uint32_t handle);
 uint32_t tribes_curl_multi_add_handle(_cpu *cpu,uint32_t multi,uint32_t easy);
 uint32_t tribes_curl_multi_remove_handle(_cpu *cpu,uint32_t multi,uint32_t easy);

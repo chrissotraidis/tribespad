@@ -27,7 +27,7 @@ static char *fault_pointer;
 void owner_check(void) { assert(pthread_equal(owner,pthread_self())); }
 extern void tbimp_CurlFixtureMalloc(void),tbimp_CurlFixtureFree(void),tbimp_CurlFixtureRealloc(void),tbimp_CurlFixtureStrdup(void),tbimp_CurlFixtureCalloc(void),tribes_return_to_host(void);
 #ifdef CURL_RUNTIME_TEST
-extern void tbimp_curl_global_init_mem(void),tbimp_curl_multi_init(void),tbimp_curl_multi_cleanup(void),tbimp_curl_global_cleanup(void);
+extern void tbimp_curl_easy_reset(void),tbimp_curl_global_init_mem(void),tbimp_curl_multi_init(void),tbimp_curl_multi_cleanup(void),tbimp_curl_global_cleanup(void);
 extern void tbimp_curl_multi_setopt(void),tbimp_curl_easy_init(void),tbimp_curl_easy_cleanup(void),tbimp_curl_multi_add_handle(void),tbimp_curl_multi_remove_handle(void),tbimp_CurlFixtureTimer(void),tbimp_CurlFixtureTimerAlternate(void);
 extern void tbimp_curl_multi_assign(void),tbimp_curl_easy_getinfo(void),tbimp_CurlFixtureSocket(void),tbimp_curl_multi_socket_action(void),tbimp_curl_easy_setopt(void);
 extern void tbimp_WSAIoctl(void),tbimp_select(void),tbimp_curl_multi_info_read(void);
@@ -72,6 +72,7 @@ void *tribes_lookup(uint32_t pc) {
         case 32:return (void *)tbimp_WSAIoctl;
         case 33:return (void *)tbimp_select;
         case 34:return (void *)tbimp_curl_multi_info_read;
+        case 35:return (void *)tbimp_curl_easy_reset;
 #endif
         case 0xfffff000:return (void *)tribes_return_to_host;
         default:abort();

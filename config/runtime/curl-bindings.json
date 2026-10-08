@@ -156,5 +156,14 @@
     "cpu_argument": true,
     "returns": true,
     "calling_convention": "cdecl"
+  },
+  "curl_easy_reset": {
+    "helper": "tribes_curl_easy_reset",
+    "arguments": 1,
+    "guest_base": false,
+    "cpu_argument": true,
+    "returns": false,
+    "calling_convention": "cdecl",
+    "helper_returns": "void"
   }
 }

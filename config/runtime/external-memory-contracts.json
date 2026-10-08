@@ -9,6 +9,7 @@
     "curl_multi_cleanup",
     "curl_easy_init",
     "curl_easy_cleanup",
+    "curl_easy_reset",
     "curl_multi_add_handle",
     "curl_multi_remove_handle",
     "curl_multi_setopt",

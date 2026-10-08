@@ -402,6 +402,23 @@ uint32_t tribes_curl_easy_init(_cpu *cpu) {
     if(!native) { free(entry); return 0; }
     return entry->guest;
 }
+void tribes_curl_easy_reset(_cpu *cpu,uint32_t handle) {
+    CURL_SCOPE=get(cpu,1);
+    Easy *entry=easy(s,handle);
+    /* The reached pool resets detached owned handles. Recursive, borrowed,
+       and attached resets require separate lifecycle evidence. */
+    if(!entry||s->callbacks||entry->borrowed||entry->attached)stop();
+    TribesCurlFrame frame; enter(s,cpu,&frame);
+    curl_easy_reset(entry->native);
+    if(entry->ca_info&&tribes_global_free(s->base,entry->ca_info))stop();
+    *entry=(Easy){.guest=entry->guest,.native=entry->native,.next=entry->next};
+    /* Reset guest options, but retain the bridge's socket ownership and
+       signal policy. Native reset preserves the real connection/DNS caches. */
+    if(curl_easy_setopt(entry->native,CURLOPT_NOSIGNAL,1L)!=CURLE_OK||
+       curl_easy_setopt(entry->native,CURLOPT_CLOSESOCKETFUNCTION,close_socket)!=CURLE_OK||
+       curl_easy_setopt(entry->native,CURLOPT_CLOSESOCKETDATA,s)!=CURLE_OK)stop();
+    leave(s,&frame);
+}
 void tribes_curl_easy_cleanup(_cpu *cpu,uint32_t handle) {
     CURL_SCOPE=get(cpu,1); if(!handle) return;
     /* A void native cleanup can silently reject recursive use. Never retire

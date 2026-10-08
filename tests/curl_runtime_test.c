@@ -21,7 +21,7 @@ extern _cpu *curl_runtime_test_setup(void);
 extern void curl_runtime_test_finish(void);
 extern void curl_wrong_init(void),curl_wrong_multi(void),curl_wrong_cleanup(void),curl_wrong_global_cleanup(void);
 extern char *curl_version(void);
-extern void curl_wrong_version(void);
+extern void curl_wrong_version(void),curl_wrong_reset(void);
 extern uint32_t version_expected;
 extern void curl_bad_callback(void *),curl_bad_pointer(void *);
 extern void curl_timer_bad_callback(void *),curl_timer_bad_data(void *),curl_timer_bad_width(void),curl_timer_dynamic_option(uint32_t),curl_timer_unknown_option(void);
@@ -156,9 +156,9 @@ static void socket_exercises(_cpu *cpu,const char *url) {
     uint32_t opt[]={socket_multi,10002,0xfedcab01};assert(call(cpu,10,3,opt)==0);
     opt[1]=20001;opt[2]=19;assert(call(cpu,10,3,opt)==0);
     opt[1]=20004;opt[2]=15;assert(call(cpu,10,3,opt)==0);
-    uint32_t stable=0,u=call(cpu,25,0,NULL);assert(u);
+    uint32_t stable=0,u=call(cpu,25,0,NULL),pooled=call(cpu,11,0,NULL);assert(u&&pooled);
     for(unsigned transfer=0;transfer<2;transfer++) {
-        uint32_t e=call(cpu,11,0,NULL);assert(e);
+        uint32_t e=pooled;
         snprintf((char *)memory+0x121000,1024,"%s/%s",url,transfer?"two":"one");
         uint32_t parts[]={u,0,0,0};assert(!call(cpu,26,4,parts));
         strcpy((char *)memory+0x121000,url);parts[2]=0x121000;parts[3]=0x84;assert(!call(cpu,26,4,parts));
@@ -195,9 +195,12 @@ static void socket_exercises(_cpu *cpu,const char *url) {
         if(!transfer)stable=socket_last;else assert(socket_last==stable);
         int fd=tribes_socket_duplicate(cpu->_pointer_offset,stable);assert(fd>=0&&close(fd)==0);
         uint32_t assign[]={socket_multi,stable,0};assert(call(cpu,17,3,assign)==5);
-        assert(call(cpu,14,2,pair)==0);assert(!tribes_global_size(cpu->_pointer_offset,message));call(cpu,24,1,&headers);call(cpu,12,1,&e);
+        assert(call(cpu,14,2,pair)==0);assert(!tribes_global_size(cpu->_pointer_offset,message));call(cpu,35,1,&e);
+        uint32_t private_info[]={e,0x100015,0x123004};assert(!call(cpu,18,3,private_info));
+        memcpy(&code,memory+0x123004,4);assert(!code);
+        call(cpu,24,1,&headers);
     }
-    call(cpu,27,1,&u);
+    call(cpu,12,1,&pooled);call(cpu,27,1,&u);
     assert(socket_assigns>=2&&call(cpu,8,1,&socket_multi)==0);
     assert(tribes_socket_duplicate(cpu->_pointer_offset,stable)==-1&&tribes_get_last_error()==10038);
     /* Reject the first real socket notification. Curl must propagate the
@@ -277,8 +280,15 @@ static void http_callback_exercises(_cpu *cpu,const char *url,const char *fault)
     header_abort=1;assert(call(cpu,28,1,&e)==23);header_abort=0;
     progress_abort=1;assert(call(cpu,28,1,&e)==42);progress_abort=0;
     assert(memory[0x124001]&&memchr(memory+0x124001,0,256));
-    /* Unsetting releases the borrowed guest buffer immediately. */
-    option[1]=10010;option[2]=0;assert(!call(cpu,21,3,option));assert(tribes_memory_permissions_set(0x124000,4096,0));
+    /* Reset releases the error buffer and callbacks, and clears the URL. */
+    call(cpu,35,1,&e);assert(tribes_memory_permissions_set(0x124000,4096,0));
+    assert(call(cpu,28,1,&e)==3);
+    uint32_t old_headers=header_calls,old_progress=progress_calls,old_body=body_bytes;
+    snprintf((char *)memory+0x121000,1024,"%s/reset",url);
+    option[1]=10002;option[2]=0x121000;assert(!call(cpu,21,3,option));
+    option[1]=10177;option[2]=0x122000;assert(!call(cpu,21,3,option));
+    assert(!call(cpu,28,1,&e));
+    assert(header_calls==old_headers&&progress_calls==old_progress&&body_bytes==old_body);
     call(cpu,12,1,&e);callback_easy=0;assert(tribes_memory_permissions_set(0x124000,4096,3));call(cpu,9,0,NULL);
 }
 int main(int argc,char **argv) {
@@ -290,7 +300,8 @@ int main(int argc,char **argv) {
         if(!strncmp(argv[1],"error-",6)){http_callback_exercises(cpu,NULL,argv[1]);abort();}
         if(!strncmp(argv[1],"url-",4)){url_exercises(cpu,argv[1]);abort();}
         if(!strncmp(argv[1],"list-",5)){list_exercises(cpu,argv[1]);abort();}
-        if(!strcmp(argv[1],"wrong-init")) curl_wrong_init();
+        if(!strcmp(argv[1],"wrong-reset"))curl_wrong_reset();
+        else if(!strcmp(argv[1],"wrong-init")) curl_wrong_init();
         else if(!strcmp(argv[1],"wrong-version"))curl_wrong_version();
         else if(!strcmp(argv[1],"version-protected")) {
             uint32_t v=call(cpu,22,0,NULL);assert(v);
@@ -327,7 +338,9 @@ int main(int argc,char **argv) {
         else {
             uint32_t init[]={1,1,2,3,4,5}; assert(call(cpu,6,6,init)==0);
             uint32_t e=call(cpu,11,0,NULL); assert(e);
-            if(!strcmp(argv[1],"stale-easy")) { call(cpu,12,1,&e); call(cpu,12,1,&e); }
+            if(!strcmp(argv[1],"reset-stale")){call(cpu,12,1,&e);call(cpu,35,1,&e);}
+            else if(!strcmp(argv[1],"reset-attached")){uint32_t pair[]={call(cpu,7,0,NULL),e};assert(!call(cpu,13,2,pair));call(cpu,35,1,&e);}
+            else if(!strcmp(argv[1],"stale-easy")) { call(cpu,12,1,&e); call(cpu,12,1,&e); }
             else if(!strcmp(argv[1],"live-easy-cleanup")) call(cpu,9,0,NULL);
             else if(!strcmp(argv[1],"unsupported-option")) { uint32_t a[]={call(cpu,7,0,NULL),20007,15}; call(cpu,10,3,a); }
         }

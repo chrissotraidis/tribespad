@@ -1,0 +1,103 @@
+{
+  "date": "2026-10-08",
+  "component": {
+    "passed": true,
+    "guard_failures": 54,
+    "http_requests": [
+      {
+        "path": "/one?check%3Done+two",
+        "client_port": 63951,
+        "headers": {
+          "Host": "127.0.0.1:63947",
+          "Accept": "text/plain",
+          "X-TribesPad": "one",
+          "X-Empty": ""
+        }
+      },
+      {
+        "path": "/two?check%3Done+two",
+        "client_port": 63951,
+        "headers": {
+          "Host": "127.0.0.1:63947",
+          "X-TribesPad": "two",
+          "X-Empty": ""
+        }
+      },
+      {
+        "path": "/redirect",
+        "client_port": 63958,
+        "headers": {
+          "Host": "127.0.0.1:63947",
+          "Accept": "*/*"
+        }
+      },
+      {
+        "path": "/short",
+        "client_port": 63958,
+        "headers": {
+          "Host": "127.0.0.1:63947",
+          "Accept": "*/*"
+        }
+      },
+      {
+        "path": "/cancel",
+        "client_port": 63959,
+        "headers": {
+          "Host": "127.0.0.1:63947",
+          "Accept": "*/*"
+        }
+      },
+      {
+        "path": "/reset",
+        "client_port": 63961,
+        "headers": {
+          "Host": "127.0.0.1:63947",
+          "Accept": "*/*"
+        }
+      }
+    ],
+    "thread_modes": [
+      "normal",
+      "checked",
+      "tsan"
+    ],
+    "thread_receipt_sha256": "2e147be5164bd5e0a050e653f2e1e373bddf981d656eaf4c806cdea14d8a1443"
+  },
+  "binary_sha256": "0df614f90085bd018c5b238223bbdfb408dd0881999a36119aa7c3b13e22d5b8",
+  "independent_subpages_enabled": true,
+  "actual_app": {
+    "pid": 97793,
+    "visible_servers": 26,
+    "original_master_discovery": true,
+    "native_mouse_refresh_verified": true,
+    "console_hidden_with_original_toggle": true,
+    "online_match_joined": false,
+    "authentication_submitted": false,
+    "screenshot": "docs/validation/macos-server-list-2026-10-08.png",
+    "screenshot_sha256": "1e90884fceea4150d6af62b01d884d302cc8b49f0ae9154933e9e4b573d8dbdf"
+  },
+  "execution_evidence": {
+    "generated/integration-review/mac-server-browser/curl-reset-execution/observation.json": "00a97e03a475fb7833427043f6e432269a109d4af4044bdf1dac0eb65fc77471",
+    "generated/integration-review/mac-server-browser/curl-reset-execution/console.log": "40036f8f576c2e4cafbfd81d5b6be58937f861ea15b60ff8aad3d9bab8d294bc",
+    "generated/integration-review/mac-server-browser/curl-reset-execution/app-stderr.log": "54578b0d55f34541e86b8d977fc4a2cd479e8c8a99b338ee1ac5e291cb9b0caf",
+    "generated/integration-review/mac-server-browser/curl-reset-execution/tribespad-browser-reset-sample.txt": "a9e18e2d6b8f97833cecfad30a5b75706c0f825d9d664908a83a5c2709cfc99e",
+    "generated/integration-review/mac-server-browser/curl-reset-execution/app-stdout.log": "3ec960f13858936da4ffda4e5af89b93ce8844ca48846dee0a37785a8d6afa39"
+  },
+  "sources_sha256": {
+    "config/runtime/curl-bindings.json": "1078ad88c0b5c45f3fadcbe798213ef8b067ec1ed70af82e8c0bf89ed68c0c67",
+    "config/runtime/external-memory-contracts.json": "011db5ddf48597c205ded669d94daaf4977ad641f2a4f28013772f490974123c",
+    "port/compiler/ExternalMemoryPass.cpp": "dbee324ede6d6102e1059cf308b8fb329cfb71e9d29dabd1d3ae8863c80bdfc7",
+    "port/core/guest_curl.c": "c988a6572d993e8a7603181b85d9d9d41216805bc59667eececf2608adc18fb6",
+    "port/core/guest_curl.h": "a27962ed444d39d00bc17601106d4c1402117426f65dc0f5b049ef4de2791e9c",
+    "scripts/test-curl-runtime.py": "9122e5e8d40924d6fd04a82d941f07db6989c644948a07069640be54c757ec42",
+    "tests/curl_runtime_test.c": "8e5fc0643c17c901cb8f12087935833637de70ad87684620417e22ffac5e73b8",
+    "tests/fixtures/curl_allocator_driver.c": "1d9a37d9b9a5a2cfd9837cf70d34ea947656a236bc76141a3638eba98073e759",
+    "tests/fixtures/curl_external_wrong.ll": "f5b4da7201e88ddada88bb0627a1067007e97150480490c055f13939618d3a20"
+  },
+  "limitations": [
+    "Window focus and console input remain rough; injected text lost periods and numeric 1 in this run. Fullscreen mouse refresh succeeded after console dismissal.",
+    "Audio test temporarily used built-in speakers; original default57 restored.",
+    "No fresh Katabatic test on this binary; prior offline gameplay evidence remains separate.",
+    "Workspace-dependent development apps; mobile game and visual HD acceptance unfinished."
+  ]
+}
