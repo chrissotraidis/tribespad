@@ -1,0 +1,93 @@
+{
+  "date": "2026-10-08",
+  "decision": "Rejected experimental atomic reader/writer guard: mixed microbenchmark gains do not establish a visible gameplay improvement. Restored the original pthread guard; existing user app bundles remain on fcbd7be3.",
+  "candidate_engine_sha256": "3f687fd9dd0346d459b46c8073564a99c3b14f24d58c44c9b333e6018dc49c68",
+  "candidate_guard_sha256": "17c6f87783909aa77339283ca1a63336c254a3734a17174c425699631af6eae4",
+  "retained_guard_sha256": "ee00fcff6979a3f4480835115d10db5dddf5fabf089a04c80f4a55e0ea82ec7c",
+  "microbenchmarks": [
+    {
+      "iteration": 0,
+      "variant": "baseline",
+      "stdout": "1 threads: 0.026147 seconds\n2 threads: 0.123876 seconds\n4 threads: 1.095715 seconds\n"
+    },
+    {
+      "iteration": 0,
+      "variant": "candidate",
+      "stdout": "1 threads: 0.018869 seconds\n2 threads: 0.154962 seconds\n4 threads: 0.787716 seconds\n"
+    },
+    {
+      "iteration": 1,
+      "variant": "baseline",
+      "stdout": "1 threads: 0.025605 seconds\n2 threads: 0.133967 seconds\n4 threads: 1.120285 seconds\n"
+    },
+    {
+      "iteration": 1,
+      "variant": "candidate",
+      "stdout": "1 threads: 0.018368 seconds\n2 threads: 0.137802 seconds\n4 threads: 0.775475 seconds\n"
+    },
+    {
+      "iteration": 2,
+      "variant": "baseline",
+      "stdout": "1 threads: 0.025242 seconds\n2 threads: 0.125885 seconds\n4 threads: 1.100013 seconds\n"
+    },
+    {
+      "iteration": 2,
+      "variant": "candidate",
+      "stdout": "1 threads: 0.018772 seconds\n2 threads: 0.133048 seconds\n4 threads: 0.773032 seconds\n"
+    }
+  ],
+  "original_execution": {
+    "pid": 13763,
+    "map": "Katabatic CTF",
+    "bots": [
+      "Slicer",
+      "Vanguard"
+    ],
+    "datablocks": 1482,
+    "objects": 205,
+    "lighting_loaded": true,
+    "match_started": true,
+    "player_spawned": true,
+    "controls": "Native W movement, relative aiming and disc fire; ammunition15 to13. Title-bar click restored focus after activation alone failed to deliver gameplay input.",
+    "loading": "Roughly9-10minutes including interval between readiness and observation; cross-process Python monotonic values were discarded.",
+    "online_match_joined": false,
+    "player_swaps": {
+      "count": 115,
+      "seconds": 96.312081167,
+      "rate": 1.183652129812563,
+      "limitation": "Read-only LLDB breakpoints add overhead. Different views and bot states prevent a controlled speedup claim."
+    },
+    "without_debugger": {
+      "captures": 33,
+      "changes": 6,
+      "seconds": 19.589105208000003,
+      "method": "Window screenshot PNG IDAT hashes; not a formal FPS benchmark."
+    },
+    "assessment": "Not responsive gameplay acceptance; the candidate is not promoted."
+  },
+  "validation": {
+    "candidate": "Memory pass, normal/checked/TSan concurrency, VM protection/zero-fill, immutable code revisions, mission literals and renderer handoff plus required renderer prerequisites passed. Full checked engine built and ran the offline match.",
+    "retained": "Restored pthread guard passes the expanded memory-pass test:23 denied-access faults, nested pending writer,8000 emitted access cycles and16000 permission publications from four writers; normal and ThreadSanitizer."
+  },
+  "next_action": "Use optimized machine-code generation on identical checked bitcode, preserving barriers and external-call gates, then verify and compare the full offline app. A standalone llc-O2 experiment reduced one checked SSE helper text from7368 to4748 bytes; no game performance claim follows.",
+  "build_note": "Latest generated bootstrap and isolated memory-performance/app contain the rejected candidate. Existing browser and Offline app bundles retain fcbd7be3. Rebuild from restored source and rerun any stale source-bound prerequisites before replacing either app.",
+  "cleanup": {
+    "pid": 13763,
+    "original_audio": "default 57\n113 MacBook Air Microphone\n106 MacBook Air Speakers\n118 eqMac\n88 Microsoft Teams Audio\n84 Jump Desktop Microphone\n57 Jump Desktop Audio\n",
+    "restored": "default 57\n113 MacBook Air Microphone\n106 MacBook Air Speakers\n118 eqMac\n88 Microsoft Teams Audio\n84 Jump Desktop Microphone\n57 Jump Desktop Audio\n"
+  },
+  "evidence_sha256": {
+    "generated/integration-review/memory-performance/rejected-guard.c": "17c6f87783909aa77339283ca1a63336c254a3734a17174c425699631af6eae4",
+    "generated/integration-review/memory-performance/rejected-guard.patch": "91731aacf20ffece6241acb29663911c2225385d9af3e045ae6edbd75b885ab6",
+    "generated/integration-review/memory-performance/bench.c": "83a1487159dab11014bd1db27c0bb26cb9d8c47e885164cf1ed39a3725617ab3",
+    "generated/integration-review/memory-performance/bench.json": "8e560d6d03d7b2c9dbed28429c1d8cab4f2d30420d272aa3e641123d76499dc2",
+    "generated/integration-review/memory-performance/console.log": "a09582f25071fabc30e5b380419a69cc651247bdfd276e1ebda8add118407f65",
+    "generated/integration-review/memory-performance/stderr.log": "8db2471a5eed67b507f25f7e932113837d2f4d760c395f8657dd26fa6975957d",
+    "generated/integration-review/memory-performance/observer-swap-times.json": "b44ba7af6a28bb9089233be3c95e825fa5a3008f380dfca82aa766a57f981099",
+    "generated/integration-review/memory-performance/swap-times.json": "bd3beb10ffce09ff783cd8812ce4809e0be729598ad00086c7cd97342a3ece6c",
+    "generated/integration-review/memory-performance/screen-frame-times.json": "f15f205376bf4422d78ab0da9eeff29b5f3707fc4ea4ab803557e375fa01f656",
+    "generated/integration-review/memory-performance/gameplay-sample.txt": "1bdda9a454dfb7bd6d5072101e92ee75b7672d1b664fba9eab815211077a31d3",
+    "generated/integration-review/memory-performance/frame.png": "0581bb6fc9bfa5f57894934fc6948d73fc3670958414efb389ca7530255daa69",
+    "generated/integration-review/memory-performance/loading-sample.txt": "dcf39858f50142364ec5fc47b8611608897e62cc590559bf9161d61e36bba7df"
+  }
+}

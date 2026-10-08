@@ -2,6 +2,7 @@
 #include <assert.h>
 #include <pthread.h>
 #include <signal.h>
+#include <stdatomic.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -18,6 +19,24 @@ extern void checked_copy_chk(void *,const void *,uint64_t),checked_move_chk(void
 static unsigned char *memory;
 static void *worker(void *context){unsigned char *p=memory+0x4000+(uintptr_t)context*64;for(unsigned i=0;i<2000;i++){checked_write(p,i);assert(checked_read(p)==i);checked_copy(p+16,p,8);assert(checked_read(p+16)==i);assert(checked_read(memory+4096)==UINT64_C(0xa5a5a5a5a5a5a5a5));}return NULL;}
 static void *publisher(void *unused){(void)unused;for(unsigned i=0;i<4000;i++)assert(tribes_memory_permissions_set(4096,4096,(i&1)?3:1));return NULL;}
+static _Atomic unsigned publisher_started,publisher_finished;
+static void *denying_publisher(void *unused){
+ (void)unused;atomic_store(&publisher_started,1);
+ assert(tribes_memory_permissions_set(12288,4096,0));
+ atomic_store(&publisher_finished,1);return NULL;
+}
+static void nested_publication(void){
+ uint32_t outer=tribes_memory_access_begin(memory+12288,8,1);assert(outer);
+ pthread_t thread;assert(!pthread_create(&thread,NULL,denying_publisher,NULL));
+ while(!atomic_load(&publisher_started))usleep(100);
+ usleep(20000);assert(!atomic_load(&publisher_finished));
+ /* Nested checked access must not wait behind the pending writer, and the
+    writer must not publish when only this inner bracket ends. */
+ assert(checked_read(memory+12288)==UINT64_C(0xa5a5a5a5a5a5a5a5));
+ assert(!atomic_load(&publisher_finished));tribes_memory_access_end(outer);
+ assert(!pthread_join(thread,NULL));assert(atomic_load(&publisher_finished));
+ assert(tribes_memory_permissions_set(12288,4096,3));
+}
 static void run_fault(unsigned n){
  switch(n){
  case 0:checked_write(memory+4096,123);break;
@@ -64,7 +83,8 @@ int main(int argc,char **argv){
   if(!child){struct rlimit limit={0,0};setrlimit(RLIMIT_CORE,&limit);close(channel[0]);assert(dup2(channel[1],2)==2);close(channel[1]);run_fault(i);_exit(99);}
   close(channel[1]);char message[1024];ssize_t count=read(channel[0],message,sizeof message-1);assert(count>0);message[count]=0;close(channel[0]);int status;assert(waitpid(child,&status,0)==child);assert(WIFSIGNALED(status)&&WTERMSIG(status)==SIGABRT);assert(strstr(message,"checked guest memory violation"));assert(!memcmp(snapshot,memory,65536));
  }
- pthread_t publishing;assert(!pthread_create(&publishing,NULL,publisher,NULL));pthread_t threads[4];for(uintptr_t i=0;i<4;i++)assert(!pthread_create(&threads[i],NULL,worker,(void *)i));for(unsigned i=0;i<4;i++)assert(!pthread_join(threads[i],NULL));assert(!pthread_join(publishing,NULL));
+ nested_publication();
+ pthread_t publishing[4];for(unsigned i=0;i<4;i++)assert(!pthread_create(publishing+i,NULL,publisher,NULL));pthread_t threads[4];for(uintptr_t i=0;i<4;i++)assert(!pthread_create(&threads[i],NULL,worker,(void *)i));for(unsigned i=0;i<4;i++)assert(!pthread_join(threads[i],NULL));for(unsigned i=0;i<4;i++)assert(!pthread_join(publishing[i],NULL));
  assert(tribes_memory_permissions_set(4096,4096,3));checked_write(memory+4096,859);assert(checked_read(memory+4096)==859);
- printf("PASS: actual pass-emitted scalar/vector/atomic/copy/move/set checks; %u forbidden-access child faults with complete shared-memory preservation; permitted neighboring/host/zero-length accesses; 8000 concurrent emitted write/read/copy cycles and 4000 permission publications; permission restoration\n",argc==1?23u:0u);return 0;
+ printf("PASS: actual pass-emitted scalar/vector/atomic/copy/move/set checks; %u forbidden-access child faults with complete shared-memory preservation; permitted neighboring/host/zero-length accesses; nested bracket excludes pending writer; 8000 concurrent emitted write/read/copy cycles and 16000 permission publications from four writers; permission restoration\n",argc==1?23u:0u);return 0;
 }
