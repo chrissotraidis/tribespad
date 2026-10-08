@@ -1,0 +1,235 @@
+{
+  "faults": {
+    "cdecl-as-stdcall": {
+      "returncode": -6,
+      "state": "explicit abort"
+    },
+    "stdcall-as-cdecl": {
+      "returncode": -6,
+      "state": "explicit abort"
+    },
+    "below-stack": {
+      "returncode": -6,
+      "state": "explicit abort"
+    },
+    "aligned-free-unreadable": {
+      "returncode": -6,
+      "state": "explicit abort"
+    }
+  },
+  "fixture_bindings": {
+    "FixtureMalloc": {
+      "helper": "fixture_malloc",
+      "arguments": 1,
+      "guest_base": false,
+      "cpu_argument": true,
+      "returns": true,
+      "helper_returns": "i32",
+      "calling_convention": "cdecl"
+    },
+    "FixtureCalloc": {
+      "helper": "fixture_calloc",
+      "arguments": 2,
+      "guest_base": false,
+      "cpu_argument": true,
+      "returns": true,
+      "helper_returns": "i32",
+      "calling_convention": "cdecl"
+    },
+    "FixtureRealloc": {
+      "helper": "fixture_realloc",
+      "arguments": 2,
+      "guest_base": false,
+      "cpu_argument": true,
+      "returns": true,
+      "helper_returns": "i32",
+      "calling_convention": "cdecl"
+    },
+    "FixtureFree": {
+      "helper": "fixture_free",
+      "arguments": 1,
+      "guest_base": false,
+      "cpu_argument": true,
+      "returns": false,
+      "helper_returns": "void",
+      "calling_convention": "cdecl"
+    },
+    "SDL_SetMemoryFunctions": {
+      "helper": "tribes_sdl_set_memory_functions",
+      "arguments": 4,
+      "guest_base": true,
+      "returns": true,
+      "calling_convention": "cdecl"
+    },
+    "SDL_malloc": {
+      "helper": "tribes_sdl_malloc",
+      "arguments": 1,
+      "guest_base": false,
+      "cpu_argument": true,
+      "returns": true,
+      "helper_returns": "i32",
+      "calling_convention": "cdecl"
+    },
+    "SDL_calloc": {
+      "helper": "tribes_sdl_calloc",
+      "arguments": 2,
+      "guest_base": false,
+      "cpu_argument": true,
+      "returns": true,
+      "helper_returns": "i32",
+      "calling_convention": "cdecl"
+    },
+    "SDL_realloc": {
+      "helper": "tribes_sdl_realloc",
+      "arguments": 2,
+      "guest_base": false,
+      "cpu_argument": true,
+      "returns": true,
+      "helper_returns": "i32",
+      "calling_convention": "cdecl"
+    },
+    "SDL_free": {
+      "helper": "tribes_sdl_free",
+      "arguments": 1,
+      "guest_base": false,
+      "cpu_argument": true,
+      "returns": false,
+      "helper_returns": "void",
+      "calling_convention": "cdecl"
+    },
+    "SDL_aligned_alloc": {
+      "helper": "tribes_sdl_aligned_alloc",
+      "arguments": 2,
+      "guest_base": false,
+      "cpu_argument": true,
+      "returns": true,
+      "helper_returns": "i32",
+      "calling_convention": "cdecl"
+    },
+    "SDL_aligned_free": {
+      "helper": "tribes_sdl_aligned_free",
+      "arguments": 1,
+      "guest_base": false,
+      "cpu_argument": true,
+      "returns": false,
+      "helper_returns": "void",
+      "calling_convention": "cdecl"
+    }
+  },
+  "generator_sha256": "f4bcf667cd544f154226cc0664ab2553dfa49fb5b2801c6544e424360c9e86f1",
+  "state": "finished",
+  "pass": true,
+  "target": "arm64-apple-macos12",
+  "simulator_device": null,
+  "runs": [
+    {
+      "mode": "normal",
+      "pass": true,
+      "output": "PASS: 54 aligned allocations through registered callbacks with i686 metadata, zeroed padding, matching frees, overflow and failure; 2000 real native allocation/calloc/reallocation/free lifetimes through emitted ARM64 SDL memory wrappers and registered cdecl callbacks, nested stdcall calls, zero-size normalization, NULL-free no-op, allocation failure/error retention and all 15 invalid callback tables, eight concurrent pthreads, copied byte retention/zero fill, unaligned argument/stack guards, parent CPU/flags preserved and thread FP changes propagated; fixtures are not selected QoL/SDL execution",
+      "binary_sha256": "cf81983d3735a53576884ff46c459d9ea8756670ec16a73a32ad779eee1d5c8e"
+    },
+    {
+      "mode": "checked",
+      "pass": true,
+      "output": "PASS: 54 aligned allocations through registered callbacks with i686 metadata, zeroed padding, matching frees, overflow and failure; 2000 real native allocation/calloc/reallocation/free lifetimes through emitted ARM64 SDL memory wrappers and registered cdecl callbacks, nested stdcall calls, zero-size normalization, NULL-free no-op, allocation failure/error retention and all 15 invalid callback tables, eight concurrent pthreads, copied byte retention/zero fill, unaligned argument/stack guards, parent CPU/flags preserved and thread FP changes propagated; fixtures are not selected QoL/SDL execution",
+      "binary_sha256": "ac50e0fe652c5b043eda2d44fe7e3f59834a2a719344f12d8118ad6bd2cbdd5f"
+    },
+    {
+      "mode": "tsan",
+      "pass": true,
+      "output": "PASS: 54 aligned allocations through registered callbacks with i686 metadata, zeroed padding, matching frees, overflow and failure; 2000 real native allocation/calloc/reallocation/free lifetimes through emitted ARM64 SDL memory wrappers and registered cdecl callbacks, nested stdcall calls, zero-size normalization, NULL-free no-op, allocation failure/error retention and all 15 invalid callback tables, eight concurrent pthreads, copied byte retention/zero fill, unaligned argument/stack guards, parent CPU/flags preserved and thread FP changes propagated; fixtures are not selected QoL/SDL execution",
+      "binary_sha256": "6ce5d09b7b046f9b7e790246a309a7fe60297ef51c77e0d7cd9a6b79de95ae68"
+    }
+  ],
+  "sources_sha256": {
+    "port/core/guest_sdl_memory.c": "f1cac46d905cbec4ec3b9844c41319656789f711259d25c6bf13c6325e45317c",
+    "port/core/guest_sdl_allocator.c": "eda2ba4e3bfd66bc71f6df9fa9042394d4d562dd1374acbc8ee6199f323ed325",
+    "port/core/guest_callback.c": "5e647f11ac9849e0cf927e1917183b81e64382a7b7d91cc2a97016673494e444",
+    "port/core/guest_heap.c": "791c26c9fd72984fc53f0f5f1447df5f1dd43e38af08a529b1efc0b3e65dd96b",
+    "tests/cdecl_callback_test.c": "d187c53a9bea22b5fcfb72c8a3c6ec87c641cd22b7691e19861707b695ac1c6c",
+    "tests/fixtures/callback.ll": "6e909d9fd612b788f4fae605e05ed2b6fe45b329f52f9a30fd2b3cd8cbcbc897",
+    "generated/native-win32/cdecl-callback/macos/bindings.ll": "08ae134f5238de166ebfe8bdc3aa6e26824bb0267f17ad48b662492533dee175"
+  },
+  "headers_sha256": {
+    "port/llasm-support/llasm_cpu.h": "8c3cd17ee706cd3768d793c21d4f553b981cb45d3845dd9a93793d16f1bcc356",
+    "port/core/guest_callback.h": "4d41104ba766ffd5dca1601cb556b184ba7f2fc2d2930b27d89365eeba39a527",
+    "port/core/guest_heap.h": "5ec37e777985dc04a9b0401376ef5e8227da1a06ed0fedaa1cae0ab991503d5b",
+    "port/core/guest_sdl_memory.h": "034e1f390f6476af7279e0156c6bcf57ab3e181e5c0c5f8809d0989fe583fbf8",
+    "port/core/guest_sdl_allocator.h": "c270bac59db8e6e5ca5d294f2c21f72b540706dbd71cc60f717d62cd71ebd996"
+  },
+  "bindings_sha256": "68d14705fcf8ac3b67def64a8a9cd2d2357259abaecd0a89ca7704373e6dd378",
+  "scope": "Component validation of pinned SDL i686 aligned allocator using original registered callback mechanism; full original aligned allocation execution pending.",
+  "original_execution": {
+    "binary_sha256": "edcf8209f58120e5b66e6bbfd7c2d3194e9797bd62852e955aa295fdd0df8a81",
+    "pid": 22655,
+    "io_calls": [
+      {
+        "name": "tribes_sdl_io_from_file",
+        "time": 1791425371.9414232,
+        "return_pc": "0x100d3ed0",
+        "arguments": [
+          "0x64304af0",
+          "0x1012b140"
+        ],
+        "path": "base\\music\\ice.mp3",
+        "mode": "rb",
+        "native_return_low": "0xd6000001",
+        "returned_time": 1791425371.955286
+      },
+      {
+        "name": "tribes_sdl_get_simd_alignment",
+        "time": 1791425371.965015,
+        "return_pc": "0x100d3c32",
+        "arguments": [],
+        "native_return_low": "0x10",
+        "returned_time": 1791425371.9740312
+      }
+    ],
+    "next_stop": {
+      "pid": 22655,
+      "import_name": "SDL_aligned_alloc",
+      "index": 323,
+      "cpu": "0x110cc8d50",
+      "base": "0x7000000000",
+      "esp": "0x2ff394",
+      "stack": [
+        "0x100d3c38",
+        "0x10",
+        "0x10000",
+        "0x64304afe",
+        "0x64304af0",
+        "0x3218",
+        "0xd6000001",
+        "0x2ff3d0",
+        "0x100d3f02",
+        "0xd6000001",
+        "0x64304aff",
+        "0x104713bc",
+        "0x10000",
+        "0x0",
+        "0x64304af0",
+        "0x2ff3ec",
+        "0x100578d8",
+        "0x64304af0",
+        "0x104713bc",
+        "0x10000",
+        "0x60631568",
+        "0x60429800",
+        "0x2ff3f8",
+        "0x4094cd"
+      ],
+      "scope": "Selected main thread CPU and bounded stack only; active workers mean no coherent whole-memory snapshot."
+    }
+  },
+  "evidence_sha256": {
+    "generated/integration-review/sdl-io/decoder-execution/app-build.json": "a5c1bb8ba0be7cda19f3e5edd01b02822adff9bb85ba351e3608b98e74cef95b",
+    "generated/integration-review/sdl-io/decoder-execution/io-calls.json": "8e596752ac305c6eff206863b3cca0038779b37be4b8ddf055d4afa43a07ddf6",
+    "generated/integration-review/sdl-io/decoder-execution/next-stop.json": "2415b71c4861771cbb5ed0d3c3c64811a7b8d3022ad35530f34ae2fc90ade9d1",
+    "generated/integration-review/sdl-io/decoder-execution/console.log": "4e86fbffe00a36d66d24f11ee9492eda892ba15bd83fa49767f884920f6b6c64",
+    "generated/integration-review/sdl-io/decoder-execution/app-stderr.log": "3764e4f9bf374669f570f377655bedabf998d1160a4bc1215872ccbe36860933",
+    "generated/integration-review/sdl-io/decoder-execution/observation.json": "888b38c13574c3dc6141cd50fb615eb65a628d77dbdb4c9d85fad8b846e95642",
+    "generated/integration-review/sdl-io/aligned-mobile-compile/result.json": "a6950d80d9e8700daa6ee8c64b6bad481c573397344d5e8972ca3c5f46bd3a73",
+    "ref/sdl3/SDL3-3.2.18/src/stdlib/SDL_stdlib.c": "192cfe8d9c94ee651e7e8a0c035962ffd21ae84d8f5ad914ddcef035c94181ea"
+  },
+  "full_engine": "Aligned allocator full rebuild live: session7458 PID25739. No new original aligned allocation/PCM/scene/HD/mobile acceptance."
+}

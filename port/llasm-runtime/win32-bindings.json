@@ -1869,5 +1869,23 @@
     "returns": true,
     "guest_base": true,
     "calling_convention": "cdecl"
+  },
+  "SDL_aligned_alloc": {
+    "helper": "tribes_sdl_aligned_alloc",
+    "arguments": 2,
+    "guest_base": false,
+    "cpu_argument": true,
+    "returns": true,
+    "helper_returns": "i32",
+    "calling_convention": "cdecl"
+  },
+  "SDL_aligned_free": {
+    "helper": "tribes_sdl_aligned_free",
+    "arguments": 1,
+    "guest_base": false,
+    "cpu_argument": true,
+    "returns": false,
+    "helper_returns": "void",
+    "calling_convention": "cdecl"
   }
 }

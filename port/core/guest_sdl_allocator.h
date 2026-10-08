@@ -7,4 +7,6 @@ uint32_t tribes_sdl_malloc(_cpu *cpu,uint32_t size);
 uint32_t tribes_sdl_calloc(_cpu *cpu,uint32_t count,uint32_t size);
 uint32_t tribes_sdl_realloc(_cpu *cpu,uint32_t pointer,uint32_t size);
 void tribes_sdl_free(_cpu *cpu,uint32_t pointer);
+uint32_t tribes_sdl_aligned_alloc(_cpu *cpu,uint32_t alignment,uint32_t size);
+void tribes_sdl_aligned_free(_cpu *cpu,uint32_t pointer);
 #endif
