@@ -340,6 +340,8 @@ original:
  dll,apple_render_present_metadata=prepare_apple_render_present(dll)
  from apple_primitive_restart import prepare as prepare_apple_primitive_restart
  dll,apple_primitive_restart_metadata=prepare_apple_primitive_restart(dll)
+ from packed_compare_runtime_inputs import prepare as prepare_packed_compare
+ dll,packed_compare_source,packed_compare_metadata=prepare_packed_compare(dll)
  (out/'qol-patched.ll').write_text(dll)
  spec=importlib.util.spec_from_file_location('patch_va',R/'scripts/prepare-va-model.py');va=importlib.util.module_from_spec(spec);spec.loader.exec_module(va)
  entries=[]
@@ -451,12 +453,13 @@ define hidden fastcc void @tbimp_FlushInstructionCache(ptr %cpu) {
  (out/'engine_bootstrap.inc').write_text('\n'.join(config)+'\n')
  sources=[out/'qol-patched.ll',engine_source,bank/'module.ll',cont/'qol/module.ll',cont/'bridges.ll',out/'publication-bindings.ll',out/'cross-imports.ll',late_source,followup_source,network_source,http_source,string_source,console_fade_source,console_animation_source,post_file_patch_source,collision_patch_source,allocation_patch_source,clock_patch_source,post_video_prefix_source,post_video_nop_source,post_video_nop_second_source,post_video_tail_source,display_immediates_source,startup_calls_source,input_nop_source,renderer_call_source,renderer_startup_source,renderer_redirects_source,renderer_dimensions_source,renderer_batch_source,renderer_nested_source,renderer_outer_source]+pending_hook_sources+renderer_hook_sources
  sources+=[font_size_source,audio_tables_source]+miles_sources+codec_sources+audio_hook_sources+mission_entry_sources
- sources += [R/'port/llasm-support/tribes_fp_query.c']
+ sources += [R/'port/llasm-support/tribes_fp_query.c',packed_compare_source]
  metadata=dict(plan_sha256=sha(plan_path),linked_imports=linked,miles=miles_metadata,codecs=codec_metadata,whole_engine_object_sha256=ec['object_sha256'],manifest_sha256=sha(out/'published-code.bin'),ranges=[dict(address=v,bytes=len(b)) for v,b in ranges],dispatch_entries=len(entries),sources_sha256={str(p.relative_to(R)):sha(p) for p in sources+[out/'merged-dispatch.ll',out/'patch_publication.inc',out/'engine_bootstrap.inc',out/'miles_bootstrap.inc',out/'codec_bootstrap.inc',R/'scripts/codec_runtime_inputs.py',R/'scripts/miles_runtime_inputs.py',keyboard,devices,pathlib.Path(__file__).resolve()]})
  metadata['late_patch']=late_metadata
  metadata['mission_literals']=mission_literal_metadata
  metadata['render_job']=render_job_metadata
  metadata['mission_entry']=mission_entry_metadata
+ metadata['packed_compare']=packed_compare_metadata
  metadata['apple_render_dimensions']=apple_render_dimensions_metadata
  metadata['apple_render_present']=apple_render_present_metadata
  metadata['apple_primitive_restart']=apple_primitive_restart_metadata

@@ -1,0 +1,84 @@
+{
+  "component": {
+    "normal": {
+      "passed": true,
+      "cases": 16384,
+      "unmasked_no_publication": 32,
+      "library_sha256": "e7942a3491e1ddecdaf38183b3e0fe2dd34414cfbb148bed18af240054635246"
+    },
+    "checked": {
+      "passed": true,
+      "cases": 16384,
+      "unmasked_no_publication": 32,
+      "library_sha256": "3bca603cb0c89849db558b2d2e5f4daa5c843b930e88665091c1359fc4db6497"
+    },
+    "passed": true,
+    "sources_sha256": {
+      "scripts/test-packed-compare.py": "a5be786cab943525d967af5e9b5c3afbbc8b77774ead5fc0f107e223202d25d2",
+      "scripts/packed_compare_runtime_inputs.py": "06b4adcf9f3e0f22a960d5043f35f3127f369193eba85ed6ab6eea5e7763e1b2",
+      "port/llasm-support/tribes_packed_compare.c": "540da7d4abdb732036f90dbddc69cf65e564f265f7e9d73d96448b15785c3afb",
+      "port/llasm-support/tribes_sse.c": "b23372bd8016bbc05d3b0066dcdd768efda660033d31cc1db03475385865e6ae",
+      "tests/packed_compare_oracle.c": "6afdb10f9774b0d2f0cfc8606490fa1cb0950644af16170cb4248479cd985c33",
+      "port/llasm-support/tribes_sse.h": "efb00007e337dc4c4668e59a517d30255425cb60939632045e307e351cf2e5b8",
+      "port/llasm-support/llasm_cpu.h": "8c3cd17ee706cd3768d793c21d4f553b981cb45d3845dd9a93793d16f1bcc356",
+      "port/core/sse_arithmetic.c": "a3fa606b116168cba4ceb30d689a31f3b2c7d034a10102efa343ee3871b13e83",
+      "port/core/sse_arithmetic.h": "7fbfdd7dce1d91f651b0c25f6a064865dc4c68c20bcdcf166f5015d19342d80f"
+    },
+    "sites": [
+      "0x1002f584",
+      "0x1002f58c",
+      "0x1002f5dd",
+      "0x1002f5e8"
+    ],
+    "source_rejections": 8,
+    "reference_sha256": "33a51241dd634dce62fa7aefff920abc45d8884f4fd926f969297bad3c365bf5",
+    "scope": "Four original register CMPPS-LT/MINPS sites; full CPU and YMM preservation, fresh Rosetta oracle, per-lane IE/DE no-publication stops. Full engine execution remains separate."
+  },
+  "full_engine": {
+    "binary_sha256": "e827297cf52a2bde72bee707aa94044393d127847e857ebb8d73963ed0b1db9c",
+    "initialized": true,
+    "independent_subpages_enabled": true,
+    "observation": {
+      "diagnostic_stop": true,
+      "kind": "execution_timeout",
+      "timeout_seconds": 60,
+      "attach_return": 1,
+      "stages_returned": 2,
+      "engine_entered": true,
+      "native_patch_publication": true
+    }
+  },
+  "app": {
+    "pids": [
+      92045,
+      93520
+    ],
+    "training_screen_rendered": true,
+    "console_opened_by_native_key": true,
+    "browser_command": "LaunchGame(\"Join\");",
+    "browser_command_is_ui_navigation": true,
+    "original_server_list_script_loaded": true,
+    "next_stop": {
+      "kind": "import",
+      "index": 422,
+      "return_pc": 268575325,
+      "stage": 2,
+      "engine_entered": true,
+      "native_patch_publication": true
+    },
+    "next_import": "curl_easy_reset",
+    "original_call_return": "0x1002225d",
+    "in_game_server_rows_verified": false,
+    "online_match_joined": false,
+    "screenshot": "generated/integration-review/mac-server-browser/training-after-restart.png",
+    "screenshot_sha256": "daf58620889029ae32e682f2b5f6d8d5c9bf0dacc050afa300cdabf69839c287"
+  },
+  "manual_offline_app_updated": true,
+  "limitations": [
+    "Mouse targeting in saved window mode still needs correction/verification; keyboard console and Option+Enter worked.",
+    "Jump Desktop Audio can hang CoreAudio opening; controlled tests temporarily selected built-in speakers and restored default57.",
+    "Selecting Miles separately reached existing PSRAD stop0x2114e23b; OpenAL preference restored.",
+    "Full offline Katabatic control evidence predates this instruction-only binary update; no new map run claimed."
+  ],
+  "scope": "Actual full original Mac restart reaches Training and original browser discovery. Server-list display remains blocked by reached curl_easy_reset. No online gameplay connection or mobile acceptance."
+}
