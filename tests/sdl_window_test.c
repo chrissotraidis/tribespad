@@ -68,7 +68,7 @@ extern void bad_alpha_func(void),bad_polygon_mode(void),bad_load_matrix_f(void),
 extern void bad_fog_i(void),bad_fog_f(void),bad_fog_fv(void);
 extern void bad_light_fv(void),bad_light_f(void),bad_light_model_fv(void);
 extern void bad_rotate_f(void),bad_translate_f(void),bad_tex_coord2f(void);
-extern void bad_color3ub(void),bad_vertex3f(void);
+extern void bad_color3ub(void),bad_vertex3f(void),bad_restart(void);
 extern void bad_color4f(void),bad_vertex2i(void),bad_tex_sub_image_2d(void);
 #endif
 #endif
@@ -669,6 +669,39 @@ static void matrix_queries(const char *fault){
  }
  glMatrixMode(GL_MODELVIEW);
  puts("Model-view/projection queries: native sixteen-float matrices, unaligned output/canaries, retained errors, full guest CPU/stack/LastError and invalid-operation preservation PASS");
+}
+static void primitive_restart(void){
+ const uint32_t restart=0xfffa0800;
+ strcpy((char *)memory+0x24000,"glPrimitiveRestartIndex");assert(CALL(63,0x24000)==restart);
+ assert(!GC(0xfffa05f0,1,0x8f9d));GC(0xfffa0020,0,0x8f9e,0x3000);assert(word(0x3000)==0);
+ glUseProgram(0);glBindBuffer(GL_ARRAY_BUFFER,0);glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
+ glDisable(GL_TEXTURE_2D);glDisable(GL_DEPTH_TEST);glDisable(GL_BLEND);glDisable(GL_CULL_FACE);glDisable(GL_LIGHTING);glDisable(GL_FOG);
+ glMatrixMode(GL_PROJECTION);glLoadIdentity();glMatrixMode(GL_MODELVIEW);glLoadIdentity();glViewport(0,0,64,64);glColor4f(1,0,0,1);
+ const GLfloat vertices[]={-.9f,-.8f,-.1f,-.8f,-.9f,.8f,-.1f,.8f,.1f,-.8f,.9f,-.8f,.1f,.8f,.9f,.8f};
+ const GLuint strips[]={0,1,2,3,4,5,6,7};unsigned char expected[64*64*4],actual[sizeof expected];
+ glClearColor(0,0,0,1);glClear(GL_COLOR_BUFFER_BIT);glEnableClientState(GL_VERTEX_ARRAY);glVertexPointer(2,GL_FLOAT,0,vertices);
+ glDrawElements(GL_TRIANGLE_STRIP,4,GL_UNSIGNED_INT,strips);glDrawElements(GL_TRIANGLE_STRIP,4,GL_UNSIGNED_INT,strips+4);glReadPixels(0,0,64,64,GL_RGBA,GL_UNSIGNED_BYTE,expected);glVertexPointer(2,GL_FLOAT,0,NULL);glDisableClientState(GL_VERTEX_ARRAY);
+ memcpy(memory+0x3fc0,vertices,sizeof vertices);GC(0xfffa0300,0,2,GL_FLOAT,0,0x3fc0);GC(0xfffa02e0,0,GL_VERTEX_ARRAY);
+ assert(tribes_memory_permissions_set(0x4000,4096,0));
+ const GLenum types[]={GL_UNSIGNED_BYTE,GL_UNSIGNED_SHORT,GL_UNSIGNED_INT};
+ for(unsigned w=0;w<3;w++){
+  unsigned width=1u<<w;uint32_t marker=w==0?255:w==1?65535:0xffffffff;
+  uint32_t indices[]={marker,0,1,2,3,marker,marker,4,5,6,7,marker};
+  for(unsigned i=0;i<12;i++)memcpy(memory+0x6001+i*width,&indices[i],width);
+  GC(restart,0,marker);GC(0xfffa0290,0,0x8f9d);assert(GC(0xfffa05f0,1,0x8f9d));
+  GC(0xfffa0020,0,0x8f9e,0x3000);assert(word(0x3000)==marker);
+  glClear(GL_COLOR_BUFFER_BIT);glEnable(0xffffffff);GC(0xfffa0350,0,GL_TRIANGLE_STRIP,12,types[w],0x6001);
+  assert(GC(0xfffa0010,1)==GL_INVALID_ENUM&&!GC(0xfffa0010,1));glReadPixels(0,0,64,64,GL_RGBA,GL_UNSIGNED_BYTE,actual);assert(!memcmp(actual,expected,sizeof actual));
+  /* All markers consume no vertex data, even with an unreadable descriptor. */
+  GC(0xfffa0300,0,2,GL_FLOAT,0,0x4000);GC(0xfffa0350,0,GL_TRIANGLE_STRIP,1,types[w],0x6001);GC(0xfffa0300,0,2,GL_FLOAT,0,0x3fc0);assert(!GC(0xfffa0010,1));
+ }
+ /* State writes inside Begin/End fail without consuming errors or changing it. */
+ GC(restart,0,65535);glBegin(GL_POINTS);GC(restart,0,7);GC(0xfffa0280,0,0x8f9d);glEnd();assert(GC(0xfffa0010,1)==GL_INVALID_OPERATION);GC(0xfffa0020,0,0x8f9e,0x3000);assert(word(0x3000)==65535&&GC(0xfffa05f0,1,0x8f9d));
+ /* A 32-bit marker is not truncated when indices are bytes. */
+ memcpy(memory+0x6001,"\0\1\2\3",4);GC(restart,0,256);glClear(GL_COLOR_BUFFER_BIT);GC(0xfffa0350,0,GL_TRIANGLE_STRIP,4,GL_UNSIGNED_BYTE,0x6001);glReadPixels(8,32,1,1,GL_RGBA,GL_UNSIGNED_BYTE,actual);assert(actual[0]==255);
+ GC(0xfffa0280,0,0x8f9d);GC(restart,0,0);assert(!GC(0xfffa05f0,1,0x8f9d));glClear(GL_COLOR_BUFFER_BIT);GC(0xfffa0350,0,GL_TRIANGLE_STRIP,4,GL_UNSIGNED_BYTE,0x6001);glReadPixels(8,32,1,1,GL_RGBA,GL_UNSIGNED_BYTE,actual);assert(actual[0]==255);
+ GC(0xfffa02f0,0,GL_VERTEX_ARRAY);assert(tribes_memory_permissions_set(0x4000,4096,3));glColor4f(1,1,1,1);assert(!GC(0xfffa0010,1));
+ puts("Primitive restart: native split-strip framebuffer oracle, 8/16/32-bit markers, no marker vertex reads, all-marker draw, unaligned indices, disabled state and retained errors PASS");
 }
 static void vector_vertices(const char *fault){
  strcpy((char *)memory+0x24000,"glVertex3fv");assert(CALL(63,0x24000)==0xfffa0760);
@@ -1339,7 +1372,7 @@ static void legacy_route(uint32_t original_window,uint32_t original_context,cons
  glBindBuffer(GL_ARRAY_BUFFER,names[2]);glGetBufferSubData(GL_ARRAY_BUFFER,0,4,readback);assert(!memcmp(data,readback,4));glBindBuffer(GL_ARRAY_BUFFER,names[0]);
  GC(0xfffa01e0,0,3,0x3001);GC(0xfffa0020,0,0x8f36,0x3021);assert(word(0x3021)==0);GC(0xfffa0020,0,0x8f37,0x3021);assert(word(0x3021)==0);
  GC(0xfffa01d0,0,0x8f37,4,0,GL_STATIC_DRAW);assert(glGetError()==GL_INVALID_OPERATION);
- texture_subregions(fault);matrix_queries(fault);gpu_sync(window,context,fault);vector_vertices(fault);immediate_rectangle();texture_array(fault);quad_draw(fault);shader_lifecycle(fault);
+ texture_subregions(fault);matrix_queries(fault);gpu_sync(window,context,fault);vector_vertices(fault);primitive_restart();immediate_rectangle();texture_array(fault);quad_draw(fault);shader_lifecycle(fault);
  assert(CALL(48,context));CALL(41,window);assert(CALL(49,original_window,original_context));
  assert(CALL(53,SDL_GL_CONTEXT_MAJOR_VERSION,3)&&CALL(53,SDL_GL_CONTEXT_MINOR_VERSION,2)&&CALL(53,SDL_GL_CONTEXT_PROFILE_MASK,SDL_GL_CONTEXT_PROFILE_CORE));
  puts("legacy fallback: guest matrices/viewport/depth state render red pixel; 32MiB copy-target storage, binding isolation, errors, sharing and cleanup PASS");
@@ -1608,6 +1641,7 @@ static int window_main(int argc,char **argv){
  if(argc==2&&!strcmp(argv[1],"bad-is-enabled")){bad_is_enabled();return 99;}
  if(argc==2&&!strcmp(argv[1],"bad-polygon-offset")){bad_polygon_offset();return 99;}
  if(argc==2&&!strcmp(argv[1],"bad-tex-coord2f")){bad_tex_coord2f();return 99;}
+ if(argc==2&&!strcmp(argv[1],"bad-restart")){bad_restart();return 99;}
  if(argc==2&&!strcmp(argv[1],"bad-load-matrix-f")){bad_load_matrix_f();return 99;}
  if(argc==2&&!strcmp(argv[1],"bad-tex-gen-i")){bad_tex_gen_i();return 99;}
  if(argc==2&&!strcmp(argv[1],"bad-tex-gen-fv")){bad_tex_gen_fv();return 99;}
@@ -1701,6 +1735,11 @@ static int window_main(int argc,char **argv){
  }
  if(argc==1||(argc==2&&strstr(argv[1],"query-result")))timer_queries(argc==2?argv[1]:NULL);
  if(argc==1){
+  /* Core contexts use the real driver entry; legacy emulation cannot leak. */
+  GC(0xfffa0020,0,0x8f9e,0x3000);assert(word(0x3000)==0&&!GC(0xfffa05f0,1,0x8f9d));
+  glEnable(0xffffffff);GC(0xfffa0800,0,65535);GC(0xfffa0290,0,0x8f9d);
+  GLint restart_index=0;glGetIntegerv(0x8f9e,&restart_index);assert(restart_index==65535&&glIsEnabled(0x8f9d));
+  assert(GC(0xfffa0010,1)==GL_INVALID_ENUM&&!GC(0xfffa0010,1));GC(0xfffa0280,0,0x8f9d);
   uint32_t version=GC(0xfffa0000,1,GL_VERSION);assert(version&&!strcmp((char *)memory+version,(char *)glGetString(GL_VERSION)));
   GLint count=0;glGetIntegerv(0x821d,&count);assert(count>0&&glGetError()==GL_NO_ERROR);
   uint32_t extensions=GC(0xfffa0000,1,GL_EXTENSIONS);assert(extensions);const char *cursor=(char *)memory+extensions;

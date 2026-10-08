@@ -25,6 +25,7 @@ extern void glEndQueryARB(GLenum target);
 extern void glGetQueryObjectui64v(GLuint id,GLenum pname,GLuint64 *value);
 extern const GLubyte *glGetStringi(GLenum name,GLuint index);
 extern void glGenerateMipmap(GLenum target);
+extern void glPrimitiveRestartIndex(GLuint index);
 extern void glGenBuffers(GLsizei n,GLuint *ids);
 extern void glDeleteBuffers(GLsizei n,const GLuint *ids);
 extern void glBindBuffer(GLenum target,GLuint id);
@@ -117,7 +118,7 @@ static uint32_t next_sync_token=0xdd000001;
 #endif
 typedef struct TextureState {unsigned refs;AutoMipmap *automatic;SyncObject *syncs;} TextureState;
 typedef struct ClientArray {uint32_t address,size,type,stride;int enabled,defined;} ClientArray;
-typedef struct GLContext {SDL_GLContext native;uint32_t token;int core;GLuint copy_bindings[2];ClientArray vertex,color,normal,fog,texcoord[32];GLenum mipmap_hint;unsigned errors;TextureState *textures;struct GLContext *next;} GLContext;
+typedef struct GLContext {SDL_GLContext native;uint32_t token;int core;uint32_t restart_index;int restart_enabled;GLuint copy_bindings[2];ClientArray vertex,color,normal,fog,texcoord[32];GLenum mipmap_hint;unsigned errors;TextureState *textures;struct GLContext *next;} GLContext;
 typedef struct Properties {SDL_PropertiesID native;struct Properties *next;} Properties;
 static Properties *properties;
 static Window *windows;
@@ -1419,8 +1420,37 @@ void tribes_gl_mult_matrix_d(_cpu *cpu,uint32_t input){
 void tribes_gl_viewport(_cpu *cpu,uint32_t x,uint32_t y,uint32_t width,uint32_t height){
     WINDOW_ENTER();glViewport((int32_t)x,(int32_t)y,(int32_t)width,(int32_t)height);DRAW_RETURN();
 }
-void tribes_gl_disable(_cpu *cpu,uint32_t cap){WINDOW_ENTER();glDisable(cap);DRAW_RETURN();}
-void tribes_gl_enable(_cpu *cpu,uint32_t cap){WINDOW_ENTER();glEnable(cap);DRAW_RETURN();}
+/* Apple legacy GL lacks primitive restart. Keep context-local state and split
+   checked client-index draws at markers; markers never fetch vertex data. */
+#if !TARGET_OS_IPHONE
+static int restart_state_available(GLContext *c){
+    if(!c||c->core)return 0;
+    /* This native query is invalid inside glBegin/glEnd. It preserves GL's
+       error and leaves the sentinel untouched, so no emulated state changes. */
+    GLint mode=-1;glGetIntegerv(GL_MATRIX_MODE,&mode);return mode!=-1;
+}
+#endif
+static int restart_enable(uint32_t cap,int enabled){
+#if TARGET_OS_IPHONE
+    (void)cap;(void)enabled;return 0;
+#else
+    GLContext *c=current_context();if(cap!=0x8f9d||!c||c->core)return 0;
+    if(restart_state_available(c))c->restart_enabled=enabled;return 1;
+#endif
+}
+void tribes_gl_disable(_cpu *cpu,uint32_t cap){WINDOW_ENTER();if(!restart_enable(cap,0))glDisable(cap);DRAW_RETURN();}
+void tribes_gl_enable(_cpu *cpu,uint32_t cap){WINDOW_ENTER();if(!restart_enable(cap,1))glEnable(cap);DRAW_RETURN();}
+void tribes_gl_primitive_restart_index(_cpu *cpu,uint32_t index){
+    WINDOW_ENTER();
+#if TARGET_OS_IPHONE
+    (void)index;(void)error;stop();
+#else
+    GLContext *c=current_context();if(!c)stop();
+    if(c->core)glPrimitiveRestartIndex(index);
+    else if(restart_state_available(c))c->restart_index=index;
+    DRAW_RETURN();
+#endif
+}
 /* Client pointers remain guest descriptors. Only draw-time host copies are
    submitted to GL, and the native pointers are detached before those copies
    are released. The reached path uses client memory, not VBO offsets. */
@@ -1455,20 +1485,21 @@ static void client_pointer(uint32_t size,uint32_t type,uint32_t stride,uint32_t 
 static uint32_t draw_index(const unsigned char *indices,unsigned width,uint32_t i){
     uint32_t index=0;memcpy(&index,indices+(size_t)i*width,width);return index;
 }
-static void *stage_array(_cpu *cpu,const ClientArray *a,const unsigned char *indices,unsigned width,uint32_t count,uint32_t maximum){
+static void *stage_array(_cpu *cpu,const ClientArray *a,const unsigned char *indices,unsigned width,uint32_t count,uint32_t maximum,int restart,uint32_t marker){
     if(!a->defined)stop();unsigned element=a->size*array_scalar_bytes(a->type);uint32_t stride=a->stride?a->stride:element;
     uint64_t extent=((uint64_t)maximum+1)*element;if(extent>UINT32_MAX)stop();
     /* Validate the actual referenced elements before allocating. Padding and
        unreferenced vertices are not guest reads. Native index values remain
        unchanged, including their shader-visible vertex identity. */
     for(uint32_t i=0;i<count;i++){
-        uint64_t address=(uint64_t)a->address+(uint64_t)draw_index(indices,width,i)*stride;
+        uint32_t index=draw_index(indices,width,i);if(restart&&index==marker)continue;
+        uint64_t address=(uint64_t)a->address+(uint64_t)index*stride;
         if(address+element>UINT64_C(0x100000000))stop();
         void *source=guest(cpu,(uint32_t)address,element);uint32_t token=tribes_memory_access_begin(source,element,1);tribes_memory_access_end(token);
     }
     unsigned char *copy=calloc(1,(size_t)extent);if(!copy)stop();
     for(uint32_t i=0;i<count;i++){
-        uint32_t index=draw_index(indices,width,i);uint64_t address=(uint64_t)a->address+(uint64_t)index*stride;
+        uint32_t index=draw_index(indices,width,i);if(restart&&index==marker)continue;uint64_t address=(uint64_t)a->address+(uint64_t)index*stride;
         checked_copy(copy+(size_t)index*element,guest(cpu,(uint32_t)address,element),element);
     }return copy;
 }
@@ -1503,7 +1534,14 @@ void tribes_gl_polygon_offset(_cpu *cpu,uint32_t factor,uint32_t units){
     WINDOW_ENTER();uint32_t bits[]={factor,units};GLfloat value[2];memcpy(value,bits,sizeof value);
     glPolygonOffset(value[0],value[1]);DRAW_RETURN();
 }
-uint32_t tribes_gl_is_enabled(_cpu *cpu,uint32_t cap){WINDOW_ENTER();uint32_t result=glIsEnabled(cap);WINDOW_RETURN(result);}
+uint32_t tribes_gl_is_enabled(_cpu *cpu,uint32_t cap){
+    WINDOW_ENTER();
+#if !TARGET_OS_IPHONE
+    GLContext *c=current_context();
+    if(cap==0x8f9d&&c&&!c->core){uint32_t result=restart_state_available(c)?c->restart_enabled:0;WINDOW_RETURN(result);}
+#endif
+    uint32_t result=glIsEnabled(cap);WINDOW_RETURN(result);
+}
 void tribes_gl_color4fv(_cpu *cpu,uint32_t input){
     WINDOW_ENTER();
 #if TARGET_OS_IPHONE
@@ -1868,20 +1906,30 @@ void tribes_gl_draw_elements(_cpu *cpu,uint32_t mode,uint32_t count,uint32_t typ
     unsigned width=type==GL_UNSIGNED_BYTE?1:type==GL_UNSIGNED_SHORT?2:4;
     if(count>UINT32_MAX/width)stop();size_t bytes=(size_t)count*width;
     unsigned char *indices=malloc(bytes);if(!indices)stop();checked_copy(indices,guest(cpu,input,bytes),bytes);
-    uint32_t maximum=0;for(uint32_t i=0;i<count;i++){uint32_t index=draw_index(indices,width,i);if(index>maximum)maximum=index;}
+    uint32_t maximum=0,vertices=0;for(uint32_t i=0;i<count;i++){uint32_t index=draw_index(indices,width,i);if(c->restart_enabled&&index==c->restart_index)continue;vertices++;if(index>maximum)maximum=index;}
+    if(!vertices){glDrawElements(mode,0,type,NULL);free(indices);DRAW_RETURN();}
     void *vertex=NULL,*color=NULL,*normal=NULL,*fog=NULL,*texcoords[32]={0};
-    if(c->vertex.enabled)vertex=stage_array(cpu,&c->vertex,indices,width,count,maximum);
-    if(c->color.enabled)color=stage_array(cpu,&c->color,indices,width,count,maximum);
-    if(c->normal.enabled)normal=stage_array(cpu,&c->normal,indices,width,count,maximum);
-    if(c->fog.enabled)fog=stage_array(cpu,&c->fog,indices,width,count,maximum);
-    for(unsigned i=0;i<32;i++)if(c->texcoord[i].enabled)texcoords[i]=stage_array(cpu,&c->texcoord[i],indices,width,count,maximum);
+    if(c->vertex.enabled)vertex=stage_array(cpu,&c->vertex,indices,width,count,maximum,c->restart_enabled,c->restart_index);
+    if(c->color.enabled)color=stage_array(cpu,&c->color,indices,width,count,maximum,c->restart_enabled,c->restart_index);
+    if(c->normal.enabled)normal=stage_array(cpu,&c->normal,indices,width,count,maximum,c->restart_enabled,c->restart_index);
+    if(c->fog.enabled)fog=stage_array(cpu,&c->fog,indices,width,count,maximum,c->restart_enabled,c->restart_index);
+    for(unsigned i=0;i<32;i++)if(c->texcoord[i].enabled)texcoords[i]=stage_array(cpu,&c->texcoord[i],indices,width,count,maximum,c->restart_enabled,c->restart_index);
     unsigned unit=client_texture_unit();glGetIntegerv(GL_ARRAY_BUFFER_BINDING,&previous);glBindBuffer(GL_ARRAY_BUFFER,0);
     if(vertex)glVertexPointer((GLint)c->vertex.size,c->vertex.type,0,vertex);
     if(color)glColorPointer((GLint)c->color.size,c->color.type,0,color);
     if(normal)glNormalPointer(c->normal.type,0,normal);
     if(fog)glFogCoordPointerEXT(c->fog.type,0,fog);
     for(unsigned i=0;i<32;i++)if(texcoords[i]){glClientActiveTexture(GL_TEXTURE0+i);glTexCoordPointer((GLint)c->texcoord[i].size,c->texcoord[i].type,0,texcoords[i]);}
-    glClientActiveTexture(GL_TEXTURE0+unit);glDrawElements(mode,(GLsizei)count,type,indices);
+    glClientActiveTexture(GL_TEXTURE0+unit);
+    if(!c->restart_enabled)glDrawElements(mode,(GLsizei)count,type,indices);
+    else{
+        uint32_t start=0;
+        for(uint32_t i=0;i<count;i++)if(draw_index(indices,width,i)==c->restart_index){
+            if(i>start)glDrawElements(mode,(GLsizei)(i-start),type,indices+(size_t)start*width);
+            start=i+1;
+        }
+        if(start<count)glDrawElements(mode,(GLsizei)(count-start),type,indices+(size_t)start*width);
+    }
     if(vertex)glVertexPointer((GLint)c->vertex.size,c->vertex.type,0,NULL);
     if(color)glColorPointer((GLint)c->color.size,c->color.type,0,NULL);
     if(normal)glNormalPointer(c->normal.type,0,NULL);
@@ -2259,9 +2307,12 @@ uint32_t tribes_gl_get_error(_cpu *cpu){
 void tribes_gl_get_integer(_cpu *cpu,uint32_t name,uint32_t output){
     WINDOW_ENTER();if(!SDL_GL_GetCurrentContext())stop();
     /* Reached scalar queries only. Other enums can have multiple outputs. */
-    if(name!=0x8d57&&name!=GL_MAX_TEXTURE_SIZE&&name!=0x84e2&&name!=0x8192&&name!=0x0d31&&name!=0x8f36&&name!=0x8f37&&name!=GL_ARRAY_BUFFER_BINDING)stop();
+    if(name!=0x8f9e&&name!=0x8d57&&name!=GL_MAX_TEXTURE_SIZE&&name!=0x84e2&&name!=0x8192&&name!=0x0d31&&name!=0x8f36&&name!=0x8f37&&name!=GL_ARRAY_BUFFER_BINDING)stop();
     GLint value;checked_copy(&value,guest(cpu,output,4),4);GLContext *c=current_context();
     GLuint *copy=copy_buffer_slot(c,name);
+    #if !TARGET_OS_IPHONE
+    if(c&&!c->core&&name==0x8f9e){if(restart_state_available(c))value=(GLint)c->restart_index;}else
+#endif
     if(copy)value=(GLint)*copy;else if(c&&c->core&&name==0x8192)value=(GLint)c->mipmap_hint;else glGetIntegerv(name,&value);
     checked_copy(guest(cpu,output,4),&value,4);graphics_active=0;leave(&frame);tribes_set_last_error(error);
 }

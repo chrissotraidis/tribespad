@@ -1,0 +1,65 @@
+{
+  "scope": "Original Katabatic first-scene failure diagnosed; finite primitive-restart support component-validated. Full original rebuild running; no new scene or gameplay acceptance.",
+  "original_failure": {
+    "pid": 94785,
+    "engine_sha256": "d4406759b529aa4998c81f442f8756e817d167241ba194f31c3f40b7040462c9",
+    "dispatch_target": "0x0",
+    "guest_return": "0x10034817",
+    "function_pointer": "0x1046cb08",
+    "export": "glPrimitiveRestartIndex",
+    "index": "0xffff",
+    "console": "Client 8247 is ready; START MATCH; then first-scene dispatch abort",
+    "scene_visible": false
+  },
+  "implementation": {
+    "guest_token": "0xfffa0800",
+    "legacy": "Context-local restart state; checked client-array draw split at restart markers; marker indices do not access vertex data.",
+    "core": "Native glPrimitiveRestartIndex with typed external-call contract.",
+    "mobile": "Export remains unavailable; changed backend/provider compile for ARM64 device and Simulator only."
+  },
+  "validation": {
+    "component_modes": [
+      "normal",
+      "checked",
+      "tsan"
+    ],
+    "expected_checked_guards": 161,
+    "tests": [
+      "8/16/32-bit indices, leading/trailing/consecutive/all markers",
+      "Native separate-strip full framebuffer comparison",
+      "Unaligned indices, guarded vertex extent, no marker fetch",
+      "Non-truncated restart index; disabled restart; retained GL errors and Begin/End rejection",
+      "Core native state/query and finite stdcall CPU/stack/LastError preservation"
+    ],
+    "regressions": [
+      "mission-literals",
+      "render-job-handoff normal/checked/tsan"
+    ],
+    "full_engine": "Build and original startup running in tool session84712; result pending."
+  },
+  "sources_sha256": {
+    "port/core/guest_sdl_backend.c": "0abd8b7b032a9270ff16d62c5f105c48bbdeaef24b7a89754911f7d29127c4a8",
+    "port/core/guest_sdl_backend.h": "aa0edaf146cd0a3949be7e881d9c5e0a6c8cc4d59c1b66a3e4b1d9a292670c9d",
+    "port/core/guest_graphics.c": "e5bbdba98c1d48e7eec0d0e1a8840ca635ec87a4ef1fd1d6763ee16d466b0af3",
+    "scripts/graphics_backend_inputs.py": "fd89b1285e4f0441f6642c4f738f1d74ca9e0b9b5cc6371e54fdd6d846ea4689",
+    "port/compiler/ExternalMemoryPass.cpp": "5f42e5dbf0d92d456e8813ab2ccb75364de99488054550679a880f76f5ea9141",
+    "config/runtime/external-memory-contracts.json": "dc4779024a64a820d39601e514cb0e03d428a3dd7439033bf1f0199ea3fe1dbe",
+    "tests/sdl_window_test.c": "9f621cfe05e054042ab0c32d52d2aca39fc1b37edcc3f586917840b9d17a0103",
+    "scripts/test-sdl-window.py": "d5ef50a289544b64e8eb0eefb6ec608a515b056529399d4cfbf3143e7b130c04"
+  },
+  "evidence_sha256": {
+    "generated/integration-review/primitive-restart/component-result.json": "b0df9e923656762dbc481d3a2f514578c7255e7a721d511edcdf269ae37cfb7c",
+    "generated/integration-review/primitive-restart/native-legacy-probe.c": "883434e354863d1b0e3df5a18319b94c4cdbce3eb816ae1dd922133cb3878265",
+    "generated/integration-review/primitive-restart/native-legacy-probe.json": "e6e0a7ed6ca987a71eccb68c435ea5df9f3e2bd87890c81cd1e72ad3326efac0",
+    "generated/integration-review/primitive-restart/mobile-compile/result.json": "faffba62320749b7cbdbda735ffa083cd9224195458d1e38aa59bf8c0206e67c",
+    "generated/integration-review/apple-render-dimensions/input-validation/katabatic-stop.json": "c885fff76d0cb301a3e1aa16be7c2ddd9b0c59b4a617c4c97aae91a657dec85c",
+    "generated/integration-review/apple-render-dimensions/input-validation/katabatic-console.log": "7c8c23f05aea0238df0a6231d522c57fa4e1746de1e91cf52d18ecfbd5ff8605"
+  },
+  "reference": "https://raw.githubusercontent.com/KhronosGroup/OpenGL-Refpages/main/gl4/glPrimitiveRestartIndex.xml",
+  "remaining": [
+    "Katabatic rendered scene and full controls",
+    "HD selection/upload/sample comparison",
+    "Authenticated existing-community matches",
+    "Full iPad/iPhone execution and physical acceptance"
+  ]
+}

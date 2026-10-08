@@ -127,6 +127,7 @@ void tribes_gl_get_integer(_cpu *,uint32_t,uint32_t);
 void tribes_gl_get_float(_cpu *,uint32_t,uint32_t);
 uint32_t tribes_glu_error_string(_cpu *,uint32_t);
 void tribes_gl_vertex3fv(_cpu *,uint32_t);
+void tribes_gl_primitive_restart_index(_cpu *,uint32_t);
 void tribes_gl_fog_i(_cpu *,uint32_t,uint32_t);
 void tribes_gl_fog_f(_cpu *,uint32_t,uint32_t);
 void tribes_gl_fog_fv(_cpu *,uint32_t,uint32_t);
