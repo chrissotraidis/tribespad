@@ -4,6 +4,8 @@ The target is the original Tribes2 build25034 with the selected TribesNEXT clien
 
 ## Immediate integration work
 
+**Immediate Mac task:** Retina absolute input now matches the original GUI and windowed Host controls work. Latest Katabatic with two bots renders and accepts movement/aim/fire, but observed frame delivery is below1Hz. Profile and reduce the checked-memory access/locking hot path without weakening permission, lifetime or concurrent protection checks; then repeat offline controls and measured frame delivery. The legacy212FPS display is stale. See `validation/macos-retina-input.json`.
+
 **Current user priority:** finish the Mac handoff for offline match testing and verify online server listings without joining any online game. Let the user assess actual Mac playability before further iPadOS work. Automated authenticated-match joining is superseded by this explicit instruction. Do not disturb the live manual Mac session. The saved untested mobile wiring patch is described in STATUS; active source stays on the validated Mac implementation.
 
 **Next mobile implementation:** connect the validated SDL/EAGL GL4ES context adapter to `guest_sdl_backend.c` and its checked external calls, then enable the finite legacy exports and run the full original mobile engine. `docs/validation/ipad-gl4es-sdl.json` proves six native pixel checks across shared contexts, swaps and cleanup on one iPad Simulator; it is not checked guest/full-engine execution. Context destruction must release GL4ES while native EAGL is still current. Pinned Apple GL4ES headers already prefix GL symbols; preserve exact signatures/private staging when adding those external contracts. Physical-device link passes without execution.

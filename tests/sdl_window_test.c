@@ -1651,7 +1651,10 @@ static void event_tests(SDL_Window *window,const char *fault){
  memset(&e,0,sizeof e);e.drop.type=SDL_EVENT_DROP_TEXT;e.drop.windowID=id;e.drop.source="test source";e.drop.data="payload";e.drop.x=.5f;e.drop.y=.25f;assert(SDL_PushEvent(&e));
  memset(&e,0,sizeof e);e.type=SDL_EVENT_QUIT;assert(SDL_PushEvent(&e));
  assert(CALL(90,out)&&word(out)==SDL_EVENT_KEY_DOWN&&word(out+24)==SDL_SCANCODE_W&&word(out+28)==SDLK_W);assert(memory[out+36]==1&&memory[out+37]==1);uint16_t raw;memcpy(&raw,memory+out+34,2);assert(raw==0x1234);
- assert(CALL(90,out)&&word(out)==SDL_EVENT_MOUSE_MOTION);float motion[4];memcpy(motion,memory+out+28,16);assert(motion[0]==12.5f&&motion[1]==18.25f&&motion[2]==-2.5f&&motion[3]==3.75f);
+ assert(CALL(90,out)&&word(out)==SDL_EVENT_MOUSE_MOTION);float motion[4];memcpy(motion,memory+out+28,16);int width,height,pixel_width,pixel_height;assert(SDL_GetWindowSize(window,&width,&height)&&SDL_GetWindowSizeInPixels(window,&pixel_width,&pixel_height));
+ float sx=(float)pixel_width/width,sy=(float)pixel_height/height;
+ assert(motion[0]==12.5f*sx&&motion[1]==18.25f*sy&&motion[2]==-2.5f&&motion[3]==3.75f);
+ printf("Mouse absolute coordinates: window=%dx%d pixels=%dx%d scale=%g,%g; relative deltas unchanged\n",width,height,pixel_width,pixel_height,sx,sy);
  assert(CALL(90,out)&&word(out)==SDL_EVENT_GAMEPAD_AXIS_MOTION&&word(out+16)==37);int16_t axis;memcpy(&axis,memory+out+24,2);assert(axis==-12345);
  assert(CALL(90,out)&&word(out)==SDL_EVENT_TEXT_INPUT);uint32_t text=word(out+20);assert(text&&!strcmp((char *)memory+text,"UTF-8: \xc3\xa9"));unsigned live=sdl_test_live;
  if(fault&&!strcmp(fault,"mutated-event-text")){memory[text]='x';CALL(90,out);assert(0);}
@@ -1662,6 +1665,12 @@ static void event_tests(SDL_Window *window,const char *fault){
  SDL_FlushEvents(SDL_EVENT_FIRST,SDL_EVENT_LAST);assert(!CALL(90,out));for(unsigned i=0;i<128;i++)assert(memory[out+i]==0xa5);
  int count=0;const bool *native=SDL_GetKeyboardState(&count);assert(count==SDL_SCANCODE_COUNT&&!memcmp(memory+keyboard,native,(size_t)count));
  if(fault&&!strcmp(fault,"unsupported-event")){memset(&e,0,sizeof e);e.type=SDL_EVENT_USER;e.user.data1=window;assert(SDL_PushEvent(&e));while(CALL(90,out)){}assert(0);}
+ /* Button and wheel pointer positions use the same pixel coordinate space;
+    wheel scrolling itself remains in SDL scroll units. */
+ memset(&e,0,sizeof e);e.button.type=SDL_EVENT_MOUSE_BUTTON_DOWN;e.button.windowID=id;e.button.button=SDL_BUTTON_LEFT;e.button.down=true;e.button.x=-2.5f;e.button.y=31.25f;assert(SDL_PushEvent(&e));
+ memset(&e,0,sizeof e);e.wheel.type=SDL_EVENT_MOUSE_WHEEL;e.wheel.windowID=id;e.wheel.x=1.5f;e.wheel.y=-2.5f;e.wheel.mouse_x=11.25f;e.wheel.mouse_y=37.5f;assert(SDL_PushEvent(&e));
+ assert(CALL(90,out)&&word(out)==SDL_EVENT_MOUSE_BUTTON_DOWN);float point[2];memcpy(point,memory+out+28,8);assert(point[0]==-2.5f*sx&&point[1]==31.25f*sy);
+ assert(CALL(90,out)&&word(out)==SDL_EVENT_MOUSE_WHEEL);memcpy(point,memory+out+36,8);assert(point[0]==11.25f*sx&&point[1]==37.5f*sy);memcpy(point,memory+out+24,8);assert(point[0]==1.5f&&point[1]==-2.5f);
  puts("Guest SDL events: queue/NULL peek, Windows32 fields, keyboard snapshot, UTF-8/drop lifetime and empty-output preservation passed");
 }
 static int window_main(int argc,char **argv){

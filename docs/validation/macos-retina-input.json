@@ -1,0 +1,100 @@
+{
+  "date": "2026-10-08",
+  "engine_sha256": "fcbd7be32b7c260089bc99971695ae5def3fe31d831c89fabc7cba909e40413c",
+  "owned_pid": 5161,
+  "implementation": "Convert absolute mouse motion, button and wheel pointer positions from native window units to real drawable pixels for the Windows client; leave relative aiming deltas and wheel scroll units unchanged.",
+  "basis": {
+    "image_sha256": "eaf5a42d301cc64a6e526aa49a82dbaefe655ed1ac0ba67939d0bab2fb6ab607",
+    "original_absolute_event_handler": "0x10041440",
+    "ui_scale_division": "0x1004145c",
+    "ui_scale_address": "0x101d66e8",
+    "bytes_at_10041454": "f30f100d88ad1c10f30f5e0de8661d10",
+    "native_coordinate_documentation": "https://wiki.libsdl.org/SDL3/README-highdpi",
+    "scope": "Static pinned consumer confirms pixel positions are divided by client UI scale. macOS conversion uses real window/backing dimensions, independent of UI scale."
+  },
+  "component_tests": {
+    "modes": [
+      "normal",
+      "tsan",
+      "checked"
+    ],
+    "passed": true,
+    "window": [
+      640,
+      480
+    ],
+    "pixels": [
+      1280,
+      960
+    ],
+    "source_test": "scripts/test-sdl-window.py"
+  },
+  "original_execution": {
+    "window_content": [
+      1024,
+      768
+    ],
+    "native_click_window_point": [
+      128,
+      96
+    ],
+    "canvas_cursor": [
+      128,
+      96
+    ],
+    "native_mouse_controls": [
+      "Host tab",
+      "Enable Bots: two bots",
+      "Start Game: Katabatic"
+    ],
+    "map": "Katabatic CTF",
+    "loaded_datablocks": 1482,
+    "loaded_objects": 205,
+    "match_started": true,
+    "bots": [
+      "Perilous (Starwolf)",
+      "Akhiles (Blood Eagle)"
+    ],
+    "local_player": "Joined Starwolf from observer with native mouse click",
+    "movement": "W3s moved from building balcony toward snow",
+    "aim": "Delta120,-30 changed orientation after input processing",
+    "fire": "Disc ammunition15 to12 after2s native fire",
+    "jet": "Sent native right-button hold3s; viewpoint changed, but fresh altitude/energy acceptance was not isolated from other motion in this run.",
+    "online_browser": "26 actual community servers visible after disconnecting local match; no online game joined or authentication submitted",
+    "fullscreen": "Alt+Enter attempt did not yield confirmed fullscreen bounds; regression remains unverified"
+  },
+  "performance": {
+    "assessment": "Unacceptably slow gameplay in this checked build; functional controls are not responsive-playability acceptance",
+    "legacy_fps": "$FPS::Real stayed212.231; mapper stats were zero. This display is stale/unreliable.",
+    "instrumented_swaps": {
+      "count": 27,
+      "seconds": 44.283509416,
+      "rate": 0.5871260056594788,
+      "limitation": "Read-only LLDB breakpoint callbacks add overhead"
+    },
+    "without_debugger": {
+      "capture_count": 44,
+      "visible_changes": 8,
+      "seconds": 19.772665166,
+      "method": "Repeated screencapture window PNG IDAT hashes; not a formal FPS benchmark"
+    },
+    "profile": "gameplay-sample.txt: tribes_memory_access_begin/end, pthread_rwlock read/unlock dominate active sampled costs; preserve all checked-memory semantics when optimizing"
+  },
+  "cleanup": {
+    "pid": 5161,
+    "original_audio": "default 57\n113 MacBook Air Microphone\n106 MacBook Air Speakers\n118 eqMac\n88 Microsoft Teams Audio\n84 Jump Desktop Microphone\n57 Jump Desktop Audio\n",
+    "restored": "default 57\n113 MacBook Air Microphone\n106 MacBook Air Speakers\n118 eqMac\n88 Microsoft Teams Audio\n84 Jump Desktop Microphone\n57 Jump Desktop Audio\n"
+  },
+  "source_sha256": {
+    "port/core/guest_sdl_backend.c": "a93a8a87b31104c4d3688a5daf4eeb91336403ee3ca6c02795ea8d033a22ad21",
+    "tests/sdl_window_test.c": "5f9cfe2e3771fbe76a165888283dc18ffc4133d89533c01f33bb6fb5ef659f66"
+  },
+  "evidence_sha256": {
+    "generated/integration-review/macos-keyboard/pixel-execution/console.log": "d570d62cb5697a198b177a3564b273a2fafa8c99a16319bec67a3f49b34f96ef",
+    "generated/integration-review/macos-keyboard/pixel-execution/stderr.log": "0d17fb0ba07127c9e09c193b1a7cab1f4b3beeb6e08ab51bc63d90d4ce1f2aee",
+    "generated/integration-review/macos-keyboard/swap-times.json": "d9eec61e28e7ef9e1c7963f3d1835716e61ed2ed1030f2149b2b56aa37dbc6ab",
+    "generated/integration-review/macos-keyboard/screen-frame-times.json": "f2aa1c7febca794c2e2563dc51860ec80f50302ec9218c5e75eff04d1b53bcd9",
+    "generated/integration-review/macos-keyboard/gameplay-sample.txt": "94361965f342fa8b475bab9c6143226fe2ab10d15087156bf5da3b2cca7c5a67",
+    "docs/validation/macos-retina-katabatic-2026-10-08.png": "766806e303684f2ad0d4e9d369613e4072b3d21fdb92c03e8bc6847c0f190b7b"
+  }
+}

@@ -391,6 +391,24 @@ static void refresh_keyboard(void){
     if(!keys||n<=0||(uint32_t)n!=keyboard_state->size)stop();
     memcpy(keyboard_state->host,keys,(size_t)n);public_publish(active_frame,keyboard_state);
 }
+/* The Windows client consumes absolute mouse positions in device pixels,
+   then divides by its UI scale (IFC22 0x1004145c). Cocoa/UIKit SDL positions
+   are window coordinates. Convert with the actual drawable/window ratio,
+   not the UI/display scale. Relative deltas remain native aiming motion.
+   Events for an absent window have no live coordinate space to convert. */
+static void event_point_to_pixels(unsigned char out[128],unsigned offset,uint32_t id){
+    for(Window *w=windows;w;w=w->next){
+        if(SDL_GetWindowID(w->native)!=id)continue;
+        int width=0,height=0,pixels_w=0,pixels_h=0;
+        if(!SDL_GetWindowSize(w->native,&width,&height)||
+           !SDL_GetWindowSizeInPixels(w->native,&pixels_w,&pixels_h)||
+           width<=0||height<=0||pixels_w<=0||pixels_h<=0)stop();
+        float point[2];memcpy(point,out+offset,sizeof point);
+        point[0]*=(float)pixels_w/(float)width;
+        point[1]*=(float)pixels_h/(float)height;
+        memcpy(out+offset,point,sizeof point);return;
+    }
+}
 static void event_to_guest(unsigned char out[128],const SDL_Event *e){
     memset(out,0,128);
 #define EF(offset,member) memcpy(out+(offset),&e->member,sizeof e->member)
@@ -409,11 +427,11 @@ static void event_to_guest(unsigned char out[128],const SDL_Event *e){
     case SDL_EVENT_KEYBOARD_ADDED:case SDL_EVENT_KEYBOARD_REMOVED:EF(16,kdevice.which);break;
     case SDL_EVENT_MOUSE_ADDED:case SDL_EVENT_MOUSE_REMOVED:EF(16,mdevice.which);break;
     case SDL_EVENT_MOUSE_MOTION:
-        EF(16,motion.windowID);EF(20,motion.which);EF(24,motion.state);EF(28,motion.x);EF(32,motion.y);EF(36,motion.xrel);EF(40,motion.yrel);break;
+        EF(16,motion.windowID);EF(20,motion.which);EF(24,motion.state);EF(28,motion.x);EF(32,motion.y);EF(36,motion.xrel);EF(40,motion.yrel);event_point_to_pixels(out,28,e->motion.windowID);break;
     case SDL_EVENT_MOUSE_BUTTON_DOWN:case SDL_EVENT_MOUSE_BUTTON_UP:
-        EF(16,button.windowID);EF(20,button.which);EF(24,button.button);EF(25,button.down);EF(26,button.clicks);EF(28,button.x);EF(32,button.y);break;
+        EF(16,button.windowID);EF(20,button.which);EF(24,button.button);EF(25,button.down);EF(26,button.clicks);EF(28,button.x);EF(32,button.y);event_point_to_pixels(out,28,e->button.windowID);break;
     case SDL_EVENT_MOUSE_WHEEL:
-        EF(16,wheel.windowID);EF(20,wheel.which);EF(24,wheel.x);EF(28,wheel.y);EF(32,wheel.direction);EF(36,wheel.mouse_x);EF(40,wheel.mouse_y);EF(44,wheel.integer_x);EF(48,wheel.integer_y);break;
+        EF(16,wheel.windowID);EF(20,wheel.which);EF(24,wheel.x);EF(28,wheel.y);EF(32,wheel.direction);EF(36,wheel.mouse_x);EF(40,wheel.mouse_y);EF(44,wheel.integer_x);EF(48,wheel.integer_y);event_point_to_pixels(out,36,e->wheel.windowID);break;
     case SDL_EVENT_TEXT_INPUT:EF(16,text.windowID);EP(20,event_string(e->text.text));break;
     case SDL_EVENT_TEXT_EDITING:
         EF(16,edit.windowID);EP(20,event_string(e->edit.text));EF(24,edit.start);EF(28,edit.length);break;
