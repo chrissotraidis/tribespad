@@ -998,6 +998,10 @@ void tribes_sdl_ceilf(_cpu *cpu,uint32_t bits){
     uint32_t error=tribes_get_last_error();float value;memcpy(&value,&bits,4);
     value=SDL_ceilf(value);tribes_set_last_error(error);return_float(cpu,value);
 }
+void tribes_sdl_randf(_cpu *cpu){
+    uint32_t error=tribes_get_last_error();float value=SDL_randf();
+    tribes_set_last_error(error);return_float(cpu,value);
+}
 uint32_t tribes_sdl_get_display_for_window(_cpu *cpu,uint32_t token){WINDOW_ENTER();WINDOW_RETURN(SDL_GetDisplayForWindow(native_window(token)));}
 uint32_t tribes_sdl_get_closest_fullscreen_mode(_cpu *cpu,uint32_t display,uint32_t width,uint32_t height,uint32_t rate_bits,uint32_t high_density,uint32_t output){
     WINDOW_ENTER();float rate;memcpy(&rate,&rate_bits,4);SDL_DisplayMode native={0};TribesSDLDisplayMode copy={0};

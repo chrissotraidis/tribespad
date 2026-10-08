@@ -779,5 +779,14 @@
     "guest_base": false,
     "cpu_argument": true,
     "calling_convention": "cdecl"
+  },
+  "SDL_randf": {
+    "helper": "tribes_sdl_randf",
+    "arguments": 0,
+    "returns": false,
+    "helper_returns": "void",
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
   }
 }

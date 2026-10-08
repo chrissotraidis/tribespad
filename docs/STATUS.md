@@ -1,4 +1,4 @@
-# TribesPad status — 7 October 2026
+# TribesPad status — 8 October 2026
 
 **The original Mac app now executes primitive restart; the next stop is missing `SDL_randf`.** Signed PID60056, checked engine `4843fdda…`, completed Katabatic loading and logged START MATCH. The original restart call resolved slot0x1046cb08 to0xfffa0800 and executed with index0xffff while GL3.1 flag0x1046c880 remained zero. Rendering then reached unimplemented import301, SDL_randf, at0x10034a99 (return0x10034a9f). No Katabatic scene frame or draw-elements call was captured. The app exited at the diagnostic stop; launcher receipt confirms audio57 restored.
 
@@ -8,7 +8,9 @@
 
 **HD input evidence:** 235 distinct buffers in the earlier original PID36498 glTexImage2D capture exactly match decoded pixels from the pinned HD2.0 archive (236 matching entries, mainly skins and effects). Dimensions match at256/512 pixels. This establishes original HD upload inputs, not completed GPU upload/sampling or visual acceptance. [Validation](validation/macos-hd-upload-inputs.json).
 
-**Next implementation:** bridge the reached native SDL_randf return through the existing checked x87 ST0 float-return helper, preserving the guest cdecl ABI and LastError. Inspect the pinned SDL imports before batching related random APIs. Then run relevant ABI tests, rebuild/package and launch the original app to verify scene presentation. Full checked engine `4843fdda0b36d39323f383733d28027829e075363251a40deff37ff3f1a7bd13` and signed packaging passed. Captures and teardown receipt: `generated/integration-review/apple-primitive-restart/execution/`. HD sampling, authenticated community multiplayer and full mobile gameplay remain unfinished. Generated builds/assets remain local.
+**SDL_randf is implemented and component-validated.** Native SDL supplies each random value; the existing float bridge returns it through x87 ST0 with no guest arguments. Normal/checked/ThreadSanitizer tests match128 seeded native values per run across all8 x87 stack positions and preserve the full unrelated CPU/stack/LastError state. The wrong native return signature is rejected;28 checked faults pass. Mission-literal and renderer-handoff regressions pass. Changed backend checked-compiles for ARM64 device/Simulator; no mobile execution. The smaller window test also fixes a pre-existing graphics-only test call outside its build guard. [Validation](validation/macos-sdl-randf.json).
+
+**Live handoff:** full original rebuild PID64770/session31403, log `/tmp/tribes-randf-bootstrap.log`. Inspect that process before starting another. After success, package the signed app and launch `generated/integration-review/sdl-randf/launch.py`; attach missing-import/NT stops and the bounded randf/restart probes in that directory. Verify actual random returns, scene presentation and controls. Prior completed engine is `4843fdda…`; original SDL_randf execution remains pending. HD sampling, authenticated community multiplayer and full mobile gameplay remain unfinished. Generated builds/assets remain local.
 
 Previous checkpoints (superseded where noted):
 

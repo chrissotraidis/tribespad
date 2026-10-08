@@ -61,7 +61,7 @@ extern void glDeleteQueriesARB(GLsizei n,const GLuint *ids);
 extern void tribes_enter(_cpu *,uint32_t);
 extern unsigned sdl_test_live,sdl_test_fail;
 #ifdef CHECKED
-extern void bad_window(void),bad_context(void);
+extern void bad_window(void),bad_context(void),bad_randf(void);
 #if defined(GRAPHICS) && !TARGET_OS_IPHONE
 extern void bad_frustum(void),bad_mult_matrix(void),bad_mult_matrix_double(void),bad_depth_mask(void),bad_is_enabled(void),bad_scale(void),bad_polygon_offset(void);
 extern void bad_alpha_func(void),bad_polygon_mode(void),bad_load_matrix_f(void),bad_tex_gen_i(void),bad_tex_gen_fv(void);
@@ -1546,6 +1546,13 @@ static void float_returns(uint32_t window,SDL_Window *native){
   float_call(75,window,scale_bits,top);float_call(75,0,0,top);
   for(unsigned n=0;n<sizeof cases/sizeof *cases;n++)float_call(76,cases[n][0],cases[n][1],top);
  }
+ /* Native seeded oracle checks the shared generator advances exactly once per
+    no-argument guest call. The stack sentinel must remain caller-owned. */
+ uint32_t random_bits[128];SDL_srand(UINT64_C(0x123456789abcdef));
+ for(unsigned n=0;n<128;n++){float v=SDL_randf();assert(v>=0&&v<1);memcpy(random_bits+n,&v,4);}
+ SDL_srand(UINT64_C(0x123456789abcdef));
+ for(unsigned n=0;n<128;n++)float_call(95,0xcafebabe,random_bits[n],n&7);
+ printf("128 seeded SDL_randf returns match native sequence and preserve guest state\n");
  cpu._st_top=0;cpu._st_tag=0xffff;cpu._st_sw_cond=0;
  printf("native display scale=%g; 104 x87 float-return cases preserve EAX, cdecl stack and unrelated CPU state\n",(double)scale);
 }
@@ -1665,6 +1672,7 @@ static int window_main(int argc,char **argv){
  tribes_memory_external_configure(cpu._pointer_offset,UINT64_C(0x100000000));tribes_memory_external_enable();
  if(argc==2&&!strcmp(argv[1],"bad-window")){bad_window();return 99;}
  if(argc==2&&!strcmp(argv[1],"bad-context")){bad_context();return 99;}
+ if(argc==2&&!strcmp(argv[1],"bad-randf")){bad_randf();return 99;}
 #if defined(GRAPHICS) && !TARGET_OS_IPHONE
  if(argc==2&&!strcmp(argv[1],"bad-frustum")){bad_frustum();return 99;}
  if(argc==2&&!strcmp(argv[1],"bad-mult-matrix-double")){bad_mult_matrix_double();return 99;}
@@ -1793,7 +1801,9 @@ static int window_main(int argc,char **argv){
     separately requested legacy context, with no fallback involved. */
  assert(CALL(48,context));assert(CALL(53,SDL_GL_CONTEXT_MAJOR_VERSION,2)&&CALL(53,SDL_GL_CONTEXT_MINOR_VERSION,1)&&CALL(53,SDL_GL_CONTEXT_PROFILE_MASK,SDL_GL_CONTEXT_PROFILE_COMPATIBILITY));
  context=CALL(47,window);assert(context&&!strncmp((char *)glGetString(GL_VERSION),"2.1",3));
+ #ifdef GRAPHICS
  if(argc==1)explicit_mipmaps();
+ #endif
 #endif
  for(int interval=-1;interval<=1;interval++){bool expected=SDL_GL_SetSwapInterval(interval);assert(CALL(74,(uint32_t)interval)==expected);if(expected){int actual=99;assert(SDL_GL_GetSwapInterval(&actual)&&actual==interval);}}
  assert(CALL(54,SDL_GL_DOUBLEBUFFER,0x3001)&&word(0x3001)==1);

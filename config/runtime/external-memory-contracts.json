@@ -232,6 +232,7 @@
     "SDL_ReadIO",
     "SDL_GetWindowDisplayScale",
     "SDL_ceilf",
+    "SDL_randf",
     "SDL_GetClosestFullscreenDisplayMode",
     "SDL_SetWindowFullscreen",
     "SDL_SetWindowSize",

@@ -49,6 +49,7 @@ void tribes_sdl_destroy_cursor(_cpu *,uint32_t);
 /* Native float values are returned in the original x87 ST0 register. */
 void tribes_sdl_get_window_display_scale(_cpu *,uint32_t);
 void tribes_sdl_ceilf(_cpu *,uint32_t);
+void tribes_sdl_randf(_cpu *);
 uint32_t tribes_sdl_get_display_for_window(_cpu *,uint32_t);
 uint32_t tribes_sdl_get_current_display_mode(_cpu *,uint32_t);
 uint32_t tribes_sdl_get_closest_fullscreen_mode(_cpu *,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t);

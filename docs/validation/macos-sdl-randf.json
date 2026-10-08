@@ -1,0 +1,36 @@
+{
+  "state": "component_validated_full_original_rebuild_running",
+  "implementation": "Native SDL_randf, no guest arguments, x87 ST0 return via existing float bridge; cdecl registers and LastError preserved. Native SDL single-thread random-generator contract unchanged.",
+  "original_boundary": {
+    "pid": 60056,
+    "import_index": 301,
+    "call": "0x10034a99",
+    "return": "0x10034a9f"
+  },
+  "validation": {
+    "normal": true,
+    "checked": true,
+    "thread_sanitizer": true,
+    "seeded_sequence_cases_per_run": 128,
+    "x87_top_positions": 8,
+    "checked_faults": 28,
+    "wrong_randf_return_signature_rejected": true,
+    "window_test_receipt_sha256": "39b0daf4a641fc69121e50f569b831173b14dfe9706effa76d3b4ea54e6838f9"
+  },
+  "mobile": {
+    "checked_compile": true,
+    "receipt_sha256": "703503cd41afe619e38755d1d5534779f237e1af8c1f3ebec3b8e51a7aee9922",
+    "scope": "Changed backend compiles for ARM64 device and Simulator; no mobile execution."
+  },
+  "sources_sha256": {
+    "port/core/guest_sdl_backend.c": "0080f3fe884b28655e170df8b7f5d3d39d428f576e3bf53d8a036ad6f9078dc9",
+    "port/core/guest_sdl_backend.h": "2ad1ed5c4ad03b40e9f5c83a99aab0fd8c38597f369d9603815bfc7eadf7f3ca",
+    "config/runtime/sdl-bindings.json": "ffb9ea7d2d6417aac18fb45000169dbd6369322bb53933357a1cb221320697e0",
+    "config/runtime/external-memory-contracts.json": "fb65b3ef4db8318d59e5baa21277b80528b1243e851549548a052b8128d55e3d",
+    "port/compiler/ExternalMemoryPass.cpp": "8c5f0f002fdaba0292635aa5f4398e198c5a1ad12f7c999bac1e8aace24640ee",
+    "tests/sdl_window_test.c": "d8e3a313cc64134fff0a0a8d7ecba4da1e33a728d12c16d3ae462063667a3d15",
+    "tests/fixtures/sdl_window_dispatch.c": "83911a798d5fd6b880594d312eb19e8a19f7aeb40d72ed0045eed5651c25dfc9",
+    "scripts/test-sdl-window.py": "0b5232091bc02b4431744b94ecf9c9b2e36f57266c742d1f1fb1c6127dbef79d"
+  },
+  "limitations": "New original app execution is pending. Katabatic scene, rendered HD, authenticated community multiplayer and mobile gameplay remain unverified."
+}
