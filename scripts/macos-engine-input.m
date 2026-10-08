@@ -14,6 +14,32 @@ static double number(const char *text) {
     return value;
 }
 
+// Explicit US physical keys avoid AppleScript's keypad synthesis for digits
+// and decimal punctuation. This is test input, not a guest keyboard remap.
+static BOOL text_key(unsigned char c, CGKeyCode *code, BOOL *shift) {
+    static const char plain[] = "asdfhgzxcvbqwerty1234567890-=[];'\\,./` ";
+    static const char upper[] = "ASDFHGZXCVBQWERTY!@#$%^&*()_+{}:\"|<>?~ ";
+    static const CGKeyCode codes[] = {0,1,2,3,4,5,6,7,8,9,11,12,13,14,15,17,16,
+        18,19,20,21,23,22,26,28,25,29,27,24,33,30,41,39,42,43,47,44,50,49};
+    _Static_assert(sizeof plain == sizeof upper, "text modifier rows");
+    _Static_assert(sizeof plain-1 == sizeof codes/sizeof *codes, "text key rows");
+    // Remaining letter keys.
+    static const char extra[] = "uojklimnp";
+    static const CGKeyCode extra_codes[] = {32,31,38,40,37,34,46,45,35};
+    for (size_t i=0;i<sizeof plain-1;i++) {
+        if (c==plain[i] || c==upper[i]) { *code=codes[i]; *shift=c!=plain[i]; return YES; }
+    }
+    for (size_t i=0;i<sizeof extra-1;i++) {
+        if (c==extra[i] || c==extra[i]-'a'+'A') { *code=extra_codes[i]; *shift=c!=extra[i]; return YES; }
+    }
+    return NO;
+}
+static void post_key(CGKeyCode code, BOOL down, CGEventFlags flags) {
+    CGEventRef event=CGEventCreateKeyboardEvent(NULL,code,down);
+    if (!event) exit(6);
+    CGEventSetFlags(event,flags);CGEventPost(kCGHIDEventTap,event);CFRelease(event);
+}
+
 int main(int argc, const char **argv) {
     @autoreleasepool {
         if (argc < 3) return 2;
@@ -45,6 +71,24 @@ int main(int argc, const char **argv) {
             NSData *data = [NSJSONSerialization dataWithJSONObject:result options:NSJSONWritingPrettyPrinted error:NULL];
             fwrite(data.bytes, 1, data.length, stdout);
             puts("");
+            return 0;
+        }
+        if (!strcmp(operation,"text")) {
+            if (argc!=4 || strlen(argv[3])>512) return 2;
+            CGKeyCode code;BOOL shift;
+            for (const unsigned char *p=(const unsigned char *)argv[3];*p;p++)
+                if (!text_key(*p,&code,&shift)) return 2;
+            if (![app activateWithOptions:0]) return 5;
+            usleep(150000);
+            for (const unsigned char *p=(const unsigned char *)argv[3];*p;p++) {
+                text_key(*p,&code,&shift);
+                if (shift) { post_key(56,YES,kCGEventFlagMaskShift); usleep(20000); }
+                post_key(code,YES,shift?kCGEventFlagMaskShift:0); usleep(30000);
+                post_key(code,NO,shift?kCGEventFlagMaskShift:0); usleep(30000);
+                if (shift) { post_key(56,NO,0); usleep(20000); }
+            }
+            printf("Native HID text pid=%d window=%u characters=%zu\n",pid,
+                   [window[(id)kCGWindowNumber] unsignedIntValue],strlen(argv[3]));
             return 0;
         }
         BOOL key = !strcmp(operation,"key"), click = !strcmp(operation,"click"), aim = !strcmp(operation,"aim");
