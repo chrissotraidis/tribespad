@@ -1,5 +1,5 @@
 {
-  "state": "component_validated_full_original_rebuild_running",
+  "state": "original_random_returns_and_katabatic_scene_verified",
   "implementation": "Native SDL_randf, no guest arguments, x87 ST0 return via existing float bridge; cdecl registers and LastError preserved. Native SDL single-thread random-generator contract unchanged.",
   "original_boundary": {
     "pid": 60056,
@@ -32,5 +32,90 @@
     "tests/fixtures/sdl_window_dispatch.c": "83911a798d5fd6b880594d312eb19e8a19f7aeb40d72ed0045eed5651c25dfc9",
     "scripts/test-sdl-window.py": "0b5232091bc02b4431744b94ecf9c9b2e36f57266c742d1f1fb1c6127dbef79d"
   },
-  "limitations": "New original app execution is pending. Katabatic scene, rendered HD, authenticated community multiplayer and mobile gameplay remain unverified."
+  "limitations": "Local Katabatic scene and selected keyboard/mouse controls only. HD upload-input provenance does not yet establish rendered HD sampling. Authenticated existing-community multiplayer, performance acceptance and full mobile gameplay remain unverified.",
+  "original_execution": {
+    "pid": 67569,
+    "engine_sha256": "76f6464ac4d83a97a4d4141861cca444c83478fcfae506aedcd0c87b63254ae6",
+    "initialized": true,
+    "independent_subpages_enabled": true,
+    "signed_packaging_verified": true,
+    "random_calls": [
+      {
+        "time": 1791437246.492967,
+        "return_pc": "0x10034a9f",
+        "native_return_observed": true,
+        "st0": 0.7611491084098816,
+        "st0_top": 7,
+        "in_range": true,
+        "integer_registers_preserved": true,
+        "returned_time": 1791437246.502672
+      },
+      {
+        "time": 1791437246.507093,
+        "return_pc": "0x10034aa9",
+        "native_return_observed": true,
+        "st0": 0.4240461587905884,
+        "st0_top": 7,
+        "in_range": true,
+        "integer_registers_preserved": true,
+        "returned_time": 1791437246.620374
+      },
+      {
+        "time": 1791437246.628286,
+        "return_pc": "0x10034ab3",
+        "native_return_observed": true,
+        "st0": 0.8732338547706604,
+        "st0_top": 7,
+        "in_range": true,
+        "integer_registers_preserved": true,
+        "returned_time": 1791437246.744538
+      },
+      {
+        "time": 1791437246.751968,
+        "return_pc": "0x10034abd",
+        "native_return_observed": true,
+        "st0": 0.4104670286178589,
+        "st0_top": 7,
+        "in_range": true,
+        "integer_registers_preserved": true,
+        "returned_time": 1791437246.868938
+      },
+      {
+        "time": 1791437247.0918531,
+        "return_pc": "0x10034adf",
+        "native_return_observed": true,
+        "st0": 0.7581652402877808,
+        "st0_top": 7,
+        "in_range": true,
+        "integer_registers_preserved": true,
+        "returned_time": 1791437247.209535
+      }
+    ],
+    "scene": "Katabatic CTF terrain, buildings, snow and match HUD rendered; click from observer joined Starwolf and spawned original first-person player.",
+    "controls": {
+      "walk": "W3s changed position and picked up repair pack; S1s moved back.",
+      "aim": "Native HID delta120,-30 changed visible yaw/pitch. A prior delta400,0 was rejected by helper and is not an input result.",
+      "weapon": "Key4 selected disc launcher with15 ammunition.",
+      "fire": "One native left-button press reduced ammunition15 to14; projectile itself not captured.",
+      "jet": "Right-button hold3s raised player toward ceiling, reduced blue energy bar and increased red heat. Subsequent frame shows landed position, full energy and no heat."
+    },
+    "debugger_incident": "Initial LLDB crashed in BreakpointSite::BumpHitCounts after deleting a disabled draw probe. Game remained live and recovered input; reattached after dyld startup with only NT/missing-import and five-return random probes. No game restart or guest state mutation.",
+    "live_handoff": {
+      "app_pid": 67569,
+      "lldb_session": 95939,
+      "launcher_session": 64001,
+      "window_id": 26233
+    },
+    "screenshots": {
+      "scene": "9355daafe946c19d4e8ee79201fcdae480957e763d8cee4e2c08b7332164c229",
+      "join": "5f92d684f231212ca66d3ff847c9bd774963a2a00dd3cb9cb97d8d9bd86dde2b",
+      "walk": "d43bc580b36560a8cc95076abbb4ecc95ad4f716b000180e757f7ff383adb253",
+      "aim": "380e5017013a8d3ab668b32a2ed3ba02a3a06626e0da2a2df172f15bf0076677",
+      "disc-before": "4e95496e3c26582484d9245e1274e607746ba3f182afd9937c74f01b365b7338",
+      "disc-after": "ad70326504554851ce4b4e8814edbff65addbe532cffd0744ded79ad50baa84c",
+      "jet-held": "7ded812b4a010b5dcc24e21bd6ba88928d5c0dc4af1d4153d1502218656a4e87",
+      "jet-released": "2b884fdda2f6bd9ae257aaf06500f0cc4becbc555fe4793e078485f39faf64fe"
+    },
+    "scope": "Original signed Mac app and native HID, with bounded read-only selected-thread random-return capture; no coherent whole-memory snapshot."
+  }
 }
