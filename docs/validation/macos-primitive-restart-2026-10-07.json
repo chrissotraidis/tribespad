@@ -35,7 +35,7 @@
       "mission-literals",
       "render-job-handoff normal/checked/tsan"
     ],
-    "full_engine": "Build and original startup running in tool session84712; result pending."
+    "full_engine": "First build linked and returned attach1/engine_entered before an ExitProcess diagnostic with return_pc0 exposed a reporter assertion. Corrected reporter retains that stop as unverified; new full startup/report running in session26260."
   },
   "sources_sha256": {
     "port/core/guest_sdl_backend.c": "0abd8b7b032a9270ff16d62c5f105c48bbdeaef24b7a89754911f7d29127c4a8",
@@ -45,7 +45,8 @@
     "port/compiler/ExternalMemoryPass.cpp": "5f42e5dbf0d92d456e8813ab2ccb75364de99488054550679a880f76f5ea9141",
     "config/runtime/external-memory-contracts.json": "dc4779024a64a820d39601e514cb0e03d428a3dd7439033bf1f0199ea3fe1dbe",
     "tests/sdl_window_test.c": "9f621cfe05e054042ab0c32d52d2aca39fc1b37edcc3f586917840b9d17a0103",
-    "scripts/test-sdl-window.py": "d5ef50a289544b64e8eb0eefb6ec608a515b056529399d4cfbf3143e7b130c04"
+    "scripts/test-sdl-window.py": "d5ef50a289544b64e8eb0eefb6ec608a515b056529399d4cfbf3143e7b130c04",
+    "scripts/test-qol-native-bootstrap.py": "acf0144b7eb9df20f002bec63c386fc5df4b749226e5665d5d86c604d911aa7e"
   },
   "evidence_sha256": {
     "generated/integration-review/primitive-restart/component-result.json": "b0df9e923656762dbc481d3a2f514578c7255e7a721d511edcdf269ae37cfb7c",

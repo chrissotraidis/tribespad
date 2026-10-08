@@ -236,7 +236,15 @@ protection_events=[dict(address=int(m[1],16),size=int(m[2]),protection=int(m[3],
 attach_returned=bool(result and result.get('attach_return') and (result.get('stages_returned')==len(stages) or result.get('engine_entered')))
 published=bool(result and result.get('native_patch_publication'))
 initialized=attach_returned and (not a.capture_patches or (a.publish_patches and published))
-if result and result.get('kind')=='import':
+if result and result.get('kind')=='import' and result.get('return_pc')==0:
+    # A noreturn shutdown import may have no caller return slot. Preserve the
+    # actual stop as unverified diagnostic evidence, never as completed exit.
+    reached=all_imports[result['index']]
+    assert reached['dll'].lower()=='kernel32.dll' and reached['name']=='ExitProcess',('unclassified zero-return import',reached)
+    result['import']=reached
+    result['original_iat_call_verified']=False
+    result['import_path_diagnostic']='ExitProcess reached without a caller return address; call origin and process shutdown remain unverified.'
+if result and result.get('kind')=='import' and result.get('return_pc')!=0:
     result['import']=all_imports[result['index']]
     # Validate the emitted return address against the original PE IAT call.
     pc=result['return_pc']
