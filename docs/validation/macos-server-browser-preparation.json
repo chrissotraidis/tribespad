@@ -1,0 +1,149 @@
+{
+  "captured_utc": "2026-10-08T06:09:46.060223+00:00",
+  "host_curl_master_http_status": 200,
+  "host_curl_master_https_status": 200,
+  "master_addresses": 26,
+  "public_directory_entries": 33,
+  "public_directory_url": "https://www.tribesnext.com/list.json",
+  "profile": {
+    "profile": "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/mac-server-browser/game-profile",
+    "source_profile": "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/offline-menu/game-profile",
+    "archive_sha256": "610463dbac0cd5e48f7cff775a6f04b23d2e35adc2779e8a00c127b86c530490",
+    "original_script_sha256": "f624fb12dc55faa560792de880d757daeef5bb860ae4e6a5412f54376c1b39a4",
+    "script_sha256": "0335daf23dcfcabf68fbbaf693ab6c21124c01a09096ba482353167aaaf3766a",
+    "autoexec_sha256": "5845f5f0302f5ab6a9a7b12086feb1855fbad67dd1861fe04a657d3e3d9d0642",
+    "replacements": 2,
+    "original_engine_executed": false,
+    "scope": "Original internet master/server queries enabled in an isolated offline profile; no authentication or game join."
+  },
+  "app": {
+    "app": "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/mac-server-browser/app/TribesPad.app",
+    "original_binary_sha256": "76f6464ac4d83a97a4d4141861cca444c83478fcfae506aedcd0c87b63254ae6",
+    "signed_engine_sha256": "01f03c8c04ca7be50b40dbe58f99dbf9ea7c087dd8aca79a2f1498b579e665b2",
+    "launcher_sha256": "1eaf5adcb6215ba3582457f94a5b12cc6e9a7c5d779f60e6b5a80b80a8b96ae8",
+    "launcher_source_sha256": "81edaa8b3ea2e56aa3f822ea39e0556b67a7a3fdd5ad980874b09804daca632e",
+    "arguments": [
+      "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/mac-server-browser/app/TribesPad.app/Contents/MacOS/TribesPadEngine",
+      "/Users/chrissotraidis/GitHub/tribespad/generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/engine.bin",
+      "/Users/chrissotraidis/GitHub/tribespad/generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/qol.bin",
+      "/Users/chrissotraidis/GitHub/tribespad/generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/volume",
+      "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/mac-server-browser/game-profile",
+      "/Users/chrissotraidis/GitHub/tribespad/generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/volume/TribesPad/Temp",
+      "/Users/chrissotraidis/GitHub/tribespad/generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe",
+      "engine"
+    ],
+    "image_sha256": {
+      "engine.bin": "d93ed9a1b411c510840a2a1206a182ff927626f8ead8d0eaea4620e2b5b09c8b",
+      "qol.bin": "f19d6aa3d29f3255e003074575a51d1e94c7104b8ca5501705d19efec4c10592"
+    },
+    "apple_legacy_gl_profile": {
+      "image_sha256": "eaf5a42d301cc64a6e526aa49a82dbaefe655ed1ac0ba67939d0bab2fb6ab607",
+      "source_sha256": "db1184b6472eeeaf84ac6c3030233af3a44763b12b8fca2ef5068797c68e3188",
+      "mapped_before_sha256": "c8dafd8b0b16ecbf26825a98e0ec871d4ef6e404282322d1639791698adf63c4",
+      "mapped_after_sha256": "f19d6aa3d29f3255e003074575a51d1e94c7104b8ca5501705d19efec4c10592",
+      "address": "0x101c4b4c",
+      "before": "GL_ARB_timer_query",
+      "after": "GL_EXT_timer_query",
+      "consumer": "0x1001a4e1",
+      "resolver": "0x1001c00d",
+      "scope": "Mac GL2.1 elapsed-time result loader uses actual EXT_timer_query support. Native extension strings, original instructions and timestamp capability remain unchanged."
+    },
+    "game_profile": {
+      "manifest_sha256": "fcbac3501a1f22586c617578453979939f3fda26dea042ebcbf4291e83da8b35",
+      "overrides": [
+        {
+          "path": "base/prefs/ClientPrefs.cs",
+          "source_sha256": "400cd6c0f127235f9f98f57a119f53bda5a2f75b51aaadeda2950595f566de74",
+          "sha256": "adb1ed6a6c2c83d11540616eb99505920adf5007079f20b26cc31add15d8aa7a",
+          "reason": "Runtime-saved preferences in the explicitly selected game profile."
+        },
+        {
+          "path": "console_start.cs",
+          "source_sha256": "412b6c81d9f8459c6d1c42034859422443387b1f92340cc017bd005256e203ae",
+          "sha256": "d7d3c70a79663d1e0f7dd28ebd179788bfcc657b65e39c4c8983f0222fdf9ceb",
+          "reason": "Original preferences select bundled Univers for Arial and skip the optional AVI intro; original login remains enabled."
+        },
+        {
+          "path": "base/gui/guiProfiles.cs",
+          "source_archive": "base/scripts.vl2",
+          "source_archive_sha256": "610463dbac0cd5e48f7cff775a6f04b23d2e35adc2779e8a00c127b86c530490",
+          "source_entry": "gui/guiProfiles.cs",
+          "source_sha256": "3beb243c8a0474d65ed410567c6b7ac50cfd8088c054e5861ec3043763da42f7",
+          "sha256": "b0fa259135c334d7f82c0c620143bf9366d6009c4324026123421abcf79551d3",
+          "font_archive": "base/t2csri.vl2",
+          "font_archive_sha256": "52762570008d4c3210212867bd9ca92c82b8fa3fc94f3f84736a6058bd53e64e",
+          "font_entry": "fonts/Univers.sdft",
+          "replacements": 8,
+          "replacements_by_face": {
+            "Lucida Console": 4,
+            "Times": 2,
+            "verdana": 2
+          },
+          "reason": "Original GUI font preferences use bundled Univers SDF instead of unavailable Windows Lucida Console, Times and Verdana."
+        },
+        {
+          "path": "base/scripts/TR2BonusHud.cs",
+          "source_archive": "base/TR2final105-client.vl2",
+          "source_archive_sha256": "0a389be1d82abaf7f6f77c3a555e85a07648f14d996125a576c51bf7b299175b",
+          "source_entry": "scripts/TR2BonusHud.cs",
+          "source_sha256": "268e870d58a60b06a3983566a0e17b8bc5b0ce81cd3271e060464ed4e310524a",
+          "sha256": "31c733fd873f10635026c408d821bad42b91ed9057347a1142a5029456b3f48f",
+          "font_archive": "base/t2csri.vl2",
+          "font_archive_sha256": "52762570008d4c3210212867bd9ca92c82b8fa3fc94f3f84736a6058bd53e64e",
+          "font_entry": "fonts/Univers Bold.sdft",
+          "replacements": 2,
+          "reason": "Original font preferences use shipped Univers Bold SDF instead of unavailable Windows Verdana Bold; original controls and commands preserved."
+        },
+        {
+          "path": "base/scripts/EditorProfiles.cs",
+          "source_archive": "base/scripts.vl2",
+          "source_archive_sha256": "610463dbac0cd5e48f7cff775a6f04b23d2e35adc2779e8a00c127b86c530490",
+          "source_entry": "scripts/EditorProfiles.cs",
+          "source_sha256": "9192cd9ac3b1c5cec1373856a53b3c926b4ed1067db7e26fd81099919ea943ca",
+          "sha256": "8cdc347b208f8c62ddc2c863a5fe7d7ab89dc0f561ea4fc6b8af2b5d8e8891ee",
+          "font_archive": "base/t2csri.vl2",
+          "font_archive_sha256": "52762570008d4c3210212867bd9ca92c82b8fa3fc94f3f84736a6058bd53e64e",
+          "font_entry": "fonts/Univers Bold.sdft",
+          "replacements": 7,
+          "reason": "Original font preferences use shipped Univers Bold SDF instead of unavailable Windows Arial Bold; original controls and commands preserved."
+        },
+        {
+          "path": "base/scripts/aiDebug.cs",
+          "source_archive": "base/scripts.vl2",
+          "source_archive_sha256": "610463dbac0cd5e48f7cff775a6f04b23d2e35adc2779e8a00c127b86c530490",
+          "source_entry": "scripts/aiDebug.cs",
+          "source_sha256": "ff91ccb7fdf51dac151aedebf94efd63b58ece8cf510a23bd4ff9adc9ca29164",
+          "sha256": "4c3c00851cef5f9dbf8f0ed8282b69464a19cdac48ca2633f4f66ffaf5f88da4",
+          "font_archive": "base/t2csri.vl2",
+          "font_archive_sha256": "52762570008d4c3210212867bd9ca92c82b8fa3fc94f3f84736a6058bd53e64e",
+          "font_entry": "fonts/Univers Bold.sdft",
+          "replacements": 1,
+          "reason": "Original font preferences use shipped Univers Bold SDF instead of unavailable Windows Arial Bold; original controls and commands preserved."
+        },
+        {
+          "path": "base/scripts/commanderProfiles.cs",
+          "source_archive": "base/scripts.vl2",
+          "source_archive_sha256": "610463dbac0cd5e48f7cff775a6f04b23d2e35adc2779e8a00c127b86c530490",
+          "source_entry": "scripts/commanderProfiles.cs",
+          "source_sha256": "26928ffc96ad1d9e2f53196adcaa6d50d373907ba9e30ba8d3691ef007da84ef",
+          "sha256": "72b5209565db7e55c2c04e41fb5de8bbe6b12ac3e893a9408978d0de34d70723",
+          "font_archive": "base/t2csri.vl2",
+          "font_archive_sha256": "52762570008d4c3210212867bd9ca92c82b8fa3fc94f3f84736a6058bd53e64e",
+          "font_entry": "fonts/Univers Bold.sdft",
+          "replacements": 1,
+          "reason": "Original font preferences use shipped Univers Bold SDF instead of unavailable Windows Arial Bold; original controls and commands preserved."
+        }
+      ]
+    },
+    "scope": "Finder-launchable development app using the complete checked engine and existing workspace assets. Packaging is not gameplay acceptance."
+  },
+  "gameplay_connections_opened": false,
+  "original_browser_executed": false,
+  "scope": "Prepared and signed separate native Mac full-engine app; host curl discovery succeeds. In-game internet discovery still unverified; existing user session untouched.",
+  "files_sha256": {
+    "generated/integration-review/mac-server-browser/live-list.json": "87b3039750121bf7c25010f935334c248ddb2b32f985eb17e287fc448d25d4ca",
+    "generated/integration-review/mac-server-browser/response.txt": "743ce518fd3ad7de44103438eda0c5519f5a0bde799c4ae8303342343a17a8aa",
+    "scripts/prepare-macos-server-browser.py": "fad7c073bf26904704bcdf073da0218c56b3e098c8ed2dc1a5b71cc282c4860a",
+    "scripts/build-macos-engine-app.py": "eb981ee6a0d32ea4cafb066e78d344a3c47bade373b36d025a37be36e66c8758"
+  }
+}
