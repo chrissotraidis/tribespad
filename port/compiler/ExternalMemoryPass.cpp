@@ -21,6 +21,37 @@ using namespace llvm;
 namespace {
 StringRef canonical(StringRef N){if(N.starts_with("\1")){N=N.drop_front();if(N.starts_with("_"))N=N.drop_front();}return N;}
 bool containsPointer(Type *T){if(T->isPointerTy())return true;if(auto *S=dyn_cast<StructType>(T)){for(auto *E:S->elements())if(containsPointer(E))return true;}if(auto *A=dyn_cast<ArrayType>(T))return containsPointer(A->getElementType());if(auto *V=dyn_cast<VectorType>(T))return containsPointer(V->getElementType());return false;}
+// Retain every check immediately before its access, but delay matching ends
+// across at most eight ordinary accesses in one straight-line segment. The
+// runtime's nested brackets then share one permission snapshot/OS read lock.
+// Never hold it across a call, fence, atomic/volatile access or control flow.
+static uint64_t groupAccessBrackets(Module &M){
+ uint64_t Grouped=0;
+ for(auto &F:M)for(auto &BB:F){
+  SmallVector<Instruction *,128> Work;for(auto &I:BB)Work.push_back(&I);
+  SmallVector<CallInst *,8> Ends;
+  auto Flush=[&](Instruction *Before){
+   if(Ends.size()>1){for(auto *End:Ends)End->moveBefore(Before);Grouped+=Ends.size();}
+   Ends.clear();
+  };
+  for(size_t i=0;i<Work.size();++i){
+   auto *I=Work[i];auto *Begin=dyn_cast<CallInst>(I);
+   if(Begin&&Begin->getCalledFunction()&&Begin->getCalledFunction()->getName()=="tribes_memory_access_begin"&&Begin->hasOneUse()&&i+2<Work.size()){
+    auto *Access=Work[i+1];auto *End=dyn_cast<CallInst>(Work[i+2]);
+    auto *Load=dyn_cast<LoadInst>(Access);auto *Store=dyn_cast<StoreInst>(Access);
+    bool Ordinary=(Load&&Load->isSimple())||(Store&&Store->isSimple());
+    if(Ordinary&&End&&End->getCalledFunction()&&End->getCalledFunction()->getName()=="tribes_memory_access_end"&&End->arg_size()==1&&End->getArgOperand(0)==Begin){
+     Ends.push_back(End);i+=2;
+     if(Ends.size()==8)Flush(End->getNextNode());
+     continue;
+    }
+   }
+   if(isa<CallBase>(I)||I->mayReadOrWriteMemory()||isa<FenceInst>(I)||I->isTerminator())Flush(I);
+  }
+  if(!Ends.empty())report_fatal_error("Unterminated checked access group");
+ }
+ return Grouped;
+}
 struct ExternalMemoryPass : PassInfoMixin<ExternalMemoryPass>{
  PreservedAnalyses run(Module &M,ModuleAnalysisManager &){
   if(!M.getModuleFlag("tribes.checked.memory")||M.getModuleFlag("tribes.checked.externals"))report_fatal_error("External guard requires exactly one prior memory pass");
@@ -722,11 +753,13 @@ struct ExternalMemoryPass : PassInfoMixin<ExternalMemoryPass>{
     if(Allowed){++HostCalls;for(auto &A:Call->args())if(A->getType()->isPointerTy())B.CreateCall(Pointer,{Label,A.get()});}else ++Blocked;
    }
   }
+  uint64_t GroupedAccesses=groupAccessBrackets(M);
   SmallVector<Constant *,128> Targets;for(auto *F:Functions)Targets.push_back(F);
   auto *Array=ConstantArray::get(ArrayType::get(P,Targets.size()),Targets);auto *Table=new GlobalVariable(M,Array->getType(),true,GlobalValue::PrivateLinkage,Array,"tb_checked_targets");
   auto *Ctor=Function::Create(FunctionType::get(Void,false),GlobalValue::PrivateLinkage,"tb_register_targets",M);auto *Entry=BasicBlock::Create(C,"entry",Ctor);IRBuilder<> B(Entry);B.CreateCall(Register,{Table,B.getInt64(Targets.size())});B.CreateRetVoid();appendToGlobalCtors(M,Ctor,65535);
   M.addModuleFlag(Module::Error,"tribes.checked.externals",1);
   json::Object Summary;Summary["registered_targets"]=Targets.size();Summary["host_only_calls"]=HostCalls;Summary["blocked_calls"]=Blocked;Summary["indirect_checks"]=IndirectCalls;Summary["range_checked_calls"]=RangeCalls;Summary["memory_manager_calls"]=ManagerCalls;Summary["barrier_asm_calls"]=BarrierCalls;
+  Summary["grouped_accesses"]=GroupedAccesses;
   errs()<<"TRIBES_EXTERNAL_PASS "<<formatv("{0}",json::Value(std::move(Summary)))<<"\n";return PreservedAnalyses::none();
  }
  static bool isRequired(){return true;}

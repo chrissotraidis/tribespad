@@ -1,0 +1,54 @@
+{
+  "date": "2026-10-08",
+  "pid": 14125,
+  "binary_sha256": "0b500dd94d28fff51e1fbf91e81c378d561296274db355190f3e11227a00cf45",
+  "action": "Native touch Launch > Quit",
+  "saved_profile": {
+    "relative_path": "Library/Application Support/TribesPad/Game/base/prefs/ClientPrefs.cs",
+    "sha256": "4277ca8a4f110cd0123dd23ee6ed6e734a21bdf5df228588b67ef14094f334c0",
+    "accepted_eula": 1,
+    "warrior": "Tribespad",
+    "video_resolution": "1180 820 60"
+  },
+  "shutdown": {
+    "diagnostic_stop": {
+      "diagnostic_stop": true,
+      "native_patch_publication": true,
+      "attach_return": 1,
+      "engine_entered": true,
+      "kind": "import",
+      "index": 175,
+      "stage": 2,
+      "return_pc": 0,
+      "esp": 3145344,
+      "eax": 0,
+      "stack_arguments": [
+        0,
+        0,
+        7312582,
+        0,
+        805388320,
+        7331637,
+        0,
+        4294967295,
+        4294967295,
+        3145464,
+        269458066
+      ],
+      "registers": {
+        "eax": 0,
+        "ecx": 0,
+        "edx": 3997696,
+        "ebx": 0,
+        "esp": 3145344,
+        "ebp": 3145464,
+        "esi": 0,
+        "edi": 0
+      }
+    },
+    "import_name": "ExitProcess",
+    "clean": false
+  },
+  "restored_on_next_launch": true,
+  "restored_pid": 18702
+}

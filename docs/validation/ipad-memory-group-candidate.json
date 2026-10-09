@@ -1,0 +1,62 @@
+{
+  "passed": true,
+  "results": {
+    "baseline": {
+      "output": "PASS: mixed host/guest groups, 1 publication boundary fault, concurrent readers/writer; 100000 batches 0.071795 seconds",
+      "binary_sha256": "f06500aeac33f9661d91944a78d451254f1c9315b8574269456da880917d39ce",
+      "seconds": 0.071795
+    },
+    "baseline-tsan": {
+      "output": "PASS: mixed host/guest groups, 0 publication boundary fault, concurrent readers/writer; 100000 batches 1.448858 seconds",
+      "binary_sha256": "95f69082a67c33ced04fbcdaecf538f7bec9b6f975ef8ab6df205fb7901c75dd",
+      "seconds": 1.448858
+    },
+    "grouped": {
+      "output": "PASS: mixed host/guest groups, 1 publication boundary fault, concurrent readers/writer; 100000 batches 0.029917 seconds",
+      "binary_sha256": "e0b746ec4e14cde8c2b2b466dffc818120a139d527685672b95fc492674f33f2",
+      "seconds": 0.029917
+    },
+    "grouped-tsan": {
+      "output": "PASS: mixed host/guest groups, 0 publication boundary fault, concurrent readers/writer; 100000 batches 0.608632 seconds",
+      "binary_sha256": "9f9c5df659f477f1011780a5beafad22020557450a871a6691195565480d35b9",
+      "seconds": 0.608632
+    }
+  },
+  "sources_sha256": {
+    "port/compiler/ExternalMemoryPass.cpp": "904b3d0294b30552a31735e13c46fe003689ef3fd5e7f75e69ddfbc2d5343004",
+    "tests/guest_access_groups_test.c": "74903c32aaf1be468e2c415a4d8aee3e4c891133f494418b02d821a35ca2f793",
+    "scripts/test-guest-access-groups.py": "d8346ae2e7b865bd1620951bb4c1799dd5769b2a34be30745a75c2f03b25c1ca"
+  },
+  "scope": "Emitted permission checks and bounded grouping; microbenchmark is not game FPS.",
+  "existing_fault_suite": "PASS: actual pass-emitted scalar/vector/atomic/copy/move/set checks; 23 forbidden-access child faults with complete shared-memory preservation; permitted neighboring/host/zero-length accesses; nested bracket excludes pending writer; 8000 concurrent emitted write/read/copy cycles and 16000 permission publications from four writers; permission restoration",
+  "menu_profile": {
+    "pid": 14125,
+    "sample_sha256": "5957b40121ea3449af0fc3fd75afad75039fe49019392c0d78831e9cb35376c6",
+    "observation": "1142/1281 sampled main-thread stacks enter native GL rendering; GLRendererFloat is the active triangle renderer. The static preview capture had zero visible changes and does not measure FPS."
+  },
+  "full_engine_execution": {
+    "pid": 18702,
+    "binary_sha256": "c1098592ba805b1a311c488e17c2c3c977bac7164a7186078f46acd14f2d4c1c",
+    "build_sha256": "82ad22c72aa42f416b6d81cc6565d4f9656db5a52c03d4b8bd8d92ee09d4c20e",
+    "guarded_sha256": "898f29b4d19619e75ab4d3dda9aae4d8a1b6bf0c91286b4ba0fe33710a6e5294",
+    "grouped_accesses": 3099405,
+    "startup_menus_rendered": true,
+    "saved_warrior_restored": "Tribespad",
+    "accepted_eula_restored": true,
+    "offline_map": "Katabatic",
+    "bots": 2,
+    "map_status": "Loading; no gameplay acceptance for this candidate yet",
+    "start": {
+      "pid": 18702,
+      "map": "Katabatic",
+      "bots": 2,
+      "dedicated": false,
+      "started_at": "2026-10-09T04:18:18.561187+00:00",
+      "monotonic": 0.017128541
+    },
+    "screenshots": {
+      "generated/integration-review/guest-access-groups/candidate-profile.png": "3ce96b85327aa8639a5a416656094bb85f34f803ff19760adeee84365947cfc1",
+      "generated/integration-review/guest-access-groups/candidate-map-load.png": "7a497fb9dcf4f94db7ce0ddebe3c6f36f3edf597edff826e09d98c0cd2361d7e"
+    }
+  }
+}
