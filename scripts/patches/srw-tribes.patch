@@ -1,3 +1,15 @@
+--- a/SConstruct
++++ b/SConstruct
+@@ -32,6 +32,9 @@
+ env = Environment(variables = vars)
+ if env['PLATFORM'] == 'darwin':
+     env.Replace(CC='clang', CXX='clang++')
++    if os.environ.get('SDKROOT'):
++        env.Append(CCFLAGS=['-isysroot', os.environ['SDKROOT']],
++                   LINKFLAGS=['-isysroot', os.environ['SDKROOT']])
+ Help(vars.GenerateHelpText(env))
+ 
+ Help("""
 --- a/SR_basic.c
 +++ b/SR_basic.c
 @@ -477,7 +477,8 @@
@@ -2187,7 +2199,22 @@
                  //}
  
                  if (ud_obj.mnemonic == UD_Ifst) instr = "FST";
-@@ -7982,7 +9577,7 @@
+@@ -7958,10 +9553,13 @@
+                         else if (ud_obj.operand[0].size == 32)
+                         {
+                             OUTPUT_PARAMSTRING("%s_FLOAT\n", instr);
++                            /* Effective-address lowering clobbers tmp0 for scaled
++                               indices. Preserve the x87 result before computing it. */
++                            OUTPUT_STRING("mov tmp1, tmp0\n");
+ 
+                             SR_disassemble_get_madr(cOutput, &(ud_obj.operand[0]), fixup[0], extrn[0], UD_NONE, MADR_WRITE, ZERO_EXTEND, &memadr);
+ 
+-                            SR_disassemble_write_mem_word(cOutput, &memadr, LR_TMP0);
++                            SR_disassemble_write_mem_word(cOutput, &memadr, LR_TMP1);
+                         }
+                         else if (ud_obj.operand[0].size == 80 && ud_obj.mnemonic == UD_Ifstp)
+                         {
+@@ -7982,7 +9580,7 @@
  
                  //if (flags_to_write)
                  //{
@@ -2196,7 +2223,7 @@
                  //}
  
                  if (ud_obj.operand[1].type == UD_NONE)
-@@ -8023,7 +9618,7 @@
+@@ -8023,7 +9621,7 @@
  
                  //if (flags_to_write)
                  //{
@@ -2205,7 +2232,7 @@
                  //}
  
                  OUTPUT_STRING("; wait\n");
-@@ -8039,6 +9634,15 @@
+@@ -8039,6 +9637,15 @@
              OUTPUT_PARAMSTRING("call halopad_trap_unimplemented 0x%x\n", (unsigned int)(section[Entry].start + cur_ofs));
              flags_write = flags_to_write;
              break;

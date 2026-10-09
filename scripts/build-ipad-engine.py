@@ -56,6 +56,8 @@ hook_proof=R/'generated/integration-review/code-revision-mobile/result.json'
 hook_test=json.loads(hook_proof.read_text());assert hook_test['passed'] and hook_test['mobile']
 for name,h in hook_test['sources_sha256'].items():assert sha(R/name)==h,name
 sources,hook_layout=mobile_hooks(sources,mobile_inputs)
+from x87_store_inputs import prepare as x87_store_inputs
+sources=x87_store_inputs(sources,mobile_inputs)
 # Refresh finite host exports without relifting unchanged original images.
 from graphics_backend_inputs import prepare as graphics_inputs
 graphics_sources,_=graphics_inputs(mobile_inputs)
@@ -143,7 +145,7 @@ if a.angle:
  for framework in angle_bundle(app,a.platform):subprocess.run(['codesign','--force','--sign','-',str(framework)],check=True)
 subprocess.run(['codesign','--force','--sign','-',*signing,str(app)],check=True)
 subprocess.run(['codesign','--verify','--deep','--strict',str(app)],check=True)
-(out/'result.json').write_text(json.dumps(dict(state='built',platform=a.platform,cpu_host_checks=a.cpu_host_checks,bundled_assets=bundled,entitlements_sha256=sha(R/'port/apple/TribesPad.entitlements') if a.platform=='device' else None,binary_sha256=sha(exe),prepared_sha256=sha(source/'prepared-inputs.json'),support_sha256=sha(out/'support/result.json'),guarded_sha256=sha(out/'guarded/result.json'),gl4es=gl4es,angle=angle,openal=al,arguments=None if bundled else args,mobile_hooks_sha256=sha(mobile_inputs/'mobile-hooks.json'),mobile_gpu_timing=dict(available=False,original_blocks=timing_blocks,test_sha256=sha(timing_proof),translated_sha256=sha(mobile_qol)),scope='Full checked engine linked for '+a.platform+'. Device builds need development signing. Build is not rendering or gameplay acceptance.'),indent=2)+'\n')
+(out/'result.json').write_text(json.dumps(dict(state='built',platform=a.platform,cpu_host_checks=a.cpu_host_checks,bundled_assets=bundled,entitlements_sha256=sha(R/'port/apple/TribesPad.entitlements') if a.platform=='device' else None,binary_sha256=sha(exe),prepared_sha256=sha(source/'prepared-inputs.json'),support_sha256=sha(out/'support/result.json'),guarded_sha256=sha(out/'guarded/result.json'),gl4es=gl4es,angle=angle,openal=al,arguments=None if bundled else args,mobile_hooks_sha256=sha(mobile_inputs/'mobile-hooks.json'),x87_stores_sha256=sha(mobile_inputs/'x87-stores.json'),mobile_gpu_timing=dict(available=False,original_blocks=timing_blocks,test_sha256=sha(timing_proof),translated_sha256=sha(mobile_qol)),scope='Full checked engine linked for '+a.platform+'. Device builds need development signing. Build is not rendering or gameplay acceptance.'),indent=2)+'\n')
 if not a.build_only:
  subprocess.run(['xcrun','simctl','install',a.simulator_device,str(app)],check=True)
  for name in ('stdout.log','stderr.log'):(out/name).write_text('')

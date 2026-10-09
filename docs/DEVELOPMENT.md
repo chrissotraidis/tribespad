@@ -41,6 +41,9 @@ export SDKROOT="$(xcrun --sdk macosx --show-sdk-path)"
 .venv/bin/python scripts/test-mobile-gpu-timing.py
 .venv/bin/python scripts/test-mobile-gpu-sync.py
 .venv/bin/python scripts/test-code-revision.py --mobile
+.venv/bin/python scripts/build-tribes-lifter.py
+.venv/bin/python scripts/test-x87-indexed-stores.py
+.venv/bin/python scripts/prepare-x87-store-engine.py
 .venv/bin/python scripts/build-ipad-engine.py --simulator-device <booted-iPad-UUID>
 ```
 
