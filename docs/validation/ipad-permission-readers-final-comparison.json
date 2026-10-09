@@ -1,0 +1,27 @@
+{
+  "passed": true,
+  "comparison": {
+    "baseline-pthread": [
+      "PASS: mixed host/guest/host-only groups, nested pending writer, 4 guard faults, concurrent readers/two publishers; 100000 batches 0.044572 seconds",
+      "PASS: mixed host/guest/host-only groups, nested pending writer, 4 guard faults, concurrent readers/two publishers; 100000 batches 0.042465 seconds",
+      "PASS: mixed host/guest/host-only groups, nested pending writer, 4 guard faults, concurrent readers/two publishers; 100000 batches 0.042604 seconds"
+    ],
+    "baseline-atomic": [
+      "PASS: mixed host/guest/host-only groups, nested pending writer, 4 guard faults, concurrent readers/two publishers; 100000 batches 0.031466 seconds",
+      "PASS: mixed host/guest/host-only groups, nested pending writer, 4 guard faults, concurrent readers/two publishers; 100000 batches 0.029797 seconds",
+      "PASS: mixed host/guest/host-only groups, nested pending writer, 4 guard faults, concurrent readers/two publishers; 100000 batches 0.030526 seconds"
+    ],
+    "grouped-pthread": [
+      "PASS: mixed host/guest/host-only groups, nested pending writer, 4 guard faults, concurrent readers/two publishers; 100000 batches 0.016265 seconds",
+      "PASS: mixed host/guest/host-only groups, nested pending writer, 4 guard faults, concurrent readers/two publishers; 100000 batches 0.016657 seconds",
+      "PASS: mixed host/guest/host-only groups, nested pending writer, 4 guard faults, concurrent readers/two publishers; 100000 batches 0.016682 seconds"
+    ],
+    "grouped-atomic": [
+      "PASS: mixed host/guest/host-only groups, nested pending writer, 4 guard faults, concurrent readers/two publishers; 100000 batches 0.019777 seconds",
+      "PASS: mixed host/guest/host-only groups, nested pending writer, 4 guard faults, concurrent readers/two publishers; 100000 batches 0.019085 seconds",
+      "PASS: mixed host/guest/host-only groups, nested pending writer, 4 guard faults, concurrent readers/two publishers; 100000 batches 0.017527 seconds"
+    ]
+  },
+  "source_sha256": "f7dd79d5a32798df41b3bbfb599babb9a9f5b6a7e11c584638d174cf48e0ec8a",
+  "scope": "Alternating native component runs using identical emitted access objects. No app running or parallel compiler. Not game FPS."
+}

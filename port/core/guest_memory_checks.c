@@ -3,6 +3,7 @@
 #include "guest_memory_checks.h"
 #include "guest_system.h"
 #include <pthread.h>
+#include <stdatomic.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -23,22 +24,66 @@ static int revision_font = -1;
 static unsigned font_size_published;
 static unsigned completed_revisions;
 static pthread_t revision_owner;
-static pthread_rwlock_t guard=PTHREAD_RWLOCK_INITIALIZER;
+/* Permission publication is rare; short readers use one atomic acquisition.
+   A pending writer closes admission before waiting for existing readers. The
+   mutex/condition pair handles only contention and serializes publishers. */
+#define WRITER_PENDING UINT32_C(0x80000000)
+static _Atomic uint32_t guard_state;
+static pthread_mutex_t guard_writer=PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t guard_wait=PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t guard_changed=PTHREAD_COND_INITIALIZER;
+static void reader_wait(void){
+ if(pthread_mutex_lock(&guard_wait))abort();
+ while(atomic_load_explicit(&guard_state,memory_order_acquire)&WRITER_PENDING)
+  if(pthread_cond_wait(&guard_changed,&guard_wait))abort();
+ if(pthread_mutex_unlock(&guard_wait))abort();
+}
+static void reader_enter(void){
+ uint32_t state=atomic_load_explicit(&guard_state,memory_order_relaxed);
+ for(;;){
+  if(state&WRITER_PENDING){
+   reader_wait();state=atomic_load_explicit(&guard_state,memory_order_relaxed);continue;
+  }
+  if(state==WRITER_PENDING-1)abort();
+  if(atomic_compare_exchange_weak_explicit(&guard_state,&state,state+1,memory_order_acquire,memory_order_relaxed))return;
+ }
+}
+static void reader_leave(void){
+ uint32_t previous=atomic_fetch_sub_explicit(&guard_state,1,memory_order_release);
+ if(!(previous&~WRITER_PENDING))abort();
+ if(previous==(WRITER_PENDING|1)){
+  if(pthread_mutex_lock(&guard_wait))abort();
+  if(pthread_cond_broadcast(&guard_changed))abort();
+  if(pthread_mutex_unlock(&guard_wait))abort();
+ }
+}
+static void write_unlock(void){
+ if(atomic_load_explicit(&guard_state,memory_order_relaxed)!=WRITER_PENDING)abort();
+ atomic_store_explicit(&guard_state,0,memory_order_release);
+ if(pthread_cond_broadcast(&guard_changed))abort();
+ if(pthread_mutex_unlock(&guard_wait))abort();
+ if(pthread_mutex_unlock(&guard_writer))abort();
+}
 /* Explicit buffer brackets can contain compiler-emitted access brackets.
-   A pending writer can block a recursive pthread reader on Darwin. Keep the
-   outer OS lock until the last nested bracket exits; every inner access is
+   Retain the outer reader admission until the last nested bracket exits,
+   even when a publisher is waiting; every inner access is
    still checked against the same protected permission snapshot. */
 static _Thread_local uint32_t read_depth;
 static void read_lock(void){
  if(read_depth==UINT32_MAX)abort();
- if(!read_depth&&pthread_rwlock_rdlock(&guard))abort();read_depth++;
+ if(!read_depth)reader_enter();read_depth++;
 }
 static void read_unlock(void){
- if(!read_depth)abort();if(!--read_depth&&pthread_rwlock_unlock(&guard))abort();
+ if(!read_depth)abort();if(!--read_depth)reader_leave();
 }
 static void write_lock(void){
  if(read_depth){fputs("TribesPad: permission publication inside a checked access bracket\n",stderr);abort();}
- if(pthread_rwlock_wrlock(&guard))abort();
+ if(pthread_mutex_lock(&guard_writer))abort();
+ if(pthread_mutex_lock(&guard_wait))abort();
+ uint32_t previous=atomic_fetch_or_explicit(&guard_state,WRITER_PENDING,memory_order_acq_rel);
+ if(previous&WRITER_PENDING)abort();
+ while(atomic_load_explicit(&guard_state,memory_order_acquire)!=WRITER_PENDING)
+  if(pthread_cond_wait(&guard_changed,&guard_wait))abort();
 }
 
 static _Noreturn void violation(const void *p,uint64_t size,uint32_t access){fprintf(stderr,"TribesPad: checked guest memory violation at 0x%llx size=%llu access=%u\n",(unsigned long long)((uintptr_t)p-guest_base),(unsigned long long)size,access);abort();}
@@ -48,7 +93,7 @@ int tribes_memory_checks_configure(uint64_t base,uint64_t size){
 }
 int tribes_memory_permissions_set(uint32_t address,uint64_t size,uint32_t access){
  if(!permissions||!size||(address|size)%4096||access>3||address>=guest_size||size>guest_size-address)return 0;
- write_lock();memset(permissions+address/4096,(int)access,(size_t)(size/4096));if(pthread_rwlock_unlock(&guard))abort();return 1;
+ write_lock();memset(permissions+address/4096,(int)access,(size_t)(size/4096));write_unlock();return 1;
 }
 /* Test interval intersection without overflowing host pointer arithmetic. Host
    buffers are left alone; a range partly crossing the guest window is invalid. */
@@ -104,7 +149,7 @@ static int prepare_revision(uint64_t base,const TribesCodeWrite *writes,uint32_t
  }
  if(ok&&next&&!plan_matches(copy,count,0))ok=0;
  if(ok){free(revision);revision=copy;revision_count=count;revision_index=0;revision_finished=0;revision_font=font;revision_owner=pthread_self();}else free(copy);
- if(pthread_rwlock_unlock(&guard))abort();return ok;
+ write_unlock();return ok;
 }
 int tribes_memory_prepare_code_revision(uint64_t base,const TribesCodeWrite *writes,uint32_t count){return prepare_revision(base,writes,count,0,-1);}
 /* Up to thirty-two subsequent finite plans, installed only by the original owner
@@ -155,7 +200,7 @@ int tribes_memory_publish_code(uint64_t base,const TribesPublishedCodeRange *ran
  }
  if(valid&&!plan_matches(revision,revision_count,0))valid=0;
  if(valid){published=next;published_count=count;}else free(next);
- if(pthread_rwlock_unlock(&guard))abort();return valid;
+ write_unlock();return valid;
 }
 /* The second captured bank is registered during original engine startup.
    Freeze only its 34 finite instruction intervals, once at revision20, before
@@ -193,7 +238,7 @@ static int publish_later_bank(uint64_t base,const TribesPublishedCodeRange *rang
   }
   free(published);published=merged;published_count+=count;if(group==2)audio_bank_published=1;else if(group==1)renderer_bank_published=1;else pending_bank_published=1;
  }
- if(pthread_rwlock_unlock(&guard))abort();return ok;
+ write_unlock();return ok;
 }
 int tribes_memory_publish_pending_bank(uint64_t base,const TribesPublishedCodeRange *ranges,uint32_t count){return publish_later_bank(base,ranges,count,0);}
 /* The renderer group is fixed to its captured 26 entries and revision30. */
@@ -223,14 +268,14 @@ int tribes_memory_apply_code_write(uint64_t base,uint32_t pc,const void *pointer
   if(ok&&memcmp(pointer,&w.before,size))ok=0;
   if(ok){memcpy((void *)pointer,&w.value,size);revision_index++;}
  }
- if(pthread_rwlock_unlock(&guard))abort();return ok;
+ write_unlock();return ok;
 }
 int tribes_memory_finish_code_revision(uint64_t base){
  if(!permissions||base!=guest_base)return 0;write_lock();
  int ok=published&&revision&&revision_index==revision_count&&!revision_finished&&pthread_equal(pthread_self(),revision_owner);
  if(ok&&!plan_matches(revision,revision_count,1))ok=0;
  if(ok){revision_finished=1;if(revision_font>=0)font_size_published|=1u<<revision_font;else completed_revisions++;}
- if(pthread_rwlock_unlock(&guard))abort();return ok;
+ write_unlock();return ok;
 }
 int tribes_memory_write_mission_literal(uint64_t base,uint32_t pc,uint32_t address,uint32_t value){
  static const uint32_t writers[]={0x10010f23,0x10010f50,0x10010f7d};
@@ -255,7 +300,7 @@ int tribes_memory_write_mission_literal(uint64_t base,uint32_t pc,uint32_t addre
      and zero/NaN bit patterns. No instruction opcode or native code changes. */
   if(ok)memcpy((void *)(guest_base+address),&value,4);
  }
- if(pthread_rwlock_unlock(&guard))abort();return ok;
+ write_unlock();return ok;
 }
 uint32_t tribes_memory_access_begin(const void *p,uint64_t size,uint32_t access){
  if(access<1||access>3)abort();if(!touches(p,size))return 0;read_lock();require(p,size,access);return 1;
@@ -272,7 +317,7 @@ void tribes_memory_access_end(uint32_t token){if(token>1)abort();if(token)read_u
 void tribes_memory_access_end_many(uint32_t count){
  if(count>8)abort();if(!count)return;
  if(count>read_depth)abort();read_depth-=count;
- if(!read_depth&&pthread_rwlock_unlock(&guard))abort();
+ if(!read_depth)reader_leave();
 }
 int tribes_memory_initialize_static(uint64_t base,const unsigned char *access,uint64_t pages){
  if(!permissions||base!=guest_base||!pages||pages>guest_size/4096||!access)return 0;
@@ -282,7 +327,7 @@ int tribes_memory_initialize_static(uint64_t base,const unsigned char *access,ui
     never data. Dynamic user arenas retain their native mapping enforcement. */
  uint64_t user_end=(uint64_t)TRIBES_GUEST_MAXIMUM_ADDRESS+1;
  if(guest_size>user_end)memset(permissions+user_end/4096,0,(size_t)((guest_size-user_end)/4096));
- if(pthread_rwlock_unlock(&guard))abort();return 1;
+ write_unlock();return 1;
 }
 static int native_access(const unsigned char *access,uint32_t count){unsigned bits=0;for(uint32_t i=0;i<count;i++)bits|=access[i];return ((bits&1)?PROT_READ:0)|((bits&2)?PROT_WRITE:0);}
 int tribes_memory_protect_pages(uint64_t base,uint32_t address,uint32_t size,const unsigned char *access){
@@ -296,10 +341,10 @@ int tribes_memory_protect_pages(uint64_t base,uint32_t address,uint32_t size,con
    /* Include the failing native group in rollback; do not assume an OS failure
       left its backing unchanged. The old software map remains unpublished. */
    for(uint32_t j=0;j<=i;j+=group)if(mprotect((void *)(uintptr_t)(base+address+(uint64_t)j*4096),(size_t)native_page,native_access(previous+j,group))){fputs("TribesPad: checked protection rollback failed\n",stderr);abort();}
-   if(pthread_rwlock_unlock(&guard))abort();return 0;
+   write_unlock();return 0;
   }
  }
- memcpy(previous,access,pages);if(pthread_rwlock_unlock(&guard))abort();return 1;
+ memcpy(previous,access,pages);write_unlock();return 1;
 }
 
 /* Only the VM owner may opt into these trusted operations. Initializing an
@@ -309,12 +354,12 @@ int tribes_memory_vm_initialize(uint64_t base,uint32_t address,uint32_t size){
  if(!permissions||base!=guest_base||address!=0x60030000||size!=0x1ffc0000||
     (uint64_t)address+size>guest_size)return 0;
  write_lock();
- if(vm_initialized){pthread_rwlock_unlock(&guard);return 0;}
+ if(vm_initialized){write_unlock();return 0;}
  /* No existing VM allocation is allowed here. An OS failure cannot leave a
     partially enabled arena available for execution. */
  if(mprotect((void *)(uintptr_t)(base+address),size,PROT_NONE)){fputs("TribesPad: checked VM initialization failed\n",stderr);abort();}
  memset(permissions+address/4096,0,size/4096);vm_initialized=1;
- if(pthread_rwlock_unlock(&guard))abort();return 1;
+ write_unlock();return 1;
 }
 int tribes_memory_vm_change(uint64_t base,uint32_t address,uint32_t size,const unsigned char *access,const unsigned char *zero){
  long native_page=sysconf(_SC_PAGESIZE);
@@ -324,9 +369,9 @@ int tribes_memory_vm_change(uint64_t base,uint32_t address,uint32_t size,const u
  uint32_t pages=size/4096,group=(uint32_t)native_page/4096;
  for(uint32_t i=0;i<pages;i++)if((access[i]!=0&&access[i]!=1&&access[i]!=3)||zero[i]>1)return 0;
  write_lock();
- if(!vm_initialized){pthread_rwlock_unlock(&guard);return 0;}
+ if(!vm_initialized){write_unlock();return 0;}
  unsigned char *previous=permissions+address/4096;
- for(uint32_t i=0;i<pages;i++)if(zero[i]&&previous[i]){pthread_rwlock_unlock(&guard);return 0;}
+ for(uint32_t i=0;i<pages;i++)if(zero[i]&&previous[i]){write_unlock();return 0;}
  for(uint32_t i=0;i<pages;i+=group){
   void *host=(void *)(uintptr_t)(base+address+(uint64_t)i*4096);
   int final=native_access(access+i,group),writable=final;
@@ -338,8 +383,8 @@ int tribes_memory_vm_change(uint64_t base,uint32_t address,uint32_t size,const u
   }
   if(failed){
    for(uint32_t j=0;j<=i;j+=group)if(mprotect((void *)(uintptr_t)(base+address+(uint64_t)j*4096),(size_t)native_page,native_access(previous+j,group))){fputs("TribesPad: checked VM rollback failed\n",stderr);abort();}
-   if(pthread_rwlock_unlock(&guard))abort();return 0;
+   write_unlock();return 0;
   }
  }
- memcpy(previous,access,pages);if(pthread_rwlock_unlock(&guard))abort();return 1;
+ memcpy(previous,access,pages);write_unlock();return 1;
 }

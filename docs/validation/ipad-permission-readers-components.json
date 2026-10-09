@@ -1,0 +1,327 @@
+{
+  "groups": {
+    "passed": true,
+    "results": {
+      "baseline": {
+        "output": "PASS: mixed host/guest/host-only groups, nested pending writer, 4 guard faults, concurrent readers/two publishers; 100000 batches 0.031088 seconds",
+        "binary_sha256": "a6db2bea7c54c1f5ddf950bf1b6e8720c2edb4636502699bd328abebc0eb387f",
+        "seconds": 0.031088
+      },
+      "baseline-tsan": {
+        "output": "PASS: mixed host/guest/host-only groups, nested pending writer, 0 guard faults, concurrent readers/two publishers; 100000 batches 0.987009 seconds",
+        "binary_sha256": "a629d82d60918e28eff34895556b710f06dcf756cc13c7f6ab9a9d644d52dc20",
+        "seconds": 0.987009
+      },
+      "grouped": {
+        "output": "PASS: mixed host/guest/host-only groups, nested pending writer, 4 guard faults, concurrent readers/two publishers; 100000 batches 0.017095 seconds",
+        "binary_sha256": "58db28f0e1c48f8b5264b6361b78792b9860c3cbad5660ede8c43951412232d1",
+        "seconds": 0.017095
+      },
+      "grouped-tsan": {
+        "output": "PASS: mixed host/guest/host-only groups, nested pending writer, 0 guard faults, concurrent readers/two publishers; 100000 batches 0.365826 seconds",
+        "binary_sha256": "0c76993cbc09816fe6fd08d650b887a9b981d706b1e3718655c9921d5a36cd04",
+        "seconds": 0.365826
+      },
+      "separate-ends": {
+        "output": "PASS: mixed host/guest/host-only groups, nested pending writer, 4 guard faults, concurrent readers/two publishers; 100000 batches 0.021534 seconds",
+        "binary_sha256": "825bd6ef3e5515f76d14e682af833138304b42451a4a4502213a2924fd121b32",
+        "seconds": 0.021534
+      },
+      "separate-ends-tsan": {
+        "output": "PASS: mixed host/guest/host-only groups, nested pending writer, 0 guard faults, concurrent readers/two publishers; 100000 batches 0.416481 seconds",
+        "binary_sha256": "6167ced7c325b5d1b3c27b8a95222dddf7cc8815ef436fe6e0b13e27b559fbf7",
+        "seconds": 0.416481
+      }
+    },
+    "sources_sha256": {
+      "port/compiler/ExternalMemoryPass.cpp": "937f80a8f02a2f88ab0dcb100b42294cf9b12e6f8049e8ac0831ec67fe0d767c",
+      "tests/guest_access_groups_test.c": "94c44b9fb7ed510518e0a9b6b2e6f74bbbcd0d9231f5382f6b2e4f5f00475f80",
+      "port/core/guest_memory_checks.c": "f7dd79d5a32798df41b3bbfb599babb9a9f5b6a7e11c584638d174cf48e0ec8a",
+      "port/core/guest_memory_checks.h": "7f5cc0edcdb7dcf395633fb20a88dab8da2ad1cfdfd5971b6c06382f9583c584",
+      "scripts/test-guest-access-groups.py": "95ed51276b85fdceb8d607e2256f88d3c17c3671a25a5aeb55530b401f13e37e"
+    },
+    "scope": "Emitted permission checks and bounded grouping; microbenchmark is not game FPS."
+  },
+  "memory": {
+    "codegen": {
+      "compiler": "/opt/homebrew/Cellar/llvm@20/20.1.8/bin/llc",
+      "sha256": "f6099ef281c3637cad74fd59db3c1cae161590a99d9ddacb36c789edeef27142",
+      "flags": [
+        "-O2",
+        "-filetype=obj",
+        "-relocation-model=pic",
+        "-verify-machineinstrs",
+        "-mtriple=arm64-apple-macos12"
+      ]
+    },
+    "tsan_output": "PASS: actual pass-emitted scalar/vector/atomic/copy/move/set checks; 0 forbidden-access child faults with complete shared-memory preservation; permitted neighboring/host/zero-length accesses; nested bracket excludes pending writer; 8000 concurrent emitted write/read/copy cycles and 16000 permission publications from four writers; permission restoration",
+    "tsan_binary_sha256": "0ff849fab8abd4b30775bbd95430789667eeade0d474685f74fbe0be5ee9ad24",
+    "state": "finished",
+    "pass": true,
+    "output": "PASS: actual pass-emitted scalar/vector/atomic/copy/move/set checks; 23 forbidden-access child faults with complete shared-memory preservation; permitted neighboring/host/zero-length accesses; nested bracket excludes pending writer; 8000 concurrent emitted write/read/copy cycles and 16000 permission publications from four writers; permission restoration",
+    "census": {
+      "atomics": 2,
+      "calls_requiring_link_audit": {
+        "\u0001_memmove": 1,
+        "__memcpy_chk": 1,
+        "__memmove_chk": 1,
+        "__memset_chk": 1,
+        "memmove": 1,
+        "memset": 1
+      },
+      "host_cpu_accesses": 0,
+      "host_cpu_spans": 0,
+      "host_local_accesses": 0,
+      "loads": 2,
+      "sets": 3,
+      "stores": 2,
+      "transfers": 5
+    },
+    "rejections": [
+      "duplicate",
+      "scalable",
+      "masked",
+      "vaarg"
+    ],
+    "binary_sha256": "aa6856df9376eeac3955eb1d682685892da1752744d8537172c32ca9195118b0",
+    "checked_ir_sha256": "0c25eb2770682595cac408ac0104625468d4db6a42c0f61aa954f76fc67a37e4",
+    "checked_object_sha256": "415bfbcf549d9834ffe6a9a7a76f51718b1b2e10c1689aad5a782c8d07338878",
+    "plugin_build_sha256": "fb57ec022df730e7263dea2b6da02cf99b9acf154fe573e51b1a99d5997cf45b",
+    "source_sha256": {
+      "port/core/guest_memory_checks.c": "f7dd79d5a32798df41b3bbfb599babb9a9f5b6a7e11c584638d174cf48e0ec8a",
+      "tests/guest_memory_checks_test.c": "8e7117d7c2aed7df7c5f3ebe825b6d8621c0cb6aebf50d3e41c0896a24404e2b",
+      "scripts/checked_codegen.py": "de021878df8a2945a88ca4fa955593db83d046af86ca49f4e53830dd7137f172",
+      "tests/fixtures/guest_memory.ll": "51ee77024b7e9cddb62792ac04c80e905301b354a9db4944ec422ea9d67f0ba6",
+      "port/core/guest_memory_checks.h": "7f5cc0edcdb7dcf395633fb20a88dab8da2ad1cfdfd5971b6c06382f9583c584",
+      "scripts/test-guest-memory-pass.py": "a8c5b7b6e2aa41e2c5d42081f07ceda22e300c849a5e682a9373d123eb2a1aea"
+    },
+    "scope": "Compiler/runtime foundation only. Native DLL/services/library coverage and VirtualProtect integration remain unproven; not enabled in game bootstrap."
+  },
+  "native_cpu": {
+    "passed": true,
+    "census": {
+      "atomics": 0,
+      "calls_requiring_link_audit": {
+        "abort": 1
+      },
+      "host_cpu_accesses": 5,
+      "host_cpu_spans": 4,
+      "host_local_accesses": 0,
+      "loads": 1,
+      "sets": 0,
+      "stores": 4,
+      "transfers": 0
+    },
+    "baseline": {
+      "atomics": 0,
+      "calls_requiring_link_audit": {
+        "abort": 1
+      },
+      "host_cpu_accesses": 0,
+      "host_cpu_spans": 0,
+      "host_local_accesses": 0,
+      "loads": 5,
+      "sets": 0,
+      "stores": 5,
+      "transfers": 0
+    },
+    "variants": [
+      "first",
+      "last",
+      "crossing",
+      "negative",
+      "unbounded",
+      "guarded",
+      "guard-too-wide",
+      "signed-negative",
+      "volatile",
+      "loaded-pointer"
+    ],
+    "runs": [
+      {
+        "mode": "normal",
+        "output": "PASS: indexed native CPU fields, preserved guest writes, eight threads; ten contract/guest faults in normal mode",
+        "binary_sha256": "800422177724aead8da04c749a41eb6c072a6cdb1c0fc7264418f7b9cbfafa2f"
+      },
+      {
+        "mode": "tsan",
+        "output": "PASS: indexed native CPU fields, preserved guest writes, eight threads; ten contract/guest faults in normal mode",
+        "binary_sha256": "103d8d917dd50b2644d5e0416b47a0f35ba753f7ec623140d3d848e84f1537ee"
+      }
+    ],
+    "sources_sha256": {
+      "tests/native_cpu_checks_test.c": "649f068bbea0c3d3d51cfeb869abd7f4b531397be705dc671bd41581b9965323",
+      "port/core/guest_memory_checks.c": "f7dd79d5a32798df41b3bbfb599babb9a9f5b6a7e11c584638d174cf48e0ec8a",
+      "port/core/guest_external_checks.c": "2ecaf0cf09462d76b293ab70860c9245ae46536959e81fd2549ad7675ad63523",
+      "port/compiler/GuestMemoryPass.cpp": "36807ef535cb76ff61f41586065cb4cd4453563f4a73ebb967152887f793322c",
+      "port/compiler/ExternalMemoryPass.cpp": "937f80a8f02a2f88ab0dcb100b42294cf9b12e6f8049e8ac0831ec67fe0d767c",
+      "port/core/guest_memory_checks.h": "7f5cc0edcdb7dcf395633fb20a88dab8da2ad1cfdfd5971b6c06382f9583c584",
+      "port/llasm-support/llasm_cpu.h": "8c3cd17ee706cd3768d793c21d4f553b981cb45d3845dd9a93793d16f1bcc356",
+      "port/llasm-support/tribes_sse.c": "281e533172f640e6c7898f83d9345d9862d19283af68355cc7828c43ca0d5660",
+      "scripts/test-native-cpu-checks.py": "ee0f65b5724ba26150304384f4023305159917d751d3784f5894729d5befadd1"
+    },
+    "scope": "Finite 440-byte native CPU proof, bounded indexed fields, preserved guest pointees and concurrent independent CPU objects. No full-game performance claim."
+  },
+  "sse": {
+    "passed": true,
+    "cases": 94128,
+    "corpus_sha256": "2fa08be97895feb87c3070abe732b02c057c48d28f0af874177c45459f864b5f",
+    "original_blocks_sha256": "f4aad0d5e654bb9c0a49abec468e0db606b967c1190b6fbe5f70778c7488f691",
+    "census": {
+      "baseline": {
+        "00-tribes_sse": {
+          "atomics": 0,
+          "calls_requiring_link_audit": {
+            "<inline-asm>": 2,
+            "__memcpy_chk": 25,
+            "abort": 662,
+            "tb_sse_arithmetic": 25,
+            "tb_sse_divide64": 4,
+            "tb_sse_multiply64": 4,
+            "tb_sse_sqrt32": 5,
+            "tb_sse_sqrt64": 1
+          },
+          "host_cpu_accesses": 0,
+          "host_cpu_spans": 0,
+          "host_local_accesses": 0,
+          "loads": 1223,
+          "sets": 67,
+          "stores": 620,
+          "transfers": 259
+        },
+        "01-sse_arithmetic": {
+          "atomics": 0,
+          "calls_requiring_link_audit": {
+            "f32_add": 1,
+            "f32_div": 1,
+            "f32_mul": 1,
+            "f32_sqrt": 1,
+            "f32_sub": 1,
+            "f64_add": 1,
+            "f64_div": 1,
+            "f64_mul": 1,
+            "f64_sqrt": 1,
+            "f64_sub": 1
+          },
+          "host_cpu_accesses": 0,
+          "host_cpu_spans": 0,
+          "host_local_accesses": 0,
+          "loads": 30,
+          "sets": 0,
+          "stores": 59,
+          "transfers": 0
+        }
+      },
+      "optimized": {
+        "00-tribes_sse": {
+          "atomics": 0,
+          "calls_requiring_link_audit": {
+            "<inline-asm>": 2,
+            "__memcpy_chk": 25,
+            "abort": 662,
+            "tb_sse_arithmetic": 25,
+            "tb_sse_divide64": 4,
+            "tb_sse_multiply64": 4,
+            "tb_sse_sqrt32": 5,
+            "tb_sse_sqrt64": 1
+          },
+          "host_cpu_accesses": 774,
+          "host_cpu_spans": 143,
+          "host_local_accesses": 321,
+          "loads": 601,
+          "sets": 67,
+          "stores": 147,
+          "transfers": 259
+        },
+        "01-sse_arithmetic": {
+          "atomics": 0,
+          "calls_requiring_link_audit": {
+            "f32_add": 1,
+            "f32_div": 1,
+            "f32_mul": 1,
+            "f32_sqrt": 1,
+            "f32_sub": 1,
+            "f64_add": 1,
+            "f64_div": 1,
+            "f64_mul": 1,
+            "f64_sqrt": 1,
+            "f64_sub": 1
+          },
+          "host_cpu_accesses": 0,
+          "host_cpu_spans": 0,
+          "host_local_accesses": 65,
+          "loads": 5,
+          "sets": 0,
+          "stores": 19,
+          "transfers": 0
+        }
+      }
+    },
+    "runs": [
+      {
+        "mode": "baseline",
+        "tsan_guard_runtime": false,
+        "output": "PASS: 94128 x86-oracle cases execute actual AOT legacy SIMD bodies; full CPU/vector/MXCSR/x87/stack and guarded-memory comparison, eight independent native threads",
+        "seconds": 0.41566316699999817,
+        "binary_sha256": "31a7beffcee9c09c30f9fe36923319b6198d2d04978dec21307ea2455956cfc0"
+      },
+      {
+        "mode": "baseline",
+        "tsan_guard_runtime": true,
+        "output": "PASS: 94128 x86-oracle cases execute actual AOT legacy SIMD bodies; full CPU/vector/MXCSR/x87/stack and guarded-memory comparison, eight independent native threads",
+        "seconds": 0.8608919579999998,
+        "binary_sha256": "84dc95dc5826e6e4364a8aad8d2442ec74505ed9259171b9f341ea9f2796cec4"
+      },
+      {
+        "mode": "optimized",
+        "tsan_guard_runtime": false,
+        "output": "PASS: 94128 x86-oracle cases execute actual AOT legacy SIMD bodies; full CPU/vector/MXCSR/x87/stack and guarded-memory comparison, eight independent native threads",
+        "seconds": 0.408294209000001,
+        "binary_sha256": "8702ab2b56f980a9a276500fd454a73d72c8ddaa500a514d7f4ffa2cd0a972c8"
+      },
+      {
+        "mode": "optimized",
+        "tsan_guard_runtime": true,
+        "output": "PASS: 94128 x86-oracle cases execute actual AOT legacy SIMD bodies; full CPU/vector/MXCSR/x87/stack and guarded-memory comparison, eight independent native threads",
+        "seconds": 0.7329434170000013,
+        "binary_sha256": "4a6f88b2a9f54c2e2e2b3328d35309416a427918c30211a766faf953353222d5"
+      }
+    ],
+    "sources_sha256": {
+      "port/llasm-support/tribes_sse.c": "281e533172f640e6c7898f83d9345d9862d19283af68355cc7828c43ca0d5660",
+      "port/core/sse_arithmetic.c": "a3fa606b116168cba4ceb30d689a31f3b2c7d034a10102efa343ee3871b13e83",
+      "port/llasm-support/llasm_cpu.h": "8c3cd17ee706cd3768d793c21d4f553b981cb45d3845dd9a93793d16f1bcc356",
+      "port/llasm-support/tribes_sse.h": "efb00007e337dc4c4668e59a517d30255425cb60939632045e307e351cf2e5b8",
+      "port/core/sse_arithmetic.h": "7fbfdd7dce1d91f651b0c25f6a064865dc4c68c20bcdcf166f5015d19342d80f",
+      "tests/sse_lowering_test.c": "2c66c03ed503f9af7bdef220abc2ac60c2169c5e0dde7fe1f0c36f594bafb940",
+      "port/core/guest_memory_checks.c": "f7dd79d5a32798df41b3bbfb599babb9a9f5b6a7e11c584638d174cf48e0ec8a",
+      "port/compiler/GuestMemoryPass.cpp": "36807ef535cb76ff61f41586065cb4cd4453563f4a73ebb967152887f793322c",
+      "scripts/checked_support.py": "002742d45e00bfc0d5117c0d5f0c745b10c90e7bc8e10d180f5e7e9e28b82b60",
+      "scripts/test-sse-host-locals.py": "2f58b4e2a56e3fd8a2f228a0d292aa7ca9e832963bde0a8211894ee6da7d7dba"
+    },
+    "scope": "Same original AOT scalar cases replayed through baseline and native-object optimized checked SSE helpers; TSan covers guard runtime. Timings include startup and threads and are not game FPS."
+  },
+  "revision_threads": {
+    "passed": true,
+    "runs": [
+      {
+        "mode": "normal",
+        "binary_sha256": "b8662f11463207d5d76934d2fa4a36000aa1a6bf25e22baf8ed6f5f9c536ab0f",
+        "stdout": "PASS: four actual readers retain prior routing across800000 partial-revision observations in revisions14/15/16/17/18/19/20/21/22/23/24/25/26/27/28/29/30/31/32/33 plus80000 pending font observations and publication completion\n"
+      },
+      {
+        "mode": "tsan",
+        "binary_sha256": "ac0002db4a16082d6a1ca1001caba5ccad5aaf8361004deb6daae3824741a395",
+        "stdout": "PASS: four actual readers retain prior routing across800000 partial-revision observations in revisions14/15/16/17/18/19/20/21/22/23/24/25/26/27/28/29/30/31/32/33 plus80000 pending font observations and publication completion\n"
+      }
+    ],
+    "sources_sha256": {
+      "port/core/guest_memory_checks.c": "f7dd79d5a32798df41b3bbfb599babb9a9f5b6a7e11c584638d174cf48e0ec8a",
+      "tests/code_revision_threads_test.c": "9a49b01f50aef9915aa3d28fbd82952a347ee3df9773e60c741f8707719485d8",
+      "generated/integration-review/code-revision-threads/macos/selector.c": "46697b1fb49552f0c11e897b78ce0ff2197ea7760dbb89dcf2bab624da55fd5d",
+      "tests/qol_native_bootstrap.c": "fbe171d6fa3883dfb0827a799a5d8d9b1239b3cb4610840e708ad3d05d5f5a4c",
+      "scripts/test-code-revision-threads.py": "fbbc28f4ebf9f9ebeee8532772feab7b6c39f2cc2c4f9977a6b963fd700ff054"
+    },
+    "scope": "Actual production prior-route selector and locked revision-state API tested with four concurrent native readers through partial14th/15th/16th/17th/18th/19th/20th/21st/22nd/23rd/24th/25th/26th/27th/28th/29th/30th/31st/32nd/33rd publication and independent font publication; Mac/TSan or sole iPad Simulator. Ordinary denied writes and all individual wrappers are separate regressions."
+  }
+}

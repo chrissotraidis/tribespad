@@ -64,10 +64,11 @@ int main(int argc,char **argv){
   int status;assert(waitpid(child,&status,0)==child);assert(WIFSIGNALED(status)&&WTERMSIG(status)==SIGABRT);
   assert(*memory==17); // the denied read must not continue into its store
  }
- pthread_t writer,workers[4];assert(!pthread_create(&writer,NULL,publisher,NULL));
+ pthread_t writers[2],workers[4];
+ for(unsigned i=0;i<2;++i)assert(!pthread_create(writers+i,NULL,publisher,NULL));
  for(uintptr_t i=0;i<4;++i)assert(!pthread_create(workers+i,NULL,reader,(void *)i));
- for(unsigned i=0;i<4;++i)assert(!pthread_join(workers[i],NULL));assert(!pthread_join(writer,NULL));
+ for(unsigned i=0;i<4;++i)assert(!pthread_join(workers[i],NULL));for(unsigned i=0;i<2;++i)assert(!pthread_join(writers[i],NULL));
  double start=now();for(unsigned i=0;i<100000;++i)batch(memory,&host);double elapsed=now()-start;
  assert(*memory==1600017&&host==100017);
- printf("PASS: mixed host/guest/host-only groups, nested pending writer, %u guard faults, concurrent readers/writer; 100000 batches %.6f seconds\n",argc==1?4u:0u,elapsed);
+ printf("PASS: mixed host/guest/host-only groups, nested pending writer, %u guard faults, concurrent readers/two publishers; 100000 batches %.6f seconds\n",argc==1?4u:0u,elapsed);
 }

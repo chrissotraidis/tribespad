@@ -60,8 +60,10 @@ The bundled app preserves its original warrior and video preferences between lau
   avoid 179 redundant support-code compilations. An optional CPU-register check
   optimization reduces the Simulator executable from 158.6 MB to 103.0 MB while
   preserving guest-memory checks. It passes the [original offline touch test](docs/validation/ipad-native-cpu-offline.json),
-  but recorded frame delivery is still around one frame per second. This is not
-  yet comfortable gameplay.
+  and the latest [permission-reader optimization](docs/validation/ipad-permission-readers-offline.json)
+  records 1.6–1.8 frames per second versus 1.0–1.1 for the previous build in the
+  same observer view. This remains too slow for comfortable gameplay; physical
+  iPad performance is unverified.
 - Fix visible rendering gaps and reduce startup/input latency in the iPad app.
 - Integrate and refine touch, controller, keyboard and mouse input in real gameplay.
 - Verify HD textures, sustained performance and physical-device behavior.
