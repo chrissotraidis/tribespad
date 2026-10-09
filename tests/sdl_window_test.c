@@ -58,6 +58,9 @@ extern void glDeleteQueriesARB(GLsizei n,const GLuint *ids);
 #include <stdio.h>
 #include <string.h>
 #include <sys/mman.h>
+#ifdef TB_GL4ES
+#include "original-shader-fixture.h"
+#endif
 extern void tribes_enter(_cpu *,uint32_t);
 extern unsigned sdl_test_live,sdl_test_fail;
 #ifdef CHECKED
@@ -117,6 +120,82 @@ static void pixels(void){
  read(width/16,height/2,1,1,GL_RGBA,GL_UNSIGNED_BYTE,pixel);
  assert(pixel[0]==0&&pixel[1]==0&&pixel[2]==0&&pixel[3]==255);
  printf("PASS: checked mobile guest legacy draw with native pixel readback\n");
+ /* The original GUI uses indexed client arrays. Its texture selector belongs
+    to GL4ES, not native GLES2; exercise two units and a context-local reset. */
+ const float vertices[]={-.5f,-.5f,.5f,-.5f,.5f,.5f,-.5f,.5f};
+ const float coords[]={0,0,1,0,1,1,0,1};
+ const unsigned char indices[]={0,1,2,0,2,3},texel[]={0,255,0,255};
+ memcpy(memory+0x8000,vertices,sizeof vertices);memcpy(memory+0x8100,coords,sizeof coords);
+ memcpy(memory+0x8020,vertices,sizeof vertices);memcpy(memory+0x8120,coords,sizeof coords);
+ memcpy(memory+0x8200,indices,sizeof indices);memcpy(memory+0x8300,texel,sizeof texel);
+ tribes_gl_gen_textures(&cpu,1,0x8400);uint32_t texture;memcpy(&texture,memory+0x8400,4);
+ tribes_gl_bind_texture(&cpu,GL_TEXTURE_2D,texture);
+ tribes_gl_tex_parameter_i(&cpu,GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+ tribes_gl_tex_parameter_i(&cpu,GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+ tribes_gl_tex_image_2d(&cpu,GL_TEXTURE_2D,0,GL_RGBA,1,1,0,GL_RGBA,GL_UNSIGNED_BYTE,0x8300);
+ tribes_gl_enable(&cpu,GL_TEXTURE_2D);tribes_gl_color4f(&cpu,0x3f800000,0x3f800000,0x3f800000,0x3f800000);
+ tribes_gl_enable_client_state(&cpu,0x8074);tribes_gl_vertex_pointer(&cpu,2,GL_FLOAT,0,0x8000);
+ for(unsigned unit=0;unit<2;unit++){
+  tribes_gl_client_active_texture(&cpu,0x84c0+unit);
+  tribes_gl_enable_client_state(&cpu,0x8078);tribes_gl_texcoord_pointer(&cpu,2,GL_FLOAT,0,0x8100);
+ }
+ tribes_gl_draw_elements(&cpu,GL_TRIANGLES,6,GL_UNSIGNED_BYTE,0x8200);tribes_gl_finish(&cpu);
+ read(width/2,height/2,1,1,GL_RGBA,GL_UNSIGNED_BYTE,pixel);
+ assert(pixel[0]==0&&pixel[1]==255&&pixel[2]==0&&pixel[3]==255);
+ for(unsigned variant=0;variant<3;variant++){
+  uint32_t program=tribes_gl_create_program(&cpu),shaders[2];
+  for(unsigned stage=0;stage<2;stage++){
+   const char *source=stage?original_shaders[variant].fragment:original_shaders[variant].vertex;
+   strcpy((char *)memory+0x9000,source);uint32_t address=0x9000;memcpy(memory+0x8800,&address,4);
+   shaders[stage]=tribes_gl_create_shader(&cpu,stage?GL_FRAGMENT_SHADER:GL_VERTEX_SHADER);
+   tribes_gl_shader_source(&cpu,shaders[stage],1,0x8800,0);tribes_gl_compile_shader(&cpu,shaders[stage]);
+   tribes_gl_get_shader_iv(&cpu,shaders[stage],GL_COMPILE_STATUS,0x8804);
+   if(!word(0x8804)){tribes_gl_get_shader_log(&cpu,shaders[stage],4096,0,0xb000);fprintf(stderr,"GUI shader: %s\n",memory+0xb000);}
+   assert(word(0x8804));tribes_gl_attach_shader(&cpu,program,shaders[stage]);
+  }
+  tribes_gl_link_program(&cpu,program);tribes_gl_get_program_iv(&cpu,program,GL_LINK_STATUS,0x8804);
+  if(!word(0x8804)){tribes_gl_get_program_log(&cpu,program,4096,0,0xb000);fprintf(stderr,"GUI program: %s\n",memory+0xb000);}
+  assert(word(0x8804));tribes_gl_use_program(&cpu,program);
+  strcpy((char *)memory+0x8808,"uiScale");tribes_gl_uniform1f(&cpu,tribes_gl_get_uniform_location(&cpu,program,0x8808),0x40000000);
+  strcpy((char *)memory+0x8808,"texRes");tribes_gl_uniform2i(&cpu,tribes_gl_get_uniform_location(&cpu,program,0x8808),1,1);
+  strcpy((char *)memory+0x8808,"srcRect");tribes_gl_uniform4i(&cpu,tribes_gl_get_uniform_location(&cpu,program,0x8808),0,0,1,1);
+  tribes_gl_color4f(&cpu,0x3f800000,0x3f800000,0x3f800000,0x3f000000);
+  tribes_gl_clear(&cpu,GL_COLOR_BUFFER_BIT);tribes_gl_draw_elements(&cpu,GL_TRIANGLES,6,GL_UNSIGNED_BYTE,0x8200);tribes_gl_finish(&cpu);
+  read(width/2,height/2,1,1,GL_RGBA,GL_UNSIGNED_BYTE,pixel);
+  assert(pixel[0]==0&&pixel[2]==0&&pixel[3]>=127&&pixel[3]<=128);
+  assert(variant?(pixel[1]>=127&&pixel[1]<=128):pixel[1]==255);
+  tribes_gl_clear(&cpu,GL_COLOR_BUFFER_BIT);
+  _cpu array_cpu=cpu;uint32_t array_error=tribes_get_last_error();
+  tribes_gl_primitive_restart_index(&cpu,5);tribes_gl_enable(&cpu,0x8f9d);
+  tribes_gl_draw_arrays(&cpu,0x0007,4,4);tribes_gl_finish(&cpu);
+  assert(!memcmp(&array_cpu,&cpu,sizeof cpu)&&tribes_get_last_error()==array_error);
+  tribes_gl_disable(&cpu,0x8f9d);
+  read(width/2,height/2,1,1,GL_RGBA,GL_UNSIGNED_BYTE,pixel);
+  assert(pixel[0]==0&&pixel[2]==0&&pixel[3]>=127&&pixel[3]<=128);
+  assert(variant?(pixel[1]>=127&&pixel[1]<=128):pixel[1]==255);
+  tribes_gl_use_program(&cpu,0);tribes_gl_delete_program(&cpu,program);
+  for(unsigned stage=0;stage<2;stage++)tribes_gl_delete_shader(&cpu,shaders[stage]);
+ }
+ puts("PASS: three original GUI shader variants, indexed/sequential quads, nonzero first, ignored restart and expected alpha/color pixels");
+ while(tribes_gl_get_error(&cpu)){}
+ tribes_gl_draw_arrays(&cpu,0x0007,UINT32_MAX,4);assert(tribes_gl_get_error(&cpu)==GL_INVALID_VALUE);
+ tribes_gl_draw_arrays(&cpu,0x0007,0,UINT32_MAX);assert(tribes_gl_get_error(&cpu)==GL_INVALID_VALUE);
+ tribes_gl_draw_arrays(&cpu,0x0007,0x7fffffff,0);assert(!tribes_gl_get_error(&cpu));
+ for(unsigned unit=0;unit<2;unit++){tribes_gl_client_active_texture(&cpu,0x84c0+unit);tribes_gl_disable_client_state(&cpu,0x8078);}
+ tribes_gl_client_active_texture(&cpu,0x84c0);tribes_gl_disable_client_state(&cpu,0x8074);
+ tribes_gl_disable(&cpu,GL_TEXTURE_2D);tribes_gl_delete_textures(&cpu,1,0x8400);
+ printf("PASS: checked mobile indexed textured draw, two client texture units and native green pixel\n");
+ tribes_gl_matrix_mode(&cpu,0x1701);tribes_gl_load_identity(&cpu);
+ /* Six IA-32 doubles for a real perspective matrix, not a GLES float ABI. */
+ _cpu projection_cpu=cpu;uint32_t projection_error=tribes_get_last_error();
+ tribes_gl_frustum(&cpu,0,0xbff00000,0,0x3ff00000,0,0xbff00000,0,0x3ff00000,0,0x3ff00000,0,0x40240000);
+ assert(!memcmp(&projection_cpu,&cpu,sizeof cpu)&&tribes_get_last_error()==projection_error);
+ tribes_gl_get_float(&cpu,0x0ba7,0x9000);float projection[16];memcpy(projection,memory+0x9000,sizeof projection);
+ const float expected_projection[16]={1,0,0,0,0,1,0,0,0,0,-11.0f/9,-1,0,0,-20.0f/9,0};
+ for(unsigned i=0;i<16;i++)assert(fabsf(projection[i]-expected_projection[i])<0.00001f);
+ assert(!tribes_gl_get_error(&cpu));tribes_gl_load_identity(&cpu);tribes_gl_matrix_mode(&cpu,0x1700);
+ puts("PASS: mobile original double-argument perspective matrix and CPU ABI");
+
 #endif
 
 }
@@ -1699,6 +1778,26 @@ static void event_tests(SDL_Window *window,const char *fault){
  assert(CALL(90,out)&&word(out)==SDL_EVENT_MOUSE_WHEEL);memcpy(point,memory+out+36,8);assert(point[0]==11.25f*sx&&point[1]==37.5f*sy);memcpy(point,memory+out+24,8);assert(point[0]==1.5f&&point[1]==-2.5f);
  puts("Guest SDL events: queue/NULL peek, Windows32 fields, keyboard snapshot, UTF-8/drop lifetime and empty-output preservation passed");
 }
+#ifdef TB_GL4ES
+static void mobile_gpu_sync(uint32_t window,uint32_t context,const char *fault){
+ assert(strstr((const char *)glGetString(GL_EXTENSIONS),"GL_APPLE_sync"));
+ tribes_gl_clear_color(&cpu,0,0x3f800000,0,0x3f800000);tribes_gl_clear(&cpu,GL_COLOR_BUFFER_BIT);
+ uint32_t token=tribes_gl_fence_sync(&cpu,0x9117,0);assert(token&&tribes_gl_is_sync(&cpu,token));
+ uint32_t status=tribes_gl_client_wait_sync(&cpu,token,1,0,1);assert(status==0x911a||status==0x911c);
+ unsigned char pixel[4];glReadPixels(32,32,1,1,GL_RGBA,GL_UNSIGNED_BYTE,pixel);assert(pixel[0]==0&&pixel[1]==255&&pixel[2]==0&&pixel[3]==255);
+ if(fault&&!strcmp(fault,"sync-output")){assert(tribes_memory_permissions_set(0x3000,4096,1));tribes_gl_get_sync_iv(&cpu,token,0x9114,1,0,0x3001);assert(0);}
+ if(fault&&!strcmp(fault,"sync-length")){assert(tribes_memory_permissions_set(0x4000,4096,1));tribes_gl_get_sync_iv(&cpu,token,0x9114,1,0x4001,0x3001);assert(0);}
+ tribes_gl_get_sync_iv(&cpu,token,0x9114,1,0x3001,0x3005);assert(word(0x3001)==1&&word(0x3005)==0x9119);
+ assert(CALL(53,SDL_GL_SHARE_WITH_CURRENT_CONTEXT,0));uint32_t isolated=CALL(47,window);assert(isolated&&!tribes_gl_is_sync(&cpu,token));
+ assert(tribes_gl_client_wait_sync(&cpu,token,0,0,0)==0x911d&&tribes_gl_get_error(&cpu)==GL_INVALID_VALUE);
+ assert(CALL(49,window,context));assert(CALL(53,SDL_GL_SHARE_WITH_CURRENT_CONTEXT,1));uint32_t shared=CALL(47,window);assert(shared&&tribes_gl_is_sync(&cpu,token));
+ assert(CALL(53,SDL_GL_SHARE_WITH_CURRENT_CONTEXT,0));tribes_gl_delete_sync(&cpu,token);assert(!tribes_gl_is_sync(&cpu,token));
+ assert(CALL(48,shared)&&CALL(48,isolated)&&CALL(49,window,context));
+ assert(tribes_gl_client_wait_sync(&cpu,token,0,0,0)==0x911d&&tribes_gl_get_error(&cpu)==GL_INVALID_VALUE);
+ assert(tribes_gl_get_error(&cpu)==0);
+ puts("Apple GPU sync: native completion, 64-bit wait, pixels, checked outputs and shared/foreign/stale tokens PASS");
+}
+#endif
 static int window_main(int argc,char **argv){
  assert(pthread_main_np());memory=mmap(NULL,UINT64_C(0x100000000),PROT_NONE,MAP_PRIVATE|MAP_ANON,-1,0);assert(memory!=MAP_FAILED);
  assert(!mprotect(memory,0x100000,PROT_READ|PROT_WRITE));memset(&cpu,0,sizeof cpu);cpu._pointer_offset=(uintptr_t)memory;cpu._esp=0xf0000;cpu.stack_bottom=memory+0x10000;cpu.stack_top=memory+0x100000;cpu._eflags=0x246;
@@ -1851,6 +1950,9 @@ static int window_main(int argc,char **argv){
  #ifdef GRAPHICS
  graphics_queries(window,argc==2?argv[1]:NULL);
  guest_pixels();
+#endif
+ #ifdef TB_GL4ES
+ mobile_gpu_sync(window,context,argc==2?argv[1]:NULL);
 #endif
  cursor_surfaces(argc==2?argv[1]:NULL);pixels();if(argc==2&&!strcmp(argv[1],"reentrant-window"))assert(SDL_AddEventWatch(reenter,NULL));assert(CALL(42,window));assert(CALL(52,window));SDL_PumpEvents();
 #if TARGET_OS_IPHONE

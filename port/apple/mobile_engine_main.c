@@ -9,6 +9,7 @@ static int enter_engine(int argc,char **argv) {
     (void)argc;(void)argv;
     if(chdir(launch_workdir)){perror("TribesPad workspace");return 125;}
     fprintf(stderr,"TribesPad iPad: entering full checked original engine\n");
+    fprintf(stderr,"TribesPad iPad: GPU elapsed-time profiling unavailable; original pre-sample scheduling estimate retained\n");
     return tribes_mobile_engine_main(8,launch_arguments);
 }
 int main(int argc,char **argv){return tribes_sdl_run_application(argc,argv,enter_engine);}

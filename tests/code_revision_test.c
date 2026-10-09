@@ -12,8 +12,15 @@ extern void emitted_store(uint32_t *,uint32_t);
 static unsigned char *memory;
 static uint64_t base;
 static unsigned faults;
-static TribesPublishedCodeRange bank_ranges[34],renderer_ranges[26];
-static void *wrong_renderer_thread(void *unused){(void)unused;assert(!tribes_memory_publish_renderer_bank(base,renderer_ranges,26));return NULL;}
+#ifdef TB_MOBILE_LEGACY_FONT_BANK
+#define RENDERER_COUNT 18
+#define AUDIO_BANK_START 0x3c13b0
+#else
+#define RENDERER_COUNT 26
+#define AUDIO_BANK_START 0x3c15f0
+#endif
+static TribesPublishedCodeRange bank_ranges[34],renderer_ranges[RENDERER_COUNT];
+static void *wrong_renderer_thread(void *unused){(void)unused;assert(!tribes_memory_publish_renderer_bank(base,renderer_ranges,RENDERER_COUNT));return NULL;}
 static void *wrong_bank_thread(void *unused){(void)unused;assert(!tribes_memory_publish_pending_bank(base,bank_ranges,34));return NULL;}
 static void ordinary_write_fault(void){
  unsigned char before[128];memcpy(before,memory+4080,sizeof before);fflush(stdout);
@@ -297,25 +304,25 @@ int main(void){
  TribesCodeWrite thirtieth={796,4160,4,6,7};
  assert(tribes_memory_prepare_next_code_revision(base,&thirtieth,1));ordinary_write_fault();assert(tribes_memory_apply_code_write(base,796,memory+4160,4,7));ordinary_write_fault();assert(tribes_memory_finish_code_revision(base));assert(tribes_memory_code_revision(base)==60);ordinary_write_fault();
  TribesCodeWrite thirtyfirst={796,4160,4,7,8};assert(!tribes_memory_prepare_next_code_revision(base,&thirtyfirst,1));
- for(unsigned i=0;i<26;i++)renderer_ranges[i]=(TribesPublishedCodeRange){0x3c0ea0+i*72,10,bank_expected};
- assert(!tribes_memory_publish_renderer_bank(base,renderer_ranges,25));
+ for(unsigned i=0;i<RENDERER_COUNT;i++)renderer_ranges[i]=(TribesPublishedCodeRange){0x3c0ea0+i*72,10,bank_expected};
+ assert(!tribes_memory_publish_renderer_bank(base,renderer_ranges,RENDERER_COUNT-1));
  assert(!pthread_create(&thread,NULL,wrong_renderer_thread,NULL));assert(!pthread_join(thread,NULL));
  memory[0x3c1000]^=1; /* Outside code intervals: mutable bookkeeping. */
- memory[0x3c0ea0]^=1;assert(!tribes_memory_publish_renderer_bank(base,renderer_ranges,26));memory[0x3c0ea0]^=1;
- assert(tribes_memory_permissions_set(0x3c1000,4096,0));assert(!tribes_memory_publish_renderer_bank(base,renderer_ranges,26));assert(tribes_memory_permissions_set(0x3c1000,4096,3));
- renderer_ranges[1].address=renderer_ranges[0].address;assert(!tribes_memory_publish_renderer_bank(base,renderer_ranges,26));renderer_ranges[1].address+=72;
- assert(tribes_memory_publish_renderer_bank(base,renderer_ranges,26));assert(!tribes_memory_publish_renderer_bank(base,renderer_ranges,26));
+ memory[0x3c0ea0]^=1;assert(!tribes_memory_publish_renderer_bank(base,renderer_ranges,RENDERER_COUNT));memory[0x3c0ea0]^=1;
+ assert(tribes_memory_permissions_set(0x3c1000,4096,0));assert(!tribes_memory_publish_renderer_bank(base,renderer_ranges,RENDERER_COUNT));assert(tribes_memory_permissions_set(0x3c1000,4096,3));
+ renderer_ranges[1].address=renderer_ranges[0].address;assert(!tribes_memory_publish_renderer_bank(base,renderer_ranges,RENDERER_COUNT));renderer_ranges[1].address+=72;
+ assert(tribes_memory_publish_renderer_bank(base,renderer_ranges,RENDERER_COUNT));assert(!tribes_memory_publish_renderer_bank(base,renderer_ranges,RENDERER_COUNT));
  pid_t child=fork();assert(child>=0);if(!child){emitted_store((uint32_t *)(memory+0x3c0ea0),0);_exit(90);}int status;assert(waitpid(child,&status,0)==child&&WIFSIGNALED(status)&&WTERMSIG(status)==SIGABRT);faults++;
  assert(tribes_memory_prepare_next_code_revision(base,&thirtyfirst,1));ordinary_write_fault();assert(tribes_memory_apply_code_write(base,796,memory+4160,4,8));ordinary_write_fault();assert(tribes_memory_finish_code_revision(base));assert(tribes_memory_code_revision(base)==62);ordinary_write_fault();
  TribesCodeWrite thirtysecond={796,4160,4,8,9};assert(tribes_memory_prepare_next_code_revision(base,&thirtysecond,1));ordinary_write_fault();assert(tribes_memory_apply_code_write(base,796,memory+4160,4,9));ordinary_write_fault();assert(tribes_memory_finish_code_revision(base));assert(tribes_memory_code_revision(base)==64);ordinary_write_fault();
  TribesCodeWrite thirtythird={796,4160,4,9,10};assert(!tribes_memory_prepare_next_code_revision(base,&thirtythird,1));
  TribesPublishedCodeRange audio_ranges[7];unsigned char audio_expected[10]={0x90};
- for(unsigned i=0;i<7;i++){uint32_t a=0x3c15f0+i*72;memcpy(memory+a,audio_expected,10);audio_ranges[i]=(TribesPublishedCodeRange){a,10,audio_expected};}
+ for(unsigned i=0;i<7;i++){uint32_t a=AUDIO_BANK_START+i*72;memcpy(memory+a,audio_expected,10);audio_ranges[i]=(TribesPublishedCodeRange){a,10,audio_expected};}
  assert(!tribes_memory_publish_audio_bank(base,audio_ranges,6));
- memory[0x3c15f0]=0;assert(!tribes_memory_publish_audio_bank(base,audio_ranges,7));memory[0x3c15f0]=0x90;
- audio_ranges[1].address=audio_ranges[0].address;assert(!tribes_memory_publish_audio_bank(base,audio_ranges,7));audio_ranges[1].address=0x3c15f0+72;
+ memory[AUDIO_BANK_START]=0;assert(!tribes_memory_publish_audio_bank(base,audio_ranges,7));memory[AUDIO_BANK_START]=0x90;
+ audio_ranges[1].address=audio_ranges[0].address;assert(!tribes_memory_publish_audio_bank(base,audio_ranges,7));audio_ranges[1].address=AUDIO_BANK_START+72;
  assert(tribes_memory_publish_audio_bank(base,audio_ranges,7));assert(!tribes_memory_publish_audio_bank(base,audio_ranges,7));
- child=fork();assert(child>=0);if(!child){emitted_store((uint32_t *)(memory+0x3c15f0),0);_exit(90);}assert(waitpid(child,&status,0)==child&&WIFSIGNALED(status)&&WTERMSIG(status)==SIGABRT);faults++;
+ child=fork();assert(child>=0);if(!child){emitted_store((uint32_t *)(memory+AUDIO_BANK_START),0);_exit(90);}assert(waitpid(child,&status,0)==child&&WIFSIGNALED(status)&&WTERMSIG(status)==SIGABRT);faults++;
  assert(tribes_memory_prepare_next_code_revision(base,&thirtythird,1));ordinary_write_fault();assert(tribes_memory_apply_code_write(base,796,memory+4160,4,10));ordinary_write_fault();assert(tribes_memory_finish_code_revision(base));assert(tribes_memory_code_revision(base)==66);ordinary_write_fault();
  TribesCodeWrite thirtyfourth={796,4160,4,10,11};assert(!tribes_memory_prepare_next_code_revision(base,&thirtyfourth,1));
 

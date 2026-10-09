@@ -29,6 +29,11 @@ def guard_link(entries,destination,*,target='arm64-apple-macos12'):
   else:
    run([str(tools/'opt'),'-load-pass-plugin',str(plugin),'-passes=tribes-external-memory,verify',str(src),'-o',str(bc)],destination/(name+'-pass.log'))
    census=json.loads(next(line.split(' ',1)[1] for line in (destination/(name+'-pass.log')).read_text().splitlines() if line.startswith('TRIBES_EXTERNAL_PASS ')))
+  # A changed link policy must run the guard pass again. If its resulting IR
+  # is identical, the same verified compiler/object is still valid; adding an
+  # unrelated checked export need not recompile the entire original engine.
+  if not checked_reuse and previous.get('target')==target and previous.get('codegen')==codegen and cached.get('bitcode_sha256')==sha(bc) and obj.exists() and cached.get('object_sha256')==sha(obj):
+   outputs.append(str(obj));state['objects'].append(dict(input=entry,object=str(obj),object_sha256=sha(obj),bitcode_sha256=sha(bc),census=census,reused_native_after_guard=True));continue
   run(codegen_command(tools,target,bc,obj),destination/(name+'-compile.log'))
   outputs.append(str(obj));state['objects'].append(dict(input=entry,object=str(obj),object_sha256=sha(obj),bitcode_sha256=sha(bc),census=census,reused_checked_ir=checked_reuse))
  state.update(state='compiled',scope='All direct external calls are checked-link symbols, bracketed buffer operations, explicit host-only or memory-owner contracts, or pre-call stops. Indirect calls require registered checked code. Missing contracts remain runtime stops. No subpage enablement in this build step.');report.write_text(json.dumps(state,indent=2)+'\n');return outputs,sha(report)

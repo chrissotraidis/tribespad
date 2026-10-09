@@ -61,6 +61,7 @@ EXPORTS += [('glTexGeni','tribes_gl_tex_gen_i',3,False,0x20040000),('glTexGenfv'
 EXPORTS += [('glLoadMatrixf','tribes_gl_load_matrix_f',1,False,0x20040000)]
 EXPORTS += [('glPrimitiveRestartIndex','tribes_gl_primitive_restart_index',1,False,0x20040000)]
 EXPORTS += [('glTexCoord2fv','tribes_gl_tex_coord2fv',1,False,0x20040000)]
+EXPORTS += [('glDrawArrays','tribes_gl_draw_arrays',3,False,0x20040000)]
 def prepare(out):
  bindings={};rows=[]
  for i,(name,helper,n,returns,module) in enumerate(EXPORTS):

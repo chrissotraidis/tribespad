@@ -245,4 +245,5 @@ void tribes_gl_fog_coord_pointer(_cpu *,uint32_t,uint32_t,uint32_t);
 void tribes_gl_tex_gen_i(_cpu *,uint32_t,uint32_t,uint32_t);
 void tribes_gl_tex_gen_fv(_cpu *,uint32_t,uint32_t,uint32_t);
 void tribes_gl_tex_coord2fv(_cpu *,uint32_t);
+void tribes_gl_draw_arrays(_cpu *,uint32_t,uint32_t,uint32_t);
 #endif

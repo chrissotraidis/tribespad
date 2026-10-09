@@ -28,6 +28,25 @@ for name,h in prepared['sources_sha256'].items():
  if pathlib.Path(name).suffix=='.ll':assert sha(R/name)==h,name
 for name,h in prepared['images'].items():assert sha(source/name)==h,name
 sources=[R/p for p in prepared['sources']]
+from mobile_gpu_timing import translate as mobile_timing, BLOCKS as timing_blocks
+timing_proof=R/'generated/integration-review/mobile-gpu-timing/result.json'
+timing_test=json.loads(timing_proof.read_text());assert timing_test['passed']
+for name,h in timing_test['sources_sha256'].items():assert sha(R/name)==h,name
+mobile_inputs=out/'mobile-inputs';mobile_inputs.mkdir(exist_ok=True)
+qol_sources=[p for p in sources if p.name=='qol-patched.ll'];assert len(qol_sources)==1
+from mobile_gpu_sync import prepare as mobile_sync
+mobile_qol=mobile_inputs/'qol-patched.ll';mobile_qol.write_text(mobile_sync(mobile_timing(qol_sources[0].read_text())))
+sources[sources.index(qol_sources[0])]=mobile_qol
+from mobile_renderer_hooks import prepare as mobile_hooks
+hook_proof=R/'generated/integration-review/code-revision-mobile/result.json'
+hook_test=json.loads(hook_proof.read_text());assert hook_test['passed'] and hook_test['mobile']
+for name,h in hook_test['sources_sha256'].items():assert sha(R/name)==h,name
+sources,hook_layout=mobile_hooks(sources,mobile_inputs)
+# Refresh finite host exports without relifting unchanged original images.
+from graphics_backend_inputs import prepare as graphics_inputs
+graphics_sources,_=graphics_inputs(mobile_inputs)
+old_wrapper=next(p for p in sources if p.name=='graphics-bindings.ll')
+sources[sources.index(old_wrapper)]=next(p for p in graphics_sources if p.name=='graphics-bindings.ll')
 target='arm64-apple-ios16-simulator';sdk=subprocess.check_output(['xcrun','--sdk','iphonesimulator','--show-sdk-path'],text=True).strip()
 sdl,sdl_flags,libraries=sdl_inputs('simulator');gl4es,gl_flags,gl_libraries=gl4es_inputs('simulator');math=sse_inputs('simulator')
 http_root=R/'generated/http-backend/simulator';http=json.loads((http_root/'result.json').read_text());assert http['passed'] and http['platform']=='simulator'
@@ -35,7 +54,7 @@ for name,h in http['libraries'].items():assert sha(R/name)==h,name
 al=json.loads((R/'generated/openal-soft/simulator/result.json').read_text());assert al['platform']=='simulator' and sha(R/al['library'])==al['library_sha256']
 zbuild=R/'generated/zlib-ng/simulator/build'
 zmeta=json.loads((zbuild.parent/'result.json').read_text());assert zmeta['pass'] and zmeta['platform']=='simulator' and sha(zbuild/'libz-ng.a')==zmeta['library_sha256']
-flags=['-std=c11','-DPTROFS_64BIT','-DTB_CHECKED_IMAGE','-DTB_GUARD_EXTERNALS','-DTB_CHECKED_SUBPAGES','-DTB_CAPTURE_PATCHES','-DTB_PUBLISH_PATCHES','-DTB_MOBILE_ENGINE','-I',str(source),'-I',str(zbuild),'-I',str(R/'ref/zlib-ng'),'-I',str(http_root/'install/include'),'-DAL_LIBTYPE_STATIC','-I',str(R/'ref/openal-soft/include'),*sdl_flags,*gl_flags,*math['compile_flags']]
+flags=['-std=c11','-DPTROFS_64BIT','-DTB_CHECKED_IMAGE','-DTB_GUARD_EXTERNALS','-DTB_CHECKED_SUBPAGES','-DTB_CAPTURE_PATCHES','-DTB_PUBLISH_PATCHES','-DTB_MOBILE_ENGINE','-DTB_MOBILE_LEGACY_FONT_BANK','-I',str(mobile_inputs),'-I',str(source),'-I',str(zbuild),'-I',str(R/'ref/zlib-ng'),'-I',str(http_root/'install/include'),'-DAL_LIBTYPE_STATIC','-I',str(R/'ref/openal-soft/include'),*sdl_flags,*gl_flags,*math['compile_flags']]
 objects,_=compile_support(sources,out/'support',flags,target=target,sdk_name='iphonesimulator')
 meta=json.loads((out/'support/result.json').read_text());entries=[]
 for name in objects:
@@ -44,6 +63,13 @@ for name in objects:
 bochs,_=checked_bochs_inputs('simulator');objects,_=guard_link(entries+bochs,out/'guarded',target=target)
 profile=out/'game-profile'
 if not profile.exists():shutil.copytree(R/'generated/apple-game-profile',profile,symlinks=True)
+# Use the game's supported offline launch override in this isolated profile.
+# No authentication or online match joining during mobile development.
+offline=profile/'base/autoexec.cs'
+offline_text='// TribesPad mobile development: original offline mode.\n$SkipLogin = true;\n$LaunchMode = "Offline";\n'
+if offline.exists():assert offline.read_text()==offline_text, 'Preserve custom autoexec.cs; select offline mode there before building'
+else:offline.write_text(offline_text)
+
 volume=out/'volume';temp=volume/'TribesPad/Temp';temp.mkdir(parents=True,exist_ok=True)
 # Publication descriptions and loaded original images are immutable inputs;
 # capture output goes to this app's separate directory.
@@ -68,8 +94,9 @@ with (out/'link.log').open('w') as log:subprocess.run(command,stdout=log,stderr=
 identifier='com.tribespad.full-engine.ipad'
 (app/'Info.plist').write_bytes(plistlib.dumps(dict(CFBundleIdentifier=identifier,CFBundleExecutable='TribesPad',CFBundleName='TribesPad',CFBundlePackageType='APPL',CFBundleVersion='1',CFBundleShortVersionString='0.1',MinimumOSVersion='16.0',UIDeviceFamily=[2],UIRequiresFullScreen=True,UIApplicationSupportsIndirectInputEvents=True,UILaunchScreen={},UISupportedInterfaceOrientations=['UIInterfaceOrientationLandscapeLeft','UIInterfaceOrientationLandscapeRight'])))
 subprocess.run(['codesign','--force','--sign','-',str(app)],check=True)
-(out/'result.json').write_text(json.dumps(dict(state='built',binary_sha256=sha(exe),prepared_sha256=sha(source/'prepared-inputs.json'),support_sha256=sha(out/'support/result.json'),guarded_sha256=sha(out/'guarded/result.json'),gl4es=gl4es,openal=al,arguments=args,scope='Full checked engine linked for iPad Simulator. Build is not rendering or gameplay acceptance.'),indent=2)+'\n')
+(out/'result.json').write_text(json.dumps(dict(state='built',binary_sha256=sha(exe),prepared_sha256=sha(source/'prepared-inputs.json'),support_sha256=sha(out/'support/result.json'),guarded_sha256=sha(out/'guarded/result.json'),gl4es=gl4es,openal=al,arguments=args,mobile_hooks_sha256=sha(mobile_inputs/'mobile-hooks.json'),mobile_gpu_timing=dict(available=False,original_blocks=timing_blocks,test_sha256=sha(timing_proof),translated_sha256=sha(mobile_qol)),scope='Full checked engine linked for iPad Simulator. Build is not rendering or gameplay acceptance.'),indent=2)+'\n')
 if not a.build_only:
  subprocess.run(['xcrun','simctl','install',a.simulator_device,str(app)],check=True)
+ for name in ('stdout.log','stderr.log'):(out/name).write_text('')
  subprocess.run(['xcrun','simctl','launch','--stdout='+str(out/'stdout.log'),'--stderr='+str(out/'stderr.log'),a.simulator_device,identifier],check=True)
 print(app)

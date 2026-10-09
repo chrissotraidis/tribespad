@@ -1,0 +1,39 @@
+{
+  "checks": {
+    "mobile-gpu-timing": {
+      "passed": true,
+      "receipt_sha256": "a13b2913ffd219646f250debe7626c2a3f8fbda5c5149bf8c88dae4ac50c16a6"
+    },
+    "code-revision-mobile": {
+      "passed": true,
+      "receipt_sha256": "52c908d6b9121be9178f95cba62cbffc8cca595d33a1b454bfcb39b50a8450d8"
+    },
+    "code-revision": {
+      "passed": true,
+      "receipt_sha256": "69ceeb8f337f577e8d81a91fadc9dd3abd88d84dbdd0de21503abe415e5bf037"
+    },
+    "checked-build-cache": {
+      "passed": true,
+      "receipt_sha256": "a39c683d1b33057a448a689aa156295e79b4543e6d5d7ac4badaff674db0bddd"
+    },
+    "mac-graphics": {
+      "passed": true,
+      "modes": [
+        "normal",
+        "tsan",
+        "checked"
+      ],
+      "expected_failures": 165,
+      "receipt_sha256": "e799efa659ac25908af6a4c7a32d1ee89238b1a28738ca4ff41b9eaadc04c4cb"
+    },
+    "mobile-gpu-sync": {
+      "passed": true,
+      "receipt_sha256": "7e749615d10e6863a768759979865be68bd588af2f2f0fa73ed071623658dad5"
+    }
+  },
+  "gpu_timing": "Four exact original blocks adapted; 512 normal and 512 checked cases; no CPU-clock GPU result substitution.",
+  "hooks": "Original 18-hook renderer layout: 42 exact stores, 19 flushes, seven relocated audio hooks; original execution confirms publication.",
+  "device": "Latest graphics bridge, including native APPLE_sync declarations, compiles for ARM64 iOS device; no connected physical iPad or device execution.",
+  "scope": "Component proofs and finite original publication, not playable acceptance.",
+  "sync": "Five original sync loader slots resolve through the finite provider registry when ARB_sync is absent; flags and populated slots remain unchanged. 384 normal and 384 checked comparisons, two permission failures; Apple native completion tested on iPad Simulator."
+}

@@ -161,7 +161,13 @@ int tribes_memory_publish_code(uint64_t base,const TribesPublishedCodeRange *ran
    Freeze only its 34 finite instruction intervals, once at revision20, before
    its entry rewrites begin. No guest API may extend the dispatch/code set. */
 static int publish_later_bank(uint64_t base,const TribesPublishedCodeRange *ranges,uint32_t count,unsigned group){
+#ifdef TB_MOBILE_LEGACY_FONT_BANK
+ /* Finite original layout when the eight SDF-font registrations are absent.
+    Every interval, byte and revision is still validated below. */
+ static const uint32_t counts[]={34,18,7},starts[]={0x3c0000,0x3c0ea0,0x3c13b0},ends[]={0x3c1000,0x3c1372,0x3c156a},stages[]={20,30,32};
+#else
  static const uint32_t counts[]={34,26,7},starts[]={0x3c0000,0x3c0ea0,0x3c15f0},ends[]={0x3c1000,0x3c15b2,0x3c17aa},stages[]={20,30,32};
+#endif
  if(group>2)return 0;
  if(!permissions||base!=guest_base||!ranges||count!=counts[group]||touches(ranges,(uint64_t)count*sizeof *ranges))return 0;
  PublishedInterval extra[34];

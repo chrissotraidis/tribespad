@@ -40,6 +40,15 @@ def build(platform):
     target = source / 'src/gl/directstate.c'
     if target.read_text() != patched:
         target.write_text(patched)
+    # GLES2 cannot answer this desktop client-array query. Return GL4ES's
+    # actual per-context client selector, including changes made internally.
+    getter = (ref / 'src/gl/getter.c').read_text()
+    anchor = 'int gl4es_commonGet(GLenum pname, GLfloat *params) {\n    switch (pname) {'
+    assert getter.count(anchor) == 1 and 'case GL_CLIENT_ACTIVE_TEXTURE:' not in getter
+    getter = getter.replace(anchor, anchor + '\n        case GL_CLIENT_ACTIVE_TEXTURE:\n            *params = GL_TEXTURE0 + glstate->texture.client;\n            break;')
+    getter_target = source / 'src/gl/getter.c'
+    if getter_target.read_text() != getter:
+        getter_target.write_text(getter)
     out = ROOT / 'generated/gl4es' / platform
     sdk = 'iphonesimulator' if platform == 'simulator' else 'iphoneos'
     command = ['cmake', '-S', str(source), '-B', str(out / 'apple-build'),
@@ -54,6 +63,7 @@ def build(platform):
     shutil.copy2(ref / 'LICENSE', out / 'LICENSE.gl4es')
     receipt = dict(url=URL, commit=COMMIT, platform=platform, configure=command,
                    private_patch_sha256=hashlib.sha256(target.read_bytes()).hexdigest(),
+                   client_texture_query_patch_sha256=hashlib.sha256(getter_target.read_bytes()).hexdigest(),
                    library_sha256=hashlib.sha256(library.read_bytes()).hexdigest(),
                    execution_tested=False)
     (out / 'result.json').write_text(json.dumps(receipt, indent=2) + '\n')

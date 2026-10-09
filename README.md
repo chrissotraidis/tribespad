@@ -8,9 +8,9 @@ platforms. The aim is the original game, offline bot matches and compatibility w
 the existing Tribes 2 community, with touch and controller support on mobile.
 
 **In development.** The Mac app renders and runs offline matches, but performance
-is currently too slow for comfortable play. The full iPad Simulator app starts the
-original engine but stops during graphics setup;
-there is no playable iPad or iPhone release yet.
+is currently too slow for comfortable play. The full iPad Simulator app renders the
+original menus and textured warrior preview, and responds to taps; offline gameplay is still being integrated.
+There is no playable iPad or iPhone release yet.
 
 ![Tribes 2 running on macOS](docs/validation/macos-retina-katabatic-2026-10-08.png)
 
@@ -24,7 +24,9 @@ there is no playable iPad or iPhone release yet.
   and refreshes their information. No online match has been joined in these tests.
 - **iPad app integration.** The full original engine builds and starts in the iPad
   Simulator. Its checked GL4ES bridge passes real pixel readback and context
-  lifecycle tests. GPU-query setup currently blocks the original menu.
+  lifecycle tests, including the original GUI shaders, perspective projection and
+  native GPU fences. [Original menus on iPad](docs/validation/ipad-original-startup-2026-10-08.png)
+  renders and responds to taps. Offline maps and gameplay controls remain unfinished.
 
 ## Current work
 
@@ -56,6 +58,10 @@ open generated/integration-review/macos-engine-app/TribesPad.app
 The app currently uses assets in that workspace. There is no standalone release or
 verified device IPA installation flow. The separate Apple controls diagnostic does
 not contain the full game.
+
+Builds cache verified translations and optimized ARM64 objects. Changes to the
+checked-call policy still run the guard pass; byte-identical guarded output can
+reuse its verified native object.
 
 Build details, native input helpers and component checks:
 **[Development guide](docs/DEVELOPMENT.md)**.

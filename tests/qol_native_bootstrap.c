@@ -107,6 +107,9 @@ static unsigned renderer_batch_write_count;
 static unsigned renderer_nested_write_count;
 #include "renderer_outer_publication.inc"
 #include "renderer_hook_publication.inc"
+enum { renderer_hook_writes_expected=sizeof renderer_hook_writes/sizeof *renderer_hook_writes,
+       renderer_hooks_expected=sizeof renderer_bank_ranges/sizeof *renderer_bank_ranges,
+       renderer_hook_flushes_expected=sizeof renderer_hook_flushes/sizeof *renderer_hook_flushes };
 static unsigned renderer_hook_write_count,renderer_hook_flush_count;
 #include "audio_tables_publication.inc"
 static unsigned audio_table_write_count;
@@ -312,7 +315,7 @@ int qol_audio_tables_route_ready(void){
  return phase>=64;
 }
 void qol_audio_tables_write(_cpu *c,uint32_t pc,const void *pointer,uint32_t size,uint64_t value){
- assert(c==&state&&c->_pointer_offset==base&&engine_entered&&stage==2&&renderer_hook_write_count==61&&renderer_hook_flush_count==27&&audio_table_write_count<160);
+ assert(c==&state&&c->_pointer_offset==base&&engine_entered&&stage==2&&renderer_hook_write_count==renderer_hook_writes_expected&&renderer_hook_flush_count==renderer_hook_flushes_expected&&audio_table_write_count<160);
  if(!audio_table_write_count){assert(tribes_memory_code_revision(base)==62);assert(tribes_memory_prepare_next_code_revision(base,audio_table_writes,160));}
  assert(tribes_memory_apply_code_write(base,pc,pointer,size,value));audio_table_write_count++;
  if(audio_table_write_count==160){assert(tribes_memory_finish_code_revision(base));assert(tribes_memory_code_revision(base)==64);fputs("Published audio tables after 160 exact original stores\n",stderr);}
@@ -389,8 +392,8 @@ static void audio_hook_write(_cpu *c,uint32_t pc,const void *pointer,uint32_t si
  fprintf(stderr,"Validated audio hook store %u pc=0x%08x address=0x%08x bytes=%u\n",audio_hook_write_count,pc,(uint32_t)((uintptr_t)pointer-base),size);
 }
 static void renderer_hook_write(_cpu *c,uint32_t pc,const void *pointer,uint32_t size,uint64_t value){
- assert(c==&state&&c->_pointer_offset==base&&engine_entered&&stage==2&&renderer_outer_write_count==20&&renderer_hook_write_count<61);
- if(!renderer_hook_write_count){assert(tribes_memory_code_revision(base)==60);assert(tribes_memory_publish_renderer_bank(base,renderer_bank_ranges,26));assert(tribes_memory_prepare_next_code_revision(base,renderer_hook_writes,61));}
+ assert(c==&state&&c->_pointer_offset==base&&engine_entered&&stage==2&&renderer_outer_write_count==20&&renderer_hook_write_count<renderer_hook_writes_expected);
+ if(!renderer_hook_write_count){assert(tribes_memory_code_revision(base)==60);assert(tribes_memory_publish_renderer_bank(base,renderer_bank_ranges,renderer_hooks_expected));assert(tribes_memory_prepare_next_code_revision(base,renderer_hook_writes,renderer_hook_writes_expected));}
  assert(tribes_memory_apply_code_write(base,pc,pointer,size,value));renderer_hook_write_count++;
  fprintf(stderr,"Validated renderer hook store %u pc=0x%08x address=0x%08x bytes=%u\n",renderer_hook_write_count,pc,(uint32_t)((uintptr_t)pointer-base),size);
 }
@@ -423,7 +426,7 @@ void qol_string_shared_write(_cpu *c,uint32_t pc,void *pointer,uint32_t size,uin
   const TribesCodeWrite *next=audio_hook_writes+audio_hook_write_count;
   if(pc==next->pc&&(uintptr_t)pointer==base+next->address){audio_hook_write(c,pc,pointer,size,value);return;}
  }
- if(renderer_hook_write_count&&renderer_hook_write_count<61){
+ if(renderer_hook_write_count&&renderer_hook_write_count<renderer_hook_writes_expected){
   const TribesCodeWrite *next=renderer_hook_writes+renderer_hook_write_count;
   if(pc==next->pc&&(uintptr_t)pointer==base+next->address){renderer_hook_write(c,pc,pointer,size,value);return;}
  }
@@ -514,7 +517,7 @@ static void load_publication(const char *directory){
    neither publishes code or authorizes a nonempty transaction. */
 static uint32_t qol_unchanged_bank_flush(uint32_t process,uint32_t address,uint32_t bytes){
  assert(engine_entered&&stage==2&&process==UINT32_MAX&&address==TB_PATCH_ADDRESS&&bytes==65536);
- assert(renderer_hook_write_count==61&&renderer_hook_flush_count==27&&tribes_memory_code_revision(base)==62);
+ assert(renderer_hook_write_count==renderer_hook_writes_expected&&renderer_hook_flush_count==renderer_hook_flushes_expected&&tribes_memory_code_revision(base)==62);
  assert(stack_readable(&state,60));
  const volatile uint32_t *stack=(const volatile uint32_t *)(uintptr_t)(base+state._esp);
  int abort_path=stack[0]==0x1007202b&&stack[9]==0x10072609&&stack[14]==0x1005a31f;
@@ -530,7 +533,7 @@ static uint32_t qol_unchanged_bank_flush(uint32_t process,uint32_t address,uint3
  assert(*(const volatile uint32_t *)(uintptr_t)(base+TB_PATCH_ADDRESS+4)==0);
  for(unsigned group=0;group<3;group++){
   const TribesPublishedCodeRange *ranges=group==0?publication_ranges:group==1?pending_bank_ranges:renderer_bank_ranges;
-  unsigned count=group==0?publication_count:group==1?34:26;
+  unsigned count=group==0?publication_count:group==1?34:renderer_hooks_expected;
   for(unsigned i=0;i<count;i++){
    const TribesPublishedCodeRange *r=ranges+i;
    if(group==0&&(r->address<TB_PATCH_ADDRESS||r->address>=TB_PATCH_ADDRESS+65536))continue;
@@ -557,15 +560,15 @@ uint32_t qol_publish_patches(uint32_t process,uint32_t address,uint32_t bytes){
 
  if(stage==2&&tribes_memory_code_revision(base)==62)return qol_unchanged_bank_flush(process,address,bytes);
  if(stage==2&&renderer_hook_write_count){
-  assert(engine_entered&&process==UINT32_MAX&&renderer_hook_write_count==61&&renderer_hook_flush_count<27&&tribes_memory_code_revision(base)==3);
+  assert(engine_entered&&process==UINT32_MAX&&renderer_hook_write_count==renderer_hook_writes_expected&&renderer_hook_flush_count<renderer_hook_flushes_expected&&tribes_memory_code_revision(base)==3);
   unsigned i=renderer_hook_flush_count;assert(address==renderer_hook_flushes[i][0]&&bytes==renderer_hook_flushes[i][1]);
-  for(unsigned j=0;j<26;j++){
+  for(unsigned j=0;j<renderer_hooks_expected;j++){
    uint32_t callback;memcpy(&callback,(void *)(uintptr_t)(base+renderer_hook_callbacks[j][0]),4);assert(callback==renderer_hook_callbacks[j][1]);
    const TribesPublishedCodeRange *r=renderer_bank_ranges+j;const volatile unsigned char *code=(const volatile unsigned char *)(uintptr_t)(base+r->address);for(unsigned k=0;k<r->size;k++)assert(code[k]==r->expected[k]);
   }
   renderer_hook_flush_count++;
   fprintf(stderr,"Validated renderer hook flush %u address=0x%08x bytes=%u\n",renderer_hook_flush_count,address,bytes);
-  if(renderer_hook_flush_count==27){assert(tribes_memory_finish_code_revision(base));assert(tribes_memory_code_revision(base)==62);fputs("Published 26 renderer hooks after 61 exact stores and 27 original flushes\n",stderr);}
+  if(renderer_hook_flush_count==renderer_hook_flushes_expected){assert(tribes_memory_finish_code_revision(base));assert(tribes_memory_code_revision(base)==62);fprintf(stderr,"Published %u renderer hooks after %u exact stores and %u original flushes\n",renderer_hooks_expected,renderer_hook_writes_expected,renderer_hook_flushes_expected);}
   return 1;
  }
 

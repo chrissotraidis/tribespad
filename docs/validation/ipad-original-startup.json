@@ -3,29 +3,27 @@
   "platform": "arm64 iPad Simulator, iOS 26.5",
   "device": "F05D2D40-0A01-47C9-9BD7-0C0E19F7512C",
   "bundle_id": "com.tribespad.full-engine.ipad",
-  "binary_sha256": "13458e9bf5fae81df9d930da97f71fe2c7612d84ef4c26f28274ab8fed6ddc1a",
+  "binary_sha256": "e7c298a12699c6a27a735e5309ff6349daa29b6336f21e1f08d08720792409e5",
   "build": "Full original engine and selected IFC22 client linked, signed, installed and launched.",
   "checked_link_entries": 409,
-  "native_objects_reused_on_incremental_build": 405,
   "observed": [
-    "Original finite startup patches publish and worker threads start.",
-    "Original temporary probe context creates and destroys successfully.",
-    "Original main EAGL/GL4ES context creates; pixel-store and hint calls execute.",
-    "Default GL_BACK selection is implemented without using the GL4ES stub."
+    "All original finite startup publications, including 18 renderer hooks and seven audio hooks.",
+    "Original license and login screens render; native Simulator tap activates the license button. No login attempted.",
+    "Supported autoexec override selects original Offline mode without authentication.",
+    "Original LAN menus and textured Blood Eagle warrior preview render in landscape.",
+    "Native Simulator taps navigate Host, enable two bots, disable Dedicated and start local Katabatic loading.",
+    "Native APPLE_sync fence/create/wait/delete execute in the full original app."
   ],
-  "failure": {
-    "kind": "Unresolved original GL function pointer",
-    "guest_return_pc": "0x10047013",
-    "operation": "glGenQueries(32, 0x1046d858)",
-    "caller": "0x1004700d",
-    "investigation": "Original renderer also calls GL_TIME_ELAPSED queries and reads 64-bit results after 32 frames. Pinned GL4ES queries use CPU clocks, not native GPU elapsed time; those operations remain gated."
-  },
   "acceptance": {
-    "original_menu": false,
+    "original_menu": true,
+    "textured_warrior_preview": true,
     "offline_match": false,
     "touch_gameplay": false,
     "physical_ipad": false,
     "online_join_attempted": false
   },
-  "scope": "Original iPad app execution, not playable acceptance. Development bundle requires prepared workspace assets."
+  "current": "Local Katabatic with two bots is loading; rendered map and player controls remain unverified.",
+  "screenshot": "docs/validation/ipad-original-startup-2026-10-08.png",
+  "screenshot_sha256": "f29d123364dac2153eddca09a59e54de4423ba7bfeebb23e97770caa8e6fde60",
+  "scope": "Original engine rendering and menu input in a Simulator development bundle. Workspace assets required; no playable or device acceptance."
 }

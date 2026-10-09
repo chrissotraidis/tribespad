@@ -71,6 +71,8 @@ struct ExternalMemoryPass : PassInfoMixin<ExternalMemoryPass>{
     if(!Target->isDeclaration()||Checked.contains(Name)||Name.starts_with("tribes_memory_access_")||Name=="tribes_memory_transfer_begin")continue;
     // Pinned GL4ES exports use the same GL ABI and private host buffers.
     // Reuse only existing finite GL contracts and all their shape checks.
+    // Apple's native GLES sync extension has exactly the existing core ABI.
+    if(Name=="glFenceSyncAPPLE"||Name=="glIsSyncAPPLE"||Name=="glClientWaitSyncAPPLE"||Name=="glGetSyncivAPPLE"||Name=="glDeleteSyncAPPLE")Name=Name.drop_back(5);
     if(Name=="gl4es_glFogCoordPointer")Name="glFogCoordPointerEXT";
     if(Name.starts_with("gl4es_gl")&&Host.contains(Name.drop_front(6)))Name=Name.drop_front(6);
     if(Strings.contains(Name)){
