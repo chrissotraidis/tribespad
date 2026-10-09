@@ -1,0 +1,148 @@
+{
+  "change": "256-entry private TLS cache for immutable AOT table matches only. Publication permission remains before every lookup, native providers remain uncached, indirect target checks remain in callers.",
+  "component": {
+    "passed": true,
+    "table_sha256": "60f55ba0ecc4dc721d349bd99b60746e903975dda9e1dcf6abbf65de55ac3800",
+    "entries": 331018,
+    "unique_targets": 330265,
+    "runs": [
+      {
+        "mode": "baseline",
+        "tsan": false,
+        "output": "PASS: 331018 table addresses, warm/reverse/threaded identities, per-call publication, changing native providers; hot=0.180377 cold=0.035969",
+        "hot_seconds": 0.180377,
+        "cold_seconds": 0.035969,
+        "binary_sha256": "052944006ce31f0f3ac3ff9625b116ee46a8066251fbb115fb271f560fe18e7a"
+      },
+      {
+        "mode": "baseline",
+        "tsan": true,
+        "output": "PASS: 331018 table addresses, warm/reverse/threaded identities, per-call publication, changing native providers; hot=1.381310 cold=0.275078",
+        "hot_seconds": 1.38131,
+        "cold_seconds": 0.275078,
+        "binary_sha256": "46bfd85c639f2d4ee9f63564c66e4a2ebb2c3687344c4ad05689dd2bda211ae8"
+      },
+      {
+        "mode": "cached",
+        "tsan": false,
+        "output": "PASS: 331018 table addresses, warm/reverse/threaded identities, per-call publication, changing native providers; hot=0.069040 cold=0.042782",
+        "hot_seconds": 0.06904,
+        "cold_seconds": 0.042782,
+        "binary_sha256": "f55de9aa981efbc6a8eab0859efd667d4a0e4a56b9aeec5e840dcfc8b6da80a1"
+      },
+      {
+        "mode": "cached",
+        "tsan": true,
+        "output": "PASS: 331018 table addresses, warm/reverse/threaded identities, per-call publication, changing native providers; hot=0.615758 cold=0.341894",
+        "hot_seconds": 0.615758,
+        "cold_seconds": 0.341894,
+        "binary_sha256": "42489771c5938222b8a3543c3bf0aad2d102800ba1c4544b1000e153ca94f7f5"
+      }
+    ],
+    "sources_sha256": {
+      "port/core/guest_dispatch.c": "d0098a7bab28ab4633cc17e1213251a185b29657b2125da97806703fe2b69774",
+      "tests/dispatch_cache_test.c": "4ff4ab60c17d4354ac84a3bbdacf4f2e5bdb2b45b56843b3f7ae4d38d922e762",
+      "port/core/guest_memory_checks.c": "ce4b64969f394561e20eba137faee5993784f69b07bafa6f053b3dbdc1d8c45d",
+      "scripts/test-dispatch-cache.py": "c22db0b3e3817df4d9e326d0170d45f580d1b025912a07b74757b87246410078"
+    },
+    "scope": "Real prepared address/alias table with distinct ARM64 RET fixtures; checked lookup comparison, cached publication denial and native provider changes. No original gameplay or FPS claim."
+  },
+  "publication_regression": {
+    "passed": true,
+    "checked_support_sha256": "42b5464316647b22bcd8f42dbe80c07260928dfba3b61ee976683bc76e25b952",
+    "binary_sha256": "c13b4133e9d67c971783651f36c35463a53ed4afeec404c1a613807fac2ccb10",
+    "dispatch_binary_sha256": "6cb76dfe97b8187083f639648dd42efa9b39187ac5874c58f1907311f4d41224",
+    "sources_sha256": {
+      "tests/published_code_test.c": "926007bc2d70f400cd752038d8c044c660de5e524bdcc4c2b18ff55bf2a28882",
+      "port/core/guest_memory_checks.c": "ce4b64969f394561e20eba137faee5993784f69b07bafa6f053b3dbdc1d8c45d",
+      "tests/published_dispatch_test.c": "0b5824d8b082bd853aa742105a8e33dc6a8685acb8171e9a7f85368f117e58a8",
+      "port/core/guest_dispatch.c": "d0098a7bab28ab4633cc17e1213251a185b29657b2125da97806703fe2b69774",
+      "tests/published_code_store.c": "7ca5b26996fdf9d77deae7b99f0b60fec1429a6278525fecf0595928a61adddd",
+      "port/core/guest_memory_checks.h": "7f5cc0edcdb7dcf395633fb20a88dab8da2ad1cfdfd5971b6c06382f9583c584",
+      "scripts/test-published-code.py": "05845d2619bacd12b7e0e3ae9990dba35a5ba16101278fbc9ba94a8159d09cd8"
+    },
+    "scope": "One-time atomic expected-byte validation and immutable exact intervals; failed checks do not publish, caller metadata is copied, neighboring bytes remain writable, and four real compiler-instrumented writes stop before changing shared memory. Linked lookup policy rejects both engine and bank before publication while DLL/host-return remain available. No game patch route activation."
+  },
+  "builds": {
+    "simulator": {
+      "state": "built",
+      "binary_sha256": "d614f27d722097762a5a7f7bdf326507509fa85b888f4ab2d579869095eb18f2",
+      "cpu_host_checks": true,
+      "bundled_assets": true,
+      "bytes": 103638912,
+      "strict_signature_verified": true
+    },
+    "device": {
+      "state": "built",
+      "binary_sha256": "18fe1a3f5c9f9a2551b603a3e20f49d34e7d735ce52215e081500c40cf5e69b1",
+      "cpu_host_checks": true,
+      "bundled_assets": true,
+      "bytes": 103572880,
+      "strict_signature_verified": true
+    }
+  },
+  "execution": {
+    "pid": 14723,
+    "map": "Katabatic",
+    "bots": 2,
+    "simulator": "iPad Air 11-inch (M4), iOS26.5",
+    "world_first_observed_seconds": 275,
+    "loading_scope": "Observation upper bound; no compiler/debugger during loading. Not a paired startup benchmark.",
+    "controls": [
+      "Fire spawns player inside Starwolf base",
+      "Weapon selects disc",
+      "Look drag rotates view",
+      "Move advances player; Blood Eagle flag distance1079.4 to1057.8",
+      "Fire reduces disc ammo15 to14; original nearby splash damages player"
+    ],
+    "ended_after_validation": true,
+    "physical_device_execution": false,
+    "online_join_or_authentication": false,
+    "remaining": [
+      "Low frame rate and input latency",
+      "Slow loading",
+      "Terrain gap",
+      "Prior inventory-station exit issue",
+      "Physical iPad signing/execution and iPhone acceptance"
+    ]
+  },
+  "performance": {
+    "captures": [
+      {
+        "frames": 86,
+        "seconds": 30.01,
+        "scope": "Thirty-second fixed initial observer view of offline Katabatic with two bots. No input, compiler or debugger during recording. Presented Simulator frames, not original FPS counter.",
+        "raw_local_report": "generated/ipad-engine/dispatch-cache-observer-video.json",
+        "raw_sha256": "de7bd55b98f053c09a70ed56769bf3de4c4caba1b36fa5d936f92ebedbfeb858"
+      },
+      {
+        "frames": 68,
+        "seconds": 30.058333,
+        "scope": "Thirty-second fixed initial observer view of offline Katabatic with two bots. No input, compiler or debugger during recording. Presented Simulator frames, not original FPS counter.",
+        "raw_local_report": "generated/ipad-engine/dispatch-cache-observer-video-2.json",
+        "raw_sha256": "60e23429326f0ebb0a956e326d3a995ad0ff351cff8b40009e99a1f873fd50fe"
+      }
+    ],
+    "comparison": "86/68 frames in30 seconds (~2.9/2.3 FPS), versus prior66/78 (~2.2/2.6). Sequential matches with varying bots; no clear game-level speedup established. Component localized lookup improves0.180377 to0.069040 seconds; cold lookup worsens0.035969 to0.042782 seconds. Lookup timing is not game FPS."
+  },
+  "profile": {
+    "local_path": "generated/ipad-engine/dispatch-cache-sample.txt",
+    "scope": "Separate four-second native sample after recordings, without compiler. Counts are sample observations, not percentages.",
+    "main_thread_samples": 314,
+    "main_thread_draw_client_arrays_samples": 81,
+    "metal_wait_samples_under_that_draw": 75,
+    "top_of_stack": {
+      "tribes_memory_access_begin": 129,
+      "tribes_memory_access_end": 38,
+      "tribes_memory_transfer_begin": 35,
+      "tb_sse_arithmetic": 25,
+      "reader_leave": 24
+    },
+    "draw_call_site": "draw_client_arrays+2060; native object disassembly maps the return to the !restart glDrawElements branch, not the restart-splitting loop."
+  },
+  "next": "Inspect GL4ES/ANGLE client-array upload and buffer reuse behind draw_client_arrays. The sampled non-restart draw waits for Metal completion. Exercise a native-buffer staging alternative in the existing real-pixel component harness while preserving checked guest copies, index/array bounds, GL errors and context state. Do not assume primitive-restart batching explains this sampled path.",
+  "screenshot": {
+    "path": "docs/validation/ipad-dispatch-cache-2026-10-09.png",
+    "sha256": "c18cbab1e45c13ec91857fd3020b8b56f5e487fbb59007cdb87f2ec10060723c"
+  }
+}

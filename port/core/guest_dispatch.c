@@ -19,19 +19,38 @@ __attribute__((weak,noinline)) void *tribes_graphics_native_lookup(uint32_t addr
 /* Hosts with build-time patch variants must keep their original-address
    entries inaccessible until the matching guest bytes have been published. */
 __attribute__((weak,noinline)) int tribes_dispatch_permitted(uint32_t address) { (void)address;return 1; }
+#ifndef TRIBESPAD_DISABLE_DISPATCH_CACHE
+/* Cache only immutable AOT table entries. Publication is checked before every
+   hit; native providers may change availability and must still be consulted.
+   Private TLS avoids synchronization between concurrently executing guests. */
+static _Thread_local struct {
+    uint32_t address;
+    void (*function)(_cpu *);
+} dispatch_cache[256];
+#endif
 void (*tribes_lookup(uint32_t address))(_cpu *) {
     if(!tribes_dispatch_permitted(address)){
         fprintf(stderr,"TribesPad: unpublished original guest PC 0x%08x\n",address);abort();
     }
     if (address == UINT32_C(0xfffff000)) return tribes_return_to_host;
+#ifndef TRIBESPAD_DISABLE_DISPATCH_CACHE
+    unsigned slot = ((address >> 2) ^ (address >> 12)) & 255;
+    if (dispatch_cache[slot].function && dispatch_cache[slot].address == address)
+        return dispatch_cache[slot].function;
+#endif
     uint32_t lower = 0, upper = tribes_dispatch_count;
     while (lower < upper) {
         uint32_t mid = lower + (upper - lower) / 2;
         if (tribes_dispatch_vas[mid] < address) lower = mid + 1;
         else upper = mid;
     }
-    if (lower < tribes_dispatch_count && tribes_dispatch_vas[lower] == address)
+    if (lower < tribes_dispatch_count && tribes_dispatch_vas[lower] == address) {
+#ifndef TRIBESPAD_DISABLE_DISPATCH_CACHE
+        dispatch_cache[slot].address = address;
+        dispatch_cache[slot].function = tribes_dispatch_fns[lower];
+#endif
         return tribes_dispatch_fns[lower];
+    }
     void *native=tribes_native_lookup(address);if(native)return (void (*)(_cpu *))native;
     native=tribes_dsound_native_lookup(address);if(native)return (void (*)(_cpu *))native;
     native=tribes_graphics_native_lookup(address);if(native)return (void (*)(_cpu *))native;
