@@ -45,7 +45,7 @@
     "accepted_eula_restored": true,
     "offline_map": "Katabatic",
     "bots": 2,
-    "map_status": "Loading; no gameplay acceptance for this candidate yet",
+    "map_status": "Rendered offline Katabatic with two bots; native touch movement/look/weapon/fire/jet exercised.",
     "start": {
       "pid": 18702,
       "map": "Katabatic",
@@ -56,7 +56,67 @@
     },
     "screenshots": {
       "generated/integration-review/guest-access-groups/candidate-profile.png": "3ce96b85327aa8639a5a416656094bb85f34f803ff19760adeee84365947cfc1",
-      "generated/integration-review/guest-access-groups/candidate-map-load.png": "7a497fb9dcf4f94db7ce0ddebe3c6f36f3edf597edff826e09d98c0cd2361d7e"
-    }
+      "generated/integration-review/guest-access-groups/candidate-map-load.png": "7a497fb9dcf4f94db7ce0ddebe3c6f36f3edf597edff826e09d98c0cd2361d7e",
+      "generated/integration-review/guest-access-groups/candidate-jet-released.png": "bf47f9207e68f02db2fd8c3e9837c14c841cec6694601aa5b80bd253c62c0d7c",
+      "generated/integration-review/guest-access-groups/candidate-startup.png": "1bd135914404b9e61ac7098881cac6f10544fa57c9b34b8cdcec3c553f87ea31",
+      "generated/integration-review/guest-access-groups/candidate-spawn.png": "9825ac4a4683187e4f21da2526246cccbddf16339df81977b2ed75bad72ca09e",
+      "generated/integration-review/guest-access-groups/candidate-weapon.png": "98785d3cad1640df37ebbc9ee38d225e7f8d94bea0bbd5402ed3324907aa2538",
+      "generated/integration-review/guest-access-groups/candidate-jet.png": "8ecee6a4a1ebfa318e1745ac2a9beacbe640577e38baf5fb1715cff2b5b8f16d",
+      "generated/integration-review/guest-access-groups/candidate-world.png": "948e3cde3fda8d0f3e560b4a5bdf75acbdde5d6ac830ec5f5db98eb5530024c6",
+      "generated/integration-review/guest-access-groups/candidate-move.png": "3ad504304f8dd00df35a44828de8be9e17c5ac82c1774cacaa2709e73038d342",
+      "generated/integration-review/guest-access-groups/candidate-look.png": "6a6777c136f9689bd507511dbfe951488fe312ef2b6c420740148e5f674fb998",
+      "generated/integration-review/guest-access-groups/candidate-fire.png": "001d0b6c90995cdfc9ed013d2140f4afc9a1fced8f4c86b7ab8960fc80d13b42",
+      "generated/integration-review/guest-access-groups/candidate-host.png": "291995c4304a9b8d18f6fc40656d630e0f086dabc3ad85846167d1ecc4a8031c",
+      "generated/integration-review/guest-access-groups/candidate-map-current.png": "948e3cde3fda8d0f3e560b4a5bdf75acbdde5d6ac830ec5f5db98eb5530024c6",
+      "generated/integration-review/guest-access-groups/candidate-resumed-look.png": "f671bd7dc0426de7025dbe5242e68a3159493d11d07414d22ce7f2a882453e22",
+      "generated/integration-review/guest-access-groups/candidate-background.png": "a523d1c8184c1389d8005757eccb1ab4ed96596b03aa7a5ef9aec8258c3c1b73",
+      "generated/integration-review/guest-access-groups/candidate-foreground.png": "e38137802944aece754e3ff3f120e83abc0a338995fa4fff0ac2d8fb78c7d93e"
+    },
+    "rendered": {
+      "pid": 18702,
+      "observed_at": "2026-10-09T04:38:52.414868+00:00",
+      "map": "Katabatic",
+      "bots": [
+        "Deathwind",
+        "Evenkill"
+      ],
+      "note": "First captured world; build running concurrently, not a controlled load-time comparison."
+    },
+    "controls": {
+      "spawn": "Fire spawned original Starwolf player",
+      "movement": "Move held 3 seconds; flag distance fell to 57.4 and view approached base wall",
+      "look": "Look drag rotated camera and compass",
+      "weapon": "Weapon changed blaster to disc with 15 rounds",
+      "fire": "Fire held 2 seconds; ammunition 15 to 14, self-damage visible from nearby impact",
+      "jet": "Jet held 6 seconds; view rose above wall, energy drained, release returned toward ground and energy recovered"
+    },
+    "limits": [
+      "Slow loading and input response",
+      "Missing/stretched building and weapon triangles remain",
+      "Load and touch tests overlapped full build; not a controlled speedup measurement",
+      "Physical iPad execution unverified"
+    ],
+    "frame_observation": {
+      "pid": 18702,
+      "observed_at": "2026-10-09T04:43:54.899436+00:00",
+      "interval_seconds": 24.87263025,
+      "visible_changes": 14,
+      "visible_changes_per_second": 0.5628676926920505,
+      "crop": [
+        360,
+        330,
+        1350,
+        930
+      ],
+      "paused_build_processes": [
+        21772,
+        23284
+      ],
+      "scope": "Screenshot changes in original offline world while stationary; no debugger or active build. Lower bound on visible updates, not presented-frame/FPS instrumentation or a controlled baseline comparison.",
+      "raw_evidence_sha256": "bce5661e130da292b114cb6b031b716b1498a37497cb6f29c086eb752fafa752"
+    },
+    "gameplay_sample_sha256": "8245c67b61cff4db4a3c0feb3158f5685b8b94c7a44b7cae0f18cf8d13f58f46",
+    "lifecycle": "Simulator Home, then simctl foreground returned the same PID18702; original world restored and native Look drag changed camera.",
+    "world_screenshot": "docs/validation/ipad-grouped-katabatic-2026-10-08.png"
   }
 }

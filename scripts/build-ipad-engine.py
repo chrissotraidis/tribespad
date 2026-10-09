@@ -63,7 +63,7 @@ al=json.loads((R/'generated/openal-soft'/a.platform/'result.json').read_text());
 zbuild=R/'generated/zlib-ng'/a.platform/'build'
 zmeta=json.loads((zbuild.parent/'result.json').read_text());assert zmeta['pass'] and zmeta['platform']==a.platform and sha(zbuild/'libz-ng.a')==zmeta['library_sha256']
 flags=['-std=c11','-DPTROFS_64BIT','-DTB_CHECKED_IMAGE','-DTB_GUARD_EXTERNALS','-DTB_CHECKED_SUBPAGES','-DTB_CAPTURE_PATCHES','-DTB_PUBLISH_PATCHES','-DTB_MOBILE_ENGINE','-DTB_MOBILE_LEGACY_FONT_BANK','-I',str(mobile_inputs),'-I',str(source),'-I',str(zbuild),'-I',str(R/'ref/zlib-ng'),'-I',str(http_root/'install/include'),'-DAL_LIBTYPE_STATIC','-I',str(R/'ref/openal-soft/include'),*sdl_flags,*gl_flags,*math['compile_flags']]
-objects,_=compile_support(sources,out/'support',flags,target=target,sdk_name=sdk_name)
+objects,_=compile_support(sources,out/'support',flags,target=target,sdk_name=sdk_name,defer_codegen=True)
 meta=json.loads((out/'support/result.json').read_text());entries=[]
 for name in objects:
  p=pathlib.Path(name);row=meta['objects'][p.stem]

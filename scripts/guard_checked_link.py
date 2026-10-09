@@ -6,6 +6,8 @@ def guard_link(entries,destination,*,target='arm64-apple-macos12'):
  destination.mkdir(exist_ok=True);sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest();tools=pathlib.Path('/opt/homebrew/Cellar/llvm@20/20.1.8/bin');plugin=R/'generated/tools/external-memory-pass/ExternalMemoryPass.dylib';pm=json.loads(plugin.with_name('result.json').read_text());assert sha(plugin)==pm['plugin_sha256'] and sha(R/'port/compiler/ExternalMemoryPass.cpp')==pm['source_sha256'];assert all(sha(pathlib.Path(n))==h for n,h in pm['tools_sha256'].items())
  names=set()
  for entry in entries:
+  # A checked input may be LLVM bitcode; llvm-nm reads its defined symbols
+  # without generating a throwaway native object. Trusted inputs stay native.
   obj=pathlib.Path(entry['object']);assert sha(obj)==entry['object_sha256']
   if entry['bitcode'] is None:continue
   output=subprocess.check_output([str(tools/'llvm-nm'),'--defined-only','--extern-only','--format=posix',str(obj)],text=True)

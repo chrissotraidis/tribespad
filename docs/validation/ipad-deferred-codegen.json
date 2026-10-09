@@ -1,0 +1,38 @@
+{
+  "passed": true,
+  "scope": "Full bundled iPad Simulator build; target fixtures also cover Mac and device. No new physical-device execution or game speedup claim.",
+  "deferred_support_objects": 179,
+  "native_objects_identical": 409,
+  "checked_symbol_policy_identical": true,
+  "checked_symbol_count": 333542,
+  "executable_identical_to_running_candidate": true,
+  "executable_sha256": "c1098592ba805b1a311c488e17c2c3c977bac7164a7186078f46acd14f2d4c1c",
+  "signature_verification": "codesign --verify --deep --strict: exit 0",
+  "fixture": {
+    "passed": true,
+    "output": "PASS: identical guarded IR/native output on Mac, Simulator and device; verified cache, corrupt input rejection, permitted read and denied-read fault",
+    "platforms": {
+      "macos": {
+        "bitcode": "864180093c98e9bed73feafb04eb3d0c62bad034ec96626c50ae23a2664ff9e3",
+        "native": "9bfadfd7494f872312942169d74cb68edfdbe7191aa870afa981ca0557cc61ee",
+        "object": "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/deferred-codegen/macos-deferred/guarded/000-00-input.o"
+      },
+      "simulator": {
+        "bitcode": "efcfc5a3e2e956af4dc2ae5f77752922c8d5c7273e5d3920f76ecbdca8647a7c",
+        "native": "37184a71526d1fa5def8d5ac567854968644a3ebb31785793d525d82d1a260a4",
+        "object": "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/deferred-codegen/simulator-deferred/guarded/000-00-input.o"
+      },
+      "device": {
+        "bitcode": "3f91a6c7f4365f072de4fc38eacad304d35ae36447966984d93bf2fbc779a3fc",
+        "native": "17b9c9f884f48516ee0799c36fc8335391b5393a07d1c3da78b2c245d2b059bd",
+        "object": "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/deferred-codegen/device-deferred/guarded/000-00-input.o"
+      }
+    },
+    "sources_sha256": {
+      "scripts/checked_support.py": "6c07029d6206a09599c34b75ff7769699f205e2ee277dbd97b293a7f20039fba",
+      "scripts/guard_checked_link.py": "ab7778702a458a6477149df4eb61b9bea844ed1e1e36123e0fa3e67f4c99e944",
+      "scripts/build-ipad-engine.py": "d62b05a992cbfc5473ffcb681cf75a43e9b7ec1a00ae4e0089b24b3329f4e8b1",
+      "scripts/test-deferred-codegen.py": "cd1433833cbee61d8786a0c8c512f9920758f295b0faabba728b9a33a3538057"
+    }
+  }
+}

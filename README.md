@@ -13,12 +13,12 @@ Katabatic match with bots and accepts touch movement, aim, weapons, firing and j
 Slow startup, input delay and visible rendering defects still need work.
 There is no playable iPad or iPhone release yet.
 
-![Tribes 2 running on macOS](docs/validation/macos-retina-katabatic-2026-10-08.png)
+![Offline Tribes 2 with touch controls in the iPad Simulator](docs/validation/ipad-touch-gameplay-2026-10-08.png)
 
 ## What works
 
 - **Original Mac menus and rendering.** The game runs in a signed native Mac app,
-  with corrected mouse targeting on Retina displays.
+  with corrected mouse targeting on Retina displays. [Mac screenshot](docs/validation/macos-retina-katabatic-2026-10-08.png).
 - **Offline matches on Mac.** Katabatic loads with two bots. Movement, aiming and
   disc firing have been exercised through native keyboard and mouse input.
 - **Internet server listings.** The original browser lists 26 community servers
@@ -29,6 +29,25 @@ There is no playable iPad or iPhone release yet.
   native GPU fences. The [original map on iPad](docs/validation/ipad-katabatic-2026-10-08.png)
   renders, and [touch gameplay](docs/validation/ipad-touch-gameplay-2026-10-08.png)
   moves, aims, switches weapons, fires and jets in the offline match.
+
+## iPad controls
+
+Tap **Touch controls** in an offline match to show the overlay.
+
+| Control | Action |
+| --- | --- |
+| Move pad | Move with the original ESDF bindings |
+| Look pad | Drag to aim |
+| Fire + Aim | Hold to fire; drag to aim while firing |
+| Jet | Hold to jet; release to recover energy |
+| Ski / Jump | Original jump action |
+| Weapon | Switch weapon |
+| Menu | Open the original Escape menu |
+| Keyboard | Show the onscreen keyboard for a selected text field |
+
+Movement, look, weapons, fire and jet have been exercised in the Simulator.
+Skiing, simultaneous gestures and physical-device responsiveness still need validation.
+The bundled app preserves its original warrior and video preferences between launches.
 
 ## Current work
 
@@ -87,7 +106,9 @@ the full game.
 
 Builds cache verified translations and optimized ARM64 objects. Changes to the
 checked-call policy still run the guard pass; byte-identical guarded output can
-reuse its verified native object.
+reuse its verified native object. Original-engine support compilation reads
+symbols directly from checked bitcode, avoiding 179 throwaway native objects before
+the final external-call guard and code-generation pass.
 
 Build details, native input helpers and component checks:
 **[Development guide](docs/DEVELOPMENT.md)**.
