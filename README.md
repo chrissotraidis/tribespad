@@ -58,8 +58,8 @@ The bundled app preserves its original warrior and video preferences between lau
 
 - Improve measured runtime performance; builds cache verified ARM64 objects and
   avoid 179 redundant support-code compilations. An optional CPU-register check
-  optimization reduces the Simulator executable from 158.6 MB to 103.1 MB while
-  preserving guest-memory checks. It passes the [original offline touch test](docs/validation/ipad-host-local-offline.json),
+  optimization reduces the Simulator executable from 158.6 MB to 103.0 MB while
+  preserving guest-memory checks. It passes the [original offline touch test](docs/validation/ipad-native-cpu-offline.json),
   but recorded frame delivery is still around one frame per second. This is not
   yet comfortable gameplay.
 - Fix visible rendering gaps and reduce startup/input latency in the iPad app.
@@ -99,10 +99,13 @@ them. Omitting the flag selects the earlier EAGL backend.
 
 Use `--cpu-host-checks` for the optimized Simulator and device builds. This optional
 mode requires current passing runs of `scripts/test-cpu-host-checks.py`,
-`scripts/test-host-local-checks.py` and `scripts/test-sse-host-locals.py`. It keeps
+`scripts/test-host-local-checks.py`, `scripts/test-native-cpu-checks.py` and
+`scripts/test-sse-host-locals.py`. It keeps
 guest-memory checks, validates the native register span once per translated block,
 and removes redundant checks only for proven in-bounds native stack, TLS and private
-global accesses. Pointers read from those objects still receive guest-memory checks.
+global accesses. Native SIMD helpers also validate the full CPU object once, then
+use proven bounds for indexed register fields. Pointers read from those objects
+and all guest operands still receive guest-memory checks.
 
 Use `--build-only` to preserve a running test session. The development touch overlay
 uses the original ESDF bindings and is enabled with **Touch controls**. Its native

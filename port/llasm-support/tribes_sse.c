@@ -4,6 +4,10 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+/* The optional checker validates this whole native object before eliding
+   register accesses. Addresses computed from _pointer_offset stay checked. */
+_Static_assert(sizeof(_cpu)==440,"Native CPU proof layout changed");
+#define NATIVE_CPU __attribute__((annotate("tribes.native-cpu")))
 static unsigned char *reg(CPU,unsigned index) {
     if(!cpu||index>=8)abort();
     return cpu->_xmm[index];
@@ -16,6 +20,17 @@ static unsigned width(unsigned mode) {
     default:abort();
     }
 }
+/* These instruction forms have only three operand widths. Keep each copy
+   exact and unaligned; fixed widths lower to scalar/vector accesses rather
+   than a dynamic library copy. Callers retain operand snapshots for aliasing. */
+static void copy_operand(void *destination,const void *source,unsigned size) {
+    switch(size) {
+    case 4:memcpy(destination,source,4);break;
+    case 8:memcpy(destination,source,8);break;
+    case 16:memcpy(destination,source,16);break;
+    default:abort();
+    }
+}
 static unsigned char *memory(CPU,uint32_t address,unsigned mode) {
     unsigned n=width(mode);
     if(!cpu||(mode==TB_SSE_A128&&(address&15))||(uint64_t)address+n>UINT64_C(0x100000000))abort();
@@ -23,18 +38,18 @@ static unsigned char *memory(CPU,uint32_t address,unsigned mode) {
     if(base>UINTPTR_MAX-(uint64_t)address-n)abort();
     return (unsigned char *)(base+address);
 }
-void tb_sse_init(CPU) {
+NATIVE_CPU void tb_sse_init(CPU) {
     if(!cpu)abort();
     memset(cpu->_xmm,0,sizeof cpu->_xmm);
     memset(cpu->_ymm_hi,0,sizeof cpu->_ymm_hi);cpu->_mxcsr=0x1f80;
 }
 /* Original math prologue STMXCSR [ESP+4]. Save tracked guest state; reserved
    high bits store as zero, and neither CPU state nor native FP state changes. */
-void tb_math_stmxcsr_1010cef3(CPU) {
+NATIVE_CPU void tb_math_stmxcsr_1010cef3(CPU) {
     uint32_t value=cpu->_mxcsr&UINT32_C(0xffff);
     memcpy(memory(cpu,cpu->_esp+4,TB_SSE_D),&value,4);
 }
-void tb_avx_ssreg(CPU,unsigned dest,unsigned merge,unsigned source) {
+NATIVE_CPU void tb_avx_ssreg(CPU,unsigned dest,unsigned merge,unsigned source) {
     unsigned char *dst=reg(cpu,dest),value[16],scalar[4];
     /* Snapshot all operands before publication: any of the three roles may
        alias. Both VEX register opcodes use this same architectural mapping. */
@@ -42,42 +57,43 @@ void tb_avx_ssreg(CPU,unsigned dest,unsigned merge,unsigned source) {
     memcpy(value,scalar,4);memcpy(dst,value,16);
     memset(cpu->_ymm_hi[dest],0,16);
 }
-void tb_avx_ssload(CPU,unsigned dest,uint32_t address) {
+NATIVE_CPU void tb_avx_ssload(CPU,unsigned dest,uint32_t address) {
     unsigned char *dst=reg(cpu,dest),value[4];
     memcpy(value,memory(cpu,address,TB_SSE_SS),4);
     memcpy(dst,value,4);memset(dst+4,0,12);memset(cpu->_ymm_hi[dest],0,16);
 }
-void tb_avx_ssstore(CPU,unsigned source,uint32_t address) {
+NATIVE_CPU void tb_avx_ssstore(CPU,unsigned source,uint32_t address) {
     unsigned char value[4];memcpy(value,reg(cpu,source),4);
     /* The memory-destination form changes no vector register, including the
        source's upper YMM half. Alignment follows the scalar memory contract. */
     memcpy(memory(cpu,address,TB_SSE_SS),value,4);
 }
-void tb_sse_load(CPU,unsigned index,uint32_t address,unsigned mode) {
+NATIVE_CPU void tb_sse_load(CPU,unsigned index,uint32_t address,unsigned mode) {
     unsigned char *dst=reg(cpu,index);unsigned n=width(mode);
-    unsigned char value[16];memcpy(value,memory(cpu,address,mode),n);
+    unsigned char value[16];copy_operand(value,memory(cpu,address,mode),n);
     /* MOVSS/MOVSD memory and MOVD/MOVQ clear the remaining XMM lanes. MOVLPD
        retains the upper quadword; all legacy forms retain future YMM lanes. */
-    memcpy(dst,value,n);
-    if(mode==TB_SSE_SS||mode==TB_SSE_D||mode==TB_SSE_Q||mode==TB_SSE_SD)memset(dst+n,0,16-n);
+    copy_operand(dst,value,n);
+    if(mode==TB_SSE_SS||mode==TB_SSE_D)memset(dst+4,0,12);
+    else if(mode==TB_SSE_Q||mode==TB_SSE_SD)memset(dst+8,0,8);
 }
-void tb_sse_store(CPU,unsigned index,uint32_t address,unsigned mode) {
-    unsigned char value[16];unsigned n=width(mode);memcpy(value,reg(cpu,index),n);
-    memcpy(memory(cpu,address,mode),value,n);
+NATIVE_CPU void tb_sse_store(CPU,unsigned index,uint32_t address,unsigned mode) {
+    unsigned char value[16];unsigned n=width(mode);copy_operand(value,reg(cpu,index),n);
+    copy_operand(memory(cpu,address,mode),value,n);
 }
-void tb_sse_regmove(CPU,unsigned dest,unsigned source,unsigned mode) {
+NATIVE_CPU void tb_sse_regmove(CPU,unsigned dest,unsigned source,unsigned mode) {
     unsigned char *dst=reg(cpu,dest),value[16];unsigned n=width(mode);
     /* MOVLPD and MOVD have no XMM-to-XMM form. Reject decoder misuse. */
     if(mode==TB_SSE_LPD||mode==TB_SSE_D)abort();
-    memcpy(value,reg(cpu,source),n);memcpy(dst,value,n);
+    copy_operand(value,reg(cpu,source),n);copy_operand(dst,value,n);
     if(mode==TB_SSE_Q)memset(dst+8,0,8);
 }
-void tb_sse_setd(CPU,unsigned index,uint32_t value) {
+NATIVE_CPU void tb_sse_setd(CPU,unsigned index,uint32_t value) {
     unsigned char *dst=reg(cpu,index);
     for(unsigned i=0;i<4;i++)dst[i]=(unsigned char)(value>>(8*i));
     memset(dst+4,0,12);
 }
-uint32_t tb_sse_getd(CPU,unsigned index) {
+NATIVE_CPU uint32_t tb_sse_getd(CPU,unsigned index) {
     const unsigned char *src=reg(cpu,index);uint32_t value=0;
     for(unsigned i=0;i<4;i++)value|=(uint32_t)src[i]<<(8*i);
     return value;
@@ -91,16 +107,16 @@ static void binary(unsigned char *dst,const unsigned char source[16],unsigned op
         }
     } else for(unsigned i=0;i<16;i++)dst[i]=op==TB_SSE_XOR?(dst[i]^source[i]):op==TB_SSE_AND?(dst[i]&source[i]):(dst[i]|source[i]);
 }
-void tb_sse_binary(CPU,unsigned op,unsigned dest,unsigned source) {
+NATIVE_CPU void tb_sse_binary(CPU,unsigned op,unsigned dest,unsigned source) {
     unsigned char value[16];unsigned char *dst=reg(cpu,dest);if(op>TB_SSE_AND)abort();
     memcpy(value,reg(cpu,source),16);binary(dst,value,op);
 }
-void tb_sse_binarymem(CPU,unsigned op,unsigned dest,uint32_t address) {
+NATIVE_CPU void tb_sse_binarymem(CPU,unsigned op,unsigned dest,uint32_t address) {
     unsigned char value[16];unsigned char *dst=reg(cpu,dest);if(op>TB_SSE_AND)abort();
     /* Legacy SSE computation memory operands require 16-byte guest alignment. */
     memcpy(value,memory(cpu,address,TB_SSE_A128),16);binary(dst,value,op);
 }
-uint32_t tb_sse_mask(CPU,unsigned index) {
+NATIVE_CPU uint32_t tb_sse_mask(CPU,unsigned index) {
     const unsigned char *src=reg(cpu,index);uint32_t value=0;
     for(unsigned i=0;i<16;i++)value|=(uint32_t)(src[i]>>7)<<i;
     return value;
@@ -111,12 +127,12 @@ static void shuffle(unsigned char *dst,const unsigned char source[16],unsigned o
     for(unsigned i=0;i<4;i++)memcpy(dst+i*n,source+((control>>(2*i))&3)*n,n);
     if(op==TB_SSE_SHUFLW)memcpy(dst+8,source+8,8);
 }
-void tb_sse_shuffle(CPU,unsigned op,unsigned dest,unsigned source,unsigned control) {
+NATIVE_CPU void tb_sse_shuffle(CPU,unsigned op,unsigned dest,unsigned source,unsigned control) {
     unsigned char value[16];unsigned char *dst=reg(cpu,dest);
     if(op>TB_SSE_SHUFLW||control>255)abort();
     memcpy(value,reg(cpu,source),16);shuffle(dst,value,op,control);
 }
-void tb_sse_shufflemem(CPU,unsigned op,unsigned dest,uint32_t address,unsigned control) {
+NATIVE_CPU void tb_sse_shufflemem(CPU,unsigned op,unsigned dest,uint32_t address,unsigned control) {
     unsigned char value[16];unsigned char *dst=reg(cpu,dest);
     if(op>TB_SSE_SHUFLW||control>255)abort();
     memcpy(value,memory(cpu,address,TB_SSE_A128),16);shuffle(dst,value,op,control);
@@ -137,11 +153,11 @@ static void dq2pd(unsigned char *dst,const unsigned char source[8]) {
         for(unsigned i=0;i<8;i++)dst[8*lane+i]=(unsigned char)(output>>(8*i));
     }
 }
-void tb_sse_dq2pd(CPU,unsigned dest,unsigned source) {
+NATIVE_CPU void tb_sse_dq2pd(CPU,unsigned dest,unsigned source) {
     unsigned char value[8];unsigned char *dst=reg(cpu,dest);
     memcpy(value,reg(cpu,source),8);dq2pd(dst,value);
 }
-void tb_sse_dq2pdmem(CPU,unsigned dest,uint32_t address) {
+NATIVE_CPU void tb_sse_dq2pdmem(CPU,unsigned dest,uint32_t address) {
     unsigned char value[8];unsigned char *dst=reg(cpu,dest);
     memcpy(value,memory(cpu,address,TB_SSE_Q),8);dq2pd(dst,value);
 }
@@ -182,11 +198,11 @@ static void ucomisd(CPU,uint64_t left,uint64_t right) {
     if(raised&~(cpu->_mxcsr>>7))abort();
     cpu->_eflags=(cpu->_eflags&~(OF|SF|AF|ZF|PF|CF))|condition;
 }
-void tb_sse_ucomisd(CPU,unsigned left,unsigned right) {
+NATIVE_CPU void tb_sse_ucomisd(CPU,unsigned left,unsigned right) {
     uint64_t a=read64(reg(cpu,left)),b=read64(reg(cpu,right));
     ucomisd(cpu,a,b);
 }
-void tb_sse_ucomisdmem(CPU,unsigned left,uint32_t address) {
+NATIVE_CPU void tb_sse_ucomisdmem(CPU,unsigned left,uint32_t address) {
     uint64_t a=read64(reg(cpu,left)),b=read64(memory(cpu,address,TB_SSE_Q));
     ucomisd(cpu,a,b);
 }
@@ -220,10 +236,10 @@ static uint32_t cvttss2si(CPU,uint32_t bits) {
     if(raised&~(cpu->_mxcsr>>7))abort();
     return result;
 }
-uint32_t tb_sse_cvttss2si(CPU,unsigned source) {
+NATIVE_CPU uint32_t tb_sse_cvttss2si(CPU,unsigned source) {
     return cvttss2si(cpu,tb_sse_getd(cpu,source));
 }
-uint32_t tb_sse_cvttss2simem(CPU,uint32_t address) {
+NATIVE_CPU uint32_t tb_sse_cvttss2simem(CPU,uint32_t address) {
     const unsigned char *src=memory(cpu,address,TB_SSE_SS);uint32_t bits=0;
     for(unsigned i=0;i<4;i++)bits|=(uint32_t)src[i]<<(8*i);
     return cvttss2si(cpu,bits);
@@ -240,7 +256,7 @@ static uint64_t rounded_shift(uint64_t significand,unsigned shift,unsigned round
     }
     return whole;
 }
-uint32_t tb_sse_cvtsd2si(CPU,unsigned source) {
+NATIVE_CPU uint32_t tb_sse_cvtsd2si(CPU,unsigned source) {
     uint64_t bits=read64(reg(cpu,source)),fraction=bits&UINT64_C(0x000fffffffffffff);
     unsigned sign=(unsigned)(bits>>63),exponent=(unsigned)((bits>>52)&2047);
     uint32_t control=cpu->_mxcsr,result=0;unsigned raised=0;
@@ -310,11 +326,11 @@ static void pd2ps(CPU,unsigned char *dst,const unsigned char source[16]) {
     for(unsigned lane=0;lane<2;lane++)for(unsigned i=0;i<4;i++)dst[4*lane+i]=(unsigned char)(output[lane]>>(8*i));
     memset(dst+8,0,8);
 }
-void tb_sse_pd2ps(CPU,unsigned dest,unsigned source) {
+NATIVE_CPU void tb_sse_pd2ps(CPU,unsigned dest,unsigned source) {
     unsigned char value[16];unsigned char *dst=reg(cpu,dest);
     memcpy(value,reg(cpu,source),16);pd2ps(cpu,dst,value);
 }
-void tb_sse_pd2psmem(CPU,unsigned dest,uint32_t address) {
+NATIVE_CPU void tb_sse_pd2psmem(CPU,unsigned dest,uint32_t address) {
     unsigned char value[16];unsigned char *dst=reg(cpu,dest);
     memcpy(value,memory(cpu,address,TB_SSE_A128),16);pd2ps(cpu,dst,value);
 }
@@ -341,13 +357,13 @@ static void scalar(CPU,unsigned op,unsigned char *dst,const unsigned char *sourc
     for(unsigned i=0;i<n;i++)dst[i]=(unsigned char)(result>>(8*i));
 #endif
 }
-void tb_sse_scalar(CPU,unsigned op,unsigned dest,unsigned source) {
+NATIVE_CPU void tb_sse_scalar(CPU,unsigned op,unsigned dest,unsigned source) {
     if(op>TB_SSE_MUL32&&op!=TB_SSE_ADD32&&op!=TB_SSE_DIV32&&op!=TB_SSE_SUB32)abort();
     unsigned n=op>=TB_SSE_MUL32?4:8;unsigned char value[8];
     unsigned char *dst=reg(cpu,dest);memcpy(value,reg(cpu,source),n);
     scalar(cpu,op,dst,value);
 }
-void tb_sse_scalarmem(CPU,unsigned op,unsigned dest,uint32_t address) {
+NATIVE_CPU void tb_sse_scalarmem(CPU,unsigned op,unsigned dest,uint32_t address) {
     if(op>TB_SSE_MUL32&&op!=TB_SSE_ADD32&&op!=TB_SSE_DIV32&&op!=TB_SSE_SUB32)abort();
     unsigned n=op>=TB_SSE_MUL32?4:8;unsigned char value[8];
     unsigned char *dst=reg(cpu,dest);
@@ -355,7 +371,7 @@ void tb_sse_scalarmem(CPU,unsigned op,unsigned dest,uint32_t address) {
     scalar(cpu,op,dst,value);
 }
 
-void tb_avx_scalar(CPU,unsigned op,unsigned dest,unsigned merge,unsigned source) {
+NATIVE_CPU void tb_avx_scalar(CPU,unsigned op,unsigned dest,unsigned merge,unsigned source) {
     if(op!=TB_SSE_MUL32 && op!=TB_SSE_ADD32 && op!=TB_SSE_DIV32 && op!=TB_SSE_SUB32)abort();
     unsigned char *dst=reg(cpu,dest),value[16],right[4];
     memcpy(value,reg(cpu,merge),16);memcpy(right,reg(cpu,source),4);
@@ -363,7 +379,7 @@ void tb_avx_scalar(CPU,unsigned op,unsigned dest,unsigned merge,unsigned source)
        An unserviced exception cannot expose merge lanes or clear YMM state. */
     scalar(cpu,op,value,right);memcpy(dst,value,16);memset(cpu->_ymm_hi[dest],0,16);
 }
-void tb_avx_scalarmem(CPU,unsigned op,unsigned dest,unsigned merge,uint32_t address) {
+NATIVE_CPU void tb_avx_scalarmem(CPU,unsigned op,unsigned dest,unsigned merge,uint32_t address) {
     if(op!=TB_SSE_MUL32 && op!=TB_SSE_ADD32 && op!=TB_SSE_DIV32 && op!=TB_SSE_SUB32)abort();
     unsigned char *dst=reg(cpu,dest),value[16],right[4];
     memcpy(value,reg(cpu,merge),16);memcpy(right,memory(cpu,address,TB_SSE_SS),4);
@@ -395,23 +411,23 @@ static void ss2sd(CPU,unsigned char value[16],const unsigned char source[4]) {
     cpu->_mxcsr|=raised;if(raised&~(cpu->_mxcsr>>7))abort();
     memcpy(value,&result,8);
 }
-void tb_avx_ss2sd(CPU,unsigned dest,unsigned merge,unsigned source) {
+NATIVE_CPU void tb_avx_ss2sd(CPU,unsigned dest,unsigned merge,unsigned source) {
     unsigned char *dst=reg(cpu,dest),value[16],scalar[4];
     memcpy(value,reg(cpu,merge),16);memcpy(scalar,reg(cpu,source),4);
     ss2sd(cpu,value,scalar);memcpy(dst,value,16);memset(cpu->_ymm_hi[dest],0,16);
 }
-void tb_avx_ss2sdmem(CPU,unsigned dest,unsigned merge,uint32_t address) {
+NATIVE_CPU void tb_avx_ss2sdmem(CPU,unsigned dest,unsigned merge,uint32_t address) {
     unsigned char *dst=reg(cpu,dest),value[16],scalar[4];
     memcpy(value,reg(cpu,merge),16);memcpy(scalar,memory(cpu,address,TB_SSE_SS),4);
     ss2sd(cpu,value,scalar);memcpy(dst,value,16);memset(cpu->_ymm_hi[dest],0,16);
 }
-void tb_avx_xor(CPU,unsigned dest,unsigned left,unsigned right) {
+NATIVE_CPU void tb_avx_xor(CPU,unsigned dest,unsigned left,unsigned right) {
     unsigned char *dst=reg(cpu,dest),a[16],b[16];
     memcpy(a,reg(cpu,left),16);memcpy(b,reg(cpu,right),16);
     for(unsigned i=0;i<16;i++)dst[i]=a[i]^b[i];
     memset(cpu->_ymm_hi[dest],0,16);
 }
-void tb_avx_xormem(CPU,unsigned dest,unsigned left,uint32_t address) {
+NATIVE_CPU void tb_avx_xormem(CPU,unsigned dest,unsigned left,uint32_t address) {
     unsigned char *dst=reg(cpu,dest),a[16],b[16];
     memcpy(a,reg(cpu,left),16);memcpy(b,memory(cpu,address,TB_SSE_U128),16);
     for(unsigned i=0;i<16;i++)dst[i]=a[i]^b[i];
@@ -425,12 +441,12 @@ static void sqrt64(CPU,unsigned char value[16],const unsigned char source[8]) {
     cpu->_mxcsr|=raised;if(raised&~(cpu->_mxcsr>>7))abort();
     for(unsigned i=0;i<8;i++)value[i]=(unsigned char)(result>>(8*i));
 }
-void tb_avx_sqrtsd(CPU,unsigned dest,unsigned merge,unsigned source) {
+NATIVE_CPU void tb_avx_sqrtsd(CPU,unsigned dest,unsigned merge,unsigned source) {
     unsigned char *dst=reg(cpu,dest),value[16],input[8];
     memcpy(value,reg(cpu,merge),16);memcpy(input,reg(cpu,source),8);
     sqrt64(cpu,value,input);memcpy(dst,value,16);memset(cpu->_ymm_hi[dest],0,16);
 }
-void tb_avx_sqrtsdmem(CPU,unsigned dest,unsigned merge,uint32_t address) {
+NATIVE_CPU void tb_avx_sqrtsdmem(CPU,unsigned dest,unsigned merge,uint32_t address) {
     unsigned char *dst=reg(cpu,dest),value[16],input[8];
     memcpy(value,reg(cpu,merge),16);memcpy(input,memory(cpu,address,TB_SSE_Q),8);
     sqrt64(cpu,value,input);memcpy(dst,value,16);memset(cpu->_ymm_hi[dest],0,16);
@@ -441,12 +457,12 @@ static void sd2ss(CPU,unsigned char value[16],const unsigned char source[8]) {
     cpu->_mxcsr|=raised;if(raised&~(cpu->_mxcsr>>7))abort();
     for(unsigned i=0;i<4;i++)value[i]=(unsigned char)(result>>(8*i));
 }
-void tb_avx_sd2ss(CPU,unsigned dest,unsigned merge,unsigned source) {
+NATIVE_CPU void tb_avx_sd2ss(CPU,unsigned dest,unsigned merge,unsigned source) {
     unsigned char *dst=reg(cpu,dest),value[16],input[8];
     memcpy(value,reg(cpu,merge),16);memcpy(input,reg(cpu,source),8);
     sd2ss(cpu,value,input);memcpy(dst,value,16);memset(cpu->_ymm_hi[dest],0,16);
 }
-void tb_avx_sd2ssmem(CPU,unsigned dest,unsigned merge,uint32_t address) {
+NATIVE_CPU void tb_avx_sd2ssmem(CPU,unsigned dest,unsigned merge,uint32_t address) {
     unsigned char *dst=reg(cpu,dest),value[16],input[8];
     memcpy(value,reg(cpu,merge),16);memcpy(input,memory(cpu,address,TB_SSE_Q),8);
     sd2ss(cpu,value,input);memcpy(dst,value,16);memset(cpu->_ymm_hi[dest],0,16);
@@ -474,25 +490,25 @@ static void comiss(CPU,uint32_t left,uint32_t right) {
     cpu->_mxcsr|=raised;if(raised&~(cpu->_mxcsr>>7))abort();
     cpu->_eflags=(cpu->_eflags&~(OF|SF|AF|ZF|PF|CF))|condition;
 }
-void tb_avx_comiss(CPU,unsigned left,unsigned right) {
+NATIVE_CPU void tb_avx_comiss(CPU,unsigned left,unsigned right) {
     uint32_t a=tb_sse_getd(cpu,left),b=tb_sse_getd(cpu,right);comiss(cpu,a,b);
 }
-void tb_avx_comissmem(CPU,unsigned left,uint32_t address) {
+NATIVE_CPU void tb_avx_comissmem(CPU,unsigned left,uint32_t address) {
     uint32_t a=tb_sse_getd(cpu,left),b=0;
     const unsigned char *source=memory(cpu,address,TB_SSE_SS);
     for(unsigned i=0;i<4;i++)b|=(uint32_t)source[i]<<(8*i);
     comiss(cpu,a,b);
 }
 
-void tb_avx_apsreg(CPU,unsigned dest,unsigned source) {
+NATIVE_CPU void tb_avx_apsreg(CPU,unsigned dest,unsigned source) {
     unsigned char *dst=reg(cpu,dest),value[16];memcpy(value,reg(cpu,source),16);
     memcpy(dst,value,16);memset(cpu->_ymm_hi[dest],0,16);
 }
-void tb_avx_apsload(CPU,unsigned dest,uint32_t address) {
+NATIVE_CPU void tb_avx_apsload(CPU,unsigned dest,uint32_t address) {
     unsigned char *dst=reg(cpu,dest),value[16];memcpy(value,memory(cpu,address,TB_SSE_A128),16);
     memcpy(dst,value,16);memset(cpu->_ymm_hi[dest],0,16);
 }
-void tb_avx_apsstore(CPU,unsigned source,uint32_t address) {
+NATIVE_CPU void tb_avx_apsstore(CPU,unsigned source,uint32_t address) {
     unsigned char value[16];memcpy(value,reg(cpu,source),16);
     memcpy(memory(cpu,address,TB_SSE_A128),value,16);
 }
@@ -504,39 +520,39 @@ static unsigned char *memory256(CPU,uint32_t address,unsigned aligned) {
     if(base>UINTPTR_MAX-(uint64_t)address-32)abort();
     return (unsigned char *)(base+address);
 }
-void tb_avx_aps256reg(CPU,unsigned dest,unsigned source) {
+NATIVE_CPU void tb_avx_aps256reg(CPU,unsigned dest,unsigned source) {
     unsigned char *dst=reg(cpu,dest),value[32];
     memcpy(value,reg(cpu,source),16);memcpy(value+16,cpu->_ymm_hi[source],16);
     memcpy(dst,value,16);memcpy(cpu->_ymm_hi[dest],value+16,16);
 }
-void tb_avx_aps256load(CPU,unsigned dest,uint32_t address) {
+NATIVE_CPU void tb_avx_aps256load(CPU,unsigned dest,uint32_t address) {
     unsigned char *dst=reg(cpu,dest),value[32];memcpy(value,memory256(cpu,address,1),32);
     memcpy(dst,value,16);memcpy(cpu->_ymm_hi[dest],value+16,16);
 }
-void tb_avx_aps256store(CPU,unsigned source,uint32_t address) {
+NATIVE_CPU void tb_avx_aps256store(CPU,unsigned source,uint32_t address) {
     unsigned char value[32];memcpy(value,reg(cpu,source),16);memcpy(value+16,cpu->_ymm_hi[source],16);
     memcpy(memory256(cpu,address,1),value,32);
 }
 
-void tb_avx_upsreg(CPU,unsigned dest,unsigned source) {tb_avx_apsreg(cpu,dest,source);}
-void tb_avx_ups256reg(CPU,unsigned dest,unsigned source) {tb_avx_aps256reg(cpu,dest,source);}
-void tb_avx_upsload(CPU,unsigned dest,uint32_t address) {
+NATIVE_CPU void tb_avx_upsreg(CPU,unsigned dest,unsigned source) {tb_avx_apsreg(cpu,dest,source);}
+NATIVE_CPU void tb_avx_ups256reg(CPU,unsigned dest,unsigned source) {tb_avx_aps256reg(cpu,dest,source);}
+NATIVE_CPU void tb_avx_upsload(CPU,unsigned dest,uint32_t address) {
     unsigned char *dst=reg(cpu,dest),value[16];memcpy(value,memory(cpu,address,TB_SSE_U128),16);
     memcpy(dst,value,16);memset(cpu->_ymm_hi[dest],0,16);
 }
-void tb_avx_upsstore(CPU,unsigned source,uint32_t address) {
+NATIVE_CPU void tb_avx_upsstore(CPU,unsigned source,uint32_t address) {
     unsigned char value[16];memcpy(value,reg(cpu,source),16);memcpy(memory(cpu,address,TB_SSE_U128),value,16);
 }
-void tb_avx_ups256load(CPU,unsigned dest,uint32_t address) {
+NATIVE_CPU void tb_avx_ups256load(CPU,unsigned dest,uint32_t address) {
     unsigned char *dst=reg(cpu,dest),value[32];memcpy(value,memory256(cpu,address,0),32);
     memcpy(dst,value,16);memcpy(cpu->_ymm_hi[dest],value+16,16);
 }
-void tb_avx_ups256store(CPU,unsigned source,uint32_t address) {
+NATIVE_CPU void tb_avx_ups256store(CPU,unsigned source,uint32_t address) {
     unsigned char value[32];memcpy(value,reg(cpu,source),16);memcpy(value+16,cpu->_ymm_hi[source],16);
     memcpy(memory256(cpu,address,0),value,32);
 }
 
-void tb_avx_zeroupper(CPU) {
+NATIVE_CPU void tb_avx_zeroupper(CPU) {
     if(!cpu)abort();
     memset(cpu->_ymm_hi,0,sizeof cpu->_ymm_hi);
 }
@@ -548,13 +564,13 @@ static void shufps_publish(CPU,unsigned wide,unsigned dest,const unsigned char *
     memcpy(reg(cpu,dest),value,16);
     if(wide)memcpy(cpu->_ymm_hi[dest],value+16,16);else memset(cpu->_ymm_hi[dest],0,16);
 }
-void tb_avx_shufps(CPU,unsigned wide,unsigned dest,unsigned left,unsigned right,unsigned control) {
+NATIVE_CPU void tb_avx_shufps(CPU,unsigned wide,unsigned dest,unsigned left,unsigned right,unsigned control) {
     if(wide>1||control>255)abort();(void)reg(cpu,dest);
     unsigned char a[32],b[32];memcpy(a,reg(cpu,left),16);memcpy(b,reg(cpu,right),16);
     if(wide){memcpy(a+16,cpu->_ymm_hi[left],16);memcpy(b+16,cpu->_ymm_hi[right],16);}
     shufps_publish(cpu,wide,dest,a,b,control);
 }
-void tb_avx_shufpsmem(CPU,unsigned wide,unsigned dest,unsigned left,uint32_t address,unsigned control) {
+NATIVE_CPU void tb_avx_shufpsmem(CPU,unsigned wide,unsigned dest,unsigned left,uint32_t address,unsigned control) {
     if(wide>1||control>255)abort();(void)reg(cpu,dest);
     unsigned char a[32],b[32];memcpy(a,reg(cpu,left),16);
     if(wide)memcpy(a+16,cpu->_ymm_hi[left],16);
@@ -563,12 +579,12 @@ void tb_avx_shufpsmem(CPU,unsigned wide,unsigned dest,unsigned left,uint32_t add
 }
 
 /* VEXTRACTF128 selects a half before any aliased destination publication. */
-void tb_avx_extract128reg(CPU,unsigned dest,unsigned source,unsigned control) {
+NATIVE_CPU void tb_avx_extract128reg(CPU,unsigned dest,unsigned source,unsigned control) {
     if(control>255)abort();unsigned char *dst=reg(cpu,dest),*src=reg(cpu,source),value[16];
     memcpy(value,(control&1)?cpu->_ymm_hi[source]:src,16);
     memcpy(dst,value,16);memset(cpu->_ymm_hi[dest],0,16);
 }
-void tb_avx_extract128store(CPU,unsigned source,uint32_t address,unsigned control) {
+NATIVE_CPU void tb_avx_extract128store(CPU,unsigned source,uint32_t address,unsigned control) {
     if(control>255)abort();unsigned char *src=reg(cpu,source),value[16];
     memcpy(value,(control&1)?cpu->_ymm_hi[source]:src,16);
     memcpy(memory(cpu,address,TB_SSE_U128),value,16);
@@ -577,17 +593,17 @@ void tb_avx_extract128store(CPU,unsigned source,uint32_t address,unsigned contro
 static void half_publish(CPU,unsigned dest,const unsigned char value[16]) {
     memcpy(reg(cpu,dest),value,16);memset(cpu->_ymm_hi[dest],0,16);
 }
-void tb_avx_halfreg(CPU,unsigned high,unsigned dest,unsigned merge,unsigned source) {
+NATIVE_CPU void tb_avx_halfreg(CPU,unsigned high,unsigned dest,unsigned merge,unsigned source) {
     if(high>1)abort();(void)reg(cpu,dest);
     unsigned char a[16],b[16],value[16];memcpy(a,reg(cpu,merge),16);memcpy(b,reg(cpu,source),16);
     memcpy(value,high?a:b+8,8);memcpy(value+8,high?b:a+8,8);half_publish(cpu,dest,value);
 }
-void tb_avx_halfload(CPU,unsigned high,unsigned dest,unsigned merge,uint32_t address) {
+NATIVE_CPU void tb_avx_halfload(CPU,unsigned high,unsigned dest,unsigned merge,uint32_t address) {
     if(high>1)abort();(void)reg(cpu,dest);
     unsigned char a[16],b[8],value[16];memcpy(a,reg(cpu,merge),16);memcpy(b,memory(cpu,address,TB_SSE_Q),8);
     memcpy(value,high?a:b,8);memcpy(value+8,high?b:a+8,8);half_publish(cpu,dest,value);
 }
-void tb_avx_halfstore(CPU,unsigned high,unsigned source,uint32_t address) {
+NATIVE_CPU void tb_avx_halfstore(CPU,unsigned high,unsigned source,uint32_t address) {
     if(high>1)abort();unsigned char value[8];memcpy(value,reg(cpu,source)+high*8,8);
     memcpy(memory(cpu,address,TB_SSE_Q),value,8);
 }
@@ -607,13 +623,13 @@ static void packed_publish(CPU,unsigned wide,unsigned op,unsigned dest,const uns
     memcpy(reg(cpu,dest),value,16);
     if(wide)memcpy(cpu->_ymm_hi[dest],value+16,16);else memset(cpu->_ymm_hi[dest],0,16);
 }
-void tb_avx_packed(CPU,unsigned wide,unsigned op,unsigned dest,unsigned left,unsigned right) {
+NATIVE_CPU void tb_avx_packed(CPU,unsigned wide,unsigned op,unsigned dest,unsigned left,unsigned right) {
     if(wide>1||(op!=TB_SSE_MUL32&&op!=TB_SSE_SUB32&&op!=TB_SSE_ADD32&&op!=TB_SSE_DIV32))abort();(void)reg(cpu,dest);
     unsigned char a[32],b[32];memcpy(a,reg(cpu,left),16);memcpy(b,reg(cpu,right),16);
     if(wide){memcpy(a+16,cpu->_ymm_hi[left],16);memcpy(b+16,cpu->_ymm_hi[right],16);}
     packed_publish(cpu,wide,op,dest,a,b);
 }
-void tb_avx_packedmem(CPU,unsigned wide,unsigned op,unsigned dest,unsigned left,uint32_t address) {
+NATIVE_CPU void tb_avx_packedmem(CPU,unsigned wide,unsigned op,unsigned dest,unsigned left,uint32_t address) {
     if(wide>1||(op!=TB_SSE_MUL32&&op!=TB_SSE_SUB32&&op!=TB_SSE_ADD32&&op!=TB_SSE_DIV32))abort();(void)reg(cpu,dest);
     unsigned char a[32],b[32];memcpy(a,reg(cpu,left),16);
     if(wide)memcpy(a+16,cpu->_ymm_hi[left],16);
@@ -629,12 +645,12 @@ static void broadcast_publish(CPU,unsigned wide,unsigned kind,unsigned dest,cons
     memcpy(reg(cpu,dest),value,16);
     if(wide)memcpy(cpu->_ymm_hi[dest],value+16,16);else memset(cpu->_ymm_hi[dest],0,16);
 }
-void tb_avx_broadcast(CPU,unsigned wide,unsigned kind,unsigned dest,unsigned source) {
+NATIVE_CPU void tb_avx_broadcast(CPU,unsigned wide,unsigned kind,unsigned dest,unsigned source) {
     if(wide>1||kind>1||(kind&&!wide))abort();(void)reg(cpu,dest);
     unsigned char value[8];memcpy(value,reg(cpu,source),4u<<kind);
     broadcast_publish(cpu,wide,kind,dest,value);
 }
-void tb_avx_broadcastmem(CPU,unsigned wide,unsigned kind,unsigned dest,uint32_t address) {
+NATIVE_CPU void tb_avx_broadcastmem(CPU,unsigned wide,unsigned kind,unsigned dest,uint32_t address) {
     if(wide>1||kind>2||(kind&&!wide))abort();(void)reg(cpu,dest);
     unsigned char value[16];unsigned mode=kind==0?TB_SSE_SS:kind==1?TB_SSE_Q:TB_SSE_U128;
     memcpy(value,memory(cpu,address,mode),4u<<kind);
@@ -642,17 +658,17 @@ void tb_avx_broadcastmem(CPU,unsigned wide,unsigned kind,unsigned dest,uint32_t 
 }
 
 
-void tb_avx_sdreg(CPU,unsigned dest,unsigned merge,unsigned source) {
+NATIVE_CPU void tb_avx_sdreg(CPU,unsigned dest,unsigned merge,unsigned source) {
     unsigned char *dst=reg(cpu,dest),value[16],scalar[8];
     memcpy(value,reg(cpu,merge),16);memcpy(scalar,reg(cpu,source),8);
     memcpy(value,scalar,8);memcpy(dst,value,16);memset(cpu->_ymm_hi[dest],0,16);
 }
-void tb_avx_sdload(CPU,unsigned dest,uint32_t address) {
+NATIVE_CPU void tb_avx_sdload(CPU,unsigned dest,uint32_t address) {
     unsigned char *dst=reg(cpu,dest),value[8];
     memcpy(value,memory(cpu,address,TB_SSE_Q),8);
     memcpy(dst,value,8);memset(dst+8,0,8);memset(cpu->_ymm_hi[dest],0,16);
 }
-void tb_avx_sdstore(CPU,unsigned source,uint32_t address) {
+NATIVE_CPU void tb_avx_sdstore(CPU,unsigned source,uint32_t address) {
     unsigned char value[8];memcpy(value,reg(cpu,source),8);
     memcpy(memory(cpu,address,TB_SSE_Q),value,8);
 }
@@ -672,13 +688,13 @@ static void sqrtps_publish(CPU,unsigned wide,unsigned dest,const unsigned char *
     memcpy(reg(cpu,dest),value,16);
     if(wide)memcpy(cpu->_ymm_hi[dest],value+16,16);else memset(cpu->_ymm_hi[dest],0,16);
 }
-void tb_avx_sqrtps(CPU,unsigned wide,unsigned dest,unsigned source) {
+NATIVE_CPU void tb_avx_sqrtps(CPU,unsigned wide,unsigned dest,unsigned source) {
     if(wide>1)abort();(void)reg(cpu,dest);
     unsigned char input[32];memcpy(input,reg(cpu,source),16);
     if(wide)memcpy(input+16,cpu->_ymm_hi[source],16);
     sqrtps_publish(cpu,wide,dest,input);
 }
-void tb_avx_sqrtpsmem(CPU,unsigned wide,unsigned dest,uint32_t address) {
+NATIVE_CPU void tb_avx_sqrtpsmem(CPU,unsigned wide,unsigned dest,uint32_t address) {
     if(wide>1)abort();(void)reg(cpu,dest);
     unsigned char input[32];
     memcpy(input,wide?memory256(cpu,address,0):memory(cpu,address,TB_SSE_U128),wide?32:16);
@@ -708,10 +724,10 @@ static uint32_t cvttsd2si(CPU,uint64_t bits) {
     if(raised&~(control>>7))abort();
     return result;
 }
-uint32_t tb_sse_cvttsd2si(CPU,unsigned source) {
+NATIVE_CPU uint32_t tb_sse_cvttsd2si(CPU,unsigned source) {
     return cvttsd2si(cpu,read64(reg(cpu,source)));
 }
-uint32_t tb_sse_cvttsd2simem(CPU,uint32_t address) {
+NATIVE_CPU uint32_t tb_sse_cvttsd2simem(CPU,uint32_t address) {
     return cvttsd2si(cpu,read64(memory(cpu,address,TB_SSE_Q)));
 }
 
@@ -736,13 +752,13 @@ static void minmaxss(CPU,unsigned maximum,unsigned char value[16],uint32_t left,
     /* Source-two NaNs, including signaling payloads, are copied unchanged. */
     memcpy(value,&result,4);
 }
-void tb_avx_minmaxss(CPU,unsigned maximum,unsigned dest,unsigned merge,unsigned source) {
+NATIVE_CPU void tb_avx_minmaxss(CPU,unsigned maximum,unsigned dest,unsigned merge,unsigned source) {
     if(maximum>1)abort();(void)reg(cpu,dest);
     unsigned char value[16];uint32_t left,right;
     memcpy(value,reg(cpu,merge),16);memcpy(&left,value,4);memcpy(&right,reg(cpu,source),4);
     minmaxss(cpu,maximum,value,left,right);memcpy(reg(cpu,dest),value,16);memset(cpu->_ymm_hi[dest],0,16);
 }
-void tb_avx_minmaxssmem(CPU,unsigned maximum,unsigned dest,unsigned merge,uint32_t address) {
+NATIVE_CPU void tb_avx_minmaxssmem(CPU,unsigned maximum,unsigned dest,unsigned merge,uint32_t address) {
     if(maximum>1)abort();(void)reg(cpu,dest);
     unsigned char value[16];uint32_t left,right;
     memcpy(value,reg(cpu,merge),16);memcpy(&left,value,4);memcpy(&right,memory(cpu,address,TB_SSE_SS),4);
@@ -770,10 +786,10 @@ static void comisd(CPU,uint64_t left,uint64_t right) {
     cpu->_mxcsr|=raised;if(raised&~(cpu->_mxcsr>>7))abort();
     cpu->_eflags=(cpu->_eflags&~(OF|SF|AF|ZF|PF|CF))|condition;
 }
-void tb_avx_comisd(CPU,unsigned left,unsigned right) {
+NATIVE_CPU void tb_avx_comisd(CPU,unsigned left,unsigned right) {
     uint64_t a=read64(reg(cpu,left)),b=read64(reg(cpu,right));comisd(cpu,a,b);
 }
-void tb_avx_comisdmem(CPU,unsigned left,uint32_t address) {
+NATIVE_CPU void tb_avx_comisdmem(CPU,unsigned left,uint32_t address) {
     uint64_t a=read64(reg(cpu,left)),b=0;
     const unsigned char *source=memory(cpu,address,TB_SSE_Q);
     for(unsigned i=0;i<8;i++)b|=(uint64_t)source[i]<<(8*i);
@@ -786,13 +802,13 @@ static void integer_logic_publish(CPU,unsigned wide,unsigned op,unsigned dest,co
     memcpy(reg(cpu,dest),value,16);
     if(wide)memcpy(cpu->_ymm_hi[dest],value+16,16);else memset(cpu->_ymm_hi[dest],0,16);
 }
-void tb_avx_integer_logic(CPU,unsigned wide,unsigned op,unsigned dest,unsigned left,unsigned right) {
+NATIVE_CPU void tb_avx_integer_logic(CPU,unsigned wide,unsigned op,unsigned dest,unsigned left,unsigned right) {
     if(wide>1||op>1)abort();(void)reg(cpu,dest);
     unsigned char a[32],b[32];memcpy(a,reg(cpu,left),16);memcpy(b,reg(cpu,right),16);
     if(wide){memcpy(a+16,cpu->_ymm_hi[left],16);memcpy(b+16,cpu->_ymm_hi[right],16);}
     integer_logic_publish(cpu,wide,op,dest,a,b);
 }
-void tb_avx_integer_logicmem(CPU,unsigned wide,unsigned op,unsigned dest,unsigned left,uint32_t address) {
+NATIVE_CPU void tb_avx_integer_logicmem(CPU,unsigned wide,unsigned op,unsigned dest,unsigned left,uint32_t address) {
     if(wide>1||op>1)abort();(void)reg(cpu,dest);
     unsigned char a[32],b[32];memcpy(a,reg(cpu,left),16);
     if(wide)memcpy(a+16,cpu->_ymm_hi[left],16);
@@ -800,19 +816,19 @@ void tb_avx_integer_logicmem(CPU,unsigned wide,unsigned op,unsigned dest,unsigne
     integer_logic_publish(cpu,wide,op,dest,a,b);
 }
 
-void tb_avx_setd(CPU,unsigned dest,uint32_t value) {
+NATIVE_CPU void tb_avx_setd(CPU,unsigned dest,uint32_t value) {
     tb_sse_setd(cpu,dest,value);memset(cpu->_ymm_hi[dest],0,16);
 }
-void tb_avx_qreg(CPU,unsigned dest,unsigned source) {
+NATIVE_CPU void tb_avx_qreg(CPU,unsigned dest,unsigned source) {
     unsigned char value[8];(void)reg(cpu,dest);memcpy(value,reg(cpu,source),8);
     memcpy(reg(cpu,dest),value,8);memset(reg(cpu,dest)+8,0,8);memset(cpu->_ymm_hi[dest],0,16);
 }
-void tb_avx_smallload(CPU,unsigned quad,unsigned dest,uint32_t address) {
+NATIVE_CPU void tb_avx_smallload(CPU,unsigned quad,unsigned dest,uint32_t address) {
     if(quad>1)abort();unsigned n=quad?8:4;unsigned char value[8];unsigned char *dst=reg(cpu,dest);
     memcpy(value,memory(cpu,address,quad?TB_SSE_Q:TB_SSE_D),n);
     memcpy(dst,value,n);memset(dst+n,0,16-n);memset(cpu->_ymm_hi[dest],0,16);
 }
-void tb_avx_smallstore(CPU,unsigned quad,unsigned source,uint32_t address) {
+NATIVE_CPU void tb_avx_smallstore(CPU,unsigned quad,unsigned source,uint32_t address) {
     if(quad>1)abort();unsigned n=quad?8:4;unsigned char value[8];memcpy(value,reg(cpu,source),n);
     memcpy(memory(cpu,address,quad?TB_SSE_Q:TB_SSE_D),value,n);
 }
@@ -830,13 +846,13 @@ static void sadbw_publish(CPU,unsigned wide,unsigned dest,const unsigned char *a
     memcpy(reg(cpu,dest),value,16);
     if(wide)memcpy(cpu->_ymm_hi[dest],value+16,16);else memset(cpu->_ymm_hi[dest],0,16);
 }
-void tb_avx_sadbw(CPU,unsigned wide,unsigned dest,unsigned left,unsigned right) {
+NATIVE_CPU void tb_avx_sadbw(CPU,unsigned wide,unsigned dest,unsigned left,unsigned right) {
     if(wide>1)abort();(void)reg(cpu,dest);
     unsigned char a[32],b[32];memcpy(a,reg(cpu,left),16);memcpy(b,reg(cpu,right),16);
     if(wide){memcpy(a+16,cpu->_ymm_hi[left],16);memcpy(b+16,cpu->_ymm_hi[right],16);}
     sadbw_publish(cpu,wide,dest,a,b);
 }
-void tb_avx_sadbwmem(CPU,unsigned wide,unsigned dest,unsigned left,uint32_t address) {
+NATIVE_CPU void tb_avx_sadbwmem(CPU,unsigned wide,unsigned dest,unsigned left,uint32_t address) {
     if(wide>1)abort();(void)reg(cpu,dest);
     unsigned char a[32],b[32];memcpy(a,reg(cpu,left),16);
     if(wide)memcpy(a+16,cpu->_ymm_hi[left],16);
@@ -863,13 +879,13 @@ static void maddadd_publish(CPU,unsigned wide,unsigned op,unsigned dest,const un
     memcpy(reg(cpu,dest),value,16);
     if(wide)memcpy(cpu->_ymm_hi[dest],value+16,16);else memset(cpu->_ymm_hi[dest],0,16);
 }
-void tb_avx_maddadd(CPU,unsigned wide,unsigned op,unsigned dest,unsigned left,unsigned right) {
+NATIVE_CPU void tb_avx_maddadd(CPU,unsigned wide,unsigned op,unsigned dest,unsigned left,unsigned right) {
     if(wide>1||op>3)abort();(void)reg(cpu,dest);
     unsigned char a[32],b[32];memcpy(a,reg(cpu,left),16);memcpy(b,reg(cpu,right),16);
     if(wide){memcpy(a+16,cpu->_ymm_hi[left],16);memcpy(b+16,cpu->_ymm_hi[right],16);}
     maddadd_publish(cpu,wide,op,dest,a,b);
 }
-void tb_avx_maddaddmem(CPU,unsigned wide,unsigned op,unsigned dest,unsigned left,uint32_t address) {
+NATIVE_CPU void tb_avx_maddaddmem(CPU,unsigned wide,unsigned op,unsigned dest,unsigned left,uint32_t address) {
     if(wide>1||op>3)abort();(void)reg(cpu,dest);
     unsigned char a[32],b[32];memcpy(a,reg(cpu,left),16);
     if(wide)memcpy(a+16,cpu->_ymm_hi[left],16);
@@ -891,17 +907,17 @@ static void packed_shift_publish(CPU,unsigned wide,unsigned op,unsigned dest,con
     memcpy(reg(cpu,dest),value,16);
     if(wide)memcpy(cpu->_ymm_hi[dest],value+16,16);else memset(cpu->_ymm_hi[dest],0,16);
 }
-void tb_avx_shiftimm(CPU,unsigned wide,unsigned op,unsigned dest,unsigned source,unsigned count) {
+NATIVE_CPU void tb_avx_shiftimm(CPU,unsigned wide,unsigned op,unsigned dest,unsigned source,unsigned count) {
     if(wide>1||op>3||count>255)abort();(void)reg(cpu,dest);unsigned char a[32];memcpy(a,reg(cpu,source),16);
     if(wide)memcpy(a+16,cpu->_ymm_hi[source],16);packed_shift_publish(cpu,wide,op,dest,a,NULL,count);
 }
-void tb_avx_shiftcount(CPU,unsigned wide,unsigned op,unsigned dest,unsigned source,unsigned countreg) {
+NATIVE_CPU void tb_avx_shiftcount(CPU,unsigned wide,unsigned op,unsigned dest,unsigned source,unsigned countreg) {
     if(wide>1||(op!=0&&op!=1&&op!=4))abort();(void)reg(cpu,dest);unsigned char a[32],b[32];uint64_t count;
     memcpy(a,reg(cpu,source),16);memcpy(b,reg(cpu,countreg),16);
     if(wide){memcpy(a+16,cpu->_ymm_hi[source],16);if(op==4)memcpy(b+16,cpu->_ymm_hi[countreg],16);}
     memcpy(&count,b,8);packed_shift_publish(cpu,wide,op,dest,a,b,count);
 }
-void tb_avx_shiftcountmem(CPU,unsigned wide,unsigned op,unsigned dest,unsigned source,uint32_t address) {
+NATIVE_CPU void tb_avx_shiftcountmem(CPU,unsigned wide,unsigned op,unsigned dest,unsigned source,uint32_t address) {
     if(wide>1||(op!=0&&op!=1&&op!=4))abort();(void)reg(cpu,dest);unsigned char a[32],b[32];uint64_t count;
     memcpy(a,reg(cpu,source),16);if(wide)memcpy(a+16,cpu->_ymm_hi[source],16);
     memcpy(b,op==4&&wide?memory256(cpu,address,0):memory(cpu,address,TB_SSE_U128),op==4&&wide?32:16);
@@ -913,12 +929,12 @@ static void permd_publish(CPU,unsigned dest,const unsigned char *indices,const u
     for(unsigned i=0;i<8;i++){uint32_t index;memcpy(&index,indices+i*4,4);memcpy(value+i*4,data+(index&7)*4,4);}
     memcpy(reg(cpu,dest),value,16);memcpy(cpu->_ymm_hi[dest],value+16,16);
 }
-void tb_avx_permd(CPU,unsigned dest,unsigned indices,unsigned source) {
+NATIVE_CPU void tb_avx_permd(CPU,unsigned dest,unsigned indices,unsigned source) {
     (void)reg(cpu,dest);unsigned char a[32],b[32];
     memcpy(a,reg(cpu,indices),16);memcpy(a+16,cpu->_ymm_hi[indices],16);
     memcpy(b,reg(cpu,source),16);memcpy(b+16,cpu->_ymm_hi[source],16);permd_publish(cpu,dest,a,b);
 }
-void tb_avx_permdmem(CPU,unsigned dest,unsigned indices,uint32_t address) {
+NATIVE_CPU void tb_avx_permdmem(CPU,unsigned dest,unsigned indices,uint32_t address) {
     (void)reg(cpu,dest);unsigned char a[32],b[32];
     memcpy(a,reg(cpu,indices),16);memcpy(a+16,cpu->_ymm_hi[indices],16);
     memcpy(b,memory256(cpu,address,0),32);permd_publish(cpu,dest,a,b);
@@ -929,12 +945,12 @@ static void unpackhighq_publish(CPU,unsigned wide,unsigned dest,const unsigned c
     for(unsigned lane=0;lane<(wide?32:16);lane+=16){memcpy(value+lane,a+lane+8,8);memcpy(value+lane+8,b+lane+8,8);}
     memcpy(reg(cpu,dest),value,16);if(wide)memcpy(cpu->_ymm_hi[dest],value+16,16);else memset(cpu->_ymm_hi[dest],0,16);
 }
-void tb_avx_unpackhighq(CPU,unsigned wide,unsigned dest,unsigned left,unsigned right) {
+NATIVE_CPU void tb_avx_unpackhighq(CPU,unsigned wide,unsigned dest,unsigned left,unsigned right) {
     if(wide>1)abort();(void)reg(cpu,dest);unsigned char a[32],b[32];
     memcpy(a,reg(cpu,left),16);memcpy(b,reg(cpu,right),16);
     if(wide){memcpy(a+16,cpu->_ymm_hi[left],16);memcpy(b+16,cpu->_ymm_hi[right],16);}unpackhighq_publish(cpu,wide,dest,a,b);
 }
-void tb_avx_unpackhighqmem(CPU,unsigned wide,unsigned dest,unsigned left,uint32_t address) {
+NATIVE_CPU void tb_avx_unpackhighqmem(CPU,unsigned wide,unsigned dest,unsigned left,uint32_t address) {
     if(wide>1)abort();(void)reg(cpu,dest);unsigned char a[32],b[32];
     memcpy(a,reg(cpu,left),16);if(wide)memcpy(a+16,cpu->_ymm_hi[left],16);
     memcpy(b,wide?memory256(cpu,address,0):memory(cpu,address,TB_SSE_U128),wide?32:16);unpackhighq_publish(cpu,wide,dest,a,b);
@@ -945,11 +961,11 @@ static void shufd_publish(CPU,unsigned wide,unsigned dest,const unsigned char *s
     for(unsigned lane=0;lane<(wide?32:16);lane+=16)for(unsigned j=0;j<4;j++)memcpy(value+lane+j*4,source+lane+((order>>(j*2))&3)*4,4);
     memcpy(reg(cpu,dest),value,16);if(wide)memcpy(cpu->_ymm_hi[dest],value+16,16);else memset(cpu->_ymm_hi[dest],0,16);
 }
-void tb_avx_shufd(CPU,unsigned wide,unsigned dest,unsigned source,unsigned order) {
+NATIVE_CPU void tb_avx_shufd(CPU,unsigned wide,unsigned dest,unsigned source,unsigned order) {
     if(wide>1||order>255)abort();(void)reg(cpu,dest);unsigned char a[32];memcpy(a,reg(cpu,source),16);
     if(wide)memcpy(a+16,cpu->_ymm_hi[source],16);shufd_publish(cpu,wide,dest,a,order);
 }
-void tb_avx_shufdmem(CPU,unsigned wide,unsigned dest,uint32_t address,unsigned order) {
+NATIVE_CPU void tb_avx_shufdmem(CPU,unsigned wide,unsigned dest,uint32_t address,unsigned order) {
     if(wide>1||order>255)abort();(void)reg(cpu,dest);unsigned char a[32];
     memcpy(a,wide?memory256(cpu,address,0):memory(cpu,address,TB_SSE_U128),wide?32:16);shufd_publish(cpu,wide,dest,a,order);
 }
@@ -959,11 +975,11 @@ static void shufb_publish(CPU,unsigned wide,unsigned dest,const unsigned char *d
     for(unsigned j=0;j<(wide?32:16);j++)value[j]=(control[j]&0x80)?0:data[(j&~15u)+(control[j]&15)];
     memcpy(reg(cpu,dest),value,16);if(wide)memcpy(cpu->_ymm_hi[dest],value+16,16);else memset(cpu->_ymm_hi[dest],0,16);
 }
-void tb_avx_shufb(CPU,unsigned wide,unsigned dest,unsigned source,unsigned controls) {
+NATIVE_CPU void tb_avx_shufb(CPU,unsigned wide,unsigned dest,unsigned source,unsigned controls) {
     if(wide>1)abort();(void)reg(cpu,dest);unsigned char a[32],b[32];memcpy(a,reg(cpu,source),16);memcpy(b,reg(cpu,controls),16);
     if(wide){memcpy(a+16,cpu->_ymm_hi[source],16);memcpy(b+16,cpu->_ymm_hi[controls],16);}shufb_publish(cpu,wide,dest,a,b);
 }
-void tb_avx_shufbmem(CPU,unsigned wide,unsigned dest,unsigned source,uint32_t address) {
+NATIVE_CPU void tb_avx_shufbmem(CPU,unsigned wide,unsigned dest,unsigned source,uint32_t address) {
     if(wide>1)abort();(void)reg(cpu,dest);unsigned char a[32],b[32];memcpy(a,reg(cpu,source),16);if(wide)memcpy(a+16,cpu->_ymm_hi[source],16);
     memcpy(b,wide?memory256(cpu,address,0):memory(cpu,address,TB_SSE_U128),wide?32:16);shufb_publish(cpu,wide,dest,a,b);
 }
@@ -973,10 +989,10 @@ static void ibroadcast_publish(CPU,unsigned wide,unsigned kind,unsigned dest,con
     for(unsigned j=0;j<(wide?32:16);j+=bytes)memcpy(value+j,source,bytes);
     memcpy(reg(cpu,dest),value,16);if(wide)memcpy(cpu->_ymm_hi[dest],value+16,16);else memset(cpu->_ymm_hi[dest],0,16);
 }
-void tb_avx_ibroadcast(CPU,unsigned wide,unsigned kind,unsigned dest,unsigned source) {
+NATIVE_CPU void tb_avx_ibroadcast(CPU,unsigned wide,unsigned kind,unsigned dest,unsigned source) {
     if(wide>1||kind>2)abort();(void)reg(cpu,dest);unsigned char value[8];memcpy(value,reg(cpu,source),2u<<kind);ibroadcast_publish(cpu,wide,kind,dest,value);
 }
-void tb_avx_ibroadcastmem(CPU,unsigned wide,unsigned kind,unsigned dest,uint32_t address) {
+NATIVE_CPU void tb_avx_ibroadcastmem(CPU,unsigned wide,unsigned kind,unsigned dest,uint32_t address) {
     if(wide>1||kind>3||(kind==3&&!wide))abort();(void)reg(cpu,dest);unsigned char value[16];memcpy(value,memory(cpu,address,TB_SSE_U128),2u<<kind);ibroadcast_publish(cpu,wide,kind,dest,value);
 }
 
@@ -986,11 +1002,11 @@ static void icmp_publish(CPU,unsigned wide,unsigned op,unsigned dest,const unsig
     else for(unsigned j=0;j<n;j++){int x=a[j]<128?a[j]:(int)a[j]-256,y=b[j]<128?b[j]:(int)b[j]-256;value[j]=(op==0?x>y:a[j]==b[j])?255:0;}
     memcpy(reg(cpu,dest),value,16);if(wide)memcpy(cpu->_ymm_hi[dest],value+16,16);else memset(cpu->_ymm_hi[dest],0,16);
 }
-void tb_avx_icmp(CPU,unsigned wide,unsigned op,unsigned dest,unsigned left,unsigned right) {
+NATIVE_CPU void tb_avx_icmp(CPU,unsigned wide,unsigned op,unsigned dest,unsigned left,unsigned right) {
     if(wide>1||op>2)abort();(void)reg(cpu,dest);unsigned char a[32],b[32];memcpy(a,reg(cpu,left),16);memcpy(b,reg(cpu,right),16);
     if(wide){memcpy(a+16,cpu->_ymm_hi[left],16);memcpy(b+16,cpu->_ymm_hi[right],16);}icmp_publish(cpu,wide,op,dest,a,b);
 }
-void tb_avx_icmpmem(CPU,unsigned wide,unsigned op,unsigned dest,unsigned left,uint32_t address) {
+NATIVE_CPU void tb_avx_icmpmem(CPU,unsigned wide,unsigned op,unsigned dest,unsigned left,uint32_t address) {
     if(wide>1||op>2)abort();(void)reg(cpu,dest);unsigned char a[32],b[32];memcpy(a,reg(cpu,left),16);if(wide)memcpy(a+16,cpu->_ymm_hi[left],16);
     memcpy(b,wide?memory256(cpu,address,0):memory(cpu,address,TB_SSE_U128),wide?32:16);icmp_publish(cpu,wide,op,dest,a,b);
 }
@@ -999,11 +1015,11 @@ static void blendvb_publish(CPU,unsigned wide,unsigned dest,const unsigned char 
     unsigned char value[32];for(unsigned j=0;j<(wide?32:16);j++)value[j]=(mask[j]&0x80)?b[j]:a[j];
     memcpy(reg(cpu,dest),value,16);if(wide)memcpy(cpu->_ymm_hi[dest],value+16,16);else memset(cpu->_ymm_hi[dest],0,16);
 }
-void tb_avx_blendvb(CPU,unsigned wide,unsigned dest,unsigned left,unsigned right,unsigned masks) {
+NATIVE_CPU void tb_avx_blendvb(CPU,unsigned wide,unsigned dest,unsigned left,unsigned right,unsigned masks) {
     if(wide>1)abort();(void)reg(cpu,dest);unsigned char a[32],b[32],m[32];memcpy(a,reg(cpu,left),16);memcpy(b,reg(cpu,right),16);memcpy(m,reg(cpu,masks),16);
     if(wide){memcpy(a+16,cpu->_ymm_hi[left],16);memcpy(b+16,cpu->_ymm_hi[right],16);memcpy(m+16,cpu->_ymm_hi[masks],16);}blendvb_publish(cpu,wide,dest,a,b,m);
 }
-void tb_avx_blendvbmem(CPU,unsigned wide,unsigned dest,unsigned left,uint32_t address,unsigned masks) {
+NATIVE_CPU void tb_avx_blendvbmem(CPU,unsigned wide,unsigned dest,unsigned left,uint32_t address,unsigned masks) {
     if(wide>1)abort();(void)reg(cpu,dest);unsigned char a[32],b[32],m[32];memcpy(a,reg(cpu,left),16);memcpy(m,reg(cpu,masks),16);
     if(wide){memcpy(a+16,cpu->_ymm_hi[left],16);memcpy(m+16,cpu->_ymm_hi[masks],16);}memcpy(b,wide?memory256(cpu,address,0):memory(cpu,address,TB_SSE_U128),wide?32:16);blendvb_publish(cpu,wide,dest,a,b,m);
 }
@@ -1012,16 +1028,16 @@ static void inserti128_publish(CPU,unsigned dest,const unsigned char *merge,cons
     unsigned char value[32];memcpy(value,merge,32);memcpy(value+(control&1)*16,insert,16);
     memcpy(reg(cpu,dest),value,16);memcpy(cpu->_ymm_hi[dest],value+16,16);
 }
-void tb_avx_inserti128(CPU,unsigned dest,unsigned merge,unsigned source,unsigned control) {
+NATIVE_CPU void tb_avx_inserti128(CPU,unsigned dest,unsigned merge,unsigned source,unsigned control) {
     if(control>255)abort();(void)reg(cpu,dest);unsigned char a[32],b[16];memcpy(a,reg(cpu,merge),16);memcpy(a+16,cpu->_ymm_hi[merge],16);memcpy(b,reg(cpu,source),16);
     inserti128_publish(cpu,dest,a,b,control);
 }
-void tb_avx_inserti128mem(CPU,unsigned dest,unsigned merge,uint32_t address,unsigned control) {
+NATIVE_CPU void tb_avx_inserti128mem(CPU,unsigned dest,unsigned merge,uint32_t address,unsigned control) {
     if(control>255)abort();(void)reg(cpu,dest);unsigned char a[32],b[16];memcpy(a,reg(cpu,merge),16);memcpy(a+16,cpu->_ymm_hi[merge],16);memcpy(b,memory(cpu,address,TB_SSE_U128),16);
     inserti128_publish(cpu,dest,a,b,control);
 }
 
-uint32_t tb_avx_movmskb(CPU,unsigned wide,unsigned source) {
+NATIVE_CPU uint32_t tb_avx_movmskb(CPU,unsigned wide,unsigned source) {
     if(wide>1)abort();uint32_t value=tb_sse_mask(cpu,source);
     if(wide)for(unsigned j=0;j<16;j++)value|=(uint32_t)(cpu->_ymm_hi[source][j]>>7)<<(j+16);
     return value;
@@ -1031,11 +1047,11 @@ static void subusw_publish(CPU,unsigned wide,unsigned dest,const unsigned char *
     unsigned char value[32];for(unsigned j=0;j<(wide?32:16);j+=2){uint16_t x,y,v;memcpy(&x,a+j,2);memcpy(&y,b+j,2);v=x>y?(uint16_t)(x-y):0;memcpy(value+j,&v,2);}
     memcpy(reg(cpu,dest),value,16);if(wide)memcpy(cpu->_ymm_hi[dest],value+16,16);else memset(cpu->_ymm_hi[dest],0,16);
 }
-void tb_avx_subusw(CPU,unsigned wide,unsigned dest,unsigned left,unsigned right) {
+NATIVE_CPU void tb_avx_subusw(CPU,unsigned wide,unsigned dest,unsigned left,unsigned right) {
     if(wide>1)abort();(void)reg(cpu,dest);unsigned char a[32],b[32];memcpy(a,reg(cpu,left),16);memcpy(b,reg(cpu,right),16);
     if(wide){memcpy(a+16,cpu->_ymm_hi[left],16);memcpy(b+16,cpu->_ymm_hi[right],16);}subusw_publish(cpu,wide,dest,a,b);
 }
-void tb_avx_subuswmem(CPU,unsigned wide,unsigned dest,unsigned left,uint32_t address) {
+NATIVE_CPU void tb_avx_subuswmem(CPU,unsigned wide,unsigned dest,unsigned left,uint32_t address) {
     if(wide>1)abort();(void)reg(cpu,dest);unsigned char a[32],b[32];memcpy(a,reg(cpu,left),16);if(wide)memcpy(a+16,cpu->_ymm_hi[left],16);
     memcpy(b,wide?memory256(cpu,address,0):memory(cpu,address,TB_SSE_U128),wide?32:16);subusw_publish(cpu,wide,dest,a,b);
 }
@@ -1053,37 +1069,37 @@ static void clmul_publish(CPU,unsigned wide,unsigned dest,const unsigned char *a
     }
     memcpy(reg(cpu,dest),value,16);if(wide)memcpy(cpu->_ymm_hi[dest],value+16,16);else memset(cpu->_ymm_hi[dest],0,16);
 }
-void tb_avx_clmul(CPU,unsigned wide,unsigned dest,unsigned left,unsigned right,unsigned control) {
+NATIVE_CPU void tb_avx_clmul(CPU,unsigned wide,unsigned dest,unsigned left,unsigned right,unsigned control) {
     if(wide>1||control>255)abort();(void)reg(cpu,dest);unsigned char a[32],b[32];memcpy(a,reg(cpu,left),16);memcpy(b,reg(cpu,right),16);
     if(wide){memcpy(a+16,cpu->_ymm_hi[left],16);memcpy(b+16,cpu->_ymm_hi[right],16);}clmul_publish(cpu,wide,dest,a,b,control);
 }
-void tb_avx_clmulmem(CPU,unsigned wide,unsigned dest,unsigned left,uint32_t address,unsigned control) {
+NATIVE_CPU void tb_avx_clmulmem(CPU,unsigned wide,unsigned dest,unsigned left,uint32_t address,unsigned control) {
     if(wide>1||control>255)abort();(void)reg(cpu,dest);unsigned char a[32],b[32];memcpy(a,reg(cpu,left),16);if(wide)memcpy(a+16,cpu->_ymm_hi[left],16);
     memcpy(b,wide?memory256(cpu,address,0):memory(cpu,address,TB_SSE_U128),wide?32:16);clmul_publish(cpu,wide,dest,a,b,control);
 }
 
 /* Dword extraction reads a source lane without changing any vector bytes.
    Only imm8 bits0..1 select the lane. Memory destinations store exactly4 bytes. */
-uint32_t tb_avx_extractd(CPU,unsigned source,unsigned control) {
+NATIVE_CPU uint32_t tb_avx_extractd(CPU,unsigned source,unsigned control) {
     if(control>255)abort();uint32_t value;memcpy(&value,reg(cpu,source)+(control&3)*4,4);return value;
 }
-void tb_avx_extractdmem(CPU,unsigned source,uint32_t address,unsigned control) {
+NATIVE_CPU void tb_avx_extractdmem(CPU,unsigned source,uint32_t address,unsigned control) {
     uint32_t value=tb_avx_extractd(cpu,source,control);memcpy(memory(cpu,address,TB_SSE_D),&value,4);
 }
-void tb_avx_insertd(CPU,unsigned dest,unsigned merge,uint32_t value,unsigned control) {
+NATIVE_CPU void tb_avx_insertd(CPU,unsigned dest,unsigned merge,uint32_t value,unsigned control) {
     if(control>255)abort();(void)reg(cpu,dest);unsigned char result[16];memcpy(result,reg(cpu,merge),16);
     memcpy(result+(control&3)*4,&value,4);memcpy(reg(cpu,dest),result,16);memset(cpu->_ymm_hi[dest],0,16);
 }
-void tb_avx_insertdmem(CPU,unsigned dest,unsigned merge,uint32_t address,unsigned control) {
+NATIVE_CPU void tb_avx_insertdmem(CPU,unsigned dest,unsigned merge,uint32_t address,unsigned control) {
     if(control>255)abort();uint32_t value;memcpy(&value,memory(cpu,address,TB_SSE_D),4);tb_avx_insertd(cpu,dest,merge,value,control);
 }
 
 /* Legacy XMM word extraction zero-extends a REG result and preserves all
    vector state. SSE4.1 memory destinations write exactly two bytes. */
-uint32_t tb_sse_extractw(CPU,unsigned source,unsigned control) {
+NATIVE_CPU uint32_t tb_sse_extractw(CPU,unsigned source,unsigned control) {
     if(control>255)abort();uint16_t value;memcpy(&value,reg(cpu,source)+(control&7)*2,2);return value;
 }
-void tb_sse_extractwmem(CPU,unsigned source,uint32_t address,unsigned control) {
+NATIVE_CPU void tb_sse_extractwmem(CPU,unsigned source,uint32_t address,unsigned control) {
     uint16_t value=(uint16_t)tb_sse_extractw(cpu,source,control);
     if((uint64_t)address+2>UINT64_C(0x100000000))abort();
     uintptr_t base=(uintptr_t)cpu->_pointer_offset;if(base>UINTPTR_MAX-(uint64_t)address-2)abort();
@@ -1094,7 +1110,7 @@ void tb_sse_extractwmem(CPU,unsigned source,uint32_t address,unsigned control) {
    three guest fences. LFENCE also blocks subsequent speculative execution.
    Memory clobbers keep compiler memory accesses on their respective sides.
    This is intentionally stronger than SFENCE/LFENCE store-order requirements. */
-void tb_sse_fence(CPU,unsigned kind) {
+NATIVE_CPU void tb_sse_fence(CPU,unsigned kind) {
     if(!cpu||kind>2)abort();
 #if defined(__aarch64__) || defined(__arm64__)
     __asm__ volatile("dsb sy" ::: "memory");
@@ -1112,13 +1128,13 @@ static unsigned cmov_condition(unsigned cc,uint32_t flags) {
     switch(cc>>1){case 0:value=o;break;case 1:value=c;break;case 2:value=z;break;case 3:value=c|z;break;case 4:value=s;break;case 5:value=p;break;case 6:value=s^o;break;default:value=z|(s^o);break;}
     return value^(cc&1);
 }
-uint32_t tb_sse_cmov(CPU,unsigned cc,unsigned bits,unsigned dest,uint32_t value) {
+NATIVE_CPU uint32_t tb_sse_cmov(CPU,unsigned cc,unsigned bits,unsigned dest,uint32_t value) {
     if(!cpu||cc>15||(bits!=16&&bits!=32)||dest>7)abort();
     uint32_t old;memcpy(&old,(const unsigned char *)cpu+dest*4,4);
     if(!cmov_condition(cc,cpu->_eflags))return old;
     return bits==16?(old&0xffff0000u)|(value&0xffffu):value;
 }
-uint32_t tb_sse_cmovmem(CPU,unsigned cc,unsigned bits,unsigned dest,uint32_t address) {
+NATIVE_CPU uint32_t tb_sse_cmovmem(CPU,unsigned cc,unsigned bits,unsigned dest,uint32_t address) {
     if(!cpu||cc>15||(bits!=16&&bits!=32)||dest>7)abort();unsigned n=bits/8;
     if((uint64_t)address+n>UINT64_C(0x100000000))abort();uintptr_t base=(uintptr_t)cpu->_pointer_offset;
     if(base>UINTPTR_MAX-(uint64_t)address-n)abort();
@@ -1138,30 +1154,30 @@ static void ps2pd_publish(CPU,unsigned dest,const unsigned char source[8]) {
     /* Precise unmasked packed priority/Windows delivery remain unfinished. */
     if(raised&~(cpu->_mxcsr>>7))abort();memcpy(reg(cpu,dest),result,16);
 }
-void tb_sse_ps2pd(CPU,unsigned dest,unsigned source) {
+NATIVE_CPU void tb_sse_ps2pd(CPU,unsigned dest,unsigned source) {
     (void)reg(cpu,dest);unsigned char input[8];memcpy(input,reg(cpu,source),8);ps2pd_publish(cpu,dest,input);
 }
-void tb_sse_ps2pdmem(CPU,unsigned dest,uint32_t address) {
+NATIVE_CPU void tb_sse_ps2pdmem(CPU,unsigned dest,uint32_t address) {
     (void)reg(cpu,dest);unsigned char input[8];memcpy(input,memory(cpu,address,TB_SSE_Q),8);ps2pd_publish(cpu,dest,input);
 }
 
-void tb_sse_sqrtsd(CPU,unsigned dest,unsigned source) {
+NATIVE_CPU void tb_sse_sqrtsd(CPU,unsigned dest,unsigned source) {
     unsigned char *dst=reg(cpu,dest),value[16],input[8];
     memcpy(input,reg(cpu,source),8);memcpy(value,dst,16);
     sqrt64(cpu,value,input);memcpy(dst,value,8);
 }
-void tb_sse_sqrtsdmem(CPU,unsigned dest,uint32_t address) {
+NATIVE_CPU void tb_sse_sqrtsdmem(CPU,unsigned dest,uint32_t address) {
     unsigned char *dst=reg(cpu,dest),value[16],input[8];
     memcpy(input,memory(cpu,address,TB_SSE_Q),8);memcpy(value,dst,16);
     sqrt64(cpu,value,input);memcpy(dst,value,8);
 }
 
-void tb_sse_sd2ss(CPU,unsigned dest,unsigned source) {
+NATIVE_CPU void tb_sse_sd2ss(CPU,unsigned dest,unsigned source) {
     unsigned char *dst=reg(cpu,dest),value[16],input[8];
     memcpy(input,reg(cpu,source),8);memcpy(value,dst,16);
     sd2ss(cpu,value,input);memcpy(dst,value,4);
 }
-void tb_sse_sd2ssmem(CPU,unsigned dest,uint32_t address) {
+NATIVE_CPU void tb_sse_sd2ssmem(CPU,unsigned dest,uint32_t address) {
     unsigned char *dst=reg(cpu,dest),value[16],input[8];
     memcpy(input,memory(cpu,address,TB_SSE_Q),8);memcpy(value,dst,16);
     sd2ss(cpu,value,input);memcpy(dst,value,4);
@@ -1174,10 +1190,10 @@ static void legacy_mulps_publish(CPU,unsigned dest,const unsigned char left[16],
     /* Precise unmasked packed priority/Windows delivery remain unfinished. */
     if(raised&~(control>>7))abort();memcpy(reg(cpu,dest),value,16);
 }
-void tb_sse_mulps(CPU,unsigned dest,unsigned source) {
+NATIVE_CPU void tb_sse_mulps(CPU,unsigned dest,unsigned source) {
     unsigned char a[16],b[16];memcpy(a,reg(cpu,dest),16);memcpy(b,reg(cpu,source),16);legacy_mulps_publish(cpu,dest,a,b);
 }
-void tb_sse_mulpsmem(CPU,unsigned dest,uint32_t address) {
+NATIVE_CPU void tb_sse_mulpsmem(CPU,unsigned dest,uint32_t address) {
     unsigned char a[16],b[16];memcpy(a,reg(cpu,dest),16);memcpy(b,memory(cpu,address,TB_SSE_A128),16);legacy_mulps_publish(cpu,dest,a,b);
 }
 
@@ -1188,10 +1204,10 @@ static void legacy_divps_publish(CPU,unsigned dest,const unsigned char left[16],
     /* Precise unmasked packed priority/Windows delivery remain unfinished. */
     if(raised&~(control>>7))abort();memcpy(reg(cpu,dest),value,16);
 }
-void tb_sse_divps(CPU,unsigned dest,unsigned source) {
+NATIVE_CPU void tb_sse_divps(CPU,unsigned dest,unsigned source) {
     unsigned char a[16],b[16];memcpy(a,reg(cpu,dest),16);memcpy(b,reg(cpu,source),16);legacy_divps_publish(cpu,dest,a,b);
 }
-void tb_sse_divpsmem(CPU,unsigned dest,uint32_t address) {
+NATIVE_CPU void tb_sse_divpsmem(CPU,unsigned dest,uint32_t address) {
     unsigned char a[16],b[16];memcpy(a,reg(cpu,dest),16);memcpy(b,memory(cpu,address,TB_SSE_A128),16);legacy_divps_publish(cpu,dest,a,b);
 }
 
@@ -1202,10 +1218,10 @@ static void legacy_addps_publish(CPU,unsigned dest,const unsigned char left[16],
     /* Precise unmasked packed priority/Windows delivery remain unfinished. */
     if(raised&~(control>>7))abort();memcpy(reg(cpu,dest),value,16);
 }
-void tb_sse_addps(CPU,unsigned dest,unsigned source) {
+NATIVE_CPU void tb_sse_addps(CPU,unsigned dest,unsigned source) {
     unsigned char a[16],b[16];memcpy(a,reg(cpu,dest),16);memcpy(b,reg(cpu,source),16);legacy_addps_publish(cpu,dest,a,b);
 }
-void tb_sse_addpsmem(CPU,unsigned dest,uint32_t address) {
+NATIVE_CPU void tb_sse_addpsmem(CPU,unsigned dest,uint32_t address) {
     unsigned char a[16],b[16];memcpy(a,reg(cpu,dest),16);memcpy(b,memory(cpu,address,TB_SSE_A128),16);legacy_addps_publish(cpu,dest,a,b);
 }
 
@@ -1214,10 +1230,10 @@ static void legacy_shufps_publish(CPU,unsigned dest,const unsigned char a[16],co
     for(unsigned lane=0;lane<4;++lane)memcpy(value+lane*4,(lane<2?a:b)+((control>>(lane*2))&3)*4,4);
     memcpy(reg(cpu,dest),value,16);
 }
-void tb_sse_shufps(CPU,unsigned dest,unsigned source,unsigned control) {
+NATIVE_CPU void tb_sse_shufps(CPU,unsigned dest,unsigned source,unsigned control) {
     if(control>255)abort();unsigned char a[16],b[16];memcpy(a,reg(cpu,dest),16);memcpy(b,reg(cpu,source),16);legacy_shufps_publish(cpu,dest,a,b,control);
 }
-void tb_sse_shufpsmem(CPU,unsigned dest,uint32_t address,unsigned control) {
+NATIVE_CPU void tb_sse_shufpsmem(CPU,unsigned dest,uint32_t address,unsigned control) {
     if(control>255)abort();unsigned char a[16],b[16];memcpy(a,reg(cpu,dest),16);
     /* SHUFPS has a complete m128 operand even when selected lanes repeat. */
     const volatile unsigned char *source=memory(cpu,address,TB_SSE_A128);
@@ -1232,25 +1248,25 @@ static void legacy_subps_publish(CPU,unsigned dest,const unsigned char left[16],
     /* Precise unmasked packed priority/Windows delivery remain unfinished. */
     if(raised&~(control>>7))abort();memcpy(reg(cpu,dest),value,16);
 }
-void tb_sse_subps(CPU,unsigned dest,unsigned source) {
+NATIVE_CPU void tb_sse_subps(CPU,unsigned dest,unsigned source) {
     unsigned char a[16],b[16];memcpy(a,reg(cpu,dest),16);memcpy(b,reg(cpu,source),16);legacy_subps_publish(cpu,dest,a,b);
 }
-void tb_sse_subpsmem(CPU,unsigned dest,uint32_t address) {
+NATIVE_CPU void tb_sse_subpsmem(CPU,unsigned dest,uint32_t address) {
     unsigned char a[16],b[16];memcpy(a,reg(cpu,dest),16);memcpy(b,memory(cpu,address,TB_SSE_A128),16);legacy_subps_publish(cpu,dest,a,b);
 }
 
 
-void tb_sse_halfreg(CPU,unsigned high,unsigned dest,unsigned source) {
+NATIVE_CPU void tb_sse_halfreg(CPU,unsigned high,unsigned dest,unsigned source) {
     if(high>1)abort();unsigned char value[8];
     memcpy(value,reg(cpu,source)+(high?0:8),8);
     memcpy(reg(cpu,dest)+(high?8:0),value,8);
 }
 
-void tb_sse_ss2sd(CPU,unsigned dest,unsigned source) {
+NATIVE_CPU void tb_sse_ss2sd(CPU,unsigned dest,unsigned source) {
     unsigned char value[16],input[4];
     memcpy(input,reg(cpu,source),4);ss2sd(cpu,value,input);memcpy(reg(cpu,dest),value,8);
 }
-void tb_sse_ss2sdmem(CPU,unsigned dest,uint32_t address) {
+NATIVE_CPU void tb_sse_ss2sdmem(CPU,unsigned dest,uint32_t address) {
     unsigned char value[16],input[4];
     memcpy(input,memory(cpu,address,TB_SSE_SS),4);ss2sd(cpu,value,input);memcpy(reg(cpu,dest),value,8);
 }
@@ -1262,19 +1278,19 @@ static void legacy_sqrtps_publish(CPU,unsigned dest,const unsigned char source[1
     /* Precise unmasked packed priority/Windows delivery remain unfinished. */
     if(raised&~(control>>7))abort();memcpy(reg(cpu,dest),value,16);
 }
-void tb_sse_sqrtps(CPU,unsigned dest,unsigned source) {
+NATIVE_CPU void tb_sse_sqrtps(CPU,unsigned dest,unsigned source) {
     unsigned char input[16];memcpy(input,reg(cpu,source),16);legacy_sqrtps_publish(cpu,dest,input);
 }
-void tb_sse_sqrtpsmem(CPU,unsigned dest,uint32_t address) {
+NATIVE_CPU void tb_sse_sqrtpsmem(CPU,unsigned dest,uint32_t address) {
     unsigned char input[16];memcpy(input,memory(cpu,address,TB_SSE_A128),16);legacy_sqrtps_publish(cpu,dest,input);
 }
 
-void tb_sse_minmaxss(CPU,unsigned maximum,unsigned dest,unsigned source) {
+NATIVE_CPU void tb_sse_minmaxss(CPU,unsigned maximum,unsigned dest,unsigned source) {
     if(maximum>1)abort();unsigned char value[16];uint32_t left,right;
     memcpy(&left,reg(cpu,dest),4);memcpy(&right,reg(cpu,source),4);
     minmaxss(cpu,maximum,value,left,right);memcpy(reg(cpu,dest),value,4);
 }
-void tb_sse_minmaxssmem(CPU,unsigned maximum,unsigned dest,uint32_t address) {
+NATIVE_CPU void tb_sse_minmaxssmem(CPU,unsigned maximum,unsigned dest,uint32_t address) {
     if(maximum>1)abort();unsigned char value[16];uint32_t left,right;
     memcpy(&left,reg(cpu,dest),4);memcpy(&right,memory(cpu,address,TB_SSE_SS),4);
     minmaxss(cpu,maximum,value,left,right);memcpy(reg(cpu,dest),value,4);
@@ -1287,10 +1303,10 @@ static void legacy_andnps_publish(CPU,unsigned dest,const unsigned char source[1
     for(unsigned i=0;i<16;++i)value[i]=(unsigned char)(~left[i]&source[i]);
     memcpy(reg(cpu,dest),value,16);
 }
-void tb_sse_andnps(CPU,unsigned dest,unsigned source) {
+NATIVE_CPU void tb_sse_andnps(CPU,unsigned dest,unsigned source) {
     unsigned char value[16];memcpy(value,reg(cpu,source),16);legacy_andnps_publish(cpu,dest,value);
 }
-void tb_sse_andnpsmem(CPU,unsigned dest,uint32_t address) {
+NATIVE_CPU void tb_sse_andnpsmem(CPU,unsigned dest,uint32_t address) {
     unsigned char value[16];const volatile unsigned char *source=memory(cpu,address,TB_SSE_A128);
     /* A zero result must not suppress any of the 16 architectural reads. */
     for(unsigned i=0;i<16;++i)value[i]=source[i];
@@ -1304,10 +1320,10 @@ static void legacy_unpacklowd_publish(CPU,unsigned dest,const unsigned char sour
     for(unsigned lane=0;lane<2;++lane){memcpy(value+lane*8,left+lane*4,4);memcpy(value+lane*8+4,source+lane*4,4);}
     memcpy(reg(cpu,dest),value,16);
 }
-void tb_sse_unpacklowd(CPU,unsigned dest,unsigned source) {
+NATIVE_CPU void tb_sse_unpacklowd(CPU,unsigned dest,unsigned source) {
     unsigned char value[8];memcpy(value,reg(cpu,source),8);legacy_unpacklowd_publish(cpu,dest,value);
 }
-void tb_sse_unpacklowdmem(CPU,unsigned dest,uint32_t address) {
+NATIVE_CPU void tb_sse_unpacklowdmem(CPU,unsigned dest,uint32_t address) {
     unsigned char value[8];const volatile unsigned char *source=memory(cpu,address,TB_SSE_A128);
     /* Intel permits fetching only low64; still validate the aligned m128
        guest range. Read all eight used bytes before publishing destination. */
@@ -1315,7 +1331,7 @@ void tb_sse_unpacklowdmem(CPU,unsigned dest,uint32_t address) {
     legacy_unpacklowd_publish(cpu,dest,value);
 }
 
-void tb_sse_shiftrbytes(CPU,unsigned dest,unsigned count) {
+NATIVE_CPU void tb_sse_shiftrbytes(CPU,unsigned dest,unsigned count) {
     if(count>255)abort();unsigned char value[16]={0},source[16];
     memcpy(source,reg(cpu,dest),16);
     if(count<16)memcpy(value,source+count,16-count);
@@ -1328,10 +1344,10 @@ static void legacy_mulsd_publish(CPU,unsigned dest,uint64_t right) {
     /* Windows #XM delivery remains unfinished; do not publish at this stop. */
     if(raised&~(control>>7))abort();memcpy(reg(cpu,dest),&value,8);
 }
-void tb_sse_mulsd(CPU,unsigned dest,unsigned source) {
+NATIVE_CPU void tb_sse_mulsd(CPU,unsigned dest,unsigned source) {
     uint64_t right;memcpy(&right,reg(cpu,source),8);legacy_mulsd_publish(cpu,dest,right);
 }
-void tb_sse_mulsdmem(CPU,unsigned dest,uint32_t address) {
+NATIVE_CPU void tb_sse_mulsdmem(CPU,unsigned dest,uint32_t address) {
     unsigned char bytes[8];const volatile unsigned char *source=memory(cpu,address,TB_SSE_Q);
     for(unsigned i=0;i<8;++i)bytes[i]=source[i];uint64_t right;memcpy(&right,bytes,8);legacy_mulsd_publish(cpu,dest,right);
 }
@@ -1353,31 +1369,31 @@ static void legacy_dq2ps_publish(CPU,unsigned dest,const unsigned char source[16
     cpu->_mxcsr|=raised;
     if(raised&~(control>>7))abort();memcpy(reg(cpu,dest),value,16);
 }
-void tb_sse_dq2ps(CPU,unsigned dest,unsigned source) {
+NATIVE_CPU void tb_sse_dq2ps(CPU,unsigned dest,unsigned source) {
     unsigned char value[16];memcpy(value,reg(cpu,source),16);legacy_dq2ps_publish(cpu,dest,value);
 }
-void tb_sse_dq2psmem(CPU,unsigned dest,uint32_t address) {
+NATIVE_CPU void tb_sse_dq2psmem(CPU,unsigned dest,uint32_t address) {
     unsigned char value[16];const volatile unsigned char *source=memory(cpu,address,TB_SSE_A128);
     for(unsigned i=0;i<16;++i)value[i]=source[i];legacy_dq2ps_publish(cpu,dest,value);
 }
 
-void tb_sse_si2ss(CPU,unsigned dest,uint32_t input) {
+NATIVE_CPU void tb_sse_si2ss(CPU,unsigned dest,uint32_t input) {
     unsigned raised=0;uint32_t control=cpu->_mxcsr,value=legacy_signed32_single(input,control,&raised);
     cpu->_mxcsr|=raised;
     if(raised&~(control>>7))abort();memcpy(reg(cpu,dest),&value,4);
 }
-void tb_sse_si2ssmem(CPU,unsigned dest,uint32_t address) {
+NATIVE_CPU void tb_sse_si2ssmem(CPU,unsigned dest,uint32_t address) {
     unsigned char bytes[4];const volatile unsigned char *source=memory(cpu,address,TB_SSE_SS);
     for(unsigned i=0;i<4;++i)bytes[i]=source[i];uint32_t input;memcpy(&input,bytes,4);tb_sse_si2ss(cpu,dest,input);
 }
 
-void tb_sse_si2sd(CPU,unsigned dest,uint32_t input) {
+NATIVE_CPU void tb_sse_si2sd(CPU,unsigned dest,uint32_t input) {
     unsigned sign=input>>31;uint32_t magnitude=sign?0u-input:input;uint64_t value=0;
     /* All signed32 inputs are exactly representable in binary64. */
     if(magnitude){unsigned top=31u-(unsigned)__builtin_clz(magnitude);value=((uint64_t)sign<<63)|((uint64_t)(top+1023)<<52)|(((uint64_t)magnitude<<(52-top))&UINT64_C(0x000fffffffffffff));}
     memcpy(reg(cpu,dest),&value,8);
 }
-void tb_sse_si2sdmem(CPU,unsigned dest,uint32_t address) {
+NATIVE_CPU void tb_sse_si2sdmem(CPU,unsigned dest,uint32_t address) {
     unsigned char bytes[4];const volatile unsigned char *source=memory(cpu,address,TB_SSE_SS);
     for(unsigned i=0;i<4;++i)bytes[i]=source[i];uint32_t input;memcpy(&input,bytes,4);tb_sse_si2sd(cpu,dest,input);
 }
@@ -1387,10 +1403,10 @@ static void legacy_packuswb_publish(CPU,unsigned dest,const unsigned char source
     for(unsigned lane=0;lane<16;++lane){uint16_t input;memcpy(&input,(lane<8?left:source)+(lane%8)*2,2);value[lane]=(unsigned char)(input>32767?0:input>255?255:input);}
     memcpy(reg(cpu,dest),value,16);
 }
-void tb_sse_packuswb(CPU,unsigned dest,unsigned source) {
+NATIVE_CPU void tb_sse_packuswb(CPU,unsigned dest,unsigned source) {
     unsigned char value[16];memcpy(value,reg(cpu,source),16);legacy_packuswb_publish(cpu,dest,value);
 }
-void tb_sse_packuswbmem(CPU,unsigned dest,uint32_t address) {
+NATIVE_CPU void tb_sse_packuswbmem(CPU,unsigned dest,uint32_t address) {
     unsigned char value[16];const volatile unsigned char *source=memory(cpu,address,TB_SSE_A128);
     for(unsigned i=0;i<16;++i)value[i]=source[i];legacy_packuswb_publish(cpu,dest,value);
 }
@@ -1400,10 +1416,10 @@ static void legacy_paddd_publish(CPU,unsigned dest,const unsigned char source[16
     for(unsigned lane=0;lane<4;++lane){uint32_t left,right;memcpy(&left,reg(cpu,dest)+lane*4,4);memcpy(&right,source+lane*4,4);value[lane]=left+right;}
     memcpy(reg(cpu,dest),value,16);
 }
-void tb_sse_paddd(CPU,unsigned dest,unsigned source) {
+NATIVE_CPU void tb_sse_paddd(CPU,unsigned dest,unsigned source) {
     unsigned char value[16];memcpy(value,reg(cpu,source),16);legacy_paddd_publish(cpu,dest,value);
 }
-void tb_sse_padddmem(CPU,unsigned dest,uint32_t address) {
+NATIVE_CPU void tb_sse_padddmem(CPU,unsigned dest,uint32_t address) {
     unsigned char value[16];const volatile unsigned char *source=memory(cpu,address,TB_SSE_A128);
     for(unsigned i=0;i<16;++i)value[i]=source[i];legacy_paddd_publish(cpu,dest,value);
 }
@@ -1429,10 +1445,10 @@ static void legacy_ucomiss(CPU,uint32_t left,uint32_t right) {
     cpu->_mxcsr|=raised;if(raised&~(cpu->_mxcsr>>7))abort();
     cpu->_eflags=(cpu->_eflags&~(OF|SF|AF|ZF|PF|CF))|condition;
 }
-void tb_sse_ucomiss(CPU,unsigned left,unsigned right) {
+NATIVE_CPU void tb_sse_ucomiss(CPU,unsigned left,unsigned right) {
     uint32_t a=tb_sse_getd(cpu,left),b=tb_sse_getd(cpu,right);legacy_ucomiss(cpu,a,b);
 }
-void tb_sse_ucomissmem(CPU,unsigned left,uint32_t address) {
+NATIVE_CPU void tb_sse_ucomissmem(CPU,unsigned left,uint32_t address) {
     unsigned char bytes[4];const volatile unsigned char *source=memory(cpu,address,TB_SSE_SS);
     for(unsigned i=0;i<4;++i)bytes[i]=source[i];uint32_t b;memcpy(&b,bytes,4);legacy_ucomiss(cpu,tb_sse_getd(cpu,left),b);
 }
@@ -1442,10 +1458,10 @@ static void legacy_pminsd_publish(CPU,unsigned dest,const unsigned char source[1
     for(unsigned lane=0;lane<4;++lane){uint32_t left,right;memcpy(&left,reg(cpu,dest)+lane*4,4);memcpy(&right,source+lane*4,4);value[lane]=(left^UINT32_C(0x80000000))<(right^UINT32_C(0x80000000))?left:right;}
     memcpy(reg(cpu,dest),value,16);
 }
-void tb_sse_pminsd(CPU,unsigned dest,unsigned source) {
+NATIVE_CPU void tb_sse_pminsd(CPU,unsigned dest,unsigned source) {
     unsigned char value[16];memcpy(value,reg(cpu,source),16);legacy_pminsd_publish(cpu,dest,value);
 }
-void tb_sse_pminsdmem(CPU,unsigned dest,uint32_t address) {
+NATIVE_CPU void tb_sse_pminsdmem(CPU,unsigned dest,uint32_t address) {
     unsigned char value[16];const volatile unsigned char *source=memory(cpu,address,TB_SSE_A128);
     for(unsigned i=0;i<16;++i)value[i]=source[i];legacy_pminsd_publish(cpu,dest,value);
 }
@@ -1455,10 +1471,10 @@ static void legacy_unpackloww_publish(CPU,unsigned dest,const unsigned char sour
     for(unsigned lane=0;lane<4;++lane){memcpy(value+lane*4,left+lane*2,2);memcpy(value+lane*4+2,source+lane*2,2);}
     memcpy(reg(cpu,dest),value,16);
 }
-void tb_sse_unpackloww(CPU,unsigned dest,unsigned source) {
+NATIVE_CPU void tb_sse_unpackloww(CPU,unsigned dest,unsigned source) {
     unsigned char value[8];memcpy(value,reg(cpu,source),8);legacy_unpackloww_publish(cpu,dest,value);
 }
-void tb_sse_unpacklowwmem(CPU,unsigned dest,uint32_t address) {
+NATIVE_CPU void tb_sse_unpacklowwmem(CPU,unsigned dest,uint32_t address) {
     unsigned char value[8];const volatile unsigned char *source=memory(cpu,address,TB_SSE_A128);
     /* Intel permits fetching only low64; still validate the aligned m128
        guest range. Read all eight used bytes before publishing destination. */
@@ -1471,10 +1487,10 @@ static void legacy_unpacklowb_publish(CPU,unsigned dest,const unsigned char sour
     for(unsigned lane=0;lane<8;++lane){value[lane*2]=left[lane];value[lane*2+1]=source[lane];}
     memcpy(reg(cpu,dest),value,16);
 }
-void tb_sse_unpacklowb(CPU,unsigned dest,unsigned source) {
+NATIVE_CPU void tb_sse_unpacklowb(CPU,unsigned dest,unsigned source) {
     unsigned char value[8];memcpy(value,reg(cpu,source),8);legacy_unpacklowb_publish(cpu,dest,value);
 }
-void tb_sse_unpacklowbmem(CPU,unsigned dest,uint32_t address) {
+NATIVE_CPU void tb_sse_unpacklowbmem(CPU,unsigned dest,uint32_t address) {
     unsigned char value[8];const volatile unsigned char *source=memory(cpu,address,TB_SSE_A128);
     /* Intel permits fetching only low64; still validate the aligned m128
        guest range. Read all eight used bytes before publishing destination. */
@@ -1489,10 +1505,10 @@ static void legacy_divpd_publish(CPU,unsigned dest,const unsigned char left[16],
     /* Precise unmasked packed priority/Windows delivery remain unfinished. */
     if(raised&~(control>>7))abort();memcpy(reg(cpu,dest),value,16);
 }
-void tb_sse_divpd(CPU,unsigned dest,unsigned source) {
+NATIVE_CPU void tb_sse_divpd(CPU,unsigned dest,unsigned source) {
     unsigned char a[16],b[16];memcpy(a,reg(cpu,dest),16);memcpy(b,reg(cpu,source),16);legacy_divpd_publish(cpu,dest,a,b);
 }
-void tb_sse_divpdmem(CPU,unsigned dest,uint32_t address) {
+NATIVE_CPU void tb_sse_divpdmem(CPU,unsigned dest,uint32_t address) {
     unsigned char a[16],b[16];memcpy(a,reg(cpu,dest),16);const volatile unsigned char *source=memory(cpu,address,TB_SSE_A128);for(unsigned i=0;i<16;++i)b[i]=source[i];legacy_divpd_publish(cpu,dest,a,b);
 }
 
@@ -1503,10 +1519,10 @@ static void legacy_addpd_publish(CPU,unsigned dest,const unsigned char left[16],
     /* Precise unmasked packed priority/Windows delivery remain unfinished. */
     if(raised&~(control>>7))abort();memcpy(reg(cpu,dest),value,16);
 }
-void tb_sse_addpd(CPU,unsigned dest,unsigned source) {
+NATIVE_CPU void tb_sse_addpd(CPU,unsigned dest,unsigned source) {
     unsigned char a[16],b[16];memcpy(a,reg(cpu,dest),16);memcpy(b,reg(cpu,source),16);legacy_addpd_publish(cpu,dest,a,b);
 }
-void tb_sse_addpdmem(CPU,unsigned dest,uint32_t address) {
+NATIVE_CPU void tb_sse_addpdmem(CPU,unsigned dest,uint32_t address) {
     unsigned char a[16],b[16];memcpy(a,reg(cpu,dest),16);const volatile unsigned char *source=memory(cpu,address,TB_SSE_A128);for(unsigned i=0;i<16;++i)b[i]=source[i];legacy_addpd_publish(cpu,dest,a,b);
 }
 
@@ -1522,22 +1538,22 @@ static void legacy_mathpd_publish(CPU,unsigned multiply,unsigned dest,const unsi
        Stage both lanes and stop before publishing an unserviced fault. */
     if(raised&~(control>>7))abort();memcpy(reg(cpu,dest),value,16);
 }
-void tb_sse_mulpd(CPU,unsigned dest,unsigned source) {
+NATIVE_CPU void tb_sse_mulpd(CPU,unsigned dest,unsigned source) {
     unsigned char a[16],b[16];memcpy(a,reg(cpu,dest),16);memcpy(b,reg(cpu,source),16);legacy_mathpd_publish(cpu,1,dest,a,b);
 }
-void tb_sse_mulpdmem(CPU,unsigned dest,uint32_t address) {
+NATIVE_CPU void tb_sse_mulpdmem(CPU,unsigned dest,uint32_t address) {
     unsigned char a[16],b[16];memcpy(a,reg(cpu,dest),16);
     const volatile unsigned char *source=memory(cpu,address,TB_SSE_A128);
     for(unsigned i=0;i<16;++i)b[i]=source[i];
     legacy_mathpd_publish(cpu,1,dest,a,b);
 }
-void tb_sse_subpd(CPU,unsigned dest,unsigned source) {
+NATIVE_CPU void tb_sse_subpd(CPU,unsigned dest,unsigned source) {
     unsigned char a[16],b[16];memcpy(a,reg(cpu,dest),16);memcpy(b,reg(cpu,source),16);legacy_mathpd_publish(cpu,0,dest,a,b);
 }
-void tb_sse_insertw(CPU,unsigned dest,uint32_t value,unsigned control) {
+NATIVE_CPU void tb_sse_insertw(CPU,unsigned dest,uint32_t value,unsigned control) {
     if(control>255)abort();uint16_t word=(uint16_t)value;memcpy(reg(cpu,dest)+(control&7)*2,&word,2);
 }
-void tb_sse_psubq(CPU,unsigned dest,unsigned source) {
+NATIVE_CPU void tb_sse_psubq(CPU,unsigned dest,unsigned source) {
     uint64_t left[2],right[2];memcpy(left,reg(cpu,dest),16);memcpy(right,reg(cpu,source),16);
     for(unsigned lane=0;lane<2;++lane)left[lane]-=right[lane];
     memcpy(reg(cpu,dest),left,16);
@@ -1567,10 +1583,10 @@ static void legacy_cmppd_publish(CPU,unsigned dest,const unsigned char left[16],
     for(unsigned lane=0;lane<2;++lane){uint64_t a,b;memcpy(&a,left+lane*8,8);memcpy(&b,right+lane*8,8);value[lane]=legacy_comparepd_lane(a,b,predicate,control,&raised);}
     cpu->_mxcsr|=raised;if(raised&~(control>>7))abort();memcpy(reg(cpu,dest),value,16);
 }
-void tb_sse_cmppd(CPU,unsigned dest,unsigned source,unsigned predicate) {
+NATIVE_CPU void tb_sse_cmppd(CPU,unsigned dest,unsigned source,unsigned predicate) {
     unsigned char a[16],b[16];memcpy(a,reg(cpu,dest),16);memcpy(b,reg(cpu,source),16);legacy_cmppd_publish(cpu,dest,a,b,predicate);
 }
-void tb_sse_cmppdmem(CPU,unsigned dest,uint32_t address,unsigned predicate) {
+NATIVE_CPU void tb_sse_cmppdmem(CPU,unsigned dest,uint32_t address,unsigned predicate) {
     unsigned char a[16],b[16];memcpy(a,reg(cpu,dest),16);const volatile unsigned char *source=memory(cpu,address,TB_SSE_A128);for(unsigned i=0;i<16;++i)b[i]=source[i];legacy_cmppd_publish(cpu,dest,a,b,predicate);
 }
 
@@ -1580,10 +1596,10 @@ static void legacy_divsd_publish(CPU,unsigned dest,uint64_t right) {
     /* Windows #XM delivery remains unfinished; do not publish at this stop. */
     if(raised&~(control>>7))abort();memcpy(reg(cpu,dest),&value,8);
 }
-void tb_sse_divsd(CPU,unsigned dest,unsigned source) {
+NATIVE_CPU void tb_sse_divsd(CPU,unsigned dest,unsigned source) {
     uint64_t right;memcpy(&right,reg(cpu,source),8);legacy_divsd_publish(cpu,dest,right);
 }
-void tb_sse_divsdmem(CPU,unsigned dest,uint32_t address) {
+NATIVE_CPU void tb_sse_divsdmem(CPU,unsigned dest,uint32_t address) {
     unsigned char bytes[8];const volatile unsigned char *source=memory(cpu,address,TB_SSE_Q);
     for(unsigned i=0;i<8;++i)bytes[i]=source[i];uint64_t right;memcpy(&right,bytes,8);legacy_divsd_publish(cpu,dest,right);
 }
@@ -1618,10 +1634,10 @@ static void legacy_truncpd_publish(CPU,unsigned dest,const unsigned char source[
     cpu->_mxcsr|=raised;if(raised&~(control>>7))abort();
     memcpy(reg(cpu,dest),result,16);
 }
-void tb_sse_truncpd(CPU,unsigned dest,unsigned source) {
+NATIVE_CPU void tb_sse_truncpd(CPU,unsigned dest,unsigned source) {
     (void)reg(cpu,dest);unsigned char input[16];memcpy(input,reg(cpu,source),16);legacy_truncpd_publish(cpu,dest,input);
 }
-void tb_sse_truncpdmem(CPU,unsigned dest,uint32_t address) {
+NATIVE_CPU void tb_sse_truncpdmem(CPU,unsigned dest,uint32_t address) {
     (void)reg(cpu,dest);unsigned char input[16];const volatile unsigned char *source=memory(cpu,address,TB_SSE_A128);
     for(unsigned i=0;i<16;++i)input[i]=source[i];legacy_truncpd_publish(cpu,dest,input);
 }
@@ -1642,10 +1658,10 @@ static void legacy_bits128_publish(CPU,unsigned op,unsigned dest,const unsigned 
     }
     memcpy(reg(cpu,dest),result,16);
 }
-void tb_sse_bits128(CPU,unsigned op,unsigned dest,unsigned source) {
+NATIVE_CPU void tb_sse_bits128(CPU,unsigned op,unsigned dest,unsigned source) {
     if(op>6)abort();unsigned char value[16];memcpy(value,reg(cpu,source),16);legacy_bits128_publish(cpu,op,dest,value);
 }
-void tb_sse_bits128mem(CPU,unsigned op,unsigned dest,uint32_t address) {
+NATIVE_CPU void tb_sse_bits128mem(CPU,unsigned op,unsigned dest,uint32_t address) {
     if(op>6)abort();(void)reg(cpu,dest);unsigned char value[16];const volatile unsigned char *p=memory(cpu,address,TB_SSE_A128);
     for(unsigned i=0;i<16;++i)value[i]=p[i];legacy_bits128_publish(cpu,op,dest,value);
 }
@@ -1674,13 +1690,13 @@ static void legacy_shift_publish(CPU,unsigned op,unsigned dest,uint64_t count) {
     }
     memcpy(reg(cpu,dest),value,16);
 }
-void tb_sse_shiftimm(CPU,unsigned op,unsigned dest,unsigned count) {
+NATIVE_CPU void tb_sse_shiftimm(CPU,unsigned op,unsigned dest,unsigned count) {
     if(count>255)abort();legacy_shift_publish(cpu,op,dest,count);
 }
-void tb_sse_shiftcount(CPU,unsigned op,unsigned dest,unsigned source) {
+NATIVE_CPU void tb_sse_shiftcount(CPU,unsigned op,unsigned dest,unsigned source) {
     if(op>=8)abort();uint64_t count;memcpy(&count,reg(cpu,source),8);legacy_shift_publish(cpu,op,dest,count);
 }
-void tb_sse_shiftcountmem(CPU,unsigned op,unsigned dest,uint32_t address) {
+NATIVE_CPU void tb_sse_shiftcountmem(CPU,unsigned op,unsigned dest,uint32_t address) {
     if(op>=8)abort();(void)reg(cpu,dest);
     unsigned char source[16];volatile const unsigned char *p=memory(cpu,address,TB_SSE_A128);
     for(unsigned i=0;i<16;++i)source[i]=p[i];

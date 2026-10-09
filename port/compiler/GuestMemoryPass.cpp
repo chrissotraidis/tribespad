@@ -3,6 +3,8 @@
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/ADT/SmallPtrSet.h"
 #include "llvm/Analysis/ValueTracking.h"
+#include "llvm/Analysis/LazyValueInfo.h"
+#include "llvm/IR/ConstantRange.h"
 #include "llvm/IR/InstIterator.h"
 #include "llvm/IR/IntrinsicInst.h"
 #include "llvm/IR/Module.h"
@@ -17,7 +19,7 @@ namespace {
 struct GuestMemoryPass : PassInfoMixin<GuestMemoryPass> {
  bool CPUHost;
  explicit GuestMemoryPass(bool CPUHost=false):CPUHost(CPUHost){}
- PreservedAnalyses run(Module &M,ModuleAnalysisManager &) {
+ PreservedAnalyses run(Module &M,ModuleAnalysisManager &AM) {
   if(M.getModuleFlag("tribes.checked.memory")||M.getModuleFlag("tribes.checked.cpu-host"))report_fatal_error("Tribes memory pass applied twice");
   for(auto &F:M)if(!F.isDeclaration()&&F.getName().starts_with("tribes_memory_"))report_fatal_error("Do not instrument the trusted memory-check runtime");
   auto &C=M.getContext();auto *I32=Type::getInt32Ty(C);auto *I64=Type::getInt64Ty(C);auto *P=PointerType::getUnqual(C);
@@ -37,6 +39,17 @@ struct GuestMemoryPass : PassInfoMixin<GuestMemoryPass> {
    if(CPUShape)CPUShape=M.getDataLayout().getTypeAllocSize(CPU)==120;
   }
   auto bytes=[&](Type *T)->uint64_t {auto N=M.getDataLayout().getTypeStoreSize(T);if(N.isScalable())report_fatal_error("Scalable memory access requires lane-aware checks");return N.getFixedValue();};
+  SmallPtrSet<Function *,32> NativeCPUs;
+  if(CPUHost)if(auto *Annotations=M.getNamedGlobal("llvm.global.annotations"))if(auto *Rows=dyn_cast_or_null<ConstantArray>(Annotations->getInitializer()))for(auto &Row:Rows->operands()){
+   auto *Entry=dyn_cast<ConstantStruct>(Row);if(!Entry||Entry->getNumOperands()<2)continue;
+   auto *Label=dyn_cast<GlobalVariable>(Entry->getOperand(1)->stripPointerCasts());
+   auto *Text=Label&&Label->hasInitializer()?dyn_cast<ConstantDataArray>(Label->getInitializer()):nullptr;
+   if(!Text||!Text->isCString()||Text->getAsCString()!="tribes.native-cpu")continue;
+   auto *F=dyn_cast<Function>(Entry->getOperand(0)->stripPointerCasts());
+   if(!M.getDataLayout().isLittleEndian()||M.getDataLayout().getPointerSizeInBits()!=64||!F||F->isDeclaration()||F->isVarArg()||F->arg_empty()||F->getArg(0)->getType()!=P)report_fatal_error("Invalid native CPU contract");
+   NativeCPUs.insert(F);
+  }
+  auto &FAM=AM.getResult<FunctionAnalysisManagerModuleProxy>(M).getManager();
   for(auto &F:M){
    if(F.isDeclaration())continue;
    SmallVector<Instruction *,128> Work;for(auto &I:instructions(F))Work.push_back(&I);
@@ -44,6 +57,30 @@ struct GuestMemoryPass : PassInfoMixin<GuestMemoryPass> {
    auto Name=F.getName();bool Block=Name.consume_front("loc_")&&!Name.empty();
    for(char Ch:Name)Block&=(Ch>='0'&&Ch<='9')||(Ch>='a'&&Ch<='f')||(Ch>='A'&&Ch<='F');
    bool Eligible=CPUShape&&Block&&F.getCallingConv()==CallingConv::Fast&&F.hasHiddenVisibility()&&!F.isVarArg()&&F.getReturnType()->isVoidTy()&&F.arg_size()==1&&F.getArg(0)->getType()==P;
+   auto *Ranges=NativeCPUs.contains(&F)?&FAM.getResult<LazyValueAnalysis>(F):nullptr;
+   // The annotation requests a runtime proof, never an unchecked exemption.
+   // Admit only nonnegative, bounded GEP chains rooted in that exact argument.
+   // A loaded pointer, integer-derived address or unbounded index is not a CPU
+   // register. Bounds are queried at the access, including dominating checks.
+   auto NativeAccess=[&](Value *Address,uint64_t Size,Instruction *At){
+    if(!Ranges||Size>440)return false;
+    uint64_t Maximum=0;
+    while(auto *G=dyn_cast<GEPOperator>(Address)){
+     if(G->getPointerAddressSpace())return false;
+     SmallMapVector<Value *,APInt,4> Terms;APInt Constant(64,0);
+     if(!G->collectOffset(M.getDataLayout(),64,Terms,Constant)||Constant.isNegative()||Constant.ugt(440))return false;
+     Maximum+=Constant.getZExtValue();if(Maximum>440-Size)return false;
+     for(auto &[Index,Scale]:Terms){
+      if(Index->getType()->getIntegerBitWidth()>64||Scale.isNegative()||Scale.ugt(440))return false;
+      auto Range=Ranges->getConstantRange(Index,At,false);
+      if(Range.getSignedMin().isNegative()||Range.getUnsignedMax().ugt(440))return false;
+      Maximum+=Range.getUnsignedMax().getZExtValue()*Scale.getZExtValue();
+      if(Maximum>440-Size)return false;
+     }
+     Address=G->getPointerOperand();
+    }
+    return Address==F.getArg(0);
+   };
    for(auto *I:Work){
     if(I->getMetadata("tribes.checked.host.cpu"))report_fatal_error("Unverified CPU host metadata");
     if(I->getMetadata("tribes.checked.host.local"))report_fatal_error("Unverified local host metadata");
@@ -54,6 +91,7 @@ struct GuestMemoryPass : PassInfoMixin<GuestMemoryPass> {
     if(!Address||M.getDataLayout().getTypeStoreSize(T).isScalable())continue;
     int64_t Offset=0;auto *Root=GetPointerBaseWithConstantOffset(Address,Offset,M.getDataLayout());
     if(Eligible&&Root==F.getArg(0)&&Offset>=0&&Offset<120&&bytes(T)<=120-(uint64_t)Offset)Host.insert(I);
+    if(NativeAccess(Address,bytes(T),I))Host.insert(I);
     // Native stack objects and actual LLVM TLS objects cannot alias the guest
     // reservation. Admit only a constant, wholly contained scalar access.
     // A pointer loaded from such an object carries no proof for its pointee.
@@ -73,7 +111,7 @@ struct GuestMemoryPass : PassInfoMixin<GuestMemoryPass> {
    if(!Host.empty()){
     IRBuilder<> B(&*F.getEntryBlock().getFirstInsertionPt());
     auto Check=M.getOrInsertFunction("tribes_memory_access_host_span",B.getVoidTy(),P,I64);
-    B.CreateCall(Check,{F.getArg(0),B.getInt64(120)});++HostSpans;
+    B.CreateCall(Check,{F.getArg(0),B.getInt64(Ranges?440:120)});++HostSpans;
    }
    // Checks read shared permission metadata and may wait or fault. Do not retain
    // a source function/call's pure-memory, nosync or speculative attributes.

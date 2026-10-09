@@ -1,0 +1,117 @@
+{
+  "platform": "iPad Air 11-inch M4 Simulator, iOS 26.5",
+  "binary_sha256": "7171461527ef2b9f8db0d924feee1bd706b75456c27e29fafddde02072f50fc4",
+  "binary_bytes": 103047424,
+  "load": {
+    "start_time": 1791550235.575949,
+    "pid": 88854,
+    "map": "Katabatic",
+    "bots": 2,
+    "world_first_observed_seconds": 431
+  },
+  "controls": {
+    "spawn": true,
+    "aim": true,
+    "weapon_switch": true,
+    "disc_ammo": [
+      15,
+      13
+    ],
+    "jet_elevation": true,
+    "jet_energy_drain": true,
+    "jet_recovery": true,
+    "movement": "Forward hold changes remote tower distance 493.9 to 437.4 and camera position"
+  },
+  "video": {
+    "frames": [
+      {
+        "best_effort_timestamp_time": "0.000000",
+        "side_data_list": [
+          {}
+        ]
+      },
+      {
+        "best_effort_timestamp_time": "0.130000"
+      },
+      {
+        "best_effort_timestamp_time": "1.238333"
+      },
+      {
+        "best_effort_timestamp_time": "1.248333"
+      },
+      {
+        "best_effort_timestamp_time": "2.005000"
+      },
+      {
+        "best_effort_timestamp_time": "2.795000"
+      },
+      {
+        "best_effort_timestamp_time": "3.425000"
+      },
+      {
+        "best_effort_timestamp_time": "4.870000"
+      },
+      {
+        "best_effort_timestamp_time": "5.575000"
+      },
+      {
+        "best_effort_timestamp_time": "7.371667"
+      },
+      {
+        "best_effort_timestamp_time": "9.348333"
+      },
+      {
+        "best_effort_timestamp_time": "9.358333"
+      },
+      {
+        "best_effort_timestamp_time": "10.540000"
+      }
+    ],
+    "programs": [],
+    "stream_groups": [],
+    "streams": [
+      {
+        "width": 1640,
+        "height": 2360,
+        "avg_frame_rate": "600/541",
+        "duration": "10.570000",
+        "nb_frames": "13"
+      }
+    ],
+    "input_start_unix": 1791550707.7527308,
+    "input_end_unix": 1791550716.256869,
+    "input": "Eight-second native Look drag, followed by two-second settle; no debugger or compiler active."
+  },
+  "sample": {
+    "duration_seconds": 4,
+    "interval_ms": 5,
+    "barrier_ancestry_counts": {
+      "tribes_lookup": 43,
+      "tb_sse_store": 56,
+      "tb_sse_shufpsmem": 1,
+      "tb_sse_load": 54,
+      "tb_sse_scalarmem": 35,
+      "tb_sse_mulsdmem": 1,
+      "tb_sse_scalar": 53,
+      "tb_sse_arithmetic": 50,
+      "tb_sse_regmove": 12
+    },
+    "top_of_stack": {
+      "access_begin": 184,
+      "rdlock": 133,
+      "unlock": 123,
+      "access_end": 67,
+      "require": 58,
+      "transfer_begin": 35,
+      "host_span": 20
+    },
+    "scope": "Native stack samples after recording, not CPU percentages or a controlled comparison"
+  },
+  "issues": [
+    "About one presented frame per second; not playable acceptance",
+    "Distant terrain gap persists",
+    "Prior inventory-station exit issue not retested",
+    "Physical iPad execution and signing unverified"
+  ],
+  "scope": "Full original offline Katabatic with two bots. No online joining or authentication. No compiler or debugger during load/frame recording; native sampling afterward."
+}
