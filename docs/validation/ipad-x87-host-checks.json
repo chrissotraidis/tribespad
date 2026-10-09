@@ -1,0 +1,267 @@
+{
+  "date": "2026-10-09",
+  "change": "Apply the existing finite 440-byte native CPU proof to CPU-first x87 helpers; numerical algorithms and guest-pointer checks are unchanged. Full optimized mobile builds require a current source-bound x87 proof.",
+  "components": {
+    "passed": true,
+    "census": {
+      "baseline": {
+        "00-tribes_float80": {
+          "atomics": 0,
+          "calls_requiring_link_audit": {
+            "abort": 172,
+            "extF80_lt": 1,
+            "extF80_to_i64": 1,
+            "f32_to_extF80": 1,
+            "f64_to_extF80": 1,
+            "halopad_x87_result": 3,
+            "i64_to_extF80": 9,
+            "tb_bo_arithmetic": 1,
+            "tb_bo_math": 1,
+            "tb_bo_store_integer": 1,
+            "tb_bo_store_real": 1,
+            "ui64_to_extF80": 2
+          },
+          "host_cpu_accesses": 0,
+          "host_cpu_spans": 0,
+          "host_local_accesses": 0,
+          "loads": 623,
+          "sets": 0,
+          "stores": 316,
+          "transfers": 0
+        },
+        "01-tribes_mmx": {
+          "atomics": 0,
+          "calls_requiring_link_audit": {
+            "abort": 6,
+            "tb_mmx_eval": 2
+          },
+          "host_cpu_accesses": 0,
+          "host_cpu_spans": 0,
+          "host_local_accesses": 0,
+          "loads": 10,
+          "sets": 4,
+          "stores": 14,
+          "transfers": 0
+        },
+        "02-mmx": {
+          "atomics": 0,
+          "calls_requiring_link_audit": {
+            "abort": 1
+          },
+          "host_cpu_accesses": 0,
+          "host_cpu_spans": 0,
+          "host_local_accesses": 0,
+          "loads": 0,
+          "sets": 0,
+          "stores": 0,
+          "transfers": 0
+        },
+        "03-x87_result_slot": {
+          "atomics": 0,
+          "calls_requiring_link_audit": {},
+          "host_cpu_accesses": 0,
+          "host_cpu_spans": 0,
+          "host_local_accesses": 0,
+          "loads": 2,
+          "sets": 0,
+          "stores": 1,
+          "transfers": 0
+        }
+      },
+      "optimized": {
+        "00-tribes_float80": {
+          "atomics": 0,
+          "calls_requiring_link_audit": {
+            "abort": 172,
+            "extF80_lt": 1,
+            "extF80_to_i64": 1,
+            "f32_to_extF80": 1,
+            "f64_to_extF80": 1,
+            "halopad_x87_result": 3,
+            "i64_to_extF80": 9,
+            "tb_bo_arithmetic": 1,
+            "tb_bo_math": 1,
+            "tb_bo_store_integer": 1,
+            "tb_bo_store_real": 1,
+            "ui64_to_extF80": 2
+          },
+          "host_cpu_accesses": 825,
+          "host_cpu_spans": 94,
+          "host_local_accesses": 70,
+          "loads": 24,
+          "sets": 0,
+          "stores": 20,
+          "transfers": 0
+        },
+        "01-tribes_mmx": {
+          "atomics": 0,
+          "calls_requiring_link_audit": {
+            "abort": 6,
+            "tb_mmx_eval": 2
+          },
+          "host_cpu_accesses": 0,
+          "host_cpu_spans": 0,
+          "host_local_accesses": 0,
+          "loads": 10,
+          "sets": 4,
+          "stores": 14,
+          "transfers": 0
+        },
+        "02-mmx": {
+          "atomics": 0,
+          "calls_requiring_link_audit": {
+            "abort": 1
+          },
+          "host_cpu_accesses": 0,
+          "host_cpu_spans": 0,
+          "host_local_accesses": 0,
+          "loads": 0,
+          "sets": 0,
+          "stores": 0,
+          "transfers": 0
+        },
+        "03-x87_result_slot": {
+          "atomics": 0,
+          "calls_requiring_link_audit": {},
+          "host_cpu_accesses": 0,
+          "host_cpu_spans": 0,
+          "host_local_accesses": 0,
+          "loads": 2,
+          "sets": 0,
+          "stores": 1,
+          "transfers": 0
+        }
+      }
+    },
+    "runs": [
+      {
+        "mode": "baseline",
+        "library_sha256": "bce877211690e90526257665796bd316172e0b3c2b6f09e79f832c46b9ebeefa",
+        "numerics": {
+          "runtime": {
+            "cases": 46800,
+            "passed": true
+          },
+          "compare": {
+            "cases": 6144,
+            "passed": true
+          },
+          "stores": {
+            "cases": 31688,
+            "passed": true
+          }
+        },
+        "guards": "PASS: x87 guest load/store, 16000 independent threaded arithmetic cases, 3 pre-access CPU/guest/index faults preserve shared memory",
+        "guard_binary_sha256": "112b9931f781054a548d67cd42bb48b39798740d33193f995f111c4696f67377"
+      },
+      {
+        "mode": "optimized",
+        "library_sha256": "02f6a7ab928003c3c6a666f72747de6a5de94909e27028b6df257165bb4cb7c5",
+        "numerics": {
+          "runtime": {
+            "cases": 46800,
+            "passed": true
+          },
+          "compare": {
+            "cases": 6144,
+            "passed": true
+          },
+          "stores": {
+            "cases": 31688,
+            "passed": true
+          }
+        },
+        "guards": "PASS: x87 guest load/store, 16000 independent threaded arithmetic cases, 5 pre-access CPU/guest/index faults preserve shared memory",
+        "guard_binary_sha256": "5306b91b9fedee92f3b639fd2cd84f02a42abecb9fdc25017bc7902688b56c4a"
+      }
+    ],
+    "sources_sha256": {
+      "port/llasm-support/tribes_float80.c": "d3680616203dd5745fdee0ba8d3b042a26ce7e4c8e41b14943f00e45585f8672",
+      "port/llasm-support/tribes_mmx.c": "088ca7733243bdb0924b843231d98104d99d1e8eecba36d19b0fa2ced8df58c8",
+      "port/core/mmx.c": "6b9509dac577aa12956284df327e678248bbb59a33e817bcfb9f6d229e9a4a05",
+      "tests/x87_result_slot.c": "19772ada46bd5e0df47f604c0df3c2b5a83ac648df99fa27f63a859698a80a8a",
+      "port/llasm-support/llasm_cpu.h": "8c3cd17ee706cd3768d793c21d4f553b981cb45d3845dd9a93793d16f1bcc356",
+      "port/core/guest_memory_checks.c": "ce4b64969f394561e20eba137faee5993784f69b07bafa6f053b3dbdc1d8c45d",
+      "port/compiler/GuestMemoryPass.cpp": "36807ef535cb76ff61f41586065cb4cd4453563f4a73ebb967152887f793322c",
+      "tests/x87_host_checks_test.c": "b5c137d913558e75f7dae3769a234aed10c670e7b5a8eedef0c2e659b0e0b7b0",
+      "scripts/checked_support.py": "002742d45e00bfc0d5117c0d5f0c745b10c90e7bc8e10d180f5e7e9e28b82b60",
+      "scripts/test-x87-host-checks.py": "07dccaa324240b80164c87d1998067b39217be4367ff602040d7ea995b5eaec2",
+      "scripts/test-float80-runtime.py": "ead3542fe31afc227d81ef2c519e0e05649d9270ceea662ded6071a3c56c50f8",
+      "scripts/test-float80-compare.py": "c8e4592680cde115326cf64539b84bc2f74738682d9d2b9068cf14c119dcad1e",
+      "scripts/test-float80-stores.py": "175f27436765b06ee8ad7d337c4b7fc847c1f3a4ae4ea0bc4d04ba27bb273856"
+    },
+    "scope": "Unchanged numerical reference cases through baseline and CPU-object-optimized checked x87 wrappers; raw x86 reference runs under Rosetta. Guest tword pointees remain checked; finite CPU overlap and invalid stack indices fail. Eight independent CPU threads. Math dependency is the pinned native reference, not the full engine link. No game FPS claim."
+  },
+  "builds": {
+    "simulator": {
+      "state": "built",
+      "platform": "simulator",
+      "binary_sha256": "bbb4b4d8f02703d269466dbc8feaaf94fe7f6f889756602159a343a9e1eb3ffc",
+      "cpu_host_checks": true,
+      "bundled_assets": true,
+      "scope": "Full checked engine linked for simulator. Device builds need development signing. Build is not rendering or gameplay acceptance.",
+      "bytes": 103031408
+    },
+    "device": {
+      "state": "built",
+      "platform": "device",
+      "binary_sha256": "5145d97e1ded7296c6153c2e43741d371ada1b1608b2ee92b7ed2af7a3fefe27",
+      "cpu_host_checks": true,
+      "bundled_assets": true,
+      "scope": "Full checked engine linked for device. Device builds need development signing. Build is not rendering or gameplay acceptance.",
+      "bytes": 102965392
+    }
+  },
+  "execution": {
+    "start_time": 1791556385.396379,
+    "pid": 5956,
+    "map": "Katabatic",
+    "bots": 2,
+    "world_first_observed_seconds": 306,
+    "simulator": "iPad Air 11-inch (M4), iOS 26.5",
+    "controls": [
+      "Fire spawns Starwolf player",
+      "Weapon selects disc",
+      "Look drag rotates camera",
+      "Move advances player",
+      "Fire changes disc ammo15 to14",
+      "Jet raises player, drains energy and recovers after release"
+    ],
+    "ended_after_validation": true,
+    "physical_device_execution": false,
+    "online_join_or_authentication": false,
+    "remaining": [
+      "Slow loading and input",
+      "Still too slow for playable acceptance",
+      "Visible terrain gaps",
+      "Prior inventory-station exit issue",
+      "Physical iPad and iPhone acceptance"
+    ]
+  },
+  "performance": {
+    "captures": [
+      {
+        "frames": 82,
+        "seconds": 30.026667,
+        "scope": "Thirty-second fixed initial observer view of offline Katabatic with two bots. No input, compiler or debugger during recording. Presented Simulator frames, not original FPS counter.",
+        "raw_local_report": "generated/ipad-engine/x87-observer-video.json",
+        "raw_sha256": "0d561a473239fe28e0edb216e519a9b35c25e9e78360dd7507084f46a6dfc36a"
+      },
+      {
+        "frames": 53,
+        "seconds": 30.051667,
+        "scope": "Thirty-second fixed initial observer view of offline Katabatic with two bots. No input, compiler or debugger during recording. Presented Simulator frames, not original FPS counter.",
+        "raw_local_report": "generated/ipad-engine/x87-observer-video-2.json",
+        "raw_sha256": "8d28b946f2712248b2801e0beca913e473e83c292f5ad6fb8d7a8ad2b34c9dcb"
+      }
+    ],
+    "comparison": "82/53 frames in 30 seconds versus prior 57/52. One better capture, one within the prior range; not a consistent speedup claim. Same initial observer view, sequential matches, varying bot behavior.",
+    "profile": "Separate 4-second native sample after recordings: access_begin304, access_end89, reader_leave57, transfer_begin54, host_span40, require34 top-of-stack observations. Counts are not percentages.",
+    "profile_local_path": "generated/ipad-engine/x87-sample.txt"
+  },
+  "next": "Inspect actual emitted access groups: the current eight-access limit counts proven CPU/local accesses even before a guest bracket starts. Measure whether this fragments guest groups; preserve every check and bound reader hold time before changing the pass.",
+  "screenshot": {
+    "path": "docs/validation/ipad-x87-host-checks-2026-10-09.png",
+    "sha256": "77eba530af16bc89ba4ba37f153a69c6f60632e545e360718e913abc067f9e0e"
+  }
+}

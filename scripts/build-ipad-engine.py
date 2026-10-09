@@ -27,7 +27,7 @@ bundled=a.bundle_assets or a.platform=='device'
 source=a.prepared_directory.resolve();out=R/('generated/ipad-engine-device' if a.platform=='device' else 'generated/ipad-engine');out.mkdir(exist_ok=True)
 sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
 if a.cpu_host_checks:
- for proof_name in ['cpu-host-checks','host-local-checks','native-cpu-checks','sse-host-locals']:
+ for proof_name in ['cpu-host-checks','host-local-checks','native-cpu-checks','sse-host-locals','x87-host-checks']:
   cpu_proof=json.loads((R/'generated/integration-review'/proof_name/'result.json').read_text());assert cpu_proof['passed']
   for name,h in cpu_proof['sources_sha256'].items():assert sha(R/name)==h,name
 bochs,_=checked_bochs_inputs(a.platform)

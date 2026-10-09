@@ -11,7 +11,7 @@ the existing Tribes 2 community, with touch and controller support on mobile.
 is currently too slow for comfortable play. The full iPad Simulator app now loads an offline
 Katabatic match with bots and accepts touch movement, aim, weapons, firing and jets.
 The Metal backend also renders interiors and supports touch death/respawn.
-Recent iPad Simulator captures measure about **1.7–1.9 FPS**, so performance is
+Recent iPad Simulator captures measure about **1.8–2.7 FPS**, so performance is
 still the main blocker. Slow startup, input delay and a terrain gap shared with Mac
 also need work.
 There is no playable iPad or iPhone release yet.
@@ -103,11 +103,11 @@ them. Omitting the flag selects the earlier EAGL backend.
 
 Use `--cpu-host-checks` for the optimized Simulator and device builds. This optional
 mode requires current passing runs of `scripts/test-cpu-host-checks.py`,
-`scripts/test-host-local-checks.py`, `scripts/test-native-cpu-checks.py` and
-`scripts/test-sse-host-locals.py`. It keeps
+`scripts/test-host-local-checks.py`, `scripts/test-native-cpu-checks.py`,
+`scripts/test-sse-host-locals.py` and `scripts/test-x87-host-checks.py`. It keeps
 guest-memory checks, validates the native register span once per translated block,
 and removes redundant checks only for proven in-bounds native stack, TLS and private
-global accesses. Native SIMD helpers also validate the full CPU object once, then
+global accesses. Native SIMD and x87 helpers also validate the full CPU object once, then
 use proven bounds for indexed register fields. Pointers read from those objects
 and all guest operands still receive guest-memory checks.
 

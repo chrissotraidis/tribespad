@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 """Check real stores and defined status against independent x86-64/Rosetta."""
+import argparse
 import ctypes, hashlib, json, pathlib, random, struct, subprocess
 R=pathlib.Path(__file__).resolve().parents[1]
-out=R/'generated/softfloat/stores';out.mkdir(parents=True,exist_ok=True)
+parser=argparse.ArgumentParser();parser.add_argument('--library',type=pathlib.Path);parser.add_argument('--output',type=pathlib.Path,default=R/'generated/softfloat/stores');args=parser.parse_args()
+out=args.output;out.mkdir(parents=True,exist_ok=True)
 sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
 sources=[R/n for n in ['port/core/ext80.c','port/llasm-support/tribes_float80.c','tests/x87_result_slot.c']]
 deps=[R/'generated/softfloat/macos/softfloat.a',R/'generated/bochs-math/libmath.dylib']
-library=out/'libstores.dylib'
-subprocess.run(['clang','-target','arm64-apple-macos26.0','-O2','-std=c11','-Wall','-Wextra','-Werror','-DPTROFS_64BIT','-DSOFTFLOAT_FAST_INT64','-DTHREAD_LOCAL=_Thread_local','-I',str(R/'ref/softfloat/SoftFloat-3e/source/include'),'-dynamiclib',*map(str,sources+deps),'-o',str(library)],check=True)
+library=args.library or out/'libstores.dylib'
+if not args.library: subprocess.run(['clang','-target','arm64-apple-macos26.0','-O2','-std=c11','-Wall','-Wextra','-Werror','-DPTROFS_64BIT','-DSOFTFLOAT_FAST_INT64','-DTHREAD_LOCAL=_Thread_local','-I',str(R/'ref/softfloat/SoftFloat-3e/source/include'),'-dynamiclib',*map(str,sources+deps),'-o',str(library)],check=True)
 oracle_source=R/'tests/float80_store_oracle.c';oracle=out/'oracle'
 subprocess.run(['clang','-arch','x86_64','-O2','-Wall','-Wextra','-Werror',str(oracle_source),'-o',str(oracle)],check=True)
 class CPU(ctypes.Structure):

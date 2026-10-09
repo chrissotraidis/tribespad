@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """Exercise actual SR x87 helper signatures with raw extended stack state."""
+import argparse
 import ctypes,hashlib,json,pathlib,random,subprocess
-R=pathlib.Path(__file__).resolve().parents[1];out=R/'generated/softfloat/runtime';out.mkdir(parents=True,exist_ok=True)
-libpath=R/'generated/softfloat/stack/libstack.dylib'
+R=pathlib.Path(__file__).resolve().parents[1];parser=argparse.ArgumentParser();parser.add_argument('--library',type=pathlib.Path);parser.add_argument('--output',type=pathlib.Path,default=R/'generated/softfloat/runtime');args=parser.parse_args()
+out=args.output;out.mkdir(parents=True,exist_ok=True)
+libpath=args.library or R/'generated/softfloat/stack/libstack.dylib'
 class CPU(ctypes.Structure):
  _fields_=[('regs',ctypes.c_uint32*9),('top',ctypes.c_uint32),('sw',ctypes.c_uint32),('cw',ctypes.c_uint32),('st',ctypes.c_uint64*8),('offset',ctypes.c_uint64),('result',ctypes.c_int64),('bottom',ctypes.c_void_p),('stacktop',ctypes.c_void_p),('tag',ctypes.c_uint32),('mmx_active',ctypes.c_uint32),('exp',ctypes.c_uint16*8),('extended',ctypes.c_uint32),('dispatch',ctypes.c_uint32),('xmm',(ctypes.c_uint8*16)*8),('mxcsr',ctypes.c_uint32),('sse_reserved',ctypes.c_uint32),('ymm_hi',(ctypes.c_uint8*16)*8)]
 lib=ctypes.CDLL(str(libpath));lib.x87_fninit_void.argtypes=[ctypes.POINTER(CPU)]
