@@ -21,12 +21,16 @@ static void *worker(void *arg) {
         if(output.result!=test->result || status.raised!=test->raised) {
             fprintf(stderr,"SSE arithmetic mismatch case %u op %u control %x inputs %llx/%llx result %llx/%llx flags %x/%x\n",i,test->op,test->control,(unsigned long long)test->a,(unsigned long long)test->b,(unsigned long long)output.result,(unsigned long long)test->result,status.raised,test->raised);assert(0);
         }
+        TBSSEResult candidate=tb_sse_evaluate(test->op,test->a,test->b,test->control);
+        assert(candidate.valid&&candidate.value==test->result&&candidate.raised==test->raised);
         assert(output.before==0x1122334455667788&&output.after==0x8877665544332211);
         assert(status.before==0x12345678&&status.after==0x87654321);
         assert(round==softfloat_roundingMode&&tiny==softfloat_detectTininess);
         assert(flags==softfloat_exceptionFlags&&precision==extF80_roundingPrecision);
     }
     uint64_t result=0xaaaaaaaaaaaaaaaa;uint32_t raised=0xaaaaaaaa;
+    assert(!tb_sse_evaluate(6,0,0,0x1f80).valid);
+    assert(!tb_sse_evaluate(0,0,0,0x10000).valid);
     assert(!tb_sse_arithmetic(6,0,0,0x1f80,&result,&raised));
     assert(!tb_sse_arithmetic(0,0,0,0x10000,&result,&raised));
     assert(!tb_sse_arithmetic(0,0,0,0x1f80,NULL,&raised));

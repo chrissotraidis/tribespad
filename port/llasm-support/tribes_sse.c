@@ -345,7 +345,7 @@ static void scalar(CPU,unsigned op,unsigned char *dst,const unsigned char *sourc
 #else
     for(unsigned i=0;i<n;i++){a|=(uint64_t)dst[i]<<(8*i);b|=(uint64_t)source[i]<<(8*i);}
 #endif
-    if(!tb_sse_arithmetic(op,a,b,cpu->_mxcsr,&result,&raised))abort();
+    TBSSEResult candidate=tb_sse_evaluate(op,a,b,cpu->_mxcsr);if(!candidate.valid)abort();result=candidate.value;raised=candidate.raised;
     cpu->_mxcsr|=raised;
     /* Preserve destination and upper scalar lanes at an unserviced #XM.
        Precise unmasked exception delivery/priority is a separate contract. */
@@ -613,7 +613,7 @@ static void packed_publish(CPU,unsigned wide,unsigned op,unsigned dest,const uns
     for(unsigned lane=0;lane<(wide?8:4);lane++) {
         uint32_t left,right,status;uint64_t result;
         memcpy(&left,a+lane*4,4);memcpy(&right,b+lane*4,4);
-        if(!tb_sse_arithmetic(op,left,right,control,&result,&status))abort();
+        TBSSEResult candidate=tb_sse_evaluate(op,left,right,control);if(!candidate.valid)abort();result=candidate.value;status=candidate.raised;
         raised|=status;uint32_t low=(uint32_t)result;memcpy(value+lane*4,&low,4);
     }
     cpu->_mxcsr|=raised;
@@ -1185,7 +1185,7 @@ NATIVE_CPU void tb_sse_sd2ssmem(CPU,unsigned dest,uint32_t address) {
 
 static void legacy_mulps_publish(CPU,unsigned dest,const unsigned char left[16],const unsigned char right[16]) {
     unsigned char value[16];uint32_t raised=0,control=cpu->_mxcsr;
-    for(unsigned lane=0;lane<4;++lane){uint32_t a,b,status;uint64_t result;memcpy(&a,left+lane*4,4);memcpy(&b,right+lane*4,4);if(!tb_sse_arithmetic(TB_SSE_MUL32,a,b,control,&result,&status))abort();raised|=status;uint32_t low=(uint32_t)result;memcpy(value+lane*4,&low,4);}
+    for(unsigned lane=0;lane<4;++lane){uint32_t a,b,status;uint64_t result;memcpy(&a,left+lane*4,4);memcpy(&b,right+lane*4,4);TBSSEResult candidate=tb_sse_evaluate(TB_SSE_MUL32,a,b,control);if(!candidate.valid)abort();result=candidate.value;status=candidate.raised;raised|=status;uint32_t low=(uint32_t)result;memcpy(value+lane*4,&low,4);}
     cpu->_mxcsr|=raised;
     /* Precise unmasked packed priority/Windows delivery remain unfinished. */
     if(raised&~(control>>7))abort();memcpy(reg(cpu,dest),value,16);
@@ -1199,7 +1199,7 @@ NATIVE_CPU void tb_sse_mulpsmem(CPU,unsigned dest,uint32_t address) {
 
 static void legacy_divps_publish(CPU,unsigned dest,const unsigned char left[16],const unsigned char right[16]) {
     unsigned char value[16];uint32_t raised=0,control=cpu->_mxcsr;
-    for(unsigned lane=0;lane<4;++lane){uint32_t a,b,status;uint64_t result;memcpy(&a,left+lane*4,4);memcpy(&b,right+lane*4,4);if(!tb_sse_arithmetic(TB_SSE_DIV32,a,b,control,&result,&status))abort();raised|=status;uint32_t low=(uint32_t)result;memcpy(value+lane*4,&low,4);}
+    for(unsigned lane=0;lane<4;++lane){uint32_t a,b,status;uint64_t result;memcpy(&a,left+lane*4,4);memcpy(&b,right+lane*4,4);TBSSEResult candidate=tb_sse_evaluate(TB_SSE_DIV32,a,b,control);if(!candidate.valid)abort();result=candidate.value;status=candidate.raised;raised|=status;uint32_t low=(uint32_t)result;memcpy(value+lane*4,&low,4);}
     cpu->_mxcsr|=raised;
     /* Precise unmasked packed priority/Windows delivery remain unfinished. */
     if(raised&~(control>>7))abort();memcpy(reg(cpu,dest),value,16);
@@ -1213,7 +1213,7 @@ NATIVE_CPU void tb_sse_divpsmem(CPU,unsigned dest,uint32_t address) {
 
 static void legacy_addps_publish(CPU,unsigned dest,const unsigned char left[16],const unsigned char right[16]) {
     unsigned char value[16];uint32_t raised=0,control=cpu->_mxcsr;
-    for(unsigned lane=0;lane<4;++lane){uint32_t a,b,status;uint64_t result;memcpy(&a,left+lane*4,4);memcpy(&b,right+lane*4,4);if(!tb_sse_arithmetic(TB_SSE_ADD32,a,b,control,&result,&status))abort();raised|=status;uint32_t low=(uint32_t)result;memcpy(value+lane*4,&low,4);}
+    for(unsigned lane=0;lane<4;++lane){uint32_t a,b,status;uint64_t result;memcpy(&a,left+lane*4,4);memcpy(&b,right+lane*4,4);TBSSEResult candidate=tb_sse_evaluate(TB_SSE_ADD32,a,b,control);if(!candidate.valid)abort();result=candidate.value;status=candidate.raised;raised|=status;uint32_t low=(uint32_t)result;memcpy(value+lane*4,&low,4);}
     cpu->_mxcsr|=raised;
     /* Precise unmasked packed priority/Windows delivery remain unfinished. */
     if(raised&~(control>>7))abort();memcpy(reg(cpu,dest),value,16);
@@ -1243,7 +1243,7 @@ NATIVE_CPU void tb_sse_shufpsmem(CPU,unsigned dest,uint32_t address,unsigned con
 
 static void legacy_subps_publish(CPU,unsigned dest,const unsigned char left[16],const unsigned char right[16]) {
     unsigned char value[16];uint32_t raised=0,control=cpu->_mxcsr;
-    for(unsigned lane=0;lane<4;++lane){uint32_t a,b,status;uint64_t result;memcpy(&a,left+lane*4,4);memcpy(&b,right+lane*4,4);if(!tb_sse_arithmetic(TB_SSE_SUB32,a,b,control,&result,&status))abort();raised|=status;uint32_t low=(uint32_t)result;memcpy(value+lane*4,&low,4);}
+    for(unsigned lane=0;lane<4;++lane){uint32_t a,b,status;uint64_t result;memcpy(&a,left+lane*4,4);memcpy(&b,right+lane*4,4);TBSSEResult candidate=tb_sse_evaluate(TB_SSE_SUB32,a,b,control);if(!candidate.valid)abort();result=candidate.value;status=candidate.raised;raised|=status;uint32_t low=(uint32_t)result;memcpy(value+lane*4,&low,4);}
     cpu->_mxcsr|=raised;
     /* Precise unmasked packed priority/Windows delivery remain unfinished. */
     if(raised&~(control>>7))abort();memcpy(reg(cpu,dest),value,16);
@@ -1514,7 +1514,7 @@ NATIVE_CPU void tb_sse_divpdmem(CPU,unsigned dest,uint32_t address) {
 
 static void legacy_addpd_publish(CPU,unsigned dest,const unsigned char left[16],const unsigned char right[16]) {
     unsigned char value[16];uint32_t raised=0,control=cpu->_mxcsr;
-    for(unsigned lane=0;lane<2;++lane){uint64_t a,b,result;uint32_t status;memcpy(&a,left+lane*8,8);memcpy(&b,right+lane*8,8);if(!tb_sse_arithmetic(TB_SSE_ADD64,a,b,control,&result,&status))abort();raised|=status;memcpy(value+lane*8,&result,8);}
+    for(unsigned lane=0;lane<2;++lane){uint64_t a,b,result;uint32_t status;memcpy(&a,left+lane*8,8);memcpy(&b,right+lane*8,8);TBSSEResult candidate=tb_sse_evaluate(TB_SSE_ADD64,a,b,control);if(!candidate.valid)abort();result=candidate.value;status=candidate.raised;raised|=status;memcpy(value+lane*8,&result,8);}
     cpu->_mxcsr|=raised;
     /* Precise unmasked packed priority/Windows delivery remain unfinished. */
     if(raised&~(control>>7))abort();memcpy(reg(cpu,dest),value,16);
@@ -1530,7 +1530,9 @@ static void legacy_mathpd_publish(CPU,unsigned multiply,unsigned dest,const unsi
     unsigned char value[16];uint32_t control=cpu->_mxcsr,raised=0;
     for(unsigned lane=0;lane<2;++lane) {
         uint64_t a,b,result;uint32_t status;memcpy(&a,left+lane*8,8);memcpy(&b,right+lane*8,8);
-        int ok=multiply?tb_sse_multiply64(a,b,control,&result,&status):tb_sse_arithmetic(TB_SSE_SUB64,a,b,control,&result,&status);
+        int ok;
+        if(multiply)ok=tb_sse_multiply64(a,b,control,&result,&status);
+        else {TBSSEResult candidate=tb_sse_evaluate(TB_SSE_SUB64,a,b,control);ok=candidate.valid;result=candidate.value;status=candidate.raised;}
         if(!ok)abort();raised|=status;memcpy(value+lane*8,&result,8);
     }
     cpu->_mxcsr|=raised;

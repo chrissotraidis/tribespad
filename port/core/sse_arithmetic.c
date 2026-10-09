@@ -3,9 +3,8 @@
 #define LITTLEENDIAN 1
 #endif
 #include "softfloat.h"
-int tb_sse_arithmetic(unsigned op,uint64_t a,uint64_t b,uint32_t control,
-                      uint64_t *result,uint32_t *raised) {
-    if(op>TB_SSE_SUB32 || control>0xffff || !result || !raised)return 0;
+TBSSEResult tb_sse_evaluate(unsigned op,uint64_t a,uint64_t b,uint32_t control) {
+    if(op>TB_SSE_SUB32 || control>0xffff)return (TBSSEResult){0,0,0};
     const int single=op>=TB_SSE_MUL32;
     const uint64_t sign=single?UINT64_C(0x80000000):UINT64_C(0x8000000000000000);
     const uint64_t infinity=single?UINT64_C(0x7f800000):UINT64_C(0x7ff0000000000000);
@@ -18,9 +17,8 @@ int tb_sse_arithmetic(unsigned op,uint64_t a,uint64_t b,uint32_t control,
        has a different two-NaN payload policy, so handle this before entry.
        SUB preserves the source NaN's sign/payload rather than negating it. */
     if(nan_a||nan_b) {
-        *result=(nan_a?a:b)|quiet;
-        *raised=((nan_a&&!(a&quiet))||(nan_b&&!(b&quiet)))?1:0;
-        return 1;
+        return (TBSSEResult){(nan_a?a:b)|quiet,
+            ((nan_a&&!(a&quiet))||(nan_b&&!(b&quiet)))?1u:0u,1};
     }
     unsigned flags=0;
     int den_a=abs_a&&abs_a<normal_min,den_b=abs_b&&abs_b<normal_min;
@@ -63,7 +61,15 @@ int tb_sse_arithmetic(unsigned op,uint64_t a,uint64_t b,uint32_t control,
     if((control&0x8000)&&((flags&16)||(abs_result&&abs_result<normal_min))) {
         value&=sign;flags|=16|32;
     }
-    *result=value;*raised=flags;return 1;
+    return (TBSSEResult){value,flags,1};
+}
+
+int tb_sse_arithmetic(unsigned op,uint64_t a,uint64_t b,uint32_t control,
+                      uint64_t *result,uint32_t *raised) {
+    if(!result||!raised)return 0;
+    TBSSEResult candidate=tb_sse_evaluate(op,a,b,control);
+    if(!candidate.valid)return 0;
+    *result=candidate.value;*raised=candidate.raised;return 1;
 }
 
 int tb_sse_sqrt64(uint64_t source,uint32_t control,uint64_t *result,uint32_t *raised) {

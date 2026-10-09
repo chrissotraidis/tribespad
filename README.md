@@ -7,15 +7,11 @@ and supplies the Windows, graphics, audio and network services it expects on App
 platforms. The aim is the original game, offline bot matches and compatibility with
 the existing Tribes 2 community, with touch and controller support on mobile.
 
-**In development.** The Mac app renders and runs offline matches, but performance
-is currently too slow for comfortable play. The full iPad Simulator app now loads an offline
-Katabatic match with bots and accepts touch movement, aim, weapons, firing and jets.
-The Metal backend also renders interiors and supports touch death/respawn.
-Latest iPad Simulator recordings measure **7.7 FPS playing / 8.2 FPS observing**,
-so performance remains the main blocker. The latest build fixes the fog corruption
-that exposed gaps in distant terrain and restores original WAV/music data delivery
-to OpenAL. Slow startup, input delay and audible-quality validation still need work.
-There is no playable iPad or iPhone release yet.
+**In development.** The Mac app and full iPad Simulator app run original offline
+matches with bots. iPad touch movement, aim, weapons, firing, jets and respawn
+have been exercised. Performance is still around **7–8 FPS in the Simulator**, with
+slow loading and input delay. Physical-iPad gameplay is unverified; there is no
+playable iPad or iPhone release yet.
 
 ![Original Tribes 2 running through Metal with iPad touch controls](docs/validation/ipad-fog-touch-2026-10-09.png)
 
@@ -35,7 +31,9 @@ There is no playable iPad or iPhone release yet.
 
 ## iPad controls
 
-Tap **Touch controls** in an offline match to show the overlay.
+To try an offline match, choose **LAN GAME → HOST → Katabatic**, enable two bots,
+and tap **START GAME**. Loading currently takes several minutes. Once the world
+appears, tap **Touch controls**, then **Fire + Aim** to spawn.
 
 | Control | Action |
 | --- | --- |
@@ -103,7 +101,7 @@ and build validation: **[Development guide](docs/DEVELOPMENT.md)**.
 
 ## Status and limits
 
-- Latest iPad Simulator recordings measure **7.7 FPS playing / 8.2 FPS observing**.
+- Latest iPad Simulator recordings measure **6.8 FPS playing / 7.7 FPS observing**.
   Viewpoints differ across builds, so these are not a controlled speedup claim.
   Startup, input delay and sustained performance still need work.
 - Distance fog is fixed. HD texture uploads are verified, but full visual fidelity

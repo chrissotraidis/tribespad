@@ -1,0 +1,176 @@
+{
+  "date": "2026-10-09",
+  "change": "Native SIMD callers receive arithmetic value, raised flags and validity in a 16-byte return value; legacy pointer API retains checked stores. Arithmetic, exception publication and guest memory rules are unchanged.",
+  "sources_sha256": {
+    "port/core/sse_arithmetic.c": "3d527d64dedbdb65e1f66bd2f076a5feffff5d33d4e31f180d9f3d521f91806b",
+    "port/core/sse_arithmetic.h": "f59e731d5d765c97c1ca2a32a62fd31ced1a23aba3b868fab8242a5f19a0ae27",
+    "port/llasm-support/tribes_sse.c": "f54377cc5864ee2b09da66171bf32c4329a4c8e03d5d719b8687098536127f04",
+    "tests/sse_arithmetic_test.c": "8782582e1401f3f0f37cb19e3a27693844f41249c97f7871c42b60822ec70f77"
+  },
+  "proofs": {
+    "arithmetic": {
+      "passed": true,
+      "cases": 32224,
+      "receipt_sha256": "5589d899370c9edc4e71ceaecd57379e40af22309153515b2abbec64b93e7833"
+    },
+    "sse-host-locals": {
+      "passed": true,
+      "cases": 94128,
+      "receipt_sha256": "e99e4f67c431e38d9dd5e96cadb3e237ea53979bbf1dc79651e43f63f46c719f"
+    },
+    "native-cpu-checks": {
+      "passed": true,
+      "cases": null,
+      "receipt_sha256": "f0daf6d4062c2918d13ea2954957843f1f39f138d53515d2edacfa77bba2945e"
+    }
+  },
+  "microbenchmark": {
+    "iterations": 4000000,
+    "runs": [
+      {
+        "seconds": 0.090574,
+        "checksum": 4278321077156736,
+        "status": 0,
+        "mode": "before"
+      },
+      {
+        "seconds": 0.067974,
+        "checksum": 4278321077156736,
+        "status": 0,
+        "mode": "after"
+      },
+      {
+        "seconds": 0.069555,
+        "checksum": 4278321077156736,
+        "status": 0,
+        "mode": "after"
+      },
+      {
+        "seconds": 0.095765,
+        "checksum": 4278321077156736,
+        "status": 0,
+        "mode": "before"
+      },
+      {
+        "seconds": 0.097544,
+        "checksum": 4278321077156736,
+        "status": 0,
+        "mode": "before"
+      },
+      {
+        "seconds": 0.077157,
+        "checksum": 4278321077156736,
+        "status": 0,
+        "mode": "after"
+      },
+      {
+        "seconds": 0.07405,
+        "checksum": 4278321077156736,
+        "status": 0,
+        "mode": "after"
+      },
+      {
+        "seconds": 0.095063,
+        "checksum": 4278321077156736,
+        "status": 0,
+        "mode": "before"
+      },
+      {
+        "seconds": 0.095898,
+        "checksum": 4278321077156736,
+        "status": 0,
+        "mode": "before"
+      },
+      {
+        "seconds": 0.073,
+        "checksum": 4278321077156736,
+        "status": 0,
+        "mode": "after"
+      },
+      {
+        "seconds": 0.071779,
+        "checksum": 4278321077156736,
+        "status": 0,
+        "mode": "after"
+      },
+      {
+        "seconds": 0.095257,
+        "checksum": 4278321077156736,
+        "status": 0,
+        "mode": "before"
+      }
+    ],
+    "median": {
+      "before": 0.095511,
+      "after": 0.0723895
+    },
+    "scope": "Isolated checked arithmetic call overhead, not game FPS; same math and guard policy, native output temporaries with guest checks enabled.",
+    "relative_median_reduction": 0.24208206384604913,
+    "limitation": "Short alternate-order native arithmetic runs with an existing offline Simulator app alive. This does not measure whole-game speedup."
+  },
+  "builds": {
+    "simulator": {
+      "binary_sha256": "7c99ebf686387addffacb43f4ee3354641390c63ef5ea6260bd52da54f11d69b",
+      "binary_bytes": 103659088,
+      "native_objects": 410,
+      "reused_after_check": 406,
+      "deep_strict_ad_hoc_signature_verified": true
+    },
+    "device": {
+      "binary_sha256": "264cac2d169b4c1b675579e0caadaae9bc97a49cbd0bb00df33f73e3ea09084b",
+      "binary_bytes": 103593056,
+      "native_objects": 410,
+      "reused_after_check": 406,
+      "deep_strict_ad_hoc_signature_verified": true
+    }
+  },
+  "actual_game": {
+    "pid": 73082,
+    "device": "iPad Air 11-inch M4 Simulator, iOS 26.5",
+    "offline": true,
+    "map": "Katabatic",
+    "bots": 2,
+    "touch_spawn": true,
+    "weapon_switch": true,
+    "disc_ammo": [
+      15,
+      14
+    ],
+    "own_flag_range": [
+      39.1,
+      22.1
+    ],
+    "world_observed_by_seconds": 206,
+    "loading_timing_limit": "Sampled upper bound; device build overlapped loading. Not a startup benchmark.",
+    "screenshot": "ipad-sse-values-2026-10-09.png",
+    "screenshot_sha256": "219a401cd33cdeb364439c9fb0e67d8d95a4ab752f23752959f3b935f9fce571"
+  },
+  "recordings": {
+    "observer": {
+      "app_pid": 73082,
+      "wall_seconds": 32.039444833000005,
+      "exit": 0,
+      "frames": 231,
+      "video_seconds": 29.828333,
+      "output": "Note: No display specified. Defaulting to display: 1E7E3028-03E7-4057-9D8B-E555C7AA69BE (screenID: 1, name: LCD)\nRecording started\nRecording completed. Writing to disk.\n\nWrote video to: /Users/chrissotraidis/GitHub/tribespad/generated/integration-review/sse-value-results/observer.mov\n",
+      "scope": "Offline Katabatic, two bots, audio enabled; no builds, debugger or sampler during recording.",
+      "presented_fps": 7.744314776155945
+    },
+    "player": {
+      "app_pid": 73082,
+      "wall_seconds": 31.349815834,
+      "exit": 0,
+      "frames": 200,
+      "video_seconds": 29.628333,
+      "output": "Note: No display specified. Defaulting to display: 1E7E3028-03E7-4057-9D8B-E555C7AA69BE (screenID: 1, name: LCD)\nRecording started\nRecording completed. Writing to disk.\n\nWrote video to: /Users/chrissotraidis/GitHub/tribespad/generated/integration-review/sse-value-results/player.mov\n",
+      "scope": "Offline Katabatic, two bots, audio enabled; no builds, debugger or sampler during recording.",
+      "presented_fps": 6.750295401364633
+    }
+  },
+  "limits": [
+    "No demonstrated whole-game speedup; current 7.74 FPS observer and 6.75 FPS player remain inadequate. Views/bot state differ across player runs.",
+    "No physical device or development identity available at prior check; device execution and controller acceptance remain unverified.",
+    "Original fog/audio fixes retained; audible quality, inventory-station purchase/exit and clean shutdown remain pending.",
+    "Offline and discovery only; no online joining or authentication."
+  ]
+}
