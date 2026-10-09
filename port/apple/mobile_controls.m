@@ -16,6 +16,7 @@
 @property(nonatomic) CGPoint stickAim;
 @property(nonatomic) CFTimeInterval lastAimTime;
 -(void)releaseControls;
+-(void)toggleControls;
 @end
 @interface TBGamePad : UILabel
 @property(nonatomic,weak) TBGameControls *owner;
@@ -52,6 +53,9 @@
     [self update:self.finger];tb_input_release(&self.owner.controls->input,self.source);
     tb_mobile_controls_emit(self.owner.controls);self.finger=nil;
     self.backgroundColor=[UIColor colorWithWhite:0 alpha:.35];
+    // The original inventory needs direct taps: the Look pad otherwise covers
+    // equipment fields and Done. Retire the key before hiding/releasing pads.
+    if(self.action==TBInventory&&self.owner.expanded)[self.owner toggleControls];
 }
 -(void)touchesCancelled:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
     (void)event;if(![touches containsObject:self.finger])return;
@@ -93,6 +97,8 @@
     self.pads=pads;
     [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(releaseControls)
         name:UIApplicationWillResignActiveNotification object:nil];
+    [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(keyboardFrameChanged:)
+        name:UIKeyboardDidChangeFrameNotification object:nil];
     [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(controllerChanged:)
         name:GCControllerDidConnectNotification object:nil];
     [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(controllerChanged:)
@@ -168,6 +174,9 @@
         SDL_StartTextInput(window);
     }
 }
+-(void)keyboardFrameChanged:(NSNotification *)notification {
+    (void)notification;[self setNeedsLayout];
+}
 -(void)toggleControls {
     SDL_Window *window=SDL_GetWindowFromID(self.controls->window);
     if(window)SDL_StopTextInput(window);
@@ -176,6 +185,8 @@
     [self setNeedsLayout];
 }
 -(void)openMenu {
+    SDL_Window *window=SDL_GetWindowFromID(self.controls->window);
+    if(window)SDL_StopTextInput(window);
     if(self.expanded)[self toggleControls];
     else [self releaseControls];
     for(int down=1;down>=0;down--) {
@@ -187,9 +198,13 @@
 -(void)layoutSubviews {
     [super layoutSubviews];[self releaseControls];
     CGRect area=UIEdgeInsetsInsetRect(self.bounds,self.safeAreaInsets);
+    // SDL shifts its root view to reveal the text caret. Keep native controls
+    // inside the part of that view still visible in the window.
+    if(self.window)area=CGRectIntersection(self.bounds,[self convertRect:
+        UIEdgeInsetsInsetRect(self.window.bounds,self.window.safeAreaInsets) fromView:self.window]);
     CGFloat w=area.size.width,h=area.size.height,x=area.origin.x,y=area.origin.y;
     self.toggle.frame=CGRectMake(x+w/2-70,y+8,140,40);
-    self.menu.frame=CGRectMake(x+w/2+78,y+8,70,40);self.menu.hidden=!self.expanded;
+    self.menu.frame=CGRectMake(x+w/2+78,y+8,70,40);
     self.keyboard.frame=CGRectMake(x+w/2-178,y+8,100,40);
     CGFloat size=MIN(180,MIN(w*.20,h*.32));
     const CGRect frames[]={CGRectMake(x+20,y+h-size-24,size,size),

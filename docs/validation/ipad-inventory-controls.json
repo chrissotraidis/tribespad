@@ -1,0 +1,95 @@
+{
+  "date": "2026-10-09",
+  "scope": "Original checked iPad Simulator offline inventory/keyboard/gameplay execution; device build only. Not comfortable-playability or physical-device acceptance.",
+  "changes": [
+    "Release the Inventory key then hide gameplay pads so original equipment fields and Done receive taps.",
+    "Keep Menu visible with pads hidden; stop text input before sending Escape.",
+    "Relayout controls within the visible window after SDL keyboard translation."
+  ],
+  "builds": {
+    "simulator": {
+      "binary_sha256": "1cffeaa28daffcfe4eaec9b8cff1009065acc29758d03ed55121e33b39f7e48f",
+      "executable_bytes": 103641840,
+      "bundled_assets": true,
+      "cpu_host_checks": true,
+      "receipt": "generated/ipad-engine/result.json",
+      "log": "generated/ipad-engine/inventory-keyboard-build.log",
+      "deep_strict_signature_verified": true,
+      "physical_execution": false
+    },
+    "device": {
+      "binary_sha256": "f0a437444547eab30f9e895e82d0a34d7f21232431dcbf0c6c5959cefeed9953",
+      "executable_bytes": 103575824,
+      "bundled_assets": true,
+      "cpu_host_checks": true,
+      "receipt": "generated/ipad-engine-device/result.json",
+      "log": "generated/ipad-engine-device/inventory-keyboard-build.log",
+      "deep_strict_signature_verified": true,
+      "physical_execution": false
+    }
+  },
+  "component_validation": {
+    "passed": true,
+    "output": "PASS: simultaneous controls, relative aim, tap edges, cancellation and gamepad aim timing\n",
+    "sources_sha256": {
+      "tests/mobile_controls_test.c": "980b9b7d3ac39d951e7b15f492c3eb150e6f76349506fa50b7ad8c198568cbde",
+      "port/apple/mobile_controls.c": "41c0b99baee56b531f9584bfd1ac4c2372a8b88a5bf2f1f8bb42bb333a49743b",
+      "port/core/input.c": "2553bd39f04f8a77b175614ff400771517181070092ac75f500c4545f5561044",
+      "port/apple/mobile_controls.h": "77bf9d42403a657dd3d6330156cd7265a08b307eb81266d0bb6c65e5776ba056",
+      "port/apple/mobile_controls.m": "ff2cd3316c37affd68615693901d1d2daf7f2e757ebb368b7d4b09e72d184677",
+      "port/core/input.h": "92635e6d7cf557ef1d6e1172ba1d566c9752f3cbb9c5f0fad4df915ce2e1b91b",
+      "scripts/test-mobile-controls.py": "755b548e38a267a3b067bd573908cf07d5da8167d96a5f128a6a124e610e448c"
+    },
+    "scope": "Native SDL event delivery and UIKit compilation; not original mobile gameplay acceptance."
+  },
+  "execution": {
+    "pid": 47712,
+    "start_unix": 1791569580.1737401,
+    "offline": true,
+    "map": "Katabatic",
+    "bots": 2,
+    "world_observed_seconds": 234
+  },
+  "observations": [
+    "Saved profile restored; LAN Host started Katabatic with two bots. World observed by 234 seconds after Start (sampled upper bound).",
+    "Fire spawned player outside Starwolf base. Inventory automatically hid pads and opened original UI.",
+    "Focused inventory name field and opened keyboard; native toolbar remained visible. Menu dismissed keyboard and closed inventory via Escape.",
+    "Reopened inventory and selected Plasma Rifle in Weapon Slot 2; original Done returned to gameplay. This is field selection, not inventory-station purchase/equipping.",
+    "Reenabled controls; Weapon selected disc with 15 rounds; Fire reduced ammunition to 14. Forward movement reduced flag distance from 47.7 to 23.0."
+  ],
+  "screenshots": {
+    "docs/validation/ipad-inventory-controls-2026-10-09.png": {
+      "source": "generated/ipad-engine/inventory-keyboard-selection.png",
+      "sha256": "f06efa743185ad6cb80b9a53090747005dcf186b3a355827bbfa54c2eeb67fc6"
+    },
+    "docs/validation/ipad-keyboard-toolbar-2026-10-09.png": {
+      "source": "generated/ipad-engine/inventory-keyboard-visible.png",
+      "sha256": "9500add63a46b93856788e11cf41d20651c71af195846226615ba7236edb1725"
+    }
+  },
+  "local_evidence_prefix": "generated/ipad-engine/inventory-keyboard-",
+  "performance": {
+    "new_fps_measurement": false,
+    "prior_receipt": "docs/validation/ipad-reader-slots.json",
+    "prior_fps": [
+      8.5,
+      8.7
+    ],
+    "checker_unchanged_from": "e9a50c8",
+    "rejected_experiments": [
+      "require inlining",
+      "single-page shortcut",
+      "group continuation API prototype",
+      "noinline reader entry"
+    ],
+    "reason": "Synthetic multithreaded benchmarks did not show consistent gains. All candidates were discarded; no checker/compiler changes retained.",
+    "local_experiment_directory": "generated/integration-review/memory-inline-require"
+  },
+  "limitations": [
+    "Slow startup and input; prior 8.5\u20138.7 FPS remains below comfortable gameplay.",
+    "Distant terrain gap remains.",
+    "Inventory-station purchase/exit not verified.",
+    "Physical iPad installation/signing, physical controller and full iPhone gameplay unverified.",
+    "No online join or authentication attempted."
+  ]
+}

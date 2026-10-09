@@ -53,14 +53,17 @@ objects are verified before cache reuse. Native C sources rebuild to account for
 header changes. See [status](STATUS.md) for the reached runtime failure: build
 success does not imply a rendered menu or an offline match.
 
-This development Simulator bundle uses absolute workspace paths. Physical-device
-asset packaging, signing and actual iPad execution remain unfinished. The separate
+Without `--bundle-assets`, the development Simulator bundle uses workspace paths.
+Device builds always bundle assets; see the self-contained build section below.
+Development signing and actual iPad execution remain unverified. The separate
 controls diagnostic remains a component app.
 
 The full app also includes an opt-in UIKit touch overlay. **Touch controls** shows
 movement, look, fire-and-aim, jets, ski/jump, weapon, grenade, pack and inventory.
-**Hide controls** releases every held action and restores menu taps; **Menu** also
-sends Escape. Losing app focus, canceled touches and layout changes release held
+**Hide controls** releases every held action and restores menu taps. A touch on
+**Inventory** also hides the pads after releasing its key, leaving equipment fields
+and Done available to direct taps. **Menu** remains visible when the pads are hidden,
+dismisses the keyboard and sends Escape. Losing app focus, canceled touches and layout changes release held
 inputs. This uses the original ESDF/default bindings, so custom key bindings need
 matching adjustments. The overlay feeds native SDL events into the existing
 checked event bridge; it does not write guest input state.
@@ -152,3 +155,33 @@ For native Simulator gestures, the owned-window helper also supports
 Coordinates are normalized to the visible Simulator window; gestures use real
 native mouse events, which Simulator converts to touches. These actions do not
 write guest memory.
+
+## Optimized iPad build
+
+Use `--angle --cpu-host-checks` for the current optimized Simulator and device
+builds. ANGLE uses the pinned Metal frameworks; its first build downloads verified
+inputs and subsequent builds reuse them. Omitting `--angle` selects the earlier
+EAGL backend.
+
+The optional `--cpu-host-checks` mode requires current passing runs of
+`scripts/test-cpu-host-checks.py`, `scripts/test-host-local-checks.py`,
+`scripts/test-native-cpu-checks.py`, `scripts/test-sse-host-locals.py` and
+`scripts/test-x87-host-checks.py`. It retains guest-memory checks, validates the
+native register span once per translated block, and removes redundant checks only
+for proven in-bounds native stack, TLS and private global accesses. Native SIMD
+and x87 helpers validate the full CPU object before proven register-field accesses.
+Pointers read from those objects and all guest operands still receive checks.
+
+Changed guard policies always rerun the checker. Byte-identical checked bitcode can
+reuse its hash-verified optimized ARM64 object. Cached builds have reused 407 of 409
+objects on each platform. Original-engine support compilation reads symbols from
+checked bitcode, avoiding 179 throwaway native objects before the final external-call
+pass. These changes reduce the executable from 158.6 MB to about 104 MB; those are
+executable sizes, not total bundles with game data.
+
+Runtime improvements include bounded access grouping, finite dispatch caching,
+triangle-fan expansion before Metal, finite graphics lookup and per-thread reader
+tracking. Every guest range, page-permission and published-code check remains.
+See [the measured reader-slot result](validation/ipad-reader-slots.json) for the
+8.5–8.7 FPS Simulator recordings and their limits. Component microbenchmarks do not
+establish original-game speedups or physical-device acceptance.
