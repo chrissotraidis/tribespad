@@ -2075,6 +2075,28 @@ void tribes_gl_fog_coord_pointer(_cpu *cpu,uint32_t type,uint32_t stride,uint32_
 #endif
 }
 #if !TARGET_OS_IPHONE || defined(TB_GL4ES)
+static void draw_staged_elements(uint32_t mode,uint32_t count,uint32_t type,const unsigned char *indices,unsigned width){
+#if defined(TB_GL4ES) && defined(TB_ANGLE)
+    /* Metal has no triangle fan primitive. ANGLE's iOS fan conversion uses
+       ten temporary buffers, then waits for GPU completion to reuse them.
+       Expand the already-checked indices on the CPU, retaining their original
+       order, winding and last provoking vertex. Restart segments arrive here
+       separately, so no triangle can connect across a marker. */
+    if(mode==GL_TRIANGLE_FAN&&count>3&&count<=INT32_MAX/3+2){
+        uint32_t expanded=(count-2)*3;
+        unsigned char *triangles=malloc((size_t)expanded*width);if(!triangles)stop();
+        for(uint32_t i=0;i<count-2;i++){
+            unsigned char *out=triangles+(size_t)i*3*width;
+            memcpy(out,indices,width);
+            memcpy(out+width,indices+(size_t)(i+1)*width,(size_t)2*width);
+        }
+        glDrawElements(GL_TRIANGLES,(GLsizei)expanded,type,triangles);free(triangles);return;
+    }
+#else
+    (void)width;
+#endif
+    glDrawElements(mode,(GLsizei)count,type,indices);
+}
 static void draw_client_arrays(_cpu *cpu,GLContext *c,uint32_t mode,uint32_t count,uint32_t type,const unsigned char *indices,unsigned width,int restart){
     uint32_t maximum=0,vertices=0;for(uint32_t i=0;i<count;i++){uint32_t index=draw_index(indices,width,i);if(restart&&index==c->restart_index)continue;vertices++;if(index>maximum)maximum=index;}
     if(!vertices){glDrawElements(mode,0,type,NULL);return;}
@@ -2091,7 +2113,7 @@ static void draw_client_arrays(_cpu *cpu,GLContext *c,uint32_t mode,uint32_t cou
     if(fog)glFogCoordPointerEXT(c->fog.type,0,fog);
     for(unsigned i=0;i<32;i++)if(texcoords[i]){glClientActiveTexture(GL_TEXTURE0+i);glTexCoordPointer((GLint)c->texcoord[i].size,c->texcoord[i].type,0,texcoords[i]);}
     glClientActiveTexture(GL_TEXTURE0+unit);
-    if(!restart)glDrawElements(mode,(GLsizei)count,type,indices);
+    if(!restart)draw_staged_elements(mode,count,type,indices,width);
     else if(mode==GL_QUADS){
         /* Original snow batches restart after each independent quad. Keep
            their index values/order, but submit one native batch. An unfinished
@@ -2107,10 +2129,10 @@ static void draw_client_arrays(_cpu *cpu,GLContext *c,uint32_t mode,uint32_t cou
     }else{
         uint32_t start=0;
         for(uint32_t i=0;i<count;i++)if(draw_index(indices,width,i)==c->restart_index){
-            if(i>start)glDrawElements(mode,(GLsizei)(i-start),type,indices+(size_t)start*width);
+            if(i>start)draw_staged_elements(mode,i-start,type,indices+(size_t)start*width,width);
             start=i+1;
         }
-        if(start<count)glDrawElements(mode,(GLsizei)(count-start),type,indices+(size_t)start*width);
+        if(start<count)draw_staged_elements(mode,count-start,type,indices+(size_t)start*width,width);
     }
     if(vertex)glVertexPointer((GLint)c->vertex.size,c->vertex.type,0,NULL);
     if(color)glColorPointer((GLint)c->color.size,c->color.type,0,NULL);

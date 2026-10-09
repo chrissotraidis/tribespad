@@ -143,7 +143,21 @@ static void pixels(void){
   tribes_gl_client_active_texture(&cpu,0x84c0+unit);
   tribes_gl_enable_client_state(&cpu,0x8078);tribes_gl_texcoord_pointer(&cpu,2,GL_FLOAT,0,0x8100);
  }
+ /* Unreferenced stride gaps must remain unread, even during GPU upload.
+    Keep a guest buffer bound across the draw to exercise private-buffer cleanup. */
+ for(unsigned i=0;i<4;i++)memcpy(memory+0x20000+i*8192,vertices+i*2,8);
+ for(unsigned i=0;i<4;i++)assert(tribes_memory_permissions_set(0x21000+i*8192,4096,0));
+ tribes_gl_vertex_pointer(&cpu,2,GL_FLOAT,8192,0x20000);
+ tribes_gl_gen_buffers(&cpu,1,0x8700);uint32_t saved_buffer=word(0x8700);
+ tribes_gl_bind_buffer(&cpu,GL_ARRAY_BUFFER,saved_buffer);
  tribes_gl_draw_elements(&cpu,GL_TRIANGLES,6,GL_UNSIGNED_BYTE,0x8200);tribes_gl_finish(&cpu);
+ tribes_gl_get_integer(&cpu,GL_ARRAY_BUFFER_BINDING,0x8704);assert(word(0x8704)==saved_buffer);
+ extern void gl4es_glGetIntegerv(unsigned,int *);int binding=-1;
+ gl4es_glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING,&binding);assert(binding==0);
+ gl4es_glGetIntegerv(0x84e1,&binding);assert(binding==0x84c1);
+ tribes_gl_bind_buffer(&cpu,GL_ARRAY_BUFFER,0);tribes_gl_delete_buffers(&cpu,1,0x8700);
+ for(unsigned i=0;i<4;i++)assert(tribes_memory_permissions_set(0x21000+i*8192,4096,3));
+ tribes_gl_vertex_pointer(&cpu,2,GL_FLOAT,0,0x8000);
  read(width/2,height/2,1,1,GL_RGBA,GL_UNSIGNED_BYTE,pixel);
  assert(pixel[0]==0&&pixel[1]==255&&pixel[2]==0&&pixel[3]==255);
  /* Original terrain/model draws restart between strips. Markers must split
@@ -162,6 +176,43 @@ static void pixels(void){
   tribes_gl_disable(&cpu,0x8f9d);assert(!tribes_gl_is_enabled(&cpu,0x8f9d));
  }
  puts("PASS: mobile 8/16/32-bit primitive restart, checked marker exclusion and state queries");
+ /* Compare the checked fan route with the renderer's original fan path.
+    Reversed indices exercise winding; repeated first/last vertices exercise
+    degenerate triangles. Restart tails must not connect two separate fans. */
+ extern void gl4es_glVertexPointer(int,unsigned,int,const void *);
+ extern void gl4es_glTexCoordPointer(int,unsigned,int,const void *);
+ extern void gl4es_glClientActiveTexture(unsigned);
+ extern void gl4es_glDrawElements(unsigned,int,unsigned,const void *);
+ tribes_gl_viewport(&cpu,0,0,64,64);
+ tribes_gl_enable(&cpu,GL_BLEND);tribes_gl_blend_func(&cpu,GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+ tribes_gl_color4f(&cpu,0x3f800000,0x3f800000,0x3f800000,0x3f000000);
+ unsigned char fan_reference[64*64*4],fan_actual[64*64*4];
+ for(unsigned bytes=1;bytes<=4;bytes*=2)for(unsigned reverse=0;reverse<2;reverse++){
+  uint32_t type=bytes==1?GL_UNSIGNED_BYTE:bytes==2?GL_UNSIGNED_SHORT:GL_UNSIGNED_INT;
+  uint32_t marker=bytes==1?255:bytes==2?65535:UINT32_MAX;
+  unsigned char native_indices[24];uint32_t values[]={0,0,1,2,3,3};
+  for(unsigned i=0;i<6;i++){uint32_t v=reverse?3-values[i]:values[i];memcpy(native_indices+i*bytes,&v,bytes);}
+  tribes_gl_clear(&cpu,GL_COLOR_BUFFER_BIT);
+  gl4es_glVertexPointer(2,GL_FLOAT,0,vertices);
+  for(unsigned unit=0;unit<2;unit++){gl4es_glClientActiveTexture(0x84c0+unit);gl4es_glTexCoordPointer(2,GL_FLOAT,0,coords);}
+  gl4es_glDrawElements(GL_TRIANGLE_FAN,6,type,native_indices);
+  tribes_gl_finish(&cpu);read(0,0,64,64,GL_RGBA,GL_UNSIGNED_BYTE,fan_reference);
+  assert(fan_reference[(32*64+32)*4+1]>=127);
+  memcpy(memory+0x8500,native_indices,6*bytes);
+  for(unsigned split=0;split<2;split++){
+   unsigned count=6;
+   if(split){memcpy(memory+0x8500+count++*bytes,&marker,bytes);memcpy(memory+0x8500+count++*bytes,&values[0],bytes);}
+   tribes_gl_primitive_restart_index(&cpu,marker);if(split)tribes_gl_enable(&cpu,0x8f9d);
+   tribes_gl_clear(&cpu,GL_COLOR_BUFFER_BIT);tribes_gl_draw_elements(&cpu,GL_TRIANGLE_FAN,count,type,0x8500);
+   tribes_gl_finish(&cpu);read(0,0,64,64,GL_RGBA,GL_UNSIGNED_BYTE,fan_actual);
+   assert(!memcmp(fan_reference,fan_actual,sizeof fan_reference));
+   tribes_gl_disable(&cpu,0x8f9d);
+  }
+ }
+ tribes_gl_disable(&cpu,GL_BLEND);tribes_gl_color4f(&cpu,0x3f800000,0x3f800000,0x3f800000,0x3f800000);
+ tribes_gl_viewport(&cpu,0,0,width,height);
+ puts("PASS: mobile checked fans match native fans in every pixel, with 8/16/32-bit indices, reversed winding, degenerates, restart tails and alpha blending");
+
  /* Snow uses independent restarted quads. Compare all pixels with separate
     reference draws, including empty segments and incomplete quad tails.
     Alpha blending makes extra/incorrectly joined primitives observable. */

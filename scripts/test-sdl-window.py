@@ -98,7 +98,7 @@ def execute(app,exe,identifier,label,argument=None):
    text=stdout.read_text();error=stderr.read_text()
    if argument:
     if 'TribesPad:' in error and not live():return -6,text,error
-   elif 'PASS:' in text:
+   elif 'PASS: guest window/context ABIs,' in text:
     time.sleep(1);assert live(),('post-main app exited unexpectedly',text,stderr.read_text());return 0,text,stderr.read_text()
    elif not live():raise AssertionError(('application exited',text,error))
    time.sleep(.2)

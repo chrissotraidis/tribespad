@@ -11,12 +11,12 @@ the existing Tribes 2 community, with touch and controller support on mobile.
 is currently too slow for comfortable play. The full iPad Simulator app now loads an offline
 Katabatic match with bots and accepts touch movement, aim, weapons, firing and jets.
 The Metal backend also renders interiors and supports touch death/respawn.
-Latest iPad Simulator captures measure about **2.3–2.9 FPS**, so performance is
+Latest iPad Simulator captures measure about **4.9–5.4 FPS**, so performance is
 still the main blocker. Slow startup, input delay and a terrain gap shared with Mac
 also need work.
 There is no playable iPad or iPhone release yet.
 
-![Original Tribes 2 running through Metal with iPad touch controls](docs/validation/ipad-angle-respawn-2026-10-09.png)
+![Original Tribes 2 running through Metal with iPad touch controls](docs/validation/ipad-fan-batching-2026-10-09.png)
 
 ## What works
 
@@ -64,8 +64,9 @@ The bundled app preserves its original warrior and video preferences between lau
   104 MB while preserving guest-memory checks. The latest compiler correction
   reduces permission groups in the main engine by 12%, retaining every checked
   access. A small per-thread dispatch cache also avoids repeated table searches
-  while retaining publication checks. The latest [iPad validation](docs/validation/ipad-dispatch-cache.json)
-  records the results; a clear game-level speedup is not yet established.
+  while retaining publication checks. Expanding triangle fans before Metal removes
+  a measured renderer stall; the latest [iPad captures](docs/validation/ipad-fan-batching.json)
+  show roughly twice the prior frame rate, though the game remains too slow.
 - Fix visible rendering gaps and reduce startup/input latency in the iPad app.
 - Integrate and refine touch, controller, keyboard and mouse input in real gameplay.
 - Verify HD textures, sustained performance and physical-device behavior.
@@ -94,7 +95,8 @@ For the full iPad app, boot one iPad Simulator and use its identifier:
 
 ```sh
 export SDKROOT="$(xcrun --sdk iphonesimulator --show-sdk-path)"
-.venv/bin/python scripts/build-ipad-engine.py --angle --simulator-device <UDID>
+.venv/bin/python scripts/build-ipad-engine.py --angle --cpu-host-checks \
+  --bundle-assets --simulator-device <UDID>
 ```
 
 `--angle` uses a pinned ANGLE Metal renderer behind the existing GL4ES bridge.
@@ -122,7 +124,8 @@ For a self-contained device build:
 
 ```sh
 export SDKROOT="$(xcrun --sdk iphoneos --show-sdk-path)"
-.venv/bin/python scripts/build-ipad-engine.py --platform device --angle --build-only
+.venv/bin/python scripts/build-ipad-engine.py --platform device --angle \
+  --cpu-host-checks --build-only
 ```
 
 The device app bundles game data and creates a writable profile in Application

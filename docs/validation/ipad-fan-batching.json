@@ -1,0 +1,105 @@
+{
+  "date": "2026-10-09",
+  "change": "Expand checked GL_TRIANGLE_FAN indices to GL_TRIANGLES on the GL4ES/ANGLE path; retain index identity, winding, last provoking vertex and restart boundaries. No GPU-buffer staging is retained.",
+  "builds": {
+    "simulator": {
+      "binary_sha256": "ca484b7e0fa0558bfe4503579a64c1593274839ffebf0aca97dc4165ed4444ac",
+      "executable_bytes": 103638944,
+      "build_receipt_sha256": "871bcc48a0158499b02cabc38364da3c28dbd495cc7da409b26e60db863c6e59",
+      "strict_deep_signature_verified": true,
+      "physical_execution": false
+    },
+    "device": {
+      "binary_sha256": "c02f36f169d66b09ec15e537f482ad623ba311f807a20ffad2e4ceea7532c539",
+      "executable_bytes": 103572912,
+      "build_receipt_sha256": "6a786401b1e8bc26a1d18fb5a82dde5ce31d6bd23d2d143fb99390ad5cc59377",
+      "strict_deep_signature_verified": true,
+      "physical_execution": false
+    }
+  },
+  "component_tests": {
+    "path": "generated/integration-review/angle-guest/F05D2D40-0A01-47C9-9BD7-0C0E19F7512C/result.json",
+    "sha256": "9a218726713958876ce472b170372150f3bec284af0d093c75e52e1a778918c9",
+    "passed": true,
+    "expected_faults": 36,
+    "coverage": "Native fan framebuffer equality across 8/16/32-bit indices, reversed winding, degenerates, restart tails and alpha blending; protected stride gaps and native binding restoration; existing original shaders, quads, perspective, sync and context lifecycle. Runner waits for final PASS, not an intermediate draw PASS."
+  },
+  "execution": {
+    "start_unix": 1791562119.051318,
+    "pid": 25238,
+    "mission": "Katabatic",
+    "bots": 2,
+    "world_observed_unix": 1791562383.4203908,
+    "load_observation_upper_bound_seconds": 264
+  },
+  "frame_captures": [
+    {
+      "path": "generated/ipad-engine/fan-observer-video.json",
+      "sha256": "ca12ff4909c655a7113defa11c314d9d3498a8e49fc728b829f3e0c7cd29508a",
+      "streams": [
+        {
+          "avg_frame_rate": "44400/9037",
+          "duration": "30.083333",
+          "nb_frames": "148"
+        }
+      ],
+      "scope": "Thirty-second fixed initial observer view of offline Katabatic with two bots. No input, compiler or debugger during recording. Presented Simulator frames, not original FPS counter."
+    },
+    {
+      "path": "generated/ipad-engine/fan-observer-video-2.json",
+      "sha256": "fb657c23dae658d7970330faccad17f94dc736e513085064f478dddcc9ddb5b5",
+      "streams": [
+        {
+          "avg_frame_rate": "32200/6031",
+          "duration": "30.086667",
+          "nb_frames": "161"
+        }
+      ],
+      "scope": "Thirty-second fixed initial observer view of offline Katabatic with two bots. No input, compiler or debugger during recording. Presented Simulator frames, not original FPS counter."
+    }
+  ],
+  "profile": {
+    "path": "generated/ipad-engine/fan-sample.txt",
+    "sha256": "8fb0cbeabe2fd43fe1ed0d0419bc9da8cb9d0c6bfcaa0c17f15d5d938b36f8d1",
+    "main_thread_observations": 315,
+    "indexed_draw_observations": 19,
+    "indexed_draw_metal_wait_observations": 0,
+    "remaining_metal_wait_observations": 10,
+    "remaining_wait_path": "GL4ES immediate render-list flush at BindFramebuffer -> DrawArrays -> ANGLE fan pool. Separate profile after FPS recordings.",
+    "prior_dispatch_cache_main_thread_observations": 314,
+    "prior_indexed_draw_observations": 92,
+    "prior_indexed_draw_metal_wait_observations": 75
+  },
+  "controls": {
+    "spawn": "Fire enters Starwolf in offline local match",
+    "move": "3-second forward touch changes Starwolf flag distance 39.1 to 21.7",
+    "look": "Touch drag rotates view from base wall toward hills",
+    "weapon": "Weapon selects disc launcher with 15 rounds",
+    "fire": "Touch fire reduces disc ammunition 15 to 14",
+    "jet": "Held touch raises viewpoint above the base, depletes energy and increases heat; release returns to ground and energy begins recovering"
+  },
+  "screenshot": {
+    "path": "docs/validation/ipad-fan-batching-2026-10-09.png",
+    "sha256": "e65549d2e2f4659401a84e2a511abd579c92651be0cd3c95557eb1a1e7233e61"
+  },
+  "rejected_experiment": {
+    "description": "Transient VBO/EBO staging passed corrected component tests but did not remove the sampled Metal waits; removed before final build.",
+    "binary_sha256": "ec7bcd1388b064cb52d7d78b727306724e8f92ed11bd225db6edb7fa70d3072f",
+    "frames_per_30_seconds": [
+      83,
+      91
+    ],
+    "profile_metal_wait_observations": 82,
+    "profile_main_thread_observations": 317,
+    "local_patch": "generated/ipad-engine/stream-buffer-experiment.patch"
+  },
+  "limitations": [
+    "Simulator captures are not physical-device performance or a controlled deterministic benchmark.",
+    "About 4.9\u20135.4 presented FPS is still too slow for comfortable play.",
+    "Terrain gap, startup latency and prior inventory exit issue remain.",
+    "Physical iPad/iPhone execution and HD visual acceptance remain unverified."
+  ],
+  "online_join": false,
+  "authentication": false,
+  "live_process": 25238
+}
