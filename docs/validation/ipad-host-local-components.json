@@ -1,0 +1,256 @@
+{
+  "passed": true,
+  "checks": {
+    "host-local-checks": {
+      "passed": true,
+      "census": {
+        "atomics": 0,
+        "calls_requiring_link_audit": {},
+        "host_cpu_accesses": 0,
+        "host_cpu_spans": 0,
+        "host_local_accesses": 7,
+        "loads": 1,
+        "sets": 0,
+        "stores": 2,
+        "transfers": 0
+      },
+      "baseline": {
+        "atomics": 0,
+        "calls_requiring_link_audit": {},
+        "host_cpu_accesses": 0,
+        "host_cpu_spans": 0,
+        "host_local_accesses": 0,
+        "loads": 5,
+        "sets": 0,
+        "stores": 5,
+        "transfers": 0
+      },
+      "variants": [
+        "stack-first",
+        "stack-last",
+        "stack-cross",
+        "stack-negative",
+        "stack-dynamic-offset",
+        "stack-dynamic-size",
+        "global-last",
+        "global-cross",
+        "imported",
+        "tls-last",
+        "tls-cross",
+        "tls-direct",
+        "volatile",
+        "atomic"
+      ],
+      "runs": [
+        {
+          "mode": "normal",
+          "output": "PASS: native stack/TLS values, checked guest pointees, eight independent threads; four pre-write guest faults in normal mode",
+          "binary_sha256": "385c5afd8e22ad6c6547c64996e9b330fc46366a0b6b06c70136bacace26ce22"
+        },
+        {
+          "mode": "tsan",
+          "output": "PASS: native stack/TLS values, checked guest pointees, eight independent threads; four pre-write guest faults in normal mode",
+          "binary_sha256": "e78fd0027d90ee1c890db6cf9859ae86f00d69426a5f01872e37759abcdcfe33"
+        }
+      ],
+      "sources_sha256": {
+        "tests/host_local_checks_test.c": "88a2f9bad98825fbd0f21af28b597ce3275890b014f3918cc43df8578ddd06bc",
+        "port/core/guest_memory_checks.c": "f97e52558e9f73f2e828a306ac4e3adece91f0b880791724234fb0280c7c2d35",
+        "port/core/guest_external_checks.c": "2ecaf0cf09462d76b293ab70860c9245ae46536959e81fd2549ad7675ad63523",
+        "port/compiler/GuestMemoryPass.cpp": "18fea2a0fe252ae4858201c45dc18ef85ac34d41267cbd8c1b6c6dffbc69d146",
+        "port/compiler/ExternalMemoryPass.cpp": "937f80a8f02a2f88ab0dcb100b42294cf9b12e6f8049e8ac0831ec67fe0d767c",
+        "scripts/checked_support.py": "002742d45e00bfc0d5117c0d5f0c745b10c90e7bc8e10d180f5e7e9e28b82b60",
+        "scripts/test-host-local-checks.py": "6ef5b5b70fb39bd7b5062902c6c58d77937251cd08501cc2d1f6979a88bd9d89"
+      },
+      "scope": "Bounded compiler-owned native stack, TLS and local global accesses; guest pointees still checked. No gameplay performance claim."
+    },
+    "sse-host-locals": {
+      "passed": true,
+      "cases": 94128,
+      "corpus_sha256": "2fa08be97895feb87c3070abe732b02c057c48d28f0af874177c45459f864b5f",
+      "original_blocks_sha256": "f4aad0d5e654bb9c0a49abec468e0db606b967c1190b6fbe5f70778c7488f691",
+      "census": {
+        "baseline": {
+          "00-tribes_sse": {
+            "atomics": 0,
+            "calls_requiring_link_audit": {
+              "<inline-asm>": 2,
+              "__memcpy_chk": 27,
+              "abort": 658,
+              "tb_sse_arithmetic": 25,
+              "tb_sse_divide64": 4,
+              "tb_sse_multiply64": 4,
+              "tb_sse_sqrt32": 5,
+              "tb_sse_sqrt64": 1
+            },
+            "host_cpu_accesses": 0,
+            "host_cpu_spans": 0,
+            "host_local_accesses": 0,
+            "loads": 1219,
+            "sets": 67,
+            "stores": 616,
+            "transfers": 259
+          },
+          "01-sse_arithmetic": {
+            "atomics": 0,
+            "calls_requiring_link_audit": {
+              "f32_add": 1,
+              "f32_div": 1,
+              "f32_mul": 1,
+              "f32_sqrt": 1,
+              "f32_sub": 1,
+              "f64_add": 1,
+              "f64_div": 1,
+              "f64_mul": 1,
+              "f64_sqrt": 1,
+              "f64_sub": 1
+            },
+            "host_cpu_accesses": 0,
+            "host_cpu_spans": 0,
+            "host_local_accesses": 0,
+            "loads": 30,
+            "sets": 0,
+            "stores": 59,
+            "transfers": 0
+          }
+        },
+        "optimized": {
+          "00-tribes_sse": {
+            "atomics": 0,
+            "calls_requiring_link_audit": {
+              "<inline-asm>": 2,
+              "__memcpy_chk": 27,
+              "abort": 658,
+              "tb_sse_arithmetic": 25,
+              "tb_sse_divide64": 4,
+              "tb_sse_multiply64": 4,
+              "tb_sse_sqrt32": 5,
+              "tb_sse_sqrt64": 1
+            },
+            "host_cpu_accesses": 0,
+            "host_cpu_spans": 0,
+            "host_local_accesses": 317,
+            "loads": 1076,
+            "sets": 67,
+            "stores": 442,
+            "transfers": 259
+          },
+          "01-sse_arithmetic": {
+            "atomics": 0,
+            "calls_requiring_link_audit": {
+              "f32_add": 1,
+              "f32_div": 1,
+              "f32_mul": 1,
+              "f32_sqrt": 1,
+              "f32_sub": 1,
+              "f64_add": 1,
+              "f64_div": 1,
+              "f64_mul": 1,
+              "f64_sqrt": 1,
+              "f64_sub": 1
+            },
+            "host_cpu_accesses": 0,
+            "host_cpu_spans": 0,
+            "host_local_accesses": 65,
+            "loads": 5,
+            "sets": 0,
+            "stores": 19,
+            "transfers": 0
+          }
+        }
+      },
+      "runs": [
+        {
+          "mode": "baseline",
+          "tsan_guard_runtime": false,
+          "output": "PASS: 94128 x86-oracle cases execute actual AOT legacy SIMD bodies; full CPU/vector/MXCSR/x87/stack and guarded-memory comparison, eight independent native threads",
+          "seconds": 0.6982374580000013,
+          "binary_sha256": "4d72241d798552fc7d529ee80c4adccd39efc645a9f854d26f8b34981ab9b205"
+        },
+        {
+          "mode": "baseline",
+          "tsan_guard_runtime": true,
+          "output": "PASS: 94128 x86-oracle cases execute actual AOT legacy SIMD bodies; full CPU/vector/MXCSR/x87/stack and guarded-memory comparison, eight independent native threads",
+          "seconds": 1.0574442919999996,
+          "binary_sha256": "5938d17638cdac889f8cb37923b53ed618dbebd230b44ba5400a80182a5ff0bd"
+        },
+        {
+          "mode": "optimized",
+          "tsan_guard_runtime": false,
+          "output": "PASS: 94128 x86-oracle cases execute actual AOT legacy SIMD bodies; full CPU/vector/MXCSR/x87/stack and guarded-memory comparison, eight independent native threads",
+          "seconds": 0.48045516599999516,
+          "binary_sha256": "e4e60eb6c92c8a0b2f83dd7a38a5e32e9988f15dc9efa504b42b22acf89068ec"
+        },
+        {
+          "mode": "optimized",
+          "tsan_guard_runtime": true,
+          "output": "PASS: 94128 x86-oracle cases execute actual AOT legacy SIMD bodies; full CPU/vector/MXCSR/x87/stack and guarded-memory comparison, eight independent native threads",
+          "seconds": 0.8674825829999975,
+          "binary_sha256": "3271e1565a9a66a75db51cc9f931daf73ea97cd5ccd9ff5aeada18074ec67f47"
+        }
+      ],
+      "sources_sha256": {
+        "port/llasm-support/tribes_sse.c": "a06483adfaa4aca6ac19e83273b97df48bcc5c3f2aa52bb07101ce755de48793",
+        "port/core/sse_arithmetic.c": "a3fa606b116168cba4ceb30d689a31f3b2c7d034a10102efa343ee3871b13e83",
+        "port/llasm-support/llasm_cpu.h": "8c3cd17ee706cd3768d793c21d4f553b981cb45d3845dd9a93793d16f1bcc356",
+        "port/llasm-support/tribes_sse.h": "efb00007e337dc4c4668e59a517d30255425cb60939632045e307e351cf2e5b8",
+        "port/core/sse_arithmetic.h": "7fbfdd7dce1d91f651b0c25f6a064865dc4c68c20bcdcf166f5015d19342d80f",
+        "tests/sse_lowering_test.c": "2c66c03ed503f9af7bdef220abc2ac60c2169c5e0dde7fe1f0c36f594bafb940",
+        "port/core/guest_memory_checks.c": "f97e52558e9f73f2e828a306ac4e3adece91f0b880791724234fb0280c7c2d35",
+        "port/compiler/GuestMemoryPass.cpp": "18fea2a0fe252ae4858201c45dc18ef85ac34d41267cbd8c1b6c6dffbc69d146",
+        "scripts/checked_support.py": "002742d45e00bfc0d5117c0d5f0c745b10c90e7bc8e10d180f5e7e9e28b82b60",
+        "scripts/test-sse-host-locals.py": "2f58b4e2a56e3fd8a2f228a0d292aa7ca9e832963bde0a8211894ee6da7d7dba"
+      },
+      "scope": "Same original AOT scalar cases replayed through baseline and native-object optimized checked SSE helpers; TSan covers guard runtime. Timings include startup and threads and are not game FPS."
+    },
+    "cpu-host-checks": {
+      "passed": true,
+      "census": {
+        "baseline": {
+          "atomics": 0,
+          "calls_requiring_link_audit": {},
+          "host_cpu_accesses": 0,
+          "host_cpu_spans": 0,
+          "host_local_accesses": 0,
+          "loads": 23,
+          "sets": 0,
+          "stores": 21,
+          "transfers": 0
+        },
+        "optimized": {
+          "atomics": 0,
+          "calls_requiring_link_audit": {},
+          "host_cpu_accesses": 24,
+          "host_cpu_spans": 3,
+          "host_local_accesses": 0,
+          "loads": 10,
+          "sets": 0,
+          "stores": 10,
+          "transfers": 0
+        }
+      },
+      "results": {
+        "test": {
+          "output": "PASS: 9 host-span/guest-access faults preserve all shared bytes; 256 original block CPU/flags/route comparisons; concurrent checked accesses/publication; baseline 0.037492 optimized 0.027027 seconds",
+          "binary_sha256": "2a1fb232caeaab1b57f25c5d401dcc42618bd12227abb7700c74572dd6d38b6f"
+        },
+        "test-tsan": {
+          "output": "PASS: 0 host-span/guest-access faults preserve all shared bytes; 256 original block CPU/flags/route comparisons; concurrent checked accesses/publication; baseline 0.753855 optimized 0.601447 seconds",
+          "binary_sha256": "287cf18c05b7569ba63dfa847106e3c2163eb9b0e9781fe9a9fb45579d53f220"
+        }
+      },
+      "original_block_sha256": "1d794c5e15c83bf264f169b88268522415e5df8b932fb9fbf1f0810919c06255",
+      "sources_sha256": {
+        "tests/cpu_host_checks_test.c": "a123cccc08a7eefabba2d4dcd281c8ffc84f25d91a08261136991b95fbcb475a",
+        "port/core/guest_memory_checks.c": "f97e52558e9f73f2e828a306ac4e3adece91f0b880791724234fb0280c7c2d35",
+        "port/core/guest_external_checks.c": "2ecaf0cf09462d76b293ab70860c9245ae46536959e81fd2549ad7675ad63523",
+        "port/core/guest_memory_checks.h": "e40dca461fbbc8c1d400edd6c07a02f3ab5b927be3fd587dbb4cbfd6ef722861",
+        "port/compiler/GuestMemoryPass.cpp": "18fea2a0fe252ae4858201c45dc18ef85ac34d41267cbd8c1b6c6dffbc69d146",
+        "port/compiler/ExternalMemoryPass.cpp": "937f80a8f02a2f88ab0dcb100b42294cf9b12e6f8049e8ac0831ec67fe0d767c",
+        "scripts/test-cpu-host-checks.py": "8cd349c48515cf67f7eb3e46d5fb6174d24354a9b833a3ce010592c17748331a"
+      },
+      "scope": "Host prefix contract and preserved guest checks, one actual original block and controlled batch; not full-game or performance acceptance."
+    }
+  },
+  "scope": "Component/reference validation; not gameplay acceptance. SIMD ThreadSanitizer coverage applies to the native guard runtime."
+}

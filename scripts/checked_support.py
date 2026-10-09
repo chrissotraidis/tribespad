@@ -36,7 +36,7 @@ def compile_support(sources,destination,flags,*,target='arm64-apple-macos12',sdk
        fields=[f for f in match[1].split('-') if not f.startswith('m:')]
        fields.insert(1,'m:o');layout_flags=['-data-layout='+'-'.join(fields)];break
       if line.startswith(('define ','declare ','@','%')):break
-   memory_pass='tribes-guest-memory-cpu-host' if cpu_host and source.suffix=='.ll' else 'tribes-guest-memory'
+   memory_pass='tribes-guest-memory-cpu-host' if cpu_host else 'tribes-guest-memory'
    run([str(tools/'opt'),'-mtriple='+target,*layout_flags,'-load-pass-plugin',str(plugin),'-passes='+memory_pass+',verify',str(llvm),'-o',str(bc)],destination/(name+'-pass.log'))
    census=json.loads(next(l.split(' ',1)[1] for l in (destination/(name+'-pass.log')).read_text().splitlines() if l.startswith('TRIBES_MEMORY_PASS ')))
    # guard_link can collect defined symbols directly from checked bitcode.

@@ -45,7 +45,7 @@ static uint64_t groupAccessBrackets(Module &M){
   };
   for(size_t i=0;i<Work.size();++i){
    auto *I=Work[i];auto *Begin=dyn_cast<CallInst>(I);
-   if(I->getMetadata("tribes.checked.host.cpu")){
+   if(I->getMetadata("tribes.checked.host.cpu")||I->getMetadata("tribes.checked.host.local")){
     auto *L=dyn_cast<LoadInst>(I);auto *S=dyn_cast<StoreInst>(I);
     if(!M.getModuleFlag("tribes.checked.cpu-host")||!((L&&L->isSimple())||(S&&S->isSimple())))report_fatal_error("Invalid checked CPU host access");
     if(++Accesses==8)Flush(I->getNextNode());

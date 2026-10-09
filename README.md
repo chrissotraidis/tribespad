@@ -58,8 +58,8 @@ The bundled app preserves its original warrior and video preferences between lau
 
 - Improve measured runtime performance; builds cache verified ARM64 objects and
   avoid 179 redundant support-code compilations. An optional CPU-register check
-  optimization reduces the Simulator executable from 158.6 MB to 104.5 MB while
-  preserving guest-memory checks. It passes the [original offline touch test](docs/validation/ipad-cpu-host-offline.json),
+  optimization reduces the Simulator executable from 158.6 MB to 103.1 MB while
+  preserving guest-memory checks. It passes the [original offline touch test](docs/validation/ipad-host-local-offline.json),
   but recorded frame delivery is still around one frame per second. This is not
   yet comfortable gameplay.
 - Fix visible rendering gaps and reduce startup/input latency in the iPad app.
@@ -97,9 +97,12 @@ export SDKROOT="$(xcrun --sdk iphonesimulator --show-sdk-path)"
 Its first build downloads the verified iOS frameworks; subsequent builds reuse
 them. Omitting the flag selects the earlier EAGL backend.
 
-The smaller validated Simulator and device builds also use `--cpu-host-checks`. This optional
-mode requires a current passing run of `scripts/test-cpu-host-checks.py`; it keeps
-guest-memory checks and validates the native register span once per translated block.
+Use `--cpu-host-checks` for the optimized Simulator and device builds. This optional
+mode requires current passing runs of `scripts/test-cpu-host-checks.py`,
+`scripts/test-host-local-checks.py` and `scripts/test-sse-host-locals.py`. It keeps
+guest-memory checks, validates the native register span once per translated block,
+and removes redundant checks only for proven in-bounds native stack, TLS and private
+global accesses. Pointers read from those objects still receive guest-memory checks.
 
 Use `--build-only` to preserve a running test session. The development touch overlay
 uses the original ESDF bindings and is enabled with **Touch controls**. Its native
@@ -116,7 +119,7 @@ export SDKROOT="$(xcrun --sdk iphoneos --show-sdk-path)"
 ```
 
 The device app bundles game data and creates a writable profile in Application
-Support on first launch. The optimized device executable is 104.5 MB and passes ad-hoc signature verification.
+Support on first launch. The optimized device executable is 103.0 MB and passes ad-hoc signature verification.
 It still needs Apple development signing and physical-iPad validation; this is not an installable release. Use `--bundle-assets` to exercise
 that same storage layout in the Simulator. Default Simulator builds use workspace
 assets for faster iteration. The separate Apple controls diagnostic does not contain

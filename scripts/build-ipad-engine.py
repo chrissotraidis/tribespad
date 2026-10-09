@@ -4,7 +4,7 @@
 Run test-qol-native-bootstrap.py --enter-engine --probe-ntdll --prepare-only first.
 Device builds bundle assets and require Apple development signing before installation.
 """
-import argparse,hashlib,json,pathlib,plistlib,shutil,subprocess
+import argparse,hashlib,json,os,pathlib,plistlib,shutil,subprocess
 from checked_support import compile_support
 from guard_checked_link import guard_link
 from checked_bochs_inputs import checked_bochs_inputs
@@ -16,7 +16,7 @@ ap=argparse.ArgumentParser(description=__doc__)
 ap.add_argument('--platform',choices=['simulator','device'],default='simulator')
 ap.add_argument('--simulator-device')
 ap.add_argument('--angle',action='store_true',help='Use the pinned ANGLE Metal renderer')
-ap.add_argument('--cpu-host-checks',action='store_true',help='Validate the translated CPU host prefix once per block; keep guest accesses checked')
+ap.add_argument('--cpu-host-checks',action='store_true',help='Validate native CPU spans and prove bounded native-object accesses; keep guest accesses checked')
 ap.add_argument('--bundle-assets',action='store_true',help='Bundle game data (always enabled for device)')
 ap.add_argument('--prepared-directory',type=pathlib.Path,default=R/'generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe')
 ap.add_argument('--build-only',action='store_true')
@@ -27,8 +27,9 @@ bundled=a.bundle_assets or a.platform=='device'
 source=a.prepared_directory.resolve();out=R/('generated/ipad-engine-device' if a.platform=='device' else 'generated/ipad-engine');out.mkdir(exist_ok=True)
 sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
 if a.cpu_host_checks:
- cpu_proof=json.loads((R/'generated/integration-review/cpu-host-checks/result.json').read_text());assert cpu_proof['passed']
- for name,h in cpu_proof['sources_sha256'].items():assert sha(R/name)==h,name
+ for proof_name in ['cpu-host-checks','host-local-checks','sse-host-locals']:
+  cpu_proof=json.loads((R/'generated/integration-review'/proof_name/'result.json').read_text());assert cpu_proof['passed']
+  for name,h in cpu_proof['sources_sha256'].items():assert sha(R/name)==h,name
 bochs,_=checked_bochs_inputs(a.platform)
 if a.platform=='simulator' and not a.build_only:
  devices=json.loads(subprocess.check_output(['xcrun','simctl','list','devices','booted','--json'],text=True))
@@ -75,6 +76,9 @@ al=json.loads((R/'generated/openal-soft'/a.platform/'result.json').read_text());
 zbuild=R/'generated/zlib-ng'/a.platform/'build'
 zmeta=json.loads((zbuild.parent/'result.json').read_text());assert zmeta['pass'] and zmeta['platform']==a.platform and sha(zbuild/'libz-ng.a')==zmeta['library_sha256']
 flags=['-std=c11','-DPTROFS_64BIT','-DTB_CHECKED_IMAGE','-DTB_GUARD_EXTERNALS','-DTB_CHECKED_SUBPAGES','-DTB_CAPTURE_PATCHES','-DTB_PUBLISH_PATCHES','-DTB_MOBILE_ENGINE','-DTB_MOBILE_LEGACY_FONT_BANK','-I',str(mobile_inputs),'-I',str(source),'-I',str(zbuild),'-I',str(R/'ref/zlib-ng'),'-I',str(http_root/'install/include'),'-DAL_LIBTYPE_STATIC','-I',str(R/'ref/openal-soft/include'),*sdl_flags,*gl_flags,*math['compile_flags']]
+# Replace a prior successful receipt before long code generation starts. A
+# retained app is not evidence that this invocation has finished building it.
+(out/'result.json').write_text(json.dumps(dict(state='building',platform=a.platform,pid=os.getpid()),indent=2)+'\n')
 objects,_=compile_support(sources,out/'support',flags,target=target,sdk_name=sdk_name,defer_codegen=True,cpu_host=a.cpu_host_checks)
 meta=json.loads((out/'support/result.json').read_text());entries=[]
 for name in objects:
@@ -138,6 +142,7 @@ signing=['--entitlements',str(R/'port/apple/TribesPad.entitlements')] if a.platf
 if a.angle:
  for framework in angle_bundle(app,a.platform):subprocess.run(['codesign','--force','--sign','-',str(framework)],check=True)
 subprocess.run(['codesign','--force','--sign','-',*signing,str(app)],check=True)
+subprocess.run(['codesign','--verify','--deep','--strict',str(app)],check=True)
 (out/'result.json').write_text(json.dumps(dict(state='built',platform=a.platform,cpu_host_checks=a.cpu_host_checks,bundled_assets=bundled,entitlements_sha256=sha(R/'port/apple/TribesPad.entitlements') if a.platform=='device' else None,binary_sha256=sha(exe),prepared_sha256=sha(source/'prepared-inputs.json'),support_sha256=sha(out/'support/result.json'),guarded_sha256=sha(out/'guarded/result.json'),gl4es=gl4es,angle=angle,openal=al,arguments=None if bundled else args,mobile_hooks_sha256=sha(mobile_inputs/'mobile-hooks.json'),mobile_gpu_timing=dict(available=False,original_blocks=timing_blocks,test_sha256=sha(timing_proof),translated_sha256=sha(mobile_qol)),scope='Full checked engine linked for '+a.platform+'. Device builds need development signing. Build is not rendering or gameplay acceptance.'),indent=2)+'\n')
 if not a.build_only:
  subprocess.run(['xcrun','simctl','install',a.simulator_device,str(app)],check=True)

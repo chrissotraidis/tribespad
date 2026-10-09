@@ -1,0 +1,330 @@
+{
+  "platform": "iPad Air 11-inch (M4), iOS 26.5 Simulator",
+  "binary_sha256": "891288e647bc3164eccdfa9c7e9889260ce7ed79a52fb1a137659b54e6a620e4",
+  "pid": 79871,
+  "load": {
+    "start_unix": 1791547189.265954,
+    "pid": 79871,
+    "map": "Katabatic",
+    "bots": 2,
+    "world_first_observed_unix": 1791547674.541468,
+    "world_first_observed_seconds": 485.2755138874054
+  },
+  "offline": true,
+  "online_join": false,
+  "touch_checks": {
+    "spawn": true,
+    "movement": true,
+    "aim": true,
+    "weapon_switch": true,
+    "disc_fire": "15 to 14 rounds after respawn",
+    "jet": "elevation and energy drain while held, recovery after release",
+    "respawn": "Original Ctrl-K death followed by touch Fire respawn"
+  },
+  "observations": [
+    "Original terrain, interiors, weapons and two bots render through ANGLE Metal.",
+    "Initial movement entered an inventory station; weapon became unavailable there. Death and respawn restored weapon operation. Inventory station exit behavior needs investigation.",
+    "Distant terrain gap persists.",
+    "Frame measurement used eight-second Look drag and two-second settling in the interior before respawn. No compiler or debugger active. Different view and bot state from prior build; no controlled speedup claim.",
+    "Device math compilation started after the recording/sample and overlapped final disc/jet control checks; those are functional checks only."
+  ],
+  "recording": {
+    "frames": [
+      {
+        "best_effort_timestamp_time": "0.000000",
+        "side_data_list": [
+          {}
+        ]
+      },
+      {
+        "best_effort_timestamp_time": "1.408333"
+      },
+      {
+        "best_effort_timestamp_time": "1.411667"
+      },
+      {
+        "best_effort_timestamp_time": "2.246667"
+      },
+      {
+        "best_effort_timestamp_time": "3.363333"
+      },
+      {
+        "best_effort_timestamp_time": "4.293333"
+      },
+      {
+        "best_effort_timestamp_time": "5.168333"
+      },
+      {
+        "best_effort_timestamp_time": "6.031667"
+      },
+      {
+        "best_effort_timestamp_time": "6.733333"
+      },
+      {
+        "best_effort_timestamp_time": "7.361667"
+      },
+      {
+        "best_effort_timestamp_time": "8.183333"
+      },
+      {
+        "best_effort_timestamp_time": "9.210000"
+      },
+      {
+        "best_effort_timestamp_time": "9.213333"
+      },
+      {
+        "best_effort_timestamp_time": "10.228333"
+      }
+    ],
+    "programs": [],
+    "stream_groups": [],
+    "streams": [
+      {
+        "width": 1640,
+        "height": 2360,
+        "avg_frame_rate": "4200/3373",
+        "duration": "10.550000",
+        "nb_frames": "14"
+      }
+    ],
+    "input_start_unix": 1791547730.93236,
+    "input_end_unix": 1791547739.423241,
+    "input": "Eight-second native Look drag, followed by two-second settle; no debugger or compiler active."
+  },
+  "sample": {
+    "duration_seconds": 4,
+    "interval_ms": 5,
+    "access_begin_parents": {
+      "tb_sse_arithmetic": 32,
+      "tb_sse_scalar": 23,
+      "tribes_lookup": 16,
+      "tb_sse_scalarmem": 16,
+      "x86_rep_movsd": 11,
+      "push": 10,
+      "arithmetic": 10,
+      "tb_sse_load": 10,
+      "loc_100DA880": 9,
+      "tb_sse_store": 7,
+      "loc_41D6A2": 5,
+      "tb_bo_arithmetic": 5,
+      "tb_shift_reg": 5,
+      "tribes_dispatch": 4,
+      "x86_repne_scasb": 4
+    },
+    "sha256": "c49674afb897c09a56ae91284a8571cf814fdcd176e96fc74f424dc5f2279c65",
+    "cost_ancestry": {
+      "lock_ancestry": [
+        [
+          "tb_sse_load",
+          18
+        ],
+        [
+          "tb_sse_store",
+          16
+        ],
+        [
+          "tb_sse_scalarmem",
+          12
+        ],
+        [
+          "tribes_memory_code_published",
+          9
+        ],
+        [
+          "tribes_memory_code_revision",
+          8
+        ],
+        [
+          "x86_rep_movsd",
+          6
+        ],
+        [
+          "loc_42CEDF",
+          4
+        ],
+        [
+          "loc_41D6A2",
+          4
+        ],
+        [
+          "x86_repne_scasb",
+          3
+        ],
+        [
+          "loc_41DDD3",
+          3
+        ],
+        [
+          "loc_51DD66",
+          3
+        ],
+        [
+          "loc_5E81B7",
+          3
+        ],
+        [
+          "loc_6F9E50",
+          3
+        ],
+        [
+          "x86_rep_stosb",
+          2
+        ],
+        [
+          "tb_sse_shufpsmem",
+          2
+        ],
+        [
+          "loc_41DD73",
+          2
+        ],
+        [
+          "loc_42CEC7",
+          2
+        ],
+        [
+          "loc_51DCC0",
+          2
+        ],
+        [
+          "loc_5E8690",
+          2
+        ],
+        [
+          "loc_6F7750",
+          2
+        ],
+        [
+          "loc_6FA44C",
+          2
+        ],
+        [
+          "loc_1005DE78",
+          2
+        ],
+        [
+          "loc_1005E070",
+          2
+        ],
+        [
+          "loc_1005F43C",
+          2
+        ],
+        [
+          "loc_41DF00",
+          2
+        ]
+      ],
+      "barrier_ancestry_inclusive_samples": [
+        [
+          "tb_sse_load",
+          64
+        ],
+        [
+          "tb_sse_store",
+          63
+        ],
+        [
+          "tb_sse_scalarmem",
+          48
+        ],
+        [
+          "tb_sse_scalar",
+          42
+        ],
+        [
+          "tb_sse_arithmetic",
+          37
+        ],
+        [
+          "tribes_lookup",
+          26
+        ],
+        [
+          "x86_rep_movsd",
+          16
+        ],
+        [
+          "push",
+          13
+        ],
+        [
+          "loc_100DA880",
+          12
+        ],
+        [
+          "arithmetic",
+          11
+        ],
+        [
+          "tb_sse_regmove",
+          11
+        ],
+        [
+          "tb_bo_arithmetic",
+          9
+        ],
+        [
+          "enter",
+          6
+        ],
+        [
+          "load32",
+          6
+        ],
+        [
+          "tb_shift_reg",
+          6
+        ],
+        [
+          "qol_string_shared_write",
+          6
+        ],
+        [
+          "x86_repne_scasb",
+          5
+        ],
+        [
+          "loc_41D6A2",
+          5
+        ],
+        [
+          "store_real",
+          5
+        ],
+        [
+          "loc_55B260",
+          5
+        ],
+        [
+          "tribes_dispatch",
+          4
+        ],
+        [
+          "loc_42CEDF",
+          4
+        ],
+        [
+          "tb_bo_store_real",
+          4
+        ],
+        [
+          "loc_51DA70",
+          4
+        ],
+        [
+          "loc_5E81B7",
+          4
+        ]
+      ],
+      "note": "Inclusive sample paths; categories overlap, not percentages or wall-time attribution."
+    }
+  },
+  "playable_acceptance": false,
+  "physical_device_execution": false,
+  "screenshots": [
+    "ipad-host-local-world-2026-10-09.png",
+    "ipad-host-local-disc-2026-10-09.png",
+    "ipad-host-local-jet-held-2026-10-09.png"
+  ]
+}
