@@ -56,6 +56,25 @@ Movement, look, weapons, fire and jet have been exercised in the Simulator.
 Skiing, simultaneous gestures and physical-device responsiveness still need validation.
 The bundled app preserves its original warrior and video preferences between launches.
 
+## iPad gamepad controls
+
+The full app now maps an extended gamepad to the original game bindings. Touch
+controls remain available alongside it.
+
+| Control | Action |
+| --- | --- |
+| Left / right stick | Move / aim |
+| Right / left trigger | Fire / jet |
+| A | Ski / jump |
+| Left / right shoulder | Grenade / next weapon |
+| X / Y | Use pack / inventory |
+| Menu | Original Escape menu |
+
+Stick aim is time based, with a deadzone and a limit on movement after a delayed
+frame. Disconnecting releases the gamepad's actions; backgrounding releases all
+controls. Native input tests and both iPad builds pass. Physical-controller and
+physical-iPad gameplay remain unverified.
+
 ## Current work
 
 - Improve measured runtime performance. Verified ARM64 object caching speeds up

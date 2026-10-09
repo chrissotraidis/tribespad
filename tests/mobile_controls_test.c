@@ -1,6 +1,7 @@
 #include "../port/apple/mobile_controls.h"
 #include <assert.h>
 #include <stdio.h>
+#include <math.h>
 static unsigned drain(SDL_Event out[32]) {
     unsigned count=0;SDL_Event event;
     while(SDL_PollEvent(&event)) {
@@ -37,5 +38,23 @@ int main(void) {
     tb_input_action(&c.input,4,TBJump,1);tb_mobile_controls_emit(&c);
     tb_input_release(&c.input,4);tb_mobile_controls_emit(&c);assert(drain(events)==2);
     assert(events[0].key.down&&!events[1].key.down);
-    SDL_Quit();puts("PASS: simultaneous original controls, relative aim, tap edges and cancellation");
+    // Gamepad release must not release another source's fire action.
+    tb_input_action(&c.input,2,TBFire,1);tb_input_action(&c.input,9,TBFire|TBJet|TBJump,1);
+    tb_mobile_controls_emit(&c);assert(drain(events)==3);
+    tb_input_release(&c.input,9);tb_mobile_controls_emit(&c);assert(drain(events)==2);
+    assert(events[0].key.scancode==SDL_SCANCODE_SPACE&&!events[0].key.down);
+    assert(events[1].button.button==SDL_BUTTON_RIGHT&&!events[1].button.down);
+    tb_mobile_controls_release(&c);assert(drain(events)==1&&!events[0].button.down);
+    // Stick aim remains time based at 60/120 Hz, with deadzone and pause cap.
+    tb_mobile_controls_gamepad_look(&c,.1f,-.1f,1.0/60);assert(!drain(events));
+    tb_mobile_controls_gamepad_look(&c,1,-1,1.0/60);assert(drain(events)==1);
+    assert(events[0].motion.xrel==15&&events[0].motion.yrel==15);
+    tb_mobile_controls_gamepad_look(&c,1,-1,1.0/120);assert(drain(events)==1);
+    assert(events[0].motion.xrel==7.5f&&events[0].motion.yrel==7.5f);
+    tb_mobile_controls_gamepad_look(&c,2,2,3);assert(drain(events)==1);
+    assert(events[0].motion.xrel==45&&events[0].motion.yrel==-45);
+    tb_mobile_controls_gamepad_look(&c,NAN,INFINITY,.01);assert(!drain(events));
+    tb_mobile_controls_gamepad_look(&c,1,1,NAN);assert(!drain(events));
+    tb_mobile_controls_gamepad_look(&c,1,1,-1);assert(!drain(events));
+    SDL_Quit();puts("PASS: simultaneous controls, relative aim, tap edges, cancellation and gamepad aim timing");
 }

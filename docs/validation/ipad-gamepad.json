@@ -1,0 +1,73 @@
+{
+  "date": "2026-10-09",
+  "change": "Connect one extended GameController profile to the full UIKit game controls. Main-queue button edges feed existing original SDL bindings, right-stick aim is display-time based, disconnect releases only source 9, background/Menu releases all controls. Reject callbacks from detached controllers and ignore Menu in the ordinary button snapshot.",
+  "builds": {
+    "simulator": {
+      "binary_sha256": "f2f3ac8fa5e8e3ef38b4e280cc688ac93cd0e1d57cec93555dcb58d73c236bd8",
+      "bytes": 103641312,
+      "state": "built",
+      "deep_strict_signature_verified": true,
+      "bundled_assets": true
+    },
+    "device": {
+      "binary_sha256": "9b23dc84c2c907c01ba27598928f7cd4432d632d9cbbec1d54456701e5e29d07",
+      "bytes": 103575296,
+      "state": "built",
+      "deep_strict_signature_verified": true,
+      "bundled_assets": true
+    }
+  },
+  "native_controls_test": {
+    "passed": true,
+    "output": "PASS: simultaneous controls, relative aim, tap edges, cancellation and gamepad aim timing\n",
+    "sources_sha256": {
+      "tests/mobile_controls_test.c": "980b9b7d3ac39d951e7b15f492c3eb150e6f76349506fa50b7ad8c198568cbde",
+      "port/apple/mobile_controls.c": "41c0b99baee56b531f9584bfd1ac4c2372a8b88a5bf2f1f8bb42bb333a49743b",
+      "port/core/input.c": "2553bd39f04f8a77b175614ff400771517181070092ac75f500c4545f5561044",
+      "port/apple/mobile_controls.h": "77bf9d42403a657dd3d6330156cd7265a08b307eb81266d0bb6c65e5776ba056",
+      "port/apple/mobile_controls.m": "b1a757506db9a847a5db1a362bc528c96d04aed926a2b911636d3670ca547640",
+      "port/core/input.h": "92635e6d7cf557ef1d6e1172ba1d566c9752f3cbb9c5f0fad4df915ce2e1b91b",
+      "scripts/test-mobile-controls.py": "755b548e38a267a3b067bd573908cf07d5da8167d96a5f128a6a124e610e448c"
+    },
+    "scope": "Native SDL event delivery and UIKit compilation; not original mobile gameplay acceptance."
+  },
+  "original_execution": {
+    "start_unix": 1791565942.1754901,
+    "pid": 36835,
+    "map": "Katabatic",
+    "bots": 2,
+    "offline": true,
+    "world_observed_seconds": 251
+  },
+  "touch_recheck": [
+    "Spawn into Starwolf outside base",
+    "Weapon switches to disc, 15 rounds",
+    "Forward walks from base apron onto snow",
+    "Aim changes compass and terrain view",
+    "Fire reduces disc ammunition 15 to 14",
+    "Menu opens original lobby with two bots, Return to Game selected"
+  ],
+  "capture": {
+    "frames": 149,
+    "seconds": 30.065,
+    "fps": 4.955928820888076,
+    "scope": "Thirty-second fixed initial observer view of offline Katabatic with two bots. No input, compiler or debugger during recording. Presented Simulator frames, not original FPS counter.",
+    "no_controller_attached": true
+  },
+  "not_accepted": [
+    "Physical controller event delivery and gameplay",
+    "Physical iPad installation and execution",
+    "Comfortable performance",
+    "Rendering fidelity: existing terrain gap persists"
+  ],
+  "rejected_optimization": "Cold reader-wait extraction and a host/guest admission split had mixed microbenchmark results; restored the exact e82de7b memory-check implementation. No performance claim or guard change retained.",
+  "sources_sha256": {
+    "port/apple/mobile_controls.c": "41c0b99baee56b531f9584bfd1ac4c2372a8b88a5bf2f1f8bb42bb333a49743b",
+    "port/apple/mobile_controls.h": "77bf9d42403a657dd3d6330156cd7265a08b307eb81266d0bb6c65e5776ba056",
+    "port/apple/mobile_controls.m": "b1a757506db9a847a5db1a362bc528c96d04aed926a2b911636d3670ca547640",
+    "port/core/input.c": "2553bd39f04f8a77b175614ff400771517181070092ac75f500c4545f5561044",
+    "scripts/build-ipad-engine.py": "22ef90e99ca339f12cae640cc343fbe90f57fea4e896bcf25350c9753ce8d8fb",
+    "tests/mobile_controls_test.c": "980b9b7d3ac39d951e7b15f492c3eb150e6f76349506fa50b7ad8c198568cbde"
+  },
+  "local_evidence": "generated/ipad-engine/gamepad-*"
+}

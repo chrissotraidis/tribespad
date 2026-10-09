@@ -1,6 +1,7 @@
 /* Native touch UI feeds ordinary SDL events through the existing checked ABI.
    Controls are opt-in so the original menus retain direct touch targeting. */
 #import <UIKit/UIKit.h>
+#import <GameController/GameController.h>
 #include "mobile_controls.h"
 
 @interface TBGameControls : UIView
@@ -10,6 +11,10 @@
 @property(nonatomic,strong) UIButton *menu;
 @property(nonatomic,strong) UIButton *keyboard;
 @property(nonatomic) BOOL expanded;
+@property(nonatomic,strong) GCController *controller;
+@property(nonatomic,strong) CADisplayLink *aimClock;
+@property(nonatomic) CGPoint stickAim;
+@property(nonatomic) CFTimeInterval lastAimTime;
 -(void)releaseControls;
 @end
 @interface TBGamePad : UILabel
@@ -88,12 +93,63 @@
     self.pads=pads;
     [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(releaseControls)
         name:UIApplicationWillResignActiveNotification object:nil];
+    [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(controllerChanged:)
+        name:GCControllerDidConnectNotification object:nil];
+    [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(controllerChanged:)
+        name:GCControllerDidDisconnectNotification object:nil];
     return self;
+}
+-(void)didMoveToSuperview {
+    [super didMoveToSuperview];
+    if(self.superview)[self controllerChanged:nil];
+    else [self detachController];
+}
+-(void)detachController {
+    GCExtendedGamepad *pad=self.controller.extendedGamepad;
+    pad.valueChangedHandler=nil;pad.buttonMenu.pressedChangedHandler=nil;
+    [self.aimClock invalidate];self.aimClock=nil;self.controller=nil;
+    self.stickAim=CGPointZero;self.lastAimTime=0;
+    if(self.controls){tb_input_release(&self.controls->input,9);tb_mobile_controls_emit(self.controls);}
+}
+-(void)controllerChanged:(NSNotification *)notification {
+    (void)notification;if(!self.superview)return;
+    if(self.controller&&[GCController.controllers containsObject:self.controller])return;
+    [self detachController];
+    for(GCController *controller in GCController.controllers)if(controller.extendedGamepad){
+        self.controller=controller;controller.handlerQueue=dispatch_get_main_queue();break;
+    }
+    if(!self.controller)return;
+    __weak TBGameControls *weakSelf=self;
+    self.controller.extendedGamepad.valueChangedHandler=^(GCExtendedGamepad *pad,GCControllerElement *element){
+        TBGameControls *owner=weakSelf;
+        if(!owner.controls||pad!=owner.controller.extendedGamepad||element==pad.buttonMenu||
+            UIApplication.sharedApplication.applicationState!=UIApplicationStateActive)return;
+        tb_input_move(&owner.controls->input,9,pad.leftThumbstick.xAxis.value,pad.leftThumbstick.yAxis.value,.15);
+        owner.stickAim=CGPointMake(pad.rightThumbstick.xAxis.value,pad.rightThumbstick.yAxis.value);
+        const uint32_t actions[]={TBFire,TBJet,TBJump,TBGrenade,TBWeapon,TBUse,TBInventory};
+        NSArray<GCControllerButtonInput *> *buttons=@[pad.rightTrigger,pad.leftTrigger,pad.buttonA,
+            pad.leftShoulder,pad.rightShoulder,pad.buttonX,pad.buttonY];
+        for(unsigned i=0;i<buttons.count;i++)tb_input_action(&owner.controls->input,9,actions[i],buttons[i].pressed);
+        tb_mobile_controls_emit(owner.controls);
+    };
+    self.controller.extendedGamepad.buttonMenu.pressedChangedHandler=^(GCControllerButtonInput *button,float value,BOOL pressed){
+        (void)value;TBGameControls *owner=weakSelf;
+        if(pressed&&button==owner.controller.extendedGamepad.buttonMenu&&
+            UIApplication.sharedApplication.applicationState==UIApplicationStateActive)[owner openMenu];
+    };
+    self.aimClock=[CADisplayLink displayLinkWithTarget:self selector:@selector(aimTick:)];
+    [self.aimClock addToRunLoop:NSRunLoop.mainRunLoop forMode:NSRunLoopCommonModes];
+}
+-(void)aimTick:(CADisplayLink *)clock {
+    CFTimeInterval previous=self.lastAimTime;self.lastAimTime=clock.timestamp;
+    if(previous&&UIApplication.sharedApplication.applicationState==UIApplicationStateActive)
+        tb_mobile_controls_gamepad_look(self.controls,self.stickAim.x,self.stickAim.y,clock.timestamp-previous);
 }
 -(UIView *)hitTest:(CGPoint)point withEvent:(UIEvent *)event {
     UIView *hit=[super hitTest:point withEvent:event];return hit==self?nil:hit;
 }
 -(void)releaseControls {
+    self.stickAim=CGPointZero;self.lastAimTime=0;
     if(self.controls)tb_mobile_controls_release(self.controls);
     for(TBGamePad *pad in self.pads) {pad.finger=nil;pad.backgroundColor=[UIColor colorWithWhite:0 alpha:.35];}
 }
@@ -121,6 +177,7 @@
 }
 -(void)openMenu {
     if(self.expanded)[self toggleControls];
+    else [self releaseControls];
     for(int down=1;down>=0;down--) {
         SDL_Event event={0};event.type=down?SDL_EVENT_KEY_DOWN:SDL_EVENT_KEY_UP;
         event.key.windowID=self.controls->window;event.key.scancode=SDL_SCANCODE_ESCAPE;

@@ -1,5 +1,6 @@
 #include "mobile_controls.h"
 #include <stdlib.h>
+#include <math.h>
 
 static void send_event(SDL_Event *event) {
     event->common.timestamp=SDL_GetTicksNS();
@@ -43,4 +44,13 @@ void tb_mobile_controls_emit(TBMobileControls *controls) {
 }
 void tb_mobile_controls_release(TBMobileControls *controls) {
     tb_input_reset(&controls->input);tb_mobile_controls_emit(controls);
+}
+void tb_mobile_controls_gamepad_look(TBMobileControls *controls,float x,float y,double seconds) {
+    if(!isfinite(seconds)||seconds<=0)return;
+    /* A delayed display callback must not turn a pause into a large aim jump. */
+    seconds=fmin(seconds,.05);
+    x=isfinite(x)&&fabsf(x)>.15f?fmaxf(-1,fminf(1,x)):0;
+    y=isfinite(y)&&fabsf(y)>.15f?fmaxf(-1,fminf(1,y)):0;
+    tb_input_look(&controls->input,9,x*900*seconds,-y*900*seconds);
+    tb_mobile_controls_emit(controls);
 }
