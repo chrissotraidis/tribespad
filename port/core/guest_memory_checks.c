@@ -38,14 +38,17 @@ static __attribute__((cold,noinline)) void reader_wait(void){
   if(pthread_cond_wait(&guard_changed,&guard_wait))abort();
  if(pthread_mutex_unlock(&guard_wait))abort();
 }
+static void reader_leave(void);
 static void reader_enter(void){
- uint32_t state=atomic_load_explicit(&guard_state,memory_order_relaxed);
  for(;;){
-  if(state&WRITER_PENDING){
-   reader_wait();state=atomic_load_explicit(&guard_state,memory_order_relaxed);continue;
-  }
-  if(state==WRITER_PENDING-1)abort();
-  if(atomic_compare_exchange_weak_explicit(&guard_state,&state,state+1,memory_order_acquire,memory_order_relaxed))return;
+  if(atomic_load_explicit(&guard_state,memory_order_relaxed)&WRITER_PENDING){reader_wait();continue;}
+  /* Reserve a count in one atomic operation. A writer racing this reservation
+     either waits for us, or closes admission first and we withdraw without
+     accessing permissions or guest data. */
+  uint32_t previous=atomic_fetch_add_explicit(&guard_state,1,memory_order_acquire);
+  if((previous&~WRITER_PENDING)==WRITER_PENDING-1)abort();
+  if(!(previous&WRITER_PENDING))return;
+  reader_leave();reader_wait();
  }
 }
 static void reader_leave(void){
@@ -58,8 +61,11 @@ static void reader_leave(void){
  }
 }
 static void write_unlock(void){
- if(atomic_load_explicit(&guard_state,memory_order_relaxed)!=WRITER_PENDING)abort();
- atomic_store_explicit(&guard_state,0,memory_order_release);
+ /* Rejected reader reservations may still be withdrawing. Preserve their
+    counts when opening admission, so a late withdrawal cannot underflow or
+    erase another reader's reservation. None may access the protected data. */
+ uint32_t previous=atomic_fetch_and_explicit(&guard_state,~WRITER_PENDING,memory_order_release);
+ if(!(previous&WRITER_PENDING))abort();
  if(pthread_cond_broadcast(&guard_changed))abort();
  if(pthread_mutex_unlock(&guard_wait))abort();
  if(pthread_mutex_unlock(&guard_writer))abort();

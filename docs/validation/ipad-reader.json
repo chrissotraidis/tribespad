@@ -1,0 +1,157 @@
+{
+  "date": "2026-10-09",
+  "change": "Replace CAS retry admission with atomic reader reservation. Rejected readers withdraw without accessing protected data. Writer release clears only its gate and retains pending withdrawals; nested reader depth, permission checks, code-write checks and publication synchronization remain.",
+  "proofs": {
+    "memory-reader": {
+      "receipt_sha256": "61d1e906b677092e5437fa57997a91644928d74aa216642f184bd4f99ffc52aa",
+      "passed": true
+    },
+    "vm-subpages/macos": {
+      "receipt_sha256": "5be20714b81205bc8814a140832d669daafd0067f241dd7bdd9510e36c396093",
+      "passed": true
+    },
+    "published-code": {
+      "receipt_sha256": "5e1fe286c188f8fc1b7ab7bdafc97c700dc583d161c5f2782a8c9f729eb30cad",
+      "passed": true
+    },
+    "code-revision-threads/macos": {
+      "receipt_sha256": "12f63753b5acae1051fcc4de9c25f66f645aabe2bd2ce14869518de234185ee9",
+      "passed": true
+    },
+    "cpu-host-checks": {
+      "receipt_sha256": "f9bb6fea43dee32f0c9d55c0fa4e969c26be55e6652c7e23ff060dbb71277435",
+      "passed": true
+    },
+    "host-local-checks": {
+      "receipt_sha256": "27441439676efd87b86242c182666479ada67e5dde73fbc44d2376c30d44a2c3",
+      "passed": true
+    },
+    "native-cpu-checks": {
+      "receipt_sha256": "470a27f0530598d51ff14b84dea9361517d98fa29cb369d58ee52baa8c138ee2",
+      "passed": true
+    },
+    "sse-host-locals": {
+      "receipt_sha256": "916244f7ea1ed67ca20563ab0e41af453a0b5a2272dcfa0d0564955a8bd36f7a",
+      "passed": true
+    },
+    "x87-host-checks": {
+      "receipt_sha256": "18efb879ba195ea7d442ed4b88f7ffc2de7702a460df77e834bab6c4731f8234",
+      "passed": true
+    },
+    "mobile-gpu-timing": {
+      "receipt_sha256": "3ac56f21b4e8295d7d1292207f27a970fb02b75a293547812b0d89ed15bcbac2",
+      "passed": true
+    },
+    "mobile-gpu-sync": {
+      "receipt_sha256": "2ba852822350675526c27ae933223f3253925a4990e4a707bf720828235d9af1",
+      "passed": true
+    },
+    "code-revision-mobile": {
+      "receipt_sha256": "6d58a247afefa6b39622d1a9292436d0beab563b0b8ec2c2ddb8751e49520bc1",
+      "passed": true
+    }
+  },
+  "concurrency": {
+    "passed": true,
+    "runs": [
+      {
+        "mode": "normal",
+        "stdout": "PASS: delayed rejected reservation, eight nested readers, 20000 publications and 800000 protected snapshots\n"
+      },
+      {
+        "mode": "tsan",
+        "stdout": "PASS: delayed rejected reservation, eight nested readers, 20000 publications and 800000 protected snapshots\n"
+      }
+    ],
+    "sources_sha256": {
+      "port/core/guest_memory_checks.c": "1d62b3446339b742720dd23f78f4ac23d53ab18f62d4481070e0c2c70cbe5dac",
+      "tests/memory_reader_test.c": "4da243328528a15066536735c0ea785ff570ecfc96fb209559613cd3c4f29a11",
+      "scripts/test-memory-reader.py": "9d3cf4f040566b053b689becd2504f63f4d098a37411bbf97226cba9304dc639"
+    }
+  },
+  "builds": {
+    "ipad-engine": {
+      "binary_sha256": "852139ec299da1615610f4068b823a1c58f84c787ef96ffffeeec72fef76fbc9",
+      "bytes": 103638880,
+      "receipt_sha256": "9911394ae6ec5714ee470ba5eab86b3fb843933fbe932f903bec526de798e65c",
+      "checked": true,
+      "signature": "deep strict verification passed in build",
+      "executed": true
+    },
+    "ipad-engine-device": {
+      "binary_sha256": "69afc692bf736cf87312d2be487416c1d5f106e9a4e3d48179f457dc3c3cb9cf",
+      "bytes": 103556432,
+      "receipt_sha256": "e7c0b2485a3e3d80529adcd3299c894b5c9d8c1cb3fc7d8c9d2199915251f63f",
+      "checked": true,
+      "signature": "deep strict verification passed in build",
+      "executed": false
+    }
+  },
+  "original_execution": {
+    "pid": 32055,
+    "start_unix": 1791564565.8153589,
+    "map": "Katabatic",
+    "bots": 2,
+    "world_first_observed_unix": 1791564836.245536,
+    "load_observation_upper_bound_seconds": 270.4301772117615
+  },
+  "frames": [
+    {
+      "frames": 177,
+      "seconds": 30.08,
+      "fps": 5.884308510638299,
+      "recording": "generated/ipad-engine/reader-observer-video.json",
+      "sha256": "15a847032f20025f9ae4e830ffe7af5aa521be012482b88f940008a74e949ffe"
+    },
+    {
+      "frames": 158,
+      "seconds": 30.035,
+      "fps": 5.260529382387215,
+      "recording": "generated/ipad-engine/reader-observer-video-2.json",
+      "sha256": "5bebf63b73612432556173c71f966bf69fdb68d04c263381fd989946a3a7ed19"
+    }
+  ],
+  "previous_frames": {
+    "frames": [
+      130,
+      126
+    ],
+    "seconds": [
+      30.065,
+      30.071667
+    ],
+    "source": "docs/validation/ipad-graphics-lookup.json"
+  },
+  "profile": {
+    "path": "generated/ipad-engine/reader-sample.txt",
+    "sha256": "a813ad4364cd82523349076a9b3a05659b1ea5109a33f88f484af2d447d2c101",
+    "main_thread_samples": 313,
+    "memory_access_begin_samples": 130,
+    "reader_leave_samples": 40,
+    "remaining_immediate_draw_metal_wait_samples": 9,
+    "comparison": "Previous separate profile: memory_access_begin157/314 and reader_leave29/314. Sample counts are approximate, not a deterministic paired benchmark."
+  },
+  "touch": {
+    "spawn": "Fire enters Starwolf inside base",
+    "weapon": "Weapon selects disc with 15 rounds",
+    "move": "Forward held 3 seconds; Blood Eagle flag distance 559.1 to 542.0, player drops into shaft",
+    "look": "Drag rotates from facing wall to corner and repair pack",
+    "jet": "Hold raises player from lower shaft to upper ledge; energy depletes/heat rises, after release player lands and energy recovers",
+    "fire": "15 to 14 rounds with nearby impact damage"
+  },
+  "screenshots": {
+    "generated/ipad-engine/reader-world.png": "390802a2144004bad17f324f372bc373cbddc6938e00b93ff900b7865cfe4e34",
+    "generated/ipad-engine/reader-spawn.png": "89a20f9cd76d04ecc728432410ac164c6f8d2489b75d615d0abeebab4d482eb2",
+    "generated/ipad-engine/reader-move.png": "b628f8aacdf954d45c4d1d20e67c82356eb1cb006e4f2956f29aa7493b804808",
+    "generated/ipad-engine/reader-look.png": "7833a7ebcf7b9efc46f9625fa7b16d894b043f6cda50ea4637e92355046961fa",
+    "generated/ipad-engine/reader-fire.png": "5eb39c887aa8ba9ba7d597bae9d0327fb190482672556151320adabffd2aacb9",
+    "generated/ipad-engine/reader-jet-held.png": "e086d8888fe235bfe4c9acbd97227f5739937e5c620913b86844dd78c080be0b",
+    "generated/ipad-engine/reader-jet-released.png": "b8f551fdfdd0af8698410a94d125d1d6a686b6fd4d91ebdbd3bf703b8c73b1b5"
+  },
+  "limitations": [
+    "Fixed observer captures, no input/compilers/debugger. Separate profile after recordings. Bot behavior nondeterministic; physical-device FPS not measured.",
+    "Still too slow for comfortable play. Terrain gaps, startup/input latency, inventory exit and platform acceptance remain.",
+    "No online joining/authentication; Mac bundles unchanged."
+  ],
+  "next": "Reduce hot barrier call overhead: inspect generated prologue/TLS/cold contention paths before changing code, preserve all reader/publication semantics, and validate actual full-game performance."
+}
