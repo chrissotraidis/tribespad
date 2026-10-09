@@ -12,26 +12,16 @@ __attribute__((weak,noinline)) void *tribes_openal_native_lookup(uint32_t addres
 #include <TargetConditionals.h>
 #include <stdlib.h>
 #include <string.h>
-typedef struct {const char *name;uint32_t address,module;void *function;} GraphicsExport;
+typedef struct {const char *name;uint32_t address,module;void *function;uint32_t platforms;} GraphicsExport;
 #include "graphics-exports.inc"
 /* Only implemented mobile entry points are exposed. */
 static int available(const GraphicsExport *e){
-#if TARGET_OS_IPHONE
-#ifdef TB_GL4ES
-    if(!strcmp(e->name,"glDrawBuffer"))return 1; /* bounded default-back selection */
-    static const char *legacy[]={"glPrimitiveRestartIndex","glFenceSync","glIsSync","glClientWaitSync","glGetSynciv","glDeleteSync","glDrawArrays","glTexCoord2fv","glLoadMatrixf","glTexGeni","glTexGenfv","glPolygonMode","glAlphaFunc","glFogCoordPointerEXT","glVertex3fv","glFogi","glFogf","glFogfv","glLightfv","glLightf","glLightModelfv","glRotatef","glTexCoord2f","glTranslatef","glColor3ub","glVertex3f","glColor4f","glVertex2i","glPushMatrix","glPopMatrix","glScalef","glFrustum","glMultMatrixf","glMultMatrixd","glColor4fv","glMaterialfv","glTexEnvfv","glTexEnvf","glNormalPointer","glBegin","glVertex2f","glEnd","glTexEnvi","glColor4ub","glEnableClientState","glDisableClientState","glColorPointer","glVertexPointer","glTexCoordPointer","glDrawElements","glMatrixMode","glLoadIdentity","glLoadMatrixd","glClientActiveTextureARB","glMultiTexCoord2fARB","glMultiTexCoord2fvARB","glMultiTexCoord3fvARB"};
-    for(unsigned i=0;i<sizeof legacy/sizeof *legacy;i++)if(!strcmp(e->name,legacy[i]))return 1;
-#endif
-    if(!strcmp(e->name,"glDrawArrays"))return 0;
-    if(!strcmp(e->name,"glTexCoord2fv")||!strcmp(e->name,"glPrimitiveRestartIndex"))return 0;
-    if(!strcmp(e->name,"glLoadMatrixf")||!strcmp(e->name,"glTexGeni")||!strcmp(e->name,"glTexGenfv")||!strcmp(e->name,"glPolygonMode")||!strcmp(e->name,"glAlphaFunc")||!strcmp(e->name,"glFogCoordPointerEXT")||!strcmp(e->name,"glVertex3fv"))return 0;
-    if(!strcmp(e->name,"glFogi")||!strcmp(e->name,"glFogf")||!strcmp(e->name,"glFogfv"))return 0;
-    if(!strcmp(e->name,"glLightfv")||!strcmp(e->name,"glLightf")||!strcmp(e->name,"glLightModelfv"))return 0;
-    if(!strcmp(e->name,"glRotatef")||!strcmp(e->name,"glTexCoord2f")||!strcmp(e->name,"glTranslatef")||!strcmp(e->name,"glColor3ub")||!strcmp(e->name,"glVertex3f")||!strcmp(e->name,"glColor4f")||!strcmp(e->name,"glVertex2i"))return 0;
-    if(!strcmp(e->name,"glPushMatrix")||!strcmp(e->name,"glPopMatrix")||!strcmp(e->name,"glScalef")||!strcmp(e->name,"glFrustum")||!strcmp(e->name,"glMultMatrixf")||!strcmp(e->name,"glMultMatrixd")||!strcmp(e->name,"glColor4fv")||!strcmp(e->name,"glMaterialfv")||!strcmp(e->name,"glTexEnvfv")||!strcmp(e->name,"glTexEnvf")||!strcmp(e->name,"glNormalPointer"))return 0;
-    return strcmp(e->name,"glIsSync")!=0 && strcmp(e->name,"glGetSynciv")!=0 && strcmp(e->name,"glFenceSync")!=0 && strcmp(e->name,"glClientWaitSync")!=0 && strcmp(e->name,"glDeleteSync")!=0 && strcmp(e->name,"glBegin")!=0 && strcmp(e->name,"glVertex2f")!=0 && strcmp(e->name,"glEnd")!=0 && strcmp(e->name,"glTexImage3D")!=0 && strcmp(e->name,"glTexSubImage3D")!=0 && strcmp(e->name,"glTexEnvi")!=0 && strcmp(e->name,"glColor4ub")!=0 && strcmp(e->name,"glEnableClientState")!=0 && strcmp(e->name,"glDisableClientState")!=0 && strcmp(e->name,"glColorPointer")!=0 && strcmp(e->name,"glVertexPointer")!=0 && strcmp(e->name,"glTexCoordPointer")!=0 && strcmp(e->name,"glDrawElements")!=0 && strcmp(e->name,"glMatrixMode")!=0 && strcmp(e->name,"glLoadIdentity")!=0 && strcmp(e->name,"glLoadMatrixd")!=0 && strcmp(e->name,"glBeginQuery")!=0 && strcmp(e->name,"glEndQuery")!=0 && strcmp(e->name,"glGetQueryObjectui64v")!=0 && strcmp(e->name,"glGenQueries")!=0 && strcmp(e->name,"glDrawBuffer")!=0 && strcmp(e->name,"glClientActiveTextureARB")!=0 && strncmp(e->name,"glMultiTexCoord",14)!=0;
+#if !TARGET_OS_IPHONE
+    return (e->platforms & 1u) != 0;
+#elif defined(TB_GL4ES)
+    return (e->platforms & 4u) != 0;
 #else
-    (void)e;return 1;
+    return (e->platforms & 2u) != 0;
 #endif
 }
 static const uint32_t gl_module=0x20040000,glu_module=0x20050000;
@@ -45,7 +35,13 @@ int tribes_graphics_configure(uint64_t base){
     }return 1;
 }
 void *tribes_graphics_native_lookup(uint32_t address){
-    for(unsigned i=0;i<sizeof graphics_exports/sizeof *graphics_exports;i++)if(graphics_exports[i].address==address&&available(&graphics_exports[i]))return graphics_exports[i].function;
+    /* Generated slots are contiguous, but arbitrary/unaligned guest addresses
+       still fall through to the next finite provider. No dynamic proc cache. */
+    uint32_t offset=address-GRAPHICS_EXPORT_BASE;
+    if(offset%GRAPHICS_EXPORT_STRIDE==0 && offset/GRAPHICS_EXPORT_STRIDE<sizeof graphics_exports/sizeof *graphics_exports){
+        const GraphicsExport *e=&graphics_exports[offset/GRAPHICS_EXPORT_STRIDE];
+        if(e->address==address&&available(e))return e->function;
+    }
     return tribes_openal_native_lookup(address);
 }
 static void name_copy(_cpu *cpu,uint32_t address,char text[256]){

@@ -1,0 +1,104 @@
+{
+  "date": "2026-10-09",
+  "change": "Generate immutable platform masks; checked arithmetic lookup of contiguous finite graphics addresses. Context/name lookup and backend guards unchanged.",
+  "component": {
+    "passed": true,
+    "scope": "ASan/UBSan native provider component; mocked context/module services",
+    "runs": [
+      {
+        "platform": "macos",
+        "output": "PASS: 131 exports, 131 available; slot bytes, fallthrough, registration, context and errors\n"
+      },
+      {
+        "platform": "gles",
+        "output": "PASS: 131 exports, 67 available; slot bytes, fallthrough, registration, context and errors\n"
+      },
+      {
+        "platform": "gl4es",
+        "output": "PASS: 131 exports, 125 available; slot bytes, fallthrough, registration, context and errors\n"
+      }
+    ],
+    "inputs": {
+      "port/core/guest_graphics.c": "53239c7c819ff368ddf76f6568645b581c148b7c5b815800b1b907cc247b2a8a",
+      "scripts/graphics_backend_inputs.py": "f6451deae776c7ba4b6d4339ab1677c55af8d4d526a2c7aa85e2c92ca981db23",
+      "tests/graphics_lookup_test.c": "693aaec8e1890d12daed65728659d07d4a9ca8f1819492f142aac61f1702c632",
+      "tests/fixtures/graphics_availability_reference.h": "77a864d9eee227fb57b8eb348cc0fd87502b7b442d87494e862b964d42137784",
+      "scripts/test-graphics-lookup.py": "d48f9439de2a2ee83fcd9aa7d30c8e933dbf36793649d84e35072d1248a4a1da"
+    }
+  },
+  "builds": {
+    "ipad-engine": {
+      "binary_sha256": "6f8f242fc0489895a9c20bb658dedae46e45be4d069d5f66c89e4b8e72f0390f",
+      "bytes": 103638880,
+      "receipt_sha256": "6c535a600accfa7cc2ba5e91b76ada39f6eefdd4683378ebf5c34cae23937dc9",
+      "checked": true,
+      "signature": "deep strict verification passed in build",
+      "executed": true
+    },
+    "ipad-engine-device": {
+      "binary_sha256": "e963f6ccb940275e89f71cfb8244422a144b02390e7b68838334ab62861696da",
+      "bytes": 103572848,
+      "receipt_sha256": "f84707c24045ec31e9d77479808726124bdbb2ba437ecff29ea8a151f70a73de",
+      "checked": true,
+      "signature": "deep strict verification passed in build",
+      "executed": false
+    }
+  },
+  "original_execution": {
+    "start_unix": 1791563297.073639,
+    "pid": 28319,
+    "map": "Katabatic",
+    "bots": 2,
+    "world_first_observed_unix": 1791563591.2091131,
+    "load_observation_upper_bound_seconds": 294.1354742050171
+  },
+  "frames": [
+    {
+      "frames": 130,
+      "seconds": 30.065,
+      "fps": 4.3239647430567105,
+      "recording": "generated/ipad-engine/graphics-lookup-observer-video.json",
+      "sha256": "4e48b9b457a8e0ea853f21b4d270b6c9494ac99274244647352f3f6b58b5c3de"
+    },
+    {
+      "frames": 126,
+      "seconds": 30.071667,
+      "fps": 4.189990531619015,
+      "recording": "generated/ipad-engine/graphics-lookup-observer-video-2.json",
+      "sha256": "5210f934089a353fd78b9014910358617cee6e7fd03c50d47df9c693158c04de"
+    }
+  ],
+  "profile": {
+    "path": "generated/ipad-engine/graphics-lookup-sample.txt",
+    "sha256": "869d2679f7f43ade0cdefae572433bf3e881cd7885d4b73fdc7db75390949565",
+    "main_thread_samples": 314,
+    "graphics_lookup_samples": 0,
+    "memory_access_begin_samples": 157,
+    "remaining_immediate_draw_metal_wait_samples": 8,
+    "comparison": "Prior separate profile: graphics lookup 22/315, including available 19/315. Samples are approximate, not deterministic paired measurements."
+  },
+  "touch": {
+    "spawn": "Fire enters Starwolf",
+    "weapon": "Weapon selects disc with 15 rounds",
+    "move": "Forward held 3 seconds; flag distance 39.1 to 21.9",
+    "look": "Drag rotates view from right building to left building",
+    "fire": "15 to 14 rounds; nearby impact also damaged player",
+    "jet": "Held 8 seconds; at 4 seconds above base with depleted energy/red heat; after release grounded with energy recovering"
+  },
+  "screenshots": {
+    "generated/ipad-engine/graphics-lookup-world.png": "80bae48d6bc51f1505483c7914c09e65970ed4ab3d95b72fc53a45e146bc347b",
+    "generated/ipad-engine/graphics-lookup-spawn.png": "5c111efeb9566215a04cc9a3e2e5a4083b118612f75e40e953fda91d2709764d",
+    "generated/ipad-engine/graphics-lookup-move.png": "7ebfd3a13d248edf2d8049525befbee28003da846d6306cab56391c46fd4e994",
+    "generated/ipad-engine/graphics-lookup-look.png": "f2ed40e403294e847e88410a2e80a0a163701a21e818aa350e6bdf570d8adbcb",
+    "generated/ipad-engine/graphics-lookup-fire.png": "de2495d9739216042b7e9a6a6823824aae5e1c88d87cbe5a6190bb455d6240f5",
+    "generated/ipad-engine/graphics-lookup-jet-held.png": "464dc9e4d69aff90ab4f6c2ce81c5583a4e857bd9ffc5b02085490829e4dc31d",
+    "generated/ipad-engine/graphics-lookup-jet-released.png": "7a6df5eec674d1899eec306cf736b8c93e46def182318f3c4843414b70b6a95c"
+  },
+  "limitations": [
+    "Latest fixed-view captures 4.2\u20134.3 FPS, below prior 4.9\u20135.4; no game-frame-rate benefit established for this change. Bot activity is not deterministic.",
+    "No compiler/debugger/input during captures. Separate profile afterwards.",
+    "Terrain gaps, slow startup/input, inventory exit and physical-device acceptance remain.",
+    "No online joining or authentication. Mac bundles unchanged."
+  ],
+  "next": "Resolve sampled offsets within tribes_memory_access_begin; reduce measured guard overhead while preserving concurrent permission/lifetime/publication semantics. No disabled checks."
+}
