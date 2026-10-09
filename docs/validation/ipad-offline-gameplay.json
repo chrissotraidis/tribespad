@@ -1,0 +1,39 @@
+{
+  "date": "2026-10-08",
+  "platform": "iPad Air 11-inch (M4), iOS 26.5 Simulator",
+  "pid": 3943,
+  "binary_sha256": "f905ef5faaf945b931ad02e789dfff5f84b16afe942c9fc4d8c69c212f2acca4",
+  "map": "Katabatic",
+  "offline_bots": [
+    "Simrionic",
+    "Akhiles"
+  ],
+  "world_rendered": true,
+  "original_loader_primitive_restart_slot": "0xfffa0800",
+  "native_touch_actions": {
+    "spawn": "Fire pad joins Starwolf from observer",
+    "move": "3-second upper Move press changes flag distance from 27.3 to 23.2 and moves through the doorway",
+    "look": "Rightward Look drag rotates the original player view and compass",
+    "weapon": "Weapon tap changes blaster to disc launcher",
+    "fire": "2-second Fire press reduces disc ammo from 15 to 13",
+    "jet": "6-second Jet press raises the view, drains blue energy and increases red heat; after release the view settles and energy recovers"
+  },
+  "screenshots": {
+    "generated/integration-review/ipad-gameplay/jet-held.png": "7124be8ca86438bbb04ed8bc609b148c59eda965294d7fab7992c59132b24211",
+    "generated/integration-review/ipad-gameplay/fire.png": "43c014ed0900a7e3f39696eb9b81465875b2ee0aad705c261fd121136d436418",
+    "generated/integration-review/ipad-gameplay/aim-weapon.png": "829879e4feed8f35c72f4a0448df3839bee98e35f19c52580808d7976cdbea46",
+    "generated/integration-review/ipad-gameplay/weapon-before-fire.png": "ba450e64e62356c45a2122284f6646b0ed8097ed779018dcfe105d3726b97bb5",
+    "generated/integration-review/ipad-gameplay/forward.png": "bfad8dc80910fec21aea0c4fbfec99fb0a4d3301b65a4837eab7c24b2bd3eb77",
+    "generated/integration-review/ipad-gameplay/spawn.png": "d4f7c69a29375c662b35fdfdc11168fa81feb94e4bb328894f1bf2bee403f90b",
+    "generated/integration-review/ipad-gameplay/controls.png": "5b4eadf4ed3efb8945bfa7c9dc33049ec775f601020d742546f6f4a776eb3808",
+    "generated/integration-review/ipad-gameplay/jet-released.png": "b9935ca7638a06e63b160742b73083c2f0f90d3e6d686b97bad15decb8fe800a",
+    "generated/integration-review/ipad-gameplay/jet-recovered.png": "11ead09362850101d6086f87a8ad57721487e3a329af7d584e4860a5a2ede5d3"
+  },
+  "limitations": [
+    "Slow startup and visible input delay; no FPS or responsive-playability acceptance",
+    "Black triangular gaps visible in some interior views; rendering fidelity incomplete",
+    "No physical iPad execution or device provisioning",
+    "No online join or authentication; HD sampling acceptance incomplete"
+  ],
+  "scope": "Actual full original engine execution and native Simulator touch gameplay actions, not finished platform acceptance."
+}

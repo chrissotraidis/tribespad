@@ -8,8 +8,9 @@ platforms. The aim is the original game, offline bot matches and compatibility w
 the existing Tribes 2 community, with touch and controller support on mobile.
 
 **In development.** The Mac app renders and runs offline matches, but performance
-is currently too slow for comfortable play. The full iPad Simulator app renders the
-original menus and textured warrior preview, and responds to taps; offline gameplay is still being integrated.
+is currently too slow for comfortable play. The full iPad Simulator app now loads an offline
+Katabatic match with bots and accepts touch movement, aim, weapons, firing and jets.
+Slow startup, input delay and visible rendering defects still need work.
 There is no playable iPad or iPhone release yet.
 
 ![Tribes 2 running on macOS](docs/validation/macos-retina-katabatic-2026-10-08.png)
@@ -25,13 +26,14 @@ There is no playable iPad or iPhone release yet.
 - **iPad app integration.** The full original engine builds and starts in the iPad
   Simulator. Its checked GL4ES bridge passes real pixel readback and context
   lifecycle tests, including the original GUI shaders, perspective projection and
-  native GPU fences. The [original menus on iPad](docs/validation/ipad-original-startup-2026-10-08.png)
-  render and respond to taps. Offline maps and gameplay controls remain unfinished.
+  native GPU fences. The [original map on iPad](docs/validation/ipad-katabatic-2026-10-08.png)
+  renders, and [touch gameplay](docs/validation/ipad-touch-gameplay-2026-10-08.png)
+  moves, aims, switches weapons, fires and jets in the offline match.
 
 ## Current work
 
 - Measure game performance with the optimized, cached ARM64 build.
-- Complete offline map rendering in the full iPad app.
+- Fix visible rendering gaps and reduce startup/input latency in the iPad app.
 - Integrate and refine touch, controller, keyboard and mouse input in real gameplay.
 - Verify HD textures, sustained performance and physical-device behavior.
 
@@ -64,11 +66,24 @@ export SDKROOT="$(xcrun --sdk iphonesimulator --show-sdk-path)"
 
 Use `--build-only` to preserve a running test session. The development touch overlay
 uses the original ESDF bindings and is enabled with **Touch controls**. Its native
-event tests pass; original-game touch acceptance is still pending.
+event tests pass, and the controls have been exercised in the original offline match.
+Tap an original text field, then **Keyboard**, to enter text. The focused field stays
+above the onscreen keyboard; Return dismisses it. Sensitivity, simultaneous gestures
+and sustained performance still need refinement.
 
-The app currently uses assets in that workspace. There is no standalone release or
-verified device IPA installation flow. The separate Apple controls diagnostic does
-not contain the full game.
+For a self-contained device build:
+
+```sh
+export SDKROOT="$(xcrun --sdk iphoneos --show-sdk-path)"
+.venv/bin/python scripts/build-ipad-engine.py --platform device --build-only
+```
+
+The device app bundles game data and creates a writable profile in Application
+Support on first launch. It still needs Apple development signing and physical-iPad
+validation; this is not an installable release. Use `--bundle-assets` to exercise
+that same storage layout in the Simulator. Default Simulator builds use workspace
+assets for faster iteration. The separate Apple controls diagnostic does not contain
+the full game.
 
 Builds cache verified translations and optimized ARM64 objects. Changes to the
 checked-call policy still run the guard pass; byte-identical guarded output can

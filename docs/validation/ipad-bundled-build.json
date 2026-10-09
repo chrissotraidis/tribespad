@@ -1,0 +1,32 @@
+{
+  "date": "2026-10-08",
+  "builds": {
+    "simulator": {
+      "binary_sha256": "0b500dd94d28fff51e1fbf91e81c378d561296274db355190f3e11227a00cf45",
+      "bundled_assets": true,
+      "guarded_objects": 409,
+      "reused_verified_objects": 407,
+      "entitlements_sha256": null
+    },
+    "device": {
+      "binary_sha256": "8c546d671b8f2f0c42f19c7a126023575cea7911fbc338ed87e3be322ecc0cdb",
+      "bundled_assets": true,
+      "guarded_objects": 409,
+      "reused_verified_objects": 407,
+      "entitlements_sha256": "1ecc376ec4c7a5e9ca9207b7daced6505b6ba90ef857615dfb68cbbb0553e00e"
+    }
+  },
+  "device_signature": "Ad-hoc signature verifies with extended virtual addressing; no provisioning profile",
+  "physical_device_execution": false,
+  "available_devices": 0,
+  "valid_signing_identities": 0,
+  "sources_sha256": {
+    "scripts/build-ipad-engine.py": "26cf291687f56708391dd5405923794a2427e8cba721221f3f04dc062a223d70",
+    "port/apple/mobile_engine_main.m": "683a60ef09110735836c17d4b0abcc607f0294dbc401f707100ee161d351ce2f",
+    "port/apple/mobile_game_paths.m": "8ccbf15e1e85fc71c61bdad1a18b65e5e1e4e743e70183971ce630f336e409c4",
+    "port/apple/mobile_game_paths.h": "58e7c09a43ab9800c596183c8cee0964b4b5f34f6a029920df9401d9e91bcde1",
+    "port/apple/mobile_controls.m": "9972243154a0ca9e83bdd4af93f8f872a8a2b2c32bb30c661db0f2150d4f88ac",
+    "port/apple/TribesPad.entitlements": "1ecc376ec4c7a5e9ca9207b7daced6505b6ba90ef857615dfb68cbbb0553e00e"
+  },
+  "scope": "Full ARM64 device build and self-contained Simulator app packaging. Physical installation and execution remain unverified."
+}

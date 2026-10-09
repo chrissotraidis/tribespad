@@ -1,0 +1,20 @@
+{
+  "date": "2026-10-08",
+  "platform": "iPad Air 11-inch (M4), iOS 26.5 Simulator",
+  "pid": 14125,
+  "binary_sha256": "0b500dd94d28fff51e1fbf91e81c378d561296274db355190f3e11227a00cf45",
+  "bundled_assets": true,
+  "original_menus_rendered": true,
+  "keyboard": {
+    "input": "Nine native Simulator touchscreen key taps",
+    "observed_text": "Tribespad",
+    "focused_field_visible_above_keyboard": true,
+    "return_dismisses_keyboard": true
+  },
+  "private_profile": "Library/Application Support/TribesPad/Game",
+  "screenshots": {
+    "docs/validation/ipad-keyboard-2026-10-08.png": "57deea6ab4b9421d9a7121b0b98d184c9fb79ce9b0f915fe78892b4c464a1919",
+    "generated/ipad-engine/final-keyboard-dismissed.png": "5f0db75fb1cf1489c430208fdfe762ed61eca57954518a6f04c37b5bcf09ea0b"
+  },
+  "scope": "Actual bundled full-engine startup and native keyboard execution. Offline map/touch gameplay was exercised in the earlier binary recorded in ipad-offline-gameplay.json. No physical device execution or online join."
+}

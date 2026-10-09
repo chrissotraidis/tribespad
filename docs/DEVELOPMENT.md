@@ -125,3 +125,30 @@ This separate shell links two translated routines, displays input actions and pr
 ```
 
 Audio tests exercise actual CoreAudio silent playback and worker-thread logging. They do not establish that original game sound or the complete application works.
+
+### Self-contained iPad build
+
+`scripts/build-ipad-engine.py --platform device --build-only` writes the full checked
+ARM64 app to `generated/ipad-engine-device/TribesPad.app`. It includes the prepared
+original images, loader inputs and isolated offline game profile. No workspace path
+is required at runtime. `--bundle-assets` enables the same layout in Simulator builds.
+First launch copies the profile into Application Support; later launches preserve
+saved settings and refresh immutable loader inputs. These reproducible files are
+excluded from iCloud backup. `scripts/test-mobile-game-paths.py` tests install,
+preservation, loader refresh and recovery, and compiles both entry configurations
+for Simulator and device without interrupting a running game.
+
+The output is ad-hoc signed for build verification, not provisioned for installation.
+Development signing must retain `port/apple/TribesPad.entitlements` and use a profile
+with Apple's [Extended Virtual Addressing capability](https://developer.apple.com/documentation/bundleresources/entitlements/com.apple.developer.kernel.extended-virtual-addressing).
+The checked original engine reserves a 4 GiB virtual address range. This entitlement
+requests additional address space; it does not establish that the game fits the
+physical device's memory budget. Physical-device launch and memory acceptance remain
+unverified. Game data stays local and ignored by Git.
+
+For native Simulator gestures, the owned-window helper also supports
+`<pid> press <x> <y> <seconds>` and
+`<pid> drag <start-x> <start-y> <end-x> <end-y> <seconds>`.
+Coordinates are normalized to the visible Simulator window; gestures use real
+native mouse events, which Simulator converts to touches. These actions do not
+write guest memory.

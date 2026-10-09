@@ -8,6 +8,7 @@
 @property(nonatomic,strong) NSArray<UIView *> *pads;
 @property(nonatomic,strong) UIButton *toggle;
 @property(nonatomic,strong) UIButton *menu;
+@property(nonatomic,strong) UIButton *keyboard;
 @property(nonatomic) BOOL expanded;
 -(void)releaseControls;
 @end
@@ -65,7 +66,10 @@
     self.menu=[UIButton buttonWithType:UIButtonTypeSystem];
     [self.menu setTitle:@"Menu" forState:UIControlStateNormal];
     [self.menu addTarget:self action:@selector(openMenu) forControlEvents:UIControlEventTouchUpInside];
-    for(UIButton *button in @[self.toggle,self.menu]) {
+    self.keyboard=[UIButton buttonWithType:UIButtonTypeSystem];
+    [self.keyboard setTitle:@"Keyboard" forState:UIControlStateNormal];
+    [self.keyboard addTarget:self action:@selector(toggleKeyboard) forControlEvents:UIControlEventTouchUpInside];
+    for(UIButton *button in @[self.toggle,self.menu,self.keyboard]) {
         button.backgroundColor=[UIColor colorWithWhite:0 alpha:.6];
         button.tintColor=UIColor.whiteColor;button.layer.cornerRadius=12;[self addSubview:button];
     }
@@ -93,7 +97,24 @@
     if(self.controls)tb_mobile_controls_release(self.controls);
     for(TBGamePad *pad in self.pads) {pad.finger=nil;pad.backgroundColor=[UIColor colorWithWhite:0 alpha:.35];}
 }
+-(void)toggleKeyboard {
+    SDL_Window *window=SDL_GetWindowFromID(self.controls->window);if(!window)return;
+    if(SDL_TextInputActive(window))SDL_StopTextInput(window);
+    else {
+        if(self.expanded)[self toggleControls];
+        [self releaseControls];
+        // Original menus retain their own field focus. The last game touch
+        // identifies the field; tell UIKit to keep that point above the IME.
+        float x=0,y=0;SDL_GetMouseState(&x,&y);
+        SDL_Rect caret={(int)x,(int)y,1,24};
+        SDL_SetTextInputArea(window,&caret,0);
+        SDL_SetHint(SDL_HINT_RETURN_KEY_HIDES_IME,"1");
+        SDL_StartTextInput(window);
+    }
+}
 -(void)toggleControls {
+    SDL_Window *window=SDL_GetWindowFromID(self.controls->window);
+    if(window)SDL_StopTextInput(window);
     [self releaseControls];self.expanded=!self.expanded;
     [self.toggle setTitle:self.expanded?@"Hide controls":@"Touch controls" forState:UIControlStateNormal];
     [self setNeedsLayout];
@@ -112,6 +133,7 @@
     CGFloat w=area.size.width,h=area.size.height,x=area.origin.x,y=area.origin.y;
     self.toggle.frame=CGRectMake(x+w/2-70,y+8,140,40);
     self.menu.frame=CGRectMake(x+w/2+78,y+8,70,40);self.menu.hidden=!self.expanded;
+    self.keyboard.frame=CGRectMake(x+w/2-178,y+8,100,40);
     CGFloat size=MIN(180,MIN(w*.20,h*.32));
     const CGRect frames[]={CGRectMake(x+20,y+h-size-24,size,size),
         CGRectMake(x+w*.48,y+h*.39,w*.22,h*.48),

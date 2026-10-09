@@ -91,6 +91,34 @@ int main(int argc, const char **argv) {
                    [window[(id)kCGWindowNumber] unsignedIntValue],strlen(argv[3]));
             return 0;
         }
+        // Drive an actual Simulator touch by dragging or holding its owned window.
+        BOOL drag = !strcmp(operation,"drag"), press = !strcmp(operation,"press");
+        if (drag || press) {
+            if (argc != (drag ? 8 : 6)) return 2;
+            double x0=number(argv[3]), y0=number(argv[4]);
+            double x1=drag ? number(argv[5]) : x0, y1=drag ? number(argv[6]) : y0;
+            double seconds=number(argv[drag ? 7 : 5]);
+            if (x0<0 || x0>1 || y0<0 || y0>1 || x1<0 || x1>1 || y1<0 || y1>1 || seconds<.05 || seconds>10) return 2;
+            if (![app activateWithOptions:0]) return 5;
+            usleep(150000);
+            CGPoint point=CGPointMake(bounds.origin.x+bounds.size.width*x0,bounds.origin.y+bounds.size.height*y0);
+            CGEventRef event=CGEventCreateMouseEvent(NULL,kCGEventMouseMoved,point,kCGMouseButtonLeft);
+            CGEventPost(kCGHIDEventTap,event);CFRelease(event);usleep(150000);
+            event=CGEventCreateMouseEvent(NULL,kCGEventLeftMouseDown,point,kCGMouseButtonLeft);
+            CGEventPost(kCGHIDEventTap,event);CFRelease(event);
+            const int steps=30;
+            for (int i=1;i<=steps;++i) {
+                usleep((useconds_t)(seconds*1000000/steps));
+                point=CGPointMake(bounds.origin.x+bounds.size.width*(x0+(x1-x0)*i/steps),
+                                  bounds.origin.y+bounds.size.height*(y0+(y1-y0)*i/steps));
+                event=CGEventCreateMouseEvent(NULL,kCGEventLeftMouseDragged,point,kCGMouseButtonLeft);
+                CGEventPost(kCGHIDEventTap,event);CFRelease(event);
+            }
+            event=CGEventCreateMouseEvent(NULL,kCGEventLeftMouseUp,point,kCGMouseButtonLeft);
+            CGEventPost(kCGHIDEventTap,event);CFRelease(event);
+            printf("Native HID %s pid=%d window=%u duration=%g\n",operation,pid,[window[(id)kCGWindowNumber] unsignedIntValue],seconds);
+            return 0;
+        }
         BOOL key = !strcmp(operation,"key"), click = !strcmp(operation,"click"), aim = !strcmp(operation,"aim");
         BOOL fire = !strcmp(operation,"fire"), jet = !strcmp(operation,"jet");
         if ((!key && !click && !aim && !fire && !jet) || argc != ((fire || jet) ? 4 : 5)) return 2;

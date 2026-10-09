@@ -6,19 +6,9 @@
     "port/apple/mobile_controls.c": "b256f6a6835b6b9134ac1803d855afa8ced47f13bb4a5b03ec15778a9a3a2b4c",
     "port/core/input.c": "2553bd39f04f8a77b175614ff400771517181070092ac75f500c4545f5561044",
     "port/apple/mobile_controls.h": "cd58b42663d7d141489401745a607522d9293216437f5afbfe946689398f8604",
-    "port/apple/mobile_controls.m": "accdcf5b4ec0f141cdab6cdb2b97d6ad1885c9f02148a0a7fbcde1871b022233",
+    "port/apple/mobile_controls.m": "9972243154a0ca9e83bdd4af93f8f872a8a2b2c32bb30c661db0f2150d4f88ac",
     "port/core/input.h": "92635e6d7cf557ef1d6e1172ba1d566c9752f3cbb9c5f0fad4df915ce2e1b91b",
     "scripts/test-mobile-controls.py": "755b548e38a267a3b067bd573908cf07d5da8167d96a5f128a6a124e610e448c"
   },
-  "scope": "Native SDL event delivery and UIKit compilation; not original mobile gameplay acceptance.",
-  "original_execution": {
-    "pid": 3943,
-    "overlay_visible_and_toggleable": true,
-    "native_weapon_tap_delivered_w_to_original_text_field": true,
-    "menu_taps_restored_when_hidden": true,
-    "primitive_restart_slot": "0xfffa0800",
-    "offline_map_retest": "Katabatic with two bots loading",
-    "touch_gameplay": false
-  },
-  "binary_sha256": "f905ef5faaf945b931ad02e789dfff5f84b16afe942c9fc4d8c69c212f2acca4"
+  "scope": "Native SDL event delivery and UIKit compilation; not original mobile gameplay acceptance."
 }

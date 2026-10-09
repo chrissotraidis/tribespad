@@ -1,0 +1,13 @@
+{
+  "passed": true,
+  "output": "mobile app paths: first install, preservation, refresh and retry passed\n",
+  "expected_failure": "TribesPad: cannot prepare app storage: The file \u201cProfile\u201d couldn\u2019t be opened because there is no such file.\n",
+  "sources_sha256": {
+    "scripts/test-mobile-game-paths.py": "7a27e12197656a04f74bd7ca7ad00d58bbe77c8a6c912a62aa1478fbeb010ce2",
+    "port/apple/mobile_game_paths.h": "58e7c09a43ab9800c596183c8cee0964b4b5f34f6a029920df9401d9e91bcde1",
+    "port/apple/mobile_game_paths.m": "8ccbf15e1e85fc71c61bdad1a18b65e5e1e4e743e70183971ce630f336e409c4",
+    "port/apple/mobile_engine_main.m": "683a60ef09110735836c17d4b0abcc607f0294dbc401f707100ee161d351ce2f",
+    "tests/mobile_game_paths_test.m": "a8907386251ca0fa75ec86792a1534908bc2e805549a17515805a529f31e7525"
+  },
+  "scope": "Native Foundation app-storage execution and Simulator/device entry compilation; not physical-device execution."
+}
