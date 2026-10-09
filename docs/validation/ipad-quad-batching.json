@@ -1,0 +1,38 @@
+{
+  "scope": "Partial frame captured read-only at native GL4ES entry from original offline Katabatic PID18702; debugger detached afterwards. Not a frame-time measurement.",
+  "source_binary": "c1098592ba805b1a311c488e17c2c3c977bac7164a7186078f46acd14f2d4c1c",
+  "draw_calls_captured": 3201,
+  "quad_calls_with_shared_vertex_buffer": 1764,
+  "quad_indices": "1764 sequential groups of four uint16 indices, separated by one restart index in the original private buffer",
+  "quad_vertex_count": 7056,
+  "near_plane": 0.05000000074505806,
+  "far_plane": 500.0,
+  "trace_sha256": "5b1af7323af54b389ad4521af3d343a272daddb7de8d9ed5cbb9103341682bd5",
+  "finding": "Restart emulation splits one snow quad batch into thousands of native calls. Preserve each complete quad and index order in one native batch; retain strip/fan splitting. Geometry holes are not yet diagnosed.",
+  "implementation": "Batch complete restarted GL_QUADS using original index values/order; discard incomplete tails at each restart; existing checked staging and strip/fan splitting retained.",
+  "tests": {
+    "passed": true,
+    "pixel_comparison": "All 64x64 RGBA pixels equal two separately drawn alpha-blended reference quads, for 8/16/32-bit indices with leading/consecutive restart markers and incomplete tails.",
+    "existing_expected_faults": 33,
+    "receipt_sha256": "0f056c371c18564b1ae9044edc84421b7d5abf2b0c1d0ceacb7ecd32b160460f"
+  },
+  "candidate": {
+    "binary_sha256": "71999ccc135170b73c61627a5ee83568ec44162b9bb0a59f56ffb571d819a930",
+    "signature_verified": true,
+    "pid": 27260,
+    "execution": "Original profile/menu restored; offline Katabatic with two bots started, still loading. Full-match performance pending.",
+    "map_start": {
+      "pid": 27260,
+      "started_at": "2026-10-09T05:07:33.953749+00:00",
+      "mission": "Katabatic",
+      "bots": 2,
+      "dedicated": false,
+      "binary_sha256": "71999ccc135170b73c61627a5ee83568ec44162b9bb0a59f56ffb571d819a930"
+    }
+  },
+  "sources_sha256": {
+    "port/core/guest_sdl_backend.c": "9266476bdfb315959932848e362aac38e0df292de7be0c80d6fb00eadce224e9",
+    "tests/sdl_window_test.c": "0531a19320d0564ea28ee999a22159cac0d7645643894617d6cd62889d678cac"
+  },
+  "reference": "https://registry.khronos.org/OpenGL/extensions/NV/NV_primitive_restart.txt"
+}

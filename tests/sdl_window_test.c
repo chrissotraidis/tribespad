@@ -158,6 +158,33 @@ static void pixels(void){
   tribes_gl_disable(&cpu,0x8f9d);assert(!tribes_gl_is_enabled(&cpu,0x8f9d));
  }
  puts("PASS: mobile 8/16/32-bit primitive restart, checked marker exclusion and state queries");
+ /* Snow uses independent restarted quads. Compare all pixels with separate
+    reference draws, including empty segments and incomplete quad tails.
+    Alpha blending makes extra/incorrectly joined primitives observable. */
+ tribes_gl_viewport(&cpu,0,0,64,64);
+ tribes_gl_enable(&cpu,GL_BLEND);tribes_gl_blend_func(&cpu,GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+ tribes_gl_color4f(&cpu,0x3f800000,0x3f800000,0x3f800000,0x3f000000);
+ unsigned char reference[64*64*4],batched[64*64*4];
+ for(unsigned bytes=1;bytes<=4;bytes*=2){
+  uint32_t marker=bytes==1?255:bytes==2?65535:UINT32_MAX;
+  uint32_t split[]={marker,0,1,2,3,0,1,marker,marker,0,1,2,3,marker,0,1,2};
+  uint32_t type=bytes==1?GL_UNSIGNED_BYTE:bytes==2?GL_UNSIGNED_SHORT:GL_UNSIGNED_INT;
+  for(unsigned i=0;i<4;i++)memcpy(memory+0x8500+i*bytes,&i,bytes);
+  tribes_gl_clear(&cpu,GL_COLOR_BUFFER_BIT);
+  for(unsigned i=0;i<2;i++)tribes_gl_draw_elements(&cpu,7,4,type,0x8500);
+  tribes_gl_finish(&cpu);read(0,0,64,64,GL_RGBA,GL_UNSIGNED_BYTE,reference);
+  for(unsigned i=0;i<sizeof split/sizeof *split;i++)memcpy(memory+0x8500+i*bytes,&split[i],bytes);
+  tribes_gl_primitive_restart_index(&cpu,marker);tribes_gl_enable(&cpu,0x8f9d);
+  tribes_gl_clear(&cpu,GL_COLOR_BUFFER_BIT);
+  tribes_gl_draw_elements(&cpu,7,sizeof split/sizeof *split,type,0x8500);
+  tribes_gl_finish(&cpu);read(0,0,64,64,GL_RGBA,GL_UNSIGNED_BYTE,batched);
+  assert(!memcmp(reference,batched,sizeof reference));
+  assert(reference[(32*64+32)*4+1]>180);
+  tribes_gl_disable(&cpu,0x8f9d);
+ }
+ tribes_gl_disable(&cpu,GL_BLEND);tribes_gl_color4f(&cpu,0x3f800000,0x3f800000,0x3f800000,0x3f800000);
+ tribes_gl_viewport(&cpu,0,0,width,height);
+ puts("PASS: restarted quad batches match separate alpha-blended draws in every pixel (8/16/32-bit, empty and incomplete segments)");
  for(unsigned variant=0;variant<3;variant++){
   uint32_t program=tribes_gl_create_program(&cpu),shaders[2];
   for(unsigned stage=0;stage<2;stage++){

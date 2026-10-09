@@ -2081,7 +2081,19 @@ static void draw_client_arrays(_cpu *cpu,GLContext *c,uint32_t mode,uint32_t cou
     for(unsigned i=0;i<32;i++)if(texcoords[i]){glClientActiveTexture(GL_TEXTURE0+i);glTexCoordPointer((GLint)c->texcoord[i].size,c->texcoord[i].type,0,texcoords[i]);}
     glClientActiveTexture(GL_TEXTURE0+unit);
     if(!restart)glDrawElements(mode,(GLsizei)count,type,indices);
-    else{
+    else if(mode==GL_QUADS){
+        /* Original snow batches restart after each independent quad. Keep
+           their index values/order, but submit one native batch. An unfinished
+           quad at a restart (or at the end) must not join the next segment. */
+        unsigned char *quads=malloc((size_t)count*width);if(!quads)stop();
+        uint32_t start=0,used=0;
+        for(uint32_t i=0;i<=count;i++)if(i==count||draw_index(indices,width,i)==c->restart_index){
+            uint32_t complete=(i-start)/4*4;
+            memcpy(quads+(size_t)used*width,indices+(size_t)start*width,(size_t)complete*width);
+            used+=complete;start=i+1;
+        }
+        glDrawElements(mode,(GLsizei)used,type,quads);free(quads);
+    }else{
         uint32_t start=0;
         for(uint32_t i=0;i<count;i++)if(draw_index(indices,width,i)==c->restart_index){
             if(i>start)glDrawElements(mode,(GLsizei)(i-start),type,indices+(size_t)start*width);
