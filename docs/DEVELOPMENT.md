@@ -32,6 +32,7 @@ HTTP/TLS, zlib and OpenAL dependencies prepared:
 ```sh
 export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
 export SDKROOT="$(xcrun --sdk macosx --show-sdk-path)"
+.venv/bin/python scripts/build-guest-memory-pass.py
 .venv/bin/python scripts/build-checked-bochs.py --platform simulator
 .venv/bin/python scripts/build-native-openal.py --platform simulator
 .venv/bin/python scripts/build-gl4es-mobile.py --platform simulator
@@ -52,6 +53,8 @@ export SDKROOT="$(xcrun --sdk macosx --show-sdk-path)"
 .venv/bin/python scripts/test-cpu-host-checks.py
 .venv/bin/python scripts/test-host-local-checks.py
 .venv/bin/python scripts/test-native-cpu-checks.py
+.venv/bin/python scripts/test-sse-host-locals.py
+.venv/bin/python scripts/test-x87-host-checks.py
 .venv/bin/python scripts/test-sdl-io.py
 .venv/bin/python scripts/test-openal-guest.py --offline
 export SDKROOT="$(xcrun --sdk iphonesimulator --show-sdk-path)"
@@ -64,8 +67,11 @@ to `generated/ipad-engine/TribesPad.app`; build metadata, launch logs, isolated
 game profile and captures are beside it. Add `--build-only` to build without
 installing or launching. Existing translated sources, checked IR and native
 objects are verified before cache reuse. Native C sources rebuild to account for
-header changes. See [status](STATUS.md) for the reached runtime failure: build
-success does not imply a rendered menu or an offline match.
+header changes. The native-object policy proves fixed-size copies and clears as
+well as scalar accesses; guest pointers retain their checks. Changing the memory
+pass requires rebuilding checked Bochs inputs for each target and rerunning the
+source-bound guard tests above. See [status](STATUS.md) for actual gameplay
+evidence and outstanding acceptance work.
 
 Without `--bundle-assets`, the development Simulator bundle uses workspace paths.
 Device builds always bundle assets; see the self-contained build section below.

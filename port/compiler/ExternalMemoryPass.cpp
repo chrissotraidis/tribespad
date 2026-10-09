@@ -148,6 +148,13 @@ struct ExternalMemoryPass : PassInfoMixin<ExternalMemoryPass>{
      report_fatal_error(Twine("Missing intrinsic external contract: ")+Name);
     }
     if(Range.contains(Name)){
+     // The prior pass proves every byte of both operands within native-owned
+     // storage (or a runtime-validated CPU span). This is never inferred here
+     // from the library name; forged input metadata is rejected by that pass.
+     if(Call->getMetadata("tribes.checked.host.bulk")){
+      if(!M.getModuleFlag("tribes.checked.cpu-host"))report_fatal_error("Bulk proof without native-object policy");
+      ++RangeCalls;continue;
+     }
      // Require the bracketing calls inserted by the memory pass. The first
      // pass owns the exact buffer/length semantics; no name-only exemption.
      auto *Prev=dyn_cast_or_null<CallInst>(Call->getPrevNode());auto *Next=dyn_cast_or_null<CallInst>(Call->getNextNode());

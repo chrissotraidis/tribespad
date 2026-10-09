@@ -14,6 +14,7 @@ def module(functions):
 target datalayout = "e-m:o-i64:64-i128:128-n32:64-S128-Fn32"
 @label = private constant [18 x i8] c"tribes.native-cpu\\00"
 @llvm.global.annotations = appending global [%d x {ptr,ptr,ptr,i32,ptr}] [%s], section "llvm.metadata"
+declare void @llvm.memcpy.p0.p0.i64(ptr,ptr,i64,i1)
 declare void @abort()
 '''%(len(names),annotations)+'\n'.join(functions.values())
 functions={
@@ -75,6 +76,10 @@ for name,(guard,address,ty,admit) in variants.items():
  expected=int(admit)+(1 if name=='loaded-pointer' else 0)
  assert c['host_cpu_accesses']==expected,(name,c)
  assert c['loads']==int(not admit),(name,c)
+for name,offset,size,admit in [('bulk-last',424,16,True),('bulk-cross',425,16,False),('bulk-negative',-1,16,False)]:
+ text='define void @probe(ptr %cpu) {\n%src = alloca [16 x i8]\n%p = getelementptr i8,ptr %cpu,i64 '+str(offset)+'\ncall void @llvm.memcpy.p0.p0.i64(ptr %p,ptr %src,i64 '+str(size)+',i1 false)\nret void\n}'
+ _,c=check(name,module({'probe':text}))
+ assert c['host_bulk_operations']==int(admit) and c['host_cpu_spans']==int(admit) and c['transfers']==int(not admit),(name,c)
 policy=out/'policy.json';policy.write_text(json.dumps(dict(checked_symbols=[],host_only=['abort'],range_checked=[],memory_manager_calls=[],memory_manager_sources=[],host_intrinsics=[],checked_strings=[],checked_callbacks=[],barrier_asm_sources=[],scalar_fcntl_commands=[])))
 bc=out/'guarded.bc';env=dict(os.environ,TRIBES_EXTERNAL_POLICY=str(policy))
 subprocess.run([str(T/'opt'),'-load-pass-plugin',str(plugins[1]),'-passes=tribes-external-memory,verify',str(ir),'-o',str(bc)],env=env,check=True,capture_output=True)

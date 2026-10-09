@@ -26,7 +26,7 @@ struct GuestMemoryPass : PassInfoMixin<GuestMemoryPass> {
   auto Begin=M.getOrInsertFunction("tribes_memory_access_begin",I32,P,I64,I32);
   auto Transfer=M.getOrInsertFunction("tribes_memory_transfer_begin",I32,P,P,I64);
   auto End=M.getOrInsertFunction("tribes_memory_access_end",Type::getVoidTy(C),I32);
-  uint64_t Loads=0,Stores=0,Atomics=0,Transfers=0,Sets=0,HostAccesses=0,HostSpans=0,LocalAccesses=0;std::map<std::string,uint64_t> Calls;
+  uint64_t Loads=0,Stores=0,Atomics=0,Transfers=0,Sets=0,HostAccesses=0,HostSpans=0,LocalAccesses=0,HostBulk=0;std::map<std::string,uint64_t> Calls;
   // Only the original translator's fixed register prefix is admitted. The
   // runtime checks this whole host span at block entry; pointed-to guest data
   // and accesses beyond the prefix continue through ordinary permission checks.
@@ -53,7 +53,7 @@ struct GuestMemoryPass : PassInfoMixin<GuestMemoryPass> {
   for(auto &F:M){
    if(F.isDeclaration())continue;
    SmallVector<Instruction *,128> Work;for(auto &I:instructions(F))Work.push_back(&I);
-   SmallPtrSet<Instruction *,32> Host,Local;
+   SmallPtrSet<Instruction *,32> Host,Local,Bulk;bool BulkCPU=false;
    auto Name=F.getName();bool Block=Name.consume_front("loc_")&&!Name.empty();
    for(char Ch:Name)Block&=(Ch>='0'&&Ch<='9')||(Ch>='a'&&Ch<='f')||(Ch>='A'&&Ch<='F');
    bool Eligible=CPUShape&&Block&&F.getCallingConv()==CallingConv::Fast&&F.hasHiddenVisibility()&&!F.isVarArg()&&F.getReturnType()->isVoidTy()&&F.arg_size()==1&&F.getArg(0)->getType()==P;
@@ -81,34 +81,60 @@ struct GuestMemoryPass : PassInfoMixin<GuestMemoryPass> {
     }
     return Address==F.getArg(0);
    };
-   for(auto *I:Work){
-    if(I->getMetadata("tribes.checked.host.cpu"))report_fatal_error("Unverified CPU host metadata");
-    if(I->getMetadata("tribes.checked.host.local"))report_fatal_error("Unverified local host metadata");
-    if(!CPUHost)continue;
-    Value *Address=nullptr;Type *T=nullptr;
-    if(auto *L=dyn_cast<LoadInst>(I)){if(L->isSimple()){Address=L->getPointerOperand();T=L->getType();}}
-    if(auto *S=dyn_cast<StoreInst>(I)){if(S->isSimple()){Address=S->getPointerOperand();T=S->getValueOperand()->getType();}}
-    if(!Address||M.getDataLayout().getTypeStoreSize(T).isScalable())continue;
+   auto LocalAccess=[&](Value *Address,uint64_t Size){
     int64_t Offset=0;auto *Root=GetPointerBaseWithConstantOffset(Address,Offset,M.getDataLayout());
-    if(Eligible&&Root==F.getArg(0)&&Offset>=0&&Offset<120&&bytes(T)<=120-(uint64_t)Offset)Host.insert(I);
-    if(NativeAccess(Address,bytes(T),I))Host.insert(I);
-    // Native stack objects and actual LLVM TLS objects cannot alias the guest
-    // reservation. Admit only a constant, wholly contained scalar access.
-    // A pointer loaded from such an object carries no proof for its pointee.
-    // Local globals are similarly owned by this module; ordinary imported or
-    // interposable globals, dynamic offsets and transfers remain checked.
     uint64_t Extent=0;
     if(auto *TLS=dyn_cast<IntrinsicInst>(Root))if(TLS->getIntrinsicID()==Intrinsic::threadlocal_address)Root=TLS->getArgOperand(0);
     if(auto *A=dyn_cast<AllocaInst>(Root)){
-     if(A->isStaticAlloca()&&A->getAddressSpace()==0){auto Size=A->getAllocationSize(M.getDataLayout());if(Size&&!Size->isScalable())Extent=Size->getFixedValue();}
+     if(A->isStaticAlloca()&&A->getAddressSpace()==0){auto N=A->getAllocationSize(M.getDataLayout());if(N&&!N->isScalable())Extent=N->getFixedValue();}
     }else if(auto *G=dyn_cast<GlobalVariable>(Root)){
      if(G->getAddressSpace()==0&&!G->isExternallyInitialized()&&(G->isThreadLocal()||(G->hasLocalLinkage()&&G->hasInitializer()))&&G->getValueType()->isSized()){
-      auto Size=M.getDataLayout().getTypeAllocSize(G->getValueType());if(!Size.isScalable())Extent=Size.getFixedValue();
+      auto N=M.getDataLayout().getTypeAllocSize(G->getValueType());if(!N.isScalable())Extent=N.getFixedValue();
      }
     }
-    if(Extent&&Offset>=0&&(uint64_t)Offset<Extent&&bytes(T)<=Extent-(uint64_t)Offset)Local.insert(I);
+    return Extent&&Offset>=0&&(uint64_t)Offset<Extent&&Size<=Extent-(uint64_t)Offset;
+   };
+   auto CPUAccess=[&](Value *Address,uint64_t Size,Instruction *At){
+    int64_t Offset=0;auto *Root=GetPointerBaseWithConstantOffset(Address,Offset,M.getDataLayout());
+    return (Eligible&&Root==F.getArg(0)&&Offset>=0&&Offset<120&&Size<=120-(uint64_t)Offset)||NativeAccess(Address,Size,At);
+   };
+   for(auto *I:Work){
+    if(I->getMetadata("tribes.checked.host.cpu"))report_fatal_error("Unverified CPU host metadata");
+    if(I->getMetadata("tribes.checked.host.local"))report_fatal_error("Unverified local host metadata");
+    if(I->getMetadata("tribes.checked.host.bulk"))report_fatal_error("Unverified bulk host metadata");
+    if(!CPUHost)continue;
+    Value *Address=nullptr,*Source=nullptr,*Length=nullptr;Type *T=nullptr;
+    if(auto *L=dyn_cast<LoadInst>(I)){if(L->isSimple()){Address=L->getPointerOperand();T=L->getType();}}
+    if(auto *S=dyn_cast<StoreInst>(I)){if(S->isSimple()){Address=S->getPointerOperand();T=S->getValueOperand()->getType();}}
+    if(Address&&T&&!M.getDataLayout().getTypeStoreSize(T).isScalable()){
+     if(CPUAccess(Address,bytes(T),I))Host.insert(I);
+     if(LocalAccess(Address,bytes(T)))Local.insert(I);
+     continue;
+    }
+    // Prove the entire constant-sized operation, including both copy operands.
+    // Loaded pointers, guest offsets and unknown lengths retain both brackets.
+    if(auto *M=dyn_cast<MemIntrinsic>(I)){
+     if(M->isVolatile())continue;
+     Address=M->getDest();Length=M->getLength();
+     if(auto *X=dyn_cast<MemTransferInst>(M))Source=X->getSource();
+    }else if(auto *Call=dyn_cast<CallInst>(I)){
+     auto *Target=Call->getCalledFunction();if(!Target||!Target->isDeclaration()||Target->isVarArg()||Call->isMustTailCall())continue;
+     StringRef Name=Target->getName();
+     if(Name.starts_with("\1")){Name=Name.drop_front();if(Name.starts_with("_"))Name=Name.drop_front();}
+     bool Copy=Name=="memcpy"||Name=="memmove"||Name=="__memcpy_chk"||Name=="__memmove_chk";
+     bool Set=Name=="memset"||Name=="bzero"||Name=="__memset_chk";
+     unsigned N=Name=="bzero"?2:Name.starts_with("__")?4:3;
+     if((!Copy&&!Set)||Call->arg_size()!=N)continue;
+     Address=Call->getArgOperand(0);if(Copy)Source=Call->getArgOperand(1);
+     Length=Call->getArgOperand(Name=="bzero"?1:2);
+    }
+    auto *N=dyn_cast_or_null<ConstantInt>(Length);
+    if(!Address||!N||N->getBitWidth()>64||N->isZero()||Address->getType()!=P||(Source&&Source->getType()!=P))continue;
+    uint64_t Size=N->getZExtValue();bool UsesCPU=false;
+    auto Proven=[&](Value *V){if(LocalAccess(V,Size))return true;if(CPUAccess(V,Size,I)){UsesCPU=true;return true;}return false;};
+    if(Proven(Address)&&(!Source||Proven(Source))){Bulk.insert(I);BulkCPU|=UsesCPU;}
    }
-   if(!Host.empty()){
+   if(!Host.empty()||BulkCPU){
     IRBuilder<> B(&*F.getEntryBlock().getFirstInsertionPt());
     auto Check=M.getOrInsertFunction("tribes_memory_access_host_span",B.getVoidTy(),P,I64);
     B.CreateCall(Check,{F.getArg(0),B.getInt64(Ranges?440:120)});++HostSpans;
@@ -117,6 +143,7 @@ struct GuestMemoryPass : PassInfoMixin<GuestMemoryPass> {
    // a source function/call's pure-memory, nosync or speculative attributes.
    for(auto A:{Attribute::Memory,Attribute::NoSync,Attribute::Speculatable,Attribute::WillReturn})F.removeFnAttr(A);
    for(auto *I:Work){
+    if(Bulk.contains(I)){I->setMetadata("tribes.checked.host.bulk",MDNode::get(C,{}));++HostBulk;continue;}
     if(Host.contains(I)){I->setMetadata("tribes.checked.host.cpu",MDNode::get(C,{}));++HostAccesses;continue;}
     if(Local.contains(I)){I->setMetadata("tribes.checked.host.local",MDNode::get(C,{}));++LocalAccesses;continue;}
     IRBuilder<> B(I);Value *Address=nullptr,*Length=nullptr,*Source=nullptr;unsigned Mode=0;
@@ -166,7 +193,7 @@ struct GuestMemoryPass : PassInfoMixin<GuestMemoryPass> {
   }
   M.addModuleFlag(Module::Error,"tribes.checked.memory",1);
   if(CPUHost)M.addModuleFlag(Module::Error,"tribes.checked.cpu-host",1);
-  json::Object O;O["loads"]=Loads;O["stores"]=Stores;O["atomics"]=Atomics;O["transfers"]=Transfers;O["sets"]=Sets;O["host_cpu_accesses"]=HostAccesses;O["host_cpu_spans"]=HostSpans;O["host_local_accesses"]=LocalAccesses;json::Object External;
+  json::Object O;O["loads"]=Loads;O["stores"]=Stores;O["atomics"]=Atomics;O["transfers"]=Transfers;O["sets"]=Sets;O["host_cpu_accesses"]=HostAccesses;O["host_cpu_spans"]=HostSpans;O["host_local_accesses"]=LocalAccesses;O["host_bulk_operations"]=HostBulk;json::Object External;
   for(auto &[Name,Count]:Calls)External[Name]=Count;O["calls_requiring_link_audit"]=std::move(External);
   errs()<<"TRIBES_MEMORY_PASS "<<formatv("{0}",json::Value(std::move(O)))<<"\n";
   return PreservedAnalyses::none();

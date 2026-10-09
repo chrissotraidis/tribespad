@@ -15,7 +15,20 @@ target datalayout = "e-m:o-i64:64-i128:128-n32:64-S128-Fn32"
 @imported = external global [8 x i8]
 @local = private global [8 x i8] zeroinitializer
 @tls_bytes = external thread_local global [8 x i8]
+declare ptr @memcpy(ptr,ptr,i64)
+declare void @llvm.memcpy.p0.p0.i64(ptr,ptr,i64,i1)
+declare void @llvm.memset.p0.i64(ptr,i8,i64,i1)
 declare ptr @llvm.threadlocal.address.p0(ptr)
+'''
+bulk_body='''define i32 @host_bulk(ptr %guest) {
+ %src = alloca [8 x i8]
+ %dst = alloca [8 x i8]
+ call void @llvm.memset.p0.i64(ptr %src,i8 37,i64 8,i1 false)
+ %r = call ptr @memcpy(ptr %dst,ptr %src,i64 8)
+ call void @llvm.memcpy.p0.p0.i64(ptr %guest,ptr %dst,i64 8,i1 false)
+ %v = load i32,ptr %dst
+ ret i32 %v
+}
 '''
 body='''define i32 @host_locals(ptr %guest,i32 %n) {
  %slot = alloca i32
@@ -39,14 +52,15 @@ define void @host_pointee(ptr %guest,i32 %n) {
  ret void
 }
 '''
-policy=out/'policy.json';policy.write_text(json.dumps(dict(checked_symbols=[],host_only=[],range_checked=[],memory_manager_calls=[],memory_manager_sources=[],host_intrinsics=[],checked_strings=[],checked_callbacks=[],barrier_asm_sources=[],scalar_fcntl_commands=[])))
+body+=bulk_body
+policy=out/'policy.json';policy.write_text(json.dumps(dict(checked_symbols=[],host_only=[],range_checked=['memcpy'],memory_manager_calls=[],memory_manager_sources=[],host_intrinsics=[],checked_strings=[],checked_callbacks=[],barrier_asm_sources=[],scalar_fcntl_commands=[])))
 def check(name,text,optimized=True):
  src=out/(name+'-input.ll');dst=out/(name+'.ll');src.write_text(text)
  run=subprocess.run([str(T/'opt'),'-load-pass-plugin',str(plugins[0]),'-passes=tribes-guest-memory'+('-cpu-host' if optimized else '')+',verify','-S',str(src),'-o',str(dst)],capture_output=True,text=True)
  assert run.returncode==0,run.stderr
  return dst,json.loads(next(l.split(' ',1)[1] for l in run.stderr.splitlines() if l.startswith('TRIBES_MEMORY_PASS ')))
-ir,census=check('runtime',prefix+body);assert census['host_local_accesses']==7 and census['loads']==1 and census['stores']==2,census
-_,baseline=check('baseline',prefix+body,False);assert baseline['host_local_accesses']==0 and baseline['loads']+baseline['stores']==10,baseline
+ir,census=check('runtime',prefix+body);assert census['host_bulk_operations']==2 and census['host_local_accesses']==8 and census['loads']==1 and census['stores']==2,census
+_,baseline=check('baseline',prefix+body,False);assert baseline['host_local_accesses']==0 and baseline['loads']+baseline['stores']==11,baseline
 # Include the first/last valid byte, crossing and negative ranges, dynamic
 # offsets/allocation extents, volatility, atomics and ordinary imported globals.
 variants={
@@ -69,6 +83,22 @@ for name,(address,load,admit) in variants.items():
  tail=' monotonic,align 4' if name=='atomic' else ''
  _,c=check(name,prefix+'define void @probe(i64 %offset) {\n'+address+'\n%v = '+load+',ptr %p'+tail+'\nret void\n}\n')
  assert c['host_local_accesses']==int(admit) and c['loads']==int(not admit),(name,c)
+# Both endpoints must be wholly native; crossing, loaded and guest pointers
+# cannot inherit a native object's proof. Volatile and unknown lengths remain.
+for name,address,length,volatile,admit in [
+ ('bulk-local','%p = getelementptr i8,ptr %slot,i64 0','8','false',True),
+ ('bulk-cross','%p = getelementptr i8,ptr %slot,i64 1','8','false',False),
+ ('bulk-negative','%p = getelementptr i8,ptr %slot,i64 -1','8','false',False),
+ ('bulk-guest','%p = getelementptr i8,ptr %guest,i64 0','8','false',False),
+ ('bulk-dynamic','%p = getelementptr i8,ptr %slot,i64 0','%length','false',False),
+ ('bulk-volatile','%p = getelementptr i8,ptr %slot,i64 0','8','true',False),
+]:
+ text=prefix+'define void @probe(ptr %guest,i64 %length) {\n%slot = alloca [8 x i8]\n%dst = alloca [8 x i8]\n'+address+'\ncall void @llvm.memcpy.p0.p0.i64(ptr %dst,ptr %p,i64 '+length+',i1 '+volatile+')\nret void\n}\n'
+ _,c=check(name,text);assert c['host_bulk_operations']==int(admit) and c['transfers']==int(not admit),(name,c)
+for optimized in [False,True]:
+ src=out/'forged-bulk.ll';src.write_text((prefix+bulk_body).replace('i64 8,i1 false)','i64 8,i1 false), !tribes.checked.host.bulk !0')+'\n!0 = !{}\n')
+ run=subprocess.run([str(T/'opt'),'-load-pass-plugin',str(plugins[0]),'-passes=tribes-guest-memory'+('-cpu-host' if optimized else ''),str(src),'-o',str(out/'forged-bulk.bc')],capture_output=True,text=True)
+ assert run.returncode and 'Unverified bulk host metadata' in run.stderr,run.stderr
 for mode in ['tribes-guest-memory','tribes-guest-memory-cpu-host']:
  src=out/'forged.ll';src.write_text((prefix+body).replace('%v = load i32,ptr %slot','%v = load i32,ptr %slot, !tribes.checked.host.local !0')+'\n!0 = !{}\n')
  run=subprocess.run([str(T/'opt'),'-load-pass-plugin',str(plugins[0]),'-passes='+mode,str(src),'-o',str(out/'forged.bc')],capture_output=True,text=True);assert run.returncode and 'Unverified local host metadata' in run.stderr

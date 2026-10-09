@@ -1,0 +1,123 @@
+{
+  "date": "2026-10-09",
+  "change": "The native-object policy now proves every byte of constant-sized copies and clears, including both copy operands. CPU operands require the existing runtime span proof. Unknown, crossing, volatile and guest operations retain their existing checks; forged proof metadata is rejected.",
+  "sources_sha256": {
+    "port/compiler/GuestMemoryPass.cpp": "ac56bd1984a28b52a4ff6f4ca0f9ed4ebefdfad6bc1dc8e02981e723e9743067",
+    "port/compiler/ExternalMemoryPass.cpp": "50573dc398deb00ce315a28908d82c002a1699b17a9fb400382af16d1d647053",
+    "scripts/test-host-local-checks.py": "81c3da591654f8eb5ee25081f5893042139f3eae6f9533389d7619e209fed71b",
+    "scripts/test-native-cpu-checks.py": "0e3a848a18f708f64ffaa5b24c62547afc1484dd3822a47b6f12737ec40fe1a2",
+    "tests/host_local_checks_test.c": "d6380274ea7876c4afbc6b63d16fea73488d0c24c2f71de3a801265c983aee8b"
+  },
+  "proofs": {
+    "cpu-host-checks": {
+      "passed": true,
+      "receipt_sha256": "b46ed46ae6364b66b65fdf876cdb5e8cf4769e5221ac1231eaab5c8fcc566bc3"
+    },
+    "host-local-checks": {
+      "passed": true,
+      "receipt_sha256": "af438c22f30cda10c62955555517b4be96ce0a2704aacfac35a339bbcd481e70"
+    },
+    "native-cpu-checks": {
+      "passed": true,
+      "receipt_sha256": "900b65a75a37070ca8ee49f6c9cca1876fde3fc3575bbfe4603a56788da2baaf"
+    },
+    "sse-host-locals": {
+      "passed": true,
+      "receipt_sha256": "c2ac706bcdc840e21ab0b71bfeb96291786003b1434eaf109211a839ec0d6134"
+    },
+    "x87-host-checks": {
+      "passed": true,
+      "receipt_sha256": "cd014a75483f77e544e47aefd8a61df2d2782594d8e40c12a688cbc72922a8df"
+    },
+    "sdl-io": {
+      "passed": true,
+      "receipt_sha256": "78b55503dea2cd92e35ee869a70c80a5a119d4de7261fe533a6a4941156f0ed8"
+    }
+  },
+  "builds": {
+    "simulator": {
+      "binary_sha256": "f65fca7764d95514ac726f0b08b86ea61d937992ca8b95e30017d848065bdf6a",
+      "bytes": 103659024,
+      "receipt_sha256": "39c45d6b62623dc6a580860d958ee14ce99440cd6d1c27ffe95358b6684beb19",
+      "deep_strict_adhoc_signature": true
+    },
+    "device": {
+      "binary_sha256": "e9ab6573cd723d73fddf9ef5dbab0be0a1ccbdfaa40e7fbe1986bd884bee7542",
+      "bytes": 103593008,
+      "receipt_sha256": "807709b2e3e5042fe1c98df7b2e9ef46973d93b39325139e608ed920f75381bb",
+      "deep_strict_adhoc_signature": true
+    }
+  },
+  "sse_static_operations": {
+    "native_bulk_proven": 208,
+    "transfers_before": 259,
+    "transfers_after": 97,
+    "sets_before": 67,
+    "sets_after": 21,
+    "cpu_span_checks_before": 143,
+    "cpu_span_checks_after": 179,
+    "original_oracle_cases": 94128
+  },
+  "actual_game": {
+    "pid": 67859,
+    "device": "iPad Air 11-inch M4 Simulator, iOS 26.5",
+    "offline": true,
+    "map": "Katabatic",
+    "bots": 2,
+    "touch_spawn": true,
+    "weapon_switch": true,
+    "disc_ammo": [
+      15,
+      14
+    ],
+    "own_flag_range": [
+      43.3,
+      28.9
+    ],
+    "screenshot": "ipad-native-copies-2026-10-09.png",
+    "screenshot_sha256": "48526d64a67c26df647744a485a019e48c569c5ead20f0cdb585300aed0730df"
+  },
+  "recordings": {
+    "before": {
+      "seconds": 30.102732375000002,
+      "exit": 0,
+      "output": "Note: No display specified. Defaulting to display: 1E7E3028-03E7-4057-9D8B-E555C7AA69BE (screenID: 1, name: LCD)\nRecording started\n",
+      "app_pid": 61947,
+      "scope": "Stationary player beneath remote tower; offline Katabatic two bots, audio enabled; no debugger or builds during recording.",
+      "frames": 218,
+      "video_seconds": 29.743333,
+      "presented_fps": 7.329373611222387
+    },
+    "after-observer": {
+      "seconds": 30.118606417,
+      "exit": 0,
+      "output": "Note: No display specified. Defaulting to display: 1E7E3028-03E7-4057-9D8B-E555C7AA69BE (screenID: 1, name: LCD)\nRecording started\n",
+      "app_pid": 67859,
+      "scope": "Initial stationary observer view; offline Katabatic two bots, audio enabled; no debugger or builds during recording. Different view from prior player recording; not a controlled speedup comparison.",
+      "frames": 244,
+      "video_seconds": 29.816667,
+      "presented_fps": 8.18334255803977
+    },
+    "after-player": {
+      "seconds": 30.0664515,
+      "exit": 0,
+      "output": "Note: No display specified. Defaulting to display: 1E7E3028-03E7-4057-9D8B-E555C7AA69BE (screenID: 1, name: LCD)\nRecording started\n",
+      "app_pid": 67859,
+      "scope": "Stationary player outside own base; offline Katabatic two bots, audio enabled; no debugger or builds during recording. Different spawn/view from prior player recording; not a controlled speedup comparison.",
+      "frames": 228,
+      "video_seconds": 29.795,
+      "presented_fps": 7.652290652794092
+    }
+  },
+  "profile": {
+    "before_sha256": "57673cb549a1f1c90478729b7f71b1b9accd8c282d0e1c7ea852c22ff40537ce",
+    "after_sha256": "35421eef426a52734cf02543a6cf8b29f6094067f2b6acac25e97807b3fbd0db",
+    "finding": "Checked-memory helpers remain the dominant active cost. Retained transfer checks remain hot. Separate five-second samples; differing view/state and counts do not establish a speedup."
+  },
+  "limits": [
+    "No controlled full-game speedup proven. New recordings are 8.18 FPS observer / 7.65 FPS player, below comfortable play.",
+    "Startup ran concurrently with the device build and is not benchmarked.",
+    "No physical devices or valid development signing identities found. Physical iPad/controller and iPhone acceptance remain pending.",
+    "No online joining or authentication. Existing Mac handoff bundles unchanged."
+  ]
+}
