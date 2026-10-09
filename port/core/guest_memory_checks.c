@@ -265,6 +265,11 @@ uint32_t tribes_memory_transfer_begin(void *destination,const void *source,uint6
  read_lock();if(read)require(source,size,1);if(write)require(destination,size,2);return 1;
 }
 void tribes_memory_access_end(uint32_t token){if(token>1)abort();if(token)read_unlock();}
+void tribes_memory_access_end_many(uint32_t count){
+ if(count>8)abort();if(!count)return;
+ if(count>read_depth)abort();read_depth-=count;
+ if(!read_depth&&pthread_rwlock_unlock(&guard))abort();
+}
 int tribes_memory_initialize_static(uint64_t base,const unsigned char *access,uint64_t pages){
  if(!permissions||base!=guest_base||!pages||pages>guest_size/4096||!access)return 0;
  for(uint64_t i=0;i<pages;i++)if(access[i]!=0&&access[i]!=1&&access[i]!=3)return 0;

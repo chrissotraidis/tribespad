@@ -57,7 +57,10 @@ The bundled app preserves its original warrior and video preferences between lau
 ## Current work
 
 - Improve measured runtime performance; builds already cache verified ARM64 objects
-  and avoid 179 redundant support-code compilations.
+  and avoid 179 redundant support-code compilations. Batching checked-memory
+  bookkeeping reduces the Simulator executable from 173.2 MB to 158.6 MB; the
+  [isolated benchmark](docs/validation/ipad-memory-retirement-components.json)
+  improves about 22%. That result is not a gameplay FPS measurement.
 - Fix visible rendering gaps and reduce startup/input latency in the iPad app.
 - Integrate and refine touch, controller, keyboard and mouse input in real gameplay.
 - Verify HD textures, sustained performance and physical-device behavior.

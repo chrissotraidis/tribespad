@@ -31,7 +31,15 @@ static uint64_t groupAccessBrackets(Module &M){
   SmallVector<Instruction *,128> Work;for(auto &I:BB)Work.push_back(&I);
   SmallVector<CallInst *,8> Ends;
   auto Flush=[&](Instruction *Before){
-   if(Ends.size()>1){for(auto *End:Ends)End->moveBefore(Before);Grouped+=Ends.size();}
+   if(Ends.size()>1){
+    // Each begin returns 0 for host memory or 1 for a retained guest bracket.
+    // Retire the same bounded set together, at the former last-end boundary.
+    IRBuilder<> B(Before);Value *Count=Ends.front()->getArgOperand(0);
+    for(size_t n=1;n<Ends.size();++n)Count=B.CreateAdd(Count,Ends[n]->getArgOperand(0),"tribes.end.count");
+    auto EndMany=M.getOrInsertFunction("tribes_memory_access_end_many",B.getVoidTy(),B.getInt32Ty());
+    B.CreateCall(EndMany,{Count});Grouped+=Ends.size();
+    for(auto *End:Ends)End->eraseFromParent();
+   }
    Ends.clear();
   };
   for(size_t i=0;i<Work.size();++i){

@@ -1,0 +1,262 @@
+{
+  "change": "Retire at most eight already-grouped access tokens in one call; each begin/check stays immediately before its access and no external-call, fence, atomic, volatile or control-flow boundary is crossed.",
+  "sources_sha256": {
+    "port/compiler/ExternalMemoryPass.cpp": "df3c6b71d7004a6a77b122015f0c300c158d99dec7666dd2afec049c0360473f",
+    "port/core/guest_memory_checks.c": "f4d19f22c10d6609ab442f36bbce033cd47b4f46f1eeadf3db22be142e3d90ad",
+    "port/core/guest_memory_checks.h": "147e104a90e8f741a12db86fe01fc94ec0fa4ee4cad18dd4ab033d245f19913a",
+    "tests/guest_access_groups_test.c": "aed4f616026cd7d41e9a371596a719fb64e3d9ca6883fb93fe14f74cffb8ab58",
+    "scripts/test-guest-access-groups.py": "95ed51276b85fdceb8d607e2256f88d3c17c3671a25a5aeb55530b401f13e37e"
+  },
+  "tests": {
+    "guest-access-groups": {
+      "passed": true,
+      "results": {
+        "baseline": {
+          "output": "PASS: mixed host/guest/host-only groups, nested pending writer, 4 guard faults, concurrent readers/writer; 100000 batches 0.059623 seconds",
+          "binary_sha256": "1cc2a1a4f566be578779aab0fd4a53b9a5448a1f4bfa3fc3d85b2b76404a6f30",
+          "seconds": 0.059623
+        },
+        "baseline-tsan": {
+          "output": "PASS: mixed host/guest/host-only groups, nested pending writer, 0 guard faults, concurrent readers/writer; 100000 batches 1.264340 seconds",
+          "binary_sha256": "0fda9f1545e27dc7478d506699289613510314f7c376c246100c1323ce826c05",
+          "seconds": 1.26434
+        },
+        "grouped": {
+          "output": "PASS: mixed host/guest/host-only groups, nested pending writer, 4 guard faults, concurrent readers/writer; 100000 batches 0.021800 seconds",
+          "binary_sha256": "5ff3b29381bb6516c2a92c38f143284cee12deda5312178578555fbf7e8af1d0",
+          "seconds": 0.0218
+        },
+        "grouped-tsan": {
+          "output": "PASS: mixed host/guest/host-only groups, nested pending writer, 0 guard faults, concurrent readers/writer; 100000 batches 0.506536 seconds",
+          "binary_sha256": "d753314aca5a41e09e34a50b6a83f8954e139df5f6d8f4622d08832b9ce007a1",
+          "seconds": 0.506536
+        },
+        "separate-ends": {
+          "output": "PASS: mixed host/guest/host-only groups, nested pending writer, 4 guard faults, concurrent readers/writer; 100000 batches 0.026144 seconds",
+          "binary_sha256": "9b9b1f7dfea15cd9166da54887f7461193be656332060b605df2e0aeb6b7e80c",
+          "seconds": 0.026144
+        },
+        "separate-ends-tsan": {
+          "output": "PASS: mixed host/guest/host-only groups, nested pending writer, 0 guard faults, concurrent readers/writer; 100000 batches 0.573635 seconds",
+          "binary_sha256": "b3b936b57d40b4bf2349162eb9c2049bfc1fcc5d703445b94bbfa12d56e86594",
+          "seconds": 0.573635
+        }
+      },
+      "sources_sha256": {
+        "port/compiler/ExternalMemoryPass.cpp": "df3c6b71d7004a6a77b122015f0c300c158d99dec7666dd2afec049c0360473f",
+        "tests/guest_access_groups_test.c": "aed4f616026cd7d41e9a371596a719fb64e3d9ca6883fb93fe14f74cffb8ab58",
+        "port/core/guest_memory_checks.c": "f4d19f22c10d6609ab442f36bbce033cd47b4f46f1eeadf3db22be142e3d90ad",
+        "port/core/guest_memory_checks.h": "147e104a90e8f741a12db86fe01fc94ec0fa4ee4cad18dd4ab033d245f19913a",
+        "scripts/test-guest-access-groups.py": "95ed51276b85fdceb8d607e2256f88d3c17c3671a25a5aeb55530b401f13e37e"
+      },
+      "scope": "Emitted permission checks and bounded grouping; microbenchmark is not game FPS."
+    },
+    "guest-memory-pass": {
+      "codegen": {
+        "compiler": "/opt/homebrew/Cellar/llvm@20/20.1.8/bin/llc",
+        "sha256": "f6099ef281c3637cad74fd59db3c1cae161590a99d9ddacb36c789edeef27142",
+        "flags": [
+          "-O2",
+          "-filetype=obj",
+          "-relocation-model=pic",
+          "-verify-machineinstrs",
+          "-mtriple=arm64-apple-macos12"
+        ]
+      },
+      "tsan_output": "PASS: actual pass-emitted scalar/vector/atomic/copy/move/set checks; 0 forbidden-access child faults with complete shared-memory preservation; permitted neighboring/host/zero-length accesses; nested bracket excludes pending writer; 8000 concurrent emitted write/read/copy cycles and 16000 permission publications from four writers; permission restoration",
+      "tsan_binary_sha256": "0495f599f22bca92f19d3c978968a643e8b2c1b975ca82ee89467b2924d02aca",
+      "state": "finished",
+      "pass": true,
+      "output": "PASS: actual pass-emitted scalar/vector/atomic/copy/move/set checks; 23 forbidden-access child faults with complete shared-memory preservation; permitted neighboring/host/zero-length accesses; nested bracket excludes pending writer; 8000 concurrent emitted write/read/copy cycles and 16000 permission publications from four writers; permission restoration",
+      "census": {
+        "atomics": 2,
+        "calls_requiring_link_audit": {
+          "\u0001_memmove": 1,
+          "__memcpy_chk": 1,
+          "__memmove_chk": 1,
+          "__memset_chk": 1,
+          "memmove": 1,
+          "memset": 1
+        },
+        "loads": 2,
+        "sets": 3,
+        "stores": 2,
+        "transfers": 5
+      },
+      "rejections": [
+        "duplicate",
+        "scalable",
+        "masked",
+        "vaarg"
+      ],
+      "binary_sha256": "1ff03d560e32b17c62c5b616c282193ddb473c5870e7a301d641ce903a9f0e1a",
+      "checked_ir_sha256": "0c25eb2770682595cac408ac0104625468d4db6a42c0f61aa954f76fc67a37e4",
+      "checked_object_sha256": "415bfbcf549d9834ffe6a9a7a76f51718b1b2e10c1689aad5a782c8d07338878",
+      "plugin_build_sha256": "e5487380e1dbb67943d0e5282e0246360821d21a81730be4acf69ddfd085fcf2",
+      "source_sha256": {
+        "port/core/guest_memory_checks.c": "f4d19f22c10d6609ab442f36bbce033cd47b4f46f1eeadf3db22be142e3d90ad",
+        "tests/guest_memory_checks_test.c": "8e7117d7c2aed7df7c5f3ebe825b6d8621c0cb6aebf50d3e41c0896a24404e2b",
+        "scripts/checked_codegen.py": "de021878df8a2945a88ca4fa955593db83d046af86ca49f4e53830dd7137f172",
+        "tests/fixtures/guest_memory.ll": "51ee77024b7e9cddb62792ac04c80e905301b354a9db4944ec422ea9d67f0ba6",
+        "port/core/guest_memory_checks.h": "147e104a90e8f741a12db86fe01fc94ec0fa4ee4cad18dd4ab033d245f19913a",
+        "scripts/test-guest-memory-pass.py": "a8c5b7b6e2aa41e2c5d42081f07ceda22e300c849a5e682a9373d123eb2a1aea"
+      },
+      "scope": "Compiler/runtime foundation only. Native DLL/services/library coverage and VirtualProtect integration remain unproven; not enabled in game bootstrap."
+    },
+    "external-memory-pass": {
+      "codegen": {
+        "compiler": "/opt/homebrew/Cellar/llvm@20/20.1.8/bin/llc",
+        "sha256": "f6099ef281c3637cad74fd59db3c1cae161590a99d9ddacb36c789edeef27142",
+        "flags": [
+          "-O2",
+          "-filetype=obj",
+          "-relocation-model=pic",
+          "-verify-machineinstrs",
+          "-mtriple=arm64-apple-macos12"
+        ]
+      },
+      "pass_": true,
+      "scalar_softfloat": {
+        "platform": "macos",
+        "archive_sha256": "21130ce885d35c1fe73fc1e1bf2244178167e05c6747cad5f450cc991714c746",
+        "library_sha256": "f0a5208669eb75579c0b0cc947dcf7605d41a47c828434cf3ef90baca397ed0b",
+        "headers_sha256": {
+          "ref/softfloat/SoftFloat-3e/source/include/internals.h": "e7205630a8087895388cb6c6afbc5dfe8a8c201f4eb3eab2586e91a73e36bd4e",
+          "ref/softfloat/SoftFloat-3e/source/include/opts-GCC.h": "b3766ad02173012a8b58df2c43b424dc387fbca241104b931e91365f59b36001",
+          "ref/softfloat/SoftFloat-3e/source/include/primitiveTypes.h": "ab4e4209a90b07dcc7600636dcf1c04f910ba4ff63d0eec64b0141769c16a221",
+          "ref/softfloat/SoftFloat-3e/source/include/primitives.h": "146644301372c13af893119485269d54f3d718df9ce8b1a96cb908d3b828b1ed",
+          "ref/softfloat/SoftFloat-3e/source/include/softfloat.h": "0359d1f1c5bef11bcb728b5f065655bf0f144c918692f1350d5f44e25d68acd4",
+          "ref/softfloat/SoftFloat-3e/source/include/softfloat_types.h": "d0876f30a0d3dde97dd16007dbf635d98ef8262476ab8913930548a70f140afa"
+        },
+        "adapter_sha256": "a3fa606b116168cba4ceb30d689a31f3b2c7d034a10102efa343ee3871b13e83",
+        "adapter_header_sha256": "7fbfdd7dce1d91f651b0c25f6a064865dc4c68c20bcdcf166f5015d19342d80f",
+        "build_helper_sha256": "e4207debfd2c9b83aed22de747bbefbc45906decdc657151179f68fa577e7add"
+      },
+      "output": "PASS: emitted external-call policy; registered AOT indirect target; bounded guest memcpy; host-only strlen/malloc; sixteen boundary stops including nested pointer aggregate, unregistered code and guest-pointer escape; checked strings/comparisons with terminator/page/zero-limit/unsigned-byte coverage, registered once callbacks, nullable TLS cleanup and exact scalar fcntl shapes and by-value SoftFloat binary32/64 add/sub/mul/div/sqrt and six exact by-value ext80 conversions with mismatched ABI rejection, exact ARM64 barrier admission and unknown assembly rejection, with shared guest memory unchanged",
+      "binary_sha256": "8f8b5e2b0875c2a8648f70fa3d8a46bcfd8e0a06f4c365ef41b24e428feb87b5",
+      "guarded_ir_sha256": "17d101726c5581d5990da79b3709dfdfcae3283125cec183bf2c6bb8b10b89df",
+      "policy_sha256": "a045b2286e3ae383b5d7d7289076a71c17a464fcb3a636deea0b1201d60b0ebb",
+      "plugins": {
+        "generated/tools/guest-memory-pass/GuestMemoryPass.dylib": "42d2c26a5b075bf16d0e20dedfa274f867b34803f84431c4d29dbb5682baddd8",
+        "generated/tools/external-memory-pass/ExternalMemoryPass.dylib": "54efd8ee0bfa63305cef8d3a497fa5c1dd792b2758fe910c95674067a86755af"
+      },
+      "sources_sha256": {
+        "port/core/guest_memory_checks.c": "f4d19f22c10d6609ab442f36bbce033cd47b4f46f1eeadf3db22be142e3d90ad",
+        "port/core/guest_external_checks.c": "2ecaf0cf09462d76b293ab70860c9245ae46536959e81fd2549ad7675ad63523",
+        "tests/guest_external_checks_test.c": "7d1b435d0c38377ecc27c4c2e0eb36736dbeaa233bb5d91810722582b3c2003c",
+        "scripts/checked_codegen.py": "de021878df8a2945a88ca4fa955593db83d046af86ca49f4e53830dd7137f172",
+        "tests/fixtures/guest_external.ll": "ecec7f7600d7dcc9c0ff916767594b0745f54665145950c9928083e92c83fd3a",
+        "scripts/test-external-memory-pass.py": "156179b7af091f4594332793f16cfdac6f748417760ea6f924532f5e8d9a42cc",
+        "port/core/guest_external_checks.h": "ab65320753209627402034eec28c7503a4a98fb7156a547fb7f9d396b625562c"
+      },
+      "scope": "External gate compiler/runtime fixture. Real bootstrap policy and application are not yet established."
+    },
+    "mobile-gpu-timing": {
+      "normal": {
+        "cases": 512,
+        "binary_sha256": "64c9c55c1227b87b1294010da589d765ba34effda2ad0ce2a29a579a8d7d879e"
+      },
+      "checked": {
+        "cases": 512,
+        "binary_sha256": "d31f07a74593b92ce5a876be8ce4d02bccd80bc8e93a50bc9021a9e492d02112"
+      },
+      "passed": true,
+      "blocks": {
+        "loc_10047006": [
+          "d347ba31d79c612212376d9d3822a85f320ea6a25402d7ee96d8670c26d840a7",
+          "loc_10047013"
+        ],
+        "loc_10041CD0": [
+          "eeb2922805a588d39906a7307cd8c5658649591c8d434e59bfd4a56723d7eac7",
+          "loc_10041CF6"
+        ],
+        "loc_10041E86": [
+          "9fdcdb8b0e92e514da25f525a36b9bc75f5e2d07a52cce684350b75fd146074f",
+          "loc_10041E91"
+        ],
+        "loc_1004221C": [
+          "6f80d88a246c922c44668f6483fa92a243ef6e36c2983709f40572e0ab8e4e1a",
+          "loc_100422F7"
+        ]
+      },
+      "sources_sha256": {
+        "scripts/test-mobile-gpu-timing.py": "deafb6ce394b06db39bbc4b4037989e7b7df1444264adcd109d3af4c479dfeb8",
+        "scripts/mobile_gpu_timing.py": "b14cf36c6d91b5859cf133b2829776940dbc8afee70e744e056ed38ba1bb4f4e",
+        "port/core/guest_memory_checks.c": "f4d19f22c10d6609ab442f36bbce033cd47b4f46f1eeadf3db22be142e3d90ad",
+        "port/core/guest_external_checks.c": "2ecaf0cf09462d76b293ab70860c9245ae46536959e81fd2549ad7675ad63523"
+      },
+      "scope": "Four finite mobile timing routes. Original gen/begin/end blocks compared with an isolated stdcall query boundary; mobile report path leaves pre-sample estimator state intact. No rendering or scheduling-performance acceptance."
+    },
+    "mobile-gpu-sync": {
+      "normal": {
+        "cases": 384,
+        "binary_sha256": "75a9a44722e270df1176bf694211abf34cd8280168d2a4688a62ae60309295bb"
+      },
+      "checked": {
+        "cases": 384,
+        "binary_sha256": "510165c8344b8f0da4f20cbf9319ecea739b323690bcbb40b140ec2c2c47b2ea"
+      },
+      "passed": true,
+      "checked_faults": 2,
+      "original_blocks_sha256": {
+        "loc_1001BEB1": "e6ba6c9f1cd624ab9891bd43d04de81e1b0b3201a6b0326fb2a5b7c4cc6c1500",
+        "loc_1001BEBA": "b83d999a53594a4f1dc7aeaefba1cac01ddae116a6317cc5e74090a94c8dab45",
+        "loc_1001BEC1": "a50422e5caea3eee91f9b11829f5d70293f4789f29e6a93a1c95d3d8981b238a",
+        "loc_1001BECD": "655cb5bf375381e16fde5c0adf3cb2663be6cddbd321285025d714e997a420e6",
+        "loc_1001BED9": "1705abc3c67cb34d80ccb633ef82e45bd6ac11fbd5339cf172a230af1f299715",
+        "loc_1001BEE5": "f344cc1e0c2120e774c6d445bcace436eb696f2874dc0a92b1250ee009961b5f",
+        "loc_1001BEFF": "e25a90183534e92b13e1b6a9668855ff2737b6eabbf3a27e910a722d1c2b828b"
+      },
+      "sources_sha256": {
+        "scripts/test-mobile-gpu-sync.py": "22c4677d44c3b1632c77f099df508eaca94606f9ad30e6a1215807a18f7b08b1",
+        "scripts/mobile_gpu_sync.py": "7862fb75c4cf02d7546294091cf72e5a92fc3ea943d9d3d8900e03d810158975",
+        "port/core/guest_memory_checks.c": "f4d19f22c10d6609ab442f36bbce033cd47b4f46f1eeadf3db22be142e3d90ad",
+        "port/core/guest_external_checks.c": "2ecaf0cf09462d76b293ab70860c9245ae46536959e81fd2549ad7675ad63523"
+      },
+      "scope": "Original ARB_sync branch and full CPU preservation; only five missing sync slots use actual resolver results. Provider stub isolates branch behavior; Apple native fences and checked outputs exercised separately in iPad graphics tests."
+    },
+    "code-revision-mobile": {
+      "passed": true,
+      "mobile": true,
+      "renderer_bank_entries": 18,
+      "checked_store_build_sha256": "1965f59b7d7dba4d57bc5333e08357d561207bfeef7fbcbc2a0c7ce2b7e5bb5c",
+      "binary_sha256": "838446c8e326803f1cf3a5e84330cc7b7beb645af2892b9f0670fb7b96cf26ba",
+      "sources_sha256": {
+        "tests/code_revision_test.c": "69f93df0a7e09c0869784e80b42fa86910cf802f97a81e1b7f3e61fed65fda58",
+        "port/core/guest_memory_checks.c": "f4d19f22c10d6609ab442f36bbce033cd47b4f46f1eeadf3db22be142e3d90ad",
+        "tests/published_code_store.c": "7ca5b26996fdf9d77deae7b99f0b60fec1429a6278525fecf0595928a61adddd",
+        "port/core/guest_memory_checks.h": "147e104a90e8f741a12db86fe01fc94ec0fa4ee4cad18dd4ab033d245f19913a",
+        "scripts/test-code-revision.py": "fbc199ebcfbc64661f40c5ca88e73b850e2747b59b634439a20118892be90b64"
+      },
+      "scope": "Thirty-three primary plus two independent font ordered single-owner finite code revisions, including chained overlapping preimages and last-writer final-byte validation; rejected requests preserve bytes/state and ordinary compiler-instrumented writes remain blocked before, during and after revision. The pending, platform-specific renderer and audio bank additions validate bytes, range, permissions and owner; immutable bank instructions and mutable metadata remain distinct. No engine route activation claim."
+    }
+  },
+  "microbenchmark": {
+    "seconds": {
+      "separate-ends": [
+        0.026589,
+        0.026513,
+        0.026488,
+        0.026569,
+        0.027485,
+        0.033001,
+        0.028584
+      ],
+      "grouped": [
+        0.020738,
+        0.020736,
+        0.021075,
+        0.020754,
+        0.020647,
+        0.022279,
+        0.022277
+      ]
+    },
+    "medians": {
+      "separate-ends": 0.026589,
+      "grouped": 0.020754
+    },
+    "scope": "Alternating identical 100000-batch microbenchmarks with old separate ends and new batched ends; no game FPS claim."
+  },
+  "scope": "Component correctness and isolated bookkeeping timings; no gameplay speedup established."
+}

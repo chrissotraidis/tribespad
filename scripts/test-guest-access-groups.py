@@ -17,25 +17,45 @@ lines+=['ret void','}']
 fixture=out/'input.ll';fixture.write_text('\n'.join(lines)+'\n')
 policy=out/'policy.json';policy.write_text(json.dumps(dict(checked_symbols=['revoke_page'],host_only=[],range_checked=[],memory_manager_calls=[],memory_manager_sources=[],host_intrinsics=[],checked_strings=[],checked_callbacks=[],barrier_asm_sources=[],scalar_fcntl_commands=[])))
 env=dict(os.environ,TRIBES_EXTERNAL_POLICY=str(policy));results={}
-for grouped in [False,True]:
- name='grouped' if grouped else 'baseline';ir=out/(name+'.ll')
+for name in ['baseline','grouped','separate-ends']:
+ grouped=name!='baseline';ir=out/(name+'.ll')
  cmd=[str(tools/'opt')]+[a for p in plugins for a in ['-load-pass-plugin',str(p)]]+['-passes=tribes-guest-memory'+(',tribes-external-memory' if grouped else '')+',verify','-S',str(fixture),'-o',str(ir)]
  run=subprocess.run(cmd,env=env,capture_output=True,text=True);assert not run.returncode,run.stderr
  (out/(name+'-pass.log')).write_text(run.stderr)
+ if name=='separate-ends':
+  # Reconstruct the previous implementation with identical checks and lock
+  # boundaries, changing only the batched end back into individual ends.
+  pending=[];old=[]
+  for line in ir.read_text().splitlines():
+   if 'call i32 @tribes_memory_access_begin(' in line:pending.append(line.strip().split(' = ')[0])
+   if 'call void @tribes_memory_access_end_many(' in line:
+    old.extend('  call void @tribes_memory_access_end(i32 '+t+')' for t in pending);pending=[]
+   else:
+    old.append(line)
+    if 'call void @tribes_memory_access_end(' in line:pending.remove(re.search(r'\(i32 ([^)]+)\)',line)[1])
+  assert not pending;ir.write_text('\n'.join(old)+'\n')
  # Check each begin still immediately precedes its access, and no outstanding
  # group crosses control flow, calls, fences or an unrelated memory operation.
- depth=0;maximum=0;begins=0;ends=0;previous=''
+ pending=[];sums={};maximum=0;begins=0;ends=0;previous='';batched=0
  for line in ir.read_text().splitlines():
   s=line.strip()
   if 'call i32 @tribes_memory_access_begin(' in s:
-   depth+=1;begins+=1;maximum=max(maximum,depth)
-  elif 'call void @tribes_memory_access_end(' in s:depth-=1;ends+=1;assert depth>=0
+   token=s.split(' = ')[0];pending.append(token);sums[token]=[token];begins+=1;maximum=max(maximum,len(pending))
+  elif re.match(r'%tribes.end.count[^ ]* = add i32 ',s):
+   key,args=s.split(' = add i32 ');left,right=args.split(', ');sums[key]=sums[left]+sums[right]
+  elif 'call void @tribes_memory_access_end_many(' in s:
+   tokens=sums[re.search(r'\(i32 ([^)]+)\)',s)[1]]
+   assert tokens==pending and 2<=len(tokens)<=8,(tokens,pending)
+   ends+=len(tokens);pending=[];batched+=1
+  elif 'call void @tribes_memory_access_end(' in s:
+   token=re.search(r'\(i32 ([^)]+)\)',s)[1];assert token in pending;pending.remove(token);ends+=1
   elif re.search(r'\b(load|store|atomicrmw)\b',s):
    assert '@tribes_memory_access_begin(' in previous,s
-   if 'volatile' in s or 'atomicrmw' in s:assert depth==1
-  elif re.search(r'\b(call|br|ret|fence)\b',s):assert depth==0,s
+   if 'volatile' in s or 'atomicrmw' in s:assert len(pending)==1
+  elif re.search(r'\b(call|br|ret|fence)\b',s):assert not pending,s
   previous=s
- assert depth==0 and begins==ends and maximum==(8 if grouped else 1),(depth,begins,ends,maximum)
+ assert not pending and begins==ends and maximum==(8 if grouped else 1),(pending,begins,ends,maximum)
+ assert (batched>0)==(name=='grouped')
  obj=out/(name+'.o');subprocess.run(codegen_command(tools,'arm64-apple-macos12',ir,obj),check=True)
  for tsan in [False,True]:
   exe=out/(name+('-tsan' if tsan else ''))
@@ -43,4 +63,4 @@ for grouped in [False,True]:
   subprocess.run(['clang','-O2','-pthread','-Wall','-Wextra','-Werror']+(['-fsanitize=thread'] if tsan else [])+list(map(str,sources))+[str(obj),'-o',str(exe)],check=True)
   run=subprocess.run([str(exe)]+(['concurrency-only'] if tsan else []),capture_output=True,text=True,timeout=45);assert not run.returncode and run.stdout.startswith('PASS:') and not run.stderr,(run.returncode,run.stdout,run.stderr)
   results[exe.name]=dict(output=run.stdout.strip(),binary_sha256=sha(exe),seconds=float(re.search(r'batches ([0-9.]+) seconds',run.stdout)[1]))
-(out/'result.json').write_text(json.dumps(dict(passed=True,results=results,sources_sha256={str(p.relative_to(R)):sha(p) for p in [R/'port/compiler/ExternalMemoryPass.cpp',R/'tests/guest_access_groups_test.c',pathlib.Path(__file__).resolve()]},scope='Emitted permission checks and bounded grouping; microbenchmark is not game FPS.'),indent=2)+'\n');print(json.dumps(results,indent=2))
+(out/'result.json').write_text(json.dumps(dict(passed=True,results=results,sources_sha256={str(p.relative_to(R)):sha(p) for p in [R/'port/compiler/ExternalMemoryPass.cpp',R/'tests/guest_access_groups_test.c',R/'port/core/guest_memory_checks.c',R/'port/core/guest_memory_checks.h',pathlib.Path(__file__).resolve()]},scope='Emitted permission checks and bounded grouping; microbenchmark is not game FPS.'),indent=2)+'\n');print(json.dumps(results,indent=2))

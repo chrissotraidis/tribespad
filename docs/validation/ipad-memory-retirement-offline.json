@@ -1,0 +1,141 @@
+{
+  "binary_sha256": "586560831d067e2d612d998125497452463982f4e267e97be83f9ae566476fbe",
+  "pid": 56792,
+  "platform": "iPad Air 11-inch (M4), iOS 26.5 Simulator",
+  "renderer": "ANGLE Metal through GL4ES",
+  "offline_map": "Katabatic",
+  "bots": [
+    "Simrionic",
+    "Terrapinio"
+  ],
+  "checks": {
+    "original_menus": true,
+    "warrior_model": true,
+    "map": true,
+    "touch_spawn": true,
+    "touch_move": true,
+    "touch_look": true,
+    "touch_weapon": true,
+    "disc_ammo_before": 15,
+    "disc_ammo_after": 14,
+    "touch_jet_height_and_energy": true,
+    "energy_recovery_after_release": true,
+    "interior_floor_visible": true
+  },
+  "first_world_observed_seconds": 727,
+  "load_observations": {
+    "start_game_unix": 1791539186.41948,
+    "observations": [
+      {
+        "elapsed_seconds": 216,
+        "stage": "datablocks",
+        "loaded": 268,
+        "total": 1482
+      },
+      {
+        "elapsed_seconds": 326,
+        "stage": "datablocks",
+        "loaded": 356,
+        "total": 1482
+      },
+      {
+        "elapsed_seconds": 428,
+        "stage": "datablocks",
+        "loaded": 663,
+        "total": 1482
+      },
+      {
+        "elapsed_seconds": 522,
+        "stage": "datablocks",
+        "loaded": 968,
+        "total": 1482
+      },
+      {
+        "elapsed_seconds": 625,
+        "stage": "objects",
+        "loaded": 114,
+        "total": 205
+      }
+    ],
+    "timing_limit": "Concurrent physical-device compilation; not a controlled baseline comparison."
+  },
+  "executable_bytes": {
+    "before": 173207584,
+    "after": 158557552
+  },
+  "performance": {
+    "console_fps_real": 20.8221,
+    "video": {
+      "frames": [
+        {
+          "best_effort_timestamp_time": "0.000000",
+          "side_data_list": [
+            {}
+          ]
+        },
+        {
+          "best_effort_timestamp_time": "0.108333"
+        },
+        {
+          "best_effort_timestamp_time": "1.951667"
+        },
+        {
+          "best_effort_timestamp_time": "1.960000"
+        },
+        {
+          "best_effort_timestamp_time": "3.008333"
+        },
+        {
+          "best_effort_timestamp_time": "4.056667"
+        },
+        {
+          "best_effort_timestamp_time": "5.126667"
+        },
+        {
+          "best_effort_timestamp_time": "6.155000"
+        },
+        {
+          "best_effort_timestamp_time": "8.080000"
+        },
+        {
+          "best_effort_timestamp_time": "9.240000"
+        },
+        {
+          "best_effort_timestamp_time": "9.241667"
+        },
+        {
+          "best_effort_timestamp_time": "10.373333"
+        }
+      ],
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "width": 1640,
+          "height": 2360,
+          "avg_frame_rate": "800/767",
+          "duration": "10.511667",
+          "nb_frames": "12"
+        }
+      ]
+    },
+    "video_sha256": "a3071f0c137586140a967977e89a101e2571b9e34661fdf9183134f60a65ec15",
+    "input": "Eight-second continuous native drag in Look pad, plus two-second settle.",
+    "limit": "Only 12 recorded frames over 10.511667 seconds. Console counter is not a reliable display-frame rate. Device compilation was active; this is not a controlled baseline comparison or a physical-device measurement."
+  },
+  "screenshots_sha256": {
+    "docs/validation/ipad-retirement-spawn-2026-10-09.png": "a6ae5cf229f15cbe9a5b319cc55c7c9589583833f38675b712f54856dfa80ad3",
+    "docs/validation/ipad-retirement-move-2026-10-09.png": "4b333725212bc2bd6234f9128f399d1f77710c0e29eed3edfa4e4374cbc61af6",
+    "docs/validation/ipad-retirement-fire-look-2026-10-09.png": "2fbcd0c26b66d0c57faec11cfa49957b4756471b39ac5fff0a2258ea2479f1fc",
+    "docs/validation/ipad-retirement-jet-2026-10-09.png": "d6552a5cdba4efa142a4c5ee8fb3a0947fdc2e979bc5f18a3a0d712794942151",
+    "docs/validation/ipad-retirement-gameplay-2026-10-09.png": "aba088bfd291cc73e94fd25a6fa2caa44925d7e6877289781602fc56c1da5fd8",
+    "docs/validation/ipad-retirement-fps-console-2026-10-09.png": "f31d55c37a9416d7c315a14d48ebf04789dbfe9f0e2bf707e13b872a90892c89",
+    "docs/validation/ipad-retirement-world-2026-10-09.png": "962ac5e44f0809a95c6e84b0ce62e41f901de06b27c991061e63289c09b98bd9"
+  },
+  "remaining": [
+    "Poor visible responsiveness; no demonstrated gameplay speedup.",
+    "Known mountain gap remains.",
+    "Device build compiling at receipt creation; physical iPad execution unverified.",
+    "No online join or authentication."
+  ]
+}
