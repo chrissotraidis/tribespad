@@ -1,0 +1,117 @@
+{
+  "state": "built",
+  "platform": "simulator",
+  "cpu_host_checks": true,
+  "bundled_assets": true,
+  "entitlements_sha256": null,
+  "binary_sha256": "f406e9c6ea03a5947e539d328c39fb299b43075069aa2071b3eda1dbc521cfe1",
+  "prepared_sha256": "2213042be59d1db3645bbc69d19794fdbab8d99144981d16facba19f9d17a221",
+  "support_sha256": "10ef3aae2889a4b9e1f7a20ba868427b54ba2c5d23b38190c0f63a723a8b2c9b",
+  "guarded_sha256": "358404f4a035d4bb23f722c1ce183a5149ce87a0425530b8fc37df9c0db336f2",
+  "gl4es": {
+    "url": "https://github.com/ptitSeb/gl4es.git",
+    "commit": "ec16bedd8819c475326f4f1a3063772c6d986e06",
+    "platform": "simulator",
+    "configure": [
+      "cmake",
+      "-S",
+      "/Users/chrissotraidis/GitHub/tribespad/generated/gl4es/source",
+      "-B",
+      "/Users/chrissotraidis/GitHub/tribespad/generated/gl4es/simulator/apple-build",
+      "-DCMAKE_SYSTEM_NAME=iOS",
+      "-DCMAKE_OSX_SYSROOT=iphonesimulator",
+      "-DCMAKE_OSX_ARCHITECTURES=arm64",
+      "-DCMAKE_OSX_DEPLOYMENT_TARGET=16.0",
+      "-DCMAKE_BUILD_TYPE=Release",
+      "-DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE=/Users/chrissotraidis/GitHub/tribespad/generated/gl4es/simulator/lib",
+      "-DNOX11=ON",
+      "-DNOEGL=ON",
+      "-DSTATICLIB=ON",
+      "-DNO_LOADER=ON",
+      "-DNO_INIT_CONSTRUCTOR=ON",
+      "-DDEFAULT_ES=2"
+    ],
+    "private_patch_sha256": "8190f2cef1860c7a67155d30aab5682fc218232b7fa78f366883597c5a1b2e70",
+    "client_texture_query_patch_sha256": "bbb2d8979653e84415eeb20f8b7b49d3a41f2fbabee8e1d5b92e47af18ff91a4",
+    "library_sha256": "8b9589150453395b9bf8b291f1a777d6b1cd577613e5678a4fedb5057870289b",
+    "execution_tested": false
+  },
+  "angle": {
+    "distributor": "https://github.com/jeremyfa/build-angle",
+    "url": "https://github.com/jeremyfa/build-angle/releases/download/angle-d2e5e48/angle-ios-universal.zip",
+    "archive_sha256": "1bbd5140d70de689f21f520581192a375d94d81d43844474c24623d545f6f2d2",
+    "reported_source_commit": "d2e5e488da0c6215f8276e5b8d992a4a6ec20c32",
+    "platform": "simulator",
+    "frameworks": {
+      "ref/angle-prebuilt/ios/libEGL.xcframework/ios-arm64_x86_64-simulator/libEGL.framework": "f131851a3b162176a694faa0a054d91135208315f1566c732a71dcdf6d22a5a6",
+      "ref/angle-prebuilt/ios/libGLESv2.xcframework/ios-arm64_x86_64-simulator/libGLESv2.framework": "860f01c6e5b51d4f246e05bd42ab97ab41a23db9bbe12f9aff7e2bcc8fb71992"
+    }
+  },
+  "openal": {
+    "state": "built",
+    "platform": "simulator",
+    "revision": "dc7d7054a5b4f3bec1dc23a42fd616a0847af948",
+    "library": "generated/openal-soft/simulator/libopenal.a",
+    "library_sha256": "fce880ef18cd430484e6691443b22055830981cb287411f00c857a5dc56f5183",
+    "architecture": "arm64",
+    "sdk": "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.5.sdk",
+    "configure": [
+      "cmake",
+      "-S",
+      "/Users/chrissotraidis/GitHub/tribespad/ref/openal-soft",
+      "-B",
+      "/Users/chrissotraidis/GitHub/tribespad/generated/openal-soft/simulator",
+      "-G",
+      "Ninja",
+      "-DCMAKE_BUILD_TYPE=Release",
+      "-DCMAKE_OSX_ARCHITECTURES=arm64",
+      "-DCMAKE_OSX_DEPLOYMENT_TARGET=16.0",
+      "-DCMAKE_OSX_SYSROOT=/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.5.sdk",
+      "-DLIBTYPE=STATIC",
+      "-DALSOFT_UTILS=OFF",
+      "-DALSOFT_EXAMPLES=OFF",
+      "-DALSOFT_TESTS=OFF",
+      "-DALSOFT_INSTALL=OFF",
+      "-DALSOFT_REQUIRE_COREAUDIO=ON",
+      "-DCMAKE_SYSTEM_NAME=iOS",
+      "-DALSOFT_BACKEND_PIPEWIRE=OFF",
+      "-DALSOFT_BACKEND_PULSEAUDIO=OFF",
+      "-DALSOFT_BACKEND_JACK=OFF",
+      "-DALSOFT_BACKEND_PORTAUDIO=OFF",
+      "-DALSOFT_BACKEND_SDL2=OFF",
+      "-DALSOFT_BACKEND_SDL3=OFF",
+      "-DALSOFT_BACKEND_WAVE=OFF",
+      "-DALSOFT_BACKEND_OPENSL=OFF",
+      "-DALSOFT_BACKEND_OBOE=OFF"
+    ],
+    "scope": "Native static mixer with required CoreAudio backend. Build only; original game integration and Apple platform acceptance remain separate."
+  },
+  "arguments": null,
+  "mobile_hooks_sha256": "db0c90563c702c5bc1f4e0a90b7e88266eace2410cde6e408f7f6a12489e606a",
+  "mobile_gpu_timing": {
+    "available": false,
+    "original_blocks": {
+      "loc_10047006": [
+        "d347ba31d79c612212376d9d3822a85f320ea6a25402d7ee96d8670c26d840a7",
+        "loc_10047013"
+      ],
+      "loc_10041CD0": [
+        "eeb2922805a588d39906a7307cd8c5658649591c8d434e59bfd4a56723d7eac7",
+        "loc_10041CF6"
+      ],
+      "loc_10041E86": [
+        "9fdcdb8b0e92e514da25f525a36b9bc75f5e2d07a52cce684350b75fd146074f",
+        "loc_10041E91"
+      ],
+      "loc_1004221C": [
+        "6f80d88a246c922c44668f6483fa92a243ef6e36c2983709f40572e0ab8e4e1a",
+        "loc_100422F7"
+      ]
+    },
+    "test_sha256": "99d305afb4c3ccce6b9d1b9bc15917fc7c721d589c6cf220bd53c9e366337817",
+    "translated_sha256": "915812ea19fdb04f5c63b5ff40fb1fa14c443c95dbc5b3bc560d2476693c7856"
+  },
+  "scope": "Full checked engine linked for simulator. Device builds need development signing. Build is not rendering or gameplay acceptance.",
+  "strict_signature_verified": true,
+  "executable_bytes": 104524880
+}

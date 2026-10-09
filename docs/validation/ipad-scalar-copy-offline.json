@@ -1,0 +1,174 @@
+{
+  "binary_sha256": "f406e9c6ea03a5947e539d328c39fb299b43075069aa2071b3eda1dbc521cfe1",
+  "source_sha256": "a06483adfaa4aca6ac19e83273b97df48bcc5c3f2aa52bb07101ce755de48793",
+  "pid": 72516,
+  "platform": "iPad Air 11-inch (M4), iOS 26.5 Simulator",
+  "renderer": "ANGLE Metal through GL4ES",
+  "offline_map": "Katabatic",
+  "configured_bots": 2,
+  "load": {
+    "start_game_unix": 1791544559.579137,
+    "map": "Katabatic",
+    "bots": 2,
+    "concurrent_build": false,
+    "first_world_observed_seconds": 455,
+    "observations": [
+      {
+        "seconds": 150,
+        "datablocks": 268
+      },
+      {
+        "seconds": 236,
+        "datablocks": 609
+      },
+      {
+        "seconds": 330,
+        "objects": 1
+      },
+      {
+        "seconds": 399,
+        "objects": 205
+      }
+    ]
+  },
+  "checks": {
+    "original_menus": true,
+    "saved_profile_restored": true,
+    "offline_world": true,
+    "touch_spawn": true,
+    "touch_move": true,
+    "touch_look": true,
+    "touch_weapon": true,
+    "disc_ammo_before": 15,
+    "disc_ammo_after": 14,
+    "touch_jet_height_and_energy": true,
+    "energy_recovery_after_release": true
+  },
+  "performance": {
+    "recording": {
+      "frames": [
+        {
+          "best_effort_timestamp_time": "0.000000",
+          "side_data_list": [
+            {}
+          ]
+        },
+        {
+          "best_effort_timestamp_time": "1.068333"
+        },
+        {
+          "best_effort_timestamp_time": "1.070000"
+        },
+        {
+          "best_effort_timestamp_time": "2.165000"
+        },
+        {
+          "best_effort_timestamp_time": "2.168333"
+        },
+        {
+          "best_effort_timestamp_time": "3.213333"
+        },
+        {
+          "best_effort_timestamp_time": "4.750000"
+        },
+        {
+          "best_effort_timestamp_time": "6.336667"
+        },
+        {
+          "best_effort_timestamp_time": "9.240000"
+        },
+        {
+          "best_effort_timestamp_time": "9.246667"
+        }
+      ],
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "width": 1640,
+          "height": 2360,
+          "avg_frame_rate": "375/347",
+          "duration": "9.253333",
+          "nb_frames": "10"
+        }
+      ],
+      "input_start_unix": 1791545068.8812091,
+      "input_end_unix": 1791545077.3934221,
+      "input": "Eight-second native Look drag, followed by two-second settle; no debugger or compiler active."
+    },
+    "video_sha256": "052a72e45b62b5a25f7b22f761af1f9b4e4190995396d390b56be772c3e33e2b",
+    "sample_sha256": "c4ae27aa4a64f294da10e4fdcf67165c18de6eeef5922f6f0ad1c96a75aa1138",
+    "profile": {
+      "access_begin_parent_samples": [
+        [
+          "tb_sse_arithmetic",
+          117
+        ],
+        [
+          "tb_sse_scalar",
+          48
+        ],
+        [
+          "load32",
+          27
+        ],
+        [
+          "tribes_lookup",
+          17
+        ],
+        [
+          "push",
+          15
+        ],
+        [
+          "tb_sse_scalarmem",
+          14
+        ],
+        [
+          "loc_100DA880",
+          9
+        ],
+        [
+          "enter_engine",
+          8
+        ],
+        [
+          "tb_bo_arithmetic",
+          8
+        ],
+        [
+          "arithmetic",
+          8
+        ],
+        [
+          "tribes_memory_checked_strncmp",
+          5
+        ],
+        [
+          "x87_fld_float",
+          5
+        ],
+        [
+          "tribes_dispatch",
+          4
+        ],
+        [
+          "enter",
+          4
+        ],
+        [
+          "loc_5E8540",
+          4
+        ]
+      ]
+    },
+    "interpretation": "Ten recorded display frames over 9.253 seconds. Still far too slow. Different views and bot states prevent a controlled comparison with the prior nine-frame recording."
+  },
+  "limitations": [
+    "Visible distant terrain gap remains",
+    "Load and input latency remain unacceptable",
+    "Physical iPad execution unverified"
+  ],
+  "online_joined": false,
+  "authentication_submitted": false
+}

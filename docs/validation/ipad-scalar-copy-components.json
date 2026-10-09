@@ -1,0 +1,32 @@
+{
+  "state": "finished",
+  "pass": true,
+  "target": "arm64-apple-macos12",
+  "sources_sha256": {
+    "scripts/patches/srw-tribes.patch": "e9b851685343923f498db85de706671c379270cabf9370f2bf3b396344409385",
+    "port/llasm-support/tribes_sse.c": "a06483adfaa4aca6ac19e83273b97df48bcc5c3f2aa52bb07101ce755de48793",
+    "port/llasm-support/tribes_sse.h": "efb00007e337dc4c4668e59a517d30255425cb60939632045e307e351cf2e5b8",
+    "port/llasm-support/tribes_sse.llinc": "8e1285e1bfd92a895221a6cdf6fa2a6be816ef90330e25c827eba10576eb7b74",
+    "port/llasm-support/llasm_cpu.h": "8c3cd17ee706cd3768d793c21d4f553b981cb45d3845dd9a93793d16f1bcc356",
+    "tests/sse_lowering_test.c": "2c66c03ed503f9af7bdef220abc2ac60c2169c5e0dde7fe1f0c36f594bafb940",
+    "scripts/test-sse-move-lowering.py": "8937457ecda4fed554c6b9d3608de29a95f8b5b70e5241a4f461d7e54f4eb8ef",
+    "tests/sse_fp_oracle.c": "63867ac8f8130abb878b375e05c511b079f7c3266c2c2ed3fe17d043723ca0bd"
+  },
+  "scalar_enabled": true,
+  "cases": 94128,
+  "runs": [
+    {
+      "mode": "normal",
+      "pass": true,
+      "output": "PASS: 94128 x86-oracle cases execute actual AOT legacy SIMD bodies; full CPU/vector/MXCSR/x87/stack and guarded-memory comparison, eight independent native threads",
+      "binary_sha256": "c59a56c4dd1185981dad3beec3367d272ccf861b2f4c64ad082ecaede0132cd2"
+    },
+    {
+      "mode": "tsan",
+      "pass": true,
+      "output": "PASS: 94128 x86-oracle cases execute actual AOT legacy SIMD bodies; full CPU/vector/MXCSR/x87/stack and guarded-memory comparison, eight independent native threads",
+      "binary_sha256": "157b557108773cc2be150331e0539c592f561ce68ed420f12489c7cd67236fd0"
+    }
+  ],
+  "scope": "Actual SRW-emitted legacy SIMD bodies from isolated original-byte/synthetic operand fixtures, compiled ahead of time to native ARM64. Full registers/flags/XMM/MXCSR/x87/stack and memory checks on independent threads. No complete QoL lift/initializer, VEX, patch publication, rendering or game-session claim"
+}

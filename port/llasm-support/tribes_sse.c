@@ -321,13 +321,25 @@ void tb_sse_pd2psmem(CPU,unsigned dest,uint32_t address) {
 static void scalar(CPU,unsigned op,unsigned char *dst,const unsigned char *source) {
     unsigned n=op>=TB_SSE_MUL32?4:8;
     uint64_t a=0,b=0,result;uint32_t raised;
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+    /* Fixed-width copies preserve unaligned operands and let the checked
+       build validate one scalar access instead of a loop of byte accesses. */
+    if(n==4){uint32_t left,right;memcpy(&left,dst,4);memcpy(&right,source,4);a=left;b=right;}
+    else {memcpy(&a,dst,8);memcpy(&b,source,8);}
+#else
     for(unsigned i=0;i<n;i++){a|=(uint64_t)dst[i]<<(8*i);b|=(uint64_t)source[i]<<(8*i);}
+#endif
     if(!tb_sse_arithmetic(op,a,b,cpu->_mxcsr,&result,&raised))abort();
     cpu->_mxcsr|=raised;
     /* Preserve destination and upper scalar lanes at an unserviced #XM.
        Precise unmasked exception delivery/priority is a separate contract. */
     if(raised&~(cpu->_mxcsr>>7))abort();
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+    if(n==4){uint32_t value=(uint32_t)result;memcpy(dst,&value,4);}
+    else memcpy(dst,&result,8);
+#else
     for(unsigned i=0;i<n;i++)dst[i]=(unsigned char)(result>>(8*i));
+#endif
 }
 void tb_sse_scalar(CPU,unsigned op,unsigned dest,unsigned source) {
     if(op>TB_SSE_MUL32&&op!=TB_SSE_ADD32&&op!=TB_SSE_DIV32&&op!=TB_SSE_SUB32)abort();

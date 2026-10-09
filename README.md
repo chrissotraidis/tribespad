@@ -97,7 +97,7 @@ export SDKROOT="$(xcrun --sdk iphonesimulator --show-sdk-path)"
 Its first build downloads the verified iOS frameworks; subsequent builds reuse
 them. Omitting the flag selects the earlier EAGL backend.
 
-The smaller validated Simulator build also uses `--cpu-host-checks`. This optional
+The smaller validated Simulator and device builds also use `--cpu-host-checks`. This optional
 mode requires a current passing run of `scripts/test-cpu-host-checks.py`; it keeps
 guest-memory checks and validates the native register span once per translated block.
 
@@ -116,8 +116,8 @@ export SDKROOT="$(xcrun --sdk iphoneos --show-sdk-path)"
 ```
 
 The device app bundles game data and creates a writable profile in Application
-Support on first launch. It still needs Apple development signing and physical-iPad
-validation; this is not an installable release. Use `--bundle-assets` to exercise
+Support on first launch. The optimized device executable is 104.5 MB and passes ad-hoc signature verification.
+It still needs Apple development signing and physical-iPad validation; this is not an installable release. Use `--bundle-assets` to exercise
 that same storage layout in the Simulator. Default Simulator builds use workspace
 assets for faster iteration. The separate Apple controls diagnostic does not contain
 the full game.
