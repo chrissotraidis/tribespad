@@ -1,0 +1,145 @@
+{
+  "date": "2026-10-09",
+  "scope": "Diagnostic isolation, not a production renderer fix or playable acceptance.",
+  "pid": 31207,
+  "executable_sha256": "3d35f92c40dcc5a915903b274568383dff22782055ff8798354668a3b9f09b5c",
+  "scene": "Offline Katabatic, respawned interior; native original draw mode TRIANGLES/count168/type UNSIGNED_INT. Selected triangle67/66/68.",
+  "pixel_coordinate": {
+    "x": 200,
+    "y": 1400,
+    "origin": "top-left",
+    "framebuffer": [
+      2360,
+      1640
+    ]
+  },
+  "native_program": 52,
+  "shaders": [
+    53,
+    54
+  ],
+  "observations": [
+    {
+      "probe": "floor-native-blend-disabled",
+      "pixel": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "framebuffer_sha256": "815b28f23dfcd2f0ec5e7f5895679516c9b20277ce2df922caf3e6d032d471f1"
+    },
+    {
+      "probe": "floor-native-depth-disabled",
+      "pixel": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "framebuffer_sha256": "3c96786d068568cf3e1e05fe30d3897c878bfae2cbd6efadc0e8d61b637d3366"
+    },
+    {
+      "probe": "floor-native-selected",
+      "pixel": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "framebuffer_sha256": "3c96786d068568cf3e1e05fe30d3897c878bfae2cbd6efadc0e8d61b637d3366"
+    },
+    {
+      "probe": "floor-only-fog-off-fresh",
+      "pixel": [
+        42,
+        44,
+        31,
+        255
+      ],
+      "framebuffer_sha256": "8dfebf9970930d10b39642c452f4e55bdfe8981f32bdbdc443ed4477034e5e6b"
+    },
+    {
+      "probe": "floor-native-constant-fog",
+      "pixel": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "framebuffer_sha256": "6ebcb0ab50ad08a0a4cdd29f8e4ffafe2f20268f3d088f3c1bd8629a06256ef6"
+    },
+    {
+      "probe": "floor-cloned-native-program",
+      "pixel": [
+        44,
+        45,
+        33,
+        255
+      ],
+      "framebuffer_sha256": "8252e42794219856e131835e99561a284b992574634cd6809097c556ed9747ef"
+    },
+    {
+      "probe": "floor-refreshed-native-uniforms",
+      "pixel": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "framebuffer_sha256": "3c96786d068568cf3e1e05fe30d3897c878bfae2cbd6efadc0e8d61b637d3366"
+    },
+    {
+      "probe": "floor-relinked-native-shaders",
+      "pixel": [
+        44,
+        45,
+        33,
+        255
+      ],
+      "framebuffer_sha256": "9100077b9b0f116832700a898ece71d864639ff09997b876e25ed9094139786e"
+    }
+  ],
+  "native_component": {
+    "cases": [
+      {
+        "coverage_difference": 0,
+        "passed": true,
+        "reference_pixels": 177,
+        "fog_pixels": 177,
+        "width": 64,
+        "height": 64
+      },
+      {
+        "coverage_difference": 0,
+        "passed": true,
+        "reference_pixels": 167757,
+        "fog_pixels": 167757,
+        "width": 2360,
+        "height": 1640
+      }
+    ],
+    "passed": true,
+    "renderer": "Apple Software Renderer",
+    "simulator_udid": "F05D2D40-0A01-47C9-9BD7-0C0E19F7512C",
+    "source_sha256": "dc63a1741437cceb0f4429bb6d1a4f9601895e906fca4acd6896335c4c6828f1",
+    "fixture_sha256": "cafe5a6d093753c78cb0cdad1df336e33f84ea2c7cef7a87605583a686869844",
+    "scope": "Native GLES component only. No original engine or GL4ES executes in this probe."
+  },
+  "findings": [
+    "Native depth or blend disable alone, a constant fog coordinate, and reuploading all existing uniform values do not fill the pixel.",
+    "Disabling only fog through GL4ES and redrawing the selected triangle fills the fresh-frame gap; earlier multi-state diagnostics did not isolate this.",
+    "A new native program linked from the exact shader sources, with copied uniforms and the same attributes/textures/depth/blend, fills the pixel.",
+    "A new program linked using the existing compiled shader objects53/54 also fills the pixel. New shader compilation is not required for that diagnostic.",
+    "The native component reproduces both exact shader sources and selected geometry, with two constant textures, and has identical nonzero coverage with and without fog at64x64 and2360x1640. It does not reproduce the live defect.",
+    "Native glGetError returned0 after the original draw. All eight active native uniforms and five active attributes match the captured shader interfaces."
+  ],
+  "limitations": [
+    "Root cause remains unproven: investigate original program creation/reuse rather than disabling original fog or relinking every draw.",
+    "The component omits real textures, the full draw, depth/blend and game state history.",
+    "Diagnostic program109 was temporary, its copied values came from original program52, and original program binding was restored before deletion.",
+    "All temporary native enables/current attributes restored; debugger detached; PID31207 resumed. No production code or guest memory modified.",
+    "The observer mountain gap predates the later blended pass and may have a separate cause.",
+    "No controlled frame-rate comparison or physical-device execution."
+  ]
+}

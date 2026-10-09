@@ -1,0 +1,146 @@
+{
+  "provenance": "PID31207, original offline Katabatic floor draw 0055; GL4ES ec16bedd8819c475326f4f1a3063772c6d986e06 generated shaders. Native input and uniform values captured before OpenGLES glDrawElements.",
+  "mvp": [
+    -0.1361139714717865,
+    0.0,
+    0.9808257222175598,
+    0.9806296825408936,
+    -0.6814544796943665,
+    0.0,
+    -0.1959104984998703,
+    -0.19587133824825287,
+    0.0,
+    0.9999999403953552,
+    0.0,
+    0.0,
+    3.2865960597991943,
+    1.3665541410446167,
+    4.592967510223389,
+    4.692039489746094
+  ],
+  "attributes": [
+    {
+      "slot": 0,
+      "size": 3,
+      "type": 5126,
+      "stride": 0,
+      "values": [
+        [
+          -0.5,
+          14.0,
+          -5.0
+        ],
+        [
+          6.5,
+          8.5,
+          -5.0
+        ],
+        [
+          -0.5,
+          8.5,
+          -5.0
+        ]
+      ]
+    },
+    {
+      "slot": 5,
+      "size": 1,
+      "type": 5126,
+      "stride": 0,
+      "values": [
+        [
+          0.01056634820997715
+        ],
+        [
+          0.023450518026947975
+        ],
+        [
+          0.008191447705030441
+        ]
+      ]
+    },
+    {
+      "slot": 8,
+      "size": 2,
+      "type": 5126,
+      "stride": 0,
+      "values": [
+        [
+          0.685546875,
+          0.39453125
+        ],
+        [
+          0.712890625,
+          0.373046875
+        ],
+        [
+          0.685546875,
+          0.373046875
+        ]
+      ]
+    },
+    {
+      "slot": 9,
+      "size": 2,
+      "type": 5126,
+      "stride": 0,
+      "values": [
+        [
+          -0.25,
+          -7.0
+        ],
+        [
+          3.25,
+          -4.25
+        ],
+        [
+          -0.25,
+          -4.25
+        ]
+      ]
+    }
+  ],
+  "fog": {
+    "program": 52,
+    "color": [
+      0.6499999761581421,
+      0.6499999761581421,
+      0.699999988079071,
+      1.0
+    ],
+    "density": [
+      1.0
+    ],
+    "start": [
+      0.0
+    ],
+    "end": [
+      1.0
+    ],
+    "scale": [
+      1.0
+    ],
+    "location": 5,
+    "attribute": {
+      "enabled": 1,
+      "size": 1,
+      "stride": 4,
+      "type": 5126,
+      "buffer": 0
+    },
+    "pointer": 4789907456,
+    "vertices": [
+      [
+        0.01056634820997715
+      ],
+      [
+        0.023450518026947975
+      ],
+      [
+        0.008191447705030441
+      ]
+    ]
+  },
+  "vertex_shader": "#version 100\n#extension GL_EXT_shader_non_constant_global_initializers : enable\nprecision mediump float;\n#define GL4ES\nattribute highp vec4 _gl4es_Vertex;\nattribute lowp vec4 _gl4es_Color;\nattribute highp vec4 _gl4es_MultiTexCoord0;\nattribute highp vec4 _gl4es_MultiTexCoord1;\nattribute highp float _gl4es_FogCoord;\nuniform highp mat4 _gl4es_ModelViewProjectionMatrix;\nprecision mediump int;\n// FPE_Shader generated\nvarying vec4 Color;\nvarying highp float FogSrc;\nvarying highp vec4 _gl4es_TexCoord_0;\nvarying highp vec4 _gl4es_TexCoord_1;\n\nvoid main() {\ngl_Position = _gl4es_ModelViewProjectionMatrix * _gl4es_Vertex;\nColor = _gl4es_Color;\n_gl4es_TexCoord_0 = _gl4es_MultiTexCoord0.stpq;\n_gl4es_TexCoord_1 = _gl4es_MultiTexCoord1.stpq;\nFogSrc = _gl4es_FogCoord;\n}\n",
+  "fragment_shader": "#version 100\n#extension GL_EXT_shader_non_constant_global_initializers : enable\nprecision mediump float;\n#define GL4ES\nstruct _gl4es_FogParameters {\n    lowp vec4 color;\n    mediump float density;\n    highp   float start;\n    highp   float end;\n    highp   float scale;\n};\nuniform _gl4es_FogParameters _gl4es_Fog;\nprecision mediump int;\n// FPE_Shader generated\nvarying vec4 Color;\nvarying highp float FogSrc;\nvarying highp vec4 _gl4es_TexCoord_0;\nuniform sampler2D _gl4es_TexSampler_0;\nvarying highp vec4 _gl4es_TexCoord_1;\nuniform sampler2D _gl4es_TexSampler_1;\nvoid main() {\nvec4 fColor = Color;\nvec4 texColor0 = texture2DProj(_gl4es_TexSampler_0, _gl4es_TexCoord_0);\nvec4 texColor1 = texture2DProj(_gl4es_TexSampler_1, _gl4es_TexCoord_1);\nfColor.rgb = texColor0.rgb;\nfColor.rgb *= texColor1.rgb;\nhighp float fog_c = FogSrc;\nhighp float FogF = clamp((_gl4es_Fog.end - fog_c) * _gl4es_Fog.scale, 0., 1.);\nfColor.rgb = mix(_gl4es_Fog.color.rgb, fColor.rgb, FogF);\ngl_FragColor = fColor;\n}\n"
+}
