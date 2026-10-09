@@ -78,5 +78,21 @@
     "guest_base": false,
     "cpu_argument": true,
     "calling_convention": "cdecl"
+  },
+  "SDL_IOFromConstMem": {
+    "helper": "tribes_sdl_io_from_const_mem",
+    "arguments": 2,
+    "returns": true,
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
+  },
+  "SDL_LoadWAV_IO": {
+    "helper": "tribes_sdl_load_wav_io",
+    "arguments": 5,
+    "returns": true,
+    "guest_base": false,
+    "cpu_argument": true,
+    "calling_convention": "cdecl"
   }
 }

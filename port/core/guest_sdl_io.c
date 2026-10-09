@@ -1,7 +1,7 @@
-#include "../llasm-support/llasm_cpu.h"
 #include "guest_filesystem.h"
 #include "guest_heap.h"
 #include "guest_memory_checks.h"
+#include "guest_sdl_allocator.h"
 #include <SDL3/SDL.h>
 #include <limits.h>
 #include <pthread.h>
@@ -11,7 +11,7 @@
 
 /* Original music decoder file streams. Native SDL owns stream storage; only
    process-owned scalar tokens and copied bytes cross the i686 boundary. */
-typedef struct IO {uint64_t base;uint32_t token;SDL_IOStream *stream;struct IO *next;} IO;
+typedef struct IO {uint64_t base;uint32_t token;SDL_IOStream *stream;void *owned;struct IO *next;} IO;
 static IO *streams;
 static uint32_t next_token=0xd6000001;
 static pthread_mutex_t io_lock=PTHREAD_MUTEX_INITIALIZER;
@@ -56,9 +56,53 @@ done:tribes_set_last_error(error);return result;
 }
 uint32_t tribes_sdl_close_io(_cpu *cpu,uint32_t token){
     uint32_t error=tribes_get_last_error();pthread_mutex_lock(&io_lock);bool result;
-    if(token){IO **p=slot(cpu,token);IO *v=*p;result=SDL_CloseIO(v->stream);*p=v->next;free(v);}
+    if(token){IO **p=slot(cpu,token);IO *v=*p;result=SDL_CloseIO(v->stream);*p=v->next;free(v->owned);free(v);}
     else result=SDL_CloseIO(NULL);
     pthread_mutex_unlock(&io_lock);tribes_set_last_error(error);return result;
+}
+/* The original client passes an immutable encoded resource here, immediately
+   consumes it with LoadWAV_IO(closeio=true), then releases the resource. Keep
+   a private snapshot so SDL never retains a guest pointer. */
+uint32_t tribes_sdl_io_from_const_mem(_cpu *cpu,uint32_t data,uint32_t size){
+    uint32_t error=tribes_get_last_error(),result=0;
+    if(size>64u*1024u*1024u)stop();
+    IO *v=calloc(1,sizeof *v);
+    if(!v){SDL_OutOfMemory();goto done;}
+    if(data){
+        v->owned=malloc(size?size:1);
+        if(!v->owned){free(v);SDL_OutOfMemory();goto done;}
+        if(size)copy(v->owned,guest(cpu,data,size),size);
+    }
+    v->stream=SDL_IOFromConstMem(v->owned,size);
+    if(!v->stream){free(v->owned);free(v);goto done;}
+    pthread_mutex_lock(&io_lock);
+    if(next_token>=0xd7000000)stop();
+    result=v->token=next_token++;v->base=cpu->_pointer_offset;v->next=streams;streams=v;
+    pthread_mutex_unlock(&io_lock);
+done:tribes_set_last_error(error);return result;
+}
+uint32_t tribes_sdl_load_wav_io(_cpu *cpu,uint32_t token,uint32_t closeio,uint32_t specification,uint32_t buffer_out,uint32_t length_out){
+    uint32_t error=tribes_get_last_error(),address=0,length=0;
+    SDL_AudioSpec spec={0};Uint8 *pcm=NULL;
+    _Static_assert(sizeof spec==12&&offsetof(SDL_AudioSpec,channels)==4&&offsetof(SDL_AudioSpec,freq)==8,"SDL i686 audio specification");
+    pthread_mutex_lock(&io_lock);
+    IO **p=token?slot(cpu,token):NULL;IO *v=p?*p:NULL;
+    bool result=SDL_LoadWAV_IO(v?v->stream:NULL,closeio!=0,specification?&spec:NULL,buffer_out?&pcm:NULL,length_out?&length:NULL);
+    if(closeio&&v){*p=v->next;free(v->owned);free(v);}
+    pthread_mutex_unlock(&io_lock);
+    /* Release the stream lock before invoking the registered guest allocator.
+       Its matching SDL_free owns the returned buffer, exactly as in the DLL. */
+    if(result){
+        if(length>64u*1024u*1024u)stop();
+        address=tribes_sdl_malloc(cpu,length);
+        if(address){if(length)copy(guest(cpu,address,length),pcm,length);}
+        else {SDL_OutOfMemory();result=false;length=0;}
+        SDL_free(pcm);
+    }else length=0;
+    if(specification)copy(guest(cpu,specification,sizeof spec),&spec,sizeof spec);
+    if(buffer_out)copy(guest(cpu,buffer_out,4),&address,4);
+    if(length_out)copy(guest(cpu,length_out,4),&length,4);
+    tribes_set_last_error(error);return result;
 }
 static uint32_t position(_cpu *cpu,uint32_t token,uint64_t offset,int whence,int operation){
     uint32_t error=tribes_get_last_error();pthread_mutex_lock(&io_lock);

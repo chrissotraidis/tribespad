@@ -226,6 +226,8 @@
     "SDL_PutAudioStreamData",
     "SDL_FlushAudioStream",
     "SDL_IOFromFile",
+    "SDL_IOFromConstMem",
+    "SDL_LoadWAV_IO",
     "SDL_CloseIO",
     "SDL_SeekIO",
     "SDL_TellIO",

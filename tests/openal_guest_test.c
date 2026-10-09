@@ -40,6 +40,9 @@ int main(int argc,char **argv){
  ctx=CALL(alcCreateContext,d,0x102000);assert(ctx&&ctx!=d);CALL(alcGetIntegerv,d,ALC_MAX_AUXILIARY_SENDS,1,0x101100);assert(*(uint32_t *)(memory+0x101100)==4);assert(CALL(alcMakeContextCurrent,ctx));assert(CALL(alcGetCurrentContext)==ctx);assert(CALL(alcGetContextsDevice,ctx)==d);
  assert(CALL(alcGetError,d)==ALC_NO_ERROR);
  uint32_t renderer=CALL(alGetString,AL_RENDERER);assert(renderer&&!strcmp((char *)memory+renderer,"OpenAL Soft"));assert(CALL(alGetString,AL_RENDERER)==renderer);
+ assert(!strcmp((char *)memory+CALL(alGetString,AL_EXTENSIONS),"AL_EXT_OFFSET"));
+ strcpy((char *)memory+0x100100,"AL_EXT_OFFSET");assert(CALL(alIsExtensionPresent,0x100100));
+ strcpy((char *)memory+0x100100,"AL_EXT_DYNAMIX");assert(!CALL(alIsExtensionPresent,0x100100));
  strcpy((char *)memory+0x100100,"ALC_SOFT_events");assert(!CALL(alcIsExtensionPresent,d,0x100100));assert(!strcmp((char *)memory+CALL(alcGetString,d,ALC_EXTENSIONS),"ALC_EXT_EFX"));
  strcpy((char *)memory+0x100100,"ALC_EXT_EFX");assert(CALL(alcIsExtensionPresent,d,0x100100));
  strcpy((char *)memory+0x100100,"alBufferData");assert(CALL(alGetProcAddress,0x100100));strcpy((char *)memory+0x100100,"alBufferCallbackSOFT");assert(!CALL(alGetProcAddress,0x100100));
@@ -52,6 +55,16 @@ int main(int argc,char **argv){
  CALL(alGenSources,1,0x101004);uint32_t s=*(uint32_t *)(memory+0x101004);assert(s&&CALL(alIsSource,s));CALL(alSourcei,s,AL_BUFFER,b);CALL(alSourcei,s,AL_LOOPING,AL_TRUE);CALL(alSourcef,s,AL_GAIN,0x3ca3d70a);CALL(alSource3f,s,AL_POSITION,0xbf800000,0,0xbf800000);CALL(alGetSource3f,s,AL_POSITION,0x101100,0x101104,0x101108);assert(*(uint32_t *)(memory+0x101100)==0xbf800000&&*(uint32_t *)(memory+0x101108)==0xbf800000);
  CALL(alSourcePlay,s);uint32_t offset=0;for(unsigned i=0;i<50&&!offset;i++){if(offline){float samples[1024];tribes_openal_test_render(&cpu,d,samples,512);}else usleep(10000);CALL(alGetSourceiv,s,AL_SAMPLE_OFFSET,0x101100);offset=*(uint32_t *)(memory+0x101100);}assert(offset);CALL(alGetSourceiv,s,AL_SOURCE_STATE,0x101100);assert(*(uint32_t *)(memory+0x101100)==AL_PLAYING);assert(CALL(alGetError)==AL_NO_ERROR);
  if(offline){float samples[4096];double left=0,right=0;tribes_openal_test_render(&cpu,d,samples,2048);for(unsigned i=0;i<2048;i++){left+=samples[2*i]*samples[2*i];right+=samples[2*i+1]*samples[2*i+1];}assert(left>right*2&&left>0);printf("Guest positional PCM %.8f / %.8f\n",left,right);}
+ /* AL_EXT_OFFSET: pause the actual mixer, seek using every exposed unit,
+    and read the resulting sample/byte positions through the guest ABI. */
+ CALL(alSourcePause,s);CALL(alSourcei,s,AL_SAMPLE_OFFSET,1200);
+ CALL(alGetSourceiv,s,AL_BYTE_OFFSET,0x101100);assert(*(uint32_t *)(memory+0x101100)==2400);
+ *(uint32_t *)(memory+0x101100)=960;CALL(alSourceiv,s,AL_BYTE_OFFSET,0x101100);
+ CALL(alGetSourceiv,s,AL_SAMPLE_OFFSET,0x101104);assert(*(uint32_t *)(memory+0x101104)==480);
+ float seconds=.03125f;memcpy(memory+0x101100,&seconds,4);CALL(alSourcefv,s,AL_SEC_OFFSET,0x101100);
+ CALL(alGetSourcefv,s,AL_SEC_OFFSET,0x101104);assert(*(float *)(memory+0x101104)==seconds);
+ CALL(alGetSourceiv,s,AL_SAMPLE_OFFSET,0x101104);assert(*(uint32_t *)(memory+0x101104)==1500);
+ assert(CALL(alGetError)==AL_NO_ERROR);
  CALL(alSourceStop,s);CALL(alSourcei,s,AL_LOOPING,AL_FALSE);CALL(alSourcei,s,AL_BUFFER,0);CALL(alSourceQueueBuffers,s,1,0x101000);CALL(alSourcePlay,s);CALL(alSourceStop,s);CALL(alSourceUnqueueBuffers,s,1,0x101100);assert(*(uint32_t *)(memory+0x101100)==b);assert(CALL(alGetError)==AL_NO_ERROR);
  /* EFX: exercise real native objects, parameter widths and audible reverb
     routing through the same original-width guest ABI as the game. */

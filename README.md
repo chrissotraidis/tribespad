@@ -13,8 +13,8 @@ Katabatic match with bots and accepts touch movement, aim, weapons, firing and j
 The Metal backend also renders interiors and supports touch death/respawn.
 Measured iPad Simulator performance is about **8.5–8.7 FPS** on the prior build,
 so performance remains the main blocker. The latest build fixes the fog corruption
-that exposed gaps in distant terrain. Slow startup, input delay and audio errors
-still need work.
+that exposed gaps in distant terrain and restores original WAV/music data delivery
+to OpenAL. Slow startup, input delay and audible-quality validation still need work.
 There is no playable iPad or iPhone release yet.
 
 ![Original Tribes 2 running through Metal with iPad touch controls](docs/validation/ipad-fog-touch-2026-10-09.png)
@@ -27,6 +27,9 @@ There is no playable iPad or iPhone release yet.
   servers and refreshed their information. Tests do not join online matches.
 - **Original iPad game in Simulator.** The Metal renderer loads Katabatic with bots.
   Touch movement, aiming, weapon switching, firing, jets and respawn work.
+- **Original audio data.** WAV loading and the MP3 window tables are repaired.
+  Original UI/loading samples match the game archive, and music supplies nonzero
+  PCM to OpenAL. Audible quality still needs validation.
 - **Saved profiles.** The bundled iPad app keeps warrior and video preferences
   between launches. Its device build includes the game files it needs locally.
 
@@ -102,8 +105,8 @@ and build validation: **[Development guide](docs/DEVELOPMENT.md)**.
 
 - Latest measured iPad Simulator performance is **8.5–8.7 FPS**, improved from
   about 5 FPS. Startup, input delay and sustained performance still need work.
-- A distant terrain gap remains. HD texture uploads are verified, but full visual
-  fidelity is not accepted.
+- Distance fog is fixed. HD texture uploads are verified, but full visual fidelity
+  is not accepted.
 - Both iPad targets build with an optimized executable of about **104 MB**, down
   from 158.6 MB. Verified object caching speeds up rebuilds; guest-memory checks
   stay enabled.

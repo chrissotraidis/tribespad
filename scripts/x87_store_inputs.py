@@ -70,4 +70,60 @@ def prepare(sources, out):
                   script_sha256=sha(pathlib.Path(__file__).resolve()),
                   scope='Fresh strict compiler definitions substituted before checked-memory instrumentation. Startup routing and publication plans unchanged.')
     (out / 'x87-stores.json').write_text(json.dumps(report, indent=2) + '\n')
+    sources = prepare_mp3(sources, out)
+    return sources
+
+def mp3_changes():
+    old = R / 'generated/srw/run-20261004T210704-mp3dec/native-diagnostic/module.ll'
+    new = R / 'generated/srw/run-20261009T191518-mp3dec/native-diagnostic/module.ll'
+    reports = [json.loads(p.with_name('result.json').read_text()) for p in [old, new]]
+    for p, report in zip([old, new], reports):
+        assert sha(p) == report['module_sha256']
+    for key in ['image_sha256', 'mapped_sha256', 'entries', 'imports', 'exports', 'unsupported_instructions']:
+        assert reports[0][key] == reports[1][key], key
+    test = json.loads((R / 'generated/integration-review/x87-indexed-stores/result.json').read_text())
+    assert test['passed']
+    for name, digest in test['source_sha256'].items():
+        assert sha(R / name) == digest, name
+    identity = json.loads((new.parent.parent / 'result.json').read_text())
+    assert identity['srw_sha256'] == test['srw_sha256']
+    pattern = re.compile(r'^(FSTP?_FLOAT)\nmov tmp1, tmp0\n(.*?)^store tmp1, ([^\n]+)$', re.M | re.S)
+    def revert(m):
+        assert '\n;' not in '\n' + m[2] and 'FST' not in m[2] and 'endp' not in m[2]
+        return m[1] + '\n' + m[2] + 'store tmp0, ' + m[3]
+    reverted, count = pattern.subn(revert, (new.parent.parent / 'seg01_code.llinc').read_text())
+    assert count == 560 and reverted == (old.parent.parent / 'seg01_code.llinc').read_text()
+    previous = {m[1]: m[0] for m in DEFINITION.finditer(old.read_text())}
+    current = {m[1]: m[0] for m in DEFINITION.finditer(new.read_text())}
+    assert previous.keys() == current.keys()
+    selected = {n: (previous[n], body) for n, body in current.items() if semantic(previous[n]) != semantic(body)}
+    assert len(selected) == 19
+    # Apart from comments, only stored SSA values may change. Validate their
+    # provenance from FST/FSTP and keep destinations and control flow identical.
+    store = re.compile(r'^store i32 (%\d+), (i32\* %\d+, align \d+)$')
+    for name, (before, after) in selected.items():
+        a, b = semantic(before).splitlines(), semantic(after).splitlines()
+        assert len(a) == len(b), name
+        for left, right in zip(a, b):
+            if left == right:
+                continue
+            x, y = store.fullmatch(left), store.fullmatch(right)
+            assert x and y and x[2] == y[2], (name, left, right)
+            assert re.search(r'^' + re.escape(y[1]) + r' = call i32 @x87_fstp?_float\(', after, re.M), name
+    return old, new, selected
+
+def prepare_mp3(sources, out):
+    old, new, selected = mp3_changes()
+    assert sources.count(old) == 1
+    proof_path = R / 'generated/integration-review/mp3-window-tables/result.json'
+    proof = json.loads(proof_path.read_text())
+    assert proof['passed'] and proof['module_sha256'] == sha(new)
+    for name, digest in proof['source_sha256'].items():
+        assert sha(R / name) == digest, name
+    sources = list(sources)
+    sources[sources.index(old)] = new
+    (out / 'mp3-stores.json').write_text(json.dumps(dict(
+        old_sha256=sha(old), new_sha256=sha(new), functions=sorted(selected),
+        regression_sha256=sha(proof_path), script_sha256=sha(pathlib.Path(__file__).resolve()),
+        scope='Fresh codec lift before checked-memory instrumentation; all 739 diagnostic stops and original exports retained.'), indent=2) + '\n')
     return sources

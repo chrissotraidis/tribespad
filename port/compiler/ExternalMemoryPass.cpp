@@ -310,9 +310,11 @@ struct ExternalMemoryPass : PassInfoMixin<ExternalMemoryPass>{
     if(Name=="SDL_strcasecmp")Allowed=Allowed&&!Target->isVarArg()&&Call->getType()==I32&&Call->arg_size()==2&&Call->getArgOperand(0)->getType()==P&&Call->getArgOperand(1)->getType()==P;
     if(Name=="SDL_ReadU32LE")Allowed=Allowed&&!Target->isVarArg()&&Call->getType()==B.getInt1Ty()&&Call->arg_size()==2&&Call->getArgOperand(0)->getType()==P&&Call->getArgOperand(1)->getType()==P;
     if(Name=="SDL_GetError")Allowed=Allowed&&!Target->isVarArg()&&Call->getType()==P&&Call->arg_size()==0;
-    if(Name=="SDL_IOFromFile"||Name=="SDL_CloseIO"||Name=="SDL_SeekIO"||Name=="SDL_TellIO"||Name=="SDL_GetIOSize"||Name=="SDL_ReadIO"){
-     SmallVector<Type *,3> Args;Type *Result=I64;
+    if(Name=="SDL_IOFromFile"||Name=="SDL_IOFromConstMem"||Name=="SDL_LoadWAV_IO"||Name=="SDL_CloseIO"||Name=="SDL_SeekIO"||Name=="SDL_TellIO"||Name=="SDL_GetIOSize"||Name=="SDL_ReadIO"){
+     SmallVector<Type *,5> Args;Type *Result=I64;
      if(Name=="SDL_IOFromFile"){Args={P,P};Result=P;}
+     else if(Name=="SDL_IOFromConstMem"){Args={P,I64};Result=P;}
+     else if(Name=="SDL_LoadWAV_IO"){Args={P,B.getInt1Ty(),P,P,P};Result=B.getInt1Ty();}
      else if(Name=="SDL_CloseIO"){Args={P};Result=B.getInt1Ty();}
      else if(Name=="SDL_SeekIO")Args={P,I64,I32};
      else if(Name=="SDL_ReadIO")Args={P,P,I64};

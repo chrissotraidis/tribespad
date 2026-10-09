@@ -71,9 +71,13 @@ uint32_t tribes_oa_alcGetCurrentContext(_cpu *c){BEGIN;ALCcontext *native=alcGet
 uint32_t tribes_oa_alcGetContextsDevice(_cpu *c,uint32_t a){BEGIN;Context *x=context(a);ALCdevice *d=alcGetContextsDevice(x?x->native:NULL);if(!d)DONE(0);if(!x||d!=x->device->native)stop("context device mismatch");DONE(x->device->token);}
 uint32_t tribes_oa_alcGetError(_cpu *c,uint32_t a){BEGIN;DONE(alcGetError(DN(a)));}
 uint32_t tribes_oa_alGetError(_cpu *c){BEGIN;DONE(alGetError());}
-uint32_t tribes_oa_alGetString(_cpu *c,uint32_t a){BEGIN;const char *s=a==AL_EXTENSIONS?"":alGetString(a);DONE(string_copy(c,s,text_size(s,0)));}
+/* Offset controls use the already-bridged scalar/vector source APIs. Report
+ * this verified native capability consistently in both discovery paths. The
+ * original client appends its own DYNAMIX functions to a nonempty native list;
+ * advertising those client functions here would misrepresent this provider. */
+uint32_t tribes_oa_alGetString(_cpu *c,uint32_t a){BEGIN;const char *s=a==AL_EXTENSIONS?(alIsExtensionPresent("AL_EXT_OFFSET")?"AL_EXT_OFFSET":""):alGetString(a);DONE(string_copy(c,s,text_size(s,0)));}
 uint32_t tribes_oa_alcGetString(_cpu *c,uint32_t a,uint32_t b){BEGIN;const char *s=b==ALC_EXTENSIONS?(alcIsExtensionPresent(DN(a),"ALC_EXT_EFX")?"ALC_EXT_EFX":""):alcGetString(DN(a),b);int list=!a&&b==ALC_DEVICE_SPECIFIER;DONE(string_copy(c,s,text_size(s,list)));}
-uint32_t tribes_oa_alIsExtensionPresent(_cpu *c,uint32_t a){BEGIN;char s[256];name_copy(c,a,s);DONE(0);}
+uint32_t tribes_oa_alIsExtensionPresent(_cpu *c,uint32_t a){BEGIN;char s[256];name_copy(c,a,s);DONE(!strcmp(s,"AL_EXT_OFFSET")&&alIsExtensionPresent(s));}
 uint32_t tribes_oa_alcIsExtensionPresent(_cpu *c,uint32_t a,uint32_t b){BEGIN;char s[256];name_copy(c,b,s);ALCdevice *d=DN(a);DONE(!strcmp(s,"ALC_EXT_EFX")&&alcIsExtensionPresent(d,s));}
 uint32_t tribes_oa_alGetEnumValue(_cpu *c,uint32_t a){BEGIN;char s[256];name_copy(c,a,s);DONE(alGetEnumValue(s));}
 uint32_t tribes_oa_alGetProcAddress(_cpu *c,uint32_t a){BEGIN;char s[256];name_copy(c,a,s);DONE(alGetProcAddress(s)?proc(s):0);}

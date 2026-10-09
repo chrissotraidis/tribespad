@@ -1,5 +1,6 @@
 #include "../port/llasm-support/llasm_cpu.h"
 #include "../port/core/guest_heap.h"
+#include "../port/core/guest_sdl_memory.h"
 #include "../port/core/guest_filesystem.h"
 #include "../port/core/guest_memory_checks.h"
 #include "../port/core/guest_external_checks.h"
@@ -13,19 +14,43 @@
 extern void tribes_enter(_cpu *,uint32_t),tribes_return_to_host(void);
 extern void tbimp_SDL_strcasecmp(void),tbimp_SDL_strlcpy(void);
 extern void tbimp_SDL_IOFromFile(void),tbimp_SDL_CloseIO(void),tbimp_SDL_SeekIO(void),tbimp_SDL_TellIO(void),tbimp_SDL_GetIOSize(void),tbimp_SDL_ReadIO(void),tbimp_SDL_ReadU32LE(void),tbimp_SDL_GetSIMDAlignment(void);
+extern void tbimp_SDL_IOFromConstMem(void),tbimp_SDL_LoadWAV_IO(void),tbimp_test_malloc(void);
 static unsigned char *memory;
-static uint64_t call(unsigned entry,uint32_t a,uint32_t b,uint32_t c,uint32_t d){
+static uint64_t call5(unsigned entry,uint32_t a,uint32_t b,uint32_t c,uint32_t d,uint32_t e){
  _cpu cpu;memset(&cpu,0xa5,sizeof cpu);cpu._pointer_offset=(uintptr_t)memory;cpu._esp=0x100800;
- uint32_t args[]={a,b,c,d};memcpy(memory+cpu._esp,args,sizeof args);_cpu before=cpu;
+ cpu.stack_bottom=memory+0x100000;cpu.stack_top=memory+0x110000;
+ uint32_t args[]={a,b,c,d,e};memcpy(memory+cpu._esp,args,sizeof args);_cpu before=cpu;
  tribes_set_last_error(123);tribes_enter(&cpu,entry);uint64_t result=cpu._eax;
  if(entry==3||entry==4||entry==5){result|=(uint64_t)cpu._edx<<32;before._edx=cpu._edx;}
  before._eax=cpu._eax;assert(!memcmp(&before,&cpu,sizeof cpu));assert(tribes_get_last_error()==123);return result;
 }
+static uint64_t call(unsigned entry,uint32_t a,uint32_t b,uint32_t c,uint32_t d){return call5(entry,a,b,c,d,0);}
 int main(int argc,char **argv){
  memory=mmap(NULL,UINT64_C(0x100000000),PROT_NONE,MAP_PRIVATE|MAP_ANON,-1,0);assert(memory!=MAP_FAILED);
  assert(!mprotect(memory+0x100000,0x10000,PROT_READ|PROT_WRITE));
  assert(tribes_memory_checks_configure((uintptr_t)memory,UINT64_C(0x100000000)));assert(tribes_memory_permissions_set(0,UINT64_C(0x100000000),0));assert(tribes_memory_permissions_set(0x100000,0x10000,3));
- const void *targets[]={tbimp_SDL_IOFromFile,tbimp_SDL_CloseIO,tbimp_SDL_SeekIO,tbimp_SDL_TellIO,tbimp_SDL_GetIOSize,tbimp_SDL_ReadIO,tbimp_SDL_ReadU32LE,tbimp_SDL_GetSIMDAlignment,tbimp_SDL_strcasecmp,tbimp_SDL_strlcpy,tribes_return_to_host};tribes_memory_register_targets(targets,11);tribes_memory_external_configure((uintptr_t)memory,UINT64_C(0x100000000));tribes_memory_external_enable();
+ const void *targets[]={tbimp_SDL_IOFromFile,tbimp_SDL_CloseIO,tbimp_SDL_SeekIO,tbimp_SDL_TellIO,tbimp_SDL_GetIOSize,tbimp_SDL_ReadIO,tbimp_SDL_ReadU32LE,tbimp_SDL_GetSIMDAlignment,tbimp_SDL_strcasecmp,tbimp_SDL_strlcpy,tbimp_SDL_IOFromConstMem,tbimp_SDL_LoadWAV_IO,tbimp_test_malloc,tribes_return_to_host};tribes_memory_register_targets(targets,14);tribes_memory_external_configure((uintptr_t)memory,UINT64_C(0x100000000));tribes_memory_external_enable();
+ assert(tribes_memory_permissions_set(0x30000000,0x1000000,3)); /* Standalone guest heap arena. */
+ assert(tribes_sdl_set_memory_functions((uintptr_t)memory,13,13,13,13));
+ /* Exact PCM bytes, scalar token lifetime, and failure output semantics. */
+ unsigned char wav[]={ 'R','I','F','F',40,0,0,0,'W','A','V','E','f','m','t',' ',16,0,0,0,
+  1,0,1,0,0x80,0xbb,0,0,0,0x77,1,0,2,0,16,0,'d','a','t','a',4,0,0,0,0x34,0x12,0xdc,0xfe};
+ memcpy(memory+0x104000,wav,sizeof wav);
+ if(argc>1&&!strcmp(argv[1],"memory-unreadable")){assert(tribes_memory_permissions_set(0x104000,4096,0));call(11,0x104000,sizeof wav,0,0);abort();}
+ uint32_t wt=(uint32_t)call(11,0x104000,sizeof wav,0,0);assert(wt);
+ if(argc>1&&!strcmp(argv[1],"wav-readonly-spec")){assert(tribes_memory_permissions_set(0x105000,4096,1));call5(12,wt,1,0x105000,0x106000,0x106004);abort();}
+ if(argc>1&&!strcmp(argv[1],"wav-short-output")){call5(12,wt,1,0x105000,0x106000,0x10fffe);abort();}
+ assert(call5(12,wt,1,0x105000,0x106000,0x106004));
+ SDL_AudioSpec expected={SDL_AUDIO_S16LE,1,48000};assert(!memcmp(memory+0x105000,&expected,sizeof expected));
+ uint32_t decoded;memcpy(&decoded,memory+0x106000,4);assert(decoded&&*(uint32_t *)(memory+0x106004)==4&&!memcmp(memory+decoded,wav+44,4));
+ assert(tribes_global_free((uintptr_t)memory,decoded)==0);
+ if(argc>1&&!strcmp(argv[1],"wav-stale")){call(4,wt,0,0,0);abort();}
+ /* With closeio=false, the same actual stream remains seekable. */
+ wt=(uint32_t)call(11,0x104000,sizeof wav,0,0);assert(call5(12,wt,0,0x105000,0x106000,0x106004));
+ memcpy(&decoded,memory+0x106000,4);assert(!memcmp(memory+decoded,wav+44,4));assert(!tribes_global_free((uintptr_t)memory,decoded));assert(call(5,wt,0,0,0)==sizeof wav);assert(call(2,wt,0,0,0));
+ memset(memory+0x104000,0,48);wt=(uint32_t)call(11,0x104000,48,0,0);assert(wt);
+ memset(memory+0x105000,0xa5,12);memset(memory+0x106000,0xa5,8);
+ assert(!call5(12,wt,1,0x105000,0x106000,0x106004));assert(!*(uint32_t *)(memory+0x106000)&&!*(uint32_t *)(memory+0x106004));assert(SDL_GetError()[0]);
  char dir[]="/tmp/tribes-sdl-io-XXXXXX";assert(mkdtemp(dir));assert(tribes_filesystem_configure((uintptr_t)memory,dir,dir,dir));char path[1024];snprintf(path,sizeof path,"%s/Music.dat",dir);FILE *f=fopen(path,"wb");assert(f);assert(fwrite("abc\0def",1,7,f)==7);fclose(f);
  strcpy((char *)memory+0x101000,"music.DAT");strcpy((char *)memory+0x102000,"rb");
  if(argc>1&&!strcmp(argv[1],"unreadable-path")){assert(tribes_memory_permissions_set(0x101000,4096,0));call(1,0x101000,0x102000,0,0);abort();}

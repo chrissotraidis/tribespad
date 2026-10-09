@@ -4,7 +4,7 @@
 Run test-qol-native-bootstrap.py --enter-engine --probe-ntdll --prepare-only first.
 Device builds bundle assets and require Apple development signing before installation.
 """
-import argparse,hashlib,json,os,pathlib,plistlib,shutil,subprocess
+import argparse,hashlib,importlib.util,json,os,pathlib,plistlib,re,shutil,subprocess
 from checked_support import compile_support
 from guard_checked_link import guard_link
 from checked_bochs_inputs import checked_bochs_inputs
@@ -58,6 +58,24 @@ for name,h in hook_test['sources_sha256'].items():assert sha(R/name)==h,name
 sources,hook_layout=mobile_hooks(sources,mobile_inputs)
 from x87_store_inputs import prepare as x87_store_inputs
 sources=x87_store_inputs(sources,mobile_inputs)
+# Replace only the two reached WAV import stops. Keep the frozen preparation
+# immutable and run the usual memory/external-call passes over these wrappers.
+wave_proof_path=R/'generated/integration-review/sdl-io/result.json'
+wave_proof=json.loads(wave_proof_path.read_text());assert wave_proof['passed']
+for name,h in wave_proof['sources_sha256'].items():assert sha(R/name)==h,name
+wave_names=['SDL_IOFromConstMem','SDL_LoadWAV_IO']
+wave_bindings=json.loads((R/'config/runtime/sdl-io-bindings.json').read_text())
+generator_spec=importlib.util.spec_from_file_location('wave_bindings',R/'scripts/gen-win32-bindings.py')
+generator=importlib.util.module_from_spec(generator_spec);generator_spec.loader.exec_module(generator)
+wave_wrapper=mobile_inputs/'sdl-wav-bindings.ll'
+wave_wrapper.write_text(generator.generate({n:wave_bindings[n] for n in wave_names},False))
+old_stops=next(p for p in sources if p.name=='stops.ll');stops_text=old_stops.read_text()
+for name,ordinal in zip(wave_names,[257,256]):
+    body='define hidden fastcc void @tbimp_'+name+'(ptr %cpu) { call void @qol_missing_import(ptr %cpu, i32 '+str(ordinal)+')\n unreachable\n}'
+    assert stops_text.count(body)==1,name
+    stops_text=stops_text.replace(body,'',1)
+wave_stops=mobile_inputs/'stops.ll';wave_stops.write_text(stops_text)
+sources[sources.index(old_stops)]=wave_stops;sources.append(wave_wrapper)
 # Refresh finite host exports without relifting unchanged original images.
 from graphics_backend_inputs import prepare as graphics_inputs
 graphics_sources,_=graphics_inputs(mobile_inputs)
@@ -145,7 +163,7 @@ if a.angle:
  for framework in angle_bundle(app,a.platform):subprocess.run(['codesign','--force','--sign','-',str(framework)],check=True)
 subprocess.run(['codesign','--force','--sign','-',*signing,str(app)],check=True)
 subprocess.run(['codesign','--verify','--deep','--strict',str(app)],check=True)
-(out/'result.json').write_text(json.dumps(dict(state='built',platform=a.platform,cpu_host_checks=a.cpu_host_checks,bundled_assets=bundled,entitlements_sha256=sha(R/'port/apple/TribesPad.entitlements') if a.platform=='device' else None,binary_sha256=sha(exe),prepared_sha256=sha(source/'prepared-inputs.json'),support_sha256=sha(out/'support/result.json'),guarded_sha256=sha(out/'guarded/result.json'),gl4es=gl4es,angle=angle,openal=al,arguments=None if bundled else args,mobile_hooks_sha256=sha(mobile_inputs/'mobile-hooks.json'),x87_stores_sha256=sha(mobile_inputs/'x87-stores.json'),mobile_gpu_timing=dict(available=False,original_blocks=timing_blocks,test_sha256=sha(timing_proof),translated_sha256=sha(mobile_qol)),scope='Full checked engine linked for '+a.platform+'. Device builds need development signing. Build is not rendering or gameplay acceptance.'),indent=2)+'\n')
+(out/'result.json').write_text(json.dumps(dict(state='built',platform=a.platform,cpu_host_checks=a.cpu_host_checks,bundled_assets=bundled,entitlements_sha256=sha(R/'port/apple/TribesPad.entitlements') if a.platform=='device' else None,binary_sha256=sha(exe),prepared_sha256=sha(source/'prepared-inputs.json'),support_sha256=sha(out/'support/result.json'),guarded_sha256=sha(out/'guarded/result.json'),gl4es=gl4es,angle=angle,openal=al,arguments=None if bundled else args,mobile_hooks_sha256=sha(mobile_inputs/'mobile-hooks.json'),x87_stores_sha256=sha(mobile_inputs/'x87-stores.json'),mp3_stores_sha256=sha(mobile_inputs/'mp3-stores.json'),wav_io_test_sha256=sha(wave_proof_path),mobile_gpu_timing=dict(available=False,original_blocks=timing_blocks,test_sha256=sha(timing_proof),translated_sha256=sha(mobile_qol)),scope='Full checked engine linked for '+a.platform+'. Device builds need development signing. Build is not rendering or gameplay acceptance.'),indent=2)+'\n')
 if not a.build_only:
  subprocess.run(['xcrun','simctl','install',a.simulator_device,str(app)],check=True)
  for name in ('stdout.log','stderr.log'):(out/name).write_text('')

@@ -44,6 +44,17 @@ export SDKROOT="$(xcrun --sdk macosx --show-sdk-path)"
 .venv/bin/python scripts/build-tribes-lifter.py
 .venv/bin/python scripts/test-x87-indexed-stores.py
 .venv/bin/python scripts/prepare-x87-store-engine.py
+.venv/bin/python scripts/lift-image.py --module mp3dec --tribes-tools --full-flags --diagnostic
+.venv/bin/python scripts/prepare-miles-native-diagnostic.py <new-mp3-lift-directory> --codec mp3dec
+# x87_store_inputs.py pins the reviewed MP3 lift directory.
+.venv/bin/python scripts/test-mp3-window-tables.py
+.venv/bin/python scripts/build-external-memory-pass.py
+.venv/bin/python scripts/test-cpu-host-checks.py
+.venv/bin/python scripts/test-host-local-checks.py
+.venv/bin/python scripts/test-native-cpu-checks.py
+.venv/bin/python scripts/test-sdl-io.py
+.venv/bin/python scripts/test-openal-guest.py --offline
+export SDKROOT="$(xcrun --sdk iphonesimulator --show-sdk-path)"
 .venv/bin/python scripts/build-ipad-engine.py --simulator-device <booted-iPad-UUID>
 ```
 

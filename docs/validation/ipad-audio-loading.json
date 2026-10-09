@@ -1,0 +1,721 @@
+{
+  "date": "2026-10-09",
+  "platform": "iPad Air 11-inch (M4), iOS 26.5 Simulator, ARM64",
+  "pid": 61947,
+  "builds": {
+    "simulator": {
+      "binary_sha256": "20f7d17914fec6b85f739adc1e2507ef54cedb0b6720818c2d4d9897eeebaade",
+      "executable_bytes": 103659040,
+      "receipt_sha256": "539f0b6bd46a0d3f194af96672e957c2b07f4f27341816cd89c556b8e1a6fdb9",
+      "signature": "deep strict ad-hoc verification passed",
+      "execution": true
+    },
+    "device": {
+      "binary_sha256": "2f367263e4c8b58627348212f9cfb474f4ef5255f513fd93717fcbdc285ec57a",
+      "executable_bytes": 103593008,
+      "receipt_sha256": "c6ada3c0f9441ddd7c987a2f03e044184af678beb5b5eb697a2267f631d12bdc",
+      "signature": "deep strict ad-hoc verification passed",
+      "execution": false
+    }
+  },
+  "fixes": [
+    "Expose the actually supported AL_EXT_OFFSET extension so the original QoL wrapper appends its own DYNAMIX loader extension and preserves audio initialization.",
+    "Implement reached SDL_IOFromConstMem and SDL_LoadWAV_IO with private native staging, checked guest copies and the registered guest allocator.",
+    "Refresh the original MP3 decoder with the fixed FST/FSTP lifter; only 19 definitions change store operands, all 739 diagnostic stops retained."
+  ],
+  "components": {
+    "sdl_io": {
+      "receipt_sha256": "368b2749d7c3282f9c812183964d8f5b9c7eaecfac17a6e13a8671a0ffbcdbcf",
+      "result": {
+        "passed": true,
+        "state": "finished",
+        "runs": [
+          {
+            "mode": "normal",
+            "passed": true,
+            "faults": [],
+            "binary_sha256": "f8c29fc51b6cd8c570f9c6ea23f354efe099743de1de6c8aadac92114147ae64"
+          },
+          {
+            "mode": "checked",
+            "passed": true,
+            "faults": [
+              "unreadable-path",
+              "stale",
+              "foreign",
+              "readonly-output",
+              "short-output",
+              "string-unreadable",
+              "string-readonly-output",
+              "string-short-output",
+              "memory-unreadable",
+              "wav-readonly-spec",
+              "wav-short-output",
+              "wav-stale"
+            ],
+            "binary_sha256": "d857cf4531fa7ba0554410323aa01c0fccdd9330297be5df897a5147bec7b1fe"
+          },
+          {
+            "mode": "tsan",
+            "passed": true,
+            "faults": [],
+            "binary_sha256": "db18a532834caf25589574f8f4207f075ef03bf7308b81a02687ce5ab2eb66cb"
+          }
+        ],
+        "sources_sha256": {
+          "port/core/guest_sdl_io.c": "a6f33155653f0a687c66bb4706d3a105ef87bd1e40a071769069d67526bc4972",
+          "port/core/guest_filesystem.c": "dccc9e2c3fc003ca6beff79eb004bdc544eb2e227a7757cb79b6692a828d03ae",
+          "port/core/guest_heap.c": "791c26c9fd72984fc53f0f5f1447df5f1dd43e38af08a529b1efc0b3e65dd96b",
+          "port/core/guest_sdl_allocator.c": "eda2ba4e3bfd66bc71f6df9fa9042394d4d562dd1374acbc8ee6199f323ed325",
+          "port/core/guest_sdl_memory.c": "f1cac46d905cbec4ec3b9844c41319656789f711259d25c6bf13c6325e45317c",
+          "port/core/guest_callback.c": "5e647f11ac9849e0cf927e1917183b81e64382a7b7d91cc2a97016673494e444",
+          "tests/sdl_io_allocator.c": "d39d9c545ca8d54121329168fce216f192fbbb4db07ca2bf58a2e86e36f6e04e",
+          "tests/sdl_io_test.c": "eed9dea9b79958c3e02d51d118058964772f90e57c0c6e7ff2ac2a0c6eecd9a3",
+          "scripts/test-sdl-io.py": "1086083392936e8d98e68abcf30a0ca9058b533a5fe223d0f8ae38a2f1643278",
+          "config/runtime/sdl-io-bindings.json": "2ef591d2cc533e13799539f748fcef186b092c66ea00ff9a0cbe163a0346ec3f",
+          "port/compiler/ExternalMemoryPass.cpp": "052b3a1cd32587e1a087fe1929627028f6429d6eb83441076aaf1aa9f78f1c3b",
+          "config/runtime/external-memory-contracts.json": "0d40a4befcec9654567150221669bbd5242be330095a924a5adbb8b3c0da9c9c"
+        },
+        "scope": "Real read-only file IO and emitted guest ABI; original decoder execution and full music playback unverified."
+      }
+    },
+    "openal": {
+      "receipt_sha256": "2258c71fbe15a3c8e95f90fa0003c8a035aaf771895f2dc7c97a1e754cedfd9c",
+      "result": {
+        "passed": true,
+        "offline": true,
+        "runs": [
+          {
+            "mode": "normal",
+            "passed": true,
+            "binary_sha256": "d3fc2c8c75a4c4dd9f15158cd15a95f00f04602853d6f144cac38ead276381bd",
+            "faults": [
+              "stale-device",
+              "stale-context"
+            ]
+          },
+          {
+            "mode": "checked",
+            "passed": true,
+            "binary_sha256": "7fe4747d51092965b3aeed50398c71c7fab883dc0cbd5fe10228a5a022252e1e",
+            "faults": [
+              "readonly",
+              "unreadable-pcm",
+              "unreadable-attributes",
+              "readonly-efx",
+              "unreadable-efx-vector",
+              "readonly-efx-vector",
+              "stale-device",
+              "stale-context"
+            ]
+          }
+        ],
+        "library_sha256": "0d5d6cb7e9feaab80d9d0af148889c95a57edb2dbefef8dfb536793568358339",
+        "sources": {
+          "port/core/guest_openal.c": "5ecf7e06871d6454a4fa52ea6100b2325acc9d4b8a2fb61edf616b8e0e69c957",
+          "generated/integration-review/openal-provider/abi/openal-bindings.ll": "05abf7bf2b33afd0b84c094156c0858b359817e74489ff6b4b83ada3ff24db01",
+          "tests/openal_guest_test.c": "b0848ff5658c478634bf7df6c7f9d6b0ef3e561655aee40e429962aefc516ae1",
+          "tests/fixtures/native_enter.ll": "78597a5a3030a7a7e0d6746358a6f3489ff8e8c395fba21383c200133f2f1f9d",
+          "port/core/guest_memory_checks.c": "2aa9915ae596be9ac924872e5c798558b14a77d2a9484618a549435c50e1432a",
+          "port/llasm-support/tribes_absolute_memory.c": "6a6e98d3e1447f011ba83ae74a3a155edc957e064e9c44dcd28f3aad7a7e1b0d",
+          "port/core/ext80.c": "8f78a2e550aede93935833384a8c4afd07cafd31f064988bbaa3cffa373d5c2b",
+          "port/llasm-support/tribes_float80.c": "d3680616203dd5745fdee0ba8d3b042a26ce7e4c8e41b14943f00e45585f8672"
+        },
+        "scope": "Actual finite cdecl OpenAL guest bridge; offline positional mixer; not original-game or mobile acceptance."
+      }
+    },
+    "mp3": {
+      "receipt_sha256": "17d435f20a52c1a5d8299d58c98acf0ebceb102b93712b7b10e58393bde7a9f7",
+      "result": {
+        "passed": true,
+        "values": 54,
+        "module_sha256": "1c2842855ef2f2b0d678b0a2b4a02bcd2dfd3769be79e9e817fbbaba648d1a01",
+        "old_module_sha256": "df5e63a496761c6e483ef635529c97872b80c798ef71ff063d189f513620514b",
+        "results": {
+          "old": {
+            "matches": 0,
+            "tables": [
+              {
+                "function": "loc_26F02290",
+                "values": [
+                  5.605193857299268e-45,
+                  1.1210387714598537e-44,
+                  1.6815581571897805e-44,
+                  2.2420775429197073e-44,
+                  2.802596928649634e-44,
+                  3.363116314379561e-44,
+                  3.923635700109488e-44,
+                  4.484155085839415e-44,
+                  5.044674471569341e-44,
+                  5.605193857299268e-44,
+                  6.165713243029195e-44,
+                  6.726232628759122e-44,
+                  7.286752014489049e-44,
+                  7.847271400218976e-44,
+                  8.407790785948902e-44,
+                  8.96831017167883e-44,
+                  9.528829557408756e-44,
+                  1.0089348943138683e-43,
+                  1.064986832886861e-43,
+                  1.1210387714598537e-43,
+                  1.1770907100328463e-43,
+                  1.233142648605839e-43,
+                  1.2891945871788317e-43,
+                  1.3452465257518244e-43,
+                  1.401298464324817e-43,
+                  1.4573504028978098e-43,
+                  1.5134023414708024e-43,
+                  1.5694542800437951e-43,
+                  1.6255062186167878e-43,
+                  1.6815581571897805e-43,
+                  1.7376100957627732e-43,
+                  1.793662034335766e-43,
+                  1.8497139729087585e-43,
+                  1.9057659114817512e-43,
+                  1.961817850054744e-43,
+                  2.0178697886277366e-43
+                ],
+                "expected": [
+                  0.04361938685178757,
+                  0.13052618503570557,
+                  0.2164396047592163,
+                  0.30070579051971436,
+                  0.3826834261417389,
+                  0.4617486000061035,
+                  0.5372995734214783,
+                  0.6087614297866821,
+                  0.6755902171134949,
+                  0.7372773289680481,
+                  0.7933533191680908,
+                  0.8433914184570312,
+                  0.8870108127593994,
+                  0.9238795042037964,
+                  0.9537169337272644,
+                  0.9762960076332092,
+                  0.9914448261260986,
+                  0.9990482330322266,
+                  0.9990482330322266,
+                  0.9914448857307434,
+                  0.9762960076332092,
+                  0.9537169933319092,
+                  0.9238795638084412,
+                  0.8870108723640442,
+                  0.843391478061676,
+                  0.7933533787727356,
+                  0.7372773885726929,
+                  0.6755902767181396,
+                  0.6087614893913269,
+                  0.5372996926307678,
+                  0.4617486894130707,
+                  0.38268351554870605,
+                  0.3007058799266815,
+                  0.21643969416618347,
+                  0.13052627444267273,
+                  0.04361947625875473
+                ],
+                "matches": 0
+              },
+              {
+                "function": "loc_26F022C0",
+                "values": [
+                  5.605193857299268e-45,
+                  1.1210387714598537e-44,
+                  1.6815581571897805e-44,
+                  2.2420775429197073e-44,
+                  2.802596928649634e-44,
+                  3.363116314379561e-44,
+                  3.923635700109488e-44,
+                  4.484155085839415e-44,
+                  5.044674471569341e-44,
+                  5.605193857299268e-44,
+                  6.165713243029195e-44,
+                  6.726232628759122e-44,
+                  7.286752014489049e-44,
+                  7.847271400218976e-44,
+                  8.407790785948902e-44,
+                  8.96831017167883e-44,
+                  9.528829557408756e-44,
+                  1.0089348943138683e-43
+                ],
+                "expected": [
+                  0.04361938685178757,
+                  0.13052618503570557,
+                  0.2164396047592163,
+                  0.30070579051971436,
+                  0.3826834261417389,
+                  0.4617486000061035,
+                  0.5372995734214783,
+                  0.6087614297866821,
+                  0.6755902171134949,
+                  0.7372773289680481,
+                  0.7933533191680908,
+                  0.8433914184570312,
+                  0.8870108127593994,
+                  0.9238795042037964,
+                  0.9537169337272644,
+                  0.9762960076332092,
+                  0.9914448261260986,
+                  0.9990482330322266
+                ],
+                "matches": 0
+              }
+            ],
+            "library_sha256": "f38ec8b1d13ccf433cd171a30c5319e0432c469b8e626577e4bb840a1bbb9e31"
+          },
+          "fixed": {
+            "matches": 54,
+            "tables": [
+              {
+                "function": "loc_26F02290",
+                "values": [
+                  0.04361938685178757,
+                  0.13052618503570557,
+                  0.2164396047592163,
+                  0.30070579051971436,
+                  0.3826834261417389,
+                  0.4617486000061035,
+                  0.5372995734214783,
+                  0.6087614297866821,
+                  0.6755902171134949,
+                  0.7372773289680481,
+                  0.7933533191680908,
+                  0.8433914184570312,
+                  0.8870108127593994,
+                  0.9238795042037964,
+                  0.9537169337272644,
+                  0.9762960076332092,
+                  0.9914448261260986,
+                  0.9990482330322266,
+                  0.9990482330322266,
+                  0.9914448857307434,
+                  0.9762960076332092,
+                  0.9537169933319092,
+                  0.9238795638084412,
+                  0.8870108723640442,
+                  0.843391478061676,
+                  0.7933533787727356,
+                  0.7372773885726929,
+                  0.6755902767181396,
+                  0.6087614893913269,
+                  0.5372996926307678,
+                  0.4617486894130707,
+                  0.38268351554870605,
+                  0.3007058799266815,
+                  0.21643969416618347,
+                  0.13052627444267273,
+                  0.04361947625875473
+                ],
+                "expected": [
+                  0.04361938685178757,
+                  0.13052618503570557,
+                  0.2164396047592163,
+                  0.30070579051971436,
+                  0.3826834261417389,
+                  0.4617486000061035,
+                  0.5372995734214783,
+                  0.6087614297866821,
+                  0.6755902171134949,
+                  0.7372773289680481,
+                  0.7933533191680908,
+                  0.8433914184570312,
+                  0.8870108127593994,
+                  0.9238795042037964,
+                  0.9537169337272644,
+                  0.9762960076332092,
+                  0.9914448261260986,
+                  0.9990482330322266,
+                  0.9990482330322266,
+                  0.9914448857307434,
+                  0.9762960076332092,
+                  0.9537169933319092,
+                  0.9238795638084412,
+                  0.8870108723640442,
+                  0.843391478061676,
+                  0.7933533787727356,
+                  0.7372773885726929,
+                  0.6755902767181396,
+                  0.6087614893913269,
+                  0.5372996926307678,
+                  0.4617486894130707,
+                  0.38268351554870605,
+                  0.3007058799266815,
+                  0.21643969416618347,
+                  0.13052627444267273,
+                  0.04361947625875473
+                ],
+                "matches": 36
+              },
+              {
+                "function": "loc_26F022C0",
+                "values": [
+                  0.04361938685178757,
+                  0.13052618503570557,
+                  0.2164396047592163,
+                  0.30070579051971436,
+                  0.3826834261417389,
+                  0.4617486000061035,
+                  0.5372995734214783,
+                  0.6087614297866821,
+                  0.6755902171134949,
+                  0.7372773289680481,
+                  0.7933533191680908,
+                  0.8433914184570312,
+                  0.8870108127593994,
+                  0.9238795042037964,
+                  0.9537169337272644,
+                  0.9762960076332092,
+                  0.9914448261260986,
+                  0.9990482330322266
+                ],
+                "expected": [
+                  0.04361938685178757,
+                  0.13052618503570557,
+                  0.2164396047592163,
+                  0.30070579051971436,
+                  0.3826834261417389,
+                  0.4617486000061035,
+                  0.5372995734214783,
+                  0.6087614297866821,
+                  0.6755902171134949,
+                  0.7372773289680481,
+                  0.7933533191680908,
+                  0.8433914184570312,
+                  0.8870108127593994,
+                  0.9238795042037964,
+                  0.9537169337272644,
+                  0.9762960076332092,
+                  0.9914448261260986,
+                  0.9990482330322266
+                ],
+                "matches": 18
+              }
+            ],
+            "library_sha256": "ad58e872e6086754fc32bbd1c1a602e285bc49b6141936f7cd6399c0d562b7f0"
+          }
+        },
+        "source_sha256": {
+          "port/core/ext80.c": "8f78a2e550aede93935833384a8c4afd07cafd31f064988bbaa3cffa373d5c2b",
+          "port/llasm-support/tribes_float80.c": "d3680616203dd5745fdee0ba8d3b042a26ce7e4c8e41b14943f00e45585f8672",
+          "tests/x87_result_slot.c": "19772ada46bd5e0df47f604c0df3c2b5a83ac648df99fa27f63a859698a80a8a",
+          "scripts/test-mp3-window-tables.py": "c2940c3150ee5bd8328937099ca68ad7e738d96e3889a5a5dc25f791ae26a6a5",
+          "scripts/x87_store_inputs.py": "584de96641edee05598c9d668aeff46951a863bcb2cfbd57a5480e36044df912"
+        },
+        "scope": "Original native MP3 table loops, original constants, all 54 float values checked against sine, loop exits and destination canaries. Old module fails all values. Not complete MP3 output or audible playback acceptance."
+      }
+    }
+  },
+  "original_execution": {
+    "pcm_calls": [
+      {
+        "symbol": "tribes_oa_alBufferData",
+        "pid": 61947,
+        "args": [
+          3,
+          4353,
+          1653607424,
+          6712,
+          22050
+        ],
+        "flag": "01",
+        "caller": "0x10056cb9",
+        "bytes": 6712,
+        "sha256": "8df430cfc5e44ddc87dcbb2a9bef23b6d80635cebe6fdd927b0fbe8f57ef81c7",
+        "nonzero_bytes": 6573,
+        "min_sample": -4611,
+        "max_sample": 4622
+      },
+      {
+        "symbol": "tribes_oa_alSourcePlay",
+        "pid": 61947,
+        "args": [
+          3,
+          1,
+          3144224,
+          1,
+          0
+        ],
+        "flag": "01",
+        "caller": "0x4055f0"
+      },
+      {
+        "symbol": "tribes_oa_alSourcePlay",
+        "pid": 61947,
+        "args": [
+          2,
+          1,
+          3144184,
+          1,
+          0
+        ],
+        "flag": "01",
+        "caller": "0x4055f0"
+      },
+      {
+        "symbol": "tribes_oa_alSourcePlay",
+        "pid": 61947,
+        "args": [
+          3,
+          1,
+          3144184,
+          1,
+          0
+        ],
+        "flag": "01",
+        "caller": "0x4055f0"
+      },
+      {
+        "symbol": "tribes_oa_alSourcePlay",
+        "pid": 61947,
+        "args": [
+          4,
+          1,
+          3144224,
+          1,
+          0
+        ],
+        "flag": "01",
+        "caller": "0x4055f0"
+      },
+      {
+        "symbol": "tribes_oa_alSourcePlay",
+        "pid": 61947,
+        "args": [
+          2,
+          1,
+          3144184,
+          1,
+          0
+        ],
+        "flag": "01",
+        "caller": "0x4055f0"
+      },
+      {
+        "symbol": "tribes_oa_alSourcePlay",
+        "pid": 61947,
+        "args": [
+          3,
+          1,
+          3144260,
+          1,
+          0
+        ],
+        "flag": "01",
+        "caller": "0x4055f0"
+      },
+      {
+        "symbol": "tribes_oa_alBufferData",
+        "pid": 61947,
+        "args": [
+          8,
+          4353,
+          1696890880,
+          413698,
+          22050
+        ],
+        "flag": "01",
+        "caller": "0x10056cb9",
+        "bytes": 413698,
+        "sha256": "61600d23afccd301afc926da4068f0ebc80da8692bbf0d727aae5c381aa10eee",
+        "nonzero_bytes": 405412,
+        "min_sample": -9756,
+        "max_sample": 9848
+      },
+      {
+        "symbol": "tribes_oa_alSourcePlay",
+        "pid": 61947,
+        "args": [
+          1,
+          1,
+          3142472,
+          1,
+          0
+        ],
+        "flag": "01",
+        "caller": "0x4055f0"
+      },
+      {
+        "symbol": "tribes_oa_alBufferData",
+        "pid": 61947,
+        "args": [
+          4,
+          4355,
+          1677197328,
+          65536,
+          22050
+        ],
+        "flag": "01",
+        "caller": "0x100573f6",
+        "bytes": 65536,
+        "sha256": "f56e2f3aa92f330b6c172b4b6faf1294673e77fe904a8a0179b48eb9209ae641",
+        "nonzero_bytes": 54202,
+        "min_sample": -2096,
+        "max_sample": 2065
+      },
+      {
+        "symbol": "tribes_oa_alBufferData",
+        "pid": 61947,
+        "args": [
+          5,
+          4355,
+          1677197328,
+          65536,
+          22050
+        ],
+        "flag": "01",
+        "caller": "0x100573f6",
+        "bytes": 65536,
+        "sha256": "4e4955f0f9ab8f3506e67c3f71028669619c24f58c6e198c6fbb21f4a7c80f7c",
+        "nonzero_bytes": 58682,
+        "min_sample": -2142,
+        "max_sample": 1822
+      },
+      {
+        "symbol": "tribes_oa_alBufferData",
+        "pid": 61947,
+        "args": [
+          6,
+          4355,
+          1677197328,
+          65536,
+          22050
+        ],
+        "flag": "01",
+        "caller": "0x100573f6",
+        "bytes": 65536,
+        "sha256": "61f023de5e0e81798bbe815617dcef27214e76d69fa1a30c9782f8df7e9628c0",
+        "nonzero_bytes": 60251,
+        "min_sample": -2484,
+        "max_sample": 2459
+      },
+      {
+        "symbol": "tribes_oa_alBufferData",
+        "pid": 61947,
+        "args": [
+          7,
+          4355,
+          1677197328,
+          65536,
+          22050
+        ],
+        "flag": "01",
+        "caller": "0x100573f6",
+        "bytes": 65536,
+        "sha256": "b520e52d6f011bf00bf7599ef63c5fa008dc16af00da62db6916de542858e639",
+        "nonzero_bytes": 60641,
+        "min_sample": -2346,
+        "max_sample": 2474
+      },
+      {
+        "symbol": "tribes_oa_alSourcePlay",
+        "pid": 61947,
+        "args": [
+          64,
+          1,
+          1613496164,
+          256,
+          879609306416128
+        ],
+        "flag": "01",
+        "caller": "0x1005749e"
+      },
+      {
+        "symbol": "tribes_oa_alBufferData",
+        "pid": 61947,
+        "args": [
+          4,
+          4355,
+          1677197328,
+          65536,
+          22050
+        ],
+        "flag": "01",
+        "caller": "0x100575b5",
+        "bytes": 65536,
+        "sha256": "72195c765a6d084878bd2571537c815fab1436f3ba5f7b7875bc3641b3286053",
+        "nonzero_bytes": 60133,
+        "min_sample": -2523,
+        "max_sample": 2472
+      },
+      {
+        "symbol": "tribes_oa_alBufferData",
+        "pid": 61947,
+        "args": [
+          5,
+          4355,
+          1677197328,
+          65536,
+          22050
+        ],
+        "flag": "01",
+        "caller": "0x100575b5",
+        "bytes": 65536,
+        "sha256": "c5d184126c15a2a07601eeead80c49471c757ad084c9036430ee3cfa87d89d6b",
+        "nonzero_bytes": 59493,
+        "min_sample": -2333,
+        "max_sample": 2562
+      }
+    ],
+    "exact_original_pcm_matches": [
+      {
+        "archive": "ref/product/base/audio.vl2",
+        "file": "audio/gui/buttonDown.wav",
+        "format": [
+          1,
+          1,
+          22050,
+          44100,
+          2,
+          16
+        ],
+        "pcm_sha256": "8df430cfc5e44ddc87dcbb2a9bef23b6d80635cebe6fdd927b0fbe8f57ef81c7",
+        "bytes": 6712
+      },
+      {
+        "archive": "ref/product/base/audio.vl2",
+        "file": "audio/gui/loading_hum.wav",
+        "format": [
+          1,
+          1,
+          22050,
+          44100,
+          2,
+          16
+        ],
+        "pcm_sha256": "61600d23afccd301afc926da4068f0ebc80da8692bbf0d727aae5c381aa10eee",
+        "bytes": 413698
+      }
+    ],
+    "match": {
+      "map": "Katabatic",
+      "bots": 2,
+      "offline": true,
+      "rendered": true,
+      "touch_spawn": true,
+      "weapon_switch": true,
+      "disc_ammo": [
+        15,
+        14
+      ],
+      "movement_remote_tower_range": [
+        493.9,
+        466.0
+      ],
+      "movement_own_flag_range": [
+        612.1,
+        591.4
+      ]
+    },
+    "console": "Post-fire console shows match startup and two bot UNABLE TO DEPLOY EQUIPMENT objective messages; prior repeating alSourcei invalid-buffer flood absent from this observed console.",
+    "debugger": "Bounded read-only audio capture during loading; detached before these gameplay screenshots. No whole-memory snapshot or FPS claim."
+  },
+  "screenshots_sha256": {
+    "ipad-audio-gameplay-2026-10-09.png": "54a0fedeabe51ef4549ff0bd88b0cf9e58c43b800bff9c3ecf7718f6d32da7f7",
+    "ipad-audio-console-2026-10-09.png": "fd61c48ef1485644d5645e5f046538e0b079540c8ba84edcc134fc2f65b825ff"
+  },
+  "limits": [
+    "Native PCM buffers and source-play calls verified; subjective audible quality and physical speaker output not accepted.",
+    "No new performance measurement. Prior fixed-view Simulator result 8.5\u20138.7 FPS remains below comfortable play.",
+    "Physical iPad/development signing, physical controller and iPhone gameplay remain unverified.",
+    "No online joining or authentication. Mac handoff bundles unchanged."
+  ]
+}
