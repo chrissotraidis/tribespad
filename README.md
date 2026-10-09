@@ -1,87 +1,73 @@
 # TribesPad
 
-A port of the actual Tribes2 build25034 and selected TribesNEXT client to native ARM64 on iPad, iPhone and macOS, targeting HD textures and existing-community multiplayer.
+Tribes 2 on iPad, iPhone and Mac, using the original game and TribesNEXT client.
 
-**Not playable yet.** The signed macOS full-engine app renders the original menus and textured character model and starts the original Training mission loader through native keyboard and mouse input. Rendering and gameplay remain under integration testing. The separate mobile app contains controls and connection diagnostics; full mobile gameplay, a rendered playable map and an authenticated match remain unverified.
+TribesPad translates the original x86 game ahead of time into native ARM64 code
+and supplies the Windows, graphics, audio and network services it expects on Apple
+platforms. The aim is the original game, offline bot matches and compatibility with
+the existing Tribes 2 community, with touch and controller support on mobile.
 
-Read the [current status](docs/STATUS.md), [detailed project review](docs/PROJECT-REVIEW-2026-10-03.md), [execution plan](docs/EXECUTION-PLAN.md) and [product target](docs/Tribes2-Online-HD-Target.md).
+**In development.** The Mac app renders and runs offline matches, but performance
+is currently too slow for comfortable play. The full iPad Simulator app starts the
+original engine but stops during graphics setup;
+there is no playable iPad or iPhone release yet.
 
-## Full-engine integration build
+![Tribes 2 running on macOS](docs/validation/macos-retina-katabatic-2026-10-08.png)
 
-In the prepared development workspace:
+## What works
+
+- **Original Mac menus and rendering.** The game runs in a signed native Mac app,
+  with corrected mouse targeting on Retina displays.
+- **Offline matches on Mac.** Katabatic loads with two bots. Movement, aiming and
+  disc firing have been exercised through native keyboard and mouse input.
+- **Internet server listings.** The original browser lists 26 community servers
+  and refreshes their information. No online match has been joined in these tests.
+- **iPad app integration.** The full original engine builds and starts in the iPad
+  Simulator. Its checked GL4ES bridge passes real pixel readback and context
+  lifecycle tests. GPU-query setup currently blocks the original menu.
+
+## Current work
+
+- Measure game performance with the optimized, cached ARM64 build.
+- Connect the full original engine to the iPad renderer and app lifecycle.
+- Integrate and refine touch, controller, keyboard and mouse input in real gameplay.
+- Verify HD textures, sustained performance and physical-device behavior.
+
+Offline testing and server discovery are the current multiplayer-related checks;
+authenticated online play remains unverified. Detailed results and remaining issues
+are in [status](docs/STATUS.md) and the [execution plan](docs/EXECUTION-PLAN.md).
+
+## Build from source
+
+The development build needs Xcode, pinned LLVM tools, prepared game inputs and
+translated images. A clean checkout is not yet a one-command build.
+
+In the prepared workspace, build and package the Mac app with:
 
 ```sh
 export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
 export SDKROOT="$(xcrun --sdk macosx --show-sdk-path)"
 .venv/bin/python scripts/test-qol-native-bootstrap.py \
   generated/srw/run-20261003T190924-ifc22 --probe-ntdll --enter-engine
-```
-
-This builds and runs the original engine/community DLL with diagnostic stops for unsupported behavior. It is not a packaged game or a successful-startup test. Inspect the actual `result.json` under the run's `native-diagnostic/checked/bootstrap-published-ntdll-probe` directory. A diagnostic process finishing does not mean the game initialized.
-
-To package the prepared full-engine build as a signed macOS app:
-
-```sh
 .venv/bin/python scripts/build-macos-engine-app.py
 open generated/integration-review/macos-engine-app/TribesPad.app
 ```
 
-This development app depends on the prepared workspace assets and is not a portable distribution. See current status for the host audio workaround and the latest runtime boundary.
+The app currently uses assets in that workspace. There is no standalone release or
+verified device IPA installation flow. The separate Apple controls diagnostic does
+not contain the full game.
 
-The build needs Xcode, the pinned LLVM tools, prepared game inputs, translated images and native dependencies. A clean checkout cannot yet reproduce all of those from a single command: cached SRW baseline acquisition remains a setup gap. [Historical build commands](docs/BUILD-HISTORY.md) are retained for investigation; their older status statements are superseded by the current status.
+Build details, native input helpers and component checks:
+**[Development guide](docs/DEVELOPMENT.md)**.
 
-## Native Mac app input
+## Game files and references
 
-The input helper finds the selected engine's visible window, including SDL exclusive fullscreen on layer 25, and sends real macOS HID events. Build it with the active Xcode SDK:
+Game data is not included in this repository. Downloads, textures and generated
+translations stay under ignored `ref/` and `generated/` directories.
+[Input hashes](inputs-manifest.json) identify the selected game and TribesNEXT files;
+[dependency pins](dependencies.lock.json) include the
+[HaloPad / ProjectReach](https://github.com/chrissotraidis/projectreach) reference.
+Free download availability does not grant redistribution rights.
 
-```sh
-mkdir -p generated/tools
-xcrun clang -fobjc-arc -O2 -Wall -Wextra -Werror \
-  -framework AppKit -framework CoreGraphics \
-  scripts/macos-engine-input.m -o generated/tools/macos-engine-input
-```
-
-Replace `PID` with the launched engine's process ID from its `app.pid` file. `window` reports the actual owned window without sending input; `click` uses fractions of its bounds. These are desktop test actions, not guest-state injection.
-
-```sh
-generated/tools/macos-engine-input PID window
-generated/tools/macos-engine-input PID key 36 0.8  # Return held for 0.8s
-generated/tools/macos-engine-input PID click 0.5 0.5
-generated/tools/macos-engine-input PID aim 30 -10
-generated/tools/macos-engine-input PID fire 0.3
-generated/tools/macos-engine-input PID jet 0.5
-```
-
-Use movement/fire/jet only after gameplay renders. Shipped defaults use ESDF, Space to jump, mouse aim and left/right buttons for fire/jet; verify the active configuration in game. Event delivery alone does not prove a gameplay action.
-
-## Apple control and server-query diagnostic
-
-```sh
-.venv/bin/python scripts/build-apple.py --platform macos
-.venv/bin/python scripts/build-apple.py --simulator YOUR_SIMULATOR_UUID
-```
-
-This separate shell links two translated routines, displays input actions and probes community servers. It does not link the full game, log in or join a match. The builder refuses a second booted simulator. Device signing and physical-game acceptance remain unfinished.
-
-## Current multimedia checks
-
-```sh
-.venv/bin/python scripts/test-sdl-hints.py
-.venv/bin/python scripts/test-sdl-display.py
-.venv/bin/python scripts/test-sdl-sync.py
-.venv/bin/python scripts/test-sdl-tls.py
-.venv/bin/python scripts/test-sdl-audio.py
-# Run mobile tests sequentially on the same sole booted simulator:
-.venv/bin/python scripts/test-sdl-audio.py --simulator-device YOUR_SIMULATOR_UUID
-.venv/bin/python scripts/test-sdl-display.py --simulator-device YOUR_SIMULATOR_UUID
-.venv/bin/python scripts/test-sdl-sync.py
-.venv/bin/python scripts/test-sdl-tls.py --simulator-device YOUR_SIMULATOR_UUID
-```
-
-Audio tests exercise actual CoreAudio silent playback and worker-thread logging. They do not establish that original game sound or the complete application works.
-
-## Inputs and reference
-
-`inputs-manifest.json` records original downloads and installed module hashes. `dependencies.lock.json` pins ProjectReach/HaloPad and other references. Game binaries, generated translations, downloads and textures stay in ignored `ref/` and `generated/` directories. The active ProjectReach repository is not modified.
-
-Free download availability does not grant redistribution rights. The current target is a reproducible personal build; no App Store or public binary release is promised.
+See the [product target](docs/Tribes2-Online-HD-Target.md) for the intended experience.
+Problems: [open an issue](https://github.com/chrissotraidis/tribespad/issues).

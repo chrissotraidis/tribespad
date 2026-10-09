@@ -69,6 +69,10 @@ struct ExternalMemoryPass : PassInfoMixin<ExternalMemoryPass>{
     }else{B.CreateCall(Indirect,{Call->getCalledOperand()});++IndirectCalls;}continue;}
     auto Name=canonical(Target->getName());
     if(!Target->isDeclaration()||Checked.contains(Name)||Name.starts_with("tribes_memory_access_")||Name=="tribes_memory_transfer_begin")continue;
+    // Pinned GL4ES exports use the same GL ABI and private host buffers.
+    // Reuse only existing finite GL contracts and all their shape checks.
+    if(Name=="gl4es_glFogCoordPointer")Name="glFogCoordPointerEXT";
+    if(Name.starts_with("gl4es_gl")&&Host.contains(Name.drop_front(6)))Name=Name.drop_front(6);
     if(Strings.contains(Name)){
      if(Name=="strcmp"||Name=="strncmp"){
       unsigned N=Name=="strcmp"?2:3;
@@ -92,6 +96,12 @@ struct ExternalMemoryPass : PassInfoMixin<ExternalMemoryPass>{
     }
     if(Managers.contains(Name)&&Sources.contains(M.getSourceFileName())){++ManagerCalls;continue;}
     bool Allowed=Host.contains(Name)||Intrinsics.contains(Name);
+    if(Name=="tribes_gl4es_context_create"||Name=="tribes_gl4es_context_activate"||Name=="tribes_gl4es_context_swap"||Name=="tribes_gl4es_context_destroy"){
+     auto *Result=Name=="tribes_gl4es_context_create"?static_cast<Type *>(P):Name=="tribes_gl4es_context_swap"?static_cast<Type *>(B.getInt1Ty()):B.getVoidTy();
+     unsigned Count=Name=="tribes_gl4es_context_create"?3:1;
+     Allowed=Allowed&&!Target->isVarArg()&&Call->getType()==Result&&Call->arg_size()==Count&&Target->getCallingConv()==CallingConv::C&&Call->getCallingConv()==CallingConv::C;
+     if(Allowed)for(auto &A:Call->args())if(A->getType()!=P)Allowed=false;
+    }
     if(Name=="tribes_memory_code_revision")
      Allowed=Allowed&&!Target->isVarArg()&&Call->getType()==I32&&Call->arg_size()==1&&Call->getArgOperand(0)->getType()==I64;
 

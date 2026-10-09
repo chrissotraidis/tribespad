@@ -16,10 +16,18 @@ def guard(entry):
  objects,_=guard_link([entry],out/'guarded');report=json.loads((out/'guarded/result.json').read_text());return pathlib.Path(objects[0]),bool(report['objects'][0].get('reused_verified_bitcode'))
 write(17);first,reused=support();assert not reused;again,reused=support();assert reused and first==again
 obj,reused=guard(first);assert not reused;_,reused=guard(first);assert reused
+# Changing the backend must regenerate native code without repeating the checked pass.
+receipt=out/'guarded/result.json';state=json.loads(receipt.read_text())
+checked=pathlib.Path(state['objects'][0]['object']).with_suffix('.bc');checked_stamp=checked.stat().st_mtime_ns
+state['codegen']['flags']=['-O0'];receipt.write_text(json.dumps(state))
+_,reused=guard(first);assert not reused
+state=json.loads(receipt.read_text());assert state['objects'][0]['reused_checked_ir'] and checked.stat().st_mtime_ns==checked_stamp
+obj.write_bytes(b'corrupted native object');_,reused=guard(first);assert not reused
+state=json.loads(receipt.read_text());assert state['objects'][0]['reused_checked_ir'] and checked.stat().st_mtime_ns==checked_stamp
 write(29);changed,reused=support();assert not reused and changed['object_sha256']!=first['object_sha256'];obj,reused=guard(changed);assert not reused
 library=out/'changed.dylib';subprocess.run(['clang','-target','arm64-apple-macos12','-O2','-dynamiclib',str(obj),str(R/'port/core/guest_memory_checks.c'),str(R/'port/core/guest_external_checks.c'),'-o',str(library)],check=True)
 lib=ctypes.CDLL(str(library));lib.cache_fixture.argtypes=[ctypes.c_void_p];value=ctypes.c_uint32();lib.cache_fixture(ctypes.byref(value));assert value.value==29
 pathlib.Path(changed['bitcode']).write_bytes(b'corrupted cached bitcode');repaired,reused=support();assert not reused and repaired==changed
 policy=out/'guarded/result.json';state=json.loads(policy.read_text());state['policy_sha256']='invalid';policy.write_text(json.dumps(state));_,reused=guard(repaired);assert not reused
-report=dict(passed=True,run=str(out.relative_to(R)),changed_value=value.value,binary_sha256=sha(library),script_sha256=sha(pathlib.Path(__file__).resolve()),builders_sha256={str(p.relative_to(R)):sha(p) for p in [R/'scripts/checked_support.py',R/'scripts/guard_checked_link.py']},scope='Exact source/tool/bitcode/object cache hit; source change rebuilds both passes and executes the new store; corrupted bitcode and policy mismatch invalidate reuse. C and Objective-C inputs are never reused by this cache.')
+report=dict(passed=True,run=str(out.relative_to(R)),changed_value=value.value,binary_sha256=sha(library),script_sha256=sha(pathlib.Path(__file__).resolve()),builders_sha256={str(p.relative_to(R)):sha(p) for p in [R/'scripts/checked_codegen.py',R/'scripts/checked_support.py',R/'scripts/guard_checked_link.py']},scope='Exact source/tool/bitcode/object cache hit; source change rebuilds both passes and executes the new store; Backend identity changes and corrupted native objects rebuild from verified checked IR; corrupted bitcode and policy mismatch invalidate reuse. C and Objective-C inputs are never reused by this cache.')
 (root/'result.json').write_text(json.dumps(report,indent=2)+'\n');print('PASS: checked cache reuse, source/bitcode/policy invalidation, executed rebuilt value 29')

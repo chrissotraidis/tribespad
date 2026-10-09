@@ -62,6 +62,9 @@ extern void tribes_enter(_cpu *,uint32_t);
 extern unsigned sdl_test_live,sdl_test_fail;
 #ifdef CHECKED
 extern void bad_window(void),bad_context(void),bad_randf(void);
+#ifdef TB_GL4ES
+extern void bad_gl4es_color(void),bad_gl4es_adapter(void),gl4es_guest_pointer(void *);
+#endif
 #if defined(GRAPHICS) && !TARGET_OS_IPHONE
 extern void bad_frustum(void),bad_mult_matrix(void),bad_mult_matrix_double(void),bad_depth_mask(void),bad_is_enabled(void),bad_scale(void),bad_polygon_offset(void);
 extern void bad_alpha_func(void),bad_polygon_mode(void),bad_load_matrix_f(void),bad_tex_gen_i(void),bad_tex_gen_fv(void);
@@ -93,6 +96,29 @@ static void pixels(void){
  unsigned char pixel[4]={0};color(.25f,.5f,.75f,1);clear(GL_COLOR_BUFFER_BIT);read(0,0,1,1,GL_RGBA,GL_UNSIGNED_BYTE,pixel);
  assert(pixel[0]>=63&&pixel[0]<=65&&pixel[1]>=127&&pixel[1]<=129&&pixel[2]>=190&&pixel[2]<=192&&pixel[3]==255);
  printf("renderer=%s version=%s pixel=%u,%u,%u,%u\n",string(GL_RENDERER),string(GL_VERSION),pixel[0],pixel[1],pixel[2],pixel[3]);
+#ifdef TB_GL4ES
+ /* Exercise the checked guest backend's legacy matrix/immediate draw path,
+    then read the actual EAGL drawable through the independent native oracle. */
+ int width,height;assert(SDL_GetWindowSizeInPixels(SDL_GL_GetCurrentWindow(),&width,&height));
+ tribes_gl_draw_buffer(&cpu,0x0405); /* UIKit's actual back-buffer destination. */
+ tribes_gl_viewport(&cpu,0,0,width,height);
+ tribes_gl_clear_color(&cpu,0,0,0,0x3f800000);tribes_gl_clear(&cpu,GL_COLOR_BUFFER_BIT);
+ tribes_gl_matrix_mode(&cpu,0x1701);tribes_gl_load_identity(&cpu);
+ tribes_gl_matrix_mode(&cpu,0x1700);tribes_gl_load_identity(&cpu);
+ tribes_gl_color4f(&cpu,0x3f800000,0,0,0x3f800000);
+ tribes_gl_begin(&cpu,0x0007);
+ tribes_gl_vertex2f(&cpu,0xbf000000,0xbf000000);
+ tribes_gl_vertex2f(&cpu,0x3f000000,0xbf000000);
+ tribes_gl_vertex2f(&cpu,0x3f000000,0x3f000000);
+ tribes_gl_vertex2f(&cpu,0xbf000000,0x3f000000);
+ tribes_gl_end(&cpu);tribes_gl_finish(&cpu);
+ read(width/2,height/2,1,1,GL_RGBA,GL_UNSIGNED_BYTE,pixel);
+ assert(pixel[0]==255&&pixel[1]==0&&pixel[2]==0&&pixel[3]==255);
+ read(width/16,height/2,1,1,GL_RGBA,GL_UNSIGNED_BYTE,pixel);
+ assert(pixel[0]==0&&pixel[1]==0&&pixel[2]==0&&pixel[3]==255);
+ printf("PASS: checked mobile guest legacy draw with native pixel readback\n");
+#endif
+
 }
 #ifdef GRAPHICS
 static uint32_t graphics_expected_error=0x19a5;
@@ -164,7 +190,7 @@ static void guest_pixels(void){
  ReadPixels read=(ReadPixels)SDL_GL_GetProcAddress("glReadPixels");assert(read);
  GC(0xfffa0070,0,0x8d40,0);
  GC(0xfffa00b0,0,GL_UNPACK_ALIGNMENT,1);GLint alignment=0;glGetIntegerv(GL_UNPACK_ALIGNMENT,&alignment);assert(alignment==1);GC(0xfffa00b0,0,GL_UNPACK_ALIGNMENT,4);
-#if !TARGET_OS_IPHONE
+#if !TARGET_OS_IPHONE || defined(TB_GL4ES)
  GC(0xfffa0090,0,GL_BACK);
 #else
  strcpy((char *)memory+0x24000,"glDrawBuffer");assert(!CALL(63,0x24000));
@@ -1356,7 +1382,7 @@ static void matrix_multiplication(const char *fault,int kind){
 static void legacy_route(uint32_t original_window,uint32_t original_context,const char *fault){
  assert(CALL(53,SDL_GL_CONTEXT_MAJOR_VERSION,3)&&CALL(53,SDL_GL_CONTEXT_MINOR_VERSION,2)&&CALL(53,SDL_GL_CONTEXT_PROFILE_MASK,SDL_GL_CONTEXT_PROFILE_COMPATIBILITY));
  uint32_t window=CALL(40,0x2000,64,64,SDL_WINDOW_OPENGL|SDL_WINDOW_HIDDEN,0);assert(window);
- uint32_t context=CALL(47,window);assert(context);assert(!strncmp((char *)glGetString(GL_VERSION),"2.1",3));
+ uint32_t context=CALL(47,window);if(!context)fprintf(stderr,"Context creation failed: %s\n",SDL_GetError());assert(context);assert(!strncmp((char *)glGetString(GL_VERSION),"2.1",3));
  assert(CALL(54,SDL_GL_CONTEXT_MAJOR_VERSION,0x3001)&&word(0x3001)==2);
  const char *exports[]={"glMatrixMode","glLoadIdentity","glLoadMatrixd","glViewport","glDisable","glEnable"};
  for(unsigned i=0;i<6;i++){strcpy((char *)memory+0x24000,exports[i]);assert(CALL(63,0x24000)==0xfffa0240+16*i);}
@@ -1679,6 +1705,11 @@ static int window_main(int argc,char **argv){
  assert(tribes_memory_checks_configure(cpu._pointer_offset,UINT64_C(0x100000000)));
 #ifdef CHECKED
  tribes_memory_external_configure(cpu._pointer_offset,UINT64_C(0x100000000));tribes_memory_external_enable();
+#ifdef TB_GL4ES
+ if(argc==2&&!strcmp(argv[1],"bad-gl4es-color")){bad_gl4es_color();return 99;}
+ if(argc==2&&!strcmp(argv[1],"bad-gl4es-adapter")){bad_gl4es_adapter();return 99;}
+ if(argc==2&&!strcmp(argv[1],"gl4es-guest-pointer")){gl4es_guest_pointer(memory);return 99;}
+#endif
  if(argc==2&&!strcmp(argv[1],"bad-window")){bad_window();return 99;}
  if(argc==2&&!strcmp(argv[1],"bad-context")){bad_context();return 99;}
  if(argc==2&&!strcmp(argv[1],"bad-randf")){bad_randf();return 99;}
@@ -1752,7 +1783,7 @@ static int window_main(int argc,char **argv){
  assert(!SDL_GL_CreateContext(native)&&!strcmp(SDL_GetError(),"Failed creating OpenGL context at version requested"));
  assert(CALL(53,SDL_GL_CONTEXT_PROFILE_MASK,SDL_GL_CONTEXT_PROFILE_CORE));
 #endif
- uint32_t context=CALL(47,window);assert((context&0xff000000)==0xdb000000);
+ uint32_t context=CALL(47,window);if(!context)fprintf(stderr,"Context creation failed: %s\n",SDL_GetError());assert((context&0xff000000)==0xdb000000);
  assert(CALL(50)==window&&CALL(51)==context);
 #if !TARGET_OS_IPHONE
  GLint profile=0;glGetIntegerv(0x9126,&profile);assert(profile&1);

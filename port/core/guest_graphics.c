@@ -14,10 +14,14 @@ __attribute__((weak,noinline)) void *tribes_openal_native_lookup(uint32_t addres
 #include <string.h>
 typedef struct {const char *name;uint32_t address,module;void *function;} GraphicsExport;
 #include "graphics-exports.inc"
-/* Desktop draw-buffer selection has no GLES2 implementation. Do not resolve
-   that export on mobile until its state semantics are implemented. */
+/* Only implemented mobile entry points are exposed. */
 static int available(const GraphicsExport *e){
 #if TARGET_OS_IPHONE
+#ifdef TB_GL4ES
+    if(!strcmp(e->name,"glDrawBuffer"))return 1; /* bounded default-back selection */
+    static const char *legacy[]={"glTexCoord2fv","glLoadMatrixf","glTexGeni","glTexGenfv","glPolygonMode","glAlphaFunc","glFogCoordPointerEXT","glVertex3fv","glFogi","glFogf","glFogfv","glLightfv","glLightf","glLightModelfv","glRotatef","glTexCoord2f","glTranslatef","glColor3ub","glVertex3f","glColor4f","glVertex2i","glPushMatrix","glPopMatrix","glScalef","glFrustum","glMultMatrixf","glMultMatrixd","glColor4fv","glMaterialfv","glTexEnvfv","glTexEnvf","glNormalPointer","glBegin","glVertex2f","glEnd","glTexEnvi","glColor4ub","glEnableClientState","glDisableClientState","glColorPointer","glVertexPointer","glTexCoordPointer","glDrawElements","glMatrixMode","glLoadIdentity","glLoadMatrixd","glClientActiveTextureARB","glMultiTexCoord2fARB","glMultiTexCoord2fvARB","glMultiTexCoord3fvARB"};
+    for(unsigned i=0;i<sizeof legacy/sizeof *legacy;i++)if(!strcmp(e->name,legacy[i]))return 1;
+#endif
     if(!strcmp(e->name,"glTexCoord2fv")||!strcmp(e->name,"glPrimitiveRestartIndex"))return 0;
     if(!strcmp(e->name,"glLoadMatrixf")||!strcmp(e->name,"glTexGeni")||!strcmp(e->name,"glTexGenfv")||!strcmp(e->name,"glPolygonMode")||!strcmp(e->name,"glAlphaFunc")||!strcmp(e->name,"glFogCoordPointerEXT")||!strcmp(e->name,"glVertex3fv"))return 0;
     if(!strcmp(e->name,"glFogi")||!strcmp(e->name,"glFogf")||!strcmp(e->name,"glFogfv"))return 0;

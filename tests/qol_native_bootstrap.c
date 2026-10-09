@@ -989,11 +989,17 @@ void x87_frstor_void(_cpu *c,const uint8_t *memory){(void)memory;stop(c,"frstor"
 static void commit(uint32_t address,uint32_t bytes,uint32_t type){uint64_t page=(uint64_t)sysconf(_SC_PAGESIZE),lo=address&~(page-1),hi=((uint64_t)address+bytes+page-1)&~(page-1);assert(hi<=UINT64_C(0x100000000));assert(!mprotect((void *)(uintptr_t)(base+lo),(size_t)(hi-lo),PROT_READ|PROT_WRITE));assert(tribes_address_space_declare(base,(uint32_t)lo,(uint32_t)(hi-lo),(uint32_t)lo,4,0x1000,4,type));}
 static void load(const char *path,uint32_t address){FILE *f=fopen(path,"rb");assert(f&&!fseek(f,0,SEEK_END));long size=ftell(f);assert(size>0&&size<0x10000000&&!fseek(f,0,SEEK_SET));commit(address,(uint32_t)size,0x1000000);assert(fread((void *)(uintptr_t)(base+address),1,(size_t)size,f)==(size_t)size&&!fclose(f));}
 static void put(uint32_t address,uint32_t value){memcpy((void *)(uintptr_t)(base+address),&value,4);}
+#ifdef TB_MOBILE_ENGINE
+int tribes_mobile_engine_main(int argc,char **argv){
+#else
 int main(int argc,char **argv){
- /* This harness is macOS-only and enters the guest on process main. Cocoa's
-    native SDL driver owns NSApplication setup. Mobile hosts use SDL_RunApp. */
+#endif
+ /* Desktop enters on process main; the mobile host has already entered
+    SDL_RunApp and established the UIKit main-thread lifecycle. */
+#ifndef TB_MOBILE_ENGINE
  extern void tribes_sdl_host_application_ready(void);
  tribes_sdl_host_application_ready();
+#endif
 #ifdef TB_CAPTURE_PATCHES
  assert(argc==7||argc==8);capture_directory=argv[6];
 #ifdef TB_PUBLISH_PATCHES
