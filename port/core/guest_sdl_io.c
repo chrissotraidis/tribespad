@@ -165,3 +165,6 @@ uint32_t tribes_sdl_strlcpy(_cpu *cpu,uint32_t destination,uint32_t source,uint3
     }
     free(text);tribes_set_last_error(error);return length;
 }
+
+/* SDL errors are native thread-local strings, separate from Win32 LastError. */
+uint32_t tribes_sdl_clear_error(void){return SDL_ClearError();}

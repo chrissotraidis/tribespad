@@ -12,6 +12,8 @@ int tribes_fls_fiber_select(TribesFlsFiber *fiber);
 int tribes_fls_fiber_delete(TribesFlsFiber *fiber);
 void *tribes_fls_current_context(uint64_t base);
 void tribes_fls_thread_cleanup(uint64_t base);
+/* Forced process termination discards worker values without guest callbacks. */
+void tribes_fls_thread_discard(uint64_t base);
 uint32_t tribes_fls_alloc_index(uint64_t base,uint32_t callback);
 uint32_t tribes_fls_get_value(uint64_t base,uint32_t index);
 uint32_t tribes_fls_set_value(uint64_t base,uint32_t index,uint32_t value);

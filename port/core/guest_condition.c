@@ -45,6 +45,22 @@ static void wake(uint64_t base,uint32_t guest,int all) {
 }
 void tribes_condition_wake(uint64_t base,uint32_t guest) { wake(base,guest,0); }
 void tribes_condition_wake_all(uint64_t base,uint32_t guest) { wake(base,guest,1); }
+/* pthread cancellation reacquires the catalog before running this cleanup.
+   Remove the stack-owned waiter before the native thread can disappear. The
+   associated guest lock stays released, as it must for process termination. */
+typedef struct ConditionWait { uintptr_t key;uint32_t guest;Condition *condition;Waiter *waiter;uint64_t base;uint32_t lock;int mode; } ConditionWait;
+static void finish_wait(void *context) {
+    ConditionWait *wait=context;Condition *c=wait->condition;Waiter *w=wait->waiter;
+    (void)validate(wait->key,wait->guest);
+    Waiter **link=&c->waiters;while(*link!=w)link=&(*link)->next;*link=w->next;
+    check(pthread_cond_destroy(&w->changed),wait->guest);
+    if(!c->waiters){Condition **p=&conditions;while(*p!=c)p=&(*p)->next;*p=c->next;publish(wait->key,0);free(c);}
+    check(pthread_mutex_unlock(&catalog),wait->guest);
+}
+static void cancel_wait(void *context) {
+    ConditionWait *wait=context;finish_wait(wait);
+    if(wait->mode==2)tribes_critical_condition_cancel(wait->base,wait->lock);
+}
 static uint32_t sleep_on(uint64_t base,uint32_t guest,uint32_t lock,uint32_t ms,int mode) {
     uintptr_t key=key_for(base,guest);check(pthread_mutex_lock(&catalog),guest);
     Condition *c=validate(key,guest);
@@ -55,21 +71,24 @@ static uint32_t sleep_on(uint64_t base,uint32_t guest,uint32_t lock,uint32_t ms,
     if(mode==2)tribes_critical_condition_release(base,lock);
     else if(mode==1)tribes_srw_release_shared(base,lock);
     else tribes_srw_release_exclusive(base,lock);
-    int error=ETIMEDOUT;
+    int error=ETIMEDOUT,cancel_state;uint32_t success;ConditionWait wait={key,guest,c,&w,base,lock,mode};
+    pthread_cleanup_push(cancel_wait,&wait);
+    check(pthread_setcancelstate(PTHREAD_CANCEL_ENABLE,&cancel_state),guest);
+    pthread_testcancel();
     if(ms==UINT32_MAX)error=pthread_cond_wait(&w.changed,&catalog);
     else if(ms){
         struct timespec relative={(time_t)(ms/1000),(long)(ms%1000)*1000000};
         error=pthread_cond_timedwait_relative_np(&w.changed,&catalog,&relative);
     }
+    /* Darwin relative timed waits need an explicit deferred-cancel check. */
+    pthread_testcancel();
     if(error&&error!=ETIMEDOUT)check(error,guest);
     /* A selected wake wins a native timeout race. Native spurious wakes are
        permitted by Windows; one wait avoids extending the requested timeout. */
-    uint32_t success=!error||w.selected;
-    (void)validate(key,guest);
-    Waiter **link=&c->waiters;while(*link!=&w)link=&(*link)->next;*link=w.next;
-    check(pthread_cond_destroy(&w.changed),guest);
-    if(!c->waiters){Condition **p=&conditions;while(*p!=c)p=&(*p)->next;*p=c->next;publish(key,0);free(c);}
-    check(pthread_mutex_unlock(&catalog),guest);
+    success=!error||w.selected;
+    check(pthread_setcancelstate(cancel_state,NULL),guest);
+    pthread_cleanup_pop(0);
+    finish_wait(&wait);
     /* Never retain the CV catalog while reacquiring a contended guest lock. */
     if(mode==2)tribes_critical_condition_reacquire(base,lock);
     else if(mode==1)tribes_srw_acquire_shared(base,lock);

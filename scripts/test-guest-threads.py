@@ -11,8 +11,8 @@ out=R/'generated/integration-review/guest-threads'/(a.simulator_device or 'macos
 (out/'result.json').write_text(json.dumps(dict(passed=False,state='running'))+'\n')
 spec=importlib.util.spec_from_file_location('bindings',R/'scripts/gen-win32-bindings.py');gen=importlib.util.module_from_spec(spec);spec.loader.exec_module(gen)
 bindings=R/'port/llasm-runtime/win32-bindings.json';data=json.loads(bindings.read_text());wrapper=out/'bindings.ll'
-wrapper.write_text(gen.generate({n:data[n] for n in ['QueueUserWorkItem','CreateThread','ResumeThread','GetExitCodeThread','GetThreadId','ExitThread','FreeLibraryAndExitThread']},False))
-sources=[R/'port/core'/(n+'.c') for n in ['guest_threads','guest_callback','guest_heap','guest_modules','guest_virtual_memory','guest_teb','guest_thread_ids','native_handles','native_fls','guest_fls','shift']]+[R/'port/llasm-support/tribes_absolute_memory.c',R/'port/llasm-support/tribes_shift.c',R/'tests/fixtures/peb_readers.ll',R/'tests/fixtures/guest_threads_dispatch.c',R/'tests/fixtures/guest_threads.ll',R/'tests/fixtures/native_enter.ll',wrapper]
+wrapper.write_text(gen.generate({n:data[n] for n in ['QueueUserWorkItem','CreateThread','ResumeThread','GetExitCodeThread','GetThreadId','ExitThread','FreeLibraryAndExitThread','ExitProcess']},False))
+sources=[R/'port/core'/(n+'.c') for n in ['guest_condition','guest_srw','critical_section','guest_threads','guest_callback','guest_heap','guest_modules','guest_virtual_memory','guest_teb','guest_thread_ids','native_handles','native_fls','guest_fls','shift']]+[R/'port/llasm-support/tribes_absolute_memory.c',R/'port/llasm-support/tribes_shift.c',R/'tests/fixtures/peb_readers.ll',R/'tests/fixtures/guest_threads_dispatch.c',R/'tests/fixtures/guest_threads.ll',R/'tests/fixtures/native_enter.ll',wrapper]
 objects=[];checked=guarded=None;modes=['normal'] if a.simulator_device else a.modes.split(',')
 if 'checked' in modes:
  objects,checked=compile_support(sources,out/'checked',['-DPTROFS_64BIT']);meta=json.loads((out/'checked/result.json').read_text());entries=[]
@@ -36,7 +36,12 @@ for mode in modes:
   for fault_id in range(1,5):
    fault=subprocess.run([str(exe),str(fault_id)],capture_output=True,text=True,timeout=30);(out/('host-fault-%d.log'%fault_id)).write_text(fault.stdout+fault.stderr)
    assert fault.returncode==-signal.SIGABRT and 'external memory contract stop' in fault.stderr,(fault_id,fault.returncode,fault.stderr)
- report['runs'].append(dict(mode=mode,passed=True,binary_sha256=sha(exe),stdout=run.stdout));print(mode,run.stdout.strip(),flush=True)
-paths=sources+guards+[test,bindings,pathlib.Path(__file__).resolve()]
+ if not a.simulator_device:
+  for code in (0,23):
+   shutdown=subprocess.run([str(exe),'shutdown',str(code)],capture_output=True,text=True,timeout=30)
+   (out/(mode+'-shutdown-%d.log'%code)).write_text(shutdown.stdout+shutdown.stderr)
+   assert shutdown.returncode==code and shutdown.stdout.startswith('PASS: process exit') and shutdown.stderr=='TribesPad: original process shutdown completed, code=%d\n'%code,(mode,code,shutdown.returncode,shutdown.stdout,shutdown.stderr)
+ report['runs'].append(dict(mode=mode,passed=True,binary_sha256=sha(exe),stdout=run.stdout,process_exit_codes=[] if a.simulator_device else [0,23]));print(mode,run.stdout.strip(),flush=True)
+paths=sources+guards+[test,bindings,pathlib.Path(__file__).resolve(),R/'scripts/gen-win32-bindings.py',R/'config/runtime/external-memory-contracts.json']
 report.update(passed=True,state='finished',sources_sha256={str(p.relative_to(R)):sha(p) for p in paths},scope='Native guest-thread lifecycle via finite AOT fixtures, not original-game or physical-device acceptance.')
 (out/'result.json').write_text(json.dumps(report,indent=2)+'\n')

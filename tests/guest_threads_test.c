@@ -6,7 +6,12 @@
 #include "../port/core/native_handles.h"
 #include "../port/core/guest_memory_checks.h"
 #include "../port/core/guest_external_checks.h"
+#include "../port/core/critical_section.h"
+#include "../port/core/guest_condition.h"
 #include <assert.h>
+extern void fixture_shutdown_setup(unsigned);
+extern void fixture_shutdown_handles(uint32_t,uint32_t,uint32_t);
+extern unsigned fixture_shutdown_started(void);
 #include <errno.h>
 #include <stdlib.h>
 #include <sys/resource.h>
@@ -33,11 +38,12 @@ int main(int argc,char **argv){
  const void *vm_targets[]={(const void *)tribes_memory_vm_initialize,(const void *)tribes_memory_vm_change};
  tribes_memory_register_targets(vm_targets,2);tribes_memory_external_enable();assert(tribes_virtual_memory_enable_checked(base,&vm_backend));
 #endif
- if(argc>1&&strcmp(argv[1],"guard")){fixture_bad_host((unsigned)atoi(argv[1]),base);return 99;}
+ int shutdown=argc>1&&!strcmp(argv[1],"shutdown");
+ if(argc>1&&!shutdown&&strcmp(argv[1],"guard")){fixture_bad_host((unsigned)atoi(argv[1]),base);return 99;}
  unsigned char a[]={0x78,0x56,0x34,0x12},b[]={1,0xef,0xcd,0xab};uint32_t ca=0x100,cb=0x200;
- TribesThreadModule modules[]={{0x100000,0x101,0,4,12,1,a,&ca,0},{0x200000,0x201,1,4,12,1,b,&cb,0}};
+ TribesThreadModule modules[]={{0x100000,0x101,0,4,12,1,a,&ca,0},{0x200000,0x201,1,4,12,1,b,&cb,0},{0x300000,0x101,UINT32_MAX,0,0,0,NULL,NULL,0}};
  assert(tribes_module_register_image(base,0x200000,0x10000,"C:\\thread.dll",0));
- assert(tribes_threads_configure(base,123,42,0x100000,modules,2));
+ assert(tribes_threads_configure(base,123,42,0x100000,modules,shutdown?3:2));
  assert(!tribes_threads_configure(base,123,42,0x100000,modules,2)&&errno==EALREADY);
  assert(tribes_get_thread_id(0xfffffffe)==42&&tribes_thread_object_live_count()==1);
  assert(tribes_teb_configure(base,0x18000,0x90000,0x40000,123,42,0x19000));
@@ -45,6 +51,18 @@ int main(int argc,char **argv){
  assert(tribes_teb_configure_process(base,&metadata));assert(!tribes_teb_configure_process(base,&metadata)&&errno==EALREADY);
  assert(x86_read_fs_dword(0x30)==metadata.peb&&word(0x18030)==metadata.peb);
  assert(word(0x11008)==1&&word(0x11018)==1&&word(0x11020)==3&&word(0x11048)==0x12004);
+ if(shutdown){
+  unsigned code=argc>2?(unsigned)atoi(argv[2]):0;fixture_shutdown_setup(code);
+  assert(tribes_disable_thread_library_calls(base,0x300000));
+  tribes_critical_init(base,0x4000);tribes_condition_initialize(base,0x4100);
+  uint32_t port=tribes_create_io_completion_port(base,UINT32_MAX,0,0,1);assert(port);
+  uint32_t a=tribes_create_thread(base,0,0,0x300,0,4,0),b=tribes_create_thread(base,0,0,0x300,1,4,0);assert(a&&b);
+  fixture_shutdown_handles(a,b,port);tribes_threads_process_ready(base);
+  assert(tribes_resume_thread(a)==1&&tribes_resume_thread(b)==1);
+  for(unsigned retry=0;fixture_shutdown_started()!=2&&retry<1000;retry++){struct timespec delay={0,1000000};nanosleep(&delay,NULL);}
+  assert(fixture_shutdown_started()==2);
+  uint32_t arg=code;(void)call(8,1,&arg);abort();
+ }
  /* Exercise the unmodified original readers with both truth values. */
  assert(call(0x500,0,NULL)==0&&call(0x501,0,NULL)==0);
  uint32_t bits=0x80000001;memcpy(memory+0x11008,&bits,4);assert(call(0x500,0,NULL)==1);

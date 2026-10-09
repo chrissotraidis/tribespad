@@ -1,12 +1,18 @@
 # TribesPad execution plan
 
+**Current iPad app:** checked Simulator `80a10406…` now completes the original **Launch → Quit** path with code0, both from the initial menu and after an offline Katabatic match. Worker threads finish native cleanup before original DLL process-detach callbacks. Reached `SDL_ClearError` and atomic x86 `InterlockedFlushSList` cleanup are implemented. Normal/checked/ThreadSanitizer lifecycle, cancellation, SDL and list tests pass. [Validation](validation/ipad-shutdown.json).
+
+**Actual app test:** the app relaunched with saved warrior/host settings, loaded Katabatic with Red Ghost and So Dark, spawned by touch, switched weapon, fired disc15→14 and moved (own flag646.7→630.2). World observed by189s; device compilation overlapped loading, so this is not a speed benchmark. Leave Game returned to Host; Quit then completed without a diagnostic stop. No owned app, debugger or build remains running. [Gameplay](validation/ipad-shutdown-gameplay-2026-10-09.png).
+
+**Builds/next:** Simulator `80a10406…` and device `d66af3ea…` pass deep strict ad-hoc signatures, about104MB each; validated native object reuse406/411 and171/411 respectively. README retains the HaloPad-style layout and adds original Quit instructions. The main remaining blocker is comfortable performance: previous recordings measured6.75 FPS playing /7.74 observing, and the new five-second sample still points to memory barriers. Next target measured guard overhead while preserving permission/lifetime/concurrency checks, then remeasure the same view. Inventory-station purchase/exit, visual/audio fidelity, physical iPad/controller and iPhone acceptance remain. Device execution needs development signing. Offline/discovery only; no online joining/authentication. Mac bundles unchanged.
+
+## Earlier checkpoints
+
 **Current iPad app:** checked Simulator `7c99ebf6…` runs original offline Katabatic with two bots. Native SIMD arithmetic now returns its result and exception flags by value, avoiding temporary output-pointer checks while retaining the legacy checked pointer API. All 32,224 arithmetic and 94,128 original SIMD reference cases, threaded/TLS checks and native CPU boundary/fault tests pass. The isolated ADD32 benchmark improves about24%; this is not a whole-game speedup. [Validation](validation/ipad-sse-values.json).
 
 **Actual result:** touch spawning, weapon switching, disc fire 15→14 and movement (own flag39.1→22.1) pass. World observed by206s after Start, with the device build overlapping loading. Separate recordings without builds/debuggers measure **7.74 FPS observer / 6.75 FPS player**; performance remains inadequate and no game-speed gain is established. PID73082 remains in the offline match. [Screenshot](validation/ipad-sse-values-2026-10-09.png).
 
 **Builds/next:** Simulator `7c99ebf6…` and device `264cac2d…` pass deep strict ad-hoc signatures, remain about104MB and each reuse406/410 native objects after validation. README follows HaloPad's layout and explains how to start an offline bot match. Audio/fog fixes and all memory/publication guards remain. Next obtain a controlled same-view performance comparison and target the remaining measured cost before further guard changes; inventory-station purchase/exit and clean shutdown also remain. Physical iPad/controller and iPhone acceptance are outstanding; no connected device or development identity was available at the prior check. Offline/discovery only; no online joining/authentication. Mac bundles unchanged.
-
-## Earlier checkpoints
 
 **Current iPad app:** checked Simulator `20f7d179…` runs original offline Katabatic with two bots through ANGLE Metal. The audio initialization failure is fixed: an empty native extension list prevented the original QoL wrapper from advertising its own WAV loader. The provider now reports the actually supported `AL_EXT_OFFSET`; two reached SDL WAV imports decode real data into checked guest-owned buffers. [Validation](validation/ipad-audio-loading.json).
 

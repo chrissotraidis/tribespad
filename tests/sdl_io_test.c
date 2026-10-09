@@ -14,7 +14,7 @@
 extern void tribes_enter(_cpu *,uint32_t),tribes_return_to_host(void);
 extern void tbimp_SDL_strcasecmp(void),tbimp_SDL_strlcpy(void);
 extern void tbimp_SDL_IOFromFile(void),tbimp_SDL_CloseIO(void),tbimp_SDL_SeekIO(void),tbimp_SDL_TellIO(void),tbimp_SDL_GetIOSize(void),tbimp_SDL_ReadIO(void),tbimp_SDL_ReadU32LE(void),tbimp_SDL_GetSIMDAlignment(void);
-extern void tbimp_SDL_IOFromConstMem(void),tbimp_SDL_LoadWAV_IO(void),tbimp_test_malloc(void);
+extern void tbimp_SDL_IOFromConstMem(void),tbimp_SDL_LoadWAV_IO(void),tbimp_test_malloc(void),tbimp_SDL_ClearError(void);
 static unsigned char *memory;
 static uint64_t call5(unsigned entry,uint32_t a,uint32_t b,uint32_t c,uint32_t d,uint32_t e){
  _cpu cpu;memset(&cpu,0xa5,sizeof cpu);cpu._pointer_offset=(uintptr_t)memory;cpu._esp=0x100800;
@@ -29,9 +29,9 @@ int main(int argc,char **argv){
  memory=mmap(NULL,UINT64_C(0x100000000),PROT_NONE,MAP_PRIVATE|MAP_ANON,-1,0);assert(memory!=MAP_FAILED);
  assert(!mprotect(memory+0x100000,0x10000,PROT_READ|PROT_WRITE));
  assert(tribes_memory_checks_configure((uintptr_t)memory,UINT64_C(0x100000000)));assert(tribes_memory_permissions_set(0,UINT64_C(0x100000000),0));assert(tribes_memory_permissions_set(0x100000,0x10000,3));
- const void *targets[]={tbimp_SDL_IOFromFile,tbimp_SDL_CloseIO,tbimp_SDL_SeekIO,tbimp_SDL_TellIO,tbimp_SDL_GetIOSize,tbimp_SDL_ReadIO,tbimp_SDL_ReadU32LE,tbimp_SDL_GetSIMDAlignment,tbimp_SDL_strcasecmp,tbimp_SDL_strlcpy,tbimp_SDL_IOFromConstMem,tbimp_SDL_LoadWAV_IO,tbimp_test_malloc,tribes_return_to_host};tribes_memory_register_targets(targets,14);tribes_memory_external_configure((uintptr_t)memory,UINT64_C(0x100000000));tribes_memory_external_enable();
+ const void *targets[]={tbimp_SDL_IOFromFile,tbimp_SDL_CloseIO,tbimp_SDL_SeekIO,tbimp_SDL_TellIO,tbimp_SDL_GetIOSize,tbimp_SDL_ReadIO,tbimp_SDL_ReadU32LE,tbimp_SDL_GetSIMDAlignment,tbimp_SDL_strcasecmp,tbimp_SDL_strlcpy,tbimp_SDL_IOFromConstMem,tbimp_SDL_LoadWAV_IO,tbimp_test_malloc,tbimp_SDL_ClearError,tribes_return_to_host};tribes_memory_register_targets(targets,15);tribes_memory_external_configure((uintptr_t)memory,UINT64_C(0x100000000));tribes_memory_external_enable();
  assert(tribes_memory_permissions_set(0x30000000,0x1000000,3)); /* Standalone guest heap arena. */
- assert(tribes_sdl_set_memory_functions((uintptr_t)memory,13,13,13,13));
+ assert(tribes_sdl_set_memory_functions((uintptr_t)memory,14,14,14,14));
  /* Exact PCM bytes, scalar token lifetime, and failure output semantics. */
  unsigned char wav[]={ 'R','I','F','F',40,0,0,0,'W','A','V','E','f','m','t',' ',16,0,0,0,
   1,0,1,0,0x80,0xbb,0,0,0,0x77,1,0,2,0,16,0,'d','a','t','a',4,0,0,0,0x34,0x12,0xdc,0xfe};
@@ -92,6 +92,7 @@ int main(int argc,char **argv){
  assert(call(3,token,(uint32_t)-3,UINT32_MAX,SDL_IO_SEEK_END)==4);assert(call(6,token,0x103001,3,0)==3&&!memcmp(memory+0x103001,"def",3));
  assert(call(3,token,5,1,SDL_IO_SEEK_SET)==UINT64_C(0x100000005));assert(call(4,token,0,0,0)==UINT64_C(0x100000005));assert(call(5,token,0,0,0)==7);assert(call(4,token,0,0,0)==UINT64_C(0x100000005));
  assert(call(3,token,UINT32_MAX,UINT32_MAX,SDL_IO_SEEK_SET)==UINT64_MAX);assert(SDL_GetError()[0]);
+ SDL_SetError("%s","shutdown error");assert(SDL_GetError()[0]);assert(call(13,0,0,0,0)==1&&!SDL_GetError()[0]);
  assert(call(2,token,0,0,0));assert(call(1,0x101000,0x102000,0,0)==0);assert(SDL_GetError()[0]);assert(call(4,0,0,0,0)==UINT64_MAX);
  puts("PASS: native UTF-8 comparison and bounded string-copy oracles, protected boundaries, real SDL file bytes, EOF, signed/64-bit seek and size, cdecl CPU/LastError, checked output extent and owned stream lifetime");return 0;
 }

@@ -1,0 +1,559 @@
+{
+  "date": "2026-10-09",
+  "change": "Original main-thread ExitProcess joins workers at cancellation-safe condition/completion waits, discards forced-worker FLS callbacks, invokes original reverse DLL/TLS process detach, and terminates with the original exit code. Native SDL_ClearError and atomic x86 InterlockedFlushSList complete reached cleanup.",
+  "sources_sha256": {
+    "config/runtime/external-memory-contracts.json": "257ea9c16d499cf39f287ae5441a3e6d5197ed0c72dd13825bbc94302fe7d55b",
+    "config/runtime/sdl-io-bindings.json": "22b557bc0dde0e45c47539f954aeac523efb0abf3379fbd56c4549b0742a20e4",
+    "port/core/critical_section.c": "7b0f15ba1ea9b26f73154b7dd097aca94efe31ced43e77fc4aea99e12b3c614f",
+    "port/core/critical_section.h": "35b73a943821bb1ed3dd4d845abe3472b245f95305b7e8978468c66b4ef77839",
+    "port/core/guest_condition.c": "eb0c3a09bbd97f3c82bef90acc5a6f66a7c27fe8fa4e1b0cd5288d3879812a24",
+    "port/core/guest_sdl_io.c": "55f8857b0009eff62f603cb1bbe7270840151e964000aa6f5382c26a25932363",
+    "port/core/guest_slist.c": "791146f59b7518ece101e7a35ee261f1900e5480db704465026ee29961dc1e55",
+    "port/core/guest_slist.h": "5eeddcc45608cb9a3b528172f6f688b01914fa2600d568a4016512a2c35293b9",
+    "port/core/guest_threads.c": "9fdde2cff1f8abbac3450a812d86c3bb96b59f74874fd758e7f3df01ddbeeb1e",
+    "port/core/guest_threads.h": "a1a8795d021b5cbf010c610ec581d6136eb697eec3e66b14922ab908e47a8801",
+    "port/core/native_fls.c": "7adb338508e54da20e611f4d06e72c029131017b32373db564b4e4dfdf585727",
+    "port/core/native_fls.h": "2a51ce92c4a395d80b29dae3f516858954edbd11cdf28d81bf5cd05b73cd98d8",
+    "port/core/native_handles.c": "5287749e5e32bd5c512c4416ac0f8dd5f4151387aaa12a4513b37f8f93782ec7",
+    "port/llasm-runtime/win32-bindings.json": "432d99164d97162f633e6816109e52b479fd8c209662ace294b820df44d3ca86",
+    "scripts/build-ipad-engine.py": "779f4a709929998161c7ed937397ce43fd7e43c3ecdad155f3f22caeae3cfe57",
+    "scripts/gen-win32-bindings.py": "dfc3b1c2f6be03a57e7210a7766a6a982314c2e2ceefa5e33a444614205e35ce",
+    "scripts/test-guest-threads.py": "e448c8155aad141d6ca9ec22f06a7745de7688e0359854ac9fd45ae6bb2d014b",
+    "scripts/test-slist-abi.py": "cf18d19640070d6719eead50f166714cf39bd5f14addfed04e5836186edde910",
+    "tests/completion_port_test.c": "ae9bccdd8f90b30de37c09bab14ff5abcf97faff74d52967d8e1aa56d1db0739",
+    "tests/condition_test.c": "7cc9501742ab26cf4b9fcd482d7dee44068ff5925279ed8beb51c5816afe5cb1",
+    "tests/fixtures/guest_threads_dispatch.c": "c037c2a4e34c835430175876fa474ed56e101cd7a2e0ce6855bd4af6218d0ec5",
+    "tests/guest_threads_test.c": "218be311cc56c0196e1f4a56827b210b9adb81e93576cbaca8de224e99832eb4",
+    "tests/sdl_io_test.c": "d21202d945e128ab4899494cc59dfaaa8ad12c82ffa10545c45b8311accc3595",
+    "tests/slist_abi_test.c": "6b3549ef1342b95838107f8a12fad1a1c85173d9e75e706a87e7ea1fc0a3b287"
+  },
+  "proofs": {
+    "threads": {
+      "receipt": "generated/integration-review/guest-threads/macos/result.json",
+      "sha256": "453552577135ed827ff989fed456329c051ef8da829c5906c1c50a05d6e9e2f6",
+      "runs": [
+        {
+          "mode": "normal",
+          "passed": true,
+          "binary_sha256": "5212ec8e3d41dcd736a0c022968c7d1d214660bd19c7cb5cb16a67b2fd2702ee",
+          "stdout": "PASS: 25 native guest threads and 3 queued long-function workers; suspend/process-ready gates, independent TEB/TLS, ordered serialized callbacks, FLS cleanup, three exit paths, duplicate/early-close/wait lifetime and VM reclamation\n",
+          "process_exit_codes": [
+            0,
+            23
+          ]
+        },
+        {
+          "mode": "tsan",
+          "passed": true,
+          "binary_sha256": "4eb5ece508ef57a445e4369b8a7fa7d22bc34ea26b29bf929a3ebd67d8bcc597",
+          "stdout": "PASS: 25 native guest threads and 3 queued long-function workers; suspend/process-ready gates, independent TEB/TLS, ordered serialized callbacks, FLS cleanup, three exit paths, duplicate/early-close/wait lifetime and VM reclamation\n",
+          "process_exit_codes": [
+            0,
+            23
+          ]
+        },
+        {
+          "mode": "checked",
+          "passed": true,
+          "binary_sha256": "734468236bf571c245d80acd09bbf9c2f7ba4f880ceddb123e4650de5db55d27",
+          "stdout": "PASS: 25 native guest threads and 3 queued long-function workers; suspend/process-ready gates, independent TEB/TLS, ordered serialized callbacks, FLS cleanup, three exit paths, duplicate/early-close/wait lifetime and VM reclamation\n",
+          "process_exit_codes": [
+            0,
+            23
+          ]
+        }
+      ]
+    },
+    "slist": {
+      "receipt": "generated/native-win32/slist-abi/macos/result.json",
+      "sha256": "283a2c3eadcf83727de93301392452d54143dc9e57a51eccc3a075cc90c31734",
+      "runs": [
+        {
+          "mode": "normal",
+          "pass": true,
+          "output": "PASS: 1001 actual ARM64 void stdcall SLIST initializations, eight-byte x86 layout/alignment, neighboring memory/LastError/CPU/EAX/flags/stack preservation and independent guest images; 2000 populated/empty flushes with sequence rollover, eight racing flushers with one owner; push/pop remain unsupported",
+          "binary_sha256": "fb9ea3e1b548fab8ff010290a747f81b632d73deff69c55843b79aa9e608f231"
+        },
+        {
+          "mode": "tsan",
+          "pass": true,
+          "output": "PASS: 1001 actual ARM64 void stdcall SLIST initializations, eight-byte x86 layout/alignment, neighboring memory/LastError/CPU/EAX/flags/stack preservation and independent guest images; 2000 populated/empty flushes with sequence rollover, eight racing flushers with one owner; push/pop remain unsupported",
+          "binary_sha256": "a42ad4d572d9639e8ebead05e22a9719abbcd1e01fd7c037d2f4727c6142cf29"
+        },
+        {
+          "mode": "checked",
+          "pass": true,
+          "output": "PASS: 1001 actual ARM64 void stdcall SLIST initializations, eight-byte x86 layout/alignment, neighboring memory/LastError/CPU/EAX/flags/stack preservation and independent guest images; 2000 populated/empty flushes with sequence rollover, eight racing flushers with one owner; push/pop remain unsupported",
+          "binary_sha256": "88fac0aba5cebe4403203c5b5b692a56e7dd3af4024e833eb5c613a4f7d99691"
+        }
+      ]
+    },
+    "sdl_io": {
+      "receipt": "generated/integration-review/sdl-io/result.json",
+      "sha256": "169d616c594ef32154662101a3842350937e4f7fed6147e3e5a2eb8f90b07bef",
+      "runs": [
+        {
+          "mode": "normal",
+          "passed": true,
+          "faults": [],
+          "binary_sha256": "cc22b28a1ca626d0d3650b2f7a511ecef11b0f5f1db6f310c3004b1f5d57de13"
+        },
+        {
+          "mode": "checked",
+          "passed": true,
+          "faults": [
+            "unreadable-path",
+            "stale",
+            "foreign",
+            "readonly-output",
+            "short-output",
+            "string-unreadable",
+            "string-readonly-output",
+            "string-short-output",
+            "memory-unreadable",
+            "wav-readonly-spec",
+            "wav-short-output",
+            "wav-stale"
+          ],
+          "binary_sha256": "f45b0da51a983fb044e6ac7e81936e4c915dca410dc587c5234a091976db458c"
+        },
+        {
+          "mode": "tsan",
+          "passed": true,
+          "faults": [],
+          "binary_sha256": "974093be27408d755ec5f6011b28a0a728b5db8b3dd35415f02c05e4459cd20e"
+        }
+      ]
+    }
+  },
+  "builds": {
+    "simulator": {
+      "binary_sha256": "80a1040662aae4e7adfe3b83228128baec4e63a314f762f04072df72bdb00e61",
+      "bytes": 103659952,
+      "signature": "deep strict ad-hoc verification passed",
+      "native_objects_reused": 406,
+      "native_objects_total": 411
+    },
+    "device": {
+      "binary_sha256": "d66af3eabcaf9e9638885105e4b69ae6dac171fdc1c76a4c515e96d6281d2cb8",
+      "bytes": 103593920,
+      "signature": "deep strict ad-hoc verification passed",
+      "native_objects_reused": 171,
+      "native_objects_total": 411
+    }
+  },
+  "wait_tests": {
+    "condition": "432 waits and six cancelled finite/infinite CS/shared/exclusive waits passed normal, checked and ThreadSanitizer; cancellation releases the retained CS reference.",
+    "completion": "259 bounded/interleaved and 8000 concurrent producer packets plus four cancelled scalar/batch finite/infinite dequeues passed normal, checked and ThreadSanitizer."
+  },
+  "original_app": {
+    "simulator": "iPad Air 11-inch M4, iOS 26.5",
+    "menu_quit_pid": 85041,
+    "relaunch_and_match_pid": 85137,
+    "menu_quit": "Original Launch > Quit completed code=0; process disappeared, no diagnostic stop.",
+    "relaunch": "Original menu loaded; saved warrior Tribespad, Katabatic and two-bot settings retained.",
+    "map": "Katabatic, Capture the Flag, bots Red Ghost and So Dark",
+    "world_observed_by_seconds": 189,
+    "timing_limit": "Device build overlapped loading; not a benchmark.",
+    "touch": [
+      "Spawned into Starwolf",
+      "Switched blaster to disc",
+      "Forward movement: own flag646.7 to630.2",
+      "Disc fire: ammo15 to14"
+    ],
+    "after_match": "Menu > Leave Game > Yes returned to Host; Launch > Quit completed code=0; process disappeared with no diagnostic stop.",
+    "debugger_attached": false,
+    "online_joined": false,
+    "owned_app_running": false
+  },
+  "performance": {
+    "fresh_frame_rate": null,
+    "previous_player_fps": 6.75,
+    "previous_observer_fps": 7.74,
+    "claim": "No game-speed improvement established. Five-second sample of prior app still dominated by memory barriers.",
+    "sample": {
+      "exclusive": [
+        [
+          "tribes_memory_access_begin",
+          904
+        ],
+        [
+          "require",
+          259
+        ],
+        [
+          "tribes_memory_access_end",
+          178
+        ],
+        [
+          "tribes_memory_access_host_span",
+          175
+        ],
+        [
+          "_tlv_get_addr",
+          174
+        ],
+        [
+          "tribes_memory_indirect_target",
+          164
+        ],
+        [
+          "tribes_memory_transfer_begin",
+          115
+        ],
+        [
+          "__psynch_cvwait",
+          79
+        ],
+        [
+          "tribes_memory_access_end_many",
+          76
+        ],
+        [
+          "_platform_memmove",
+          59
+        ],
+        [
+          "load32",
+          55
+        ],
+        [
+          "tribes_lookup",
+          42
+        ],
+        [
+          "tb_sse_evaluate",
+          39
+        ],
+        [
+          "tribes_memory_code_revision",
+          30
+        ],
+        [
+          "arithmetic",
+          27
+        ],
+        [
+          "push",
+          26
+        ],
+        [
+          "glStartTilingQCOM",
+          20
+        ],
+        [
+          "softfloat_roundPackToExtF80(bool, int, unsigned long long, unsigned long long, unsigned char, unsigned char, softfloat_status_t*)",
+          20
+        ],
+        [
+          "f32_to_extF80",
+          18
+        ],
+        [
+          "_platform_memcmp",
+          14
+        ],
+        [
+          "enter",
+          13
+        ],
+        [
+          "extF80_mul(extFloat80M, extFloat80M, softfloat_status_t*)",
+          13
+        ],
+        [
+          "stage_array",
+          12
+        ],
+        [
+          "tb_bo_arithmetic",
+          12
+        ],
+        [
+          "tribes_memory_external_pointer",
+          11
+        ],
+        [
+          "compare",
+          11
+        ],
+        [
+          "tribes_memory_external_gate",
+          10
+        ],
+        [
+          "softfloat_roundPackToF32",
+          10
+        ],
+        [
+          "tribes_system_native_lookup",
+          9
+        ],
+        [
+          "f32_mul",
+          9
+        ],
+        [
+          "tb_shift_reg",
+          9
+        ],
+        [
+          "x87_fst_st",
+          9
+        ],
+        [
+          "tb_sse_load",
+          8
+        ],
+        [
+          "softfloat_addMagsExtF80(unsigned short, unsigned long long, unsigned short, unsigned long long, bool, softfloat_status_t*)",
+          6
+        ],
+        [
+          "packToExtF80(bool, unsigned short, unsigned long long)",
+          6
+        ],
+        [
+          "x87_fadd_to_st",
+          6
+        ],
+        [
+          "load64",
+          6
+        ],
+        [
+          "tb_shift",
+          6
+        ],
+        [
+          "tribes_dispatch",
+          5
+        ],
+        [
+          "DYLD-STUB$$memcpy",
+          5
+        ]
+      ],
+      "callers": [
+        {
+          "function": "require",
+          "caller": "tribes_memory_access_begin",
+          "samples": 257
+        },
+        {
+          "function": "tribes_memory_indirect_target",
+          "caller": "tribes_dispatch",
+          "samples": 159
+        },
+        {
+          "function": "tribes_memory_access_begin",
+          "caller": "enter_engine",
+          "samples": 106
+        },
+        {
+          "function": "tribes_memory_access_begin",
+          "caller": "tb_bo_arithmetic",
+          "samples": 88
+        },
+        {
+          "function": "tribes_memory_access_begin",
+          "caller": "tribes_lookup",
+          "samples": 48
+        },
+        {
+          "function": "tribes_memory_access_begin",
+          "caller": "enter",
+          "samples": 48
+        },
+        {
+          "function": "tribes_memory_transfer_begin",
+          "caller": "enter",
+          "samples": 48
+        },
+        {
+          "function": "tribes_memory_access_end",
+          "caller": "enter",
+          "samples": 41
+        },
+        {
+          "function": "tribes_memory_code_revision",
+          "caller": "tribes_dispatch_permitted",
+          "samples": 28
+        },
+        {
+          "function": "tribes_memory_access_begin",
+          "caller": "load32",
+          "samples": 26
+        },
+        {
+          "function": "tribes_memory_access_begin",
+          "caller": "tb_bo_store_real",
+          "samples": 25
+        },
+        {
+          "function": "tribes_memory_access_begin",
+          "caller": "tribes_dispatch",
+          "samples": 23
+        },
+        {
+          "function": "tribes_memory_access_begin",
+          "caller": "x86_rep_stosb",
+          "samples": 22
+        },
+        {
+          "function": "tribes_memory_transfer_begin",
+          "caller": "tb_sse_store",
+          "samples": 22
+        },
+        {
+          "function": "tribes_memory_transfer_begin",
+          "caller": "stage_array",
+          "samples": 21
+        },
+        {
+          "function": "tribes_memory_access_begin",
+          "caller": "arithmetic",
+          "samples": 18
+        },
+        {
+          "function": "tribes_memory_access_end",
+          "caller": "tribes_lookup",
+          "samples": 17
+        },
+        {
+          "function": "tribes_memory_access_host_span",
+          "caller": "push",
+          "samples": 17
+        },
+        {
+          "function": "tribes_memory_access_host_span",
+          "caller": "arithmetic",
+          "samples": 16
+        },
+        {
+          "function": "tribes_memory_access_begin",
+          "caller": "tb_shift_reg",
+          "samples": 15
+        },
+        {
+          "function": "tribes_memory_access_end",
+          "caller": "stage_array",
+          "samples": 14
+        },
+        {
+          "function": "tribes_memory_access_begin",
+          "caller": "stage_array",
+          "samples": 14
+        },
+        {
+          "function": "tribes_memory_access_begin",
+          "caller": "x86_rep_movsd",
+          "samples": 14
+        },
+        {
+          "function": "tribes_memory_transfer_begin",
+          "caller": "draw_client_arrays",
+          "samples": 13
+        },
+        {
+          "function": "tribes_memory_access_begin",
+          "caller": "tb_sse_load",
+          "samples": 13
+        },
+        {
+          "function": "tribes_memory_access_begin",
+          "caller": "loc_5E3110",
+          "samples": 13
+        },
+        {
+          "function": "tribes_memory_access_host_span",
+          "caller": "load32",
+          "samples": 13
+        },
+        {
+          "function": "tribes_memory_access_end",
+          "caller": "tb_sse_store",
+          "samples": 13
+        },
+        {
+          "function": "tribes_memory_transfer_begin",
+          "caller": "tb_sse_scalarmem",
+          "samples": 11
+        },
+        {
+          "function": "tribes_memory_external_pointer",
+          "caller": "enter",
+          "samples": 10
+        },
+        {
+          "function": "tribes_memory_access_end_many",
+          "caller": "tb_bo_arithmetic",
+          "samples": 10
+        },
+        {
+          "function": "tribes_memory_access_begin",
+          "caller": "tribes_system_native_lookup",
+          "samples": 9
+        },
+        {
+          "function": "tribes_memory_access_end",
+          "caller": "tb_sse_load",
+          "samples": 9
+        },
+        {
+          "function": "tribes_memory_access_begin",
+          "caller": "softfloat_countLeadingZeros64(unsigned long long)",
+          "samples": 9
+        },
+        {
+          "function": "tribes_memory_access_begin",
+          "caller": "loc_51DCEB",
+          "samples": 9
+        },
+        {
+          "function": "tribes_memory_access_begin",
+          "caller": "softfloat_roundPackToF32(bool, short, unsigned int, softfloat_status_t*)",
+          "samples": 9
+        },
+        {
+          "function": "tribes_memory_access_begin",
+          "caller": "tribes_dsound_native_lookup",
+          "samples": 8
+        },
+        {
+          "function": "tribes_memory_access_begin",
+          "caller": "extF80_mul(extFloat80M, extFloat80M, softfloat_status_t*)",
+          "samples": 7
+        },
+        {
+          "function": "tribes_memory_access_begin",
+          "caller": "softfloat_roundPackToExtF80(bool, int, unsigned long long, unsigned long long, unsigned char, softfloat_status_t*)",
+          "samples": 7
+        },
+        {
+          "function": "tribes_memory_transfer_begin",
+          "caller": "tb_sse_load",
+          "samples": 7
+        }
+      ]
+    }
+  },
+  "limits": [
+    "Bounded main-thread shutdown; workers must reach the supported cancellation-safe waits within ten seconds. Unsupported worker states remain explicit failures.",
+    "No physical iPad/controller or full iPhone acceptance; device build still needs development signing.",
+    "No online joining or authentication. Mac bundles unchanged.",
+    "Inventory-station purchase/exit, rendering fidelity, audible quality and comfortable performance remain unaccepted."
+  ],
+  "references": [
+    "https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-exitprocess",
+    "https://learn.microsoft.com/en-us/windows/win32/api/interlockedapi/nf-interlockedapi-interlockedflushslist",
+    "https://github.com/wine-mirror/wine/blob/wine-10.0/dlls/ntdll/sync.c"
+  ],
+  "artifacts": {
+    "generated/integration-review/ipad-frame-cost/app-stdout.log": "57f372b2edf0e731238ed78d82ef6224bc3fc52dc659a2122610cc232fc5e1d0",
+    "generated/integration-review/ipad-frame-cost/app-stderr.log": "5fdcffc78d0f454e7c6a73a69881244d09335dc389dc634b2a961ed41da68a76",
+    "generated/integration-review/ipad-frame-cost/relaunch-stdout.log": "7eb70257593da06f682a3ddda54a9d260d4fc514f645237f5ca74b08f8da61a6",
+    "generated/integration-review/ipad-frame-cost/relaunch-stderr.log": "82c294bcff8c67a8cdcb9bbcedab63f8cae8cf18ef938354e8471c6756db29ed",
+    "generated/integration-review/ipad-frame-cost/player-sample.txt": "2c9188e730df240083da75b84b61c5424af0f88e4a80f39718e9cc38405db576"
+  }
+}

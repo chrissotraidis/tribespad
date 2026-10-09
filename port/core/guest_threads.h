@@ -17,6 +17,7 @@ uint32_t tribes_disable_thread_library_calls(uint64_t base,uint32_t image);
 void tribes_threads_process_ready(uint64_t base);
 uint32_t tribes_create_thread(uint64_t base,uint32_t attributes,uint32_t stack_size,uint32_t start,uint32_t parameter,uint32_t flags,uint32_t id_output);
 uint32_t tribes_queue_user_work_item(uint64_t base,uint32_t start,uint32_t parameter,uint32_t flags);
+_Noreturn void tribes_exit_process(_cpu *cpu,uint32_t code);
 _Noreturn void tribes_exit_thread(_cpu *cpu,uint32_t code);
 _Noreturn void tribes_free_library_and_exit_thread(_cpu *cpu,uint32_t module,uint32_t code);
 uint32_t tribes_guest_threads_live_count(void);

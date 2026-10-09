@@ -486,6 +486,11 @@ static uint64_t next_completion_thread=1;
 /* Detach at least one available packet, then as many immediately available
    packets as the caller can receive. Both public dequeue APIs share ownership,
    timeout, close and single-consumer behavior. Never wait to fill the batch. */
+/* A cancelled dequeue owns a borrow and the registry lock after cond_wait
+   unwinds. Retire both without consuming a packet or leaving the port locked. */
+static void cancel_completion_wait(void *context){
+    drop_completion(context);pthread_mutex_unlock(&registry);
+}
 static CompletionPacket *take_completion_packets(uint32_t handle,uint32_t milliseconds,uint32_t capacity,uint32_t *count){
     *count=0;
     struct timespec deadline={0,0};
@@ -499,7 +504,10 @@ static CompletionPacket *take_completion_packets(uint32_t handle,uint32_t millis
     if(!p){pthread_mutex_unlock(&registry);tribes_set_last_error(6);return NULL;}
     if(!completion_thread){if(!next_completion_thread)abort();completion_thread=next_completion_thread++;}
     if(p->consumer&&p->consumer!=completion_thread){pthread_mutex_unlock(&registry);fprintf(stderr,"TribesPad: completion port consumer handoff/multi-consumer scheduling is not implemented\n");abort();}
-    p->consumer=completion_thread;p->refs++;int error=0;
+    p->consumer=completion_thread;p->refs++;int error=0,cancel_state;
+    pthread_cleanup_push(cancel_completion_wait,p);
+    if(pthread_setcancelstate(PTHREAD_CANCEL_ENABLE,&cancel_state))abort();
+    pthread_testcancel();
     while(!p->head&&p->open){
         if(!milliseconds)break;
 #ifdef TRIBESPAD_COMPLETION_WAIT_OBSERVER
@@ -514,8 +522,11 @@ static CompletionPacket *take_completion_packets(uint32_t handle,uint32_t millis
             if(remaining.tv_sec<0||(!remaining.tv_sec&&!remaining.tv_nsec))break;
             error=pthread_cond_timedwait_relative_np(&p->changed,&registry,&remaining);
         }
+        pthread_testcancel();
         if(error==ETIMEDOUT){error=0;break;}if(error)break;
     }
+    if(pthread_setcancelstate(cancel_state,NULL))abort();
+    pthread_cleanup_pop(0);
     CompletionPacket *first=NULL;
     if(!p->open)tribes_set_last_error(735);
     else if(error)tribes_set_last_error(8);

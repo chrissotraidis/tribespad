@@ -4,4 +4,5 @@
 /* Original 32-bit SLIST_HEADER: Next (DWORD), Depth/Sequence (WORDs).
    Initialization requires exclusive access; this does not implement push/pop. */
 void tribes_initialize_slist_head(uint64_t base,uint32_t head);
+uint32_t tribes_flush_slist(uint64_t base,uint32_t head);
 #endif

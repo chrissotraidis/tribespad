@@ -12,4 +12,5 @@ uint32_t tribes_critical_delete(uint64_t guest_base,uint32_t guest_address);
    unlocked. These two operations must be paired by the CV implementation. */
 void tribes_critical_condition_release(uint64_t base,uint32_t guest);
 void tribes_critical_condition_reacquire(uint64_t base,uint32_t guest);
+void tribes_critical_condition_cancel(uint64_t base,uint32_t guest);
 #endif

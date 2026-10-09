@@ -26,6 +26,9 @@ playable iPad or iPhone release yet.
 - **Original audio data.** WAV loading and the MP3 window tables are repaired.
   Original UI/loading samples match the game archive, and music supplies nonzero
   PCM to OpenAL. Audible quality still needs validation.
+- **Clean iPad shutdown.** The original **Launch → Quit** path completes
+  worker and DLL cleanup, including after an offline match, and the app can
+  reopen its saved profile.
 - **Saved profiles.** The bundled iPad app keeps warrior and video preferences
   between launches. Its device build includes the game files it needs locally.
 
@@ -52,7 +55,8 @@ Skiing, simultaneous gestures and physical-device responsiveness still need vali
 The bundled app preserves its original warrior and video preferences between launches.
 In inventory, tap the original **Done** button, then **Touch controls** to resume.
 Use **Hide controls** when another original dialog needs direct taps. The toolbar
-stays reachable while the onscreen keyboard is open.
+stays reachable while the onscreen keyboard is open. To close the game, choose
+**Launch → Quit** in the original menu.
 
 ## Controller layout
 

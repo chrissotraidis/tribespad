@@ -97,9 +97,18 @@ int main(int argc,char **argv){
    assert(!word(cv)&&!tribes_condition_live_count()&&!tribes_srw_live_count());
   }
  }
+ /* Process shutdown may cancel a parked native worker. Its stack waiter must
+    retire without reacquiring or retaining the associated guest lock. */
+ for(unsigned mode=0;mode<3;mode++)for(unsigned finite=0;finite<2;finite++){
+  generation=0;atomic_store(&returned,0);struct Worker w={1,mode,finite?10000:UINT32_MAX};pthread_t thread;
+  assert(!pthread_create(&thread,NULL,worker,&w));wait_count(1);assert(!pthread_cancel(thread));
+  void *result=NULL;assert(!pthread_join(thread,&result)&&result==PTHREAD_CANCELED);
+  assert(!atomic_load(&returned)&&!word(cv)&&!tribes_condition_live_count()&&!tribes_srw_live_count());
+  take(mode);drop(mode);tribes_condition_wake_all(base,cv);
+ }
  tribes_critical_delete(base,cs);
 #ifdef CHECKED_TEST
  for(unsigned i=0;i<9;i++)reject(i);
 #endif
- puts("PASS: five emitted condition-variable ABI wrappers; all CPU/flags/stack and success/timeout LastError; exact unaligned 4-byte object; 432 finite/infinite concurrent waits over exclusive/shared SRW and CS, wake-one/all, atomic release/reacquire and predicate visibility, zero/15ms timeout with no remembered wake, idle metadata retirement and movable zero state");return 0;
+ puts("PASS: five emitted condition-variable ABI wrappers; all CPU/flags/stack and success/timeout LastError; exact unaligned 4-byte object; 432 finite/infinite concurrent waits over exclusive/shared SRW and CS, wake-one/all, atomic release/reacquire and predicate visibility, zero/15ms timeout with no remembered wake, idle metadata retirement and movable zero state; six cancelled finite/infinite waiters release catalog and guest locks");return 0;
 }

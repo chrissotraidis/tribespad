@@ -56,6 +56,8 @@ export SDKROOT="$(xcrun --sdk macosx --show-sdk-path)"
 .venv/bin/python scripts/test-sse-host-locals.py
 .venv/bin/python scripts/test-x87-host-checks.py
 .venv/bin/python scripts/test-sdl-io.py
+.venv/bin/python scripts/test-guest-threads.py
+.venv/bin/python scripts/test-slist-abi.py
 .venv/bin/python scripts/test-openal-guest.py --offline
 export SDKROOT="$(xcrun --sdk iphonesimulator --show-sdk-path)"
 .venv/bin/python scripts/build-ipad-engine.py --simulator-device <booted-iPad-UUID>

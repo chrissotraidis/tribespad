@@ -94,5 +94,12 @@
     "guest_base": false,
     "cpu_argument": true,
     "calling_convention": "cdecl"
+  },
+  "SDL_ClearError": {
+    "helper": "tribes_sdl_clear_error",
+    "arguments": 0,
+    "returns": true,
+    "guest_base": false,
+    "calling_convention": "cdecl"
   }
 }

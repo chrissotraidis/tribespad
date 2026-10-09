@@ -58,22 +58,40 @@ for name,h in hook_test['sources_sha256'].items():assert sha(R/name)==h,name
 sources,hook_layout=mobile_hooks(sources,mobile_inputs)
 from x87_store_inputs import prepare as x87_store_inputs
 sources=x87_store_inputs(sources,mobile_inputs)
-# Replace only the two reached WAV import stops. Keep the frozen preparation
+# Replace the reached WAV and SDL error import stops. Keep the frozen preparation
 # immutable and run the usual memory/external-call passes over these wrappers.
 wave_proof_path=R/'generated/integration-review/sdl-io/result.json'
 wave_proof=json.loads(wave_proof_path.read_text());assert wave_proof['passed']
 for name,h in wave_proof['sources_sha256'].items():assert sha(R/name)==h,name
-wave_names=['SDL_IOFromConstMem','SDL_LoadWAV_IO']
+wave_names=['SDL_IOFromConstMem','SDL_LoadWAV_IO','SDL_ClearError']
 wave_bindings=json.loads((R/'config/runtime/sdl-io-bindings.json').read_text())
 generator_spec=importlib.util.spec_from_file_location('wave_bindings',R/'scripts/gen-win32-bindings.py')
 generator=importlib.util.module_from_spec(generator_spec);generator_spec.loader.exec_module(generator)
 wave_wrapper=mobile_inputs/'sdl-wav-bindings.ll'
 wave_wrapper.write_text(generator.generate({n:wave_bindings[n] for n in wave_names},False))
 old_stops=next(p for p in sources if p.name=='stops.ll');stops_text=old_stops.read_text()
-for name,ordinal in zip(wave_names,[257,256]):
+for name,ordinal in zip(wave_names,[257,256,347]):
     body='define hidden fastcc void @tbimp_'+name+'(ptr %cpu) { call void @qol_missing_import(ptr %cpu, i32 '+str(ordinal)+')\n unreachable\n}'
     assert stops_text.count(body)==1,name
     stops_text=stops_text.replace(body,'',1)
+# The frozen bootstrap stopped at ExitProcess. Replace only that reached import
+# after native/checked/TSan shutdown through the emitted guest ABI passes.
+shutdown_proof=json.loads((R/'generated/integration-review/guest-threads/macos/result.json').read_text())
+assert shutdown_proof['passed'] and all(row.get('process_exit_codes')==[0,23] for row in shutdown_proof['runs'])
+for name,h in shutdown_proof['sources_sha256'].items():assert sha(R/name)==h,name
+exit_bindings=json.loads((R/'port/llasm-runtime/win32-bindings.json').read_text())
+exit_wrapper=mobile_inputs/'process-exit-bindings.ll'
+exit_wrapper.write_text(generator.generate({n:exit_bindings[n] for n in ['ExitProcess','InterlockedFlushSList']},False))
+exit_stop='define hidden fastcc void @tbimp_ExitProcess(ptr %cpu) { call void @qol_missing_import(ptr %cpu, i32 175)\n unreachable\n}'
+assert stops_text.count(exit_stop)==1
+stops_text=stops_text.replace(exit_stop,'',1);sources.append(exit_wrapper)
+flush_proof=json.loads((R/'generated/native-win32/slist-abi/macos/result.json').read_text())
+assert flush_proof['pass'] and {r['mode'] for r in flush_proof['runs']}=={'normal','checked','tsan'}
+for name,h in flush_proof['sources_sha256'].items():assert sha(R/name)==h,name
+assert flush_proof['bindings_sha256']==sha(R/'port/llasm-runtime/win32-bindings.json')
+flush_stop='define hidden fastcc void @tbimp_InterlockedFlushSList(ptr %cpu) { call void @qol_missing_import(ptr %cpu, i32 186)\n unreachable\n}'
+assert stops_text.count(flush_stop)==1
+stops_text=stops_text.replace(flush_stop,'',1)
 wave_stops=mobile_inputs/'stops.ll';wave_stops.write_text(stops_text)
 sources[sources.index(old_stops)]=wave_stops;sources.append(wave_wrapper)
 # Refresh finite host exports without relifting unchanged original images.

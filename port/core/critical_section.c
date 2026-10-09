@@ -106,6 +106,13 @@ void tribes_critical_condition_reacquire(uint64_t base,uint32_t guest) {
     if(!s||s->references<2)stop("condition reference",guest,EINVAL);
     --s->references;pthread_mutex_unlock(&catalog);
 }
+void tribes_critical_condition_cancel(uint64_t base,uint32_t guest) {
+    /* A cancelled condition wait already released ownership, but still holds
+       the reference that normally survives until condition_reacquire. */
+    pthread_mutex_lock(&catalog);Section *s=find(key_for(base,guest));
+    if(!s||!s->references)stop("cancelled condition reference",guest,EINVAL);
+    --s->references;pthread_mutex_unlock(&catalog);
+}
 uint32_t tribes_critical_delete(uint64_t base,uint32_t guest) {
     uintptr_t key=key_for(base,guest);
     pthread_mutex_lock(&catalog);Section **link=&sections;

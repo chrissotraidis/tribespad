@@ -14,18 +14,22 @@
 #include <errno.h>
 #include <pthread.h>
 #include <setjmp.h>
+#include <stdatomic.h>
+#include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 typedef struct ThreadModule {TribesThreadModule source;uint32_t offset;int active,disabled;struct ThreadModule *next;} ThreadModule;
-typedef struct Process {uint64_t base;uint32_t pid,main_tid,reserve,environment_size;int ready;ThreadModule *modules;struct Process *next;} Process;
+typedef struct Process {uint64_t base;uint32_t pid,main_tid,reserve,environment_size;int ready;_Atomic int exiting;uint32_t exit_code;ThreadModule *modules;struct Process *next;} Process;
 typedef struct Thread {
     Process *process;TribesThreadObject *object;_cpu cpu;jmp_buf escape;
     uint32_t stack,environment,stack_top,stack_bottom,start,parameter,id,code;
-    int phase;
+    _Atomic int phase;pthread_t native;struct Thread *next;
 } Thread;
 static Process *processes;
+static Thread *threads;
+static pthread_cond_t thread_finished=PTHREAD_COND_INITIALIZER;
 static pthread_mutex_t registry=PTHREAD_MUTEX_INITIALIZER;
 static pthread_mutex_t loader;
 static pthread_cond_t initialized=PTHREAD_COND_INITIALIZER;
@@ -110,7 +114,29 @@ static void release_memory(Thread *t){
     if(t->environment&&!tribes_virtual_free(t->process->base,t->environment,0,0x8000))stop("environment release");
     if(t->stack&&!tribes_virtual_free(t->process->base,t->stack,0,0x8000))stop("stack release");
 }
+static void retire_thread(Thread *t,int terminated){
+    uint64_t base=t->process->base;t->phase=3;t->cpu._esp=t->stack_top;
+    if(terminated){tribes_guest_callback_reset();tribes_fls_thread_discard(base);}
+    else {
+        tribes_fls_thread_cleanup(base);tribes_guest_thread_finalize(&t->cpu);
+        tribes_loader_lock();detach_modules(t,t->process->modules);tribes_loader_unlock();
+        tribes_fls_thread_cleanup(base);tribes_guest_thread_finalize(&t->cpu);
+    }
+    tribes_teb_clear();tribes_absolute_memory_clear();release_memory(t);
+    TribesThreadObject *object=t->object;uint32_t code=t->code;
+    tribes_thread_object_finish(object,code);tribes_thread_object_set_current(NULL);self=NULL;
+    if(!terminated)check(pthread_detach(pthread_self()));
+    check(pthread_mutex_lock(&registry));Thread **link=&threads;
+    while(*link!=t)link=&(*link)->next;*link=t->next;--live_threads;
+    check(pthread_cond_broadcast(&thread_finished));check(pthread_mutex_unlock(&registry));free(t);
+}
+static void cancel_thread(void *context){
+    Thread *t=context;check(pthread_setcancelstate(PTHREAD_CANCEL_DISABLE,NULL));
+    if(!atomic_load_explicit(&t->process->exiting,memory_order_acquire)||t->phase!=2)stop("cancellation outside process shutdown");
+    t->code=t->process->exit_code;retire_thread(t,1);
+}
 static void *run(void *context){
+    check(pthread_setcancelstate(PTHREAD_CANCEL_DISABLE,NULL));
     Thread *t=context;self=t;tribes_thread_object_set_current(t->object);
     /* Suspension prevents original TLS/DLL callbacks as well as the entry. */
     tribes_thread_object_wait_start(t->object);
@@ -127,23 +153,17 @@ static void *run(void *context){
     tribes_set_last_error(0);tribes_loader_lock();while(!t->process->ready)check(pthread_cond_wait(&initialized,&loader));
     t->phase=1;for(ThreadModule *m=t->process->modules;m;m=m->next)notify_module(t,m,2);
     check(pthread_mutex_unlock(&loader));t->phase=2;
+    pthread_cleanup_push(cancel_thread,t);
     if(!_setjmp(t->escape))t->code=tribes_call_guest(&t->cpu,t->start,1,&t->parameter,t->stack_top);
-    t->phase=3;t->cpu._esp=t->stack_top;
-    tribes_fls_thread_cleanup(base);
-    tribes_guest_thread_finalize(&t->cpu);
-    tribes_loader_lock();detach_modules(t,t->process->modules);check(pthread_mutex_unlock(&loader));
-    /* A detach callback may create fresh FLS storage; drain before releasing TEB. */
-    tribes_fls_thread_cleanup(base);tribes_guest_thread_finalize(&t->cpu);
-    tribes_teb_clear();tribes_absolute_memory_clear();release_memory(t);
-    self=NULL;
-    check(pthread_mutex_lock(&registry));--live_threads;check(pthread_mutex_unlock(&registry));
-    TribesThreadObject *object=t->object;uint32_t code=t->code;free(t);tribes_thread_object_finish(object,code);tribes_thread_object_set_current(NULL);return NULL;
+    pthread_cleanup_pop(0);
+    retire_thread(t,0);return NULL;
 }
 uint32_t tribes_create_thread(uint64_t base,uint32_t attributes,uint32_t size,uint32_t start,uint32_t parameter,uint32_t flags,uint32_t output){
     if(attributes)stop("security attributes not yet implemented");
     if((flags&~0x10004u)||(output&&(output>UINT32_MAX-3||base>UINTPTR_MAX-output-3))){tribes_set_last_error(87);return 0;}
     uint32_t saved=tribes_get_last_error();check(pthread_mutex_lock(&registry));Process *p=find(base);
     if(!p)stop("CreateThread before host process configuration");
+    if(p->exiting){check(pthread_mutex_unlock(&registry));tribes_set_last_error(1115);return 0;}
     uint32_t id=next_id;if(id==p->main_tid)++id;
     if(!id||id==UINT32_MAX){check(pthread_mutex_unlock(&registry));tribes_set_last_error(8);return 0;}
     next_id=id+1;check(pthread_mutex_unlock(&registry));
@@ -160,9 +180,17 @@ uint32_t tribes_create_thread(uint64_t base,uint32_t attributes,uint32_t size,ui
     t->environment=tribes_virtual_alloc(base,0,p->environment_size,0x3000,4);if(!t->environment)goto failure;
     uint32_t handle;t->object=tribes_thread_object_create(id,!!(flags&4),&handle);if(!t->object)goto failure;
     pthread_attr_t a;int error=pthread_attr_init(&a);
-    if(!error){error=pthread_attr_setstacksize(&a,16u*1024*1024);if(!error)error=pthread_attr_setdetachstate(&a,PTHREAD_CREATE_DETACHED);
-        if(!error){check(pthread_mutex_lock(&registry));++live_threads;check(pthread_mutex_unlock(&registry));pthread_t thread;error=pthread_create(&thread,&a,run,t);
-            if(error){check(pthread_mutex_lock(&registry));--live_threads;check(pthread_mutex_unlock(&registry));}}
+    if(!error){error=pthread_attr_setstacksize(&a,16u*1024*1024);
+        if(!error){
+            check(pthread_mutex_lock(&registry));
+            if(p->exiting)error=ECANCELED;
+            else {
+                ++live_threads;t->next=threads;threads=t;
+                error=pthread_create(&t->native,&a,run,t);
+                if(error){threads=t->next;--live_threads;}
+            }
+            check(pthread_mutex_unlock(&registry));
+        }
         check(pthread_attr_destroy(&a));
     }
     if(error){if(!tribes_close_handle(handle))stop("failed create handle release");tribes_thread_object_finish(t->object,0);goto failure;}
@@ -191,3 +219,43 @@ _Noreturn void tribes_free_library_and_exit_thread(_cpu *cpu,uint32_t module,uin
     (void)tribes_free_library(cpu->_pointer_offset,module);tribes_exit_thread(cpu,code);
 }
 uint32_t tribes_guest_threads_live_count(void){check(pthread_mutex_lock(&registry));uint32_t count=live_threads;check(pthread_mutex_unlock(&registry));return count;}
+
+/* The reached main-thread shutdown cancels workers only at native waits with
+   explicit cleanup. Other running/blocked states remain bounded failures; no
+   asynchronous native cancellation or fabricated thread completion. */
+static void process_detach(_cpu *cpu,ThreadModule *m){
+    if(!m)return;process_detach(cpu,m->next);if(m->active!=1)return;
+    uint32_t args[]={m->source.image,0,1};
+    for(uint32_t i=0;i<m->source.callback_count;i++)
+        (void)tribes_call_guest(cpu,m->source.callbacks[i],3,args,cpu->_esp-64);
+    if(m->source.entry)(void)tribes_call_guest(cpu,m->source.entry,3,args,cpu->_esp-64);
+    m->active=0;
+}
+_Noreturn void tribes_exit_process(_cpu *cpu,uint32_t code){
+    if(!cpu||self)stop("ExitProcess requires the main guest thread");
+    check(pthread_mutex_lock(&registry));Process *p=find(cpu->_pointer_offset);
+    if(!p||!p->ready||p!=processes||p->next||p->exiting||tribes_get_current_thread_id()!=p->main_tid)
+        stop("unsupported process shutdown state");
+    for(Thread *t=threads;t;t=t->next)if(t->process!=p||t->phase!=2)stop("worker not ready for process shutdown");
+    p->exit_code=code;atomic_store_explicit(&p->exiting,1,memory_order_release);
+    uint32_t count=live_threads;pthread_t *workers=count?calloc(count,sizeof *workers):NULL;
+    if(count&&!workers)stop("shutdown worker allocation");
+    uint32_t index=0;
+    for(Thread *t=threads;t;t=t->next){workers[index++]=t->native;check(pthread_cancel(t->native));}
+    struct timespec deadline;check(clock_gettime(CLOCK_MONOTONIC,&deadline));deadline.tv_sec+=10;
+    while(live_threads){
+        struct timespec now,left;check(clock_gettime(CLOCK_MONOTONIC,&now));
+        left.tv_sec=deadline.tv_sec-now.tv_sec;left.tv_nsec=deadline.tv_nsec-now.tv_nsec;
+        if(left.tv_nsec<0){--left.tv_sec;left.tv_nsec+=1000000000;}
+        if(left.tv_sec<0||(!left.tv_sec&&!left.tv_nsec))stop("workers did not reach cancellable waits");
+        int error=pthread_cond_timedwait_relative_np(&thread_finished,&registry,&left);
+        if(error&&error!=ETIMEDOUT)check(error);
+    }
+    check(pthread_mutex_unlock(&registry));
+    /* Joining also completes native TLS destructors before original DLL detach. */
+    for(uint32_t i=0;i<count;i++){void *result;check(pthread_join(workers[i],&result));if(result!=PTHREAD_CANCELED)stop("worker escaped shutdown cancellation");}
+    free(workers);
+    tribes_loader_lock();process_detach(cpu,p->modules);tribes_loader_unlock();
+    fprintf(stderr,"TribesPad: original process shutdown completed, code=%u\n",code);
+    _Exit((int)(code&255));
+}

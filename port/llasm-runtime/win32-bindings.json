@@ -1425,6 +1425,15 @@
     "guest_base": false,
     "returns": true
   },
+  "ExitProcess": {
+    "helper": "tribes_exit_process",
+    "arguments": 1,
+    "guest_base": false,
+    "returns": false,
+    "cpu_argument": true,
+    "helper_returns": "void",
+    "noreturn": true
+  },
   "ExitThread": {
     "helper": "tribes_exit_thread",
     "arguments": 1,
@@ -1903,6 +1912,12 @@
   "WSASendTo": {
     "helper": "tribes_wsa_send_to",
     "arguments": 9,
+    "returns": true,
+    "guest_base": true
+  },
+  "InterlockedFlushSList": {
+    "helper": "tribes_flush_slist",
+    "arguments": 1,
     "returns": true,
     "guest_base": true
   }

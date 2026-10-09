@@ -33,6 +33,13 @@ static void *wake(void *arg){
 typedef struct Producer {uint32_t port,id;} Producer;
 static void *producer(void *arg){Producer *p=arg;for(uint32_t i=0;i<2000;i++)assert(tribes_post_queued_completion(p->port,i,p->id,0x80000000|i));return NULL;}
 static void *second_consumer(void *arg){tribes_get_queued_completion(base,(uint32_t)(uintptr_t)arg,0x11001,0x11009,0x11011,0);return NULL;}
+typedef struct CancelWait {uint32_t port;int batch;uint32_t timeout;} CancelWait;
+static void *cancel_waiter(void *arg){
+ CancelWait *w=arg;
+ if(w->batch)tribes_get_queued_completion_ex(base,w->port,0x11001,128,0x12003,w->timeout,0);
+ else tribes_get_queued_completion(base,w->port,0x11001,0x11009,0x11011,w->timeout);
+ return NULL;
+}
 static void rejected(unsigned kind,uint32_t port){
  pid_t child=fork();assert(child>=0);if(!child){
   if(kind==0)tribes_create_io_completion_port(base,1,port,0,1);
@@ -93,5 +100,14 @@ int main(void){
  port=call(1,create,4);batch[0]=port;watched=port;completion_watch(port);assert(!pthread_create(&worker,NULL,wake,(void *)1));memset(memory+0x11000,0xa5,4096);
  assert(!call(5,batch,6)&&tribes_get_last_error()==735&&word(0x12003)==0&&word(0x11001)==0xa5a5a5a5);assert(!pthread_join(worker,NULL));
  assert(!call(5,batch,6)&&tribes_get_last_error()==6&&word(0x12003)==0);
- puts("PASS: owned completion queue, five emitted guest ABIs, FIFO/opaque values, 259 bounded/interleaved packets and8000 concurrent producer packets, single and batched timeout/wakeup/close abandonment, invalid/type checks and explicit unsupported scheduling/association/duplication gates");return 0;
+ for(unsigned batch_mode=0;batch_mode<2;batch_mode++)for(unsigned finite=0;finite<2;finite++){
+  uint32_t cancelled=tribes_create_io_completion_port(base,UINT32_MAX,0,0,1);assert(cancelled);
+  completion_watch(cancelled);CancelWait w={cancelled,batch_mode,finite?10000:UINT32_MAX};pthread_t thread;
+  assert(!pthread_create(&thread,NULL,cancel_waiter,&w));while(!completion_observed())sched_yield();
+  assert(!pthread_cancel(thread));void *result=NULL;int joined=pthread_join(thread,&result);if(joined||result!=PTHREAD_CANCELED)fprintf(stderr,"cancel batch=%u finite=%u join=%d result=%p expected=%p\n",batch_mode,finite,joined,result,PTHREAD_CANCELED);assert(!joined&&result==PTHREAD_CANCELED);
+  /* Both calls acquire the registry: cancellation must drop the waiting borrow
+     and unlock it without taking a completion packet. */
+  assert(tribes_post_queued_completion(cancelled,1,2,3));assert(tribes_close_handle(cancelled));
+ }
+ puts("PASS: owned completion queue, five emitted guest ABIs, FIFO/opaque values, 259 bounded/interleaved packets and8000 concurrent producer packets, single and batched timeout/wakeup/close abandonment, invalid/type checks and explicit unsupported scheduling/association/duplication gates; four cancelled scalar/batch finite/infinite dequeues release registry and borrow");return 0;
 }

@@ -124,3 +124,16 @@ void tribes_fls_thread_cleanup(uint64_t base) {
     if(pthread_once(&once,init_key)||key_error)abort();
     for(;;){TribesFlsFiber *f=pthread_getspecific(key);while(f&&f->process->base!=base)f=f->thread_next;if(!f)break;if(!tribes_fls_fiber_delete(f))abort();}
 }
+
+void tribes_fls_thread_discard(uint64_t base) {
+    if(pthread_once(&once,init_key)||key_error)abort();
+    TribesFlsFiber *head=pthread_getspecific(key),**link=&head;
+    while(*link){
+        TribesFlsFiber *fiber=*link;if(fiber->process->base!=base){link=&fiber->thread_next;continue;}
+        *link=fiber->thread_next;
+        pthread_mutex_lock(&lock);TribesFlsFiber **global=&fibers;
+        while(*global!=fiber)global=&(*global)->global_next;*global=fiber->global_next;pthread_mutex_unlock(&lock);
+        if(fiber->dispose)fiber->dispose(fiber->context);free(fiber);
+    }
+    if(pthread_setspecific(key,head))abort();
+}

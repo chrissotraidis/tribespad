@@ -7,9 +7,12 @@
 #include "../../port/core/guest_virtual_memory.h"
 #include "../../port/core/native_handles.h"
 #include "../../port/llasm-support/tribes_absolute_memory.h"
+#include "../../port/core/guest_condition.h"
+#include "../../port/core/critical_section.h"
 #include <assert.h>
 #include <stdatomic.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <time.h>
 #include <pthread.h>
@@ -17,8 +20,10 @@
 extern void loc_1011C79B(void),loc_1011C7AD(void);
 void tribes_set_dispatch_target(_cpu *c,uint32_t pc){(void)c;assert(pc==0xfffff000);}
 extern void fixture_start(void),fixture_tls_a(void),fixture_dll_a(void),fixture_tls_b(void),fixture_dll_b(void),fixture_fls(void);
+extern void tbimp_ExitProcess(void);
 extern void tbimp_QueueUserWorkItem(void),tbimp_CreateThread(void),tbimp_ResumeThread(void),tbimp_GetExitCodeThread(void),tbimp_GetThreadId(void),tbimp_ExitThread(void),tbimp_FreeLibraryAndExitThread(void),tribes_return_to_host(void);
 void *tribes_lookup(uint32_t pc){switch(pc){
+ case 8:return (void *)tbimp_ExitProcess;
  case 1:return (void *)tbimp_CreateThread;case 2:return (void *)tbimp_ResumeThread;case 3:return (void *)tbimp_GetExitCodeThread;case 4:return (void *)tbimp_GetThreadId;
  case 5:return (void *)tbimp_ExitThread;case 6:return (void *)tbimp_FreeLibraryAndExitThread;case 7:return (void *)tbimp_QueueUserWorkItem;
  case 0x100:return (void *)fixture_tls_a;case 0x101:return (void *)fixture_dll_a;case 0x200:return (void *)fixture_tls_b;case 0x201:return (void *)fixture_dll_b;
@@ -40,7 +45,46 @@ static void environment(_cpu *c){
  assert(word(c,a+4)==0&&word(c,b+4)==0);
 }
 static void fixture_finalize(_cpu *c){environment(c);assert(sequence==5||sequence==9);atomic_fetch_add(&finalized,1);}
+static unsigned shutdown_mode,shutdown_code,detach_step;
+static uint32_t shutdown_handles[2],shutdown_port;
+static pthread_key_t shutdown_key;
+static _Atomic unsigned shutdown_started,shutdown_destructed;
+static void shutdown_destructor(void *value){assert(value);atomic_fetch_add(&shutdown_destructed,1);}
+void fixture_shutdown_setup(unsigned code){
+ shutdown_mode=1;shutdown_code=code;assert(!pthread_key_create(&shutdown_key,shutdown_destructor));
+}
+void fixture_shutdown_handles(uint32_t a,uint32_t b,uint32_t port){shutdown_handles[0]=a;shutdown_handles[1]=b;shutdown_port=port;}
+unsigned fixture_shutdown_started(void){return atomic_load(&shutdown_started);}
+static void shutdown_notify(_cpu *c,uint32_t which){
+ uint32_t reason=word(c,c->_esp+8),image=word(c,c->_esp+4);
+ if(reason==2){assert(image!=0x300000);ret(c,3,1);return;}
+ assert(reason==0&&word(c,c->_esp+12)==1); /* no worker THREAD_DETACH */
+ assert(atomic_load(&shutdown_destructed)==2&&tribes_guest_threads_live_count()==0);
+ static const uint32_t images[]={0x300000,0x200000,0x200000,0x100000,0x100000};
+ static const unsigned order[]={1,2,3,0,1};
+ assert(detach_step<5&&image==images[detach_step]&&which==order[detach_step]);
+ for(unsigned i=0;i<2;i++){
+  assert(!tribes_wait_single_object(shutdown_handles[i],0));
+  assert(tribes_get_exit_code_thread(c->_pointer_offset,shutdown_handles[i],0x3000));
+  assert(word(c,0x3000)==shutdown_code);
+ }
+ if(++detach_step==5){
+  tribes_critical_delete(c->_pointer_offset,0x4000);
+  assert(!tribes_condition_live_count());assert(tribes_close_handle(shutdown_port));
+  for(unsigned i=0;i<2;i++)assert(tribes_close_handle(shutdown_handles[i]));
+  puts("PASS: process exit joined both workers, discarded FLS callbacks, delivered reverse process detach including disabled thread notifications");fflush(stdout);
+ }
+ ret(c,3,1);
+}
+static void shutdown_procedure(_cpu *c){
+ unsigned kind=word(c,c->_esp+4);assert(kind<2);assert(!pthread_setspecific(shutdown_key,(void *)(uintptr_t)(kind+1)));
+ uint32_t index=tribes_fls_alloc(c,0x400);assert(index!=UINT32_MAX&&tribes_fls_set(c,index,1));
+ atomic_fetch_add(&shutdown_started,1);
+ if(!kind){tribes_critical_enter(c->_pointer_offset,0x4000);for(;;)(void)tribes_condition_sleep_cs(c->_pointer_offset,0x4100,0x4000,32);}
+ else for(;;)(void)tribes_get_queued_completion_ex(c->_pointer_offset,shutdown_port,0x5000,128,0x5800,32,0);
+}
 void fixture_notify(_cpu *c,uint32_t which){
+ if(shutdown_mode){shutdown_notify(c,which);return;}
  assert(atomic_fetch_add(&inside,1)==0);environment(c);
  uint32_t reason=word(c,c->_esp+8),image=word(c,c->_esp+4);assert(word(c,c->_esp+12)==0);
  assert(image==(which<2?0x100000:0x200000));
@@ -50,6 +94,7 @@ void fixture_notify(_cpu *c,uint32_t which){
 }
 void fixture_cleanup(_cpu *c){environment(c);assert(sequence==4);assert(word(c,c->_esp+4)==slot+1);sequence++;ret(c,1,0);}
 void fixture_procedure(_cpu *c){
+ if(shutdown_mode){shutdown_procedure(c);return;}
  environment(c);assert(sequence==4);assert(tribes_guest_finalizer_register(fixture_finalize));assert(tribes_guest_finalizer_register(fixture_finalize));slot=word(c,c->_esp+4);assert(slot<64);
  if(slot==63){*(volatile unsigned char *)(uintptr_t)(c->_pointer_offset+x86_read_fs_dword(8)-1)=1;abort();}
  uint32_t tls_block=word(c,x86_read_fs_dword(0x2c));assert(word(c,tls_block+8)==0);uint32_t marker=slot+1;memcpy((void *)(uintptr_t)(c->_pointer_offset+tls_block+8),&marker,4);
