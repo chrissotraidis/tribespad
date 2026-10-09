@@ -24,57 +24,78 @@ static int revision_font = -1;
 static unsigned font_size_published;
 static unsigned completed_revisions;
 static pthread_t revision_owner;
-/* Permission publication is rare; short readers use one atomic acquisition.
-   A pending writer closes admission before waiting for existing readers. The
-   mutex/condition pair handles only contention and serializes publishers. */
-#define WRITER_PENDING UINT32_C(0x80000000)
-static _Atomic uint32_t guard_state;
+/* Readers announce on separate cache lines. Publication closes admission and
+   waits for every announced reader before touching permissions or guest pages.
+   Sequential consistency on both sides prevents the store/load race in which
+   a reader misses the closed gate and a writer misses that reader. */
+typedef struct __attribute__((aligned(128))) MemoryReader {
+ _Atomic uint32_t active;
+ struct MemoryReader *next;
+} MemoryReader;
+static MemoryReader *readers;
+static _Atomic uint32_t writer_pending;
 static pthread_mutex_t guard_writer=PTHREAD_MUTEX_INITIALIZER;
 static pthread_mutex_t guard_wait=PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t guard_changed=PTHREAD_COND_INITIALIZER;
+static pthread_key_t reader_key;
+static pthread_once_t reader_key_once=PTHREAD_ONCE_INIT;
+static _Thread_local struct {MemoryReader *node;uint32_t depth;} reader_local;
+#define read_depth reader_local.depth
+static void reader_destroy(void *pointer){
+ MemoryReader *node=pointer;
+ if(atomic_load_explicit(&node->active,memory_order_seq_cst))abort();
+ if(pthread_mutex_lock(&guard_wait))abort();
+ MemoryReader **link=&readers;
+ while(*link&&*link!=node)link=&(*link)->next;
+ if(!*link)abort();*link=node->next;
+ if(pthread_mutex_unlock(&guard_wait))abort();
+ /* Another pthread-key destructor can still perform checked work. Let it
+    register again instead of retaining a pointer to this retired node. */
+ reader_local.node=NULL;free(node);
+}
+static void reader_key_create(void){if(pthread_key_create(&reader_key,reader_destroy))abort();}
+static __attribute__((cold,noinline)) MemoryReader *reader_register(void){
+ if(pthread_once(&reader_key_once,reader_key_create))abort();
+ MemoryReader *node=NULL;
+ if(posix_memalign((void **)&node,128,sizeof *node))abort();
+ atomic_init(&node->active,0);
+ if(pthread_mutex_lock(&guard_wait))abort();node->next=readers;readers=node;
+ if(pthread_mutex_unlock(&guard_wait))abort();
+ if(pthread_setspecific(reader_key,node))abort();reader_local.node=node;return node;
+}
 static __attribute__((cold,noinline)) void reader_wait(void){
  if(pthread_mutex_lock(&guard_wait))abort();
- while(atomic_load_explicit(&guard_state,memory_order_acquire)&WRITER_PENDING)
+ while(atomic_load_explicit(&writer_pending,memory_order_seq_cst))
   if(pthread_cond_wait(&guard_changed,&guard_wait))abort();
  if(pthread_mutex_unlock(&guard_wait))abort();
 }
-static void reader_leave(void);
+static __attribute__((cold,noinline)) void reader_notify_writer(void){
+ if(pthread_mutex_lock(&guard_wait))abort();
+ if(pthread_cond_broadcast(&guard_changed))abort();
+ if(pthread_mutex_unlock(&guard_wait))abort();
+}
+static void reader_leave(void){
+ atomic_store_explicit(&reader_local.node->active,0,memory_order_seq_cst);
+ /* Pair with the writer's gate store and reader scan: either it sees us idle
+    or we see its gate and wake it. This also covers rejected announcements. */
+ if(atomic_load_explicit(&writer_pending,memory_order_seq_cst))reader_notify_writer();
+}
 static void reader_enter(void){
+ MemoryReader *node=reader_local.node;if(!node)node=reader_register();
  for(;;){
-  if(atomic_load_explicit(&guard_state,memory_order_relaxed)&WRITER_PENDING){reader_wait();continue;}
-  /* Reserve a count in one atomic operation. A writer racing this reservation
-     either waits for us, or closes admission first and we withdraw without
-     accessing permissions or guest data. */
-  uint32_t previous=atomic_fetch_add_explicit(&guard_state,1,memory_order_acquire);
-  if((previous&~WRITER_PENDING)==WRITER_PENDING-1)abort();
-  if(!(previous&WRITER_PENDING))return;
+  atomic_store_explicit(&node->active,1,memory_order_seq_cst);
+  if(!atomic_load_explicit(&writer_pending,memory_order_seq_cst))return;
   reader_leave();reader_wait();
  }
 }
-static void reader_leave(void){
- uint32_t previous=atomic_fetch_sub_explicit(&guard_state,1,memory_order_release);
- if(!(previous&~WRITER_PENDING))abort();
- if(previous==(WRITER_PENDING|1)){
-  if(pthread_mutex_lock(&guard_wait))abort();
-  if(pthread_cond_broadcast(&guard_changed))abort();
-  if(pthread_mutex_unlock(&guard_wait))abort();
- }
-}
 static void write_unlock(void){
- /* Rejected reader reservations may still be withdrawing. Preserve their
-    counts when opening admission, so a late withdrawal cannot underflow or
-    erase another reader's reservation. None may access the protected data. */
- uint32_t previous=atomic_fetch_and_explicit(&guard_state,~WRITER_PENDING,memory_order_release);
- if(!(previous&WRITER_PENDING))abort();
+ atomic_store_explicit(&writer_pending,0,memory_order_seq_cst);
  if(pthread_cond_broadcast(&guard_changed))abort();
  if(pthread_mutex_unlock(&guard_wait))abort();
  if(pthread_mutex_unlock(&guard_writer))abort();
 }
 /* Explicit buffer brackets can contain compiler-emitted access brackets.
-   Retain the outer reader admission until the last nested bracket exits,
-   even when a publisher is waiting; every inner access is
-   still checked against the same protected permission snapshot. */
-static _Thread_local uint32_t read_depth;
+   Keep the outer announcement until the last nested access has been checked. */
 static void read_lock(void){
  if(read_depth==UINT32_MAX)abort();
  if(!read_depth)reader_enter();read_depth++;
@@ -82,14 +103,19 @@ static void read_lock(void){
 static void read_unlock(void){
  if(!read_depth)abort();if(!--read_depth)reader_leave();
 }
+/* The registry is inspected only while holding guard_wait. Registration and
+   thread teardown use that same mutex, so nodes cannot disappear during scans. */
+static int readers_present(void){
+ for(MemoryReader *node=readers;node;node=node->next)
+  if(atomic_load_explicit(&node->active,memory_order_seq_cst))return 1;
+ return 0;
+}
 static void write_lock(void){
  if(read_depth){fputs("TribesPad: permission publication inside a checked access bracket\n",stderr);abort();}
  if(pthread_mutex_lock(&guard_writer))abort();
  if(pthread_mutex_lock(&guard_wait))abort();
- uint32_t previous=atomic_fetch_or_explicit(&guard_state,WRITER_PENDING,memory_order_acq_rel);
- if(previous&WRITER_PENDING)abort();
- while(atomic_load_explicit(&guard_state,memory_order_acquire)!=WRITER_PENDING)
-  if(pthread_cond_wait(&guard_changed,&guard_wait))abort();
+ atomic_store_explicit(&writer_pending,1,memory_order_seq_cst);
+ while(readers_present())if(pthread_cond_wait(&guard_changed,&guard_wait))abort();
 }
 
 static __attribute__((cold,noinline)) _Noreturn void violation(const void *p,uint64_t size,uint32_t access){fprintf(stderr,"TribesPad: checked guest memory violation at 0x%llx size=%llu access=%u\n",(unsigned long long)((uintptr_t)p-guest_base),(unsigned long long)size,access);abort();}

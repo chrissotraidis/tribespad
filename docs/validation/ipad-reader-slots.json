@@ -1,0 +1,261 @@
+{
+  "date": "2026-10-09",
+  "change": "Per-thread cache-line-separated active-reader flags replace the shared reader counter. Sequentially consistent announcements, writer gate and scans exclude overlapping publication; nested accesses retain the outer announcement. Registration and destructor removal share the writer condition mutex; later pthread-key destructors can re-register safely. Every permission, published-code and finite-revision check is preserved.",
+  "proofs": {
+    "memory-reader": {
+      "passed": true,
+      "receipt_sha256": "cdda684165eaf7b3524015643e95a80e67ec540194889273a1630a7621a9c4c8"
+    },
+    "vm-subpages/macos": {
+      "passed": true,
+      "receipt_sha256": "4ae0c1962a940df9d21e6b02615e8aa9e5a4076f2879ae56b0e723e93c7ae349"
+    },
+    "published-code": {
+      "passed": true,
+      "receipt_sha256": "cf24fa179cac06e677de9410caa123df20f80da382e18b319897254786abf017"
+    },
+    "code-revision-threads/macos": {
+      "passed": true,
+      "receipt_sha256": "72c8b5261363feb7467b82f1592d63f68ef3a3e1450de9112d8677c08974c77e"
+    },
+    "cpu-host-checks": {
+      "passed": true,
+      "receipt_sha256": "4d15b9c9aa74fcea5833645703474133c4c46f0059479c0175dcf6ee9d2dc863"
+    },
+    "host-local-checks": {
+      "passed": true,
+      "receipt_sha256": "5d0e9553091e3a4380f9ea6adea4b9f2cb44223213955544c7664aab17117771"
+    },
+    "native-cpu-checks": {
+      "passed": true,
+      "receipt_sha256": "bc4729bcd49d4270f4888564df2d87d06df5bb0a8a64125d7ca2e992201d1094"
+    },
+    "sse-host-locals": {
+      "passed": true,
+      "receipt_sha256": "d469f46c525c49df166f2c609732897a6b68f3c0356f83484305b548917638f2"
+    },
+    "x87-host-checks": {
+      "passed": true,
+      "receipt_sha256": "a3afd2c11b8fb10dcfc6b82bd22e936e30fe9deca66629ef77dfe697cb4210e2"
+    },
+    "mobile-gpu-timing": {
+      "passed": true,
+      "receipt_sha256": "290f36f6290716d7ff1cc1a7fef7808b8eb38140176c055a259432f7c3ef627f"
+    },
+    "mobile-gpu-sync": {
+      "passed": true,
+      "receipt_sha256": "4b82d3b4e7f0abcf0ca1242fff52169b930a50de0ca221a4169e5dff8f720216"
+    },
+    "code-revision-mobile": {
+      "passed": true,
+      "receipt_sha256": "c2f3f2bf259056b91d05bddba981301e22cf2a762a6702d285ea9a22c9e4e163"
+    }
+  },
+  "builds": {
+    "simulator": {
+      "binary_sha256": "8082e28651a95eba95d1a811d309a884ea86f29dd1c532769e84f5afa651128d",
+      "bytes": 103641584,
+      "state": "built",
+      "deep_strict_signature_verified": true,
+      "bundled_assets": true
+    },
+    "device": {
+      "binary_sha256": "266557fec1a32abbcfad9d2005332f7046a129e08fb224725993348870b87598",
+      "bytes": 103575568,
+      "state": "built",
+      "deep_strict_signature_verified": true,
+      "bundled_assets": true
+    }
+  },
+  "original_execution": {
+    "start_unix": 1791567090.590107,
+    "pid": 41057,
+    "map": "Katabatic",
+    "bots": 2,
+    "offline": true,
+    "world_observed_seconds": 184
+  },
+  "captures": [
+    {
+      "name": "reader-slots-observer-video",
+      "frames": 256,
+      "seconds": 30.09,
+      "fps": 8.507809903622466,
+      "scope": "Thirty-second fixed initial observer view of offline Katabatic with two bots. No input, compiler or debugger during recording. Presented Simulator frames, not original FPS counter."
+    },
+    {
+      "name": "reader-slots-observer-video-2",
+      "frames": 263,
+      "seconds": 30.085,
+      "fps": 8.741897955791922,
+      "scope": "Thirty-second fixed initial observer view of offline Katabatic with two bots. No input, compiler or debugger during recording. Presented Simulator frames, not original FPS counter."
+    }
+  ],
+  "previous_capture": {
+    "frames": 149,
+    "seconds": 30.065,
+    "fps": 4.955928820888076,
+    "reference": "ipad-gamepad.json"
+  },
+  "microbenchmark": {
+    "runs": [
+      [
+        "baseline",
+        1,
+        0.009032
+      ],
+      [
+        "candidate",
+        1,
+        0.007508
+      ],
+      [
+        "baseline",
+        1,
+        0.011581
+      ],
+      [
+        "candidate",
+        1,
+        0.005998
+      ],
+      [
+        "baseline",
+        1,
+        0.008788
+      ],
+      [
+        "candidate",
+        1,
+        0.005558
+      ],
+      [
+        "baseline",
+        1,
+        0.010634
+      ],
+      [
+        "candidate",
+        1,
+        0.005467
+      ],
+      [
+        "baseline",
+        2,
+        0.106263
+      ],
+      [
+        "candidate",
+        2,
+        0.021706
+      ],
+      [
+        "baseline",
+        2,
+        0.096046
+      ],
+      [
+        "candidate",
+        2,
+        0.020837
+      ],
+      [
+        "baseline",
+        2,
+        0.099466
+      ],
+      [
+        "candidate",
+        2,
+        0.022917
+      ],
+      [
+        "baseline",
+        2,
+        0.105052
+      ],
+      [
+        "candidate",
+        2,
+        0.023429
+      ],
+      [
+        "baseline",
+        4,
+        0.21678
+      ],
+      [
+        "candidate",
+        4,
+        0.04776
+      ],
+      [
+        "baseline",
+        4,
+        0.209134
+      ],
+      [
+        "candidate",
+        4,
+        0.044109
+      ],
+      [
+        "baseline",
+        4,
+        0.207647
+      ],
+      [
+        "candidate",
+        4,
+        0.047951
+      ],
+      [
+        "baseline",
+        4,
+        0.208974
+      ],
+      [
+        "candidate",
+        4,
+        0.049247
+      ]
+    ],
+    "candidate_source_sha256": "2aa9915ae596be9ac924872e5c798558b14a77d2a9484618a549435c50e1432a",
+    "baseline_source_sha256": "1d62b3446339b742720dd23f78f4ac23d53ab18f62d4481070e0c2c70cbe5dac"
+  },
+  "profile": {
+    "scope": "Separate four-second sample after recordings; inclusive counts overlap, not additive.",
+    "main_thread_observations": 316,
+    "inclusive_observations": {
+      "tribes_memory_access_begin": 142,
+      "tribes_memory_access_end": 29,
+      "tribes_memory_transfer_begin": 21,
+      "_tlv_get_addr": 19,
+      "tribes_dispatch": 29,
+      "tribes_lookup": 14,
+      "tribes_memory_code_revision": 2,
+      "require": 21
+    },
+    "physical_footprint_mib": 241.5
+  },
+  "touch_recheck": [
+    "Spawn into Starwolf outdoors",
+    "Forward moves flag distance61.7 to46.0",
+    "Weapon switches to disc15",
+    "Jet raises view above base, drains energy/adds heat; release falls and recovers energy",
+    "Aim changes compass/view",
+    "Fire reduces disc ammo15 to14"
+  ],
+  "remaining": [
+    "Insufficient frame rate for comfortable gameplay",
+    "Terrain gaps and slow startup/input",
+    "Physical iPad/controller and iPhone acceptance",
+    "HD visual fidelity"
+  ],
+  "sources_sha256": {
+    "port/core/guest_memory_checks.c": "2aa9915ae596be9ac924872e5c798558b14a77d2a9484618a549435c50e1432a",
+    "tests/memory_reader_test.c": "3704cd35e71f4ae10d4d8796c5f25e48dfad256ab76d3b425b8d0fc199c96e1b",
+    "scripts/test-memory-reader.py": "9d3cf4f040566b053b689becd2504f63f4d098a37411bbf97226cba9304dc639"
+  },
+  "local_evidence": "generated/ipad-engine/reader-slots-* and generated/integration-review/memory-reader-slots/"
+}
