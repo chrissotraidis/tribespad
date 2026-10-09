@@ -51,7 +51,8 @@ The bundled app preserves its original warrior and video preferences between lau
 
 ## Current work
 
-- Measure game performance with the optimized, cached ARM64 build.
+- Improve measured runtime performance; builds already cache verified ARM64 objects
+  and avoid 179 redundant support-code compilations.
 - Fix visible rendering gaps and reduce startup/input latency in the iPad app.
 - Integrate and refine touch, controller, keyboard and mouse input in real gameplay.
 - Verify HD textures, sustained performance and physical-device behavior.

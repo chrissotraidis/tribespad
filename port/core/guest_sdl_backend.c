@@ -2535,16 +2535,16 @@ void tribes_gl_get_integer(_cpu *cpu,uint32_t name,uint32_t output){
     if(copy)value=(GLint)*copy;else if(c&&c->core&&name==0x8192)value=(GLint)c->mipmap_hint;else glGetIntegerv(name,&value);
     checked_copy(guest(cpu,output,4),&value,4);graphics_active=0;leave(&frame);tribes_set_last_error(error);
 }
-/* The original model-view/projection queries have exactly sixteen floats. Keep
-   every other vector enum guarded until its output extent is supported. */
+/* Matrix queries return sixteen floats; the reached scene fog color
+   returns four. Keep other vector enums guarded until their extent is known. */
 void tribes_gl_get_float(_cpu *cpu,uint32_t name,uint32_t output){
     WINDOW_ENTER();if(!SDL_GL_GetCurrentContext())stop();
     size_t count=1;
-    if(name==0x0ba6||name==0x0ba7){
+    if(name==0x0ba6||name==0x0ba7||name==0x0b66){
 #if TARGET_OS_IPHONE && !defined(TB_GL4ES)
         stop();
 #else
-        (void)legacy_context();count=16;
+        (void)legacy_context();count=name==0x0b66?4:16;
 #endif
     }else if(name!=0x84ff&&name!=GL_MAX_TEXTURE_SIZE&&name!=0x8192)stop();
     GLfloat value[16];size_t bytes=count*sizeof(*value);

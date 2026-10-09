@@ -1822,6 +1822,24 @@ static void event_tests(SDL_Window *window,const char *fault){
  puts("Guest SDL events: queue/NULL peek, Windows32 fields, keyboard snapshot, UTF-8/drop lifetime and empty-output preservation passed");
 }
 #ifdef TB_GL4ES
+static void mobile_fog_query(const char *fault){
+ extern void gl4es_glGetFloatv(unsigned,float *),gl4es_glFogfv(unsigned,const float *);
+ GLfloat saved[4],expected[4],color[4]={.125f,.375f,.75f,1};
+ gl4es_glGetFloatv(0x0b66,saved);gl4es_glFogfv(0x0b66,color);gl4es_glGetFloatv(0x0b66,expected);
+ if(fault&&!strcmp(fault,"fog-query-readonly")){assert(tribes_memory_permissions_set(0x3000,4096,1));tribes_gl_get_float(&cpu,0x0b66,0x3001);assert(0);}
+ if(fault&&!strcmp(fault,"fog-query-cross-page")){assert(tribes_memory_permissions_set(0x4000,4096,1));tribes_gl_get_float(&cpu,0x0b66,0x3ff1);assert(0);}
+ const uint32_t addresses[]={0x3001,0x3ff0};
+ for(unsigned i=0;i<2;i++){
+  uint32_t address=addresses[i];memset(memory+address-1,0xa5,18);
+  assert(tribes_memory_permissions_set(0x4000,4096,0));
+  glEnable(0xffffffff);tribes_gl_get_float(&cpu,0x0b66,address);
+  assert(!memcmp(memory+address,expected,16)&&memory[address-1]==0xa5);
+  assert(glGetError()==GL_INVALID_ENUM&&!glGetError());
+  assert(tribes_memory_permissions_set(0x4000,4096,3));assert(memory[address+16]==0xa5);
+ }
+ gl4es_glFogfv(0x0b66,saved);
+ puts("Fog color query: four native floats, unaligned/page-end output, sentinels and existing GL error preserved PASS");
+}
 static void mobile_gpu_sync(uint32_t window,uint32_t context,const char *fault){
  assert(strstr((const char *)glGetString(GL_EXTENSIONS),"GL_APPLE_sync"));
  tribes_gl_clear_color(&cpu,0,0x3f800000,0,0x3f800000);tribes_gl_clear(&cpu,GL_COLOR_BUFFER_BIT);
@@ -1995,6 +2013,7 @@ static int window_main(int argc,char **argv){
  guest_pixels();
 #endif
  #ifdef TB_GL4ES
+ mobile_fog_query(argc==2?argv[1]:NULL);
  mobile_gpu_sync(window,context,argc==2?argv[1]:NULL);
 #endif
  cursor_surfaces(argc==2?argv[1]:NULL);pixels();if(argc==2&&!strcmp(argv[1],"reentrant-window"))assert(SDL_AddEventWatch(reenter,NULL));assert(CALL(42,window));assert(CALL(52,window));SDL_PumpEvents();

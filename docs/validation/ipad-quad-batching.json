@@ -20,7 +20,7 @@
     "binary_sha256": "71999ccc135170b73c61627a5ee83568ec44162b9bb0a59f56ffb571d819a930",
     "signature_verified": true,
     "pid": 27260,
-    "execution": "Original profile/menu restored; offline Katabatic with two bots started, still loading. Full-match performance pending.",
+    "execution": "Offline Katabatic with So Dark and Evenkill loaded. Touch Fire joined Starwolf; Move/Look changed the view, Weapon selected disc (15 rounds), Fire hit the nearby wall and original game reported death from own spinfusor disc. Later stopped at unsupported glGetFloatv(GL_FOG_COLOR).",
     "map_start": {
       "pid": 27260,
       "started_at": "2026-10-09T05:07:33.953749+00:00",
@@ -28,6 +28,43 @@
       "bots": 2,
       "dedicated": false,
       "binary_sha256": "71999ccc135170b73c61627a5ee83568ec44162b9bb0a59f56ffb571d819a930"
+    },
+    "visible_updates": {
+      "pid": 27260,
+      "observed_at": "2026-10-09T05:27:30.785403+00:00",
+      "interval_seconds": 24.249351625,
+      "visible_changes": 11,
+      "visible_changes_per_second": 0.45362037592211296,
+      "crop": [
+        360,
+        330,
+        1350,
+        930
+      ],
+      "active_build": false,
+      "scope": "Screenshot changes during stationary post-fire/death scene, without debugger or build. Not FPS or controlled comparison; different view from earlier candidate."
+    },
+    "runtime_batch": {
+      "mode": "GL_QUADS",
+      "indices": 8000,
+      "maximum_index": 7999,
+      "quad_count": 2000,
+      "native_calls": 1,
+      "method": "LLDB exact-entry read-only argument and buffer capture at gl4es_glDrawElements; detached afterwards."
+    },
+    "rendering": {
+      "finding": "Terrain gaps visible in current framebuffer before the snow draw. Snow is not the source of these holes. Geometry/depth/culling still need diagnosis.",
+      "readback": "1024x768 lower-left subregion of actual 2360x1640 drawable at first large quad entry; native glReadPixels invoked on rendering thread through debugger. A later error query returned GL_INVALID_ENUM with unknown origin; error was not checked immediately before readback.",
+      "sha256": "bf427215d21a5b04808a67dcb451fe73971decb7da157d01f7269b7648f2534f",
+      "image": "ipad-pre-snow-2026-10-09.png"
+    },
+    "terminated": {
+      "pid": 27260,
+      "signal": "SIGABRT",
+      "bridge": "tribes_gl_get_float",
+      "retained_name_register": "x22=2918 (GL_FOG_COLOR)",
+      "output_address": 3142420,
+      "scope": "Crash after debugger detached; static original block loc_6A70C8 supplies this four-float query. No stable post-diagnostic endurance acceptance."
     }
   },
   "sources_sha256": {
