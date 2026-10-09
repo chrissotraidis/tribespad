@@ -32,7 +32,7 @@ static _Atomic uint32_t guard_state;
 static pthread_mutex_t guard_writer=PTHREAD_MUTEX_INITIALIZER;
 static pthread_mutex_t guard_wait=PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t guard_changed=PTHREAD_COND_INITIALIZER;
-static void reader_wait(void){
+static __attribute__((cold,noinline)) void reader_wait(void){
  if(pthread_mutex_lock(&guard_wait))abort();
  while(atomic_load_explicit(&guard_state,memory_order_acquire)&WRITER_PENDING)
   if(pthread_cond_wait(&guard_changed,&guard_wait))abort();
@@ -86,7 +86,7 @@ static void write_lock(void){
   if(pthread_cond_wait(&guard_changed,&guard_wait))abort();
 }
 
-static _Noreturn void violation(const void *p,uint64_t size,uint32_t access){fprintf(stderr,"TribesPad: checked guest memory violation at 0x%llx size=%llu access=%u\n",(unsigned long long)((uintptr_t)p-guest_base),(unsigned long long)size,access);abort();}
+static __attribute__((cold,noinline)) _Noreturn void violation(const void *p,uint64_t size,uint32_t access){fprintf(stderr,"TribesPad: checked guest memory violation at 0x%llx size=%llu access=%u\n",(unsigned long long)((uintptr_t)p-guest_base),(unsigned long long)size,access);abort();}
 int tribes_memory_checks_configure(uint64_t base,uint64_t size){
  if(permissions||!base||!size||(base|size)%4096||size>UINT64_C(0x100000000)||base>UINTPTR_MAX-size)return 0;
  unsigned char *p=malloc((size_t)(size/4096));if(!p)return 0;memset(p,3,(size_t)(size/4096));guest_base=(uintptr_t)base;guest_size=size;permissions=p;return 1;
@@ -171,13 +171,18 @@ static int covered(const PublishedInterval *ranges,uint32_t count,uint64_t begin
  for(uint32_t i=0;i<count;i++)if(ranges[i].begin<=begin&&begin+size<=ranges[i].end)return 1;
  return 0;
 }
+static __attribute__((cold,noinline)) _Noreturn void published_write_violation(const void *p,uint64_t size,uint32_t access,uint64_t offset){
+ fprintf(stderr,"TribesPad: write to published AOT code at 0x%llx\n",(unsigned long long)offset);violation(p,size,access);
+}
 static void require(const void *p,uint64_t size,uint32_t access){
  uintptr_t address=(uintptr_t)p;if(address<guest_base||address-guest_base>=guest_size||size>guest_size-(address-guest_base))violation(p,size,access);
  uint64_t offset=address-guest_base,last=(offset+size-1)/4096;
- if((access&2)&&published_count){
+ /* Published intervals are sorted and disjoint under this reader bracket.
+    Heap/stack writes outside their envelope still need page permission checks. */
+ if((access&2)&&published_count&&offset<published[published_count-1].end&&offset+size>published[0].begin){
   uint32_t lo=0,hi=published_count;
   while(lo<hi){uint32_t mid=lo+(hi-lo)/2;if(published[mid].end<=offset)lo=mid+1;else hi=mid;}
-  if(lo<published_count&&published[lo].begin<offset+size){fprintf(stderr,"TribesPad: write to published AOT code at 0x%llx\n",(unsigned long long)offset);violation(p,size,access);}
+  if(lo<published_count&&published[lo].begin<offset+size)published_write_violation(p,size,access,offset);
  }
  for(uint64_t page=offset/4096;page<=last;++page)if((permissions[page]&access)!=access)violation(p,size,access);
 }

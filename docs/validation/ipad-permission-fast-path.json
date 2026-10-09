@@ -1,0 +1,241 @@
+{
+  "date": "2026-10-09",
+  "change": "Keep waiting/failure handling cold and skip published-interval binary search only for writes outside its complete envelope. Bounds, page permissions, overlap rejection and reader/writer exclusion remain enforced.",
+  "source_sha256": {
+    "port/core/guest_memory_checks.c": "ce4b64969f394561e20eba137faee5993784f69b07bafa6f053b3dbdc1d8c45d",
+    "tests/code_revision_test.c": "01e41198d5f24db6615ecc2ba355f1abe5434bc8084ca901270832168da6a69d",
+    "scripts/test-code-revision.py": "d4c039b0a9f232f7e1db145a107f15af89befbdfb8470ac678dc731e6d65262c"
+  },
+  "components": {
+    "runtime_sha256": "ce4b64969f394561e20eba137faee5993784f69b07bafa6f053b3dbdc1d8c45d",
+    "results": {
+      "guest-memory-pass": {
+        "pass": true,
+        "state": "finished",
+        "scope": "Compiler/runtime foundation only. Native DLL/services/library coverage and VirtualProtect integration remain unproven; not enabled in game bootstrap.",
+        "output": "PASS: actual pass-emitted scalar/vector/atomic/copy/move/set checks; 23 forbidden-access child faults with complete shared-memory preservation; permitted neighboring/host/zero-length accesses; nested bracket excludes pending writer; 8000 concurrent emitted write/read/copy cycles and 16000 permission publications from four writers; permission restoration",
+        "tsan_output": "PASS: actual pass-emitted scalar/vector/atomic/copy/move/set checks; 0 forbidden-access child faults with complete shared-memory preservation; permitted neighboring/host/zero-length accesses; nested bracket excludes pending writer; 8000 concurrent emitted write/read/copy cycles and 16000 permission publications from four writers; permission restoration",
+        "binary_sha256": "f72c0ad046fe93bdfa80a3742f3ea5d5321ad3e44bfe312ecd04987c8026bd23"
+      },
+      "guest-access-groups": {
+        "passed": true,
+        "scope": "Emitted permission checks and bounded grouping; microbenchmark is not game FPS.",
+        "results": {
+          "baseline": {
+            "output": "PASS: mixed host/guest/host-only groups, nested pending writer, 4 guard faults, concurrent readers/two publishers; 100000 batches 0.025328 seconds",
+            "binary_sha256": "c96f51e7e6e0eb8e4ea8f3797f596fa46ed7f0ad9d74259d063deefe135b3355",
+            "seconds": 0.025328
+          },
+          "baseline-tsan": {
+            "output": "PASS: mixed host/guest/host-only groups, nested pending writer, 0 guard faults, concurrent readers/two publishers; 100000 batches 0.894782 seconds",
+            "binary_sha256": "ab57b8772f34694393f94ae4bbb765a787846852363b232bd901d20d5a21ee97",
+            "seconds": 0.894782
+          },
+          "grouped": {
+            "output": "PASS: mixed host/guest/host-only groups, nested pending writer, 4 guard faults, concurrent readers/two publishers; 100000 batches 0.020015 seconds",
+            "binary_sha256": "77341fb1b3abf89f9b50e7a546511f13bad3f30c2b827df0ca18199b963cec7f",
+            "seconds": 0.020015
+          },
+          "grouped-tsan": {
+            "output": "PASS: mixed host/guest/host-only groups, nested pending writer, 0 guard faults, concurrent readers/two publishers; 100000 batches 0.344465 seconds",
+            "binary_sha256": "9b010bd47e889f123239da24e9694a0d464523bea92131d4d6f9d36cd64e6957",
+            "seconds": 0.344465
+          },
+          "separate-ends": {
+            "output": "PASS: mixed host/guest/host-only groups, nested pending writer, 4 guard faults, concurrent readers/two publishers; 100000 batches 0.020106 seconds",
+            "binary_sha256": "ba16182604444ede37a590870ee22ff85e5f321a7b45f2e01f26982a97f4a13f",
+            "seconds": 0.020106
+          },
+          "separate-ends-tsan": {
+            "output": "PASS: mixed host/guest/host-only groups, nested pending writer, 0 guard faults, concurrent readers/two publishers; 100000 batches 0.399541 seconds",
+            "binary_sha256": "c6e6d594b58febdf2eba3821a6cce7f99aff7fb7227772ff77bd951a8aa5059e",
+            "seconds": 0.399541
+          }
+        }
+      },
+      "code-revision-mobile": {
+        "passed": true,
+        "scope": "Thirty-three primary plus two independent font ordered single-owner finite code revisions, including chained overlapping preimages and last-writer final-byte validation; rejected requests preserve bytes/state and ordinary compiler-instrumented writes remain blocked before, during and after revision. The pending, platform-specific renderer and audio bank additions validate bytes, range, permissions and owner; immutable bank instructions and mutable metadata remain distinct. No engine route activation claim.",
+        "binary_sha256": "aaa2b1528d2cbef6cd27e31eecd5945bcc6a3266c74308325d9bc68f9340d566"
+      },
+      "code-revision-threads/macos": {
+        "passed": true,
+        "scope": "Actual production dispatch gate (fixture image bounds), unpublished/initial/partial/final/font states, plus prior-route selector and locked revision-state API tested with four concurrent native readers through partial14th/15th/16th/17th/18th/19th/20th/21st/22nd/23rd/24th/25th/26th/27th/28th/29th/30th/31st/32nd/33rd publication and independent font publication; Mac/TSan or sole iPad Simulator. Ordinary denied writes and all individual wrappers are separate regressions.",
+        "runs": [
+          {
+            "mode": "normal",
+            "binary_sha256": "151566aaa58424bdfa11ce01db6fdf4a4fd56defcdcb8a0e31cb4d00c51975b2",
+            "stdout": "PASS: dispatch gate rejects unpublished/partial states, accepts initial/final/font states and preserves range boundaries; four actual readers retain prior routing across800000 partial-revision observations in revisions14/15/16/17/18/19/20/21/22/23/24/25/26/27/28/29/30/31/32/33 plus80000 pending font observations and publication completion\n"
+          },
+          {
+            "mode": "tsan",
+            "binary_sha256": "a08ffd1836897cf50a3feac67afa892361aca23d530cba09d46c205f069c47b7",
+            "stdout": "PASS: dispatch gate rejects unpublished/partial states, accepts initial/final/font states and preserves range boundaries; four actual readers retain prior routing across800000 partial-revision observations in revisions14/15/16/17/18/19/20/21/22/23/24/25/26/27/28/29/30/31/32/33 plus80000 pending font observations and publication completion\n"
+          }
+        ]
+      },
+      "cpu-host-checks": {
+        "passed": true,
+        "scope": "Host prefix contract and preserved guest checks, one actual original block and controlled batch; not full-game or performance acceptance.",
+        "results": {
+          "test": {
+            "output": "PASS: 9 host-span/guest-access faults preserve all shared bytes; 256 original block CPU/flags/route comparisons; concurrent checked accesses/publication; baseline 0.027092 optimized 0.021053 seconds",
+            "binary_sha256": "973ac3ba7966d9f192ea2323675c05a06e458c110b94db5a3150520f569da11f"
+          },
+          "test-tsan": {
+            "output": "PASS: 0 host-span/guest-access faults preserve all shared bytes; 256 original block CPU/flags/route comparisons; concurrent checked accesses/publication; baseline 0.500226 optimized 0.430590 seconds",
+            "binary_sha256": "b6bd3733a4055c174026aa8b2087eef94e442468377cc620a9792437f748ec81"
+          }
+        }
+      },
+      "host-local-checks": {
+        "passed": true,
+        "scope": "Bounded compiler-owned native stack, TLS and local global accesses; guest pointees still checked. No gameplay performance claim.",
+        "runs": [
+          {
+            "mode": "normal",
+            "output": "PASS: native stack/TLS values, checked guest pointees, eight independent threads; four pre-write guest faults in normal mode",
+            "binary_sha256": "c62f5fec1f4a8e2594b990057b913835164dd824c46b455fdb4acf6000300cee"
+          },
+          {
+            "mode": "tsan",
+            "output": "PASS: native stack/TLS values, checked guest pointees, eight independent threads; four pre-write guest faults in normal mode",
+            "binary_sha256": "37ae78b53126e64178b7be1f0a2cec80f8073af7476a3ac49e2ef3112f6b118d"
+          }
+        ]
+      },
+      "native-cpu-checks": {
+        "passed": true,
+        "scope": "Finite 440-byte native CPU proof, bounded indexed fields, preserved guest pointees and concurrent independent CPU objects. No full-game performance claim.",
+        "runs": [
+          {
+            "mode": "normal",
+            "output": "PASS: indexed native CPU fields, preserved guest writes, eight threads; ten contract/guest faults in normal mode",
+            "binary_sha256": "da5712ed588fb1c6f56402b10a87ef10b014056436e36007a50cd4ee092c3f8d"
+          },
+          {
+            "mode": "tsan",
+            "output": "PASS: indexed native CPU fields, preserved guest writes, eight threads; ten contract/guest faults in normal mode",
+            "binary_sha256": "fbb30f697dc676abf83b3f1538f77991620dee9ea479fc31750ff5e11e9b69f7"
+          }
+        ]
+      },
+      "sse-host-locals": {
+        "passed": true,
+        "scope": "Same original AOT scalar cases replayed through baseline and native-object optimized checked SSE helpers; TSan covers guard runtime. Timings include startup and threads and are not game FPS.",
+        "cases": 94128,
+        "runs": [
+          {
+            "mode": "baseline",
+            "tsan_guard_runtime": false,
+            "output": "PASS: 94128 x86-oracle cases execute actual AOT legacy SIMD bodies; full CPU/vector/MXCSR/x87/stack and guarded-memory comparison, eight independent native threads",
+            "seconds": 0.41167587500000025,
+            "binary_sha256": "e5922acaa710cabd3ab09cd9ee13d019773b2af5e6a940144de36e73c4332165"
+          },
+          {
+            "mode": "baseline",
+            "tsan_guard_runtime": true,
+            "output": "PASS: 94128 x86-oracle cases execute actual AOT legacy SIMD bodies; full CPU/vector/MXCSR/x87/stack and guarded-memory comparison, eight independent native threads",
+            "seconds": 0.8586571670000005,
+            "binary_sha256": "4e3d285969829e638d53266c53ab068164a8aeb3876396a033b8763f91ee6b9a"
+          },
+          {
+            "mode": "optimized",
+            "tsan_guard_runtime": false,
+            "output": "PASS: 94128 x86-oracle cases execute actual AOT legacy SIMD bodies; full CPU/vector/MXCSR/x87/stack and guarded-memory comparison, eight independent native threads",
+            "seconds": 0.4028037080000004,
+            "binary_sha256": "2086c63d8b1e3214c62e38e31d8e99c6516fd23594620d64aca03e3171610d29"
+          },
+          {
+            "mode": "optimized",
+            "tsan_guard_runtime": true,
+            "output": "PASS: 94128 x86-oracle cases execute actual AOT legacy SIMD bodies; full CPU/vector/MXCSR/x87/stack and guarded-memory comparison, eight independent native threads",
+            "seconds": 0.7339090420000005,
+            "binary_sha256": "9bbc62947ac96b6a55a761f40b4802b637dc1b7a8a726207f990ffa219406d52"
+          }
+        ]
+      },
+      "mobile-gpu-timing": {
+        "passed": true,
+        "scope": "Four finite mobile timing routes. Original gen/begin/end blocks compared with an isolated stdcall query boundary; mobile report path leaves pre-sample estimator state intact. No rendering or scheduling-performance acceptance."
+      },
+      "mobile-gpu-sync": {
+        "passed": true,
+        "scope": "Original ARB_sync branch and full CPU preservation; only five missing sync slots use actual resolver results. Provider stub isolates branch behavior; Apple native fences and checked outputs exercised separately in iPad graphics tests."
+      }
+    }
+  },
+  "builds": {
+    "simulator": {
+      "state": "built",
+      "platform": "simulator",
+      "binary_sha256": "96285f74eac7f5534105c830efbcdb1871f7826a61c8784465fbf1165a232609",
+      "cpu_host_checks": true,
+      "bundled_assets": true,
+      "scope": "Full checked engine linked for simulator. Device builds need development signing. Build is not rendering or gameplay acceptance.",
+      "executable_bytes": 103047648
+    },
+    "device": {
+      "state": "built",
+      "platform": "device",
+      "binary_sha256": "66cce05fb9bae70b14d4175a685cc98cbdfc22f9a04112d750954a27d3ab69fc",
+      "cpu_host_checks": true,
+      "bundled_assets": true,
+      "scope": "Full checked engine linked for device. Device builds need development signing. Build is not rendering or gameplay acceptance.",
+      "executable_bytes": 102981632
+    }
+  },
+  "execution": {
+    "simulator": "iPad Air 11-inch (M4), iOS 26.5",
+    "udid": "F05D2D40-0A01-47C9-9BD7-0C0E19F7512C",
+    "pid": 3046,
+    "map": "Katabatic",
+    "bots": 2,
+    "world_first_observed_seconds": 316,
+    "load_timing_scope": "Upper bound from first observation, not exact load completion.",
+    "controls": [
+      "Fire spawns Starwolf player",
+      "Weapon selects disc launcher",
+      "Look drag rotates view",
+      "Move forward and backward change position",
+      "Fire decreases disc ammo from 15 to 14",
+      "Jet raises player and drains energy; release restores energy"
+    ],
+    "ended_after_validation": true,
+    "online_join_or_authentication": false,
+    "physical_device_execution": false
+  },
+  "performance": {
+    "captures": [
+      {
+        "frames": 57,
+        "seconds": 30.06,
+        "scope": "Thirty-second fixed initial observer view of offline Katabatic with two bots. No input, compiler or debugger during recording. Presented Simulator frames, not original FPS counter.",
+        "raw_local_report": "generated/ipad-engine/fast-observer-video.json",
+        "raw_report_sha256": "7907308a761e16f55124de6691ba53dfb0e44be9705bf35b8bccf982c4f7b699"
+      },
+      {
+        "frames": 52,
+        "seconds": 30.068333,
+        "scope": "Thirty-second fixed initial observer view of offline Katabatic with two bots. No input, compiler or debugger during recording. Presented Simulator frames, not original FPS counter.",
+        "raw_local_report": "generated/ipad-engine/fast-observer-video-2.json",
+        "raw_report_sha256": "fc0cb937f00132491e00182591b508518792e966d9337bd01c8da9a46a8c1a5e"
+      }
+    ],
+    "comparison": "57/52 frames versus prior dispatch build 52/58 frames in 30 seconds: no clear additional FPS gain. Sequential runs have varying bot behavior. Simulator only; not playable acceptance.",
+    "profile": "Separate native sample after recordings: access-begin316, access-end63, transfer-begin57, reader-leave53 and require44 top-of-stack observations. Counts are not percentages. x87 CPU-field helper checks remain visible."
+  },
+  "remaining": [
+    "About 1.7\u20131.9 FPS in the measured observer view",
+    "Distant terrain gaps",
+    "Prior inventory-station exit issue",
+    "Physical iPad execution and responsiveness",
+    "iPhone validation"
+  ],
+  "next": "Inspect extending the existing finite 440-byte CPU-object proof to CPU-first x87 helpers, with existing numerical/reference and guest-write regressions.",
+  "screenshot": {
+    "path": "docs/validation/ipad-permission-fast-path-2026-10-09.png",
+    "sha256": "62e43d0ee0abef7e8e13b2ca18c93667286aa9e27c18176cb9da4e8b856c70fb",
+    "description": "Player inside Starwolf base, disc ammo14 and recovered jet energy."
+  }
+}

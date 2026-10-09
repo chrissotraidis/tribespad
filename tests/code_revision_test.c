@@ -9,6 +9,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 extern void emitted_store(uint32_t *,uint32_t);
+extern void emitted_copy(void *,const void *,uint64_t);
 static unsigned char *memory;
 static uint64_t base;
 static unsigned faults;
@@ -27,6 +28,29 @@ static void ordinary_write_fault(void){
  pid_t child=fork();assert(child>=0);if(!child){emitted_store((uint32_t *)(memory+4094),0);_exit(90);}
  int status;assert(waitpid(child,&status,0)==child&&WIFSIGNALED(status)&&WTERMSIG(status)==SIGABRT);
  assert(!memcmp(before,memory+4080,sizeof before));faults++;
+}
+static void published_boundary_fault(uint32_t address,uint32_t size){
+ unsigned char before[0x5000],source[0x2000]={0};assert(size<=sizeof source&&address+size<=sizeof before);
+ memcpy(before,memory,sizeof before);fflush(stdout);
+ pid_t child=fork();assert(child>=0);if(!child){emitted_copy(memory+address,source,size);_exit(90);}
+ int status;assert(waitpid(child,&status,0)==child&&WIFSIGNALED(status)&&WTERMSIG(status)==SIGABRT);
+ assert(!memcmp(before,memory,sizeof before));faults++;
+}
+static void published_boundaries(void){
+ /* Exact outer edges and an internal gap remain writable. */
+ const uint32_t allowed[]={764,800,4168,8200,0x4000};
+ for(unsigned i=0;i<sizeof allowed/sizeof *allowed;i++){
+  uint32_t value;emitted_store((uint32_t *)(memory+allowed[i]),0x12345678);
+  memcpy(&value,memory+allowed[i],4);assert(value==0x12345678);
+  emitted_store((uint32_t *)(memory+allowed[i]),0x11111111);
+ }
+ published_boundary_fault(767,4);  /* Cross the first begin. */
+ published_boundary_fault(799,4);  /* Cross the first end. */
+ published_boundary_fault(8199,4); /* Cross the last end. */
+ published_boundary_fault(764,7437); /* Span the entire envelope from outside. */
+ assert(tribes_memory_permissions_set(0x4000,4096,1));
+ published_boundary_fault(0x4000,4); /* Outside code still obeys page protection. */
+ assert(tribes_memory_permissions_set(0x4000,4096,3));
 }
 static TribesCodeWrite next_writes[]={{780,4120,4,0x11111111,0x90909090},{784,4124,2,0x1111,0x9090}};
 static void *wrong_next_thread(void *unused){
@@ -52,7 +76,7 @@ int main(void){
  TribesPublishedCodeRange ranges[]={{768,sizeof source,source},{4088,sizeof expected,expected},{8192,sizeof fonts,(unsigned char *)fonts}};
  assert(!tribes_memory_publish_code(base,ranges+1,1)); /* Writer outside published code. */
  memory[4094]^=1;assert(!tribes_memory_publish_code(base,ranges,3));memory[4094]^=1;
- assert(tribes_memory_publish_code(base,ranges,3));assert(tribes_memory_code_revision(base)==1);ordinary_write_fault();
+ assert(tribes_memory_publish_code(base,ranges,3));assert(tribes_memory_code_revision(base)==1);ordinary_write_fault();published_boundaries();
  assert(!tribes_memory_prepare_next_code_revision(base,next_writes,2));
  unsigned char before[80];memcpy(before,memory+4088,sizeof before);
  assert(!tribes_memory_apply_code_write(base,772,memory+4104,2,0xaabb));

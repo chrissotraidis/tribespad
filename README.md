@@ -11,7 +11,9 @@ the existing Tribes 2 community, with touch and controller support on mobile.
 is currently too slow for comfortable play. The full iPad Simulator app now loads an offline
 Katabatic match with bots and accepts touch movement, aim, weapons, firing and jets.
 The Metal backend also renders interiors and supports touch death/respawn.
-Slow startup, input delay and a terrain gap shared with Mac still need work.
+Recent iPad Simulator captures measure about **1.7–1.9 FPS**, so performance is
+still the main blocker. Slow startup, input delay and a terrain gap shared with Mac
+also need work.
 There is no playable iPad or iPhone release yet.
 
 ![Original Tribes 2 running through Metal with iPad touch controls](docs/validation/ipad-angle-respawn-2026-10-09.png)
