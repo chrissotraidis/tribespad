@@ -135,7 +135,7 @@
   "remaining": [
     "Poor visible responsiveness; no demonstrated gameplay speedup.",
     "Known mountain gap remains.",
-    "Device build compiling at receipt creation; physical iPad execution unverified.",
+    "Device build completes and deep/strict signatures verify; physical iPad execution remains unverified.",
     "No online join or authentication."
   ]
 }

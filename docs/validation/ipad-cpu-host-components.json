@@ -1,0 +1,79 @@
+{
+  "scope": "Component validation only. Full original iPad game validation is separate.",
+  "tests": {
+    "cpu-host-checks": {
+      "receipt_sha256": "f25c7413e7059aea1a14b8cd57e31d6e3b7450d610b70d6aea417e297f26a370",
+      "completed_without_error": true
+    },
+    "guest-memory-pass": {
+      "receipt_sha256": "3174d6ac98c563dd7fa6e365bced117983ca70c906620153b53cce2e87ecb011",
+      "completed_without_error": true
+    },
+    "guest-access-groups": {
+      "receipt_sha256": "01c31fde7581b3bd7daa25349a46140a65f19a73fab7c7a0b70bafc08b42a612",
+      "completed_without_error": true
+    },
+    "external-memory-pass": {
+      "receipt_sha256": "f2796fa4e3f85b8a07c805a96d3cb1af91151efd672c95522b0b2dda25afc0cb",
+      "completed_without_error": true
+    },
+    "mobile-gpu-timing": {
+      "receipt_sha256": "99d305afb4c3ccce6b9d1b9bc15917fc7c721d589c6cf220bd53c9e366337817",
+      "completed_without_error": true
+    },
+    "mobile-gpu-sync": {
+      "receipt_sha256": "15cf83738a6c1f9ac50984f0964ac8ffe26af0676380dcbb2e84442c4d93071d",
+      "completed_without_error": true
+    },
+    "code-revision-mobile": {
+      "receipt_sha256": "66c68b9a71f4db95c5c1d3eb33b84167d280a46b8eae407254df7fb6d5a8ae45",
+      "completed_without_error": true
+    }
+  },
+  "cpu_host": {
+    "passed": true,
+    "census": {
+      "baseline": {
+        "atomics": 0,
+        "calls_requiring_link_audit": {},
+        "host_cpu_accesses": 0,
+        "host_cpu_spans": 0,
+        "loads": 23,
+        "sets": 0,
+        "stores": 21,
+        "transfers": 0
+      },
+      "optimized": {
+        "atomics": 0,
+        "calls_requiring_link_audit": {},
+        "host_cpu_accesses": 24,
+        "host_cpu_spans": 3,
+        "loads": 10,
+        "sets": 0,
+        "stores": 10,
+        "transfers": 0
+      }
+    },
+    "results": {
+      "test": {
+        "output": "PASS: 9 host-span/guest-access faults preserve all shared bytes; 256 original block CPU/flags/route comparisons; concurrent checked accesses/publication; baseline 0.041212 optimized 0.031909 seconds",
+        "binary_sha256": "2a1fb232caeaab1b57f25c5d401dcc42618bd12227abb7700c74572dd6d38b6f"
+      },
+      "test-tsan": {
+        "output": "PASS: 0 host-span/guest-access faults preserve all shared bytes; 256 original block CPU/flags/route comparisons; concurrent checked accesses/publication; baseline 0.874220 optimized 0.693328 seconds",
+        "binary_sha256": "287cf18c05b7569ba63dfa847106e3c2163eb9b0e9781fe9a9fb45579d53f220"
+      }
+    },
+    "original_block_sha256": "1d794c5e15c83bf264f169b88268522415e5df8b932fb9fbf1f0810919c06255",
+    "sources_sha256": {
+      "tests/cpu_host_checks_test.c": "a123cccc08a7eefabba2d4dcd281c8ffc84f25d91a08261136991b95fbcb475a",
+      "port/core/guest_memory_checks.c": "f97e52558e9f73f2e828a306ac4e3adece91f0b880791724234fb0280c7c2d35",
+      "port/core/guest_external_checks.c": "2ecaf0cf09462d76b293ab70860c9245ae46536959e81fd2549ad7675ad63523",
+      "port/core/guest_memory_checks.h": "e40dca461fbbc8c1d400edd6c07a02f3ab5b927be3fd587dbb4cbfd6ef722861",
+      "port/compiler/GuestMemoryPass.cpp": "27937524c34157cfe41a67d60afeaaf0fa8d2bddac9d98045dd3618dfe0ce893",
+      "port/compiler/ExternalMemoryPass.cpp": "42ebd918251048990a7009a95d1a81a610937107b5a9e496bbf40111d288e557",
+      "scripts/test-cpu-host-checks.py": "8cd349c48515cf67f7eb3e46d5fb6174d24354a9b833a3ce010592c17748331a"
+    },
+    "scope": "Host prefix contract and preserved guest checks, one actual original block and controlled batch; not full-game or performance acceptance."
+  }
+}

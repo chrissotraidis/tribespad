@@ -12,6 +12,9 @@ int tribes_memory_permissions_set(uint32_t address,uint64_t size,uint32_t access
    Permission writers cannot run until every nested bracket has ended. */
 uint32_t tribes_memory_access_begin(const void *pointer,uint64_t size,uint32_t access);
 uint32_t tribes_memory_transfer_begin(void *destination,const void *source,uint64_t size);
+/* Fixed native CPU-state prefix: reject any overlap with the immutable guest
+   window before translated blocks use statically bounded host fields. */
+void tribes_memory_access_host_span(const void *pointer,uint64_t size);
 void tribes_memory_access_end(uint32_t token);
 /* Compiler groups at most eight ordinary accesses; count is the sum of their
    0/1 tokens. Retains any enclosing bracket, including with a pending writer. */

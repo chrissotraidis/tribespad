@@ -260,6 +260,9 @@ int tribes_memory_write_mission_literal(uint64_t base,uint32_t pc,uint32_t addre
 uint32_t tribes_memory_access_begin(const void *p,uint64_t size,uint32_t access){
  if(access<1||access>3)abort();if(!touches(p,size))return 0;read_lock();require(p,size,access);return 1;
 }
+void tribes_memory_access_host_span(const void *p,uint64_t size){
+ if(!p||size!=120||size>UINTPTR_MAX-(uintptr_t)p||touches(p,size))violation(p,size,0);
+}
 uint32_t tribes_memory_transfer_begin(void *destination,const void *source,uint64_t size){
  int write=touches(destination,size),read=touches(source,size);if(!write&&!read)return 0;
  read_lock();if(read)require(source,size,1);if(write)require(destination,size,2);return 1;

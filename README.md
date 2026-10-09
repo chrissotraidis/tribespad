@@ -56,11 +56,12 @@ The bundled app preserves its original warrior and video preferences between lau
 
 ## Current work
 
-- Improve measured runtime performance; builds already cache verified ARM64 objects
-  and avoid 179 redundant support-code compilations. Batching checked-memory
-  bookkeeping reduces the Simulator executable from 173.2 MB to 158.6 MB; the
-  [isolated benchmark](docs/validation/ipad-memory-retirement-components.json)
-  improves about 22%. That result is not a gameplay FPS measurement.
+- Improve measured runtime performance; builds cache verified ARM64 objects and
+  avoid 179 redundant support-code compilations. An optional CPU-register check
+  optimization reduces the Simulator executable from 158.6 MB to 104.5 MB while
+  preserving guest-memory checks. It passes the [original offline touch test](docs/validation/ipad-cpu-host-offline.json),
+  but recorded frame delivery is still around one frame per second. This is not
+  yet comfortable gameplay.
 - Fix visible rendering gaps and reduce startup/input latency in the iPad app.
 - Integrate and refine touch, controller, keyboard and mouse input in real gameplay.
 - Verify HD textures, sustained performance and physical-device behavior.
@@ -96,6 +97,10 @@ export SDKROOT="$(xcrun --sdk iphonesimulator --show-sdk-path)"
 Its first build downloads the verified iOS frameworks; subsequent builds reuse
 them. Omitting the flag selects the earlier EAGL backend.
 
+The smaller validated Simulator build also uses `--cpu-host-checks`. This optional
+mode requires a current passing run of `scripts/test-cpu-host-checks.py`; it keeps
+guest-memory checks and validates the native register span once per translated block.
+
 Use `--build-only` to preserve a running test session. The development touch overlay
 uses the original ESDF bindings and is enabled with **Touch controls**. Its native
 event tests pass, and the controls have been exercised in the original offline match.
@@ -119,8 +124,8 @@ the full game.
 
 Builds cache verified translations and optimized ARM64 objects. Changes to the
 checked-call policy still run the guard pass; byte-identical guarded output can
-reuse its verified native object. The current Metal builds each reused 406 of 409
-objects on Simulator and device. Original-engine support compilation reads
+reuse its verified native object. Unchanged builds have reused 407 of 409 objects
+on Simulator and device. Original-engine support compilation reads
 symbols directly from checked bitcode, avoiding 179 throwaway native objects before
 the final external-call guard and code-generation pass.
 

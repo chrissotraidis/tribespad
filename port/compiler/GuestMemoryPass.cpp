@@ -1,6 +1,8 @@
 // Build-time checks for precompiled guest accesses, not a JIT or interpreter.
 // Run after optimization, then code-generate without another optimization pass.
 #include "llvm/IR/IRBuilder.h"
+#include "llvm/ADT/SmallPtrSet.h"
+#include "llvm/Analysis/ValueTracking.h"
 #include "llvm/IR/InstIterator.h"
 #include "llvm/IR/IntrinsicInst.h"
 #include "llvm/IR/Module.h"
@@ -13,22 +15,55 @@
 using namespace llvm;
 namespace {
 struct GuestMemoryPass : PassInfoMixin<GuestMemoryPass> {
+ bool CPUHost;
+ explicit GuestMemoryPass(bool CPUHost=false):CPUHost(CPUHost){}
  PreservedAnalyses run(Module &M,ModuleAnalysisManager &) {
-  if(M.getModuleFlag("tribes.checked.memory"))report_fatal_error("Tribes memory pass applied twice");
+  if(M.getModuleFlag("tribes.checked.memory")||M.getModuleFlag("tribes.checked.cpu-host"))report_fatal_error("Tribes memory pass applied twice");
   for(auto &F:M)if(!F.isDeclaration()&&F.getName().starts_with("tribes_memory_"))report_fatal_error("Do not instrument the trusted memory-check runtime");
   auto &C=M.getContext();auto *I32=Type::getInt32Ty(C);auto *I64=Type::getInt64Ty(C);auto *P=PointerType::getUnqual(C);
   auto Begin=M.getOrInsertFunction("tribes_memory_access_begin",I32,P,I64,I32);
   auto Transfer=M.getOrInsertFunction("tribes_memory_transfer_begin",I32,P,P,I64);
   auto End=M.getOrInsertFunction("tribes_memory_access_end",Type::getVoidTy(C),I32);
-  uint64_t Loads=0,Stores=0,Atomics=0,Transfers=0,Sets=0;std::map<std::string,uint64_t> Calls;
+  uint64_t Loads=0,Stores=0,Atomics=0,Transfers=0,Sets=0,HostAccesses=0,HostSpans=0;std::map<std::string,uint64_t> Calls;
+  // Only the original translator's fixed register prefix is admitted. The
+  // runtime checks this whole host span at block entry; pointed-to guest data
+  // and accesses beyond the prefix continue through ordinary permission checks.
+  auto *CPU=StructType::getTypeByName(C,"_cpu");
+  bool CPUShape=CPUHost&&CPU&&!CPU->isOpaque()&&!CPU->isPacked()&&CPU->getNumElements()==14&&M.getDataLayout().isLittleEndian()&&M.getDataLayout().getPointerSizeInBits()==64;
+  if(CPUShape){
+   for(unsigned n=0;n<12;++n)CPUShape&=CPU->getElementType(n)->isIntegerTy(32);
+   auto *FP=dyn_cast<ArrayType>(CPU->getElementType(12));
+   CPUShape&=FP&&FP->getNumElements()==8&&FP->getElementType()->isDoubleTy()&&CPU->getElementType(13)->isIntegerTy(64);
+   if(CPUShape)CPUShape=M.getDataLayout().getTypeAllocSize(CPU)==120;
+  }
   auto bytes=[&](Type *T)->uint64_t {auto N=M.getDataLayout().getTypeStoreSize(T);if(N.isScalable())report_fatal_error("Scalable memory access requires lane-aware checks");return N.getFixedValue();};
   for(auto &F:M){
    if(F.isDeclaration())continue;
    SmallVector<Instruction *,128> Work;for(auto &I:instructions(F))Work.push_back(&I);
+   SmallPtrSet<Instruction *,32> Host;
+   auto Name=F.getName();bool Block=Name.consume_front("loc_")&&!Name.empty();
+   for(char Ch:Name)Block&=(Ch>='0'&&Ch<='9')||(Ch>='a'&&Ch<='f')||(Ch>='A'&&Ch<='F');
+   bool Eligible=CPUShape&&Block&&F.getCallingConv()==CallingConv::Fast&&F.hasHiddenVisibility()&&!F.isVarArg()&&F.getReturnType()->isVoidTy()&&F.arg_size()==1&&F.getArg(0)->getType()==P;
+   for(auto *I:Work){
+    if(I->getMetadata("tribes.checked.host.cpu"))report_fatal_error("Unverified CPU host metadata");
+    if(!Eligible)continue;
+    Value *Address=nullptr;Type *T=nullptr;
+    if(auto *L=dyn_cast<LoadInst>(I)){if(L->isSimple()){Address=L->getPointerOperand();T=L->getType();}}
+    if(auto *S=dyn_cast<StoreInst>(I)){if(S->isSimple()){Address=S->getPointerOperand();T=S->getValueOperand()->getType();}}
+    if(!Address||M.getDataLayout().getTypeStoreSize(T).isScalable())continue;
+    int64_t Offset=0;auto *Root=GetPointerBaseWithConstantOffset(Address,Offset,M.getDataLayout());
+    if(Root==F.getArg(0)&&Offset>=0&&Offset<120&&bytes(T)<=120-(uint64_t)Offset)Host.insert(I);
+   }
+   if(!Host.empty()){
+    IRBuilder<> B(&*F.getEntryBlock().getFirstInsertionPt());
+    auto Check=M.getOrInsertFunction("tribes_memory_access_host_span",B.getVoidTy(),P,I64);
+    B.CreateCall(Check,{F.getArg(0),B.getInt64(120)});++HostSpans;
+   }
    // Checks read shared permission metadata and may wait or fault. Do not retain
    // a source function/call's pure-memory, nosync or speculative attributes.
    for(auto A:{Attribute::Memory,Attribute::NoSync,Attribute::Speculatable,Attribute::WillReturn})F.removeFnAttr(A);
    for(auto *I:Work){
+    if(Host.contains(I)){I->setMetadata("tribes.checked.host.cpu",MDNode::get(C,{}));++HostAccesses;continue;}
     IRBuilder<> B(I);Value *Address=nullptr,*Length=nullptr,*Source=nullptr;unsigned Mode=0;
     if(auto *L=dyn_cast<LoadInst>(I)){Address=L->getPointerOperand();Length=B.getInt64(bytes(L->getType()));Mode=1;++Loads;}
     else if(auto *S=dyn_cast<StoreInst>(I)){Address=S->getPointerOperand();Length=B.getInt64(bytes(S->getValueOperand()->getType()));Mode=2;++Stores;}
@@ -75,7 +110,8 @@ struct GuestMemoryPass : PassInfoMixin<GuestMemoryPass> {
    }
   }
   M.addModuleFlag(Module::Error,"tribes.checked.memory",1);
-  json::Object O;O["loads"]=Loads;O["stores"]=Stores;O["atomics"]=Atomics;O["transfers"]=Transfers;O["sets"]=Sets;json::Object External;
+  if(CPUHost)M.addModuleFlag(Module::Error,"tribes.checked.cpu-host",1);
+  json::Object O;O["loads"]=Loads;O["stores"]=Stores;O["atomics"]=Atomics;O["transfers"]=Transfers;O["sets"]=Sets;O["host_cpu_accesses"]=HostAccesses;O["host_cpu_spans"]=HostSpans;json::Object External;
   for(auto &[Name,Count]:Calls)External[Name]=Count;O["calls_requiring_link_audit"]=std::move(External);
   errs()<<"TRIBES_MEMORY_PASS "<<formatv("{0}",json::Value(std::move(O)))<<"\n";
   return PreservedAnalyses::none();
@@ -83,4 +119,4 @@ struct GuestMemoryPass : PassInfoMixin<GuestMemoryPass> {
  static bool isRequired(){return true;}
 };
 }
-extern "C" LLVM_ATTRIBUTE_WEAK PassPluginLibraryInfo llvmGetPassPluginInfo(){return {LLVM_PLUGIN_API_VERSION,"TribesGuestMemory","1",[](PassBuilder &PB){PB.registerPipelineParsingCallback([](StringRef Name,ModulePassManager &MPM,ArrayRef<PassBuilder::PipelineElement>){if(Name!="tribes-guest-memory")return false;MPM.addPass(GuestMemoryPass());return true;});}};}
+extern "C" LLVM_ATTRIBUTE_WEAK PassPluginLibraryInfo llvmGetPassPluginInfo(){return {LLVM_PLUGIN_API_VERSION,"TribesGuestMemory","1",[](PassBuilder &PB){PB.registerPipelineParsingCallback([](StringRef Name,ModulePassManager &MPM,ArrayRef<PassBuilder::PipelineElement>){if(Name!="tribes-guest-memory"&&Name!="tribes-guest-memory-cpu-host")return false;MPM.addPass(GuestMemoryPass(Name=="tribes-guest-memory-cpu-host"));return true;});}};}

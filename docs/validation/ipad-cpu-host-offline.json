@@ -1,0 +1,203 @@
+{
+  "binary_sha256": "2b1f622cbd1d9f4e467dc8c18d5c565d71f8ba80b72ad5663d24193dd5abdbf7",
+  "pid": 66531,
+  "platform": "iPad Air 11-inch (M4), iOS 26.5 Simulator",
+  "renderer": "ANGLE Metal through GL4ES",
+  "offline_map": "Katabatic",
+  "bots": [
+    "Heretik",
+    "The Golden"
+  ],
+  "cpu_host": {
+    "host_cpu_accesses": 2068335,
+    "host_cpu_spans": 320549
+  },
+  "executable_bytes": {
+    "before": 158557552,
+    "after": 104524896
+  },
+  "checks": {
+    "original_menus": true,
+    "saved_profile_restored": true,
+    "offline_world": true,
+    "touch_spawn": true,
+    "touch_move": true,
+    "touch_look": true,
+    "touch_weapon": true,
+    "disc_ammo_before": 15,
+    "disc_ammo_after": 14,
+    "touch_jet_height_and_energy": true,
+    "energy_recovery_after_release": true
+  },
+  "load": {
+    "start_game_unix": 1791542667.648503,
+    "map": "Katabatic",
+    "bots": 2,
+    "concurrent_build": false,
+    "observations": [
+      {
+        "elapsed_seconds": 126,
+        "stage": "datablocks",
+        "loaded": 268,
+        "total": 1482
+      },
+      {
+        "elapsed_seconds": 198,
+        "stage": "datablocks",
+        "loaded": 462,
+        "total": 1482
+      },
+      {
+        "elapsed_seconds": 310,
+        "stage": "datablocks",
+        "loaded": 1466,
+        "total": 1482
+      },
+      {
+        "elapsed_seconds": 371,
+        "stage": "objects",
+        "loaded": 204,
+        "total": 205
+      }
+    ],
+    "first_world_observed_seconds": 419
+  },
+  "performance": {
+    "baseline": {
+      "recording": {
+        "frames": [
+          {
+            "best_effort_timestamp_time": "0.000000",
+            "side_data_list": [
+              {}
+            ]
+          },
+          {
+            "best_effort_timestamp_time": "0.230000"
+          },
+          {
+            "best_effort_timestamp_time": "2.501667"
+          },
+          {
+            "best_effort_timestamp_time": "2.505000"
+          },
+          {
+            "best_effort_timestamp_time": "4.761667"
+          },
+          {
+            "best_effort_timestamp_time": "6.393333"
+          },
+          {
+            "best_effort_timestamp_time": "10.401667"
+          },
+          {
+            "best_effort_timestamp_time": "10.403333"
+          }
+        ],
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "width": 1640,
+            "height": 2360,
+            "avg_frame_rate": "1600/2081",
+            "duration": "10.405000",
+            "nb_frames": "8"
+          }
+        ],
+        "input_start_unix": 1791542576.248919,
+        "input_end_unix": 1791542584.73472,
+        "input": "Eight-second native Look drag, followed by two-second settle; no debugger or compiler active."
+      },
+      "video_sha256": "691cb573ac40d1c55aa80c75b7cbef5fbf5da53d8def334b07ca556fd951200e"
+    },
+    "candidate": {
+      "recording": {
+        "frames": [
+          {
+            "best_effort_timestamp_time": "0.000000",
+            "side_data_list": [
+              {}
+            ]
+          },
+          {
+            "best_effort_timestamp_time": "1.273333"
+          },
+          {
+            "best_effort_timestamp_time": "1.281667"
+          },
+          {
+            "best_effort_timestamp_time": "2.491667"
+          },
+          {
+            "best_effort_timestamp_time": "3.726667"
+          },
+          {
+            "best_effort_timestamp_time": "4.776667"
+          },
+          {
+            "best_effort_timestamp_time": "6.603333"
+          },
+          {
+            "best_effort_timestamp_time": "9.038333"
+          },
+          {
+            "best_effort_timestamp_time": "9.046667"
+          }
+        ],
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "width": 1640,
+            "height": 2360,
+            "avg_frame_rate": "1800/1811",
+            "duration": "9.055000",
+            "nb_frames": "9"
+          }
+        ],
+        "input_start_unix": 1791543208.552724,
+        "input_end_unix": 1791543217.0664918,
+        "input": "Eight-second native Look drag, followed by two-second settle; no debugger or compiler active."
+      },
+      "video_sha256": "54bb4782b178ed63692a514de6124e55232ee6863c91e3872e38af5e4325f3ef"
+    },
+    "limits": "Both recordings had no debugger or compiler active and the same eight-second Look drag. Views, bot state and recordings differ; not a controlled speedup comparison. Candidate still shows only nine frames over 9.055 seconds and is not comfortably playable."
+  },
+  "profile": {
+    "sample_sha256": "8d827aab135451509f978120787befa7121137e058c54cb21da42a16b1ff5d80",
+    "access_begin_parent_samples": {
+      "tb_sse_arithmetic": 96,
+      "scalar": 95,
+      "load32": 27,
+      "tribes_lookup": 13,
+      "arithmetic": 10,
+      "tb_sse_load": 9,
+      "x86_rep_movsd": 8,
+      "store_real": 7,
+      "tb_sse_store": 7,
+      "tb_sse_scalar": 7,
+      "legacy_mulps_publish": 6,
+      "x87_fst_st": 5,
+      "tb_sse_scalarmem": 5,
+      "enter_engine": 4,
+      "loc_51DD66": 4
+    },
+    "interpretation": "Remaining access checks concentrate in native SSE/math helpers. Whole-process totals include sleeping workers and are not a CPU-time denominator."
+  },
+  "screenshots_sha256": {
+    "docs/validation/ipad-cpu-host-fire-look-2026-10-09.png": "706fd807c5e1c18818460b8ac116755d6e2e142e60985c9a2d6cea187b72a1e1",
+    "docs/validation/ipad-cpu-host-jet-2026-10-09.png": "cf348dcf9cf99db9ca758d725850ab9fdbb0dc1598c8df81ba4546294a1d1111",
+    "docs/validation/ipad-cpu-host-move-2026-10-09.png": "55aaa8e6c66e84252b6bd28218216756f382e3c3323a77032eb95a624ef87cdd",
+    "docs/validation/ipad-cpu-host-recovery-2026-10-09.png": "5723c3a03e0d86e4ff8d30fab4eb942c35fbed9fdb1b26eccc5d83de83a9f113",
+    "docs/validation/ipad-cpu-host-spawn-2026-10-09.png": "0696220a47cadedad8235c7513d88de7ca96c524f231c7637902d1b44fc29f15",
+    "docs/validation/ipad-cpu-host-world-2026-10-09.png": "b3b3a573b0d5b9bb5d2f6e29fc686c0ae5e06b844f77242dcc0184a4c7d53d1e"
+  },
+  "remaining": [
+    "Poor visible responsiveness and startup latency",
+    "Known distant mountain gap",
+    "Candidate device build running; physical device execution unverified",
+    "No connected device or valid development signing identity found",
+    "No online join/authentication"
+  ]
+}

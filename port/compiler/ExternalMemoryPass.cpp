@@ -30,6 +30,7 @@ static uint64_t groupAccessBrackets(Module &M){
  for(auto &F:M)for(auto &BB:F){
   SmallVector<Instruction *,128> Work;for(auto &I:BB)Work.push_back(&I);
   SmallVector<CallInst *,8> Ends;
+  unsigned Accesses=0;
   auto Flush=[&](Instruction *Before){
    if(Ends.size()>1){
     // Each begin returns 0 for host memory or 1 for a retained guest bracket.
@@ -40,17 +41,23 @@ static uint64_t groupAccessBrackets(Module &M){
     B.CreateCall(EndMany,{Count});Grouped+=Ends.size();
     for(auto *End:Ends)End->eraseFromParent();
    }
-   Ends.clear();
+   Ends.clear();Accesses=0;
   };
   for(size_t i=0;i<Work.size();++i){
    auto *I=Work[i];auto *Begin=dyn_cast<CallInst>(I);
+   if(I->getMetadata("tribes.checked.host.cpu")){
+    auto *L=dyn_cast<LoadInst>(I);auto *S=dyn_cast<StoreInst>(I);
+    if(!M.getModuleFlag("tribes.checked.cpu-host")||!((L&&L->isSimple())||(S&&S->isSimple())))report_fatal_error("Invalid checked CPU host access");
+    if(++Accesses==8)Flush(I->getNextNode());
+    continue;
+   }
    if(Begin&&Begin->getCalledFunction()&&Begin->getCalledFunction()->getName()=="tribes_memory_access_begin"&&Begin->hasOneUse()&&i+2<Work.size()){
     auto *Access=Work[i+1];auto *End=dyn_cast<CallInst>(Work[i+2]);
     auto *Load=dyn_cast<LoadInst>(Access);auto *Store=dyn_cast<StoreInst>(Access);
     bool Ordinary=(Load&&Load->isSimple())||(Store&&Store->isSimple());
     if(Ordinary&&End&&End->getCalledFunction()&&End->getCalledFunction()->getName()=="tribes_memory_access_end"&&End->arg_size()==1&&End->getArgOperand(0)==Begin){
      Ends.push_back(End);i+=2;
-     if(Ends.size()==8)Flush(End->getNextNode());
+     if(++Accesses==8)Flush(End->getNextNode());
      continue;
     }
    }
