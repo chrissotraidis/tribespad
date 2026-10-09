@@ -1,5 +1,8 @@
 #define SDL_MAIN_HANDLED
 #include <SDL3/SDL.h>
+#ifdef TB_ANGLE
+#include "../port/apple/angle_sdl.h"
+#endif
 #include <SDL3/SDL_main.h>
 #include <GL/gl.h>
 #include "../port/apple/gl4es_context.h"
@@ -76,12 +79,19 @@ static int application(int argc,char **argv) {
     /* Keep the real SDL drawable visible briefly for screenshot inspection. */
     for(unsigned i=0;i<30;i++){SDL_PumpEvents();SDL_Delay(100);}
     glDeleteTextures(1,&texture);
+#ifdef TB_ANGLE
+    GLenum (*nativeFramebufferStatus)(GLenum)=(GLenum (*)(GLenum))SDL_GL_GetProcAddress("glCheckFramebufferStatus");
+    assert(nativeFramebufferStatus && nativeFramebufferStatus(GL_FRAMEBUFFER)==GL_FRAMEBUFFER_COMPLETE);
+    tribes_gl4es_context_destroy(a);
+    assert(nativeFramebufferStatus(GL_FRAMEBUFFER)==GL_FRAMEBUFFER_COMPLETE);
+#else
     GLuint framebuffer=(GLuint)SDL_GetNumberProperty(SDL_GetWindowProperties(window),
         SDL_PROP_WINDOW_UIKIT_OPENGL_FRAMEBUFFER_NUMBER,0);
     GLboolean (*nativeIsFramebuffer)(GLuint)=(GLboolean (*)(GLuint))SDL_GL_GetProcAddress("glIsFramebuffer");
     assert(nativeIsFramebuffer && nativeIsFramebuffer(framebuffer));
     tribes_gl4es_context_destroy(a);
     assert(nativeIsFramebuffer(framebuffer)); /* SDL drawable remains owned by SDL. */
+#endif
     assert(SDL_GL_DestroyContext(first));
     SDL_DestroyWindow(window);SDL_Quit();
     assert(snprintf(path,sizeof path,"%s/Documents/result.json",getenv("HOME"))<(int)sizeof path);

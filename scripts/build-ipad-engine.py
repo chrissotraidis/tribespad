@@ -15,6 +15,7 @@ R=pathlib.Path(__file__).resolve().parents[1]
 ap=argparse.ArgumentParser(description=__doc__)
 ap.add_argument('--platform',choices=['simulator','device'],default='simulator')
 ap.add_argument('--simulator-device')
+ap.add_argument('--angle',action='store_true',help='Use the pinned ANGLE Metal renderer')
 ap.add_argument('--bundle-assets',action='store_true',help='Bundle game data (always enabled for device)')
 ap.add_argument('--prepared-directory',type=pathlib.Path,default=R/'generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe')
 ap.add_argument('--build-only',action='store_true')
@@ -57,6 +58,12 @@ sources[sources.index(old_wrapper)]=next(p for p in graphics_sources if p.name==
 sdk_name='iphoneos' if a.platform=='device' else 'iphonesimulator'
 target='arm64-apple-ios16'+('' if a.platform=='device' else '-simulator');sdk=subprocess.check_output(['xcrun','--sdk',sdk_name,'--show-sdk-path'],text=True).strip()
 sdl,sdl_flags,libraries=sdl_inputs(a.platform);gl4es,gl_flags,gl_libraries=gl4es_inputs(a.platform);math=sse_inputs(a.platform)
+angle=None
+if a.angle:
+ from angle_backend_inputs import inputs as angle_inputs,bundle as angle_bundle
+ angle,angle_flags,angle_libraries=angle_inputs(a.platform)
+ gl_flags+=angle_flags;gl_libraries=angle_libraries+gl_libraries
+
 http_root=R/'generated/http-backend'/a.platform;http=json.loads((http_root/'result.json').read_text());assert http['passed'] and http['platform']==a.platform
 for name,h in http['libraries'].items():assert sha(R/name)==h,name
 al=json.loads((R/'generated/openal-soft'/a.platform/'result.json').read_text());assert al['platform']==a.platform and sha(R/al['library'])==al['library_sha256']
@@ -93,6 +100,13 @@ for name,origin in image_sources.items():
  assert sha(source/name)==expected,name
  shutil.copy2(source/name,capture/name)
 app=out/'TribesPad.app';app.mkdir(exist_ok=True);exe=app/'TribesPad'
+if not a.angle:
+ # Remove only this backend's owned files when switching back to EAGL.
+ for name in ('libEGL.framework','libGLESv2.framework'):
+  framework=app/'Frameworks'/name
+  if framework.exists():shutil.rmtree(framework)
+ license=app/'LICENSE.ANGLE'
+ if license.exists():license.unlink()
 shutil.copy2(R/'generated/gl4es'/a.platform/'LICENSE.gl4es',app/'LICENSE.gl4es')
 args=[str(exe),str(source/'engine.bin'),str(source/'qol.bin'),str(volume),str(profile),str(temp),str(capture),'engine']
 if bundled:
@@ -109,14 +123,17 @@ else:
  config='#define TB_BUNDLED_GAME_DATA 0\nstatic const char *launch_workdir='+json.dumps(str(R))+';\nstatic char *launch_arguments[]={'+','.join(json.dumps(p) for p in args)+',NULL};\n'
 (out/'mobile-engine-launch-config.h').write_text(config)
 host=[R/'port/apple/mobile_engine_main.m',R/'port/apple/mobile_game_paths.m',R/'port/apple/sdl_main.c',R/'port/apple/gl4es_context.c',R/'port/apple/mobile_controls.m',R/'port/apple/mobile_controls.c',R/'port/core/input.c']
+if a.angle:host.append(R/'port/apple/angle_sdl.c')
 command=['clang','-target',target,'-isysroot',sdk,'-O2','-I',str(out),*sdl_flags,*gl_flags,'-DNOX11','-DNOEGL','-DNO_LOADER','-DDEFAULT_ES=2','-isystem',str(R/'ref/gl4es/src'),*map(str,host),*objects,*gl_libraries,*libraries,*math['libraries'],*[str(R/n) for n in http['libraries']],str(R/al['library']),str(zbuild/'libz-ng.a'),'-lz','-lc++','-framework','Foundation','-framework','CoreGraphics','-framework','CoreText','-framework','CoreFoundation','-framework','SystemConfiguration','-framework','AudioToolbox','-framework','CoreAudio','-o',str(exe)]
 command[1:1]=['-fobjc-arc']
 with (out/'link.log').open('w') as log:subprocess.run(command,stdout=log,stderr=log,check=True)
 identifier='com.tribespad.full-engine.ipad'
 (app/'Info.plist').write_bytes(plistlib.dumps(dict(CFBundleIdentifier=identifier,CFBundleExecutable='TribesPad',CFBundleName='TribesPad',CFBundlePackageType='APPL',CFBundleSupportedPlatforms=['iPhoneOS' if a.platform=='device' else 'iPhoneSimulator'],CFBundleVersion='1',CFBundleShortVersionString='0.1',MinimumOSVersion='16.0',UIDeviceFamily=[2],UIRequiresFullScreen=True,LSRequiresIPhoneOS=True,UIRequiredDeviceCapabilities=['arm64'],NSLocalNetworkUsageDescription='Find and connect to local Tribes 2 games.',UIApplicationSupportsIndirectInputEvents=True,UILaunchScreen={},UISupportedInterfaceOrientations=['UIInterfaceOrientationLandscapeLeft','UIInterfaceOrientationLandscapeRight'])))
 signing=['--entitlements',str(R/'port/apple/TribesPad.entitlements')] if a.platform=='device' else []
+if a.angle:
+ for framework in angle_bundle(app,a.platform):subprocess.run(['codesign','--force','--sign','-',str(framework)],check=True)
 subprocess.run(['codesign','--force','--sign','-',*signing,str(app)],check=True)
-(out/'result.json').write_text(json.dumps(dict(state='built',platform=a.platform,bundled_assets=bundled,entitlements_sha256=sha(R/'port/apple/TribesPad.entitlements') if a.platform=='device' else None,binary_sha256=sha(exe),prepared_sha256=sha(source/'prepared-inputs.json'),support_sha256=sha(out/'support/result.json'),guarded_sha256=sha(out/'guarded/result.json'),gl4es=gl4es,openal=al,arguments=None if bundled else args,mobile_hooks_sha256=sha(mobile_inputs/'mobile-hooks.json'),mobile_gpu_timing=dict(available=False,original_blocks=timing_blocks,test_sha256=sha(timing_proof),translated_sha256=sha(mobile_qol)),scope='Full checked engine linked for '+a.platform+'. Device builds need development signing. Build is not rendering or gameplay acceptance.'),indent=2)+'\n')
+(out/'result.json').write_text(json.dumps(dict(state='built',platform=a.platform,bundled_assets=bundled,entitlements_sha256=sha(R/'port/apple/TribesPad.entitlements') if a.platform=='device' else None,binary_sha256=sha(exe),prepared_sha256=sha(source/'prepared-inputs.json'),support_sha256=sha(out/'support/result.json'),guarded_sha256=sha(out/'guarded/result.json'),gl4es=gl4es,angle=angle,openal=al,arguments=None if bundled else args,mobile_hooks_sha256=sha(mobile_inputs/'mobile-hooks.json'),mobile_gpu_timing=dict(available=False,original_blocks=timing_blocks,test_sha256=sha(timing_proof),translated_sha256=sha(mobile_qol)),scope='Full checked engine linked for '+a.platform+'. Device builds need development signing. Build is not rendering or gameplay acceptance.'),indent=2)+'\n')
 if not a.build_only:
  subprocess.run(['xcrun','simctl','install',a.simulator_device,str(app)],check=True)
  for name in ('stdout.log','stderr.log'):(out/name).write_text('')

@@ -7,6 +7,9 @@
 #include "process_environment.h"
 #include <SDL3/SDL.h>
 #include <TargetConditionals.h>
+#ifdef TB_ANGLE
+#include "../apple/angle_sdl.h"
+#endif
 #if defined(TB_GL4ES)
 #include <GL/gl.h>
 /* GL4ES exports the core spelling; its EXT header alias has no native symbol. */
@@ -19,6 +22,7 @@
 #undef glClientWaitSync
 #undef glGetSynciv
 #undef glDeleteSync
+#ifndef TB_ANGLE
 #define glFenceSync glFenceSyncAPPLE
 #define glIsSync glIsSyncAPPLE
 #define glClientWaitSync glClientWaitSyncAPPLE
@@ -29,6 +33,13 @@ extern GLboolean glIsSyncAPPLE(GLsync);
 extern GLenum glClientWaitSyncAPPLE(GLsync,GLbitfield,GLuint64);
 extern void glGetSyncivAPPLE(GLsync,GLenum,GLsizei,GLsizei *,GLint *);
 extern void glDeleteSyncAPPLE(GLsync);
+#else
+extern GLsync glFenceSync(GLenum,GLbitfield);
+extern GLboolean glIsSync(GLsync);
+extern GLenum glClientWaitSync(GLsync,GLbitfield,GLuint64);
+extern void glGetSynciv(GLsync,GLenum,GLsizei,GLsizei *,GLint *);
+extern void glDeleteSync(GLsync);
+#endif
 
 #elif TARGET_OS_IPHONE
 #include <SDL3/SDL_opengles2.h>

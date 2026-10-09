@@ -1,0 +1,46 @@
+{
+  "binary_sha256": "e5e87259bc2170fbf90e815786c04765d0e9dcbe52ec7a1e2a676691706ce4ff",
+  "pid": 44901,
+  "platform": "iPad Air 11-inch (M4), iOS 26.5 Simulator",
+  "renderer": "ANGLE Metal through GL4ES",
+  "offline_map": "Katabatic",
+  "bots": [
+    "Demonshriek",
+    "Dharmic Sword"
+  ],
+  "original_execution": {
+    "menus": true,
+    "warrior_model": true,
+    "map": true,
+    "touch_spawn": true,
+    "touch_move": true,
+    "touch_look": true,
+    "touch_weapon": true,
+    "disc_ammo_before": 15,
+    "disc_ammo_after": 14,
+    "touch_jet_height_and_energy": true,
+    "keyboard_ctrl_k_and_touch_respawn": true,
+    "interior_floor_visible_after_move_and_look": true
+  },
+  "load_observation_seconds": 553,
+  "load_timing_note": "First observed world after Start Game; bounded by screenshot sampling, not exact time-to-frame.",
+  "screenshots_sha256": {
+    "docs/validation/ipad-angle-world-2026-10-09.png": "8ee5201950f54c207e3c657b10c6580d3e97b462cf4bc44ac1328c1c5f092917",
+    "docs/validation/ipad-angle-move-2026-10-09.png": "5697ec062d4538d6f9b128b3a9393aa4c2090970d36beb391b3290e554cec97a",
+    "docs/validation/ipad-angle-fire-2026-10-09.png": "83ba23825e00ef45c57c260fe70250bdaf86b1d25c4302bf4795a3b366910385",
+    "docs/validation/ipad-angle-jet-2026-10-09.png": "e8c26be6438ae91af49e584dae430a46f4dc81b9350f88d4c283b917248f08e6",
+    "docs/validation/ipad-angle-respawn-2026-10-09.png": "17a047a86391ab40e92553c688fb26c6ea92b13af51c76b4198ba146784ccb8f",
+    "docs/validation/ipad-angle-interior-2026-10-09.png": "00b8ef4b3b4b0a0dbd83a1193d31565d9220da82ce6f9553c34cf0ba404d6f41"
+  },
+  "remaining": [
+    "Distant terrain gap also visible in prior Mac screenshot: docs/validation/macos-katabatic-2026-10-08.png. Do not attribute this to the EAGL-only native replay defect.",
+    "Interior floor looks complete in inspected Metal views; not a pixel-identical whole-scene comparison or exhaustive geometry acceptance.",
+    "Startup and response remain too slow for playability acceptance. Loading sample shows checked-memory barriers are a major active CPU cost. No FPS improvement claim.",
+    "Physical device not run: devicectl found no devices and codesigning found zero valid identities.",
+    "HD fidelity, iPhone full-engine execution and sustained mobile acceptance remain unverified."
+  ],
+  "no_online_join_or_auth": true,
+  "process_preserved": true,
+  "debugger_attached": false,
+  "scope": "Original full checked engine offline execution and touch evidence, not release/playable acceptance."
+}

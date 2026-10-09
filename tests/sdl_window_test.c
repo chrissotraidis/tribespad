@@ -10,6 +10,10 @@
 #include "../port/core/guest_memory_checks.h"
 #include "../port/core/guest_external_checks.h"
 #include <SDL3/SDL.h>
+#ifdef TB_ANGLE
+#include "../port/apple/angle_sdl.h"
+extern void bad_angle_context(void);
+#endif
 #include <TargetConditionals.h>
 #if TARGET_OS_IPHONE
 #include <SDL3/SDL_opengles2.h>
@@ -1841,7 +1845,11 @@ static void mobile_fog_query(const char *fault){
  puts("Fog color query: four native floats, unaligned/page-end output, sentinels and existing GL error preserved PASS");
 }
 static void mobile_gpu_sync(uint32_t window,uint32_t context,const char *fault){
+#ifdef TB_ANGLE
+ assert(strstr((const char *)glGetString(GL_VERSION),"OpenGL ES 3"));
+#else
  assert(strstr((const char *)glGetString(GL_EXTENSIONS),"GL_APPLE_sync"));
+#endif
  tribes_gl_clear_color(&cpu,0,0x3f800000,0,0x3f800000);tribes_gl_clear(&cpu,GL_COLOR_BUFFER_BIT);
  uint32_t token=tribes_gl_fence_sync(&cpu,0x9117,0);assert(token&&tribes_gl_is_sync(&cpu,token));
  uint32_t status=tribes_gl_client_wait_sync(&cpu,token,1,0,1);assert(status==0x911a||status==0x911c);
@@ -1856,7 +1864,7 @@ static void mobile_gpu_sync(uint32_t window,uint32_t context,const char *fault){
  assert(CALL(48,shared)&&CALL(48,isolated)&&CALL(49,window,context));
  assert(tribes_gl_client_wait_sync(&cpu,token,0,0,0)==0x911d&&tribes_gl_get_error(&cpu)==GL_INVALID_VALUE);
  assert(tribes_gl_get_error(&cpu)==0);
- puts("Apple GPU sync: native completion, 64-bit wait, pixels, checked outputs and shared/foreign/stale tokens PASS");
+ puts("Native GPU sync: native completion, 64-bit wait, pixels, checked outputs and shared/foreign/stale tokens PASS");
 }
 #endif
 static int window_main(int argc,char **argv){
@@ -1871,6 +1879,9 @@ static int window_main(int argc,char **argv){
  if(argc==2&&!strcmp(argv[1],"gl4es-guest-pointer")){gl4es_guest_pointer(memory);return 99;}
 #endif
  if(argc==2&&!strcmp(argv[1],"bad-window")){bad_window();return 99;}
+#ifdef TB_ANGLE
+ if(argc==2&&!strcmp(argv[1],"bad-angle-context")){bad_angle_context();return 99;}
+#endif
  if(argc==2&&!strcmp(argv[1],"bad-context")){bad_context();return 99;}
  if(argc==2&&!strcmp(argv[1],"bad-randf")){bad_randf();return 99;}
 #if defined(GRAPHICS) && !TARGET_OS_IPHONE

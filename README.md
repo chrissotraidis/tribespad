@@ -10,10 +10,11 @@ the existing Tribes 2 community, with touch and controller support on mobile.
 **In development.** The Mac app renders and runs offline matches, but performance
 is currently too slow for comfortable play. The full iPad Simulator app now loads an offline
 Katabatic match with bots and accepts touch movement, aim, weapons, firing and jets.
-Slow startup, input delay and visible rendering defects still need work.
+The Metal backend also renders interiors and supports touch death/respawn.
+Slow startup, input delay and a terrain gap shared with Mac still need work.
 There is no playable iPad or iPhone release yet.
 
-![Offline Tribes 2 with touch controls in the iPad Simulator](docs/validation/ipad-touch-gameplay-2026-10-08.png)
+![Original Tribes 2 running through Metal with iPad touch controls](docs/validation/ipad-angle-respawn-2026-10-09.png)
 
 ## What works
 
@@ -29,7 +30,10 @@ There is no playable iPad or iPhone release yet.
   native GPU fences. The [original map on iPad](docs/validation/ipad-katabatic-2026-10-08.png)
   renders, and [touch gameplay](docs/validation/ipad-touch-gameplay-2026-10-08.png)
   moves, aims, switches weapons, fires and jets in the offline match. Touch death
-  and [respawn](docs/validation/ipad-respawn-2026-10-09.png) also work.
+  and [respawn](docs/validation/ipad-angle-respawn-2026-10-09.png) also work.
+  The new [Metal backend](docs/validation/ipad-angle-offline.json) passes the native
+  clipped-triangle regression and the checked bridge suite with 36 expected guard
+  failures. Physical-iPad execution is still unverified.
 
 ## iPad controls
 
@@ -82,8 +86,12 @@ For the full iPad app, boot one iPad Simulator and use its identifier:
 
 ```sh
 export SDKROOT="$(xcrun --sdk iphonesimulator --show-sdk-path)"
-.venv/bin/python scripts/build-ipad-engine.py --simulator-device <UDID>
+.venv/bin/python scripts/build-ipad-engine.py --angle --simulator-device <UDID>
 ```
+
+`--angle` uses a pinned ANGLE Metal renderer behind the existing GL4ES bridge.
+Its first build downloads the verified iOS frameworks; subsequent builds reuse
+them. Omitting the flag selects the earlier EAGL backend.
 
 Use `--build-only` to preserve a running test session. The development touch overlay
 uses the original ESDF bindings and is enabled with **Touch controls**. Its native
@@ -96,7 +104,7 @@ For a self-contained device build:
 
 ```sh
 export SDKROOT="$(xcrun --sdk iphoneos --show-sdk-path)"
-.venv/bin/python scripts/build-ipad-engine.py --platform device --build-only
+.venv/bin/python scripts/build-ipad-engine.py --platform device --angle --build-only
 ```
 
 The device app bundles game data and creates a writable profile in Application
@@ -108,7 +116,8 @@ the full game.
 
 Builds cache verified translations and optimized ARM64 objects. Changes to the
 checked-call policy still run the guard pass; byte-identical guarded output can
-reuse its verified native object. Original-engine support compilation reads
+reuse its verified native object. The current Metal builds each reused 406 of 409
+objects on Simulator and device. Original-engine support compilation reads
 symbols directly from checked bitcode, avoiding 179 throwaway native objects before
 the final external-call guard and code-generation pass.
 

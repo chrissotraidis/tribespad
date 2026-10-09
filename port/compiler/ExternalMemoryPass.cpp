@@ -104,6 +104,16 @@ struct ExternalMemoryPass : PassInfoMixin<ExternalMemoryPass>{
     // Reuse only existing finite GL contracts and all their shape checks.
     // Apple's native GLES sync extension has exactly the existing core ABI.
     if(Name=="glFenceSyncAPPLE"||Name=="glIsSyncAPPLE"||Name=="glClientWaitSyncAPPLE"||Name=="glGetSyncivAPPLE"||Name=="glDeleteSyncAPPLE")Name=Name.drop_back(5);
+    // Finite ANGLE adapter functions preserve the matching SDL host-only ABI.
+    if(Name=="tribes_angle_create_context")Name="SDL_GL_CreateContext";
+    if(Name=="tribes_angle_destroy_context")Name="SDL_GL_DestroyContext";
+    if(Name=="tribes_angle_make_current")Name="SDL_GL_MakeCurrent";
+    if(Name=="tribes_angle_current_context")Name="SDL_GL_GetCurrentContext";
+    if(Name=="tribes_angle_current_window")Name="SDL_GL_GetCurrentWindow";
+    if(Name=="tribes_angle_swap_window")Name="SDL_GL_SwapWindow";
+    if(Name=="tribes_angle_set_swap_interval")Name="SDL_GL_SetSwapInterval";
+    if(Name=="tribes_angle_get_swap_interval")Name="SDL_GL_GetSwapInterval";
+    if(Name=="tribes_angle_get_attribute")Name="SDL_GL_GetAttribute";
     if(Name=="gl4es_glFogCoordPointer")Name="glFogCoordPointerEXT";
     if(Name.starts_with("gl4es_gl")&&Host.contains(Name.drop_front(6)))Name=Name.drop_front(6);
     if(Strings.contains(Name)){

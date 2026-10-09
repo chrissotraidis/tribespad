@@ -352,6 +352,14 @@
       "tag": "1.24.3",
       "path": "ref/openal-soft",
       "usage": "Native positional audio candidate for the selected QoL OpenAL provider. Build and component evidence are separate from checked guest ABI and original-game acceptance."
+    },
+    {
+      "name": "angle-ios-metal",
+      "url": "https://github.com/jeremyfa/build-angle/releases/download/angle-d2e5e48/angle-ios-universal.zip",
+      "sha256": "1bbd5140d70de689f21f520581192a375d94d81d43844474c24623d545f6f2d2",
+      "revision": "d2e5e488da0c6215f8276e5b8d992a4a6ec20c32",
+      "path": "ref/angle-prebuilt/ios",
+      "usage": "Opt-in Metal backend. Pinned distributor XCFrameworks for ARM64 iOS and Simulator; reported ANGLE source revision, not a local source-build attestation."
     }
   ]
 }

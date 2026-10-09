@@ -1,8 +1,16 @@
-/* Isolate a captured game triangle in Apple's GLES implementation, without
-   the guest runtime or GL4ES. A fragment-only fog change must retain coverage. */
+/* Replay a captured clipped triangle without the guest runtime or GL4ES.
+   Both fog variants must keep coverage when their programs are reused. */
 #import <UIKit/UIKit.h>
+#ifdef TB_ANGLE
+#define EGL_EGLEXT_PROTOTYPES
+#include <GLES2/gl2.h>
+#include <GLES2/gl2ext.h>
+#include <EGL/egl.h>
+#include <EGL/eglext.h>
+#else
 #import <OpenGLES/ES2/gl.h>
 #import <OpenGLES/ES2/glext.h>
+#endif
 #include <assert.h>
 
 static GLuint shader(GLenum type, NSString *source) {
@@ -25,8 +33,16 @@ static void uniform1(GLuint p,const char *name,float value) {
     GLint location=glGetUniformLocation(p,name);if(location>=0)glUniform1f(location,value);
 }
 static void execute(void) {
+#ifdef TB_ANGLE
+    const EGLint attrs[]={EGL_PLATFORM_ANGLE_TYPE_ANGLE,EGL_PLATFORM_ANGLE_TYPE_METAL_ANGLE,EGL_NONE};
+    EGLDisplay display=eglGetPlatformDisplayEXT(EGL_PLATFORM_ANGLE_ANGLE,NULL,attrs);assert(display!=EGL_NO_DISPLAY);assert(eglInitialize(display,NULL,NULL));
+    EGLConfig config;EGLint count;const EGLint configAttrs[]={EGL_SURFACE_TYPE,EGL_PBUFFER_BIT,EGL_RENDERABLE_TYPE,EGL_OPENGL_ES2_BIT,EGL_RED_SIZE,8,EGL_GREEN_SIZE,8,EGL_BLUE_SIZE,8,EGL_ALPHA_SIZE,8,EGL_NONE};assert(eglChooseConfig(display,configAttrs,&config,1,&count)&&count==1);
+    const EGLint surfaceAttrs[]={EGL_WIDTH,1,EGL_HEIGHT,1,EGL_NONE};EGLSurface surface=eglCreatePbufferSurface(display,config,surfaceAttrs);assert(surface!=EGL_NO_SURFACE);
+    const EGLint contextAttrs[]={EGL_CONTEXT_CLIENT_VERSION,2,EGL_NONE};EGLContext context=eglCreateContext(display,config,EGL_NO_CONTEXT,contextAttrs);assert(context!=EGL_NO_CONTEXT);assert(eglMakeCurrent(display,surface,surface,context));
+#else
     EAGLContext *context=[[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
     assert(context && [EAGLContext setCurrentContext:context]);
+#endif
     NSString *fixture=[[NSBundle mainBundle] pathForResource:@"fixture" ofType:@"json"];
     NSDictionary *data=[NSJSONSerialization JSONObjectWithData:[NSData dataWithContentsOfFile:fixture] options:0 error:nil];assert(data);
     NSString *fragment=data[@"fragment_shader"];
@@ -60,8 +76,9 @@ static void execute(void) {
         assert(glCheckFramebufferStatus(GL_FRAMEBUFFER)==GL_FRAMEBUFFER_COMPLETE);
         glViewport(0,0,w,h);glDisable(GL_DEPTH_TEST);glDisable(GL_CULL_FACE);glDisable(GL_BLEND);glDisable(GL_SCISSOR_TEST);glDisable(GL_STENCIL_TEST);
         unsigned char *pixels[2]={calloc(1,bytes),calloc(1,bytes)};assert(pixels[0]&&pixels[1]);
-        unsigned coverage[2]={0};
-        for(unsigned variant=0;variant<2;variant++){
+        unsigned coverage[2]={0},initial[2]={0};BOOL stable=YES;NSMutableArray *draws=[NSMutableArray array];
+        for(unsigned draw=0;draw<6;draw++){
+            unsigned variant=draw%2;coverage[variant]=0;
             GLuint p=programs[variant];glUseProgram(p);
             glUniformMatrix4fv(glGetUniformLocation(p,"_gl4es_ModelViewProjectionMatrix"),1,GL_FALSE,mvp);
             glUniform1i(glGetUniformLocation(p,"_gl4es_TexSampler_0"),0);glUniform1i(glGetUniformLocation(p,"_gl4es_TexSampler_1"),1);
@@ -71,17 +88,24 @@ static void execute(void) {
             glDrawElements(GL_TRIANGLES,3,GL_UNSIGNED_INT,ids);glFinish();
             glReadPixels(0,0,w,h,GL_RGBA,GL_UNSIGNED_BYTE,pixels[variant]);assert(glGetError()==GL_NO_ERROR);
             for(size_t i=3;i<bytes;i+=4)coverage[variant]+=pixels[variant][i]!=0;
+            if(draw<2)initial[variant]=coverage[variant];else stable &= coverage[variant]==initial[variant];
+            [draws addObject:@{@"fog":@(variant),@"coverage":@(coverage[variant])}];
         }
         unsigned different=0;for(size_t i=3;i<bytes;i+=4)different+=(pixels[0][i]!=0)!=(pixels[1][i]!=0);
-        BOOL ok=coverage[0]>0 && different==0;passed &= ok;
-        [results addObject:@{@"width":@(w),@"height":@(h),@"reference_pixels":@(coverage[0]),@"fog_pixels":@(coverage[1]),@"coverage_difference":@(different),@"passed":@(ok)}];
+        BOOL ok=stable && coverage[0]>0 && different==0;passed &= ok;
+        [results addObject:@{@"width":@(w),@"height":@(h),@"draws":draws,@"stable_coverage":@(stable),@"reference_pixels":@(coverage[0]),@"fog_pixels":@(coverage[1]),@"coverage_difference":@(different),@"passed":@(ok)}];
         free(pixels[0]);free(pixels[1]);
     }
     NSDictionary *result=@{@"passed":@(passed),@"renderer":@((const char *)glGetString(GL_RENDERER)),@"cases":results};
     NSString *path=[NSSearchPathForDirectoriesInDomains(NSDocumentDirectory,NSUserDomainMask,YES).firstObject stringByAppendingPathComponent:@"result.json"];
     assert([[NSJSONSerialization dataWithJSONObject:result options:NSJSONWritingPrettyPrinted error:nil] writeToFile:path atomically:YES]);
     glDeleteRenderbuffers(1,&color);glDeleteFramebuffers(1,&framebuffer);glDeleteTextures(2,textures);
-    for(unsigned i=0;i<2;i++)glDeleteProgram(programs[i]);[EAGLContext setCurrentContext:nil];
+    for(unsigned i=0;i<2;i++)glDeleteProgram(programs[i]);
+#ifdef TB_ANGLE
+    eglMakeCurrent(display,EGL_NO_SURFACE,EGL_NO_SURFACE,EGL_NO_CONTEXT);eglDestroyContext(display,context);eglDestroySurface(display,surface);eglTerminate(display);
+#else
+    [EAGLContext setCurrentContext:nil];
+#endif
 }
 @interface ProbeDelegate:UIResponder<UIApplicationDelegate>
 @property(nonatomic,strong) UIWindow *window;

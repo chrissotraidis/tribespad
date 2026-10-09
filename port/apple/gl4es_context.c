@@ -3,6 +3,9 @@
    These private structure accesses require the exact dependency revision in
    build-gl4es-mobile.py. No library-generated procedure reaches the guest. */
 #include "gl4es_context.h"
+#ifdef TB_ANGLE
+#include "angle_sdl.h"
+#endif
 #include "gl4esinit.h"
 #include "gl/glstate.h"
 #include "gl/gl4es.h"
@@ -53,11 +56,19 @@ void tribes_gl4es_context_activate(TribesGL4ESContext *context) {
         activeTexture((GLenum)active);
         context->state->bound_changed=hardext.maxtex;
     }
+#ifdef TB_ANGLE
+    /* EGL owns its real default framebuffer zero on the SDL Metal surface. */
+    Sint64 framebuffer=0;
+#else
     Sint64 framebuffer=SDL_GetNumberProperty(SDL_GetWindowProperties(context->window),
         SDL_PROP_WINDOW_UIKIT_OPENGL_FRAMEBUFFER_NUMBER,0);
+#endif
     int width,height;
     framebuffer_size(&width,&height);
-    if (framebuffer<=0 || framebuffer>UINT32_MAX || width<=0 || height<=0) abort();
+#ifndef TB_ANGLE
+    if (framebuffer<=0 || framebuffer>UINT32_MAX) abort();
+#endif
+    if (width<=0 || height<=0) abort();
     /* mainfbo_fbo maps GL default zero to SDL's current native drawable.
        globals4es.usefbo stays false: GL4ES must not allocate/delete this FBO. */
     context->state->fbo.mainfbo_fbo=(GLuint)framebuffer;

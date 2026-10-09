@@ -14,7 +14,9 @@ ROOT = Path(__file__).resolve().parents[1]
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--simulator-device', required=True)
 parser.add_argument('--sdl', action='store_true', help='Exercise the SDL context adapter and shared textures')
+parser.add_argument('--angle',action='store_true',help='Use ANGLE Metal with the SDL adapter')
 args = parser.parse_args()
+assert not args.angle or args.sdl
 env = dict(os.environ, DEVELOPER_DIR='/Applications/Xcode.app/Contents/Developer')
 
 
@@ -29,10 +31,10 @@ assert 'iPad' in booted[0]['deviceTypeIdentifier']
 library = ROOT / 'generated/gl4es/simulator/lib/libGL.a'
 build = json.loads((library.parents[1] / 'result.json').read_text())
 assert hashlib.sha256(library.read_bytes()).hexdigest() == build['library_sha256']
-out = ROOT / 'generated/integration-review' / ('gl4es-sdl' if args.sdl else 'gl4es-mobile')
+out = ROOT / 'generated/integration-review' / ('gl4es-angle' if args.angle else 'gl4es-sdl' if args.sdl else 'gl4es-mobile')
 app = out / 'TribesRenderer.app'
 app.mkdir(parents=True, exist_ok=True)
-identifier = 'org.tribespad.gl4es-sdl' if args.sdl else 'org.tribespad.gl4es-probe'
+identifier = 'org.tribespad.gl4es-angle' if args.angle else 'org.tribespad.gl4es-sdl' if args.sdl else 'org.tribespad.gl4es-probe'
 subprocess.run(['xcrun', 'simctl', 'terminate', args.simulator_device, identifier], env=env, capture_output=True)
 info = dict(CFBundleIdentifier=identifier, CFBundleExecutable='TribesRenderer',
             CFBundleName='TribesRenderer', CFBundlePackageType='APPL', CFBundleVersion='1',
@@ -51,10 +53,18 @@ if args.sdl:
     flags += ['-DNOX11', '-DNOEGL', '-DNO_LOADER', '-DDEFAULT_ES=2',
               '-isystem', str(ROOT / 'ref/gl4es/src')]
     sources += [ROOT / 'port/apple/gl4es_context.c']
+if args.angle:
+    from angle_backend_inputs import inputs as angle_inputs,bundle as angle_bundle
+    angle,angle_flags,angle_libraries=angle_inputs('simulator')
+    flags+=angle_flags;libraries=angle_libraries+libraries
+    sources += [ROOT/'port/apple/angle_sdl.c']
+
 run(['xcrun', '--sdk', 'iphonesimulator', 'clang', '-target', 'arm64-apple-ios16-simulator',
      '-isysroot', sdk, *flags, '-Wall', '-Wextra', '-Werror', '-Wno-deprecated-declarations',
      '-I' + str(ROOT / 'ref/gl4es/include'), *map(str,sources), str(library),
      *libraries, '-o', str(app / 'TribesRenderer')])
+if args.angle:
+    for framework in angle_bundle(app,'simulator'):run(['codesign','--force','--sign','-',str(framework)],capture_output=True)
 run(['codesign', '--force', '--sign', '-', str(app)], capture_output=True)
 run(['xcrun', 'simctl', 'install', args.simulator_device, str(app)])
 container = Path(run(['xcrun', 'simctl', 'get_app_container', args.simulator_device, identifier, 'data'], capture_output=True, text=True).stdout.strip())
@@ -83,6 +93,7 @@ result.update(dependency=build, device=booted[0]['name'], simulator_udid=args.si
 if args.sdl:
     result['sdl_backend_sha256'] = hashlib.sha256((ROOT / 'generated/sdl-backend/simulator/result.json').read_bytes()).hexdigest()
     result['adapter_sha256'] = hashlib.sha256((ROOT / 'port/apple/gl4es_context.c').read_bytes()).hexdigest()
+if args.angle:result['angle']=angle
 (out / 'result.json').write_text(json.dumps(result, indent=2) + '\n')
 assert result['passed'], result
 if args.sdl:

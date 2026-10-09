@@ -684,8 +684,10 @@
     "port/apple/font.h": "e0e3340fc18b4a46240ef7ad28b85283d0236106546de392bed4028b87257df6",
     "port/core/gdi_memory.c": "f0ea3299f10fc01af5e84648a007f7a1ee01e15a10b5b8b9967127eb5306533c",
     "port/core/gdi_memory.h": "a83bdab6a4d2e3e25f85bf3ff038aa9a647482cf69f40e5e4af3e82f28690391",
-    "port/apple/gl4es_context.c": "cf2842b66e493638ddf389f588d4fb4f4a0cdaca967bd87b51f83041eb92fe01",
-    "port/apple/gl4es_context.h": "f057c42d3852d0bce74ab0286cad2fa6bc074a5a94fd5f4f1c231647a3183c05"
+    "port/apple/gl4es_context.c": "f472d6607b523a8ba231858ae369013efbea5499bc55b302570f0fda4d262e5c",
+    "port/apple/gl4es_context.h": "f057c42d3852d0bce74ab0286cad2fa6bc074a5a94fd5f4f1c231647a3183c05",
+    "port/apple/angle_sdl.c": "1db1244af48c82253dc67c8037a2a3c0851731100c55f4d9f59af2624277a696",
+    "port/apple/angle_sdl.h": "d66fd545320b83fa81797b93ae8177081d872d11d6bda2d5383478db1ed9c116"
   },
   "scalar_softfloat_contract": "f32/f64 add/sub/mul/div and sqrt only: Apple ARM64 scalar-struct ABI i32 (i64,i64) / i64 (i64,i64) for binary operations; sqrt is i32 (i64) / i64 (i64), exact nonvariadic C declaration/call. Arguments are values, never addresses. Reviewed dependencies use locals, bounded internal tables and host thread-local rounding/exception state. Exact library identity and header contents checked by sse_inputs.",
   "barrier_asm_sources": [

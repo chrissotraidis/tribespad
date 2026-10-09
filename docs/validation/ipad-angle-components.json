@@ -1,0 +1,272 @@
+{
+  "scope": "Component evidence: native repeated clipped-triangle replay and checked SDL/GL4ES guest bridge. Original game acceptance recorded separately.",
+  "apple_control": {
+    "cases": [
+      {
+        "height": 64,
+        "passed": true,
+        "fog_pixels": 177,
+        "coverage_difference": 0,
+        "reference_pixels": 177,
+        "width": 64,
+        "draws": [
+          {
+            "fog": 0,
+            "coverage": 177
+          },
+          {
+            "fog": 1,
+            "coverage": 177
+          },
+          {
+            "fog": 0,
+            "coverage": 177
+          },
+          {
+            "fog": 1,
+            "coverage": 177
+          },
+          {
+            "fog": 0,
+            "coverage": 177
+          },
+          {
+            "fog": 1,
+            "coverage": 177
+          }
+        ],
+        "stable_coverage": true
+      },
+      {
+        "height": 1640,
+        "passed": false,
+        "fog_pixels": 0,
+        "coverage_difference": 0,
+        "reference_pixels": 0,
+        "width": 2360,
+        "draws": [
+          {
+            "fog": 0,
+            "coverage": 167757
+          },
+          {
+            "fog": 1,
+            "coverage": 167757
+          },
+          {
+            "fog": 0,
+            "coverage": 0
+          },
+          {
+            "fog": 1,
+            "coverage": 0
+          },
+          {
+            "fog": 0,
+            "coverage": 0
+          },
+          {
+            "fog": 1,
+            "coverage": 0
+          }
+        ],
+        "stable_coverage": false
+      }
+    ],
+    "passed": false,
+    "renderer": "Apple Software Renderer",
+    "backend": "apple",
+    "angle": null,
+    "simulator_udid": "F05D2D40-0A01-47C9-9BD7-0C0E19F7512C",
+    "source_sha256": "61c31b42e60e9dd18fb1dddd92318e0d43209974db8114fa288fe642568db2dc",
+    "fixture_sha256": "cafe5a6d093753c78cb0cdad1df336e33f84ea2c7cef7a87605583a686869844",
+    "scope": "Native GLES component only. No original engine or GL4ES executes in this probe."
+  },
+  "angle_replay": {
+    "cases": [
+      {
+        "height": 64,
+        "passed": true,
+        "fog_pixels": 177,
+        "coverage_difference": 0,
+        "reference_pixels": 177,
+        "width": 64,
+        "draws": [
+          {
+            "fog": 0,
+            "coverage": 177
+          },
+          {
+            "fog": 1,
+            "coverage": 177
+          },
+          {
+            "fog": 0,
+            "coverage": 177
+          },
+          {
+            "fog": 1,
+            "coverage": 177
+          },
+          {
+            "fog": 0,
+            "coverage": 177
+          },
+          {
+            "fog": 1,
+            "coverage": 177
+          }
+        ],
+        "stable_coverage": true
+      },
+      {
+        "height": 1640,
+        "passed": true,
+        "fog_pixels": 167758,
+        "coverage_difference": 0,
+        "reference_pixels": 167758,
+        "width": 2360,
+        "draws": [
+          {
+            "fog": 0,
+            "coverage": 167758
+          },
+          {
+            "fog": 1,
+            "coverage": 167758
+          },
+          {
+            "fog": 0,
+            "coverage": 167758
+          },
+          {
+            "fog": 1,
+            "coverage": 167758
+          },
+          {
+            "fog": 0,
+            "coverage": 167758
+          },
+          {
+            "fog": 1,
+            "coverage": 167758
+          }
+        ],
+        "stable_coverage": true
+      }
+    ],
+    "passed": true,
+    "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple iOS simulator GPU, Version 26.5 (Build 23F77))",
+    "backend": "angle",
+    "angle": {
+      "distributor": "https://github.com/jeremyfa/build-angle",
+      "url": "https://github.com/jeremyfa/build-angle/releases/download/angle-d2e5e48/angle-ios-universal.zip",
+      "archive_sha256": "1bbd5140d70de689f21f520581192a375d94d81d43844474c24623d545f6f2d2",
+      "reported_source_commit": "d2e5e488da0c6215f8276e5b8d992a4a6ec20c32",
+      "platform": "simulator",
+      "frameworks": {
+        "ref/angle-prebuilt/ios/libEGL.xcframework/ios-arm64_x86_64-simulator/libEGL.framework": "f131851a3b162176a694faa0a054d91135208315f1566c732a71dcdf6d22a5a6",
+        "ref/angle-prebuilt/ios/libGLESv2.xcframework/ios-arm64_x86_64-simulator/libGLESv2.framework": "860f01c6e5b51d4f246e05bd42ab97ab41a23db9bbe12f9aff7e2bcc8fb71992"
+      }
+    },
+    "simulator_udid": "F05D2D40-0A01-47C9-9BD7-0C0E19F7512C",
+    "source_sha256": "61c31b42e60e9dd18fb1dddd92318e0d43209974db8114fa288fe642568db2dc",
+    "fixture_sha256": "cafe5a6d093753c78cb0cdad1df336e33f84ea2c7cef7a87605583a686869844",
+    "scope": "Native GLES component only. No original engine or GL4ES executes in this probe."
+  },
+  "checked_guest": {
+    "passed": true,
+    "faults": [
+      "bad-angle-context",
+      "bad-gl4es-color",
+      "bad-gl4es-adapter",
+      "gl4es-guest-pointer",
+      "sync-output",
+      "sync-length",
+      "fog-query-readonly",
+      "fog-query-cross-page",
+      "readonly-event",
+      "cross-page-event",
+      "mutated-event-text",
+      "unsupported-event",
+      "unreadable-cursor",
+      "readonly-cursor",
+      "mutated-surface",
+      "stale-surface",
+      "mutated-remove-surface",
+      "stale-remove-surface",
+      "stale-cursor",
+      "readonly-closest",
+      "mutated-closest",
+      "mutated-mode",
+      "unknown-mode",
+      "unknown-property",
+      "stale-properties",
+      "readonly-count",
+      "wrong-thread",
+      "readonly-output",
+      "wrong-token",
+      "stale-window",
+      "stale-context",
+      "live-subsystem-quit",
+      "reentrant-window",
+      "bad-window",
+      "bad-context",
+      "bad-randf"
+    ],
+    "stdout": "fullscreen modes=2; native fields/order, single guest allocation, free, OOM/retry and invalid ID verified\nMouse absolute coordinates: window=1180x820 pixels=2360x1640 scale=2,2; relative deltas unchanged\nGuest SDL events: queue/NULL peek, Windows32 fields, keyboard snapshot, UTF-8/drop lifetime and empty-output preservation passed\ndisplay=1 current mode=1180x820; native fullscreen-mode selection/clear and borrowed mode checks pass\n128 seeded SDL_randf returns match native sequence and preserve guest state\nnative display scale=2; 104 x87 float-return cases preserve EAX, cdecl stack and unrelated CPU state\nclosest-mode stack copy, native fullscreen/size/border/position/sync results and invalid outputs verified\nLIBGL: Initialising gl4es\nLIBGL: v1.1.7 built on Oct  8 2026 20:31:33\nLIBGL: Using GLES 2.0 backend\nLIBGL: Hardware test on current Context...\nLIBGL: Hardware Full NPOT detected and used\nLIBGL: Extension GL_EXT_blend_minmax  detected and used\nLIBGL: Extension GL_EXT_draw_buffers  detected and used\nLIBGL: FBO are in core, and so used\nLIBGL: PointSprite are in core, and so used\nLIBGL: CubeMap are in core, and so used\nLIBGL: BlendColor is in core, and so used\nLIBGL: Blend Subtract is in core, and so used\nLIBGL: Blend Function and Equation Separation is in core, and so used\nLIBGL: Texture Mirrored Repeat is in core, and so used\nLIBGL: Extension GL_OES_mapbuffer  detected\nLIBGL: Extension GL_OES_element_index_uint  detected and used\nLIBGL: Extension GL_OES_packed_depth_stencil  detected and used\nLIBGL: Extension GL_OES_depth24  detected and used\nLIBGL: Extension GL_OES_rgb8_rgba8  detected and used\nLIBGL: Extension GL_EXT_texture_format_BGRA8888  detected and used\nLIBGL: Extension GL_OES_depth_texture  detected and used\nLIBGL: Extension GL_OES_texture_stencil8  detected and used\nLIBGL: Extension GL_EXT_texture_rg  detected and used\nLIBGL: Extension GL_OES_texture_float  detected and used\nLIBGL: Extension GL_OES_texture_half_float  detected and used\nLIBGL: Extension GL_EXT_color_buffer_float  detected and used\nLIBGL: Extension GL_EXT_color_buffer_half_float  detected and used\nLIBGL: high precision float in fragment shader available and used\nLIBGL: Extension GL_EXT_shader_texture_lod detected and used\nLIBGL: Extension GL_EXT_frag_depth  detected and used\nLIBGL: Max vertex attrib: 16\nLIBGL: Extension GL_OES_standard_derivatives  detected and used\nLIBGL: Extension GL_OES_get_program_binary  detected and used\nLIBGL: Number of supported Program Binary Format: 1\nLIBGL: Max texture size: 8192\nLIBGL: Max Varying Vector: 30\nLIBGL: Texture Units: 16/16 (hardware: 16), Max lights: 8, Max planes: 6\nLIBGL: Extension GL_EXT_texture_filter_anisotropic  detected and used\nLIBGL: Max Anisotropic filtering: 16\nLIBGL: Max Color Attachments: 8 / Draw buffers: 8\nLIBGL: Hardware vendor is Google Inc. (Apple)\nLIBGL: Targeting OpenGL 2.1\nLIBGL: Not trying to batch small subsequent glDrawXXXX\nLIBGL: Trying to use VBO\nLIBGL: Hack to trigger a SwapBuffers when a Full Framebuffer Blit on default FBO is done\nLIBGL: Current folder is:/Users/chrissotraidis/Library/Developer/CoreSimulator/Devices/F05D2D40-0A01-47C9-9BD7-0C0E19F7512C/data/Containers/Bundle/Application/BC232D6B-4FFD-4D56-804A-87888DC15369/checked.app\nFog color query: four native floats, unaligned/page-end output, sentinels and existing GL error preserved PASS\nNative GPU sync: native completion, 64-bit wait, pixels, checked outputs and shared/foreign/stale tokens PASS\ncursor: captured 16x32 pixels, conversion, premultiplication, refcount, borrowed/owned storage and native cursor lifetime PASS\nrenderer=ANGLE (Apple, ANGLE Metal Renderer: Apple iOS simulator GPU, Version 26.5 (Build 23F77)) version=OpenGL ES 3.0 (ANGLE 2.1.1 git hash: d2e5e488da0c) pixel=64,128,191,255\nPASS: checked mobile guest legacy draw with native pixel readback\nPASS: mobile 8/16/32-bit primitive restart, checked marker exclusion and state queries\nPASS: restarted quad batches match separate alpha-blended draws in every pixel (8/16/32-bit, empty and incomplete segments)\nPASS: three original GUI shader variants, indexed/seq",
+    "sources_sha256": {
+      "port/core/guest_sdl_backend.c": "6b01420091c4f41e08e956f85e841f50f8e1f0b48c153136efcb16513037414b",
+      "port/core/guest_window_catalog.c": "6ac5dc7741f7a87109d9e97f573a4ab279d6dee605ee36b1b3629129c6583510",
+      "port/core/ext80.c": "8f78a2e550aede93935833384a8c4afd07cafd31f064988bbaa3cffa373d5c2b",
+      "port/llasm-support/tribes_float80.c": "fec58c465f2b20523b723dc851a325f8d2ad5d5d3dbf414569563612a7b0409a",
+      "port/llasm-support/tribes_result.c": "983b85e4760dfbabccf08711b6007f8bdd0612f037164e6698aaeabf9b00bed5",
+      "port/core/guest_sdl_allocator.c": "eda2ba4e3bfd66bc71f6df9fa9042394d4d562dd1374acbc8ee6199f323ed325",
+      "port/core/guest_sdl_sync.c": "6acaa5065015a384d811ea4c830f0a87aa7d50a16974bf0bed38a42a9c8c3096",
+      "port/core/guest_sdl_tls.c": "27cf9c65f2afb7c16c285fefc330144dca659d9b5b8cdf196960665f47ff0171",
+      "port/core/guest_sdl_memory.c": "f1cac46d905cbec4ec3b9844c41319656789f711259d25c6bf13c6325e45317c",
+      "port/core/guest_curl_allocator.c": "ad28b5725d361ddc87d32bb74e85d9934a7598d910a09b9d21101013838c6231",
+      "port/core/guest_callback.c": "5e647f11ac9849e0cf927e1917183b81e64382a7b7d91cc2a97016673494e444",
+      "port/core/guest_heap.c": "791c26c9fd72984fc53f0f5f1447df5f1dd43e38af08a529b1efc0b3e65dd96b",
+      "port/core/process_environment.c": "58f2ad7f11c2d3c79e21af8408ffde46954ef2ec97114035f74dcaaf529e91d7",
+      "port/core/guest_filesystem.c": "dccc9e2c3fc003ca6beff79eb004bdc544eb2e227a7757cb79b6692a828d03ae",
+      "tests/fixtures/sdl_window_dispatch.c": "83911a798d5fd6b880594d312eb19e8a19f7aeb40d72ed0045eed5651c25dfc9",
+      "tests/fixtures/native_enter.ll": "78597a5a3030a7a7e0d6746358a6f3489ff8e8c395fba21383c200133f2f1f9d",
+      "generated/integration-review/angle-guest/F05D2D40-0A01-47C9-9BD7-0C0E19F7512C/bindings.ll": "94ca02c715ed2188001b858b3d3c3f43cca7e1c170cede8da4a0d88e7e257c85",
+      "tests/sdl_window_test.c": "28a991f22cb03eceefce55473b109258eaaa6b722c2b2e08b6107d72ef7bdd66",
+      "port/apple/sdl_main.c": "bf39cc97a37f352e0a1e3c890b1304116af6b724a94332ccdf7babab1652ee1c",
+      "port/apple/gl4es_context.c": "f472d6607b523a8ba231858ae369013efbea5499bc55b302570f0fda4d262e5c",
+      "port/apple/angle_sdl.c": "1db1244af48c82253dc67c8037a2a3c0851731100c55f4d9f59af2624277a696",
+      "port/core/guest_memory_checks.c": "ef6765843ddde177df340c7bb4375d5ce369771bc36a1ba6b7e79bd8140bf0e3",
+      "port/core/guest_external_checks.c": "2ecaf0cf09462d76b293ab70860c9245ae46536959e81fd2549ad7675ad63523",
+      "generated/integration-review/angle-guest/F05D2D40-0A01-47C9-9BD7-0C0E19F7512C/wrong-signatures.ll": "46130e1ec9fff86dfe2ff55bf305581c5876862c4db75d34ab26809b1d5e6262",
+      "generated/integration-review/cursor-surface/execution/cursor-rgba.bin": "130a25b7967d4e73a113cc55f0c273dad4caba60eef07fd505393ab2830eb1d7",
+      "generated/integration-review/angle-guest/F05D2D40-0A01-47C9-9BD7-0C0E19F7512C/cursor-fixture.h": "fa382af10bc48a09946efea05cb11af8f40b6bf41b1ac6277cba9046e8b6301d",
+      "port/apple/sdl_main.h": "8ca027ba6092a53915c999da5950323f39c1cfc18ba0d6c67eb07195f435bf1c",
+      "port/core/guest_sdl_backend.h": "c3a0fb75f33a1d9c3468f8dbd4c398ea1f7f96aece360ea7c289c1e5b2612ff3",
+      "config/runtime/sdl-bindings.json": "ffb9ea7d2d6417aac18fb45000169dbd6369322bb53933357a1cb221320697e0",
+      "port/compiler/ExternalMemoryPass.cpp": "b38bfd6610a54acf07e97a3246c8f1ba0a7dab8ed972795004642f43cd7f3fb6",
+      "config/runtime/external-memory-contracts.json": "3661a2b992a7a8412f91d0d78767b88763719b243fe7f86e1f9882adba79bbf8",
+      "scripts/sdl_backend_inputs.py": "89902810475c8a9588fb5a9769c7188f37adcc004c0d033812cebf70cdea38d6",
+      "scripts/test-sdl-window.py": "9555af80800c4bfa17da9d265d8fcf7eb07cb51e5208d47ac688ac4175b88759",
+      "generated/integration-review/angle-guest/F05D2D40-0A01-47C9-9BD7-0C0E19F7512C/original-shader-fixture.h": "dca4c73adb34cab37b54183d29d06ce101059d2df1de64022237e9d3d644a799",
+      "port/core/mobile_shader_sources.inc": "d5ac5c5af8f3b7afcf7c907f0a7649f20369a076ee35b9d0ea3d6e08b39aff36",
+      "scripts/generate-legacy-shaders.py": "2baf91b4f743ff9489e60cdde4234c659e60e44ea10370307d7b5915125b1d21",
+      "scripts/gl4es_backend_inputs.py": "b8dac6f08144d17a13dbe46c41efde64b48ebcddf13d4ce1a0ebf5641d0fa2c5",
+      "port/apple/gl4es_context.h": "f057c42d3852d0bce74ab0286cad2fa6bc074a5a94fd5f4f1c231647a3183c05",
+      "port/apple/angle_sdl.h": "d66fd545320b83fa81797b93ae8177081d872d11d6bda2d5383478db1ed9c116",
+      "scripts/angle_backend_inputs.py": "d554ef923152f178ddb82d434c605ea7c411813da2b09334d70917fd354967d2"
+    },
+    "angle": {
+      "distributor": "https://github.com/jeremyfa/build-angle",
+      "url": "https://github.com/jeremyfa/build-angle/releases/download/angle-d2e5e48/angle-ios-universal.zip",
+      "archive_sha256": "1bbd5140d70de689f21f520581192a375d94d81d43844474c24623d545f6f2d2",
+      "reported_source_commit": "d2e5e488da0c6215f8276e5b8d992a4a6ec20c32",
+      "platform": "simulator",
+      "frameworks": {
+        "ref/angle-prebuilt/ios/libEGL.xcframework/ios-arm64_x86_64-simulator/libEGL.framework": "f131851a3b162176a694faa0a054d91135208315f1566c732a71dcdf6d22a5a6",
+        "ref/angle-prebuilt/ios/libGLESv2.xcframework/ios-arm64_x86_64-simulator/libGLESv2.framework": "860f01c6e5b51d4f246e05bd42ab97ab41a23db9bbe12f9aff7e2bcc8fb71992"
+      }
+    }
+  }
+}
