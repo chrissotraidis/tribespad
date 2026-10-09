@@ -1,5 +1,5 @@
 {
-  "scope": "Reached scene GL_FOG_COLOR query. Component bounds/native-state checks pass; full-app post-death reproduction remains pending.",
+  "scope": "Reached scene GL_FOG_COLOR query: component bounds/native-state checks pass. Full candidate touch spawn, disc self-kill and respawn pass, but this runtime sequence did not reach the query.",
   "trigger": {
     "previous_pid": 27260,
     "previous_binary": "71999ccc135170b73c61627a5ee83568ec44162b9bb0a59f56ffb571d819a930",
@@ -121,8 +121,18 @@
   },
   "runtime": {
     "pid": 31207,
-    "state": "Original menus/profile restored. Started offline Katabatic with two bots, dedicated mode off; loading.",
-    "map_start": "2026-10-09T05:35:27.643887+00:00"
+    "state": "Offline Katabatic rendered with two bots. Touch Fire joined Starwolf; Weapon selected disc, Look aimed down, Fire produced the original self-kill message; subsequent Fire respawned indoors with full health. Original lobby and Return to Game worked. Process remains alive, debugger detached.",
+    "map_start": "2026-10-09T05:35:27.643887+00:00",
+    "bots": [
+      "Dharmic Sword",
+      "No-Dachi"
+    ],
+    "fog_query_observation": {
+      "method": "Exact native function-entry breakpoint conditioned on w1 == 0x0b66",
+      "hits": 0,
+      "conclusion": "This death/respawn sequence did not exercise the query. Component success remains separate."
+    },
+    "respawn_screenshot": "docs/validation/ipad-respawn-2026-10-09.png"
   },
   "sources_sha256": {
     "port/core/guest_sdl_backend.c": "f11745de0c5714b428796a1c1fb17f2661065dc7c516a6374ceedd3c4ab32e1b",

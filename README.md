@@ -28,7 +28,8 @@ There is no playable iPad or iPhone release yet.
   lifecycle tests, including the original GUI shaders, perspective projection and
   native GPU fences. The [original map on iPad](docs/validation/ipad-katabatic-2026-10-08.png)
   renders, and [touch gameplay](docs/validation/ipad-touch-gameplay-2026-10-08.png)
-  moves, aims, switches weapons, fires and jets in the offline match.
+  moves, aims, switches weapons, fires and jets in the offline match. Touch death
+  and [respawn](docs/validation/ipad-respawn-2026-10-09.png) also work.
 
 ## iPad controls
 

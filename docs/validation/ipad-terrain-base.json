@@ -1,0 +1,455 @@
+{
+  "pid": 31207,
+  "binary_sha256": "3d35f92c40dcc5a915903b274568383dff22782055ff8798354668a3b9f09b5c",
+  "finding": "The distant center-left mountain gap is visible before the first blend after 236 opaque draws. Later fog/blend and snow passes do not create this particular gap. Root cause remains unresolved.",
+  "framebuffer": {
+    "width": 2360,
+    "height": 1640,
+    "readback": "GL4ES glReadPixels on rendering thread; GL error queue not consumed",
+    "screenshot": "docs/validation/ipad-terrain-base-2026-10-09.png",
+    "sha256": "a51a826c7927435b32007dd2f7f33f43b78858cfab08ff746cad99f1614c002b",
+    "phase": {
+      "phase": "first blend after opaque terrain",
+      "draws": 237,
+      "opaque_draws": 236,
+      "args": [
+        6,
+        10,
+        5123,
+        4805230464
+      ],
+      "viewport": [
+        0,
+        0,
+        2360,
+        1640
+      ],
+      "enabled_flags": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        0,
+        1,
+        0,
+        0,
+        0
+      ],
+      "blend": [
+        774,
+        771
+      ]
+    }
+  },
+  "later_interior_trace": {
+    "directory": "generated/integration-review/ipad-render-trace/scene",
+    "draws": 165,
+    "scope": "Native indexed depth-tested perspective draws and matrix/state snapshots. CPU projected triangle coverage is a diagnostic without depth, texture/shader or GPU equivalence; it is not a reference renderer.",
+    "candidate": "At reduced framebuffer pixel (100,700), triangle indices 67/66/68 of captured draw 0055 cover the black interior gap. Mode TRIANGLES, count 168, UNSIGNED_INT; fog/blend enabled, culling disabled, LEQUAL with depth write. Inspect its full shader/texture/depth state next.",
+    "next": "Make a minimal component reproduction with the captured triangle and exact native shaders; compare fog-enabled and fog-disabled output on a cleared target. Do not remove fog or alter game geometry as a workaround.",
+    "native_checks": {
+      "input": {
+        "args": [
+          4,
+          168,
+          5125,
+          4806046464
+        ],
+        "program": 52,
+        "viewport": [
+          0,
+          0,
+          2360,
+          1640
+        ],
+        "location": 0,
+        "attribute": {
+          "enabled": 1,
+          "size": 3,
+          "stride": 12,
+          "type": 5126,
+          "buffer": 0
+        },
+        "pointer": 4624280832,
+        "index_buffer": 0,
+        "indices": [
+          0,
+          1,
+          2,
+          2,
+          1,
+          3,
+          4,
+          5,
+          6,
+          6,
+          5,
+          7,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          14,
+          13,
+          15,
+          14,
+          15,
+          16,
+          16,
+          15,
+          17,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          21,
+          20,
+          22,
+          21,
+          22,
+          23,
+          23,
+          22,
+          24,
+          25,
+          26,
+          27,
+          27,
+          26,
+          28,
+          27,
+          28,
+          29,
+          29,
+          28,
+          30,
+          31,
+          32,
+          33,
+          33,
+          32,
+          34,
+          33,
+          34,
+          35,
+          35,
+          34,
+          36,
+          35,
+          36,
+          37,
+          37,
+          36,
+          38,
+          37,
+          38,
+          39,
+          39,
+          38,
+          40,
+          39,
+          40,
+          41,
+          41,
+          40,
+          42,
+          41,
+          42,
+          43,
+          44,
+          45,
+          46,
+          46,
+          45,
+          47,
+          46,
+          47,
+          48,
+          49,
+          50,
+          51,
+          51,
+          50,
+          52,
+          53,
+          54,
+          55,
+          55,
+          54,
+          56,
+          57,
+          58,
+          59,
+          59,
+          58,
+          60,
+          61,
+          62,
+          63,
+          63,
+          62,
+          64,
+          65,
+          66,
+          67,
+          67,
+          66,
+          68,
+          69,
+          70,
+          71,
+          71,
+          70,
+          72,
+          71,
+          72,
+          73,
+          73,
+          72,
+          74,
+          73,
+          74,
+          75,
+          76,
+          77,
+          78,
+          78,
+          77,
+          79,
+          78,
+          79,
+          80,
+          81,
+          82,
+          83,
+          83,
+          82,
+          84,
+          83,
+          84,
+          85,
+          85,
+          84,
+          86,
+          85,
+          86,
+          87
+        ],
+        "vertices": [
+          [
+            -0.5,
+            14.0,
+            -5.0
+          ],
+          [
+            6.5,
+            8.5,
+            -5.0
+          ],
+          [
+            -0.5,
+            8.5,
+            -5.0
+          ]
+        ],
+        "shaders": [
+          53,
+          54
+        ]
+      },
+      "mvp": [
+        -0.1361139714717865,
+        0.0,
+        0.9808257222175598,
+        0.9806296825408936,
+        -0.6814544796943665,
+        0.0,
+        -0.1959104984998703,
+        -0.19587133824825287,
+        0.0,
+        0.9999999403953552,
+        0.0,
+        0.0,
+        3.2865960597991943,
+        1.3665541410446167,
+        4.592967510223389,
+        4.692039489746094
+      ],
+      "fog": {
+        "program": 52,
+        "color": [
+          0.6499999761581421,
+          0.6499999761581421,
+          0.699999988079071,
+          1.0
+        ],
+        "density": [
+          1.0
+        ],
+        "start": [
+          0.0
+        ],
+        "end": [
+          1.0
+        ],
+        "scale": [
+          1.0
+        ],
+        "location": 5,
+        "attribute": {
+          "enabled": 1,
+          "size": 1,
+          "stride": 4,
+          "type": 5126,
+          "buffer": 0
+        },
+        "pointer": 4789907456,
+        "vertices": [
+          [
+            0.01056634820997715
+          ],
+          [
+            0.023450518026947975
+          ],
+          [
+            0.008191447705030441
+          ]
+        ]
+      },
+      "gl4es_state": {
+        "blend": [
+          1,
+          0
+        ],
+        "fog": [
+          9729,
+          1.0,
+          34140,
+          0.0,
+          1.0,
+          0.0,
+          0.6499999761581421,
+          0.6499999761581421,
+          0.699999988079071,
+          1.0,
+          33873
+        ],
+        "program": 0,
+        "attributes": [
+          {
+            "slot": 0,
+            "size": 3,
+            "type": 5126,
+            "stride": 0,
+            "values": [
+              [
+                -0.5,
+                14.0,
+                -5.0
+              ],
+              [
+                6.5,
+                8.5,
+                -5.0
+              ],
+              [
+                -0.5,
+                8.5,
+                -5.0
+              ]
+            ]
+          },
+          {
+            "slot": 5,
+            "size": 1,
+            "type": 5126,
+            "stride": 0,
+            "values": [
+              [
+                0.01056634820997715
+              ],
+              [
+                0.023450518026947975
+              ],
+              [
+                0.008191447705030441
+              ]
+            ]
+          },
+          {
+            "slot": 8,
+            "size": 2,
+            "type": 5126,
+            "stride": 0,
+            "values": [
+              [
+                0.685546875,
+                0.39453125
+              ],
+              [
+                0.712890625,
+                0.373046875
+              ],
+              [
+                0.685546875,
+                0.373046875
+              ]
+            ]
+          },
+          {
+            "slot": 9,
+            "size": 2,
+            "type": 5126,
+            "stride": 0,
+            "values": [
+              [
+                -0.25,
+                -7.0
+              ],
+              [
+                3.25,
+                -4.25
+              ],
+              [
+                -0.25,
+                -4.25
+              ]
+            ]
+          }
+        ]
+      },
+      "native_cull_scissor_stencil": false,
+      "shader_sources": {
+        "53": "#version 100\n#extension GL_EXT_shader_non_constant_global_initializers : enable\nprecision mediump float;\n#define GL4ES\nattribute highp vec4 _gl4es_Vertex;\nattribute lowp vec4 _gl4es_Color;\nattribute highp vec4 _gl4es_MultiTexCoord0;\nattribute highp vec4 _gl4es_MultiTexCoord1;\nattribute highp float _gl4es_FogCoord;\nuniform highp mat4 _gl4es_ModelViewProjectionMatrix;\nprecision mediump int;\n// FPE_Shader generated\nvarying vec4 Color;\nvarying highp float FogSrc;\nvarying highp vec4 _gl4es_TexCoord_0;\nvarying highp vec4 _gl4es_TexCoord_1;\n\nvoid main() {\ngl_Position = _gl4es_ModelViewProjectionMatrix * _gl4es_Vertex;\nColor = _gl4es_Color;\n_gl4es_TexCoord_0 = _gl4es_MultiTexCoord0.stpq;\n_gl4es_TexCoord_1 = _gl4es_MultiTexCoord1.stpq;\nFogSrc = _gl4es_FogCoord;\n}\n",
+        "54": "#version 100\n#extension GL_EXT_shader_non_constant_global_initializers : enable\nprecision mediump float;\n#define GL4ES\nstruct _gl4es_FogParameters {\n    lowp vec4 color;\n    mediump float density;\n    highp   float start;\n    highp   float end;\n    highp   float scale;\n};\nuniform _gl4es_FogParameters _gl4es_Fog;\nprecision mediump int;\n// FPE_Shader generated\nvarying vec4 Color;\nvarying highp float FogSrc;\nvarying highp vec4 _gl4es_TexCoord_0;\nuniform sampler2D _gl4es_TexSampler_0;\nvarying highp vec4 _gl4es_TexCoord_1;\nuniform sampler2D _gl4es_TexSampler_1;\nvoid main() {\nvec4 fColor = Color;\nvec4 texColor0 = texture2DProj(_gl4es_TexSampler_0, _gl4es_TexCoord_0);\nvec4 texColor1 = texture2DProj(_gl4es_TexSampler_1, _gl4es_TexCoord_1);\nfColor.rgb = texColor0.rgb;\nfColor.rgb *= texColor1.rgb;\nhighp float fog_c = FogSrc;\nhighp float FogF = clamp((_gl4es_Fog.end - fog_c) * _gl4es_Fog.scale, 0., 1.);\nfColor.rgb = mix(_gl4es_Fog.color.rgb, fColor.rgb, FogF);\ngl_FragColor = fColor;\n}\n"
+      },
+      "observations": [
+        "Final native vertex/index inputs match the selected original triangle. Native MVP differs from double-precision CPU multiplication only by float rounding (maximum about 1.2e-7).",
+        "Readback before and after the original floor draw leaves pixel (200,1400), in top-left 2360x1640 coordinates, RGBA(0,0,0,0).",
+        "Repeating the original draw with depth disabled, or completing native GPU work before GL4ES frees scratch, does not fill that pixel.",
+        "A flat white diagnostic renders the triangle. Both textures with fog disabled give RGBA(42,44,31,255), lightmap only (128,167,166,255), detail only (84,67,48,255).",
+        "A later fog-only-disabled redraw gives the same textured pixel. Restoring fog and redrawing leaves that pixel unchanged; this does not yet establish whether the fog shader discarded coverage or reproduced that color.",
+        "Native fog uniforms and the three native fog coordinates are finite and match GL4ES state. Full unmodified scene still shows the gap after resuming."
+      ]
+    }
+  },
+  "limitations": [
+    "Other empty regions in the base-pass image may simply await later draws.",
+    "Native frame readback adds synchronization; no performance claim.",
+    "One initial failed readback attempt may have retained a 15.48 MB debugger scratch allocation in this process.",
+    "No production source or guest memory was changed. Later diagnostic redraws temporarily changed GPU enable/current/texture/depth state under push/pop restoration; the final resumed scene still has the defect."
+  ]
+}
