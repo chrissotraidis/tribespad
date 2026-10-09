@@ -88,8 +88,9 @@ app=out/'TribesPad.app';app.mkdir(exist_ok=True);exe=app/'TribesPad'
 shutil.copy2(R/'generated/gl4es/simulator/LICENSE.gl4es',app/'LICENSE.gl4es')
 args=[str(exe),str(source/'engine.bin'),str(source/'qol.bin'),str(volume),str(profile),str(temp),str(capture),'engine']
 (out/'mobile-engine-launch-config.h').write_text('static const char *launch_workdir='+json.dumps(str(R))+';\nstatic char *launch_arguments[]={'+','.join(json.dumps(p) for p in args)+',NULL};\n')
-host=[R/'port/apple/mobile_engine_main.c',R/'port/apple/sdl_main.c',R/'port/apple/gl4es_context.c']
+host=[R/'port/apple/mobile_engine_main.c',R/'port/apple/sdl_main.c',R/'port/apple/gl4es_context.c',R/'port/apple/mobile_controls.m',R/'port/apple/mobile_controls.c',R/'port/core/input.c']
 command=['clang','-target',target,'-isysroot',sdk,'-O2','-I',str(out),*sdl_flags,*gl_flags,'-DNOX11','-DNOEGL','-DNO_LOADER','-DDEFAULT_ES=2','-isystem',str(R/'ref/gl4es/src'),*map(str,host),*objects,*gl_libraries,*libraries,*math['libraries'],*[str(R/n) for n in http['libraries']],str(R/al['library']),str(zbuild/'libz-ng.a'),'-lz','-lc++','-framework','Foundation','-framework','CoreGraphics','-framework','CoreText','-framework','CoreFoundation','-framework','SystemConfiguration','-framework','AudioToolbox','-framework','CoreAudio','-o',str(exe)]
+command[1:1]=['-fobjc-arc']
 with (out/'link.log').open('w') as log:subprocess.run(command,stdout=log,stderr=log,check=True)
 identifier='com.tribespad.full-engine.ipad'
 (app/'Info.plist').write_bytes(plistlib.dumps(dict(CFBundleIdentifier=identifier,CFBundleExecutable='TribesPad',CFBundleName='TribesPad',CFBundlePackageType='APPL',CFBundleVersion='1',CFBundleShortVersionString='0.1',MinimumOSVersion='16.0',UIDeviceFamily=[2],UIRequiresFullScreen=True,UIApplicationSupportsIndirectInputEvents=True,UILaunchScreen={},UISupportedInterfaceOrientations=['UIInterfaceOrientationLandscapeLeft','UIInterfaceOrientationLandscapeRight'])))

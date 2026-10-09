@@ -25,13 +25,13 @@ There is no playable iPad or iPhone release yet.
 - **iPad app integration.** The full original engine builds and starts in the iPad
   Simulator. Its checked GL4ES bridge passes real pixel readback and context
   lifecycle tests, including the original GUI shaders, perspective projection and
-  native GPU fences. [Original menus on iPad](docs/validation/ipad-original-startup-2026-10-08.png)
-  renders and responds to taps. Offline maps and gameplay controls remain unfinished.
+  native GPU fences. The [original menus on iPad](docs/validation/ipad-original-startup-2026-10-08.png)
+  render and respond to taps. Offline maps and gameplay controls remain unfinished.
 
 ## Current work
 
 - Measure game performance with the optimized, cached ARM64 build.
-- Connect the full original engine to the iPad renderer and app lifecycle.
+- Complete offline map rendering in the full iPad app.
 - Integrate and refine touch, controller, keyboard and mouse input in real gameplay.
 - Verify HD textures, sustained performance and physical-device behavior.
 
@@ -54,6 +54,17 @@ export SDKROOT="$(xcrun --sdk macosx --show-sdk-path)"
 .venv/bin/python scripts/build-macos-engine-app.py
 open generated/integration-review/macos-engine-app/TribesPad.app
 ```
+
+For the full iPad app, boot one iPad Simulator and use its identifier:
+
+```sh
+export SDKROOT="$(xcrun --sdk iphonesimulator --show-sdk-path)"
+.venv/bin/python scripts/build-ipad-engine.py --simulator-device <UDID>
+```
+
+Use `--build-only` to preserve a running test session. The development touch overlay
+uses the original ESDF bindings and is enabled with **Touch controls**. Its native
+event tests pass; original-game touch acceptance is still pending.
 
 The app currently uses assets in that workspace. There is no standalone release or
 verified device IPA installation flow. The separate Apple controls diagnostic does

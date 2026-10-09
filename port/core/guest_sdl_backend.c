@@ -2517,7 +2517,7 @@ void tribes_gl_get_integer(_cpu *cpu,uint32_t name,uint32_t output){
     if(name!=0x8f9e&&name!=0x8d57&&name!=GL_MAX_TEXTURE_SIZE&&name!=0x84e2&&name!=0x8192&&name!=0x0d31&&name!=0x8f36&&name!=0x8f37&&name!=GL_ARRAY_BUFFER_BINDING)stop();
     GLint value;checked_copy(&value,guest(cpu,output,4),4);GLContext *c=current_context();
     GLuint *copy=copy_buffer_slot(c,name);
-    #if !TARGET_OS_IPHONE
+    #if !TARGET_OS_IPHONE || defined(TB_GL4ES)
     if(c&&!c->core&&name==0x8f9e){if(restart_state_available(c))value=(GLint)c->restart_index;}else
 #endif
     if(copy)value=(GLint)*copy;else if(c&&c->core&&name==0x8192)value=(GLint)c->mipmap_hint;else glGetIntegerv(name,&value);

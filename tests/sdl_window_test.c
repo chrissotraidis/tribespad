@@ -142,6 +142,22 @@ static void pixels(void){
  tribes_gl_draw_elements(&cpu,GL_TRIANGLES,6,GL_UNSIGNED_BYTE,0x8200);tribes_gl_finish(&cpu);
  read(width/2,height/2,1,1,GL_RGBA,GL_UNSIGNED_BYTE,pixel);
  assert(pixel[0]==0&&pixel[1]==255&&pixel[2]==0&&pixel[3]==255);
+ /* Original terrain/model draws restart between strips. Markers must split
+    checked copies, never read a marker-sized vertex offset. */
+ for(unsigned bytes=1;bytes<=4;bytes*=2){
+  uint32_t marker=bytes==1?255:bytes==2?65535:UINT32_MAX;
+  uint32_t split[]={0,1,2,marker,0,2,3};
+  for(unsigned i=0;i<7;i++)memcpy(memory+0x8500+i*bytes,&split[i],bytes);
+  tribes_gl_primitive_restart_index(&cpu,marker);tribes_gl_enable(&cpu,0x8f9d);
+  assert(tribes_gl_is_enabled(&cpu,0x8f9d));
+  tribes_gl_get_integer(&cpu,0x8f9e,0x8600);assert(word(0x8600)==marker);
+  tribes_gl_clear(&cpu,GL_COLOR_BUFFER_BIT);
+  tribes_gl_draw_elements(&cpu,GL_TRIANGLES,7,bytes==1?GL_UNSIGNED_BYTE:bytes==2?GL_UNSIGNED_SHORT:GL_UNSIGNED_INT,0x8500);
+  tribes_gl_finish(&cpu);read(width/2,height/2,1,1,GL_RGBA,GL_UNSIGNED_BYTE,pixel);
+  assert(pixel[0]==0&&pixel[1]==255&&pixel[2]==0&&pixel[3]==255);
+  tribes_gl_disable(&cpu,0x8f9d);assert(!tribes_gl_is_enabled(&cpu,0x8f9d));
+ }
+ puts("PASS: mobile 8/16/32-bit primitive restart, checked marker exclusion and state queries");
  for(unsigned variant=0;variant<3;variant++){
   uint32_t program=tribes_gl_create_program(&cpu),shaders[2];
   for(unsigned stage=0;stage<2;stage++){

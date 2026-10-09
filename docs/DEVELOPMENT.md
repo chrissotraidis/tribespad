@@ -57,6 +57,19 @@ This development Simulator bundle uses absolute workspace paths. Physical-device
 asset packaging, signing and actual iPad execution remain unfinished. The separate
 controls diagnostic remains a component app.
 
+The full app also includes an opt-in UIKit touch overlay. **Touch controls** shows
+movement, look, fire-and-aim, jets, ski/jump, weapon, grenade, pack and inventory.
+**Hide controls** releases every held action and restores menu taps; **Menu** also
+sends Escape. Losing app focus, canceled touches and layout changes release held
+inputs. This uses the original ESDF/default bindings, so custom key bindings need
+matching adjustments. The overlay feeds native SDL events into the existing
+checked event bridge; it does not write guest input state.
+
+`.venv/bin/python scripts/test-mobile-controls.py` checks simultaneous actions,
+relative aim, quick tap edges and cancellation using the native SDL event queue,
+then compiles the UIKit view for device and Simulator. It does not interrupt a
+running game. These component checks do not establish original touch gameplay.
+
 The mobile renderer uses the original 18-hook layout with legacy raster fonts.
 GPU elapsed-time profiling is disabled because GL4ES's query emulation measures
 CPU time; rendering keeps the original pre-sample scheduling estimate. The two
