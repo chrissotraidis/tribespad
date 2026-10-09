@@ -1,0 +1,212 @@
+{
+  "date": "2026-10-09",
+  "change": "Use one coherent publication-state query for dispatch. Reject unpublished phase0 and partial instruction phase3; retain initial/final/font-only dispatch. No permission or code-byte guard removed.",
+  "source_sha256": {
+    "tests/qol_native_bootstrap.c": "2a9da9a97c028b12169e0e9017a503e984321db6bbf0d1c729e8ee330ab65495",
+    "tests/code_revision_threads_test.c": "71b1046ddb11b0d29693a55f7e7c37f81363cf35032f9ca04e73c61a8dc762ac",
+    "scripts/test-code-revision-threads.py": "8a69b673e9718e725b27af281982a74213b03d1bd4560d76c0222a3d7d63fc6c"
+  },
+  "components": {
+    "mac": {
+      "passed": true,
+      "runs": [
+        {
+          "mode": "normal",
+          "binary_sha256": "a214753732b8712baf05d86f7f39947f3c11dc893a89209c82c17785c143d648",
+          "stdout": "PASS: dispatch gate rejects unpublished/partial states, accepts initial/final/font states and preserves range boundaries; four actual readers retain prior routing across800000 partial-revision observations in revisions14/15/16/17/18/19/20/21/22/23/24/25/26/27/28/29/30/31/32/33 plus80000 pending font observations and publication completion\n"
+        },
+        {
+          "mode": "tsan",
+          "binary_sha256": "00dd1e9bcc0407ef9cd5a2bae20d32ed18024aa4b81b4e4b861c1df609291314",
+          "stdout": "PASS: dispatch gate rejects unpublished/partial states, accepts initial/final/font states and preserves range boundaries; four actual readers retain prior routing across800000 partial-revision observations in revisions14/15/16/17/18/19/20/21/22/23/24/25/26/27/28/29/30/31/32/33 plus80000 pending font observations and publication completion\n"
+        }
+      ],
+      "scope": "Actual production dispatch gate (fixture image bounds), unpublished/initial/partial/final/font states, plus prior-route selector and locked revision-state API tested with four concurrent native readers through partial14th/15th/16th/17th/18th/19th/20th/21st/22nd/23rd/24th/25th/26th/27th/28th/29th/30th/31st/32nd/33rd publication and independent font publication; Mac/TSan or sole iPad Simulator. Ordinary denied writes and all individual wrappers are separate regressions."
+    },
+    "simulator": {
+      "passed": true,
+      "runs": [
+        {
+          "mode": "normal",
+          "binary_sha256": "8002220745ad00d9a0847dafd1a63bdd80bf419d88dd5adee7b29cb3985c3133",
+          "stdout": "PASS: dispatch gate rejects unpublished/partial states, accepts initial/final/font states and preserves range boundaries; four actual readers retain prior routing across800000 partial-revision observations in revisions14/15/16/17/18/19/20/21/22/23/24/25/26/27/28/29/30/31/32/33 plus80000 pending font observations and publication completion\n"
+        }
+      ],
+      "scope": "Actual production dispatch gate (fixture image bounds), unpublished/initial/partial/final/font states, plus prior-route selector and locked revision-state API tested with four concurrent native readers through partial14th/15th/16th/17th/18th/19th/20th/21st/22nd/23rd/24th/25th/26th/27th/28th/29th/30th/31st/32nd/33rd publication and independent font publication; Mac/TSan or sole iPad Simulator. Ordinary denied writes and all individual wrappers are separate regressions."
+    }
+  },
+  "builds": {
+    "simulator": {
+      "state": "built",
+      "platform": "simulator",
+      "binary_sha256": "40951745d4b53d71e89a89ee75a0bfcd8513692e7ae28c56f841ea1e19958832",
+      "support_sha256": "aeb0b9d1c25d7982eb1ca96d961a825cc8f0d06dd8f04fe4551f7e14cdea1fcc",
+      "guarded_sha256": "429c49b2db811aaa36de073ac9e5fcda4e7406ed43890a8eb292310dd723d126"
+    },
+    "device": {
+      "state": "built",
+      "platform": "device",
+      "binary_sha256": "a23148608126e6eff0367e3d565abfe6504de8dd27fd558b39819ed96157d954",
+      "support_sha256": "1e21f003cde5343b600adf1a6d900a73c81b389afcb228bddefe02eca47a7ef5",
+      "guarded_sha256": "e3d6072d4b64f1b9f3ad1713ffe6b121caeb67234a8343f2f133a5a8854c56c6"
+    }
+  },
+  "load": {
+    "start_time": 1791553681.6990469,
+    "pid": 98995,
+    "map": "Katabatic",
+    "bots": 2,
+    "world_first_observed_seconds": 358
+  },
+  "frame_captures": [
+    {
+      "frames": 52,
+      "seconds": 30.071667,
+      "recording": "generated/ipad-engine/dispatch-observer-video.mov",
+      "timestamps_seconds": [
+        0.0,
+        0.073333,
+        0.793333,
+        1.358333,
+        1.813333,
+        2.211667,
+        2.633333,
+        2.98,
+        3.376667,
+        3.695,
+        4.075,
+        4.425,
+        4.978333,
+        5.511667,
+        5.921667,
+        6.343333,
+        6.693333,
+        7.111667,
+        7.426667,
+        7.833333,
+        8.171667,
+        8.56,
+        8.905,
+        9.578333,
+        10.258333,
+        10.936667,
+        11.478333,
+        11.928333,
+        12.48,
+        13.031667,
+        13.578333,
+        14.181667,
+        14.793333,
+        15.768333,
+        16.458333,
+        17.043333,
+        17.585,
+        18.056667,
+        18.561667,
+        19.126667,
+        21.945,
+        23.593333,
+        24.425,
+        25.096667,
+        25.625,
+        26.158333,
+        26.691667,
+        27.201667,
+        27.976667,
+        28.553333,
+        29.235,
+        29.776667
+      ]
+    },
+    {
+      "frames": 58,
+      "seconds": 30.065,
+      "recording": "generated/ipad-engine/dispatch-observer-video-2.mov",
+      "timestamps_seconds": [
+        0.0,
+        0.353333,
+        0.836667,
+        1.253333,
+        1.728333,
+        2.183333,
+        2.573333,
+        3.02,
+        3.503333,
+        4.173333,
+        4.753333,
+        5.221667,
+        5.591667,
+        6.051667,
+        6.423333,
+        6.873333,
+        7.303333,
+        7.741667,
+        8.17,
+        8.805,
+        9.293333,
+        9.778333,
+        10.19,
+        10.635,
+        11.041667,
+        11.493333,
+        11.986667,
+        12.375,
+        12.825,
+        13.435,
+        14.041667,
+        14.495,
+        14.971667,
+        15.401667,
+        15.955,
+        16.485,
+        16.951667,
+        17.508333,
+        18.025,
+        18.57,
+        19.185,
+        19.87,
+        20.505,
+        21.378333,
+        22.02,
+        22.608333,
+        23.155,
+        24.066667,
+        24.84,
+        25.556667,
+        26.136667,
+        26.593333,
+        27.12,
+        27.663333,
+        28.248333,
+        28.951667,
+        29.45,
+        29.953333
+      ]
+    }
+  ],
+  "controls": {
+    "spawn": "Fire spawned player at Starwolf base",
+    "aim": "Look drag rotated from flag stand toward outside walkway",
+    "weapon": "Weapon selected disc launcher",
+    "fire": "Ammo15 to14",
+    "movement": "Forward hold moved from base walkway into snowfield",
+    "jet": "View gained altitude and energy emptied",
+    "release": "Returned to ground with full energy"
+  },
+  "profile": {
+    "method": "Four-second native sample after frame captures and control test",
+    "top_of_stack_counts_not_percentages": {
+      "access_begin": 183,
+      "read_lock": 129,
+      "access_end": 80,
+      "reader_leave": 68,
+      "require": 62,
+      "tlv_get_addr": 48,
+      "tb_sse_arithmetic": 40,
+      "host_span": 37
+    }
+  },
+  "scope": "Actual original offline Katabatic with two bots, checked ARM64 iPad Simulator and ANGLE Metal. No compiler/debugger/input during the fixed-observer captures. No online joins/authentication; physical-device execution remains unverified. First world observation is an upper bound on loading time.",
+  "comparison": "Previous permission-reader build recorded48/55 frames in30 seconds; current52/58. Sequential sessions with different bot activity: no substantial additional speedup established. Still too slow for comfortable play. Terrain gaps persist; inventory-station exit not retested.",
+  "next": "Avoid published-interval binary searches when an access cannot overlap their overall bounds, preserving exact interval and page checks; also inspect hot-path code generation before broadening changes."
+}

@@ -9,6 +9,13 @@
 #include <sys/mman.h>
 uint64_t base;
 extern uint32_t tested_prior_phase(void);
+extern int tribes_dispatch_permitted(uint32_t);
+static void dispatch_allowed(int allowed){
+ const uint32_t guarded[]={0x3c0000,0x3cffff,0x400000,0x47ffff};
+ const uint32_t outside[]={0,0x3bffff,0x3d0000,0x3fffff,0x480000,UINT32_MAX};
+ for(unsigned i=0;i<sizeof guarded/sizeof *guarded;i++)assert(tribes_dispatch_permitted(guarded[i])==allowed);
+ for(unsigned i=0;i<sizeof outside/sizeof *outside;i++)assert(tribes_dispatch_permitted(outside[i]));
+}
 extern int tested_font_ready(unsigned);
 extern int tested_prefix_ready(void),tested_first_nop_ready(void),tested_second_nop_ready(void),tested_tail_ready(void),tested_display_ready(void),tested_calls_ready(void),tested_pending_ready(void);
 static atomic_uint stop_readers,partial_reads[20][4],font_reads[2][4],font_pending;
@@ -16,20 +23,24 @@ static atomic_uint font_ack[4];
 static void *reader(void *arg){
  unsigned index=(unsigned)(uintptr_t)arg;
  while(!atomic_load(&stop_readers)){
-  uint32_t current=tribes_memory_code_revision(base),prior=tested_prior_phase();assert(prior==26||prior==28||prior==30||prior==32||prior==34||prior==36||prior==38||prior==40||prior==42||prior==44||prior==46||prior==48||prior==50||prior==52||prior==54||prior==56||prior==58||prior==60||prior==62||prior==64||prior==66);
+  /* Keep the gate and reference phase in the same real permission snapshot. */
+  uint32_t bracket=tribes_memory_access_begin((void *)(uintptr_t)(base+4096),4,1);
+  uint32_t current=tribes_memory_code_revision(base);dispatch_allowed(current!=0&&current!=3);
+  uint32_t prior=tested_prior_phase();assert(prior==26||prior==28||prior==30||prior==32||prior==34||prior==36||prior==38||prior==40||prior==42||prior==44||prior==46||prior==48||prior==50||prior==52||prior==54||prior==56||prior==58||prior==60||prior==62||prior==64||prior==66);
   unsigned pending=atomic_load(&font_pending);
   if(pending){assert(!tested_font_ready(pending-1));atomic_fetch_add(&font_reads[pending-1][index],1);}
   atomic_store(&font_ack[index],pending);
   if(current==3){unsigned completed=tribes_memory_code_completed_revision(base);assert(completed==26||completed==28||completed==30||completed==32||completed==34||completed==36||completed==38||completed==40||completed==42||completed==44||completed==46||completed==48||completed==50||completed==52||completed==54||completed==56||completed==58||completed==60||completed==62||completed==64||completed==66);if(completed>=28)assert(tested_prefix_ready());if(completed>=30)assert(tested_first_nop_ready());if(completed>=32)assert(tested_second_nop_ready());if(completed>=34)assert(tested_tail_ready());if(completed>=36)assert(tested_display_ready());if(completed>=38)assert(tested_calls_ready());if(completed>=42)assert(tested_pending_ready());if(completed>=56)assert(tested_font_ready(0)&&tested_font_ready(1));if(completed<=64)atomic_fetch_add(&partial_reads[(completed-26)/2][index],1);}
+  tribes_memory_access_end(bracket);
  }
  return NULL;
 }
 int main(void){
- unsigned char *memory=mmap(NULL,0x480000,PROT_READ|PROT_WRITE,MAP_ANON|MAP_PRIVATE,-1,0);assert(memory!=MAP_FAILED);base=(uintptr_t)memory;assert(tribes_memory_checks_configure(base,0x480000));
- TribesCodeWrite write={1024,4096,4,0,1};assert(tribes_memory_prepare_code_revision(base,&write,1));unsigned char expected[16]={0};uint32_t fonts[2]={544,544};memcpy(memory+8192,fonts,sizeof fonts);TribesPublishedCodeRange ranges[]={{1024,16,expected},{4096,16,expected},{8192,sizeof fonts,(unsigned char *)fonts}};assert(tribes_memory_publish_code(base,ranges,3));
+ unsigned char *memory=mmap(NULL,0x480000,PROT_READ|PROT_WRITE,MAP_ANON|MAP_PRIVATE,-1,0);assert(memory!=MAP_FAILED);base=(uintptr_t)memory;assert(tribes_memory_checks_configure(base,0x480000));dispatch_allowed(0);
+ TribesCodeWrite write={1024,4096,4,0,1};assert(tribes_memory_prepare_code_revision(base,&write,1));unsigned char expected[16]={0};uint32_t fonts[2]={544,544};memcpy(memory+8192,fonts,sizeof fonts);TribesPublishedCodeRange ranges[]={{1024,16,expected},{4096,16,expected},{8192,sizeof fonts,(unsigned char *)fonts}};assert(tribes_memory_publish_code(base,ranges,3));dispatch_allowed(1);
  for(unsigned i=1;i<=13;i++){
   if(i>1){write.before=i-1;write.value=i;assert(tribes_memory_prepare_next_code_revision(base,&write,1));}
-  assert(tribes_memory_apply_code_write(base,1024,memory+4096,4,i));assert(tribes_memory_finish_code_revision(base));assert(tribes_memory_code_completed_revision(base)==i*2);
+  assert(tribes_memory_apply_code_write(base,1024,memory+4096,4,i));dispatch_allowed(0);assert(tribes_memory_finish_code_revision(base));dispatch_allowed(1);assert(tribes_memory_code_completed_revision(base)==i*2);
  }
  pthread_t workers[4];for(unsigned i=0;i<4;i++)assert(!pthread_create(workers+i,NULL,reader,(void *)(uintptr_t)i));
  TribesCodeWrite prefix[]={{1024,4096,4,13,0x1004ae80},{1028,4100,1,0,0x5b}};assert(tribes_memory_prepare_next_code_revision(base,prefix,2));assert(tribes_memory_apply_code_write(base,1024,memory+4096,4,0x1004ae80));assert(tribes_memory_code_revision(base)==3&&tribes_memory_code_completed_revision(base)==26);
@@ -98,5 +109,5 @@ int main(void){
  assert(tested_font_ready(0)&&tested_font_ready(1));
  atomic_store(&stop_readers,1);
  for(unsigned i=0;i<4;i++)assert(!pthread_join(workers[i],NULL));
- assert(tested_prior_phase()==66&&memory[4100]==2&&memory[4111]==0x54);puts("PASS: four actual readers retain prior routing across800000 partial-revision observations in revisions14/15/16/17/18/19/20/21/22/23/24/25/26/27/28/29/30/31/32/33 plus80000 pending font observations and publication completion");return 0;
+ assert(tested_prior_phase()==66&&memory[4100]==2&&memory[4111]==0x54);puts("PASS: dispatch gate rejects unpublished/partial states, accepts initial/final/font states and preserves range boundaries; four actual readers retain prior routing across800000 partial-revision observations in revisions14/15/16/17/18/19/20/21/22/23/24/25/26/27/28/29/30/31/32/33 plus80000 pending font observations and publication completion");return 0;
 }

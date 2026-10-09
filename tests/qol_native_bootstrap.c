@@ -499,7 +499,11 @@ void qol_late_code_write(_cpu *c,uint32_t pc,const void *pointer,uint32_t size,u
  fprintf(stderr,"Validated late AOT write %u pc=0x%08x address=0x%08x bytes=%u value=0x%llx\n",late_write_count,pc,(uint32_t)((uintptr_t)pointer-base),size,(unsigned long long)value);
 }
 int tribes_dispatch_permitted(uint32_t address){
- if((address>=TB_PATCH_ADDRESS&&address<TB_PATCH_ADDRESS+65536u)||(address>=0x400000u&&address<0x400000u+TB_ENGINE_BYTES))return qol_patch_ready()&&tribes_memory_code_revision(base)!=3;
+ if((address>=TB_PATCH_ADDRESS&&address<TB_PATCH_ADDRESS+65536u)||(address>=0x400000u&&address<0x400000u+TB_ENGINE_BYTES)){
+  /* One coherent permission snapshot: 0 is unpublished, 3 is a partial
+     instruction revision. Font-only publication retains the completed phase. */
+  uint32_t phase=tribes_memory_code_revision(base);return phase!=0&&phase!=3;
+ }
  return 1;
 }
 static void load_publication(const char *directory){
