@@ -1,0 +1,249 @@
+{
+  "change": "Count proven native CPU/local operations against the eight-access budget only after a guest bracket starts. Preserve every begin check and all barrier boundaries.",
+  "sources_sha256": {
+    "port/compiler/ExternalMemoryPass.cpp": "6cf7628d1d9ff026ebbc8ddc1e2df4b5d6af5d4183003418cc7d5b4186944149",
+    "scripts/test-guest-access-groups.py": "893581582d691812648defe8e3aa26b91921419049896cc6f5d660b30b8812f9",
+    "tests/guest_access_groups_test.c": "3f67ef69277631647adc6676dd47cf81de36deb78802f1872799472715ebbdfe"
+  },
+  "group_regression": {
+    "passed": true,
+    "results": {
+      "baseline": {
+        "output": "PASS: mixed host/guest/host-only groups, nested pending writer, 4 guard faults, concurrent readers/two publishers; 100000 batches 0.023659 seconds",
+        "binary_sha256": "ea6d658f8d532ca4cb839d380dfc01bc8218938236237afc154ebcc651dffa23",
+        "seconds": 0.023659
+      },
+      "baseline-tsan": {
+        "output": "PASS: mixed host/guest/host-only groups, nested pending writer, 0 guard faults, concurrent readers/two publishers; 100000 batches 0.959992 seconds",
+        "binary_sha256": "4702dbfad4e281c05044579b7d8095a821f010a2c615c4251d4630e01ca58500",
+        "seconds": 0.959992
+      },
+      "grouped": {
+        "output": "PASS: mixed host/guest/host-only groups, nested pending writer, 4 guard faults, concurrent readers/two publishers; 100000 batches 0.018432 seconds",
+        "binary_sha256": "a299e98e561996b0efe48240d1cabdb7627dd11c164caaa2841f50a3d2a45506",
+        "seconds": 0.018432
+      },
+      "grouped-tsan": {
+        "output": "PASS: mixed host/guest/host-only groups, nested pending writer, 0 guard faults, concurrent readers/two publishers; 100000 batches 0.338685 seconds",
+        "binary_sha256": "4fa0b1d180a039b70bba040297ccf21674dde1a2191b0b208d9fd094d2f06784",
+        "seconds": 0.338685
+      },
+      "separate-ends": {
+        "output": "PASS: mixed host/guest/host-only groups, nested pending writer, 4 guard faults, concurrent readers/two publishers; 100000 batches 0.020164 seconds",
+        "binary_sha256": "f368b9b725680f75f1bf22973762c95aa020911ad7e8f86460934fab1894cbb4",
+        "seconds": 0.020164
+      },
+      "separate-ends-tsan": {
+        "output": "PASS: mixed host/guest/host-only groups, nested pending writer, 0 guard faults, concurrent readers/two publishers; 100000 batches 0.387550 seconds",
+        "binary_sha256": "7fdf48f8d69ff844e6a784e578385ea9c50c38e1a59555033fb8a1a18f140a90",
+        "seconds": 0.38755
+      }
+    },
+    "sources_sha256": {
+      "port/compiler/ExternalMemoryPass.cpp": "6cf7628d1d9ff026ebbc8ddc1e2df4b5d6af5d4183003418cc7d5b4186944149",
+      "tests/guest_access_groups_test.c": "3f67ef69277631647adc6676dd47cf81de36deb78802f1872799472715ebbdfe",
+      "port/core/guest_memory_checks.c": "ce4b64969f394561e20eba137faee5993784f69b07bafa6f053b3dbdc1d8c45d",
+      "port/core/guest_memory_checks.h": "7f5cc0edcdb7dcf395633fb20a88dab8da2ad1cfdfd5971b6c06382f9583c584",
+      "scripts/test-guest-access-groups.py": "893581582d691812648defe8e3aa26b91921419049896cc6f5d660b30b8812f9"
+    },
+    "scope": "Emitted permission checks and bounded grouping; microbenchmark is not game FPS."
+  },
+  "other_passing_tests": [
+    "test-external-memory-pass.py",
+    "test-cpu-host-checks.py",
+    "test-host-local-checks.py",
+    "test-native-cpu-checks.py"
+  ],
+  "emitted_group_census": {
+    "101-qol-patched": [
+      {
+        "groups": 85985,
+        "accesses": 183546,
+        "grouped_accesses": 148352,
+        "histogram": {
+          "1": 35194,
+          "2": 24215,
+          "3": 15153,
+          "4": 6677,
+          "5": 2497,
+          "6": 1077,
+          "7": 568,
+          "8": 604
+        }
+      },
+      {
+        "groups": 74769,
+        "accesses": 183546,
+        "grouped_accesses": 156386,
+        "histogram": {
+          "1": 27160,
+          "2": 18197,
+          "3": 11852,
+          "4": 9173,
+          "5": 4966,
+          "6": 1797,
+          "7": 860,
+          "8": 764
+        }
+      }
+    ],
+    "102-engine-routed": [
+      {
+        "groups": 297262,
+        "accesses": 651514,
+        "grouped_accesses": 533910,
+        "histogram": {
+          "1": 117604,
+          "2": 85668,
+          "3": 48748,
+          "4": 26276,
+          "5": 10259,
+          "6": 4011,
+          "7": 1703,
+          "8": 2993
+        }
+      },
+      {
+        "groups": 260959,
+        "accesses": 651514,
+        "grouped_accesses": 549900,
+        "histogram": {
+          "1": 101614,
+          "2": 54524,
+          "3": 35412,
+          "4": 38492,
+          "5": 15349,
+          "6": 8437,
+          "7": 3767,
+          "8": 3364
+        }
+      }
+    ],
+    "86-tribes_float80": [
+      {
+        "groups": 13,
+        "accesses": 44,
+        "grouped_accesses": 39,
+        "histogram": {
+          "1": 5,
+          "2": 1,
+          "3": 3,
+          "7": 4
+        }
+      },
+      {
+        "groups": 13,
+        "accesses": 44,
+        "grouped_accesses": 38,
+        "histogram": {
+          "1": 6,
+          "2": 3,
+          "8": 4
+        }
+      }
+    ],
+    "97-merged-dispatch": [
+      {
+        "groups": 2,
+        "accesses": 5,
+        "grouped_accesses": 4,
+        "histogram": {
+          "1": 1,
+          "4": 1
+        }
+      },
+      {
+        "groups": 2,
+        "accesses": 5,
+        "grouped_accesses": 4,
+        "histogram": {
+          "1": 1,
+          "4": 1
+        }
+      }
+    ]
+  },
+  "census_scope": "Before/after grouping model over actual checked LLVM; grouped-access totals matched fresh production pass output. Static counts are not runtime speedups.",
+  "builds": {
+    "simulator": {
+      "state": "built",
+      "platform": "simulator",
+      "binary_sha256": "0163890924520e29a97ec1697245ac1a97fa9b69598144aa79202645e52cdca5",
+      "cpu_host_checks": true,
+      "bundled_assets": true,
+      "bytes": 103638832,
+      "strict_ad_hoc_signature_verified": true
+    },
+    "device": {
+      "state": "built",
+      "platform": "device",
+      "binary_sha256": "0f2a0df97959c64feb424b36ecc4f99f8730a355ec0bee9869cd0d992b0fc205",
+      "cpu_host_checks": true,
+      "bundled_assets": true,
+      "bytes": 103572800,
+      "strict_ad_hoc_signature_verified": true
+    }
+  },
+  "performance": {
+    "captures": [
+      {
+        "frames": 66,
+        "seconds": 30.051667,
+        "scope": "Thirty-second fixed initial observer view of offline Katabatic with two bots. No input, compiler or debugger during recording. Presented Simulator frames, not original FPS counter.",
+        "raw_local_report": "generated/ipad-engine/group-observer-video.json",
+        "raw_sha256": "7e292b216d0d01145f966988b3e3eb8280edc940a6a65064406c65e777ab575c"
+      },
+      {
+        "frames": 78,
+        "seconds": 30.065,
+        "scope": "Thirty-second fixed initial observer view of offline Katabatic with two bots. No input, compiler or debugger during recording. Presented Simulator frames, not original FPS counter.",
+        "raw_local_report": "generated/ipad-engine/group-observer-video-2.json",
+        "raw_sha256": "2d257f40291760c5137a64746bcccaa08a975275e266aca73ec8be9541f8a5bd"
+      }
+    ],
+    "interpretation": "66/78 frames in 30 seconds (~2.2/2.6 FPS) overlaps prior x87 build 82/53 (~2.7/1.8 FPS). No clear speedup established. Same fixed observer view, sequential matches and varying bot behavior.",
+    "loading": "Device compilation overlapped map loading; no startup benchmark claimed."
+  },
+  "profile": {
+    "local_path": "generated/ipad-engine/group-sample.txt",
+    "scope": "Separate four-second native sample before recordings, while device compilation was active. Qualitative hotspot evidence only; counts are not percentages.",
+    "top_of_stack": {
+      "tribes_memory_access_begin": 170,
+      "tribes_memory_access_end": 47,
+      "reader_leave": 40,
+      "tribes_memory_transfer_begin": 37,
+      "tb_sse_arithmetic": 32,
+      "tribes_memory_access_host_span": 23,
+      "tribes_lookup": 8
+    }
+  },
+  "execution": {
+    "pid": 10513,
+    "simulator": "iPad Air 11-inch (M4), iOS 26.5",
+    "map": "Katabatic",
+    "bots": 2,
+    "controls": [
+      "Fire spawns Starwolf player",
+      "Weapon selects disc",
+      "Look drag rotates camera",
+      "Move advances player; Blood Eagle flag distance1017.8 to951.1",
+      "Fire reduces disc ammo15 to14",
+      "Jet raises player and drains energy; release restores energy"
+    ],
+    "ended_after_validation": true,
+    "physical_device_execution": false,
+    "online_join_or_authentication": false,
+    "remaining": [
+      "Low frame rate and delayed input",
+      "Slow loading",
+      "Visible terrain gaps",
+      "Prior inventory-station exit issue",
+      "Physical iPad signing/execution and iPhone acceptance"
+    ]
+  },
+  "screenshot": {
+    "path": "docs/validation/ipad-access-group-origin-2026-10-09.png",
+    "sha256": "f65e8f7acd8fb60360e42ff0435cf0b0360cc40840f6e1fd9f4d307e4c057ee9"
+  },
+  "next": "Investigate repeated finite dispatch-table searches in tribes_lookup. Compare a bounded per-thread lookup cache against the current search using actual table inputs; keep publication permission before every lookup and the existing indirect-target guard. Promote only after equivalent results and measured benefit, then exercise the full original app."
+}

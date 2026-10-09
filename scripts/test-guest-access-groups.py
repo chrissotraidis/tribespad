@@ -14,12 +14,21 @@ lines+=['ret void','}','define i64 @publication_boundary(ptr %p) {','%a = load i
 lines+=['define void @read_batch(ptr %p,ptr %dest) {']
 for i in range(16):lines += ['%%v%d = load i64,ptr %%p'%i,'store i64 %%v%d,ptr %%dest'%i]
 lines+=['ret void','}']
+# Seven compiler-owned stores before the first guest access must not spend
+# the group's budget. The same stores inside a bracket still consume it.
+for name,interleaved in [('host_prelude',False),('host_interleaved',True)]:
+ lines+=['define void @'+name+'(ptr %p) {','%local = alloca i64']
+ if interleaved:lines+=['%initial = load i64,ptr %p']
+ for i in range(7):lines+=['store i64 %d,ptr %%local'%i]
+ for i in range(1 if interleaved else 4):
+  lines+=['%%v%d = load i64,ptr %%p'%i,'%%n%d = add i64 %%v%d,1'%(i,i),'store i64 %%n%d,ptr %%p'%i]
+ lines+=['ret void','}']
 fixture=out/'input.ll';fixture.write_text('\n'.join(lines)+'\n')
 policy=out/'policy.json';policy.write_text(json.dumps(dict(checked_symbols=['revoke_page'],host_only=[],range_checked=[],memory_manager_calls=[],memory_manager_sources=[],host_intrinsics=[],checked_strings=[],checked_callbacks=[],barrier_asm_sources=[],scalar_fcntl_commands=[])))
 env=dict(os.environ,TRIBES_EXTERNAL_POLICY=str(policy));results={}
 for name in ['baseline','grouped','separate-ends']:
  grouped=name!='baseline';ir=out/(name+'.ll')
- cmd=[str(tools/'opt')]+[a for p in plugins for a in ['-load-pass-plugin',str(p)]]+['-passes=tribes-guest-memory'+(',tribes-external-memory' if grouped else '')+',verify','-S',str(fixture),'-o',str(ir)]
+ cmd=[str(tools/'opt')]+[a for p in plugins for a in ['-load-pass-plugin',str(p)]]+['-passes=tribes-guest-memory-cpu-host'+(',tribes-external-memory' if grouped else '')+',verify','-S',str(fixture),'-o',str(ir)]
  run=subprocess.run(cmd,env=env,capture_output=True,text=True);assert not run.returncode,run.stderr
  (out/(name+'-pass.log')).write_text(run.stderr)
  if name=='separate-ends':
@@ -49,6 +58,8 @@ for name in ['baseline','grouped','separate-ends']:
    ends+=len(tokens);pending=[];batched+=1
   elif 'call void @tribes_memory_access_end(' in s:
    token=re.search(r'\(i32 ([^)]+)\)',s)[1];assert token in pending;pending.remove(token);ends+=1
+  elif '!tribes.checked.host.local' in s:
+   assert re.search(r'\b(load|store)\b',s) and 'volatile' not in s
   elif re.search(r'\b(load|store|atomicrmw)\b',s):
    assert '@tribes_memory_access_begin(' in previous,s
    if 'volatile' in s or 'atomicrmw' in s:assert len(pending)==1
@@ -56,6 +67,16 @@ for name in ['baseline','grouped','separate-ends']:
   previous=s
  assert not pending and begins==ends and maximum==(8 if grouped else 1),(pending,begins,ends,maximum)
  assert (batched>0)==(name=='grouped')
+ if name=='grouped':
+  text=ir.read_text()
+  prelude=re.search(r'define void @host_prelude\([^}]+}',text)[0]
+  interleaved=re.search(r'define void @host_interleaved\([^}]+}',text)[0]
+  assert prelude.count('call i32 @tribes_memory_access_begin(')==8
+  assert prelude.count('call void @tribes_memory_access_end_many(')==1
+  assert 'call void @tribes_memory_access_end(' not in prelude
+  # The first read must retire before later guest accesses after seven native stores.
+  assert interleaved.count('call void @tribes_memory_access_end(')==1
+  assert interleaved.count('call void @tribes_memory_access_end_many(')==1
  obj=out/(name+'.o');subprocess.run(codegen_command(tools,'arm64-apple-macos12',ir,obj),check=True)
  for tsan in [False,True]:
   exe=out/(name+('-tsan' if tsan else ''))

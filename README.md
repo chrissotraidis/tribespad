@@ -11,7 +11,7 @@ the existing Tribes 2 community, with touch and controller support on mobile.
 is currently too slow for comfortable play. The full iPad Simulator app now loads an offline
 Katabatic match with bots and accepts touch movement, aim, weapons, firing and jets.
 The Metal backend also renders interiors and supports touch death/respawn.
-Recent iPad Simulator captures measure about **1.8–2.7 FPS**, so performance is
+Latest iPad Simulator captures measure about **2.2–2.6 FPS**, so performance is
 still the main blocker. Slow startup, input delay and a terrain gap shared with Mac
 also need work.
 There is no playable iPad or iPhone release yet.
@@ -58,14 +58,13 @@ The bundled app preserves its original warrior and video preferences between lau
 
 ## Current work
 
-- Improve measured runtime performance; builds cache verified ARM64 objects and
-  avoid 179 redundant support-code compilations. An optional CPU-register check
-  optimization reduces the Simulator executable from 158.6 MB to 103.0 MB while
-  preserving guest-memory checks. It passes the [original offline touch test](docs/validation/ipad-native-cpu-offline.json),
-  and the latest [permission-reader optimization](docs/validation/ipad-permission-readers-offline.json)
-  records 1.6–1.8 frames per second versus 1.0–1.1 for the previous build in the
-  same observer view. This remains too slow for comfortable gameplay; physical
-  iPad performance is unverified.
+- Improve measured runtime performance. Verified ARM64 object caching speeds up
+  rebuilds and avoids 179 redundant support-code compilations. CPU-register and
+  native-helper proofs reduce the optimized executable from 158.6 MB to about
+  104 MB while preserving guest-memory checks. The latest compiler correction
+  reduces permission groups in the main engine by 12%, retaining every checked
+  access. Frame-rate results and limitations are recorded in
+  [iPad validation](docs/validation/ipad-access-group-origin.json).
 - Fix visible rendering gaps and reduce startup/input latency in the iPad app.
 - Integrate and refine touch, controller, keyboard and mouse input in real gameplay.
 - Verify HD textures, sustained performance and physical-device behavior.
@@ -126,7 +125,7 @@ export SDKROOT="$(xcrun --sdk iphoneos --show-sdk-path)"
 ```
 
 The device app bundles game data and creates a writable profile in Application
-Support on first launch. The optimized device executable is 103.0 MB and passes ad-hoc signature verification.
+Support on first launch. The optimized device executable is about 104 MB and passes ad-hoc signature verification.
 It still needs Apple development signing and physical-iPad validation; this is not an installable release. Use `--bundle-assets` to exercise
 that same storage layout in the Simulator. Default Simulator builds use workspace
 assets for faster iteration. The separate Apple controls diagnostic does not contain

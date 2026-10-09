@@ -48,7 +48,9 @@ static uint64_t groupAccessBrackets(Module &M){
    if(I->getMetadata("tribes.checked.host.cpu")||I->getMetadata("tribes.checked.host.local")){
     auto *L=dyn_cast<LoadInst>(I);auto *S=dyn_cast<StoreInst>(I);
     if(!M.getModuleFlag("tribes.checked.cpu-host")||!((L&&L->isSimple())||(S&&S->isSimple())))report_fatal_error("Invalid checked CPU host access");
-    if(++Accesses==8)Flush(I->getNextNode());
+    // Native work before the first bracket holds no permission snapshot.
+    // Count it only inside an active group, preserving the hold-time bound.
+    if(!Ends.empty()&&++Accesses==8)Flush(I->getNextNode());
     continue;
    }
    if(Begin&&Begin->getCalledFunction()&&Begin->getCalledFunction()->getName()=="tribes_memory_access_begin"&&Begin->hasOneUse()&&i+2<Work.size()){

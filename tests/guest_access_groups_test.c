@@ -13,6 +13,7 @@
 #include <time.h>
 #include <unistd.h>
 extern void batch(uint64_t *,uint64_t *);
+extern void host_prelude(uint64_t *),host_interleaved(uint64_t *);
 extern void read_batch(const uint64_t *,uint64_t *);
 extern uint64_t publication_boundary(uint64_t *);
 static uint64_t *memory;
@@ -41,6 +42,8 @@ static double now(void){struct timespec t;assert(!clock_gettime(CLOCK_MONOTONIC,
 int main(int argc,char **argv){
  (void)argv;memory=mmap(NULL,65536,PROT_READ|PROT_WRITE,MAP_SHARED|MAP_ANON,-1,0);assert(memory!=MAP_FAILED);
  assert(tribes_memory_checks_configure((uintptr_t)memory,65536));
+ host_prelude(memory+2048);assert(memory[2048]==4);
+ host_interleaved(memory+2048);assert(memory[2048]==5);
  uint64_t host=0;batch(memory,&host);assert(*memory==16&&host==1);
  // Both pointer orders are valid: the first access can be host-only.
  batch(&host,memory);assert(*memory==17&&host==17);
