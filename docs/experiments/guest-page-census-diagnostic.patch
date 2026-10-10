@@ -1,0 +1,55 @@
+diff --git a/port/core/guest_memory_checks.c b/port/core/guest_memory_checks.c
+index c2d6e63..64c69f2 100644
+--- a/port/core/guest_memory_checks.c
++++ b/port/core/guest_memory_checks.c
+@@ -119,9 +119,41 @@ static void write_lock(void){
+ }
+ 
+ static __attribute__((cold,noinline)) _Noreturn void violation(const void *p,uint64_t size,uint32_t access){fprintf(stderr,"TribesPad: checked guest memory violation at 0x%llx size=%llu access=%u\n",(unsigned long long)((uintptr_t)p-guest_base),(unsigned long long)size,access);abort();}
++/* Opt-in diagnostic (TRIBES_MEMORY_PAGE_CENSUS=1): how often would checked
++   guest accesses touch a 16 KiB host page whose 4 KiB permissions differ, or
++   write a host page that contains published code? Counts only; never changes
++   a check result. Called under the reader bracket, so permissions are stable. */
++static int census_enabled;
++static _Atomic uint64_t census_total,census_mixed,census_code_writes;
++static _Atomic uint32_t *census_pages;
++static __attribute__((noinline)) void census_report(uint64_t total){
++ uint64_t mixed=atomic_load_explicit(&census_mixed,memory_order_relaxed),code=atomic_load_explicit(&census_code_writes,memory_order_relaxed);
++ fprintf(stderr,"TribesPad page census: accesses=%llu mixed_host_page=%llu code_page_writes=%llu",(unsigned long long)total,(unsigned long long)mixed,(unsigned long long)code);
++ uint32_t pages=(uint32_t)(guest_size/16384),shown=0;
++ for(int round=0;round<8&&census_pages;round++){
++  uint32_t best=0,index=0;for(uint32_t h=0;h<pages;h++){uint32_t c=atomic_load_explicit(census_pages+h,memory_order_relaxed);if(c>best){best=c;index=h;}}
++  if(!best)break;atomic_store_explicit(census_pages+index,0,memory_order_relaxed);
++  fprintf(stderr," page@0x%x=%u[%u%u%u%u]",index*16384u,best,permissions[index*4],permissions[index*4+1],permissions[index*4+2],permissions[index*4+3]);shown++;
++ }
++ fputc('\n',stderr);(void)shown;
++}
++static __attribute__((noinline)) void census_count(uint64_t offset,uint64_t size,uint32_t access){
++ uint64_t total=atomic_fetch_add_explicit(&census_total,1,memory_order_relaxed)+1;
++ for(uint64_t h=offset/16384;h<=(offset+size-1)/16384;h++){
++  const unsigned char *q=permissions+h*4;
++  if(q[0]!=q[1]||q[0]!=q[2]||q[0]!=q[3]){atomic_fetch_add_explicit(&census_mixed,1,memory_order_relaxed);if(census_pages)atomic_fetch_add_explicit(census_pages+h,1,memory_order_relaxed);}
++  if((access&2)&&published_count){
++   for(uint32_t i=0;i<published_count;i++)if(published[i].begin<(h+1)*16384&&published[i].end>h*16384){atomic_fetch_add_explicit(&census_code_writes,1,memory_order_relaxed);break;}
++  }
++ }
++ if(!(total&((UINT64_C(1)<<27)-1)))census_report(total);
++}
+ int tribes_memory_checks_configure(uint64_t base,uint64_t size){
+  if(permissions||!base||!size||(base|size)%4096||size>UINT64_C(0x100000000)||base>UINTPTR_MAX-size)return 0;
+- unsigned char *p=malloc((size_t)(size/4096));if(!p)return 0;memset(p,3,(size_t)(size/4096));guest_base=(uintptr_t)base;guest_size=size;permissions=p;return 1;
++ unsigned char *p=malloc((size_t)(size/4096));if(!p)return 0;memset(p,3,(size_t)(size/4096));guest_base=(uintptr_t)base;guest_size=size;permissions=p;
++ const char *census=getenv("TRIBES_MEMORY_PAGE_CENSUS");
++ if(census&&!strcmp(census,"1")){census_pages=calloc((size_t)(size/16384)+1,sizeof *census_pages);census_enabled=1;}
++ return 1;
+ }
+ int tribes_memory_permissions_set(uint32_t address,uint64_t size,uint32_t access){
+  if(!permissions||!size||(address|size)%4096||access>3||address>=guest_size||size>guest_size-address)return 0;
+@@ -217,6 +249,7 @@ static void require(const void *p,uint64_t size,uint32_t access){
+   if(lo<published_count&&published[lo].begin<offset+size)published_write_violation(p,size,access,offset);
+  }
+  for(uint64_t page=offset/4096;page<=last;++page)if((permissions[page]&access)!=access)violation(p,size,access);
++ if(census_enabled)census_count(offset,size,access);
+ }
+ int tribes_memory_publish_code(uint64_t base,const TribesPublishedCodeRange *ranges,uint32_t count){
+  if(!permissions||base!=guest_base||!ranges||!count||count>256||touches(ranges,(uint64_t)count*sizeof *ranges))return 0;

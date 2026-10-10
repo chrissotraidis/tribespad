@@ -13,6 +13,8 @@
 #include "glx/hardext.h"
 #include <pthread.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 
 extern void *NewGLState(void *, int);
 extern void ActivateGLState(void *);
@@ -22,6 +24,9 @@ struct TribesGL4ESContext {
     SDL_Window *window;
     SDL_GLContext native;
     glstate_t *state;
+    bool frame_timing;
+    Uint64 timing_start, timing_last, timing_frames;
+    Uint64 timing_swap_total, timing_swap_max, timing_interval_max;
 };
 static int initialized;
 
@@ -84,6 +89,8 @@ TribesGL4ESContext *tribes_gl4es_context_create(SDL_Window *window, SDL_GLContex
     TribesGL4ESContext *context=calloc(1,sizeof *context);
     if (!context) return NULL;
     context->window=window; context->native=native;
+    const char *timing=getenv("TRIBES_FRAME_TIMING");
+    context->frame_timing=timing && !strcmp(timing,"1");
     require_current(context);
     if (!initialized) {
         set_getprocaddress(native_proc);
@@ -102,9 +109,34 @@ TribesGL4ESContext *tribes_gl4es_context_create(SDL_Window *window, SDL_GLContex
 bool tribes_gl4es_context_swap(TribesGL4ESContext *context) {
     require_current(context);
     if (glstate!=context->state) abort();
+    Uint64 begin=context->frame_timing?SDL_GetTicksNS():0;
     gl4es_glFlush();
     bool result=SDL_GL_SwapWindow(context->window);
     tribes_gl4es_context_activate(context);
+    if (context->frame_timing && result) {
+        /* Opt-in native submission timing, independent of screen recording.
+           Includes flush/swap/reactivation; it is not GPU completion timing. */
+        Uint64 end=SDL_GetTicksNS();
+        if (context->timing_last) {
+            Uint64 interval=end-context->timing_last, swap=end-begin;
+            context->timing_frames++;
+            context->timing_swap_total+=swap;
+            if (swap>context->timing_swap_max) context->timing_swap_max=swap;
+            if (interval>context->timing_interval_max) context->timing_interval_max=interval;
+            Uint64 elapsed=end-context->timing_start;
+            if (elapsed>=UINT64_C(30000000000)) {
+                fprintf(stderr,"TribesPad frame timing: end_ns=%llu frames=%llu seconds=%.6f fps=%.3f swap_mean_ms=%.3f swap_max_ms=%.3f interval_max_ms=%.3f\n",
+                    (unsigned long long)end,(unsigned long long)context->timing_frames,
+                    elapsed/1e9,context->timing_frames*1e9/elapsed,
+                    context->timing_swap_total/1e6/context->timing_frames,
+                    context->timing_swap_max/1e6,context->timing_interval_max/1e6);
+                context->timing_start=end;
+                context->timing_frames=context->timing_swap_total=0;
+                context->timing_swap_max=context->timing_interval_max=0;
+            }
+        } else context->timing_start=end;
+        context->timing_last=end;
+    }
     return result;
 }
 

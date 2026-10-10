@@ -1,0 +1,42 @@
+{
+  "date": "2026-10-10",
+  "question": "Could MMU page protection enforce the checked guest permissions for almost every access, with exact 4 KiB checks only where a 16 KiB host page has mixed 4 KiB permissions?",
+  "census": {
+    "method": "Opt-in diagnostic in the trusted require() path (docs/experiments/guest-page-census-diagnostic.patch, not shipped). Counts every checked guest access; flags accesses to 16 KiB host pages whose four 4 KiB permissions differ, and writes to host pages containing published code.",
+    "route": "iPad Air 11-inch (M4) Simulator; launch, menus, offline Katabatic host with two bots, observer gameplay.",
+    "startup_and_loading": {
+      "checked_accesses": 11676942336,
+      "mixed_page_accesses": 7610,
+      "code_page_writes": 2498,
+      "note": "All counted within the first 134M accesses (startup).",
+      "pages": {
+        "0x10474000": "4255 [RW,R,RW,RW] image section boundary",
+        "0x60070000": "2242 [RW,-,-,-] partly committed heap",
+        "0x601a0000": "1101 [RW,-,-,-] partly committed heap",
+        "0x2116c000": "12 [RW,R,RW,RW] image section boundary"
+      }
+    },
+    "gameplay_window": {
+      "checked_accesses": 2684354560,
+      "mixed_page_accesses": 1258,
+      "code_page_writes": 0,
+      "per_million": 0.469,
+      "pages": [
+        "0x60070000 [RW,-,-,-]"
+      ]
+    },
+    "totals_at_stop": {
+      "checked_accesses": 29393682432,
+      "mixed_page_accesses": 11368,
+      "code_page_writes": 2498
+    }
+  },
+  "fault_emulation_spike": {
+    "source": "tests/fault_emulation_spike.c (component test; not linked into TribesPad)",
+    "method": "Guest view plus vm_remap RW alias. Uniform host pages get native protections; a mixed host page is PROT_NONE. SIGSEGV/SIGBUS handler decodes the AArch64 scalar load/store (incl. LDP/STP), checks the exact 4 KiB table, aborts on violation or emulates through the alias and resumes.",
+    "macos": "PASS: native 0.94 ns/rmw on uniform pages; emulated 2130 ns/access; 4 denied accesses (mixed read, mixed write, uniform read-only write, straddle) abort before effect; 4 threads.",
+    "ios_simulator": "PASS (xcrun simctl spawn, iOS 26.5 Simulator): native 0.53 ns/rmw; emulated 2090 ns/access; same 4 aborts; 4 threads.",
+    "not_covered": "SIMD, atomics (LDXR/STXR, LSE), pre/post-index forms, publication concurrency inside the handler, physical iOS devices, debugger interaction."
+  },
+  "estimate": "At ~84M checked accesses/s in gameplay, 0.47 per million is ~40 emulated faults/s (~0.1 ms/s). Removing the out-of-line software check from ~70% of game-thread self time is the only lever found large enough to approach playable frame rates; it is a structural change and still needs full design, tests and an offline-match measurement."
+}

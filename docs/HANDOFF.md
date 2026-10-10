@@ -4,7 +4,7 @@
 
 **The original game runs offline on Mac and in the iPad Simulator. It is not a finished, comfortably playable Apple port.** The primary engineering problem is runtime performance, followed by physical-device validation and reproducible packaging. This is not currently blocked on another missing startup API or on permission to use this Mac.
 
-The user requested an independent review and reorientation, a clear handoff, and merging the work into `main`. Development is stopped at this handoff. The existing goal is paused, not complete. The `build-playable-tribespad` automation was checked during wrap-up and no longer exists. No full-engine app or build process was found running during wrap-up.
+The 10 October performance review (below) replaced guesswork with a native frame baseline and a profile, rejected one guard optimization with evidence, and identified the one structural change large enough to matter. The earlier goal remains paused and there is no continuation automation. No full-engine app or build process was left running.
 
 Start here instead of replaying the enormous checkpoint histories in [STATUS](STATUS.md) and [EXECUTION-PLAN](EXECUTION-PLAN.md). Their old “next,” “blocked,” and live-process statements are historical. The heartbeat's repeated GetQueuedCompletionStatusEx boundary was superseded long ago.
 
@@ -32,13 +32,13 @@ Key evidence, each with its own limitations:
 
 ## Performance: the central unresolved problem
 
-Recent Simulator screen recordings deliver roughly **6–9 FPS**, with visible input delay and several-minute loading. Latest two 30-second fixed observer recordings measured **5.84 and 7.37 FPS**. These are screen-recording measurements, not physical-iPad frame rates. The original in-game FPS display has previously been stale and must not be trusted without validation. Mac gameplay also had unacceptable performance in its recorded checkpoint; rendering alone is not playability.
+**Baseline (10 October, native timing):** offline Katabatic, two bots, untouched observer view in the iPad Air 11-inch (M4) Simulator runs at **6.0–7.0 FPS** (means 6.75 and 6.2 over clean 30-second windows in two runs of the same source); map load took 221 s. Swap submission averages 0.04 ms, so the game thread is CPU-bound, not presentation-bound. Evidence: [frame timing and guard review](validation/ipad-frame-timing-guard-review.json). The opt-in `TRIBES_FRAME_TIMING=1` logger in `gl4es_context.c` produced these numbers and is now part of the source; it measures CPU-side swap submission, not GPU completion. Run-to-run variation on this shared Mac is about 8%, so only large differences are meaningful.
 
-A bounded memory-group change measured 7.39→8.80 FPS in one same-view comparison. Subsequent native-array proof and MMX changes did **not** establish additional whole-game gains. Live bots/snow, host load and Simulator presentation make the samples variable. The latest observed map load completed by 211 seconds, but compilation overlapped early loading, so that is not a startup benchmark.
+**Where the time goes:** 71% of game-thread self time is the software memory guard (`tribes_memory_access_begin/end`, `require`, block-entry host-span checks, thread-local lookups). Translated game code is about 3% and x87/SoftFloat about 5%. The game performs roughly 12 million checked guest accesses per frame, and each out-of-line check costs about 8.5 ns (two calls, two thread-local lookups, bounds and permission tests). The reader announce/release atomics are not the cost: a sticky-reader variant was slower in isolation. Secondary hotspots: indirect-target verification binary-searches 523,444 registered targets per indirect call (~5%); the SDL/GL backend re-reads allocator callbacks and revalidates every public SDL buffer on every GL call, including immediate-mode vertices (~8%); Metal `waitUntilCompleted` under framebuffer binds (~4%).
 
-Native samples point to checked memory access, host-span validation and reader/publication synchronization as major costs. Sample counts across worker threads are not frame-time percentages. MMX helpers became about 55% faster in isolation, but this did not translate into a demonstrated gameplay gain. Do not keep optimizing tiny helpers simply because an isolated benchmark improves.
+**Rejected:** inlining permission checks for later accesses in existing 16-access groups cut `access_begin` samples by 26% and passed fault and ThreadSanitizer tests, but measured 6.0–6.3 FPS (no measurable change), grew the binary from 104 to 190 MB and the build from 12 to 44 minutes. Most remaining checks are single accesses inside small runtime helpers, which grouping cannot reach. Patch: [inline-grouped-guard-rejected.patch](experiments/inline-grouped-guard-rejected.patch). Do not repeat call-path micro-tuning: even a free software guard would cap this scene near 23 FPS, and an out-of-line call per access cannot get close to that.
 
-**Reviewer decision needed:** assess whether this AOT/runtime design can reach the PRD's sustained 60 FPS target on the intended hardware while preserving correctness. Establish a trustworthy whole-game baseline and a bounded performance plan before more compatibility expansion. There is no supported completion estimate yet.
+**Shortest credible route:** let the MMU enforce the checked permissions. Every 16 KiB host page whose four 4 KiB guest pages agree gets native protections and needs no software check; a page with mixed 4 KiB permissions is mapped inaccessible, and its faults are decoded, checked exactly, then aborted or emulated through a private alias and resumed. A census of 29.4 billion checked accesses found mixed-page accesses only at startup (7,610) and 0.47 per million in gameplay (one partly committed heap page), with no gameplay writes to pages holding published code: about 40 emulated faults per second. A component spike ([fault_emulation_spike.c](../tests/fault_emulation_spike.c)) passes on macOS and in the iOS Simulator: native 0.5–0.9 ns accesses, about 2.1 µs per emulated access, and denied accesses abort before taking effect. Evidence: [hardware permission feasibility](validation/hardware-permission-feasibility.json). This keeps abort-on-violation semantics but changes the enforcement mechanism, so it needs an explicit design review before it replaces the brackets.
 
 ## Architecture and code map
 
@@ -53,31 +53,26 @@ The pinned original Tribes 2 x86 image, TribesNEXT/QoL DLL and required plugins 
 
 Keep native AOT execution and checked memory, permission, lifetime and concurrent publication semantics intact. Active guest threads make separate CPU/stack captures unsuitable as coherent whole-memory snapshots.
 
-## Last validated code and interrupted experiment
+## Last validated code and experiments
 
-The last gameplay-validated implementation commit is **`d73c01c`**, “Vectorize checked MMX arithmetic for Apple ARM64.” This handoff changes documentation and archives an experiment; runtime sources are restored to that commit.
+The last gameplay-validated runtime is **`d73c01c`** ("Vectorize checked MMX arithmetic for Apple ARM64") plus the opt-in frame-timing logger, which ran through two complete offline matches on 10 October. The current Simulator build of this source is `9941fde3fc6afeb959a237b5a42156a6b3d3ff75ce5c68a5dc190c614d2b0b62` (104,349,424 bytes), exercised through an offline match on 10 October. An earlier build of the same source was `c99ee37b…`; the two are not byte-identical and the cause was not isolated, so record the hash of whatever you run. The MMX receipt hash `310ce4fc…` predates the logger. The device bundle has not been rebuilt since.
 
 | Commit | Change / evidence |
 | --- | --- |
 | `d73c01c` | MMX native vectors: 56,096 x86-oracle cases including final checked module; 8,052 cases across 671 original instruction sites; checked CPU/x87 tests; actual offline touch match and clean Quit |
-| `6e9d957` | Bounded masked native-object access proof; four redundant dispatch-cache checks removed, unknown/guest accesses still checked; no demonstrated game-speed gain |
+| `6e9d957` | Bounded masked native-object access proof; no demonstrated game-speed gain |
 | `83604da` | 21+ minute session, two map loads, inventory/station equipment, clean Quit; zero abort breakpoint hits |
-| `43c990a` | Bounded straight-line memory groups 8→16 operations; retained individual permissions and call/control/atomic barriers; measured but nondeterministic frame-delivery improvement |
+| `43c990a` | Bounded straight-line memory groups 8→16 operations; measured but nondeterministic frame-delivery improvement |
 | `ef4d47b` | Original iPad worker/DLL shutdown completes |
 | `967e053`, `33154f5`, `52ee95b` | WAV/MP3 repair, x87 fog-store repair, inventory touch/keyboard routing |
 
-Validated executable SHA-256 identities from the MMX receipt:
+Archived, unshipped experiments: [inline-grouped-guard-rejected.patch](experiments/inline-grouped-guard-rejected.patch) (rejected above) and [guest-page-census-diagnostic.patch](experiments/guest-page-census-diagnostic.patch) (opt-in counter used for the census). Earlier require-inlining, single-page shortcuts, grouped-continuation, cold/noinline reader paths and sticky readers also lacked whole-game gains.
 
-- Simulator: `310ce4fc7d4c6b6bd5ea5d342122243ba42e1afcc350ed93deee9f8ae6f16894` (104,349,424 bytes).
-- Device: `9df24ab2787839cde4738651a70418d5828005eded7d065eb0d55ae7759f8a99` (104,283,392 bytes).
-
-An opt-in `TRIBES_FRAME_TIMING=1` native-swap logger was then built and launched to the menu, but **offline timing validation was interrupted**. It measures swap submission intervals, not GPU completion. The exact unfinished diff is preserved in [native-frame-timing-unvalidated.patch](experiments/native-frame-timing-unvalidated.patch); it is **not applied to shipped source**. Local logs under `generated/integration-review/native-frame-timing/` report Simulator and device output paths. Existing generated bundles/receipts may therefore contain this experiment and must not be assumed to match the validated hashes above. Rebuild from the handed-off source before promoting an artifact. Applying the archived patch later requires fresh source-bound validation and an actual offline run.
-
-A separate cold/noinline reader-retry experiment was rejected: a small single-thread improvement accompanied worse four-thread results. It never changed runtime source. Earlier require-inlining, single-page shortcuts, grouped-continuation and noinline-reader-entry experiments also lacked consistent gains. Avoid repeating them without new evidence.
+**Repeatable offline route without clicking:** at the original menu, press the grave/tilde key to open the game console, type `LaunchGame("Host");` and Return, toggle the console off and on (the HOST pane takes keyboard focus), then type `tryToStartHostedGame();` and Return. These are the original script functions behind LAN GAME and START GAME; saved prefs select Katabatic, Capture the Flag and two bots. Close the console before timing.
 
 ## Known risks and unfinished work, in priority order
 
-1. **Performance and architecture review.** Separate game CPU time, memory guards, renderer submission and presentation costs. Run one bounded before/after experiment against an actual offline route, without concurrent builds/debuggers. Preserve correctness; do not treat disabling checks as a solution.
+1. **Hardware-enforced checked memory.** Design review, then implementation: native page protections for uniform host pages, exact fault emulation for mixed pages (complete AArch64 load/store/atomic/SIMD decoding, signal-safe coordination with permission publication, published-code write protection, debugger behaviour), removal of per-access brackets, then the same offline route with native timing. Acceptance: at least 2x steady observer FPS with all permission and abort tests passing; stop and reassess below 1.5x. Smaller follow-ups afterwards: O(1) indirect-target verification and lighter per-GL-call SDL validation.
 2. **Physical iPad acceptance.** Check current device/signing availability once. Earlier checks had neither a connected device nor development identity. Device packaging needs provisioning retaining Extended Virtual Addressing; the engine reserves a 4 GiB virtual range. This is not a claim of 4 GiB physical usage, nor proof it fits the device's memory budget. See [Development](DEVELOPMENT.md).
 3. **Reproducible build/package.** Remove dependence on unexplained local preparation; inventory required generated inputs and document regeneration. Verify source-to-bundle identity before distributing. Source backup is not a portable app release.
 4. **Stability and complete controls.** Investigate the isolated null guest-PC abort from an earlier eight-operation baseline (~404 seconds). Repeated and longer sessions did not reproduce it; it is not proven fixed. Prior report: `~/Library/Logs/DiagnosticReports/Retired/TribesPad-2026-10-09-172739.ips`, if still retained. Test real simultaneous touch, skiing, station navigation, controller, background/resume and long sessions.
@@ -88,7 +83,7 @@ A separate cold/noinline reader-retry experiment was rejected: a small single-th
 
 Workspace: `/Users/chrissotraidis/GitHub/tribespad`. **Do not delete it after pulling GitHub.** At wrap-up, ignored `ref/` was about 3.7 GB and `generated/` about 250 GB. Git contains source, input manifests and selected validation evidence, not the game assets, complete translated inputs, native dependencies or all logs. A fresh clone is not currently a one-command reproducible build. Do not commit those ignored directories wholesale.
 
-Prepared baseline used by the full build: `generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe`. Preserve it until a clean reproduction succeeds. Local Python is `.venv/bin/python`; pinned LLVM was `/opt/homebrew/Cellar/llvm@20/20.1.8/bin`. Xcode SDK 26.5 was used; accidentally selecting the Command Line Tools SDK 27 previously caused TAPI incompatibilities.
+Prepared baseline used by the full build: `generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe`. Preserve it until a clean reproduction succeeds. Local Python is `.venv/bin/python`; pinned LLVM was `/opt/homebrew/Cellar/llvm@20/20.1.8/bin`. Xcode SDK 26.5 was used; accidentally selecting the Command Line Tools SDK 27 previously caused TAPI incompatibilities. Component tests that link for macOS need both `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer` and `SDKROOT="$(xcrun --sdk macosx --show-sdk-path)"`; otherwise `clang` still picks the Command Line Tools SDK and fails with a TAPI error. A change to `guest_memory_checks.c` or `ExternalMemoryPass.cpp` invalidates eleven receipts the iPad builder checks; rerun cpu-host-checks, host-local-checks, native-cpu-checks, sse-host-locals, x87-host-checks, mobile-gpu-timing, code-revision (both modes), mobile-gpu-sync, sdl-io, guest-threads and guest-access-groups (about two minutes).
 
 For the existing prepared workspace (inspect active processes first):
 
@@ -109,9 +104,9 @@ Boot only one Simulator. Install/launch `com.tribespad.full-engine.ipad` on its 
 
 Source/policy changes intentionally invalidate proof receipts. Refresh the specific affected tests, not every historical suite. For example, the interrupted context diagnostic required `test-sdl-io.py` and `test-guest-threads.py` after the reviewed-source identity changed; both passed normal/checked/ThreadSanitizer checks before the experiment build. Returning to validated source can invalidate those experimental receipts again. A build failure identifying stale proof is actionable dependency information, not permission to bypass it.
 
-## Suggested first review session
+## Suggested next session
 
-1. Read this document, the current builder and three linked app evidence records. Inspect Git status and current artifact hashes. Do not repeat the complete historical audit.
-2. Reproduce one original offline match from the handed-off code, recording binary identity and actual behavior. Establish native frame timing without debugger/screen-capture distortion; review the archived diagnostic before choosing it. Keep a separate visible capture as functional evidence.
-3. Decide whether the next meaningful result is physical-device measurement or a specific architectural performance change. State the hypothesis, baseline, acceptance criterion and stop condition before coding. Avoid another sequence of isolated microbenchmarks with no playable improvement.
-4. Report in plain language: what runs, measured responsiveness, what failed, and the next concrete decision. Update this handoff when evidence changes. Mark the project complete only after agreed platform/gameplay acceptance, not because all component tests pass.
+1. Read this document and the two new validation records. Inspect Git status and confirm the Simulator binary hash before relying on it.
+2. Review the hardware-enforcement design (risk 1) with the user; it changes how checks are enforced, not what they enforce.
+3. If approved, extend the spike into the runtime behind an explicit build option, keep the bracketed build as the reference, and measure both on the same route with `TRIBES_FRAME_TIMING=1`.
+4. Report what runs, measured frame rate, what failed and the next decision. Do not claim completion from component tests or rendering alone.

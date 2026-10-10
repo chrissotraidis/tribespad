@@ -1,0 +1,464 @@
+diff --git a/port/compiler/ExternalMemoryPass.cpp b/port/compiler/ExternalMemoryPass.cpp
+index 9ee60ea..561dfa5 100644
+--- a/port/compiler/ExternalMemoryPass.cpp
++++ b/port/compiler/ExternalMemoryPass.cpp
+@@ -21,13 +21,68 @@ using namespace llvm;
+ namespace {
+ StringRef canonical(StringRef N){if(N.starts_with("\1")){N=N.drop_front();if(N.starts_with("_"))N=N.drop_front();}return N;}
+ bool containsPointer(Type *T){if(T->isPointerTy())return true;if(auto *S=dyn_cast<StructType>(T)){for(auto *E:S->elements())if(containsPointer(E))return true;}if(auto *A=dyn_cast<ArrayType>(T))return containsPointer(A->getElementType());if(auto *V=dyn_cast<VectorType>(T))return containsPointer(V->getElementType());return false;}
++// Inline the permission test of a later grouped access. This is valid only
++// while an earlier full begin in the same group returned 1, so this thread
++// holds a reader bracket and no permission/publication writer can run. Every
++// other case (no bracket yet, straddle, overflow, denied page, published-code
++// overlap) calls the unchanged full begin and adds its token to the group.
++static uint64_t InlinedChecks=0;
++static Value *inlineGroupedBegin(Module &M,CallInst *Begin,Value *Count){
++ auto *Size=dyn_cast<ConstantInt>(Begin->getArgOperand(1));auto *Mode=dyn_cast<ConstantInt>(Begin->getArgOperand(2));
++ if(!Size||!Mode||Size->isZero()||Size->getZExtValue()>4096||(Mode->getZExtValue()!=1&&Mode->getZExtValue()!=2))return nullptr;
++ auto &C=M.getContext();auto *I8=Type::getInt8Ty(C);auto *I32=Type::getInt32Ty(C);auto *I64=Type::getInt64Ty(C);auto *P=PointerType::getUnqual(C);
++ auto *StateType=StructType::get(C,{I64,I64,P,I64,I64});
++ auto *State=M.getGlobalVariable("tribes_memory_fast_state");
++ if(!State)State=new GlobalVariable(M,StateType,false,GlobalValue::ExternalLinkage,nullptr,"tribes_memory_fast_state");
++ if(State->getValueType()!=StateType||!State->isDeclaration())report_fatal_error("Invalid inline guard state declaration");
++ uint64_t S=Size->getZExtValue(),A=Mode->getZExtValue();
++ BasicBlock *Pre=Begin->getParent();Function *F=Pre->getParent();
++ BasicBlock *Merge=Pre->splitBasicBlock(Begin,"tribes.guard.merge");
++ auto *Fast=BasicBlock::Create(C,"tribes.guard.fast",F,Merge),*Check=BasicBlock::Create(C,"tribes.guard.check",F,Merge),*Slow=BasicBlock::Create(C,"tribes.guard.slow",F,Merge);
++ auto *Mark=MDNode::get(C,{});
++ auto Load=[&](IRBuilder<> &B,Type *T,Value *Ptr){auto *L=B.CreateLoad(T,Ptr);L->setMetadata("tribes.guard.fast",Mark);return L;};
++ Pre->getTerminator()->eraseFromParent();
++ IRBuilder<> B(Pre);B.CreateCondBr(B.CreateICmpNE(Count,ConstantInt::get(I32,0)),Fast,Slow);
++ B.SetInsertPoint(Fast);
++ Value *Address=B.CreatePtrToInt(Begin->getArgOperand(0),I64);
++ Value *Base=Load(B,I64,B.CreateStructGEP(StateType,State,0)),*Limit=Load(B,I64,B.CreateStructGEP(StateType,State,1));
++ Value *End=B.CreateAdd(Address,ConstantInt::get(I64,S));
++ Value *NoWrap=B.CreateICmpUGE(End,Address);
++ Value *Inside=B.CreateAnd(NoWrap,B.CreateAnd(B.CreateICmpUGE(Address,Base),B.CreateICmpULE(End,Limit)));
++ Value *Host=B.CreateAnd(NoWrap,B.CreateOr(B.CreateICmpULE(End,Base),B.CreateICmpUGE(Address,Limit)));
++ auto *HostBlock=BasicBlock::Create(C,"tribes.guard.route",F,Merge);
++ B.CreateCondBr(Inside,Check,HostBlock);
++ B.SetInsertPoint(HostBlock);B.CreateCondBr(Host,Merge,Slow);
++ B.SetInsertPoint(Check);
++ Value *Offset=B.CreateSub(Address,Base);
++ Value *Table=Load(B,P,B.CreateStructGEP(StateType,State,2));
++ Value *First=Load(B,I8,B.CreateGEP(I8,Table,B.CreateLShr(Offset,12)));
++ Value *Last=Load(B,I8,B.CreateGEP(I8,Table,B.CreateLShr(B.CreateAdd(Offset,ConstantInt::get(I64,S-1)),12)));
++ Value *Allowed=B.CreateICmpEQ(B.CreateAnd(B.CreateAnd(First,Last),ConstantInt::get(I8,A)),ConstantInt::get(I8,A));
++ if(A&2){
++  Value *PublishedBegin=Load(B,I64,B.CreateStructGEP(StateType,State,3)),*PublishedEnd=Load(B,I64,B.CreateStructGEP(StateType,State,4));
++  Value *Overlap=B.CreateAnd(B.CreateICmpULT(Offset,PublishedEnd),B.CreateICmpUGT(B.CreateAdd(Offset,ConstantInt::get(I64,S)),PublishedBegin));
++  Allowed=B.CreateAnd(Allowed,B.CreateNot(Overlap));
++ }
++ B.CreateCondBr(Allowed,Merge,Slow);
++ Begin->removeFromParent();Begin->insertInto(Slow,Slow->end());
++ B.SetInsertPoint(Slow);B.CreateBr(Merge);
++ B.SetInsertPoint(&*Merge->getFirstInsertionPt());
++ auto *Token=B.CreatePHI(I32,4,"tribes.guard.token");
++ Token->addIncoming(ConstantInt::get(I32,0),HostBlock);Token->addIncoming(ConstantInt::get(I32,0),Check);Token->addIncoming(Begin,Slow);
++ ++InlinedChecks;
++ return B.CreateAdd(Count,Token,"tribes.end.count");
++}
+ // Retain every check immediately before its access, but delay matching ends
+ // across at most sixteen ordinary accesses in one straight-line segment. The
+ // runtime's nested brackets then share one permission snapshot/OS read lock.
+ // Never hold it across a call, fence, atomic/volatile access or control flow.
++// Inlined checks add only private branches between those same accesses.
+ static uint64_t groupAccessBrackets(Module &M){
+  uint64_t Grouped=0;
+- for(auto &F:M)for(auto &BB:F){
++ for(auto &F:M){
++ SmallVector<BasicBlock *,32> Blocks;for(auto &BB:F)Blocks.push_back(&BB);
++ for(auto *BBP:Blocks){auto &BB=*BBP;
+   SmallVector<Instruction *,128> Work;for(auto &I:BB)Work.push_back(&I);
+   SmallVector<CallInst *,16> Ends;
+   unsigned Accesses=0;
+@@ -35,8 +90,14 @@ static uint64_t groupAccessBrackets(Module &M){
+    if(Ends.size()>1){
+     // Each begin returns 0 for host memory or 1 for a retained guest bracket.
+     // Retire the same bounded set together, at the former last-end boundary.
+-    IRBuilder<> B(Before);Value *Count=Ends.front()->getArgOperand(0);
+-    for(size_t n=1;n<Ends.size();++n)Count=B.CreateAdd(Count,Ends[n]->getArgOperand(0),"tribes.end.count");
++    Value *Count=Ends.front()->getArgOperand(0);
++    for(size_t n=1;n<Ends.size();++n){
++     auto *Begin=cast<CallInst>(Ends[n]->getArgOperand(0));
++     Value *Next=inlineGroupedBegin(M,Begin,Count);
++     if(!Next){IRBuilder<> A(Begin->getNextNode()->getNextNode());Next=A.CreateAdd(Count,Begin,"tribes.end.count");}
++     Count=Next;
++    }
++    IRBuilder<> B(Before);
+     auto EndMany=M.getOrInsertFunction("tribes_memory_access_end_many",B.getVoidTy(),B.getInt32Ty());
+     B.CreateCall(EndMany,{Count});Grouped+=Ends.size();
+     for(auto *End:Ends)End->eraseFromParent();
+@@ -67,6 +128,7 @@ static uint64_t groupAccessBrackets(Module &M){
+   }
+   if(!Ends.empty())report_fatal_error("Unterminated checked access group");
+  }
++ }
+  return Grouped;
+ }
+ struct ExternalMemoryPass : PassInfoMixin<ExternalMemoryPass>{
+@@ -796,6 +858,7 @@ struct ExternalMemoryPass : PassInfoMixin<ExternalMemoryPass>{
+   M.addModuleFlag(Module::Error,"tribes.checked.externals",1);
+   json::Object Summary;Summary["registered_targets"]=Targets.size();Summary["host_only_calls"]=HostCalls;Summary["blocked_calls"]=Blocked;Summary["indirect_checks"]=IndirectCalls;Summary["range_checked_calls"]=RangeCalls;Summary["memory_manager_calls"]=ManagerCalls;Summary["barrier_asm_calls"]=BarrierCalls;
+   Summary["grouped_accesses"]=GroupedAccesses;
++  Summary["inlined_grouped_checks"]=InlinedChecks;
+   errs()<<"TRIBES_EXTERNAL_PASS "<<formatv("{0}",json::Value(std::move(Summary)))<<"\n";return PreservedAnalyses::none();
+  }
+  static bool isRequired(){return true;}
+diff --git a/port/core/guest_memory_checks.c b/port/core/guest_memory_checks.c
+index c2d6e63..f78715d 100644
+--- a/port/core/guest_memory_checks.c
++++ b/port/core/guest_memory_checks.c
+@@ -16,6 +16,12 @@ static unsigned char *permissions;
+ typedef struct { uint64_t begin,end; } PublishedInterval;
+ static PublishedInterval *published;
+ static uint32_t published_count;
++TribesMemoryFastState tribes_memory_fast_state;
++/* Called with the writer lock held after every published-interval change. */
++static void publish_fast_bounds(void){
++ tribes_memory_fast_state.published_begin=published_count?published[0].begin:0;
++ tribes_memory_fast_state.published_end=published_count?published[published_count-1].end:0;
++}
+ static int pending_bank_published,renderer_bank_published,audio_bank_published;
+ static TribesCodeWrite *revision;
+ static uint32_t revision_count,revision_index;
+@@ -121,7 +127,8 @@ static void write_lock(void){
+ static __attribute__((cold,noinline)) _Noreturn void violation(const void *p,uint64_t size,uint32_t access){fprintf(stderr,"TribesPad: checked guest memory violation at 0x%llx size=%llu access=%u\n",(unsigned long long)((uintptr_t)p-guest_base),(unsigned long long)size,access);abort();}
+ int tribes_memory_checks_configure(uint64_t base,uint64_t size){
+  if(permissions||!base||!size||(base|size)%4096||size>UINT64_C(0x100000000)||base>UINTPTR_MAX-size)return 0;
+- unsigned char *p=malloc((size_t)(size/4096));if(!p)return 0;memset(p,3,(size_t)(size/4096));guest_base=(uintptr_t)base;guest_size=size;permissions=p;return 1;
++ unsigned char *p=malloc((size_t)(size/4096));if(!p)return 0;memset(p,3,(size_t)(size/4096));guest_base=(uintptr_t)base;guest_size=size;permissions=p;
++ tribes_memory_fast_state=(TribesMemoryFastState){base,base+size,p,0,0};return 1;
+ }
+ int tribes_memory_permissions_set(uint32_t address,uint64_t size,uint32_t access){
+  if(!permissions||!size||(address|size)%4096||access>3||address>=guest_size||size>guest_size-address)return 0;
+@@ -236,7 +243,7 @@ int tribes_memory_publish_code(uint64_t base,const TribesPublishedCodeRange *ran
+   if(!covered(next,count,w.pc,1)||!covered(next,count,w.address,w.size))valid=0;
+  }
+  if(valid&&!plan_matches(revision,revision_count,0))valid=0;
+- if(valid){published=next;published_count=count;}else free(next);
++ if(valid){published=next;published_count=count;publish_fast_bounds();}else free(next);
+  write_unlock();return valid;
+ }
+ /* The second captured bank is registered during original engine startup.
+@@ -273,7 +280,7 @@ static int publish_later_bank(uint64_t base,const TribesPublishedCodeRange *rang
+    if(b==count||(a<published_count&&published[a].begin<extra[b].begin))merged[n++]=published[a++];
+    else merged[n++]=extra[b++];
+   }
+-  free(published);published=merged;published_count+=count;if(group==2)audio_bank_published=1;else if(group==1)renderer_bank_published=1;else pending_bank_published=1;
++  free(published);published=merged;published_count+=count;publish_fast_bounds();if(group==2)audio_bank_published=1;else if(group==1)renderer_bank_published=1;else pending_bank_published=1;
+  }
+  write_unlock();return ok;
+ }
+diff --git a/port/core/guest_memory_checks.h b/port/core/guest_memory_checks.h
+index 2c8d460..e510aaa 100644
+--- a/port/core/guest_memory_checks.h
++++ b/port/core/guest_memory_checks.h
+@@ -19,6 +19,18 @@ void tribes_memory_access_end(uint32_t token);
+ /* Compiler groups at most sixteen ordinary accesses; count is the sum of their
+    0/1 tokens. Retains any enclosing bracket, including with a pending writer. */
+ void tribes_memory_access_end_many(uint32_t count);
++/* Read-only snapshot for compiler-inlined checks. The external pass reads it
++   only while the same straight-line group already holds a reader bracket from
++   a full tribes_memory_access_begin, so publication cannot change it. Any
++   mismatch, straddle, published-code overlap or unproven state falls back to
++   the full begin. base/limit/permissions are fixed at configure; the
++   published bounds change only under the writer lock. */
++typedef struct {
++ uint64_t base,limit;
++ const unsigned char *permissions;
++ uint64_t published_begin,published_end;
++} TribesMemoryFastState;
++extern TribesMemoryFastState tribes_memory_fast_state;
+ /* Trusted loader/VirtualProtect transactions. Callers must have complete
+    instrumented access coverage and external call gates before guest execution.
+    Static initialization also denies data access above the guest user limit. */
+diff --git a/scripts/test-cpu-host-checks.py b/scripts/test-cpu-host-checks.py
+index 14236d8..a409e45 100644
+--- a/scripts/test-cpu-host-checks.py
++++ b/scripts/test-cpu-host-checks.py
+@@ -2,6 +2,7 @@
+ """Validate host CPU-prefix contracts against ordinary checked original execution."""
+ import hashlib,json,os,pathlib,re,subprocess
+ from checked_codegen import command
++from guarded_ir_check import check_guarded_groups
+ from console_fade_inputs import definition
+ R=pathlib.Path(__file__).resolve().parents[1];out=R/'generated/integration-review/cpu-host-checks';out.mkdir(parents=True,exist_ok=True)
+ tools=pathlib.Path('/opt/homebrew/Cellar/llvm@20/20.1.8/bin');sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
+@@ -33,24 +34,7 @@ for mode in ['baseline','optimized']:
+  # Host fields may sit within a group, but do not extend its sixteen-access
+  # limit or let a retained guest bracket cross a call/control-flow boundary.
+  guarded=subprocess.check_output([str(tools/'llvm-dis'),str(bc),'-o','-'],text=True)
+- pending=[];sums={};accesses=0;previous=''
+- for line in guarded.splitlines():
+-  s=line.strip()
+-  if 'call i32 @tribes_memory_access_begin(' in s:
+-   token=s.split(' = ')[0];pending.append(token);sums[token]=[token]
+-  elif re.match(r'%tribes.end.count[^ ]* = add i32 ',s):
+-   key,args=s.split(' = add i32 ');left,right=args.split(', ');sums[key]=sums[left]+sums[right]
+-  elif 'call void @tribes_memory_access_end_many(' in s:
+-   assert sums[re.search(r'\(i32 ([^)]+)\)',s)[1]]==pending and 2<=len(pending)<=16
+-   pending=[];accesses=0
+-  elif 'call void @tribes_memory_access_end(' in s:
+-   token=re.search(r'\(i32 ([^)]+)\)',s)[1];assert pending==[token];pending=[];accesses=0
+-  elif re.search(r'\b(load|store)\b',s):
+-   if '!tribes.checked.host.cpu' not in s:assert '@tribes_memory_access_begin(' in previous,s
+-   if pending:accesses+=1;assert accesses<=16,s
+-  elif re.search(r'\b(call|br|ret|fence)\b',s):assert not pending,s
+-  previous=s
+- assert not pending
++ check_guarded_groups(guarded)
+  obj=out/(mode+'.o');subprocess.run(command(tools,'arm64-apple-macos12',bc,obj),check=True);objects.append(obj)
+ # Preexisting metadata must never be accepted as proof by either mode.
+ for mode in ['tribes-guest-memory','tribes-guest-memory-cpu-host']:
+diff --git a/scripts/test-guest-access-groups.py b/scripts/test-guest-access-groups.py
+index a13cd41..1297cef 100644
+--- a/scripts/test-guest-access-groups.py
++++ b/scripts/test-guest-access-groups.py
+@@ -2,6 +2,7 @@
+ """Compare baseline and grouped emitted accesses with the real permission runtime."""
+ import hashlib,json,os,pathlib,re,subprocess
+ from checked_codegen import command as codegen_command
++from guarded_ir_check import check_guarded_groups
+ R=pathlib.Path(__file__).resolve().parents[1];out=R/'generated/integration-review/guest-access-groups';out.mkdir(parents=True,exist_ok=True)
+ tools=pathlib.Path('/opt/homebrew/Cellar/llvm@20/20.1.8/bin')
+ plugins=[R/'generated/tools'/n/(s+'.dylib') for n,s in [('guest-memory-pass','GuestMemoryPass'),('external-memory-pass','ExternalMemoryPass')]]
+@@ -23,54 +24,24 @@ for name,interleaved in [('host_prelude',False),('host_interleaved',True)]:
+  for i in range(1 if interleaved else 4):
+   lines+=['%%v%d = load i64,ptr %%p'%i,'%%n%d = add i64 %%v%d,1'%(i,i),'store i64 %%n%d,ptr %%p'%i]
+  lines+=['ret void','}']
++# Later accesses in one group use compiler-inlined permission checks. Each
++# pair below must still fault exactly where the full runtime check would.
++lines+=['define void @inline_pair(ptr %a,ptr %b) {','%x = load i64,ptr %a','%y = load i64,ptr %b','ret void','}']
++lines+=['define void @inline_store(ptr %a,ptr %b,i64 %v) {','%x = load i64,ptr %a','store i64 %v,ptr %b','ret void','}']
+ fixture=out/'input.ll';fixture.write_text('\n'.join(lines)+'\n')
+ policy=out/'policy.json';policy.write_text(json.dumps(dict(checked_symbols=['revoke_page'],host_only=[],range_checked=[],memory_manager_calls=[],memory_manager_sources=[],host_intrinsics=[],checked_strings=[],checked_callbacks=[],barrier_asm_sources=[],scalar_fcntl_commands=[])))
+ env=dict(os.environ,TRIBES_EXTERNAL_POLICY=str(policy));results={}
+-for name in ['baseline','grouped','separate-ends']:
++for name in ['baseline','grouped']:
+  grouped=name!='baseline';ir=out/(name+'.ll')
+  cmd=[str(tools/'opt')]+[a for p in plugins for a in ['-load-pass-plugin',str(p)]]+['-passes=tribes-guest-memory-cpu-host'+(',tribes-external-memory' if grouped else '')+',verify','-S',str(fixture),'-o',str(ir)]
+  run=subprocess.run(cmd,env=env,capture_output=True,text=True);assert not run.returncode,run.stderr
+  (out/(name+'-pass.log')).write_text(run.stderr)
+- if name=='separate-ends':
+-  # Reconstruct the previous implementation with identical checks and lock
+-  # boundaries, changing only the batched end back into individual ends.
+-  pending=[];old=[]
+-  for line in ir.read_text().splitlines():
+-   if 'call i32 @tribes_memory_access_begin(' in line:pending.append(line.strip().split(' = ')[0])
+-   if 'call void @tribes_memory_access_end_many(' in line:
+-    old.extend('  call void @tribes_memory_access_end(i32 '+t+')' for t in pending);pending=[]
+-   else:
+-    old.append(line)
+-    if 'call void @tribes_memory_access_end(' in line:pending.remove(re.search(r'\(i32 ([^)]+)\)',line)[1])
+-  assert not pending;ir.write_text('\n'.join(old)+'\n')
+- # Check each begin still immediately precedes its access, and no outstanding
+- # group crosses control flow, calls, fences or an unrelated memory operation.
+- pending=[];sums={};maximum=0;begins=0;ends=0;previous='';batched=0
+- for line in ir.read_text().splitlines():
+-  s=line.strip()
+-  if 'call i32 @tribes_memory_access_begin(' in s:
+-   token=s.split(' = ')[0];pending.append(token);sums[token]=[token];begins+=1;maximum=max(maximum,len(pending))
+-  elif re.match(r'%tribes.end.count[^ ]* = add i32 ',s):
+-   key,args=s.split(' = add i32 ');left,right=args.split(', ');sums[key]=sums[left]+sums[right]
+-  elif 'call void @tribes_memory_access_end_many(' in s:
+-   tokens=sums[re.search(r'\(i32 ([^)]+)\)',s)[1]]
+-   assert tokens==pending and 2<=len(tokens)<=16,(tokens,pending)
+-   ends+=len(tokens);pending=[];batched+=1
+-  elif 'call void @tribes_memory_access_end(' in s:
+-   token=re.search(r'\(i32 ([^)]+)\)',s)[1];assert token in pending;pending.remove(token);ends+=1
+-  elif '!tribes.checked.host.local' in s:
+-   assert re.search(r'\b(load|store)\b',s) and 'volatile' not in s
+-  elif re.search(r'\b(load|store|atomicrmw)\b',s):
+-   assert '@tribes_memory_access_begin(' in previous,s
+-   if 'volatile' in s or 'atomicrmw' in s:assert len(pending)==1
+-  elif re.search(r'\b(call|br|ret|fence)\b',s):assert not pending,s
+-  previous=s
+- assert not pending and begins==ends and maximum==(16 if grouped else 1),(pending,begins,ends,maximum)
+- assert (batched>0)==(name=='grouped')
+- if name=='grouped':
++ stats=check_guarded_groups(ir.read_text())
++ assert stats['maximum']==(16 if grouped else 1) and (stats['groups']>0)==grouped and (stats['inlined']>0)==grouped,stats
++ if grouped:
+   text=ir.read_text()
+-  prelude=re.search(r'define void @host_prelude\([^}]+}',text)[0]
+-  interleaved=re.search(r'define void @host_interleaved\([^}]+}',text)[0]
++  prelude=re.search(r'define void @host_prelude\(.*?\n}\n',text,re.S)[0]
++  interleaved=re.search(r'define void @host_interleaved\(.*?\n}\n',text,re.S)[0]
+   assert prelude.count('call i32 @tribes_memory_access_begin(')==8
+   assert prelude.count('call void @tribes_memory_access_end_many(')==1
+   assert 'call void @tribes_memory_access_end(' not in prelude
+diff --git a/scripts/test-host-local-checks.py b/scripts/test-host-local-checks.py
+index 6c5535e..0173325 100644
+--- a/scripts/test-host-local-checks.py
++++ b/scripts/test-host-local-checks.py
+@@ -2,6 +2,7 @@
+ """Prove bounded native-object access elision while keeping guest pointees checked."""
+ import hashlib,json,os,pathlib,re,subprocess
+ from checked_codegen import command
++from guarded_ir_check import check_guarded_groups
+ R=pathlib.Path(__file__).resolve().parents[1];out=R/'generated/integration-review/host-local-checks';out.mkdir(parents=True,exist_ok=True)
+ T=pathlib.Path('/opt/homebrew/Cellar/llvm@20/20.1.8/bin');sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
+ plugins=[R/'generated/tools'/n/(c+'.dylib') for n,c in [('guest-memory-pass','GuestMemoryPass'),('external-memory-pass','ExternalMemoryPass')]]
+@@ -131,22 +132,7 @@ group+='ret void\n}\n'
+ group_ir,_=check('groups',prefix+group)
+ guarded=out/'groups-guarded.ll'
+ subprocess.run([str(T/'opt'),'-load-pass-plugin',str(plugins[1]),'-passes=tribes-external-memory,verify','-S',str(group_ir),'-o',str(guarded)],env=env,check=True,capture_output=True)
+-pending=[];sums={};accesses=0;maximum=0
+-for line in guarded.read_text().splitlines():
+- s=line.strip()
+- if 'call i32 @tribes_memory_access_begin(' in s:
+-  token=s.split(' = ')[0];pending.append(token);sums[token]=[token]
+- elif re.match(r'%tribes.end.count[^ ]* = add i32 ',s):
+-  key,args=s.split(' = add i32 ');left,right=args.split(', ');sums[key]=sums[left]+sums[right]
+- elif 'call void @tribes_memory_access_end_many(' in s:
+-  assert sums[re.search(r'\(i32 ([^)]+)\)',s)[1]]==pending and accesses<=16
+-  maximum=max(maximum,accesses);pending=[];accesses=0
+- elif 'call void @tribes_memory_access_end(' in s:
+-  assert pending==[re.search(r'\(i32 ([^)]+)\)',s)[1]];pending=[];accesses=0
+- elif re.search(r'\b(load|store)\b',s):
+-  if pending:accesses+=1;assert accesses<=16
+- elif re.search(r'\b(call|br|ret|fence)\b',s):assert not pending
+-assert not pending and maximum==16
++stats=check_guarded_groups(guarded.read_text());assert stats['maximum']==16 and stats['inlined']>0,stats
+ sources=[R/'tests/host_local_checks_test.c',R/'port/core/guest_memory_checks.c',R/'port/core/guest_external_checks.c'];runs=[]
+ for tsan in [False,True]:
+  exe=out/('tsan' if tsan else 'normal');subprocess.run(['clang','-O2','-pthread','-Wall','-Wextra','-Werror']+(['-fsanitize=thread'] if tsan else [])+list(map(str,sources))+[str(obj),'-o',str(exe)],check=True)
+diff --git a/tests/guest_access_groups_test.c b/tests/guest_access_groups_test.c
+index 7fb9e2b..d88a379 100644
+--- a/tests/guest_access_groups_test.c
++++ b/tests/guest_access_groups_test.c
+@@ -16,6 +16,8 @@ extern void batch(uint64_t *,uint64_t *);
+ extern void host_prelude(uint64_t *),host_interleaved(uint64_t *);
+ extern void read_batch(const uint64_t *,uint64_t *);
+ extern uint64_t publication_boundary(uint64_t *);
++extern void inline_pair(uint64_t *,uint64_t *);
++extern void inline_store(uint64_t *,uint64_t *,uint64_t);
+ static uint64_t *memory;
+ static atomic_int writer_started,writer_done;
+ static void *denying_writer(void *unused){
+@@ -28,6 +30,44 @@ static void expect_bad_count(uint32_t count){
+  int status;assert(waitpid(child,&status,0)==child);assert(WIFSIGNALED(status)&&WTERMSIG(status)==SIGABRT);
+ }
+ void revoke_page(void){assert(tribes_memory_permissions_set(0,4096,0));}
++/* Run one forked case. expect_abort: the second, compiler-inlined access must
++   reach the full runtime check and stop before the guest access executes. */
++static unsigned inline_faults;
++static void inline_case(int expect_abort,void (*setup)(void),uint64_t *first,uint64_t *second,int store){
++ pid_t child=fork();assert(child>=0);
++ if(!child){
++  struct rlimit limit={0,0};setrlimit(RLIMIT_CORE,&limit);alarm(5);freopen("/dev/null","w",stderr);
++  if(setup)setup();
++  if(store)inline_store(first,second,0x5a5a5a5a5a5a5a5aull);else inline_pair(first,second);
++  _exit(0);
++ }
++ int status;assert(waitpid(child,&status,0)==child);
++ if(expect_abort){assert(WIFSIGNALED(status)&&WTERMSIG(status)==SIGABRT);inline_faults++;}
++ else assert(WIFEXITED(status)&&WEXITSTATUS(status)==0);
++}
++static void deny_page5(void){assert(tribes_memory_permissions_set(5*4096,4096,0));}
++static void read_only_page6(void){assert(tribes_memory_permissions_set(6*4096,4096,1));}
++static void deny_page9(void){assert(tribes_memory_permissions_set(9*4096,4096,0));}
++static void publish_page7(void){
++ static unsigned char expected[16];memcpy(expected,(unsigned char *)memory+7*4096+16,16);
++ TribesPublishedCodeRange range={7*4096+16,16,expected};
++ assert(tribes_memory_publish_code((uintptr_t)memory,&range,1));
++}
++static void inline_fault_cases(void){
++ uint64_t host=0;
++ inline_case(1,deny_page5,memory,memory+5*512,0);              /* denied read */
++ inline_case(0,read_only_page6,memory,memory+6*512,0);         /* read allowed */
++ inline_case(1,read_only_page6,memory,memory+6*512,1);         /* write denied */
++ inline_case(1,publish_page7,memory,memory+7*512+2,1);         /* published code */
++ inline_case(0,publish_page7,memory,memory+7*512+4,1);         /* adjacent data */
++ inline_case(1,NULL,memory,(uint64_t *)((unsigned char *)memory+65536-4),0); /* straddles window end */
++ inline_case(1,deny_page9,memory,(uint64_t *)((unsigned char *)memory+9*4096-4),0); /* second page denied */
++ inline_case(0,NULL,memory,&host,1);                           /* host second access */
++ inline_case(0,deny_page5,&host,memory,0);                     /* host first, guest second */
++ inline_case(1,deny_page5,&host,memory+5*512,0);               /* no bracket yet: full check */
++ assert(memory[6*512]==0&&memory[7*512+2]==0&&memory[7*512+4]==0x5a5a5a5a5a5a5a5aull);
++ memory[7*512+4]=0;
++}
+ static void *publisher(void *unused){
+  (void)unused;
+  for(unsigned i=0;i<4000;++i)assert(tribes_memory_permissions_set(4096,4096,(i&1)?1:3));
+@@ -67,11 +107,12 @@ int main(int argc,char **argv){
+   int status;assert(waitpid(child,&status,0)==child);assert(WIFSIGNALED(status)&&WTERMSIG(status)==SIGABRT);
+   assert(*memory==17); // the denied read must not continue into its store
+  }
++ if(argc==1)inline_fault_cases();
+  pthread_t writers[2],workers[4];
+  for(unsigned i=0;i<2;++i)assert(!pthread_create(writers+i,NULL,publisher,NULL));
+  for(uintptr_t i=0;i<4;++i)assert(!pthread_create(workers+i,NULL,reader,(void *)i));
+  for(unsigned i=0;i<4;++i)assert(!pthread_join(workers[i],NULL));for(unsigned i=0;i<2;++i)assert(!pthread_join(writers[i],NULL));
+  double start=now();for(unsigned i=0;i<100000;++i)batch(memory,&host);double elapsed=now()-start;
+  assert(*memory==1600017&&host==100017);
+- printf("PASS: mixed host/guest/host-only groups, nested pending writer, %u guard faults, concurrent readers/two publishers; 100000 batches %.6f seconds\n",argc==1?4u:0u,elapsed);
++ printf("PASS: mixed host/guest/host-only groups, nested pending writer, %u guard faults, %u inline-check faults, concurrent readers/two publishers; 100000 batches %.6f seconds\n",argc==1?4u:0u,inline_faults,elapsed);
+ }
+diff --git a/scripts/guarded_ir_check.py b/scripts/guarded_ir_check.py
+new file mode 100644
+index 0000000..480a348
+--- /dev/null
++++ b/scripts/guarded_ir_check.py
+@@ -0,0 +1,60 @@
++"""Structural audit of guarded IR emitted by the guest and external passes.
++
++Every guest load/store is immediately preceded by a full
++tribes_memory_access_begin, or by the token merge of a compiler-inlined check
++whose only fallback is that same full begin. A group never spans a call,
++fence or unrelated control flow outside the private tribes.guard.* blocks,
++retires 2..limit accesses through one end_many (or one access through end), and
++its count chain carries every begin token, including inlined fallbacks."""
++import re
++def check_guarded_groups(text,limit=16):
++ label='';open_=False;accesses=0;previous='';count=None;slow=set();stats=dict(groups=0,singles=0,inlined=0,maximum=0)
++ for line in text.splitlines():
++  s=line.strip()
++  if not s or s.startswith(';') or s.startswith('!') or s.startswith('declare') or s.startswith('attributes'):continue
++  m=re.match(r'^([-\w.$]+):(\s|$)',s)
++  if m:label=m[1];continue
++  if s.startswith('define '):assert not open_,s;label='';previous=s;continue
++  guard=label.startswith('tribes.guard.') and not label.startswith('tribes.guard.merge')
++  if 'call i32 @tribes_memory_access_begin(' in s:
++   token=s.split(' = ')[0]
++   if guard:assert label.startswith('tribes.guard.slow'),s;slow.add(token)
++   else:
++    if not open_:open_=True;accesses=0;count=token
++    else:
++     # Uninlined later access: its token joins the chain right after the access.
++     pass
++   previous=s;continue
++  if guard:
++   if re.search(r'\b(load|store)\b',s):assert ' store ' not in ' '+s and '!tribes.guard.fast' in s,s
++   assert not re.search(r'\b(call|atomicrmw|cmpxchg|fence|ret|switch)\b',s),s
++   previous=s;continue
++  if '= phi i32' in s:
++   assert open_ and 'tribes.guard.token' in s,s
++   incoming=re.findall(r'\[ ([^,]+), %',s);assert any(v in slow for v in incoming),s
++   stats['inlined']+=1;previous=s;continue
++  m=re.match(r'(%tribes.end.count[^ ]*) = add i32 ([^,]+), (.+)$',s)
++  if m:assert open_ and m[2]==count,(s,count);count=m[1];previous=s;continue
++  if 'call void @tribes_memory_access_end_many(' in s:
++   arg=re.search(r'\(i32 ([^)]+)\)',s)[1]
++   assert open_ and arg==count and 2<=accesses<=limit,(s,count,accesses)
++   stats['groups']+=1;stats['maximum']=max(stats['maximum'],accesses);open_=False;previous=s;continue
++  if 'call void @tribes_memory_access_end(' in s:
++   arg=re.search(r'\(i32 ([^)]+)\)',s)[1]
++   assert open_ and arg==count and accesses==1,(s,count,accesses)
++   stats['singles']+=1;stats['maximum']=max(stats['maximum'],1);open_=False;previous=s;continue
++  if re.search(r'\b(load|store|atomicrmw|cmpxchg)\b',s):
++   if '!tribes.checked.host.' in s:
++    assert re.search(r'\b(load|store)\b',s) and 'volatile' not in s,s
++    if open_:accesses+=1;assert accesses<=limit,s
++   else:
++    assert '@tribes_memory_access_begin(' in previous or 'tribes.end.count' in previous,(s,previous)
++    assert open_,s;accesses+=1;assert accesses<=limit,s
++    if 'volatile' in s or 'atomicrmw' in s or 'cmpxchg' in s:assert accesses==1,s
++   previous=s;continue
++  if s.startswith('br ') and open_ and 'tribes.guard.' in s:previous=s;continue
++  if re.search(r'\b(call|invoke|br|ret|fence|switch|unreachable)\b',s):assert not open_,s
++  previous=s
++ assert not open_
++ return stats
++
