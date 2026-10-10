@@ -12,6 +12,7 @@
 #include "llvm/Passes/PassPlugin.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/JSON.h"
+#include "llvm/Support/KnownBits.h"
 #include "llvm/Support/raw_ostream.h"
 #include <map>
 using namespace llvm;
@@ -82,7 +83,27 @@ struct GuestMemoryPass : PassInfoMixin<GuestMemoryPass> {
     return Address==F.getArg(0);
    };
    auto LocalAccess=[&](Value *Address,uint64_t Size){
-    int64_t Offset=0;auto *Root=GetPointerBaseWithConstantOffset(Address,Offset,M.getDataLayout());
+    // Prove masked indices as well as constant offsets, without assuming that
+    // an inbounds GEP or a native base makes an arbitrary index safe. Every
+    // nonnegative term and its scale must fit before adding it to the extent.
+    uint64_t Offset=0;Value *Root=Address->stripPointerCasts();
+    while(auto *G=dyn_cast<GEPOperator>(Root)){
+     if(G->getPointerAddressSpace())return false;
+     SmallMapVector<Value *,APInt,4> Terms;APInt Constant(64,0);
+     if(!G->collectOffset(M.getDataLayout(),64,Terms,Constant)||Constant.isNegative())return false;
+     uint64_t N=Constant.getZExtValue();if(N>UINT64_MAX-Offset)return false;Offset+=N;
+     for(auto &Term:Terms){
+      if(Term.second.isNegative())return false;
+      auto Maximum=computeKnownBits(Term.first,M.getDataLayout()).getMaxValue();
+      // GEP indices are signed. Reject a potentially negative index, including
+      // wide indices which could change sign when truncated to pointer width.
+      if(Maximum.isNegative()||Maximum.getBitWidth()>64)return false;
+      uint64_t Index=Maximum.getZExtValue(),Scale=Term.second.getZExtValue();
+      if(Scale&&Index>(UINT64_MAX-Offset)/Scale)return false;
+      Offset+=Index*Scale;
+     }
+     Root=G->getPointerOperand()->stripPointerCasts();
+    }
     uint64_t Extent=0;
     if(auto *TLS=dyn_cast<IntrinsicInst>(Root))if(TLS->getIntrinsicID()==Intrinsic::threadlocal_address)Root=TLS->getArgOperand(0);
     if(auto *A=dyn_cast<AllocaInst>(Root)){
@@ -92,7 +113,7 @@ struct GuestMemoryPass : PassInfoMixin<GuestMemoryPass> {
       auto N=M.getDataLayout().getTypeAllocSize(G->getValueType());if(!N.isScalable())Extent=N.getFixedValue();
      }
     }
-    return Extent&&Offset>=0&&(uint64_t)Offset<Extent&&Size<=Extent-(uint64_t)Offset;
+    return Extent&&Offset<Extent&&Size<=Extent-Offset;
    };
    auto CPUAccess=[&](Value *Address,uint64_t Size,Instruction *At){
     int64_t Offset=0;auto *Root=GetPointerBaseWithConstantOffset(Address,Offset,M.getDataLayout());

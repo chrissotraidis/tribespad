@@ -1,0 +1,121 @@
+{
+  "date": "2026-10-09",
+  "change": "Prove nonnegative masked GEP indices within fixed native stack/TLS/private-global objects using known bits and overflow-safe extent arithmetic. Guest pointees, unknown/negative/overflowing indices and externally owned globals retain checks. No runtime permission/publication change.",
+  "sources_sha256": {
+    "port/compiler/GuestMemoryPass.cpp": "c66a1b51cdba3eea259d53436b6388fb5ef9c49f373058357d7dd21f025df329",
+    "scripts/test-host-local-checks.py": "90ab642167d568a6b4b57c30894b06c90ea9ada9cd6119f7dcd17cd594ab7aca",
+    "tests/host_local_checks_test.c": "d36fb0bc7828842be1bf859d18cc8dad922cfcfcec7895a6a55f33dba59a64a7"
+  },
+  "builds": {
+    "simulator": {
+      "binary_sha256": "77af4c02b0aa1ba278a827783d43f6241df549b301fef9f6ad2b6626430c1138",
+      "bytes": 104349424,
+      "reused_native": 317,
+      "objects": 411
+    },
+    "device": {
+      "binary_sha256": "7ccf017c49e2a11072782670a0b17cee23fef82f581c302c24036b62dcb2da28",
+      "bytes": 104283392,
+      "reused_native": 322,
+      "objects": 411
+    }
+  },
+  "signatures": "Both bundles passed codesign --verify --deep --strict; ad-hoc device build only.",
+  "dispatch_proof": "Four bounded native cache field accesses elided; retained loads/stores change from 8/3 to 6/1. All 331018 prepared addresses and alias identities pass, including publication denial, provider changes and threaded execution.",
+  "tests": {
+    "host-local-checks": {
+      "passed": true,
+      "receipt_sha256": "a82b718d31e0af826c0207293645acbe8d51160743e7f7fae9985dc7da63d897"
+    },
+    "cpu-host-checks": {
+      "passed": true,
+      "receipt_sha256": "4653e64cfa1d07f028dc68b78ac5afa42eb6505ff655c75203420f06d492684a"
+    },
+    "native-cpu-checks": {
+      "passed": true,
+      "receipt_sha256": "1fd221e0b7ebe61d79f92c822b84e406d80e1f9554f33bacfa1ebed943b42f07"
+    },
+    "sse-host-locals": {
+      "passed": true,
+      "receipt_sha256": "7e13c6099d2b00ef8554a725162b498b7240b137290e464c084acb73538d1b53"
+    },
+    "x87-host-checks": {
+      "passed": true,
+      "receipt_sha256": "74bf5191b8cc7d53f183c975ee6b1c68e285a7a97021eb5cc57422b9c33e7099"
+    },
+    "guest-access-groups": {
+      "passed": true,
+      "receipt_sha256": "5ee4ef57d8a4684212fc69dd2d9c4841bad352039d74574a117afe93a40b6772"
+    },
+    "dispatch-cache": {
+      "passed": true,
+      "receipt_sha256": "3866ae392c848787d29325286c586b24aa5df8af16e3ad3f680e167c1073ad41"
+    }
+  },
+  "recordings": {
+    "before-1": {
+      "app_pid": 13515,
+      "wall_seconds": 32.007677458,
+      "exit": 0,
+      "frames": 211,
+      "video_seconds": 29.751667,
+      "scope": "Offline Katabatic, two bots, audio enabled; no builds, debugger or sampler during recording.",
+      "presented_fps": 7.0920395821854285,
+      "video_sha256": "608e188f1704bd9a63956c2d9de2aad23fe9ae8404d7471bc2b4e01e113ea97e"
+    },
+    "before-2": {
+      "app_pid": 13515,
+      "wall_seconds": 32.049910458999996,
+      "exit": 0,
+      "frames": 226,
+      "video_seconds": 29.876667,
+      "scope": "Offline Katabatic, two bots, audio enabled; no builds, debugger or sampler during recording.",
+      "presented_fps": 7.564431467539535,
+      "video_sha256": "6ea61c6eab0f2b910f4ff8dbdf8f044ccab8f25223738c019d4cb993209d1fe5"
+    },
+    "after-1": {
+      "app_pid": 17260,
+      "wall_seconds": 32.062354125,
+      "exit": 0,
+      "frames": 225,
+      "video_seconds": 29.806667,
+      "scope": "Offline Katabatic, two bots, audio enabled; no builds, debugger or sampler during recording.",
+      "presented_fps": 7.54864675074204,
+      "video_sha256": "cc6cba1c4b6c84b2c91d9357dda07449ec0fa00287efe7093df000f1b256e140"
+    },
+    "after-2": {
+      "app_pid": 17260,
+      "wall_seconds": 32.10730325,
+      "exit": 0,
+      "frames": 219,
+      "video_seconds": 29.86,
+      "scope": "Offline Katabatic, two bots, audio enabled; no builds, debugger or sampler during recording.",
+      "presented_fps": 7.334226389819157,
+      "video_sha256": "f36cac1498e92e732c50b68d444ca5b7d549858dc6addc72c634e1c37753c783"
+    }
+  },
+  "performance_conclusion": "Fresh weighted average 7.33 FPS baseline versus 7.44 candidate. Individual ranges overlap (7.09/7.56 and 7.55/7.33), so no established whole-game improvement. Original observer view, two offline bots, audio; no builds/debugger/sampler during recordings. Live bots/snow are not a deterministic replay; recording is Simulator frame delivery.",
+  "execution": {
+    "pid": 17260,
+    "binary_sha256": "77af4c02b0aa1ba278a827783d43f6241df549b301fef9f6ad2b6626430c1138",
+    "map": "Katabatic",
+    "bots": 2,
+    "touch": [
+      "spawn",
+      "weapon switch",
+      "disc ammo 15 to 14",
+      "movement: remote tower range 615.6 to 595.2"
+    ],
+    "image": "ipad-masked-host-gameplay-2026-10-09.png",
+    "image_sha256": "66725c51bca3b4146b7e18330a226e3d26b44b328c64c43dfc2917e210e73b86",
+    "online_join_or_authentication": false,
+    "quit": "Original Leave Game > Launch > Quit completed with logged code 0; process absent."
+  },
+  "profile": {
+    "path": "generated/integration-review/masked-host-bounds/player-sample.txt",
+    "sha256": "a50fc9b3c53aa048c4c6d5dc4253eed29569a10cbf789d6d007ac0b12a65b6ce",
+    "seconds": 3,
+    "timing": "After FPS recordings; beginning of spawned-player session.",
+    "finding": "Memory guards still dominate sampled CPU work; tb_mmx_eval has 187 top-of-stack samples and is the next bounded native arithmetic target. Thread totals include sleeping workers; these counts are not percentages of frame time."
+  }
+}

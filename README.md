@@ -9,7 +9,7 @@ the existing Tribes 2 community, with touch and controller support on mobile.
 
 **In development.** The Mac app and full iPad Simulator app run original offline
 matches with bots. iPad touch movement, aim, weapons, firing, jets and respawn
-have been exercised. The latest fixed-view test reaches **8.8 FPS in the Simulator**, with
+have been exercised. Recent fixed-view tests run at **7–9 FPS in the Simulator**, with
 slow loading and input delay. Physical-iPad gameplay is unverified; there is no
 playable iPad or iPhone release yet.
 
@@ -112,6 +112,9 @@ and build validation: **[Development guide](docs/DEVELOPMENT.md)**.
   **7.4 to 8.8 FPS** (two 30-second recordings per build, offline Katabatic, two bots).
   Memory checks remain enabled. This is a Simulator recording measurement, not
   physical-device performance; startup, input delay and sustained speed still need work.
+- A follow-up compiler optimization removes redundant checks on bounded native
+  arrays, but its 7.3 versus 7.4 FPS recordings overlap and establish no further
+  gameplay speedup.
 - Distance fog is fixed. HD texture uploads are verified, but full visual fidelity
   is not accepted.
 - Both iPad targets build with an optimized executable of about **104 MB**, down

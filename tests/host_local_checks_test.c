@@ -11,11 +11,13 @@
 _Thread_local uint32_t external_tls;
 extern uint32_t host_locals(uint32_t *,uint32_t);
 extern uint32_t host_bulk(void *);
+extern uint32_t host_masked(uint64_t,uint32_t);
 extern void host_pointee(uint32_t *,uint32_t);
 static unsigned char *guest;
 static void *worker(void *arg){
  unsigned index=(unsigned)(uintptr_t)arg;uint32_t *p=(uint32_t *)(guest+index*4096);
  for(uint32_t n=0;n<10000;n++){
+  assert(host_masked((uint64_t)n|(UINT64_C(0xffffffff)<<32),n+index)==n+index);
   *p=n;assert(host_locals(p,n)==(n^0x12345678u));assert(*p==n+1);assert(external_tls==n);
   host_pointee(p,n+2);assert(*p==n+2);
   assert(host_bulk(p)==0x25252525u);assert(p[0]==0x25252525u&&p[1]==0x25252525u);

@@ -12,6 +12,7 @@ target datalayout = "e-m:o-i64:64-i128:128-n32:64-S128-Fn32"
 @constant = private constant i32 305419896
 @external_tls = external thread_local global i32
 @pointer = internal thread_local global ptr null
+@masked_slots = internal thread_local global [256 x i32] zeroinitializer
 @imported = external global [8 x i8]
 @local = private global [8 x i8] zeroinitializer
 @tls_bytes = external thread_local global [8 x i8]
@@ -53,14 +54,23 @@ define void @host_pointee(ptr %guest,i32 %n) {
 }
 '''
 body+=bulk_body
+body+='''define i32 @host_masked(i64 %n,i32 %value) {
+ %a = call ptr @llvm.threadlocal.address.p0(ptr @masked_slots)
+ %i = and i64 %n,255
+ %p = getelementptr [256 x i32],ptr %a,i64 0,i64 %i
+ store i32 %value,ptr %p
+ %r = load i32,ptr %p
+ ret i32 %r
+}
+'''
 policy=out/'policy.json';policy.write_text(json.dumps(dict(checked_symbols=[],host_only=[],range_checked=['memcpy'],memory_manager_calls=[],memory_manager_sources=[],host_intrinsics=[],checked_strings=[],checked_callbacks=[],barrier_asm_sources=[],scalar_fcntl_commands=[])))
 def check(name,text,optimized=True):
  src=out/(name+'-input.ll');dst=out/(name+'.ll');src.write_text(text)
  run=subprocess.run([str(T/'opt'),'-load-pass-plugin',str(plugins[0]),'-passes=tribes-guest-memory'+('-cpu-host' if optimized else '')+',verify','-S',str(src),'-o',str(dst)],capture_output=True,text=True)
  assert run.returncode==0,run.stderr
  return dst,json.loads(next(l.split(' ',1)[1] for l in run.stderr.splitlines() if l.startswith('TRIBES_MEMORY_PASS ')))
-ir,census=check('runtime',prefix+body);assert census['host_bulk_operations']==2 and census['host_local_accesses']==8 and census['loads']==1 and census['stores']==2,census
-_,baseline=check('baseline',prefix+body,False);assert baseline['host_local_accesses']==0 and baseline['loads']+baseline['stores']==11,baseline
+ir,census=check('runtime',prefix+body);assert census['host_bulk_operations']==2 and census['host_local_accesses']==10 and census['loads']==1 and census['stores']==2,census
+_,baseline=check('baseline',prefix+body,False);assert baseline['host_local_accesses']==0 and baseline['loads']+baseline['stores']==13,baseline
 # Include the first/last valid byte, crossing and negative ranges, dynamic
 # offsets/allocation extents, volatility, atomics and ordinary imported globals.
 variants={
@@ -69,6 +79,14 @@ variants={
  'stack-cross':('%a = alloca [8 x i8]\n%p = getelementptr i8,ptr %a,i64 7','load i16',False),
  'stack-negative':('%a = alloca [8 x i8]\n%p = getelementptr i8,ptr %a,i64 -1','load i8',False),
  'stack-dynamic-offset':('%a = alloca [8 x i8]\n%p = getelementptr i8,ptr %a,i64 %offset','load i8',False),
+ 'stack-masked':('%a = alloca [8 x i8]\n%i = and i64 %offset,7\n%p = getelementptr i8,ptr %a,i64 %i','load i8',True),
+ 'stack-masked-cross':('%a = alloca [8 x i8]\n%i = and i64 %offset,7\n%p = getelementptr i8,ptr %a,i64 %i','load i16',False),
+ 'stack-masked-scaled':('%a = alloca [8 x i32]\n%i = and i64 %offset,7\n%p = getelementptr i32,ptr %a,i64 %i','load i32',True),
+ 'stack-masked-negative-scale':('%a = alloca [8 x i8]\n%i = and i64 %offset,7\n%neg = sub i64 0,%i\n%p = getelementptr i8,ptr %a,i64 %neg','load i8',False),
+ 'stack-masked-overflow':('%a = alloca [8 x i8]\n%i = and i64 %offset,9223372036854775807\n%p = getelementptr i64,ptr %a,i64 %i','load i8',False),
+ 'tls-masked':('%a = call ptr @llvm.threadlocal.address.p0(ptr @tls_bytes)\n%i = and i64 %offset,7\n%p = getelementptr i8,ptr %a,i64 %i','load i8',True),
+ 'global-masked':('%i = and i64 %offset,7\n%p = getelementptr i8,ptr @local,i64 %i','load i8',True),
+ 'imported-masked':('%i = and i64 %offset,7\n%p = getelementptr i8,ptr @imported,i64 %i','load i8',False),
  'stack-dynamic-size':('%p = alloca i8,i64 %offset','load i8',False),
  'global-last':('%p = getelementptr i8,ptr @local,i64 7','load i8',True),
  'global-cross':('%p = getelementptr i8,ptr @local,i64 7','load i16',False),
