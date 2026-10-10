@@ -7,4 +7,5 @@ TribesGL4ESContext *tribes_gl4es_context_create(SDL_Window *, SDL_GLContext, Tri
 void tribes_gl4es_context_activate(TribesGL4ESContext *);
 void tribes_gl4es_context_destroy(TribesGL4ESContext *);
 bool tribes_gl4es_context_swap(TribesGL4ESContext *);
+uint64_t tribes_gl4es_presented_frames(void);
 #endif
