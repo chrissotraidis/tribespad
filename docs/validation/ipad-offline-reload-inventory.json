@@ -1,0 +1,42 @@
+{
+  "date": "2026-10-09",
+  "source_commit": "43c990a872d87043e276ee2be27113fc3973b824",
+  "simulator_executable_sha256": "7ab66ce111e2cbd338b0a3754b67ff163e7e115792fded9f149251b8c3ef03b4",
+  "environment": {
+    "device": "iPad Air 11-inch (M4)",
+    "runtime": "iOS 26.5",
+    "pid": 11236,
+    "debugger": "LLDB attached, abort breakpoint (50 resolved locations), zero hits; debugger exited after clean app shutdown",
+    "builds_during_test": false
+  },
+  "offline_session": {
+    "mission": "Katabatic",
+    "bots": 2,
+    "map_loads_in_same_process": 2,
+    "elapsed_process_time_observed_seconds": 1267,
+    "first_start_utc": "2026-10-10T03:54:12.545810Z",
+    "second_start_utc": "2026-10-10T04:02:14.954252Z",
+    "result": "Both worlds rendered; second match touch spawning, movement, look and inventory selection succeeded; Leave Game and original Launch > Quit exited with status 0."
+  },
+  "inventory_station": {
+    "selection": "Assault Offense selected by touch in original inventory, then Done",
+    "diagnostic_setup": "Offline console moved original player 10475 next to Team1StationInventory1 using 10475.setTransform(\"291 -168.95 96.2 0 0 1 1.5708\"); no direct inventory/armor modification.",
+    "station_entry": "Touch backward movement for 0.6 seconds entered station; HUD changed to four weapons with ammo 40/15/12/150.",
+    "station_exit": "Touch forward movement for 1.3 seconds left station, then touch weapon switched to disc; flag range 35.5 to 19.3.",
+    "original_readback": "echo(10475.getDataBlock().getName(),\" \",10475.getPosition()); returned MediumMaleHumanArmor 304.499 -168.94 96.0399.",
+    "limitation": "Position was set for test setup; this does not validate an entirely touch-navigated route from spawn to station."
+  },
+  "stability": "Earlier eight-operation baseline null guest-PC failure did not recur. No cause or fix established. Debugger attachment can affect timing; this is not a stress-test guarantee or performance measurement.",
+  "console_notes": "Two bot UNABLE TO DEPLOY EQUIPMENT messages remained. Two syntax errors resulted from submitting a diagnostic command before helper typing finished; subsequent complete commands worked.",
+  "online_join_or_authentication": false,
+  "images": {
+    "inventory_exit": {
+      "path": "ipad-station-exit-2026-10-09.png",
+      "sha256": "86a4cc1727e388a7e05d96080ec25620db12d17613a142b59de57cbe7f9c3cfb"
+    },
+    "original_console_confirmation": {
+      "path": "ipad-station-confirmation-2026-10-09.png",
+      "sha256": "7e4244733ae47e6d65cd09770a9f1fd6b4e8f05c011c76a3377e47993a125ef9"
+    }
+  }
+}

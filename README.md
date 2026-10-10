@@ -23,6 +23,9 @@ playable iPad or iPhone release yet.
   servers and refreshed their information. Tests do not join online matches.
 - **Original iPad game in Simulator.** The Metal renderer loads Katabatic with bots.
   Touch movement, aiming, weapon switching, firing, jets and respawn work.
+- **Offline inventory and reload.** Two maps load in the same iPad app session.
+  Touch selects equipment, and station equipment changes and exit pass with
+  [diagnostic positioning for the station test](docs/validation/ipad-offline-reload-inventory.json).
 - **Original audio data.** WAV loading and the MP3 window tables are repaired.
   Original UI/loading samples match the game archive, and music supplies nonzero
   PCM to OpenAL. Audible quality still needs validation.
