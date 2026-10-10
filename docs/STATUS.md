@@ -1,12 +1,18 @@
 # TribesPad status — 9 October 2026
 
+**Current iPad build:** Simulator `310ce4fc…` and device `9df24ab2…` use native vectors for MMX lane arithmetic. All 56,096 x86 oracle cases pass, including the final checked module, as do 8,052 cases across 671 original instruction sites and checked x87/CPU boundaries. Isolated helper time falls about 55% (7.73→3.47 ns, median of three rounds); its checked text shrinks 2,012→484 bytes. Memory and publication checks remain intact. Both 104 MB bundles pass strict ad-hoc signatures. [Validation](validation/ipad-mmx-vectors.json).
+
+**Actual app:** original offline Katabatic with two bots renders. Touch spawn, weapon switch, disc 15→14 and forward movement (enemy flag 1080.1→1060.5) pass; Leave Game → Launch → Quit exits with code 0. World observed by 211s, with early loading overlapping device compilation. No owned app, debugger or build remains live. [Gameplay](validation/ipad-mmx-vectors-gameplay-2026-10-09.png). No online joining/authentication.
+
+**Performance/next:** two 30-second observer recordings measure **5.84/7.37 FPS**, below the prior 7.55/7.33; no whole-game improvement is established. Live-world and host/display variation prevent attributing the difference. The separate player profile no longer lists MMX at its five-top-sample threshold, but memory access/host-span checks dominate. Next measure original engine or native-swap timing independently of video capture, then target those measured guard costs. Physical iPad/controller, iPhone, comfortable performance and full fidelity/audio acceptance remain. Development signing is still needed; the earlier isolated null-PC failure remains unexplained. Mac bundles unchanged.
+
+## Earlier checkpoints
+
 **Current iPad build:** Simulator `77af4c02…` and device `7ccf017c…` prove masked indices into fixed native objects at compile time. Four redundant dispatch-cache field checks are removed; guest pointees and unknown, negative, crossing or overflowing indices remain checked. Normal/ThreadSanitizer host-boundary, CPU, SIMD/x87 and all 331,018 dispatch-address checks pass. Both bundles pass strict ad-hoc signatures, remain about 104 MB and reuse 317/411 and 322/411 native objects after checking.
 
 **Actual app:** original offline Katabatic with two bots renders; touch spawning, weapon switch, disc 15→14 and movement (remote tower 615.6→595.2) pass. Original Leave Game → Launch → Quit exits with code 0. No owned game, debugger or build remains running. [Validation](validation/ipad-masked-host-bounds.json), [gameplay](validation/ipad-masked-host-gameplay-2026-10-09.png). No online joining/authentication.
 
 **Performance/next:** fresh recordings measure 7.09/7.56 FPS before and 7.55/7.33 after (weighted 7.33→7.44); overlapping ranges do **not** establish a gameplay speedup. Live bots/snow and Simulator frame delivery limit comparison. A separate three-second player sample still finds substantial memory-guard cost and 187 top samples in scalar `tb_mmx_eval`. Next optimize those finite integer lane operations against the existing x86 oracle, then remeasure actual gameplay. Physical iPad/controller, iPhone, comfortable performance and fidelity/audio acceptance remain; device execution needs development signing. The earlier isolated null-PC failure remains unexplained, although the longer reload/inventory run did not reproduce it. Mac bundles unchanged.
-
-## Earlier checkpoints
 
 **iPad performance:** checked Simulator `7ab66ce1…` raises the bounded memory group from eight to sixteen ordinary operations. Every permission check remains; groups still end at calls, control flow, fences and atomic/volatile accesses. Normal/checked/ThreadSanitizer grouping, reader/publication and affected native-boundary tests pass. Two 30-second recordings of the same untouched Katabatic observer view measure **7.44/7.34 FPS before → 8.67/8.94 after** (weighted averages 7.39→8.80, about 19%). Live bots/snow are not a deterministic replay, and this is Simulator frame delivery, not physical-device performance.
 

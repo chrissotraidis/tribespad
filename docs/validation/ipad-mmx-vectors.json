@@ -1,0 +1,764 @@
+{
+  "date_utc": "2026-10-10T04:56:22.048603+00:00",
+  "change": "Replace scalar MMX lane loops with fixed-width Clang vector arithmetic; signed widening, unsigned wrapping pair sums, explicit saturation and full-width shift-count bounds. Guest checks and publication guards unchanged.",
+  "builds": {
+    "simulator": {
+      "binary_sha256": "310ce4fc7d4c6b6bd5ea5d342122243ba42e1afcc350ed93deee9f8ae6f16894",
+      "bytes": 104349424,
+      "strict_ad_hoc_signature_passed": true,
+      "reused_objects": 316,
+      "objects": 411,
+      "guarded_result_sha256": "5164cd44e79e0a1514df787e480722316e58300b5b08ca545aeea08bae25aa42"
+    },
+    "device": {
+      "binary_sha256": "9df24ab2787839cde4738651a70418d5828005eded7d065eb0d55ae7759f8a99",
+      "bytes": 104283392,
+      "strict_ad_hoc_signature_passed": true,
+      "reused_objects": 321,
+      "objects": 411,
+      "guarded_result_sha256": "284e83791d47f39d755fe5a6158af45a697debf9879eab2e8f7f932b5b4cd44f"
+    }
+  },
+  "oracles": {
+    "native": {
+      "architecture": "/Users/chrissotraidis/GitHub/tribespad/generated/mmx/libmmx.dylib: Mach-O 64-bit dynamically linked shared library arm64",
+      "cases": 56096,
+      "operations": {
+        "movq": 2448,
+        "paddb": 2448,
+        "paddw": 2448,
+        "psubw": 2448,
+        "pand": 2448,
+        "por": 2448,
+        "pxor": 2448,
+        "pmulhw": 2448,
+        "pmaddwd": 2448,
+        "punpcklbw": 2448,
+        "punpckhbw": 2448,
+        "punpcklwd": 2448,
+        "punpckldq": 2448,
+        "packuswb": 2448,
+        "packssdw": 2448,
+        "psraw": 2768,
+        "psrlw": 2768,
+        "psllw": 2768,
+        "psrld": 2768,
+        "pslld": 2768,
+        "psrlq": 2768,
+        "psllq": 2768
+      },
+      "oracle": "Original x86 MMX instruction bytes in Unicorn 2.1.4",
+      "binary_sha256": "1b343ee5c5c727c82f311e8a5b2681824dde83f68bfbe01af6896acce7d75a2a",
+      "pass": true,
+      "limits": [
+        "No full x87 exception/tag validation yet",
+        "Whole engine has not run"
+      ]
+    },
+    "checked": {
+      "architecture": "generated/integration-review/x87-host-checks/optimized/libx87.dylib: Mach-O 64-bit dynamically linked shared library arm64",
+      "cases": 56096,
+      "operations": {
+        "movq": 2448,
+        "paddb": 2448,
+        "paddw": 2448,
+        "psubw": 2448,
+        "pand": 2448,
+        "por": 2448,
+        "pxor": 2448,
+        "pmulhw": 2448,
+        "pmaddwd": 2448,
+        "punpcklbw": 2448,
+        "punpckhbw": 2448,
+        "punpcklwd": 2448,
+        "punpckldq": 2448,
+        "packuswb": 2448,
+        "packssdw": 2448,
+        "psraw": 2768,
+        "psrlw": 2768,
+        "psllw": 2768,
+        "psrld": 2768,
+        "pslld": 2768,
+        "psrlq": 2768,
+        "psllq": 2768
+      },
+      "oracle": "Original x86 MMX instruction bytes in Unicorn 2.1.4",
+      "binary_sha256": "1a3dee5e96bc16c5c4c26c9c3021e2d8cdc5278ca2bbec2a6f5b13de643d8611",
+      "pass": true,
+      "limits": [
+        "No full x87 exception/tag validation yet",
+        "Whole engine has not run"
+      ]
+    },
+    "final_checked": {
+      "architecture": "generated/integration-review/mmx-vectors/after.dylib: Mach-O 64-bit dynamically linked shared library arm64",
+      "cases": 56096,
+      "operations": {
+        "movq": 2448,
+        "paddb": 2448,
+        "paddw": 2448,
+        "psubw": 2448,
+        "pand": 2448,
+        "por": 2448,
+        "pxor": 2448,
+        "pmulhw": 2448,
+        "pmaddwd": 2448,
+        "punpcklbw": 2448,
+        "punpckhbw": 2448,
+        "punpcklwd": 2448,
+        "punpckldq": 2448,
+        "packuswb": 2448,
+        "packssdw": 2448,
+        "psraw": 2768,
+        "psrlw": 2768,
+        "psllw": 2768,
+        "psrld": 2768,
+        "pslld": 2768,
+        "psrlq": 2768,
+        "psllq": 2768
+      },
+      "oracle": "Original x86 MMX instruction bytes in Unicorn 2.1.4",
+      "binary_sha256": "67ae58a6d3b4de3cf02e7bb52b9af05b8816776a4ff03ceb819d57291b355680",
+      "pass": true,
+      "limits": [
+        "No full x87 exception/tag validation yet",
+        "Whole engine has not run"
+      ]
+    },
+    "original_lowering": {
+      "pass": true,
+      "original_sites": 671,
+      "emitted_blocks": 671,
+      "cases": 8052,
+      "binary_sha256": "daea01c13b7de6a5d3fc003e29cb22bf85f4e382d67e286792f8b6de4f4cbfa2",
+      "lift": "generated/srw/run-20261002T125115-tribes2",
+      "limits": [
+        "Full x87 exceptions and tag consumers still pending",
+        "Individual emitted instructions, not a complete engine session"
+      ]
+    },
+    "x87_checked_result_sha256": "3de3279e80cbde13fff4591a0078204712690625603b0de1ab0494646840b370"
+  },
+  "benchmark": {
+    "scope": "Isolated indirect calls to 16 changed MMX operations, ten million calls per operation, three alternating before/after rounds. Exact checked MMX modules retargeted to native macOS. Not a whole-game measurement.",
+    "mean_ns_per_call": {
+      "before": [
+        7.916875,
+        7.7288125,
+        7.693062499999999
+      ],
+      "after": [
+        3.4820000000000007,
+        3.4720625000000003,
+        3.4727500000000004
+      ]
+    },
+    "median_before": 7.7288125,
+    "median_after": 3.4727500000000004,
+    "all_checksums_identical": true,
+    "checked_object_text_bytes_before": 2012,
+    "checked_object_text_bytes_after": 484,
+    "raw": [
+      {
+        "name": "before",
+        "round": 0,
+        "ops": [
+          {
+            "op": 1,
+            "ns": 11.811,
+            "checksum": "80008fff010000ff"
+          },
+          {
+            "op": 2,
+            "ns": 6.063,
+            "checksum": "800077ff010008ff"
+          },
+          {
+            "op": 3,
+            "ns": 6.103,
+            "checksum": "9df07fff253000ff"
+          },
+          {
+            "op": 7,
+            "ns": 4.303,
+            "checksum": "ffb1ff80b77bac18"
+          },
+          {
+            "op": 8,
+            "ns": 4.475,
+            "checksum": "002ce9a393ef3209"
+          },
+          {
+            "op": 9,
+            "ns": 6.766,
+            "checksum": "4000ff50ffa040ff"
+          },
+          {
+            "op": 10,
+            "ns": 6.789,
+            "checksum": "007f80bfbfc03f20"
+          },
+          {
+            "op": 11,
+            "ns": 3.687,
+            "checksum": "407f807fffff00ff"
+          },
+          {
+            "op": 12,
+            "ns": 3.678,
+            "checksum": "407f407f010000ff"
+          },
+          {
+            "op": 13,
+            "ns": 14.461,
+            "checksum": "7f7f0080403f40ff"
+          },
+          {
+            "op": 14,
+            "ns": 13.211,
+            "checksum": "7f80807f3fffc000"
+          },
+          {
+            "op": 15,
+            "ns": 9.29,
+            "checksum": "ffbf007f4010402f"
+          },
+          {
+            "op": 16,
+            "ns": 9.518,
+            "checksum": "003fffff4010bfd0"
+          },
+          {
+            "op": 17,
+            "ns": 11.42,
+            "checksum": "7e7f7f80400041ff"
+          },
+          {
+            "op": 18,
+            "ns": 7.517,
+            "checksum": "003f80934010b7d8"
+          },
+          {
+            "op": 19,
+            "ns": 7.578,
+            "checksum": "70407f80204141ff"
+          }
+        ]
+      },
+      {
+        "name": "after",
+        "round": 0,
+        "ops": [
+          {
+            "op": 1,
+            "ns": 3.701,
+            "checksum": "80008fff010000ff"
+          },
+          {
+            "op": 2,
+            "ns": 3.706,
+            "checksum": "800077ff010008ff"
+          },
+          {
+            "op": 3,
+            "ns": 3.609,
+            "checksum": "9df07fff253000ff"
+          },
+          {
+            "op": 7,
+            "ns": 4.793,
+            "checksum": "ffb1ff80b77bac18"
+          },
+          {
+            "op": 8,
+            "ns": 4.51,
+            "checksum": "002ce9a393ef3209"
+          },
+          {
+            "op": 9,
+            "ns": 3.575,
+            "checksum": "4000ff50ffa040ff"
+          },
+          {
+            "op": 10,
+            "ns": 3.592,
+            "checksum": "007f80bfbfc03f20"
+          },
+          {
+            "op": 11,
+            "ns": 3.591,
+            "checksum": "407f807fffff00ff"
+          },
+          {
+            "op": 12,
+            "ns": 3.567,
+            "checksum": "407f407f010000ff"
+          },
+          {
+            "op": 13,
+            "ns": 4.471,
+            "checksum": "7f7f0080403f40ff"
+          },
+          {
+            "op": 14,
+            "ns": 4.544,
+            "checksum": "7f80807f3fffc000"
+          },
+          {
+            "op": 15,
+            "ns": 3.587,
+            "checksum": "ffbf007f4010402f"
+          },
+          {
+            "op": 16,
+            "ns": 1.878,
+            "checksum": "003fffff4010bfd0"
+          },
+          {
+            "op": 17,
+            "ns": 1.868,
+            "checksum": "7e7f7f80400041ff"
+          },
+          {
+            "op": 18,
+            "ns": 2.368,
+            "checksum": "003f80934010b7d8"
+          },
+          {
+            "op": 19,
+            "ns": 2.352,
+            "checksum": "70407f80204141ff"
+          }
+        ]
+      },
+      {
+        "name": "after",
+        "round": 1,
+        "ops": [
+          {
+            "op": 1,
+            "ns": 3.59,
+            "checksum": "80008fff010000ff"
+          },
+          {
+            "op": 2,
+            "ns": 3.582,
+            "checksum": "800077ff010008ff"
+          },
+          {
+            "op": 3,
+            "ns": 3.601,
+            "checksum": "9df07fff253000ff"
+          },
+          {
+            "op": 7,
+            "ns": 4.772,
+            "checksum": "ffb1ff80b77bac18"
+          },
+          {
+            "op": 8,
+            "ns": 4.485,
+            "checksum": "002ce9a393ef3209"
+          },
+          {
+            "op": 9,
+            "ns": 3.596,
+            "checksum": "4000ff50ffa040ff"
+          },
+          {
+            "op": 10,
+            "ns": 3.58,
+            "checksum": "007f80bfbfc03f20"
+          },
+          {
+            "op": 11,
+            "ns": 3.601,
+            "checksum": "407f807fffff00ff"
+          },
+          {
+            "op": 12,
+            "ns": 3.596,
+            "checksum": "407f407f010000ff"
+          },
+          {
+            "op": 13,
+            "ns": 4.51,
+            "checksum": "7f7f0080403f40ff"
+          },
+          {
+            "op": 14,
+            "ns": 4.553,
+            "checksum": "7f80807f3fffc000"
+          },
+          {
+            "op": 15,
+            "ns": 3.612,
+            "checksum": "ffbf007f4010402f"
+          },
+          {
+            "op": 16,
+            "ns": 1.859,
+            "checksum": "003fffff4010bfd0"
+          },
+          {
+            "op": 17,
+            "ns": 1.88,
+            "checksum": "7e7f7f80400041ff"
+          },
+          {
+            "op": 18,
+            "ns": 2.366,
+            "checksum": "003f80934010b7d8"
+          },
+          {
+            "op": 19,
+            "ns": 2.37,
+            "checksum": "70407f80204141ff"
+          }
+        ]
+      },
+      {
+        "name": "before",
+        "round": 1,
+        "ops": [
+          {
+            "op": 1,
+            "ns": 11.389,
+            "checksum": "80008fff010000ff"
+          },
+          {
+            "op": 2,
+            "ns": 6.089,
+            "checksum": "800077ff010008ff"
+          },
+          {
+            "op": 3,
+            "ns": 6.226,
+            "checksum": "9df07fff253000ff"
+          },
+          {
+            "op": 7,
+            "ns": 4.607,
+            "checksum": "ffb1ff80b77bac18"
+          },
+          {
+            "op": 8,
+            "ns": 4.774,
+            "checksum": "002ce9a393ef3209"
+          },
+          {
+            "op": 9,
+            "ns": 6.786,
+            "checksum": "4000ff50ffa040ff"
+          },
+          {
+            "op": 10,
+            "ns": 6.753,
+            "checksum": "007f80bfbfc03f20"
+          },
+          {
+            "op": 11,
+            "ns": 3.617,
+            "checksum": "407f807fffff00ff"
+          },
+          {
+            "op": 12,
+            "ns": 3.6,
+            "checksum": "407f407f010000ff"
+          },
+          {
+            "op": 13,
+            "ns": 14.364,
+            "checksum": "7f7f0080403f40ff"
+          },
+          {
+            "op": 14,
+            "ns": 13.202,
+            "checksum": "7f80807f3fffc000"
+          },
+          {
+            "op": 15,
+            "ns": 9.183,
+            "checksum": "ffbf007f4010402f"
+          },
+          {
+            "op": 16,
+            "ns": 9.29,
+            "checksum": "003fffff4010bfd0"
+          },
+          {
+            "op": 17,
+            "ns": 9.227,
+            "checksum": "7e7f7f80400041ff"
+          },
+          {
+            "op": 18,
+            "ns": 7.287,
+            "checksum": "003f80934010b7d8"
+          },
+          {
+            "op": 19,
+            "ns": 7.267,
+            "checksum": "70407f80204141ff"
+          }
+        ]
+      },
+      {
+        "name": "before",
+        "round": 2,
+        "ops": [
+          {
+            "op": 1,
+            "ns": 11.545,
+            "checksum": "80008fff010000ff"
+          },
+          {
+            "op": 2,
+            "ns": 6.01,
+            "checksum": "800077ff010008ff"
+          },
+          {
+            "op": 3,
+            "ns": 6.094,
+            "checksum": "9df07fff253000ff"
+          },
+          {
+            "op": 7,
+            "ns": 4.306,
+            "checksum": "ffb1ff80b77bac18"
+          },
+          {
+            "op": 8,
+            "ns": 4.527,
+            "checksum": "002ce9a393ef3209"
+          },
+          {
+            "op": 9,
+            "ns": 6.729,
+            "checksum": "4000ff50ffa040ff"
+          },
+          {
+            "op": 10,
+            "ns": 6.803,
+            "checksum": "007f80bfbfc03f20"
+          },
+          {
+            "op": 11,
+            "ns": 3.648,
+            "checksum": "407f807fffff00ff"
+          },
+          {
+            "op": 12,
+            "ns": 3.603,
+            "checksum": "407f407f010000ff"
+          },
+          {
+            "op": 13,
+            "ns": 14.317,
+            "checksum": "7f7f0080403f40ff"
+          },
+          {
+            "op": 14,
+            "ns": 13.193,
+            "checksum": "7f80807f3fffc000"
+          },
+          {
+            "op": 15,
+            "ns": 9.148,
+            "checksum": "ffbf007f4010402f"
+          },
+          {
+            "op": 16,
+            "ns": 9.188,
+            "checksum": "003fffff4010bfd0"
+          },
+          {
+            "op": 17,
+            "ns": 9.222,
+            "checksum": "7e7f7f80400041ff"
+          },
+          {
+            "op": 18,
+            "ns": 7.35,
+            "checksum": "003f80934010b7d8"
+          },
+          {
+            "op": 19,
+            "ns": 7.406,
+            "checksum": "70407f80204141ff"
+          }
+        ]
+      },
+      {
+        "name": "after",
+        "round": 2,
+        "ops": [
+          {
+            "op": 1,
+            "ns": 3.646,
+            "checksum": "80008fff010000ff"
+          },
+          {
+            "op": 2,
+            "ns": 3.65,
+            "checksum": "800077ff010008ff"
+          },
+          {
+            "op": 3,
+            "ns": 3.579,
+            "checksum": "9df07fff253000ff"
+          },
+          {
+            "op": 7,
+            "ns": 4.791,
+            "checksum": "ffb1ff80b77bac18"
+          },
+          {
+            "op": 8,
+            "ns": 4.495,
+            "checksum": "002ce9a393ef3209"
+          },
+          {
+            "op": 9,
+            "ns": 3.566,
+            "checksum": "4000ff50ffa040ff"
+          },
+          {
+            "op": 10,
+            "ns": 3.576,
+            "checksum": "007f80bfbfc03f20"
+          },
+          {
+            "op": 11,
+            "ns": 3.565,
+            "checksum": "407f807fffff00ff"
+          },
+          {
+            "op": 12,
+            "ns": 3.566,
+            "checksum": "407f407f010000ff"
+          },
+          {
+            "op": 13,
+            "ns": 4.53,
+            "checksum": "7f7f0080403f40ff"
+          },
+          {
+            "op": 14,
+            "ns": 4.509,
+            "checksum": "7f80807f3fffc000"
+          },
+          {
+            "op": 15,
+            "ns": 3.64,
+            "checksum": "ffbf007f4010402f"
+          },
+          {
+            "op": 16,
+            "ns": 1.865,
+            "checksum": "003fffff4010bfd0"
+          },
+          {
+            "op": 17,
+            "ns": 1.863,
+            "checksum": "7e7f7f80400041ff"
+          },
+          {
+            "op": 18,
+            "ns": 2.372,
+            "checksum": "003f80934010b7d8"
+          },
+          {
+            "op": 19,
+            "ns": 2.351,
+            "checksum": "70407f80204141ff"
+          }
+        ]
+      }
+    ]
+  },
+  "app": {
+    "simulator": "iPad Air 11-inch M4 / iOS 26.5",
+    "pid": 20510,
+    "offline_map": "Katabatic",
+    "bots": [
+      "Evenkill",
+      "The Golden"
+    ],
+    "world_observed_upper_bound_seconds": 210.61235880851746,
+    "loading_limit": "Device build overlapped early loading; sampled upper bound, not a speed benchmark.",
+    "touch_spawn": true,
+    "weapon_switch": true,
+    "disc_ammo": [
+      15,
+      14
+    ],
+    "forward_hold_seconds": 1.5,
+    "enemy_flag_distance": [
+      1080.1,
+      1060.5
+    ],
+    "original_leave_then_quit_code": 0,
+    "process_absent_after_quit": true,
+    "screenshot": "docs/validation/ipad-mmx-vectors-gameplay-2026-10-09.png",
+    "stderr_sha256": "237b1af808a6f5fefe648f3e1bf26d9121404cdca7239c58d3ad050655e976c8",
+    "online_join_or_authentication": false
+  },
+  "performance": {
+    "recordings": [
+      {
+        "app_pid": 20510,
+        "wall_seconds": 31.868317542,
+        "exit": 0,
+        "frames": 174,
+        "video_seconds": 29.78,
+        "output": "Note: No display specified. Defaulting to display: 1E7E3028-03E7-4057-9D8B-E555C7AA69BE (screenID: 1, name: LCD)\nRecording started\nRecording completed. Writing to disk.\n\nWrote video to: /Users/chrissotraidis/GitHub/tribespad/generated/integration-review/mmx-vectors/after-1.mov\n",
+        "scope": "Offline Katabatic, two bots, audio enabled; no builds, debugger or sampler during recording.",
+        "presented_fps": 5.842847548690396
+      },
+      {
+        "app_pid": 20510,
+        "wall_seconds": 32.258377458,
+        "exit": 0,
+        "frames": 220,
+        "video_seconds": 29.85,
+        "output": "Note: No display specified. Defaulting to display: 1E7E3028-03E7-4057-9D8B-E555C7AA69BE (screenID: 1, name: LCD)\nRecording started\nRecording completed. Writing to disk.\n\nWrote video to: /Users/chrissotraidis/GitHub/tribespad/generated/integration-review/mmx-vectors/after-2.mov\n",
+        "scope": "Offline Katabatic, two bots, audio enabled; no builds, debugger or sampler during recording.",
+        "presented_fps": 7.3701842546063645
+      }
+    ],
+    "weighted_presented_fps": 6.607412376320644,
+    "prior_build_recordings_fps": [
+      7.5486,
+      7.3342
+    ],
+    "limits": "No game-speed gain established. New recordings are lower and variable. Live bots/snow, different runs and host/display load prevent attribution to this change. Video delivery is not an engine or physical-device FPS benchmark.",
+    "profile": {
+      "duration_seconds": 3,
+      "sha256": "889ba59d54605bc4249ccbd67913d0aabeccfcf7495b2ce4b444d0803b348eb8",
+      "top_samples": {
+        "tribes_memory_access_begin": 626,
+        "tribes_memory_access_end": 212,
+        "require": 199,
+        "tribes_memory_access_host_span": 144,
+        "_tlv_get_addr": 127,
+        "tribes_memory_transfer_begin": 116,
+        "tb_sse_evaluate": 113
+      },
+      "mmx": "Not listed at the five-top-sample reporting threshold.",
+      "limits": "All-thread aggregate, includes sleeping workers; not percentages of game frame time."
+    }
+  },
+  "remaining": [
+    "Comfortable sustained performance and input latency",
+    "Physical iPad development signing and gameplay",
+    "Physical controller and iPhone acceptance",
+    "Complete visual/audio fidelity",
+    "Earlier isolated null guest-PC failure remains unexplained"
+  ],
+  "next": "Measure original engine frame timing or native swap timing independently of video capture, then focus on measured memory-access and native-CPU-span guard costs without weakening permission/lifetime checks.",
+  "sources_sha256": {
+    "port/core/mmx.c": "3f5dbfa3b5a4d88f3cb8b9f59648ebdec40f741b21183246d012caab02f0a386",
+    "scripts/test-mmx.py": "77a8f80ecd6525e279fd9e35ba7cb92a35a62a5689d5597c3490c98f1e20d2fd"
+  }
+}
