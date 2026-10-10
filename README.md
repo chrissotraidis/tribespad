@@ -57,7 +57,7 @@ appears, tap the controller button at the top, then **Fire** to spawn.
 | Menu button (top) | Send Escape to the original game, including when the controls are hidden |
 | Keyboard button (top) | Show the onscreen keyboard for a selected text field |
 
-Movement, look, weapons, fire and jet have been exercised in the Simulator.
+Spawn, movement, look, fire, jet, ski / jump, weapon switching, grenades and inventory have been exercised with Simulator touches.
 Skiing, simultaneous gestures and physical-device responsiveness still need validation.
 The bundled app preserves its original warrior and video preferences between launches.
 In inventory, tap the original **Done** button, then the controller button to resume.

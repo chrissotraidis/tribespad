@@ -21,6 +21,7 @@ typedef NS_ENUM(NSInteger, TBControlKind) { TBKindStick, TBKindLook, TBKindButto
 @property(nonatomic,strong) CADisplayLink *aimClock;
 @property(nonatomic) CGPoint stickAim;
 @property(nonatomic) CFTimeInterval lastAimTime;
+@property(nonatomic) CGRect laidOutArea;
 -(void)releaseControls;
 -(void)toggleControls;
 @end
@@ -81,7 +82,6 @@ static UIColor *tb_accent(void){return [UIColor colorWithRed:.60 green:.85 blue:
     }
     self.backgroundColor=held?tb_held(self.primary):tb_rest(self.primary);
     self.layer.borderColor=[UIColor colorWithWhite:1 alpha:held?.8:.32].CGColor;
-    self.transform=held?CGAffineTransformMakeScale(.94,.94):CGAffineTransformIdentity;
 }
 -(void)placeThumb:(CGPoint)point {
     CGFloat cx=self.bounds.size.width/2,cy=self.bounds.size.height/2,limit=MIN(cx,cy)*.62;
@@ -286,12 +286,16 @@ static UIButton *tb_round_button(NSString *symbol,NSString *label,id target,SEL 
     }
 }
 -(void)layoutSubviews {
-    [super layoutSubviews];[self releaseControls];
+    [super layoutSubviews];
     CGRect area=UIEdgeInsetsInsetRect(self.bounds,self.safeAreaInsets);
     // SDL shifts its root view to reveal the text caret. Keep native controls
     // inside the part of that view still visible in the window.
     if(self.window)area=CGRectIntersection(self.bounds,[self convertRect:
         UIEdgeInsetsInsetRect(self.window.bounds,self.window.safeAreaInsets) fromView:self.window]);
+    // Layout also runs when a control's appearance changes. Only a real
+    // geometry change may drop held controls; otherwise a held Jet would be
+    // released as soon as it is drawn as pressed.
+    if(!CGRectEqualToRect(area,self.laidOutArea)){self.laidOutArea=area;[self releaseControls];}
     CGFloat w=area.size.width,h=area.size.height,x=area.origin.x,y=area.origin.y;
     // One scale for iPad and iPhone: 1.0 on an 11-inch iPad in landscape.
     CGFloat k=fmin(1.15,fmax(.62,fmin(w,h)/780)),margin=fmax(14,22*k);
@@ -317,7 +321,7 @@ static UIButton *tb_round_button(NSString *symbol,NSString *label,id target,SEL 
     CGRect look=CGRectMake(x+w*.42,top+b+8,w*.58,h-(top+b+8-y));
     const CGRect frames[]={stickFrame,look,fireFrame,ringFrames[0],ringFrames[1],ringFrames[3],ringFrames[2],pack,inventory};
     for(unsigned i=0;i<self.pads.count;i++){TBGamePad *pad=(TBGamePad *)self.pads[i];
-        pad.transform=CGAffineTransformIdentity;pad.frame=frames[i];pad.hidden=!self.expanded;
+        pad.frame=frames[i];pad.hidden=!self.expanded;
         pad.caption.hidden=pad.kind==TBKindButton&&pad.bounds.size.width<52;[pad setNeedsLayout];}
 }
 @end
