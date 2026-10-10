@@ -397,5 +397,13 @@
  "limits": "Simulator only; physical iPad/iPhone untested. Player input came from a TorqueScript playtest in autoexec.cs, not touch. Frame timing is CPU-side swap timing. Remaining per-frame wait is the original QoL frame-latency fence (glClientWaitSync), left unchanged.",
  "window_selection": "The steady observer windows read during each run, before profiling and before any later build; earlier windows include the match-start countdown.",
  "soak": "run7 binary ran more than 30 minutes at about 29.6 FPS, 391 MB footprint, no crash.",
- "device_build": "Hardware-permissions build for physical iPad compiles (pre-PBO binary 3431dff9...). Not installed: no device or signing identity on this Mac."
+ "device_build": "Hardware-permissions build for physical iPad compiles (pre-PBO binary 3431dff9...). Not installed: no device or signing identity on this Mac.",
+ "map_cycle_and_quit": {
+  "run": "run24-gameover-cycle",
+  "binary": "3769cefa5c855cd6bad47e97b33e5cfcc8eaea2ce01fca3e55629d0c0fdc321f",
+  "route": "Scripted playtest (tests/sim_playtest.cs): host Katabatic CTF with two bots, spawn, move/fire/jet/jump; at 60 control ticks call Game.timeLimitReached() (original gameOver -> AIMissionEnd -> cycleMissions); play DustToDust; disconnect(); quit().",
+  "result": "Katabatic -> DustToDust cycle succeeded; second map reached control in about 25 s; scripted play continued 45 ticks; disconnect and quit; native log: original process shutdown completed, code=0.",
+  "frame_rate": "Not cleanly measured on DustToDust; 30 s windows overlapping load/debrief ranged 11-55 FPS.",
+  "harness_lesson": "Calling CycleMissions() directly skips AIMissionEnd(), so bots keep a cached navigation-graph node (AIConnection+0x85e0+0x18c) from the destroyed graph and the next getPathDistance() uses it. Checked memory stops this as a read of decommitted mimalloc memory (guest 0x491936) or, with purging disabled, as a call to guest PC 0. Both the MMU-enforced and bracketed builds behave the same way on that invalid route (runs 11-22). The original end-of-match route calls missionCycleCleanup() and works."
+ }
 }
