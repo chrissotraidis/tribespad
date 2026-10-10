@@ -42,25 +42,26 @@ is unverified; there is no playable iPad or iPhone release yet.
 
 To try an offline match, choose **LAN GAME → HOST → Katabatic**, enable two bots,
 and tap **START GAME**. Loading currently takes several minutes. Once the world
-appears, tap **Touch controls**, then **Fire + Aim** to spawn.
+appears, tap the controller button at the top, then **Fire** to spawn.
+
+![Touch controls in an offline Katabatic match](docs/validation/ipad-touch-controls-2026-10-10.png)
 
 | Control | Action |
 | --- | --- |
-| Move pad | Move with the original ESDF bindings |
-| Look pad | Drag to aim |
-| Fire + Aim | Hold to fire; drag to aim while firing |
-| Jet | Hold to jet; release to recover energy |
-| Ski / Jump | Original jump action |
-| Weapon | Switch weapon |
-| Inventory | Open inventory and hide the gameplay pads so its fields can be tapped |
-| Menu | Send Escape to the original game, including when the pads are hidden |
-| Keyboard | Show the onscreen keyboard for a selected text field |
+| Move stick (left) | Analog movement through the original ESDF bindings |
+| Right side of the screen | Drag anywhere that is not a button to aim |
+| Fire | Hold to fire; drag to aim while firing |
+| Jet, Ski / Jump, Grenade, Weapon | The ring around Fire |
+| Pack, Inventory | Above the move stick; Inventory hides the controls so its fields can be tapped |
+| Controller / X button (top) | Show or hide the touch controls |
+| Menu button (top) | Send Escape to the original game, including when the controls are hidden |
+| Keyboard button (top) | Show the onscreen keyboard for a selected text field |
 
 Movement, look, weapons, fire and jet have been exercised in the Simulator.
 Skiing, simultaneous gestures and physical-device responsiveness still need validation.
 The bundled app preserves its original warrior and video preferences between launches.
-In inventory, tap the original **Done** button, then **Touch controls** to resume.
-Use **Hide controls** when another original dialog needs direct taps. The toolbar
+In inventory, tap the original **Done** button, then the controller button to resume.
+Hide the controls when another original dialog needs direct taps. The toolbar
 stays reachable while the onscreen keyboard is open. To close the game, choose
 **Launch → Quit** in the original menu.
 

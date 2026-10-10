@@ -3,7 +3,54 @@
 #define LITTLEENDIAN 1
 #endif
 #include "softfloat.h"
+#include <math.h>
+#include <string.h>
+/* Exact hardware fast path. For round-to-nearest with finite operands and
+   result well inside the normal range, IEEE 754 binary32/binary64 add, sub,
+   mul and div produce the same correctly rounded value on AArch64 as on
+   x86 SSE, and the only possible status is precision (PE). PE is derived
+   from an exact error term (TwoSum, or an FMA residual for mul/div), which is
+   representable because no intermediate can underflow or overflow in these
+   ranges. Everything else, including any host FPCR rounding or flush mode,
+   uses the SoftFloat reference below. */
+static int host_nearest(void) {
+    /* Probe the host mode with ordinary arithmetic (no inline assembly or
+       external call): round-to-nearest-even and no flush-to-zero, else the
+       SoftFloat reference is used. Volatile operands prevent folding. */
+    volatile float one=1.0f,half=0x1p-24f,three_quarters=0x1.8p-24f,tiny=0x1p-126f,scale=0.5f;
+    return one+half==1.0f && -one-half==-1.0f && one+three_quarters==0x1.000002p0f && tiny*scale!=0.0f;
+}
+static int fast32(uint32_t x){uint32_t e=(x>>23)&0xff;return e>=48&&e<=200;}
+static int fast64(uint64_t x){uint64_t e=(x>>52)&0x7ff;return e>=128&&e<=1900;}
+static int evaluate_fast(unsigned op,uint64_t a,uint64_t b,uint32_t control,TBSSEResult *out) {
+    if((control>>13)&3)return 0;
+    if(op>=TB_SSE_MUL32) {
+        uint32_t x=(uint32_t)a,y=(uint32_t)b;if(!fast32(x)||!fast32(y)||!host_nearest())return 0;
+        float l,r,s,e;memcpy(&l,&x,4);memcpy(&r,&y,4);
+        if(op==TB_SSE_ADD32||op==TB_SSE_SUB32) {
+            if(op==TB_SSE_SUB32)r=-r;
+            s=l+r;float v=s-l;e=(l-(s-v))+(r-v);
+        } else if(op==TB_SSE_MUL32){s=l*r;e=fmaf(l,r,-s);}
+        else {s=l/r;e=fmaf(-s,r,l);}
+        uint32_t z;memcpy(&z,&s,4);
+        if(!fast32(z)&&!((z<<1)==0&&(op==TB_SSE_ADD32||op==TB_SSE_SUB32)))return 0;
+        *out=(TBSSEResult){z,e!=0.0f?32u:0u,1};return 1;
+    }
+    if(!fast64(a)||!fast64(b)||!host_nearest())return 0;
+    double l,r,s,e;memcpy(&l,&a,8);memcpy(&r,&b,8);
+    if(op==TB_SSE_SUB64)r=-r;
+    s=l+r;double v=s-l;e=(l-(s-v))+(r-v);
+    uint64_t z;memcpy(&z,&s,8);
+    if(!fast64(z)&&(z<<1)!=0)return 0;
+    *out=(TBSSEResult){z,e!=0.0?32u:0u,1};return 1;
+}
+TBSSEResult tb_sse_evaluate_reference(unsigned op,uint64_t a,uint64_t b,uint32_t control);
 TBSSEResult tb_sse_evaluate(unsigned op,uint64_t a,uint64_t b,uint32_t control) {
+    if(op>TB_SSE_SUB32 || control>0xffff)return (TBSSEResult){0,0,0};
+    TBSSEResult fast;if(evaluate_fast(op,a,b,control,&fast))return fast;
+    return tb_sse_evaluate_reference(op,a,b,control);
+}
+TBSSEResult tb_sse_evaluate_reference(unsigned op,uint64_t a,uint64_t b,uint32_t control) {
     if(op>TB_SSE_SUB32 || control>0xffff)return (TBSSEResult){0,0,0};
     const int single=op>=TB_SSE_MUL32;
     const uint64_t sign=single?UINT64_C(0x80000000):UINT64_C(0x8000000000000000);
