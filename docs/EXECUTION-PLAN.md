@@ -1,5 +1,9 @@
 # TribesPad execution plan
 
+**Handoff supersedes the next-action statements below.** Read [HANDOFF.md](HANDOFF.md) for the current acceptance matrix, performance problem, remaining work and build instructions. Development is paused for independent review; the continuation automation no longer exists. Runtime source is restored to the last gameplay-validated commit `d73c01c`; the unfinished native timing diagnostic is archived as an unapplied patch. Generated local apps may still contain that experiment. No completion or physical-device acceptance is claimed.
+
+## Historical checkpoint record
+
 **Current iPad build:** Simulator `310ce4fc…` and device `9df24ab2…` use native vectors for MMX lane arithmetic. All 56,096 x86 oracle cases pass, including the final checked module, as do 8,052 cases across 671 original instruction sites and checked x87/CPU boundaries. Isolated helper time falls about 55% (7.73→3.47 ns, median of three rounds); its checked text shrinks 2,012→484 bytes. Memory and publication checks remain intact. Both 104 MB bundles pass strict ad-hoc signatures. [Validation](validation/ipad-mmx-vectors.json).
 
 **Actual app:** original offline Katabatic with two bots renders. Touch spawn, weapon switch, disc 15→14 and forward movement (enemy flag 1080.1→1060.5) pass; Leave Game → Launch → Quit exits with code 0. World observed by 211s, with early loading overlapping device compilation. No owned app, debugger or build remains live. [Gameplay](validation/ipad-mmx-vectors-gameplay-2026-10-09.png). No online joining/authentication.

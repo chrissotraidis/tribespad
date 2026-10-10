@@ -1,0 +1,80 @@
+diff --git a/config/runtime/external-memory-contracts.json b/config/runtime/external-memory-contracts.json
+index d9a9121..c46b37c 100644
+--- a/config/runtime/external-memory-contracts.json
++++ b/config/runtime/external-memory-contracts.json
+@@ -694,7 +694,7 @@
+     "port/apple/font.h": "e0e3340fc18b4a46240ef7ad28b85283d0236106546de392bed4028b87257df6",
+     "port/core/gdi_memory.c": "f0ea3299f10fc01af5e84648a007f7a1ee01e15a10b5b8b9967127eb5306533c",
+     "port/core/gdi_memory.h": "a83bdab6a4d2e3e25f85bf3ff038aa9a647482cf69f40e5e4af3e82f28690391",
+-    "port/apple/gl4es_context.c": "f472d6607b523a8ba231858ae369013efbea5499bc55b302570f0fda4d262e5c",
++    "port/apple/gl4es_context.c": "da8b5396835eadae5568d3fdbb52f580fca1ff8627c4bc4b84a08e38f352fe79",
+     "port/apple/gl4es_context.h": "f057c42d3852d0bce74ab0286cad2fa6bc074a5a94fd5f4f1c231647a3183c05",
+     "port/apple/angle_sdl.c": "1db1244af48c82253dc67c8037a2a3c0851731100c55f4d9f59af2624277a696",
+     "port/apple/angle_sdl.h": "d66fd545320b83fa81797b93ae8177081d872d11d6bda2d5383478db1ed9c116"
+diff --git a/port/apple/gl4es_context.c b/port/apple/gl4es_context.c
+index 1b0b190..6f98243 100644
+--- a/port/apple/gl4es_context.c
++++ b/port/apple/gl4es_context.c
+@@ -13,6 +13,8 @@
+ #include "glx/hardext.h"
+ #include <pthread.h>
+ #include <stdlib.h>
++#include <stdio.h>
++#include <string.h>
+ 
+ extern void *NewGLState(void *, int);
+ extern void ActivateGLState(void *);
+@@ -22,6 +24,9 @@ struct TribesGL4ESContext {
+     SDL_Window *window;
+     SDL_GLContext native;
+     glstate_t *state;
++    bool frame_timing;
++    Uint64 timing_start, timing_last, timing_frames;
++    Uint64 timing_swap_total, timing_swap_max, timing_interval_max;
+ };
+ static int initialized;
+ 
+@@ -84,6 +89,8 @@ TribesGL4ESContext *tribes_gl4es_context_create(SDL_Window *window, SDL_GLContex
+     TribesGL4ESContext *context=calloc(1,sizeof *context);
+     if (!context) return NULL;
+     context->window=window; context->native=native;
++    const char *timing=getenv("TRIBES_FRAME_TIMING");
++    context->frame_timing=timing && !strcmp(timing,"1");
+     require_current(context);
+     if (!initialized) {
+         set_getprocaddress(native_proc);
+@@ -102,9 +109,34 @@ TribesGL4ESContext *tribes_gl4es_context_create(SDL_Window *window, SDL_GLContex
+ bool tribes_gl4es_context_swap(TribesGL4ESContext *context) {
+     require_current(context);
+     if (glstate!=context->state) abort();
++    Uint64 begin=context->frame_timing?SDL_GetTicksNS():0;
+     gl4es_glFlush();
+     bool result=SDL_GL_SwapWindow(context->window);
+     tribes_gl4es_context_activate(context);
++    if (context->frame_timing && result) {
++        /* Opt-in native submission timing, independent of screen recording.
++           Includes flush/swap/reactivation; it is not GPU completion timing. */
++        Uint64 end=SDL_GetTicksNS();
++        if (context->timing_last) {
++            Uint64 interval=end-context->timing_last, swap=end-begin;
++            context->timing_frames++;
++            context->timing_swap_total+=swap;
++            if (swap>context->timing_swap_max) context->timing_swap_max=swap;
++            if (interval>context->timing_interval_max) context->timing_interval_max=interval;
++            Uint64 elapsed=end-context->timing_start;
++            if (elapsed>=UINT64_C(30000000000)) {
++                fprintf(stderr,"TribesPad frame timing: end_ns=%llu frames=%llu seconds=%.6f fps=%.3f swap_mean_ms=%.3f swap_max_ms=%.3f interval_max_ms=%.3f\n",
++                    (unsigned long long)end,(unsigned long long)context->timing_frames,
++                    elapsed/1e9,context->timing_frames*1e9/elapsed,
++                    context->timing_swap_total/1e6/context->timing_frames,
++                    context->timing_swap_max/1e6,context->timing_interval_max/1e6);
++                context->timing_start=end;
++                context->timing_frames=context->timing_swap_total=0;
++                context->timing_swap_max=context->timing_interval_max=0;
++            }
++        } else context->timing_start=end;
++        context->timing_last=end;
++    }
+     return result;
+ }
+ 

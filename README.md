@@ -1,5 +1,7 @@
 # TribesPad
 
+**Project handoff:** [What works, remaining blockers, and the next reviewer’s starting point](docs/HANDOFF.md). Development is paused for review; the game is not release-ready.
+
 Tribes 2 on iPad, iPhone and Mac, using the original game and TribesNEXT client.
 
 TribesPad translates the original x86 game ahead of time into native ARM64 code
