@@ -30,7 +30,7 @@ for mode in ['baseline','optimized']:
  else:assert '@tribes_memory_access_host_span' not in s and census[mode]['host_cpu_accesses']==0
  s=re.sub(r'@(loc_[0-9A-F]+|cpu_batch|cpu_block|cpu_outside|route)\b',lambda m:'@'+mode+'_'+m[1],s);ir.write_text(s)
  bc=out/(mode+'.bc');subprocess.run([str(tools/'opt'),'-load-pass-plugin',str(plugins[1]),'-passes=tribes-external-memory,verify',str(ir),'-o',str(bc)],env=env,check=True,capture_output=True)
- # Host fields may sit within a group, but do not extend its eight-access
+ # Host fields may sit within a group, but do not extend its sixteen-access
  # limit or let a retained guest bracket cross a call/control-flow boundary.
  guarded=subprocess.check_output([str(tools/'llvm-dis'),str(bc),'-o','-'],text=True)
  pending=[];sums={};accesses=0;previous=''
@@ -41,13 +41,13 @@ for mode in ['baseline','optimized']:
   elif re.match(r'%tribes.end.count[^ ]* = add i32 ',s):
    key,args=s.split(' = add i32 ');left,right=args.split(', ');sums[key]=sums[left]+sums[right]
   elif 'call void @tribes_memory_access_end_many(' in s:
-   assert sums[re.search(r'\(i32 ([^)]+)\)',s)[1]]==pending and 2<=len(pending)<=8
+   assert sums[re.search(r'\(i32 ([^)]+)\)',s)[1]]==pending and 2<=len(pending)<=16
    pending=[];accesses=0
   elif 'call void @tribes_memory_access_end(' in s:
    token=re.search(r'\(i32 ([^)]+)\)',s)[1];assert pending==[token];pending=[];accesses=0
   elif re.search(r'\b(load|store)\b',s):
    if '!tribes.checked.host.cpu' not in s:assert '@tribes_memory_access_begin(' in previous,s
-   if pending:accesses+=1;assert accesses<=8,s
+   if pending:accesses+=1;assert accesses<=16,s
   elif re.search(r'\b(call|br|ret|fence)\b',s):assert not pending,s
   previous=s
  assert not pending

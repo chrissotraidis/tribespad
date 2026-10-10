@@ -352,7 +352,7 @@ uint32_t tribes_memory_transfer_begin(void *destination,const void *source,uint6
 }
 void tribes_memory_access_end(uint32_t token){if(token>1)abort();if(token)read_unlock();}
 void tribes_memory_access_end_many(uint32_t count){
- if(count>8)abort();if(!count)return;
+ if(count>16)abort();if(!count)return;
  if(count>read_depth)abort();read_depth-=count;
  if(!read_depth)reader_leave();
 }

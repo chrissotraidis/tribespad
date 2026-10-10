@@ -105,7 +105,7 @@ for mode in ['tribes-guest-memory','tribes-guest-memory-cpu-host']:
 bc=out/'guarded.bc';env=dict(os.environ,TRIBES_EXTERNAL_POLICY=str(policy))
 subprocess.run([str(T/'opt'),'-load-pass-plugin',str(plugins[1]),'-passes=tribes-external-memory,verify',str(ir),'-o',str(bc)],env=env,check=True,capture_output=True)
 obj=out/'guarded.o';subprocess.run(command(T,'arm64-apple-macos12',bc,obj),check=True)
-# Proven native accesses must still count toward the existing eight-access
+# Proven native accesses must still count toward the existing sixteen-access
 # retirement limit when interleaved with retained guest brackets.
 group='define void @group(ptr %guest) {\n%slot = alloca i32\n'
 for i in range(16):group+='%%g%d = load i32,ptr %%guest\nstore i32 %%g%d,ptr %%slot\n'%(i,i)
@@ -121,14 +121,14 @@ for line in guarded.read_text().splitlines():
  elif re.match(r'%tribes.end.count[^ ]* = add i32 ',s):
   key,args=s.split(' = add i32 ');left,right=args.split(', ');sums[key]=sums[left]+sums[right]
  elif 'call void @tribes_memory_access_end_many(' in s:
-  assert sums[re.search(r'\(i32 ([^)]+)\)',s)[1]]==pending and accesses<=8
+  assert sums[re.search(r'\(i32 ([^)]+)\)',s)[1]]==pending and accesses<=16
   maximum=max(maximum,accesses);pending=[];accesses=0
  elif 'call void @tribes_memory_access_end(' in s:
   assert pending==[re.search(r'\(i32 ([^)]+)\)',s)[1]];pending=[];accesses=0
  elif re.search(r'\b(load|store)\b',s):
-  if pending:accesses+=1;assert accesses<=8
+  if pending:accesses+=1;assert accesses<=16
  elif re.search(r'\b(call|br|ret|fence)\b',s):assert not pending
-assert not pending and maximum==8
+assert not pending and maximum==16
 sources=[R/'tests/host_local_checks_test.c',R/'port/core/guest_memory_checks.c',R/'port/core/guest_external_checks.c'];runs=[]
 for tsan in [False,True]:
  exe=out/('tsan' if tsan else 'normal');subprocess.run(['clang','-O2','-pthread','-Wall','-Wextra','-Werror']+(['-fsanitize=thread'] if tsan else [])+list(map(str,sources))+[str(obj),'-o',str(exe)],check=True)

@@ -16,7 +16,7 @@ uint32_t tribes_memory_transfer_begin(void *destination,const void *source,uint6
    reject overlap with the guest window before proven host-field accesses. */
 void tribes_memory_access_host_span(const void *pointer,uint64_t size);
 void tribes_memory_access_end(uint32_t token);
-/* Compiler groups at most eight ordinary accesses; count is the sum of their
+/* Compiler groups at most sixteen ordinary accesses; count is the sum of their
    0/1 tokens. Retains any enclosing bracket, including with a pending writer. */
 void tribes_memory_access_end_many(uint32_t count);
 /* Trusted loader/VirtualProtect transactions. Callers must have complete

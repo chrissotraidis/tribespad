@@ -22,14 +22,14 @@ namespace {
 StringRef canonical(StringRef N){if(N.starts_with("\1")){N=N.drop_front();if(N.starts_with("_"))N=N.drop_front();}return N;}
 bool containsPointer(Type *T){if(T->isPointerTy())return true;if(auto *S=dyn_cast<StructType>(T)){for(auto *E:S->elements())if(containsPointer(E))return true;}if(auto *A=dyn_cast<ArrayType>(T))return containsPointer(A->getElementType());if(auto *V=dyn_cast<VectorType>(T))return containsPointer(V->getElementType());return false;}
 // Retain every check immediately before its access, but delay matching ends
-// across at most eight ordinary accesses in one straight-line segment. The
+// across at most sixteen ordinary accesses in one straight-line segment. The
 // runtime's nested brackets then share one permission snapshot/OS read lock.
 // Never hold it across a call, fence, atomic/volatile access or control flow.
 static uint64_t groupAccessBrackets(Module &M){
  uint64_t Grouped=0;
  for(auto &F:M)for(auto &BB:F){
   SmallVector<Instruction *,128> Work;for(auto &I:BB)Work.push_back(&I);
-  SmallVector<CallInst *,8> Ends;
+  SmallVector<CallInst *,16> Ends;
   unsigned Accesses=0;
   auto Flush=[&](Instruction *Before){
    if(Ends.size()>1){
@@ -50,7 +50,7 @@ static uint64_t groupAccessBrackets(Module &M){
     if(!M.getModuleFlag("tribes.checked.cpu-host")||!((L&&L->isSimple())||(S&&S->isSimple())))report_fatal_error("Invalid checked CPU host access");
     // Native work before the first bracket holds no permission snapshot.
     // Count it only inside an active group, preserving the hold-time bound.
-    if(!Ends.empty()&&++Accesses==8)Flush(I->getNextNode());
+    if(!Ends.empty()&&++Accesses==16)Flush(I->getNextNode());
     continue;
    }
    if(Begin&&Begin->getCalledFunction()&&Begin->getCalledFunction()->getName()=="tribes_memory_access_begin"&&Begin->hasOneUse()&&i+2<Work.size()){
@@ -59,7 +59,7 @@ static uint64_t groupAccessBrackets(Module &M){
     bool Ordinary=(Load&&Load->isSimple())||(Store&&Store->isSimple());
     if(Ordinary&&End&&End->getCalledFunction()&&End->getCalledFunction()->getName()=="tribes_memory_access_end"&&End->arg_size()==1&&End->getArgOperand(0)==Begin){
      Ends.push_back(End);i+=2;
-     if(++Accesses==8)Flush(End->getNextNode());
+     if(++Accesses==16)Flush(End->getNextNode());
      continue;
     }
    }

@@ -1,12 +1,18 @@
 # TribesPad status — 9 October 2026
 
+**iPad performance:** checked Simulator `7ab66ce1…` raises the bounded memory group from eight to sixteen ordinary operations. Every permission check remains; groups still end at calls, control flow, fences and atomic/volatile accesses. Normal/checked/ThreadSanitizer grouping, reader/publication and affected native-boundary tests pass. Two 30-second recordings of the same untouched Katabatic observer view measure **7.44/7.34 FPS before → 8.67/8.94 after** (weighted averages 7.39→8.80, about 19%). Live bots/snow are not a deterministic replay, and this is Simulator frame delivery, not physical-device performance.
+
+**Actual app:** saved profile restored, two-bot offline map rendered, touch spawned/switched weapon/fired disc 15→14/moved flag 100.6→73.2. Leave Game and original Quit completed with code 0. The original eight-operation baseline had one earlier null guest-PC stop; a repeat baseline and the candidate completed the tested match/quit sequence. That isolated stability failure remains unexplained. No online joining/authentication.
+
+**Builds/next:** Simulator `7ab66ce1…` and device `06a4118f…` pass deep strict ad-hoc signatures; each executable is about 104 MB. Rechecked native objects reused 322/411 on Simulator and 328/411 on device. [Validation](validation/ipad-memory-groups.json), [gameplay](validation/ipad-memory-groups-2026-10-09.png). README now reports the measured comparison. No owned game, debugger or build remains live. Continue with the measured per-access guard cost and reproduce/capture the isolated null-PC failure during a longer offline session. Inventory-station purchase/exit, fidelity/audio quality, physical iPad/controller and iPhone acceptance remain. Device execution still needs development signing. Mac bundles unchanged.
+
+## Earlier checkpoints
+
 **Current iPad app:** checked Simulator `80a10406…` now completes the original **Launch → Quit** path with code0, both from the initial menu and after an offline Katabatic match. Worker threads finish native cleanup before original DLL process-detach callbacks. Reached `SDL_ClearError` and atomic x86 `InterlockedFlushSList` cleanup are implemented. Normal/checked/ThreadSanitizer lifecycle, cancellation, SDL and list tests pass. [Validation](validation/ipad-shutdown.json).
 
 **Actual app test:** the app relaunched with saved warrior/host settings, loaded Katabatic with Red Ghost and So Dark, spawned by touch, switched weapon, fired disc15→14 and moved (own flag646.7→630.2). World observed by189s; device compilation overlapped loading, so this is not a speed benchmark. Leave Game returned to Host; Quit then completed without a diagnostic stop. No owned app, debugger or build remains running. [Gameplay](validation/ipad-shutdown-gameplay-2026-10-09.png).
 
 **Builds/next:** Simulator `80a10406…` and device `d66af3ea…` pass deep strict ad-hoc signatures, about104MB each; validated native object reuse406/411 and171/411 respectively. README retains the HaloPad-style layout and adds original Quit instructions. The main remaining blocker is comfortable performance: previous recordings measured6.75 FPS playing /7.74 observing, and the new five-second sample still points to memory barriers. Next target measured guard overhead while preserving permission/lifetime/concurrency checks, then remeasure the same view. Inventory-station purchase/exit, visual/audio fidelity, physical iPad/controller and iPhone acceptance remain. Device execution needs development signing. Offline/discovery only; no online joining/authentication. Mac bundles unchanged.
-
-## Earlier checkpoints
 
 **Current iPad app:** checked Simulator `7c99ebf6…` runs original offline Katabatic with two bots. Native SIMD arithmetic now returns its result and exception flags by value, avoiding temporary output-pointer checks while retaining the legacy checked pointer API. All 32,224 arithmetic and 94,128 original SIMD reference cases, threaded/TLS checks and native CPU boundary/fault tests pass. The isolated ADD32 benchmark improves about24%; this is not a whole-game speedup. [Validation](validation/ipad-sse-values.json).
 

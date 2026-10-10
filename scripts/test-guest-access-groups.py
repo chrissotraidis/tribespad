@@ -14,12 +14,12 @@ lines+=['ret void','}','define i64 @publication_boundary(ptr %p) {','%a = load i
 lines+=['define void @read_batch(ptr %p,ptr %dest) {']
 for i in range(16):lines += ['%%v%d = load i64,ptr %%p'%i,'store i64 %%v%d,ptr %%dest'%i]
 lines+=['ret void','}']
-# Seven compiler-owned stores before the first guest access must not spend
+# Fifteen compiler-owned stores before the first guest access must not spend
 # the group's budget. The same stores inside a bracket still consume it.
 for name,interleaved in [('host_prelude',False),('host_interleaved',True)]:
  lines+=['define void @'+name+'(ptr %p) {','%local = alloca i64']
  if interleaved:lines+=['%initial = load i64,ptr %p']
- for i in range(7):lines+=['store i64 %d,ptr %%local'%i]
+ for i in range(15):lines+=['store i64 %d,ptr %%local'%i]
  for i in range(1 if interleaved else 4):
   lines+=['%%v%d = load i64,ptr %%p'%i,'%%n%d = add i64 %%v%d,1'%(i,i),'store i64 %%n%d,ptr %%p'%i]
  lines+=['ret void','}']
@@ -54,7 +54,7 @@ for name in ['baseline','grouped','separate-ends']:
    key,args=s.split(' = add i32 ');left,right=args.split(', ');sums[key]=sums[left]+sums[right]
   elif 'call void @tribes_memory_access_end_many(' in s:
    tokens=sums[re.search(r'\(i32 ([^)]+)\)',s)[1]]
-   assert tokens==pending and 2<=len(tokens)<=8,(tokens,pending)
+   assert tokens==pending and 2<=len(tokens)<=16,(tokens,pending)
    ends+=len(tokens);pending=[];batched+=1
   elif 'call void @tribes_memory_access_end(' in s:
    token=re.search(r'\(i32 ([^)]+)\)',s)[1];assert token in pending;pending.remove(token);ends+=1
@@ -65,7 +65,7 @@ for name in ['baseline','grouped','separate-ends']:
    if 'volatile' in s or 'atomicrmw' in s:assert len(pending)==1
   elif re.search(r'\b(call|br|ret|fence)\b',s):assert not pending,s
   previous=s
- assert not pending and begins==ends and maximum==(8 if grouped else 1),(pending,begins,ends,maximum)
+ assert not pending and begins==ends and maximum==(16 if grouped else 1),(pending,begins,ends,maximum)
  assert (batched>0)==(name=='grouped')
  if name=='grouped':
   text=ir.read_text()
@@ -74,7 +74,7 @@ for name in ['baseline','grouped','separate-ends']:
   assert prelude.count('call i32 @tribes_memory_access_begin(')==8
   assert prelude.count('call void @tribes_memory_access_end_many(')==1
   assert 'call void @tribes_memory_access_end(' not in prelude
-  # The first read must retire before later guest accesses after seven native stores.
+  # The first read must retire before later guest accesses after fifteen native stores.
   assert interleaved.count('call void @tribes_memory_access_end(')==1
   assert interleaved.count('call void @tribes_memory_access_end_many(')==1
  obj=out/(name+'.o');subprocess.run(codegen_command(tools,'arm64-apple-macos12',ir,obj),check=True)

@@ -57,7 +57,7 @@ int main(int argc,char **argv){
  uint32_t count=tribes_memory_access_begin(memory,8,1)+tribes_memory_access_begin(&host,8,1);
  tribes_memory_access_end_many(count);assert(!atomic_load(&writer_done));
  assert(tribes_memory_access_begin(&host,8,1)==0);tribes_memory_access_end_many(0);
- if(argc==1){expect_bad_count(2);expect_bad_count(9);}
+ if(argc==1){expect_bad_count(2);expect_bad_count(17);}
  tribes_memory_access_end(outer);assert(!pthread_join(denying,NULL));assert(atomic_load(&writer_done));
  assert(tribes_memory_permissions_set(0,4096,3));
  if(argc==1)expect_bad_count(1);

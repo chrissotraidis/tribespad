@@ -1,0 +1,468 @@
+{
+  "change": "Group at most sixteen ordinary accesses, retaining every permission check and all call/control-flow/atomic boundaries.",
+  "sources_sha256": {
+    "port/compiler/ExternalMemoryPass.cpp": "c308f0de90106003583c513b9be59970bf2248f294e8928ded9bac0e466c1c3c",
+    "port/core/guest_memory_checks.c": "d0ac2cb2e2ae3078e64d5072d617b915df35b27320ccdfb05867919e5a52f787",
+    "port/core/guest_memory_checks.h": "3174253ed1fefd4e882b0738331aafcaff0617c8fb1852f2fe03fb0c2fbd48f5",
+    "scripts/test-guest-access-groups.py": "3de69b53358741679bc2f72e7d026e535afd5cd9c5dd27442c0781c78b835c66",
+    "scripts/test-cpu-host-checks.py": "578c6f26423b8d51dec3425016a8093ce5de67261c5e8c71964d60574942aad6",
+    "scripts/test-host-local-checks.py": "b81e9f08c164fb28b41a5a4639e190ef310470f19bed005c0841b9ba0cc832f8",
+    "tests/guest_access_groups_test.c": "91d40c87dd4aecbbe5159b71108ca414e4ff68654978552a0b93ff848fb014d5"
+  },
+  "before": [
+    {
+      "app_pid": 5051,
+      "wall_seconds": 31.817670707999998,
+      "exit": 0,
+      "frames": 221,
+      "video_seconds": 29.718333,
+      "output": "Note: No display specified. Defaulting to display: 1E7E3028-03E7-4057-9D8B-E555C7AA69BE (screenID: 1, name: LCD)\nRecording started\nRecording completed. Writing to disk.\n\nWrote video to: /Users/chrissotraidis/GitHub/tribespad/generated/integration-review/memory-group-width/before-observer-1.mov\n",
+      "scope": "Offline Katabatic, two bots, audio enabled, untouched default observer view. Candidate llc process suspended for both recordings, parent waiting; no active compilation, debugger or sampler.",
+      "presented_fps": 7.436487100403646
+    },
+    {
+      "app_pid": 5051,
+      "wall_seconds": 31.801648708000002,
+      "exit": 0,
+      "frames": 219,
+      "video_seconds": 29.816667,
+      "output": "Note: No display specified. Defaulting to display: 1E7E3028-03E7-4057-9D8B-E555C7AA69BE (screenID: 1, name: LCD)\nRecording started\nRecording completed. Writing to disk.\n\nWrote video to: /Users/chrissotraidis/GitHub/tribespad/generated/integration-review/memory-group-width/before-observer-2.mov\n",
+      "scope": "Offline Katabatic, two bots, audio enabled, untouched default observer view. Candidate llc process suspended for both recordings, parent waiting; no active compilation, debugger or sampler.",
+      "presented_fps": 7.344885328732417
+    }
+  ],
+  "after": [
+    {
+      "app_pid": 8391,
+      "wall_seconds": 32.000172042,
+      "exit": 0,
+      "frames": 259,
+      "video_seconds": 29.871667,
+      "output": "Note: No display specified. Defaulting to display: 1E7E3028-03E7-4057-9D8B-E555C7AA69BE (screenID: 1, name: LCD)\nRecording started\nRecording completed. Writing to disk.\n\nWrote video to: /Users/chrissotraidis/GitHub/tribespad/generated/integration-review/memory-group-width/after-observer-1.mov\n",
+      "scope": "Offline Katabatic, two bots, audio enabled; no builds, debugger or sampler during recording.",
+      "presented_fps": 8.670423381460433
+    },
+    {
+      "app_pid": 8391,
+      "wall_seconds": 32.089090834,
+      "exit": 0,
+      "frames": 267,
+      "video_seconds": 29.875,
+      "output": "Note: No display specified. Defaulting to display: 1E7E3028-03E7-4057-9D8B-E555C7AA69BE (screenID: 1, name: LCD)\nRecording started\nRecording completed. Writing to disk.\n\nWrote video to: /Users/chrissotraidis/GitHub/tribespad/generated/integration-review/memory-group-width/after-observer-2.mov\n",
+      "scope": "Offline Katabatic, two bots, audio enabled; no builds, debugger or sampler during recording.",
+      "presented_fps": 8.93723849372385
+    }
+  ],
+  "baseline_crash": {
+    "pid": 87707,
+    "captureTime": "2026-10-09 17:27:35.4796 -0500",
+    "exception": {
+      "codes": "0x0000000000000000, 0x0000000000000000",
+      "rawCodes": [
+        0,
+        0
+      ],
+      "type": "EXC_CRASH",
+      "signal": "SIGABRT"
+    },
+    "faultingThread": 0,
+    "frames": [
+      {
+        "imageOffset": 34976,
+        "symbol": "__pthread_kill",
+        "symbolLocation": 8,
+        "imageIndex": 5
+      },
+      {
+        "imageOffset": 25464,
+        "symbol": "pthread_kill",
+        "symbolLocation": 264,
+        "imageIndex": 6
+      },
+      {
+        "imageOffset": 473476,
+        "symbol": "abort",
+        "symbolLocation": 116,
+        "imageIndex": 72
+      },
+      {
+        "imageOffset": 440972,
+        "symbol": "tribes_lookup",
+        "symbolLocation": 596,
+        "imageIndex": 0
+      },
+      {
+        "imageOffset": 711032,
+        "symbol": "tribes_dispatch",
+        "symbolLocation": 48,
+        "imageIndex": 0
+      },
+      {
+        "imageOffset": 5988,
+        "symbol": "enter_engine",
+        "symbolLocation": 368,
+        "imageIndex": 0
+      },
+      {
+        "imageOffset": 8340,
+        "symbol": "application_main",
+        "symbolLocation": 48,
+        "imageIndex": 0
+      },
+      {
+        "imageOffset": 79704212,
+        "symbol": "-[SDLUIKitDelegate postFinishLaunch]",
+        "symbolLocation": 64,
+        "imageIndex": 0
+      },
+      {
+        "imageOffset": 9373664,
+        "symbol": "__NSFireDelayedPerform",
+        "symbolLocation": 332,
+        "imageIndex": 73
+      },
+      {
+        "imageOffset": 607720,
+        "symbol": "__CFRUNLOOP_IS_CALLING_OUT_TO_A_TIMER_CALLBACK_FUNCTION__",
+        "symbolLocation": 28,
+        "imageIndex": 74
+      },
+      {
+        "imageOffset": 606968,
+        "symbol": "__CFRunLoopDoTimer",
+        "symbolLocation": 916,
+        "imageIndex": 74
+      },
+      {
+        "imageOffset": 604628,
+        "symbol": "__CFRunLoopDoTimers",
+        "symbolLocation": 276,
+        "imageIndex": 74
+      },
+      {
+        "imageOffset": 601068,
+        "symbol": "__CFRunLoopRun",
+        "symbolLocation": 1756,
+        "imageIndex": 74
+      },
+      {
+        "imageOffset": 579844,
+        "symbol": "_CFRunLoopRunSpecificWithOptions",
+        "symbolLocation": 496,
+        "imageIndex": 74
+      },
+      {
+        "imageOffset": 10688,
+        "symbol": "GSEventRunModal",
+        "symbolLocation": 116,
+        "imageIndex": 75
+      },
+      {
+        "imageOffset": 18990284,
+        "symbol": "-[UIApplication _run]",
+        "symbolLocation": 776,
+        "imageIndex": 76
+      },
+      {
+        "imageOffset": 26306832,
+        "symbol": "UIApplicationMain",
+        "symbolLocation": 120,
+        "imageIndex": 76
+      },
+      {
+        "imageOffset": 79700616,
+        "symbol": "SDL_RunApp",
+        "symbolLocation": 196,
+        "imageIndex": 0
+      },
+      {
+        "imageOffset": 45284,
+        "symbol": "start_sim",
+        "symbolLocation": 20,
+        "imageIndex": 1
+      },
+      {
+        "imageOffset": 204416,
+        "symbol": "start",
+        "symbolLocation": 6688,
+        "imageIndex": 71
+      }
+    ],
+    "scope": "Existing eight-operation Simulator build stopped at unsupported guest PC zero before the resumed benchmark; no guest CPU snapshot."
+  },
+  "simulator": {
+    "state": "built",
+    "platform": "simulator",
+    "cpu_host_checks": true,
+    "bundled_assets": true,
+    "entitlements_sha256": null,
+    "binary_sha256": "7ab66ce111e2cbd338b0a3754b67ff163e7e115792fded9f149251b8c3ef03b4",
+    "prepared_sha256": "2213042be59d1db3645bbc69d19794fdbab8d99144981d16facba19f9d17a221",
+    "support_sha256": "5408722d50cbda5c3903f1bdbd5c215e8e546309398622330793048437c3b8a9",
+    "guarded_sha256": "694b2b6b4959ff0f874d17a1bce6af8637dd49aababfa18b2e98c9ccf41f841e",
+    "gl4es": {
+      "url": "https://github.com/ptitSeb/gl4es.git",
+      "commit": "ec16bedd8819c475326f4f1a3063772c6d986e06",
+      "platform": "simulator",
+      "configure": [
+        "cmake",
+        "-S",
+        "/Users/chrissotraidis/GitHub/tribespad/generated/gl4es/source",
+        "-B",
+        "/Users/chrissotraidis/GitHub/tribespad/generated/gl4es/simulator/apple-build",
+        "-DCMAKE_SYSTEM_NAME=iOS",
+        "-DCMAKE_OSX_SYSROOT=iphonesimulator",
+        "-DCMAKE_OSX_ARCHITECTURES=arm64",
+        "-DCMAKE_OSX_DEPLOYMENT_TARGET=16.0",
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE=/Users/chrissotraidis/GitHub/tribespad/generated/gl4es/simulator/lib",
+        "-DNOX11=ON",
+        "-DNOEGL=ON",
+        "-DSTATICLIB=ON",
+        "-DNO_LOADER=ON",
+        "-DNO_INIT_CONSTRUCTOR=ON",
+        "-DDEFAULT_ES=2"
+      ],
+      "private_patch_sha256": "8190f2cef1860c7a67155d30aab5682fc218232b7fa78f366883597c5a1b2e70",
+      "client_texture_query_patch_sha256": "bbb2d8979653e84415eeb20f8b7b49d3a41f2fbabee8e1d5b92e47af18ff91a4",
+      "library_sha256": "8b9589150453395b9bf8b291f1a777d6b1cd577613e5678a4fedb5057870289b",
+      "execution_tested": false
+    },
+    "angle": {
+      "distributor": "https://github.com/jeremyfa/build-angle",
+      "url": "https://github.com/jeremyfa/build-angle/releases/download/angle-d2e5e48/angle-ios-universal.zip",
+      "archive_sha256": "1bbd5140d70de689f21f520581192a375d94d81d43844474c24623d545f6f2d2",
+      "reported_source_commit": "d2e5e488da0c6215f8276e5b8d992a4a6ec20c32",
+      "platform": "simulator",
+      "frameworks": {
+        "ref/angle-prebuilt/ios/libEGL.xcframework/ios-arm64_x86_64-simulator/libEGL.framework": "f131851a3b162176a694faa0a054d91135208315f1566c732a71dcdf6d22a5a6",
+        "ref/angle-prebuilt/ios/libGLESv2.xcframework/ios-arm64_x86_64-simulator/libGLESv2.framework": "860f01c6e5b51d4f246e05bd42ab97ab41a23db9bbe12f9aff7e2bcc8fb71992"
+      }
+    },
+    "openal": {
+      "state": "built",
+      "platform": "simulator",
+      "revision": "dc7d7054a5b4f3bec1dc23a42fd616a0847af948",
+      "library": "generated/openal-soft/simulator/libopenal.a",
+      "library_sha256": "fce880ef18cd430484e6691443b22055830981cb287411f00c857a5dc56f5183",
+      "architecture": "arm64",
+      "sdk": "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.5.sdk",
+      "configure": [
+        "cmake",
+        "-S",
+        "/Users/chrissotraidis/GitHub/tribespad/ref/openal-soft",
+        "-B",
+        "/Users/chrissotraidis/GitHub/tribespad/generated/openal-soft/simulator",
+        "-G",
+        "Ninja",
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DCMAKE_OSX_ARCHITECTURES=arm64",
+        "-DCMAKE_OSX_DEPLOYMENT_TARGET=16.0",
+        "-DCMAKE_OSX_SYSROOT=/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.5.sdk",
+        "-DLIBTYPE=STATIC",
+        "-DALSOFT_UTILS=OFF",
+        "-DALSOFT_EXAMPLES=OFF",
+        "-DALSOFT_TESTS=OFF",
+        "-DALSOFT_INSTALL=OFF",
+        "-DALSOFT_REQUIRE_COREAUDIO=ON",
+        "-DCMAKE_SYSTEM_NAME=iOS",
+        "-DALSOFT_BACKEND_PIPEWIRE=OFF",
+        "-DALSOFT_BACKEND_PULSEAUDIO=OFF",
+        "-DALSOFT_BACKEND_JACK=OFF",
+        "-DALSOFT_BACKEND_PORTAUDIO=OFF",
+        "-DALSOFT_BACKEND_SDL2=OFF",
+        "-DALSOFT_BACKEND_SDL3=OFF",
+        "-DALSOFT_BACKEND_WAVE=OFF",
+        "-DALSOFT_BACKEND_OPENSL=OFF",
+        "-DALSOFT_BACKEND_OBOE=OFF"
+      ],
+      "scope": "Native static mixer with required CoreAudio backend. Build only; original game integration and Apple platform acceptance remain separate."
+    },
+    "arguments": null,
+    "mobile_hooks_sha256": "db0c90563c702c5bc1f4e0a90b7e88266eace2410cde6e408f7f6a12489e606a",
+    "x87_stores_sha256": "eb38b70b941bab6b6455b5874e5f8437949b87252f36d4ee2919fad344c8a860",
+    "mp3_stores_sha256": "f80072152493bea84fe4f8a8441e0db44149499722763b63c8745a3a66741b6f",
+    "wav_io_test_sha256": "cc5103806c1449c36c48da3388123edb2220198c6808d4ed282ed2fc346c27ec",
+    "mobile_gpu_timing": {
+      "available": false,
+      "original_blocks": {
+        "loc_10047006": [
+          "d347ba31d79c612212376d9d3822a85f320ea6a25402d7ee96d8670c26d840a7",
+          "loc_10047013"
+        ],
+        "loc_10041CD0": [
+          "eeb2922805a588d39906a7307cd8c5658649591c8d434e59bfd4a56723d7eac7",
+          "loc_10041CF6"
+        ],
+        "loc_10041E86": [
+          "9fdcdb8b0e92e514da25f525a36b9bc75f5e2d07a52cce684350b75fd146074f",
+          "loc_10041E91"
+        ],
+        "loc_1004221C": [
+          "6f80d88a246c922c44668f6483fa92a243ef6e36c2983709f40572e0ab8e4e1a",
+          "loc_100422F7"
+        ]
+      },
+      "test_sha256": "10e966de1cf0254095473f468ac37cb4a87bb65d28116ef82f746bb8994ab25d",
+      "translated_sha256": "915812ea19fdb04f5c63b5ff40fb1fa14c443c95dbc5b3bc560d2476693c7856"
+    },
+    "scope": "Full checked engine linked for simulator. Device builds need development signing. Build is not rendering or gameplay acceptance.",
+    "executable_bytes": 104349424,
+    "native_objects_reused": 322,
+    "objects": 411,
+    "signature_verification": "codesign --verify --deep --strict passed"
+  },
+  "touch": {
+    "spawn": true,
+    "weapon_switch": true,
+    "disc_ammo": [
+      15,
+      14
+    ],
+    "flag_distance": [
+      100.6,
+      73.2
+    ],
+    "leave_game": true,
+    "original_quit_code": 0
+  },
+  "scope": "Two 30-second Simulator recordings per build from the same default observer viewpoint; live bot and snow simulation, not a deterministic replay. No physical-device or comfortable-playability acceptance.",
+  "tests": {
+    "guest-access-groups": "5eb1d7ef41f70efa46a18019eea50bd3be1518a7833b1b03b1be2ea7d1159037",
+    "memory-reader": "e1803381769723fb82840ec491630dd15a805f2cbf8a39fa09374c9ce7ed3e08",
+    "cpu-host-checks": "3fad73c425f41a163cce959922d3be7ef1f9c1c842bc4115c392925817afb198",
+    "host-local-checks": "047d7532d75db1165a443da9103dea1ae1ba1073ae9079d155800c78430c3c8f",
+    "native-cpu-checks": "c2e24622d8d7b35ee20a290e91bb2e2fdded1f7fec7d644b6fdbc8085149da37",
+    "sse-host-locals": "206d9541931225d7c3ff0c2f5ec20997a01246f5341e4b7a88fac1f328b88a80",
+    "x87-host-checks": "2092cd3301b79267c1a819b61443021f26fd1bf11f35b37d2e0402319c7206c1",
+    "mobile-gpu-timing": "10e966de1cf0254095473f468ac37cb4a87bb65d28116ef82f746bb8994ab25d",
+    "mobile-gpu-sync": "1410aa4d3bd3b00b8e8307325291f1b5208656f2d79d05f2e3fe59c4dd1c27e3",
+    "code-revision-mobile": "707f822e3d0244e80dda8b3d460aaf511de4502626181e9292e205ec2057242a",
+    "sdl-io": "cc5103806c1449c36c48da3388123edb2220198c6808d4ed282ed2fc346c27ec",
+    "guest-threads/macos": "70aa824609559a444579450ec16674cff59cce507a00b03f5d88f55a3782ff02"
+  },
+  "device": {
+    "state": "built",
+    "platform": "device",
+    "cpu_host_checks": true,
+    "bundled_assets": true,
+    "entitlements_sha256": "1ecc376ec4c7a5e9ca9207b7daced6505b6ba90ef857615dfb68cbbb0553e00e",
+    "binary_sha256": "06a4118f3be3a92bed2281490f4293b19a713e42b79a4f1663b90d2096843ab9",
+    "prepared_sha256": "2213042be59d1db3645bbc69d19794fdbab8d99144981d16facba19f9d17a221",
+    "support_sha256": "e21d09e591ee121400fc522f08325dd1d1216a1e8000359532f26c6c4cdfe06e",
+    "guarded_sha256": "fbd8d21d8c5bd36eaebb90535fcef91bae7b1d033a1e2cf8f37b6822a9eee45b",
+    "gl4es": {
+      "url": "https://github.com/ptitSeb/gl4es.git",
+      "commit": "ec16bedd8819c475326f4f1a3063772c6d986e06",
+      "platform": "device",
+      "configure": [
+        "cmake",
+        "-S",
+        "/Users/chrissotraidis/GitHub/tribespad/generated/gl4es/source",
+        "-B",
+        "/Users/chrissotraidis/GitHub/tribespad/generated/gl4es/device/apple-build",
+        "-DCMAKE_SYSTEM_NAME=iOS",
+        "-DCMAKE_OSX_SYSROOT=iphoneos",
+        "-DCMAKE_OSX_ARCHITECTURES=arm64",
+        "-DCMAKE_OSX_DEPLOYMENT_TARGET=16.0",
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE=/Users/chrissotraidis/GitHub/tribespad/generated/gl4es/device/lib",
+        "-DNOX11=ON",
+        "-DNOEGL=ON",
+        "-DSTATICLIB=ON",
+        "-DNO_LOADER=ON",
+        "-DNO_INIT_CONSTRUCTOR=ON",
+        "-DDEFAULT_ES=2"
+      ],
+      "private_patch_sha256": "8190f2cef1860c7a67155d30aab5682fc218232b7fa78f366883597c5a1b2e70",
+      "client_texture_query_patch_sha256": "bbb2d8979653e84415eeb20f8b7b49d3a41f2fbabee8e1d5b92e47af18ff91a4",
+      "library_sha256": "0f63be5650ebca41e06b6156cc75e99871669cb4624ad8df21d459938f7cf930",
+      "execution_tested": false
+    },
+    "angle": {
+      "distributor": "https://github.com/jeremyfa/build-angle",
+      "url": "https://github.com/jeremyfa/build-angle/releases/download/angle-d2e5e48/angle-ios-universal.zip",
+      "archive_sha256": "1bbd5140d70de689f21f520581192a375d94d81d43844474c24623d545f6f2d2",
+      "reported_source_commit": "d2e5e488da0c6215f8276e5b8d992a4a6ec20c32",
+      "platform": "device",
+      "frameworks": {
+        "ref/angle-prebuilt/ios/libEGL.xcframework/ios-arm64/libEGL.framework": "a0c281d32a356ebb7005143a65f9f8bc37e493da8218258b0295191e0441e78a",
+        "ref/angle-prebuilt/ios/libGLESv2.xcframework/ios-arm64/libGLESv2.framework": "0512077a23b5285023041fa18ab85e2e51e0f2c43d4b7ac16df49d8467a6504c"
+      }
+    },
+    "openal": {
+      "state": "built",
+      "platform": "device",
+      "revision": "dc7d7054a5b4f3bec1dc23a42fd616a0847af948",
+      "library": "generated/openal-soft/device/libopenal.a",
+      "library_sha256": "545a5e6eaacea7bbcf5398eddec1b6df4dbd2c4af6c243b033963b28b9c86c6c",
+      "architecture": "arm64",
+      "sdk": "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk",
+      "configure": [
+        "cmake",
+        "-S",
+        "/Users/chrissotraidis/GitHub/tribespad/ref/openal-soft",
+        "-B",
+        "/Users/chrissotraidis/GitHub/tribespad/generated/openal-soft/device",
+        "-G",
+        "Ninja",
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DCMAKE_OSX_ARCHITECTURES=arm64",
+        "-DCMAKE_OSX_DEPLOYMENT_TARGET=16.0",
+        "-DCMAKE_OSX_SYSROOT=/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk",
+        "-DLIBTYPE=STATIC",
+        "-DALSOFT_UTILS=OFF",
+        "-DALSOFT_EXAMPLES=OFF",
+        "-DALSOFT_TESTS=OFF",
+        "-DALSOFT_INSTALL=OFF",
+        "-DALSOFT_REQUIRE_COREAUDIO=ON",
+        "-DCMAKE_SYSTEM_NAME=iOS",
+        "-DALSOFT_BACKEND_PIPEWIRE=OFF",
+        "-DALSOFT_BACKEND_PULSEAUDIO=OFF",
+        "-DALSOFT_BACKEND_JACK=OFF",
+        "-DALSOFT_BACKEND_PORTAUDIO=OFF",
+        "-DALSOFT_BACKEND_SDL2=OFF",
+        "-DALSOFT_BACKEND_SDL3=OFF",
+        "-DALSOFT_BACKEND_WAVE=OFF",
+        "-DALSOFT_BACKEND_OPENSL=OFF",
+        "-DALSOFT_BACKEND_OBOE=OFF"
+      ],
+      "scope": "Native static mixer with required CoreAudio backend. Build only; original game integration and Apple platform acceptance remain separate."
+    },
+    "arguments": null,
+    "mobile_hooks_sha256": "db0c90563c702c5bc1f4e0a90b7e88266eace2410cde6e408f7f6a12489e606a",
+    "x87_stores_sha256": "eb38b70b941bab6b6455b5874e5f8437949b87252f36d4ee2919fad344c8a860",
+    "mp3_stores_sha256": "f80072152493bea84fe4f8a8441e0db44149499722763b63c8745a3a66741b6f",
+    "wav_io_test_sha256": "cc5103806c1449c36c48da3388123edb2220198c6808d4ed282ed2fc346c27ec",
+    "mobile_gpu_timing": {
+      "available": false,
+      "original_blocks": {
+        "loc_10047006": [
+          "d347ba31d79c612212376d9d3822a85f320ea6a25402d7ee96d8670c26d840a7",
+          "loc_10047013"
+        ],
+        "loc_10041CD0": [
+          "eeb2922805a588d39906a7307cd8c5658649591c8d434e59bfd4a56723d7eac7",
+          "loc_10041CF6"
+        ],
+        "loc_10041E86": [
+          "9fdcdb8b0e92e514da25f525a36b9bc75f5e2d07a52cce684350b75fd146074f",
+          "loc_10041E91"
+        ],
+        "loc_1004221C": [
+          "6f80d88a246c922c44668f6483fa92a243ef6e36c2983709f40572e0ab8e4e1a",
+          "loc_100422F7"
+        ]
+      },
+      "test_sha256": "10e966de1cf0254095473f468ac37cb4a87bb65d28116ef82f746bb8994ab25d",
+      "translated_sha256": "915812ea19fdb04f5c63b5ff40fb1fa14c443c95dbc5b3bc560d2476693c7856"
+    },
+    "scope": "Full checked engine linked for device. Device builds need development signing. Build is not rendering or gameplay acceptance.",
+    "executable_bytes": 104283392,
+    "native_objects_reused": 328,
+    "objects": 411,
+    "signature_verification": "codesign --verify --deep --strict passed",
+    "execution": "Not run: requires development signing and physical-device acceptance."
+  },
+  "tests_scope": "All 12 recorded source-bound proofs passed; scope is their affected native/checked/concurrency behavior, not full gameplay acceptance."
+}
