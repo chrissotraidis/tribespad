@@ -136,8 +136,9 @@ static void *ring_map(StreamRing *r,size_t offset,size_t bytes){
     real.bind_buffer(r->target,r->buffer);
     return real.map_range(r->target,(GLintptr)offset,(GLsizeiptr)bytes,GL_MAP_WRITE_BIT|GL_MAP_UNSYNCHRONIZED_BIT|GL_MAP_INVALIDATE_RANGE_BIT);
 }
+static void stream_note_unpack(GLuint buffer);
 static void stream_bind_buffer(GLenum target,GLuint buffer){
-    if(stream){if(target==GL_ARRAY_BUFFER)stream->array_binding=buffer;else if(target==GL_ELEMENT_ARRAY_BUFFER)stream->element_binding=buffer;}
+    if(stream){if(target==GL_ARRAY_BUFFER)stream->array_binding=buffer;else if(target==GL_ELEMENT_ARRAY_BUFFER)stream->element_binding=buffer;else if(target==0x88EC)stream_note_unpack(buffer);}
     real.bind_buffer(target,buffer);
 }
 static void stream_attrib_pointer(GLuint index,GLint size,GLenum type,GLboolean normalized,GLsizei stride,const void *pointer){
@@ -247,6 +248,81 @@ static void stream_draw_elements(GLenum mode,GLsizei count,GLenum type,const voi
     real.draw_elements(mode,count,type,(const void *)(uintptr_t)offset);
     real.bind_buffer(GL_ELEMENT_ARRAY_BUFFER,stream->element_binding);
 }
+
+/* Texture updates: route glTexSubImage2D pixels through a fenced
+   GL_PIXEL_UNPACK_BUFFER ring so ANGLE copies them on the GPU instead of
+   writing texture memory from the CPU (a synchronous XPC per upload in the
+   iOS Simulator, and a potential in-use stall on devices). The bytes GL would
+   read from client memory are copied exactly; unusual unpack state falls back. */
+typedef void (*PFNTexSubImage2D)(GLenum,GLint,GLint,GLint,GLsizei,GLsizei,GLenum,GLenum,const void *);
+typedef void (*PFNPixelStorei)(GLenum,GLint);
+#ifndef GL_PIXEL_UNPACK_BUFFER
+#define GL_PIXEL_UNPACK_BUFFER 0x88EC
+#endif
+#ifndef GL_UNPACK_ROW_LENGTH
+#define GL_UNPACK_ROW_LENGTH 0x0CF2
+#endif
+#ifndef GL_UNPACK_SKIP_ROWS
+#define GL_UNPACK_SKIP_ROWS 0x0CF3
+#endif
+#ifndef GL_UNPACK_SKIP_PIXELS
+#define GL_UNPACK_SKIP_PIXELS 0x0CF4
+#endif
+#ifndef GL_UNPACK_IMAGE_HEIGHT
+#define GL_UNPACK_IMAGE_HEIGHT 0x806E
+#endif
+#ifndef GL_UNPACK_SKIP_IMAGES
+#define GL_UNPACK_SKIP_IMAGES 0x806D
+#endif
+static PFNTexSubImage2D real_tex_sub_image;static PFNPixelStorei real_pixel_store;
+typedef struct { GLint alignment,unusual;GLuint unpack_binding;StreamRing pixels; } PixelState;
+static PixelState *pixel_state(void){
+    /* One per stream state; allocated alongside it on first use. */
+    static PixelState *states[8];static StreamState *owners[8];
+    if(!stream)return NULL;
+    for(unsigned i=0;i<8;i++)if(owners[i]==stream)return states[i];
+    for(unsigned i=0;i<8;i++)if(!owners[i]){
+        PixelState *n=calloc(1,sizeof(PixelState));if(!n)return NULL;
+        /* Start from the context's actual unpack state, not GL defaults. */
+        void (*get)(GLenum,GLint *)=(void (*)(GLenum,GLint *))real_proc("glGetIntegerv");
+        GLint v=4,u=0,binding=0;get(GL_UNPACK_ALIGNMENT,&v);n->alignment=v;
+        const GLenum names[]={GL_UNPACK_ROW_LENGTH,GL_UNPACK_SKIP_ROWS,GL_UNPACK_SKIP_PIXELS,GL_UNPACK_IMAGE_HEIGHT,GL_UNPACK_SKIP_IMAGES};
+        for(unsigned k=0;k<5;k++){GLint value=0;get(names[k],&value);u|=value!=0;}
+        n->unusual=u;get(0x88EF/*GL_PIXEL_UNPACK_BUFFER_BINDING*/,&binding);n->unpack_binding=(GLuint)binding;
+        states[i]=n;owners[i]=stream;return n;}
+    return NULL;
+}
+static void stream_pixel_store(GLenum name,GLint value){
+    PixelState *p=pixel_state();
+    if(p){if(name==GL_UNPACK_ALIGNMENT)p->alignment=value;
+        else if(name==GL_UNPACK_ROW_LENGTH||name==GL_UNPACK_SKIP_ROWS||name==GL_UNPACK_SKIP_PIXELS||name==GL_UNPACK_IMAGE_HEIGHT||name==GL_UNPACK_SKIP_IMAGES){
+            /* Track any nonzero value of these; fall back while set. */
+            static GLint values[5];unsigned k=name==GL_UNPACK_ROW_LENGTH?0:name==GL_UNPACK_SKIP_ROWS?1:name==GL_UNPACK_SKIP_PIXELS?2:name==GL_UNPACK_IMAGE_HEIGHT?3:4;
+            values[k]=value;p->unusual=values[0]||values[1]||values[2]||values[3]||values[4];}}
+    real_pixel_store(name,value);
+}
+static size_t pixel_bytes(GLenum format,GLenum type){
+    size_t channels=format==GL_RGBA||format==0x80E1/*BGRA*/?4:format==GL_RGB?3:format==GL_LUMINANCE_ALPHA?2:format==GL_LUMINANCE||format==GL_ALPHA?1:0;
+    if(type==GL_UNSIGNED_BYTE)return channels;
+    if(type==GL_UNSIGNED_SHORT_5_6_5)return format==GL_RGB?2:0;
+    if(type==GL_UNSIGNED_SHORT_4_4_4_4||type==GL_UNSIGNED_SHORT_5_5_5_1)return format==GL_RGBA?2:0;
+    return 0;
+}
+static void stream_tex_sub_image(GLenum target,GLint level,GLint x,GLint y,GLsizei width,GLsizei height,GLenum format,GLenum type,const void *pixels){
+    PixelState *p=pixel_state();size_t bpp=pixel_bytes(format,type);
+    if(!p||!pixels||p->unusual||p->unpack_binding||width<=0||height<=0||!bpp||(p->alignment!=1&&p->alignment!=2&&p->alignment!=4&&p->alignment!=8)){
+        real_tex_sub_image(target,level,x,y,width,height,format,type,pixels);return;}
+    size_t row=(size_t)width*bpp,stride=(row+(size_t)p->alignment-1)/(size_t)p->alignment*(size_t)p->alignment,bytes=(size_t)(height-1)*stride+row,offset;
+    if(!ring_ready(&p->pixels,GL_PIXEL_UNPACK_BUFFER,32u<<20)||!ring_reserve(&p->pixels,bytes,&offset)){
+        real.bind_buffer(GL_PIXEL_UNPACK_BUFFER,0);real_tex_sub_image(target,level,x,y,width,height,format,type,pixels);return;}
+    unsigned char *map=ring_map(&p->pixels,offset,bytes);
+    if(!map){real.bind_buffer(GL_PIXEL_UNPACK_BUFFER,0);real_tex_sub_image(target,level,x,y,width,height,format,type,pixels);return;}
+    memcpy(map,pixels,bytes);real.unmap(GL_PIXEL_UNPACK_BUFFER);
+    real_tex_sub_image(target,level,x,y,width,height,format,type,(const void *)(uintptr_t)offset);
+    real.bind_buffer(GL_PIXEL_UNPACK_BUFFER,0);
+}
+
+static void stream_note_unpack(GLuint buffer){PixelState *p=pixel_state();if(p)p->unpack_binding=buffer;}
 static void *stream_proc(const char *name){
     if(!streaming_enabled())return NULL;
     load_real();
@@ -256,6 +332,8 @@ static void *stream_proc(const char *name){
     if(!strcmp(name,"glDisableVertexAttribArray"))return (void *)stream_disable;
     if(!strcmp(name,"glDrawArrays"))return (void *)stream_draw_arrays;
     if(!strcmp(name,"glDrawElements"))return (void *)stream_draw_elements;
+    if(!strcmp(name,"glTexSubImage2D")){real_tex_sub_image=(PFNTexSubImage2D)real_proc("glTexSubImage2D");return (void *)stream_tex_sub_image;}
+    if(!strcmp(name,"glPixelStorei")){real_pixel_store=(PFNPixelStorei)real_proc("glPixelStorei");return (void *)stream_pixel_store;}
     return NULL;
 }
 #endif

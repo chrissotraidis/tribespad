@@ -1,221 +1,401 @@
 {
-  "date": "2026-10-10",
-  "route": "iPad Air 11-inch (M4) Simulator, iOS 26.5. Console-started original LAN host (LaunchGame(\"Host\"); tryToStartHostedGame()), Katabatic CTF, two bots, observer view, console closed; native TRIBES_FRAME_TIMING swap windows (last four 30 s windows per run). Shared Mac, load average 3.9-5.3.",
-  "baseline": {
-    "build": "bracketed checked memory (d73c01c + timing logger)",
-    "fps_range": [
-      6.0,
-      7.05
-    ],
-    "load_seconds": 221
-  },
-  "runs": {
-    "run1": {
-      "change": "MMU-enforced checked memory (no per-access brackets), first build",
-      "binary": null,
-      "steady_windows": [
-        {
-          "end_ns": 193358172541,
-          "fps": 19.91,
-          "interval_max_ms": 174.138
-        },
-        {
-          "end_ns": 223406959083,
-          "fps": 19.834,
-          "interval_max_ms": 100.224
-        },
-        {
-          "end_ns": 253438676083,
-          "fps": 19.746,
-          "interval_max_ms": 137.28
-        }
-      ],
-      "fps_range": [
-        19.746,
-        19.91
-      ]
+ "date": "2026-10-10",
+ "route": "iPad Air 11-inch (M4) Simulator, iOS 26.5. Console-started original LAN host (LaunchGame(\"Host\"); tryToStartHostedGame()), Katabatic CTF, two bots, observer view, console closed; native TRIBES_FRAME_TIMING swap windows (last four 30 s windows per run). Shared Mac, load average 3.9-5.3.",
+ "baseline": {
+  "build": "bracketed checked memory (d73c01c + timing logger)",
+  "fps_range": [
+   6.0,
+   7.05
+  ],
+  "load_seconds": 221
+ },
+ "runs": {
+  "run1": {
+   "change": "MMU-enforced checked memory (no per-access brackets), first build",
+   "binary": null,
+   "steady_windows": [
+    {
+     "end_ns": 193358172541,
+     "fps": 19.91,
+     "interval_max_ms": 174.138
     },
-    "run2": {
-      "change": "+ light GL entry (no per-GL-call SDL revalidation) + O(1) indirect-target bitmap",
-      "binary": "4c85ab389d134e71012f2a9c750edcec05c6cdaac26934e5ac48fdb87ce0817a",
-      "steady_windows": [
-        {
-          "end_ns": 152336657791,
-          "fps": 25.762,
-          "interval_max_ms": 157.945
-        },
-        {
-          "end_ns": 182372928333,
-          "fps": 20.808,
-          "interval_max_ms": 98.995
-        },
-        {
-          "end_ns": 212394590583,
-          "fps": 22.051,
-          "interval_max_ms": 108.909
-        },
-        {
-          "end_ns": 242405659500,
-          "fps": 23.925,
-          "interval_max_ms": 69.002
-        }
-      ],
-      "fps_range": [
-        20.808,
-        25.762
-      ]
+    {
+     "end_ns": 223406959083,
+     "fps": 19.834,
+     "interval_max_ms": 100.224
     },
-    "run3-batch": {
-      "change": "run2 binary with LIBGL_BATCH=1 (rejected: no change)",
-      "binary": null,
-      "steady_windows": [
-        {
-          "end_ns": 122091538708,
-          "fps": 22.951,
-          "interval_max_ms": 397.733
-        },
-        {
-          "end_ns": 152094374791,
-          "fps": 22.964,
-          "interval_max_ms": 188.036
-        },
-        {
-          "end_ns": 182095156708,
-          "fps": 20.366,
-          "interval_max_ms": 167.455
-        },
-        {
-          "end_ns": 212129598458,
-          "fps": 22.607,
-          "interval_max_ms": 117.437
-        }
-      ],
-      "fps_range": [
-        20.366,
-        22.964
-      ]
-    },
-    "run4-beginend0": {
-      "change": "run2 binary with LIBGL_BEGINEND=0 (diagnostic: Metal wait 27%, 15 FPS)",
-      "binary": null,
-      "steady_windows": [
-        {
-          "end_ns": 151571401458,
-          "fps": 13.786,
-          "interval_max_ms": 137.836
-        },
-        {
-          "end_ns": 181618393375,
-          "fps": 15.642,
-          "interval_max_ms": 187.673
-        },
-        {
-          "end_ns": 211681050625,
-          "fps": 16.199,
-          "interval_max_ms": 100.475
-        },
-        {
-          "end_ns": 241683332875,
-          "fps": 15.266,
-          "interval_max_ms": 115.794
-        }
-      ],
-      "fps_range": [
-        13.786,
-        16.199
-      ]
-    },
-    "run5-stream": {
-      "change": "+ client-array ring streaming (no change alone)",
-      "binary": "1a644fc645cb628f12d8f71d5f6b6087e5daec95e706be7e611b4b7713d7b68f",
-      "steady_windows": [
-        {
-          "end_ns": 152588246041,
-          "fps": 22.61,
-          "interval_max_ms": 78.475
-        },
-        {
-          "end_ns": 182621043041,
-          "fps": 24.174,
-          "interval_max_ms": 156.726
-        },
-        {
-          "end_ns": 212647889375,
-          "fps": 24.245,
-          "interval_max_ms": 102.471
-        }
-      ],
-      "fps_range": [
-        22.61,
-        24.245
-      ]
-    },
-    "run6-fans": {
-      "change": "+ triangle-fan/line-loop expansion into ring indices (ANGLE draw wait removed)",
-      "binary": "1b65351d443e532702454f923fb5e947a0bbf1ecf4a46c1e8585920aea0c003b",
-      "steady_windows": [
-        {
-          "end_ns": 122708464000,
-          "fps": 26.396,
-          "interval_max_ms": 203.213
-        },
-        {
-          "end_ns": 152721106791,
-          "fps": 24.49,
-          "interval_max_ms": 81.023
-        },
-        {
-          "end_ns": 182741291875,
-          "fps": 27.581,
-          "interval_max_ms": 152.306
-        },
-        {
-          "end_ns": 212750728166,
-          "fps": 26.925,
-          "interval_max_ms": 68.653
-        }
-      ],
-      "fps_range": [
-        24.49,
-        27.581
-      ]
-    },
-    "run7-x87": {
-      "change": "+ exact x87 float32/float64 loads without SoftFloat TLS environment",
-      "binary": "2f0121e0864a8454d22efd4fabf3e007ef984dde2c310c964cbbe5f77769c75b",
-      "steady_windows": [
-        {
-          "end_ns": 122490400666,
-          "fps": 27.47,
-          "interval_max_ms": 220.941
-        },
-        {
-          "end_ns": 152493130500,
-          "fps": 27.731,
-          "interval_max_ms": 79.035
-        },
-        {
-          "end_ns": 182503855333,
-          "fps": 28.856,
-          "interval_max_ms": 56.69
-        },
-        {
-          "end_ns": 212508141375,
-          "fps": 29.296,
-          "interval_max_ms": 150.657
-        }
-      ],
-      "fps_range": [
-        27.47,
-        29.296
-      ]
+    {
+     "end_ns": 253438676083,
+     "fps": 19.746,
+     "interval_max_ms": 137.28
     }
+   ],
+   "fps_range": [
+    19.746,
+    19.91
+   ]
   },
-  "component_tests": {
-    "hardware_permissions": "tests/hardware_permissions_test.c: macOS and iOS Simulator PASS (native uniform pages 0.35-0.47 ns; ~360k exact emulations incl. SIMD/memset/LSE/CAS; 8 stops: denied read/write, uniform read-only write, straddle, window end, revoked owner residency, SIMD into denied page, published-code write; VM zero/mixed commit; 4 emulating threads vs permission publisher)",
-    "x87_widen": "tests/float80_widen_test.c: all 2^32 binary32 + binary64 edges and 200M random widenings bit- and flag-identical to SoftFloat",
-    "receipts": "Default bracketed mode: cpu-host-checks, host-local-checks, native-cpu-checks, sse-host-locals, x87-host-checks, mobile-gpu-timing, code-revision (both), mobile-gpu-sync, sdl-io, guest-threads, guest-access-groups, external-memory-pass, x87-indexed-stores, mp3-window-tables all PASS"
+  "run2": {
+   "change": "+ light GL entry (no per-GL-call SDL revalidation) + O(1) indirect-target bitmap",
+   "binary": "4c85ab389d134e71012f2a9c750edcec05c6cdaac26934e5ac48fdb87ce0817a",
+   "steady_windows": [
+    {
+     "end_ns": 152336657791,
+     "fps": 25.762,
+     "interval_max_ms": 157.945
+    },
+    {
+     "end_ns": 182372928333,
+     "fps": 20.808,
+     "interval_max_ms": 98.995
+    },
+    {
+     "end_ns": 212394590583,
+     "fps": 22.051,
+     "interval_max_ms": 108.909
+    },
+    {
+     "end_ns": 242405659500,
+     "fps": 23.925,
+     "interval_max_ms": 69.002
+    }
+   ],
+   "fps_range": [
+    20.808,
+    25.762
+   ]
   },
-  "limits": "Simulator observer view only; physical iPad, player-controlled gameplay frame rate and long sessions not yet measured in this build. Remaining per-frame wait is the original QoL frame-latency fence (glClientWaitSync), left unchanged.",
-  "window_selection": "The steady observer windows read during each run, before profiling and before any later build; earlier windows include the match-start countdown."
+  "run3-batch": {
+   "change": "run2 binary with LIBGL_BATCH=1 (rejected: no change)",
+   "binary": null,
+   "steady_windows": [
+    {
+     "end_ns": 122091538708,
+     "fps": 22.951,
+     "interval_max_ms": 397.733
+    },
+    {
+     "end_ns": 152094374791,
+     "fps": 22.964,
+     "interval_max_ms": 188.036
+    },
+    {
+     "end_ns": 182095156708,
+     "fps": 20.366,
+     "interval_max_ms": 167.455
+    },
+    {
+     "end_ns": 212129598458,
+     "fps": 22.607,
+     "interval_max_ms": 117.437
+    }
+   ],
+   "fps_range": [
+    20.366,
+    22.964
+   ]
+  },
+  "run4-beginend0": {
+   "change": "run2 binary with LIBGL_BEGINEND=0 (diagnostic: Metal wait 27%, 15 FPS)",
+   "binary": null,
+   "steady_windows": [
+    {
+     "end_ns": 151571401458,
+     "fps": 13.786,
+     "interval_max_ms": 137.836
+    },
+    {
+     "end_ns": 181618393375,
+     "fps": 15.642,
+     "interval_max_ms": 187.673
+    },
+    {
+     "end_ns": 211681050625,
+     "fps": 16.199,
+     "interval_max_ms": 100.475
+    },
+    {
+     "end_ns": 241683332875,
+     "fps": 15.266,
+     "interval_max_ms": 115.794
+    }
+   ],
+   "fps_range": [
+    13.786,
+    16.199
+   ]
+  },
+  "run5-stream": {
+   "change": "+ client-array ring streaming (no change alone)",
+   "binary": "1a644fc645cb628f12d8f71d5f6b6087e5daec95e706be7e611b4b7713d7b68f",
+   "steady_windows": [
+    {
+     "end_ns": 152588246041,
+     "fps": 22.61,
+     "interval_max_ms": 78.475
+    },
+    {
+     "end_ns": 182621043041,
+     "fps": 24.174,
+     "interval_max_ms": 156.726
+    },
+    {
+     "end_ns": 212647889375,
+     "fps": 24.245,
+     "interval_max_ms": 102.471
+    }
+   ],
+   "fps_range": [
+    22.61,
+    24.245
+   ]
+  },
+  "run6-fans": {
+   "change": "+ triangle-fan/line-loop expansion into ring indices (ANGLE draw wait removed)",
+   "binary": "1b65351d443e532702454f923fb5e947a0bbf1ecf4a46c1e8585920aea0c003b",
+   "steady_windows": [
+    {
+     "end_ns": 122708464000,
+     "fps": 26.396,
+     "interval_max_ms": 203.213
+    },
+    {
+     "end_ns": 152721106791,
+     "fps": 24.49,
+     "interval_max_ms": 81.023
+    },
+    {
+     "end_ns": 182741291875,
+     "fps": 27.581,
+     "interval_max_ms": 152.306
+    },
+    {
+     "end_ns": 212750728166,
+     "fps": 26.925,
+     "interval_max_ms": 68.653
+    }
+   ],
+   "fps_range": [
+    24.49,
+    27.581
+   ]
+  },
+  "run7-x87": {
+   "change": "+ exact x87 float32/float64 loads without SoftFloat TLS environment",
+   "binary": "2f0121e0864a8454d22efd4fabf3e007ef984dde2c310c964cbbe5f77769c75b",
+   "steady_windows": [
+    {
+     "end_ns": 122490400666,
+     "fps": 27.47,
+     "interval_max_ms": 220.941
+    },
+    {
+     "end_ns": 152493130500,
+     "fps": 27.731,
+     "interval_max_ms": 79.035
+    },
+    {
+     "end_ns": 182503855333,
+     "fps": 28.856,
+     "interval_max_ms": 56.69
+    },
+    {
+     "end_ns": 212508141375,
+     "fps": 29.296,
+     "interval_max_ms": 150.657
+    }
+   ],
+   "fps_range": [
+    27.47,
+    29.296
+   ]
+  },
+  "run8-play": {
+   "change": "run7 binary, scripted player (autoexec playtest: spawn, move, yaw, fire, jet, jump)",
+   "binary": null,
+   "steady_windows": [
+    {
+     "end_ns": 133247926541,
+     "fps": 33.601,
+     "interval_max_ms": 141.832
+    },
+    {
+     "end_ns": 163252441333,
+     "fps": 31.429,
+     "interval_max_ms": 63.47
+    }
+   ],
+   "fps_range": [
+    31.429,
+    33.601
+   ],
+   "fps_median": 32.5
+  },
+  "run9-play": {
+   "change": "run7 binary, scripted player, longer session; profile: 23% Simulator MTLSimTexture replaceRegion under glTexSubImage2D",
+   "binary": null,
+   "steady_windows": [
+    {
+     "end_ns": 136633732500,
+     "fps": 50.581,
+     "interval_max_ms": 868.174
+    },
+    {
+     "end_ns": 166648183458,
+     "fps": 24.455,
+     "interval_max_ms": 97.727
+    },
+    {
+     "end_ns": 196692149125,
+     "fps": 24.864,
+     "interval_max_ms": 95.703
+    },
+    {
+     "end_ns": 226717393000,
+     "fps": 28.409,
+     "interval_max_ms": 75.782
+    },
+    {
+     "end_ns": 256727835625,
+     "fps": 29.19,
+     "interval_max_ms": 91.904
+    },
+    {
+     "end_ns": 286736738291,
+     "fps": 28.392,
+     "interval_max_ms": 142.28
+    },
+    {
+     "end_ns": 316737181125,
+     "fps": 20.333,
+     "interval_max_ms": 642.735
+    },
+    {
+     "end_ns": 346763197208,
+     "fps": 25.445,
+     "interval_max_ms": 104.433
+    },
+    {
+     "end_ns": 376790874333,
+     "fps": 27.142,
+     "interval_max_ms": 117.198
+    },
+    {
+     "end_ns": 406825320583,
+     "fps": 27.901,
+     "interval_max_ms": 104.212
+    },
+    {
+     "end_ns": 436871539791,
+     "fps": 21.633,
+     "interval_max_ms": 111.956
+    },
+    {
+     "end_ns": 466899444041,
+     "fps": 21.647,
+     "interval_max_ms": 126.779
+    },
+    {
+     "end_ns": 496903968375,
+     "fps": 17.597,
+     "interval_max_ms": 1076.207
+    },
+    {
+     "end_ns": 526919150083,
+     "fps": 21.456,
+     "interval_max_ms": 124.071
+    },
+    {
+     "end_ns": 556929481250,
+     "fps": 23.725,
+     "interval_max_ms": 132.541
+    },
+    {
+     "end_ns": 586945222333,
+     "fps": 20.456,
+     "interval_max_ms": 154.265
+    },
+    {
+     "end_ns": 616956852916,
+     "fps": 34.687,
+     "interval_max_ms": 170.115
+    }
+   ],
+   "fps_range": [
+    17.597,
+    50.581
+   ],
+   "fps_median": 24.9
+  },
+  "run10-pbo": {
+   "change": "+ glTexSubImage2D through fenced GL_PIXEL_UNPACK_BUFFER ring; scripted player. replaceRegion absent from 10 s profile; textures visually correct",
+   "binary": "3769cefa5c855cd6bad47e97b33e5cfcc8eaea2ce01fca3e55629d0c0fdc321f",
+   "steady_windows": [
+    {
+     "end_ns": 135775362958,
+     "fps": 28.396,
+     "interval_max_ms": 165.3
+    },
+    {
+     "end_ns": 165804281250,
+     "fps": 42.892,
+     "interval_max_ms": 321.543
+    },
+    {
+     "end_ns": 195819190791,
+     "fps": 26.42,
+     "interval_max_ms": 75.728
+    },
+    {
+     "end_ns": 225826516125,
+     "fps": 30.593,
+     "interval_max_ms": 90.818
+    },
+    {
+     "end_ns": 255847208458,
+     "fps": 33.51,
+     "interval_max_ms": 95.951
+    },
+    {
+     "end_ns": 285854742333,
+     "fps": 33.325,
+     "interval_max_ms": 55.893
+    },
+    {
+     "end_ns": 315871105333,
+     "fps": 27.785,
+     "interval_max_ms": 88.208
+    },
+    {
+     "end_ns": 345874274541,
+     "fps": 21.498,
+     "interval_max_ms": 506.97
+    },
+    {
+     "end_ns": 375900740166,
+     "fps": 18.717,
+     "interval_max_ms": 99.38
+    },
+    {
+     "end_ns": 405912916916,
+     "fps": 34.886,
+     "interval_max_ms": 103.371
+    }
+   ],
+   "fps_range": [
+    18.717,
+    42.892
+   ],
+   "fps_median": 29.5
+  }
+ },
+ "component_tests": {
+  "hardware_permissions": "tests/hardware_permissions_test.c: macOS and iOS Simulator PASS (native uniform pages 0.35-0.47 ns; ~360k exact emulations incl. SIMD/memset/LSE/CAS; 8 stops: denied read/write, uniform read-only write, straddle, window end, revoked owner residency, SIMD into denied page, published-code write; VM zero/mixed commit; 4 emulating threads vs permission publisher)",
+  "x87_widen": "tests/float80_widen_test.c: all 2^32 binary32 + binary64 edges and 200M random widenings bit- and flag-identical to SoftFloat",
+  "receipts": "Default bracketed mode: cpu-host-checks, host-local-checks, native-cpu-checks, sse-host-locals, x87-host-checks, mobile-gpu-timing, code-revision (both), mobile-gpu-sync, sdl-io, guest-threads, guest-access-groups, external-memory-pass, x87-indexed-stores, mp3-window-tables all PASS"
+ },
+ "limits": "Simulator only; physical iPad/iPhone untested. Player input came from a TorqueScript playtest in autoexec.cs, not touch. Frame timing is CPU-side swap timing. Remaining per-frame wait is the original QoL frame-latency fence (glClientWaitSync), left unchanged.",
+ "window_selection": "The steady observer windows read during each run, before profiling and before any later build; earlier windows include the match-start countdown.",
+ "soak": "run7 binary ran more than 30 minutes at about 29.6 FPS, 391 MB footprint, no crash.",
+ "device_build": "Hardware-permissions build for physical iPad compiles (pre-PBO binary 3431dff9...). Not installed: no device or signing identity on this Mac."
 }

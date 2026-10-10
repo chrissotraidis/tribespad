@@ -135,7 +135,7 @@ struct ExternalMemoryPass : PassInfoMixin<ExternalMemoryPass>{
     if(Name.starts_with("gl4es_gl")&&Host.contains(Name.drop_front(6)))Name=Name.drop_front(6);
     if(Strings.contains(Name)){
      // Hardware mode: the MMU checks every byte the native string routine
-     // touches; keep the call but still forbid it in non-hardware modules.
+     // touches. Other modules keep the checked replacements below.
      if(M.getModuleFlag("tribes.checked.hardware")){++RangeCalls;continue;}
      if(Name=="strcmp"||Name=="strncmp"){
       unsigned N=Name=="strcmp"?2:3;
