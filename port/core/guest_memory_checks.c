@@ -10,9 +10,23 @@
 #include <string.h>
 #include <sys/mman.h>
 #include <unistd.h>
+#include <errno.h>
+#include <time.h>
 static uintptr_t guest_base;
 static uint64_t guest_size;
 static unsigned char *permissions;
+/* Trusted runtime data path. In MMU-enforced builds the guest view may be
+   narrowed (inaccessible mixed pages, read-only published code), so trusted
+   reads/writes made under the writer lock use a private RW alias of the same
+   memory. Without that mode the alias is absent and this is the guest view. */
+static uintptr_t alias_base;
+#define GUEST_DATA(offset) ((unsigned char *)(uintptr_t)((alias_base?alias_base:guest_base)+(uint64_t)(offset)))
+#ifdef TRIBES_HARDWARE_PERMISSIONS
+static _Atomic uint32_t emulators;
+static int hardware_configure(void);
+static void apply_native(uint64_t first_page,uint64_t end_page);
+static void apply_published_native(void);
+#endif
 typedef struct { uint64_t begin,end; } PublishedInterval;
 static PublishedInterval *published;
 static uint32_t published_count;
@@ -53,7 +67,10 @@ static void reader_destroy(void *pointer){
     register again instead of retaining a pointer to this retired node. */
  reader_local.node=NULL;free(node);
 }
-static void reader_key_create(void){if(pthread_key_create(&reader_key,reader_destroy))abort();}
+static _Atomic int reader_key_ready;
+static void reader_key_create(void){if(pthread_key_create(&reader_key,reader_destroy))abort();atomic_store(&reader_key_ready,1);}
+/* Signal-context lookup of this thread's reader: TSD read only, no allocation. */
+static __attribute__((unused)) MemoryReader *reader_local_peek(void){return atomic_load(&reader_key_ready)?pthread_getspecific(reader_key):NULL;}
 static __attribute__((cold,noinline)) MemoryReader *reader_register(void){
  if(pthread_once(&reader_key_once,reader_key_create))abort();
  MemoryReader *node=NULL;
@@ -115,17 +132,35 @@ static void write_lock(void){
  if(pthread_mutex_lock(&guard_writer))abort();
  if(pthread_mutex_lock(&guard_wait))abort();
  atomic_store_explicit(&writer_pending,1,memory_order_seq_cst);
+#ifdef TRIBES_HARDWARE_PERMISSIONS
+ /* Fault emulations are counted, not registered readers; they never block on
+    this mutex, so poll them with a bounded wait. Publications are rare. */
+ for(;;){
+  if(!readers_present()&&!atomic_load_explicit(&emulators,memory_order_seq_cst))break;
+  struct timespec t;clock_gettime(CLOCK_REALTIME,&t);t.tv_nsec+=200000;if(t.tv_nsec>=1000000000){t.tv_sec++;t.tv_nsec-=1000000000;}
+  int r=pthread_cond_timedwait(&guard_changed,&guard_wait,&t);if(r&&r!=ETIMEDOUT)abort();
+ }
+#else
  while(readers_present())if(pthread_cond_wait(&guard_changed,&guard_wait))abort();
+#endif
 }
 
 static __attribute__((cold,noinline)) _Noreturn void violation(const void *p,uint64_t size,uint32_t access){fprintf(stderr,"TribesPad: checked guest memory violation at 0x%llx size=%llu access=%u\n",(unsigned long long)((uintptr_t)p-guest_base),(unsigned long long)size,access);abort();}
 int tribes_memory_checks_configure(uint64_t base,uint64_t size){
  if(permissions||!base||!size||(base|size)%4096||size>UINT64_C(0x100000000)||base>UINTPTR_MAX-size)return 0;
- unsigned char *p=malloc((size_t)(size/4096));if(!p)return 0;memset(p,3,(size_t)(size/4096));guest_base=(uintptr_t)base;guest_size=size;permissions=p;return 1;
+ unsigned char *p=malloc((size_t)(size/4096));if(!p)return 0;memset(p,3,(size_t)(size/4096));guest_base=(uintptr_t)base;guest_size=size;permissions=p;
+#ifdef TRIBES_HARDWARE_PERMISSIONS
+ if(!hardware_configure()){fputs("TribesPad: MMU-enforced checked memory setup failed\n",stderr);abort();}
+#endif
+ return 1;
 }
 int tribes_memory_permissions_set(uint32_t address,uint64_t size,uint32_t access){
  if(!permissions||!size||(address|size)%4096||access>3||address>=guest_size||size>guest_size-address)return 0;
- write_lock();memset(permissions+address/4096,(int)access,(size_t)(size/4096));write_unlock();return 1;
+ write_lock();memset(permissions+address/4096,(int)access,(size_t)(size/4096));
+#ifdef TRIBES_HARDWARE_PERMISSIONS
+ apply_native(address/4096,(address+size)/4096);
+#endif
+ write_unlock();return 1;
 }
 /* Test interval intersection without overflowing host pointer arithmetic. Host
    buffers are left alone; a range partly crossing the guest window is invalid. */
@@ -151,7 +186,7 @@ static int plan_matches(const TribesCodeWrite *writes,uint32_t count,int final){
   int last=final?previous_writer(writes,count,address):(int)i;
   uint64_t value=final?writes[last].value:writes[last].before;
   unsigned char expected=(unsigned char)(value>>(8*(address-writes[last].address)));
-  if(*(const unsigned char *)(guest_base+address)!=expected)return 0;
+  if(*GUEST_DATA(address)!=expected)return 0;
  }
  return 1;
 }
@@ -229,14 +264,18 @@ int tribes_memory_publish_code(uint64_t base,const TribesPublishedCodeRange *ran
  write_lock();int valid=!published;
  for(uint32_t i=0;valid&&i<count;i++){
   for(uint64_t page=next[i].begin/4096;page<=(next[i].end-1)/4096;page++)if(!(permissions[page]&1)){valid=0;break;}
-  if(valid&&memcmp((void *)(uintptr_t)(guest_base+next[i].begin),ranges[i].expected,ranges[i].size))valid=0;
+  if(valid&&memcmp(GUEST_DATA(next[i].begin),ranges[i].expected,ranges[i].size))valid=0;
  }
  for(uint32_t i=0;valid&&i<revision_count;i++){
   TribesCodeWrite w=revision[i];
   if(!covered(next,count,w.pc,1)||!covered(next,count,w.address,w.size))valid=0;
  }
  if(valid&&!plan_matches(revision,revision_count,0))valid=0;
- if(valid){published=next;published_count=count;}else free(next);
+ if(valid){published=next;published_count=count;
+#ifdef TRIBES_HARDWARE_PERMISSIONS
+  apply_published_native();
+#endif
+ }else free(next);
  write_unlock();return valid;
 }
 /* The second captured bank is registered during original engine startup.
@@ -263,7 +302,7 @@ static int publish_later_bank(uint64_t base,const TribesPublishedCodeRange *rang
  for(uint32_t i=0;ok&&i<count;i++){
   for(uint32_t j=0;j<published_count;j++)if(extra[i].begin<published[j].end&&published[j].begin<extra[i].end){ok=0;break;}
   for(uint64_t page=extra[i].begin/4096;ok&&page<=(extra[i].end-1)/4096;page++)if(!(permissions[page]&1))ok=0;
-  if(ok&&memcmp((void *)(uintptr_t)(base+extra[i].begin),ranges[i].expected,ranges[i].size))ok=0;
+  if(ok&&memcmp(GUEST_DATA(extra[i].begin),ranges[i].expected,ranges[i].size))ok=0;
  }
  PublishedInterval *merged=ok?malloc((size_t)(published_count+count)*sizeof *merged):NULL;
  if(ok&&!merged)ok=0;
@@ -273,7 +312,11 @@ static int publish_later_bank(uint64_t base,const TribesPublishedCodeRange *rang
    if(b==count||(a<published_count&&published[a].begin<extra[b].begin))merged[n++]=published[a++];
    else merged[n++]=extra[b++];
   }
-  free(published);published=merged;published_count+=count;if(group==2)audio_bank_published=1;else if(group==1)renderer_bank_published=1;else pending_bank_published=1;
+  free(published);published=merged;published_count+=count;
+#ifdef TRIBES_HARDWARE_PERMISSIONS
+  apply_published_native();
+#endif
+if(group==2)audio_bank_published=1;else if(group==1)renderer_bank_published=1;else pending_bank_published=1;
  }
  write_unlock();return ok;
 }
@@ -302,8 +345,8 @@ int tribes_memory_apply_code_write(uint64_t base,uint32_t pc,const void *pointer
   TribesCodeWrite w=revision[revision_index];uint64_t offset=p-guest_base;
   ok=w.pc==pc&&w.address==offset&&w.size==size&&w.value==value;
   for(uint64_t page=offset/4096;ok&&page<=(offset+size-1)/4096;page++)if((permissions[page]&3)!=3)ok=0;
-  if(ok&&memcmp(pointer,&w.before,size))ok=0;
-  if(ok){memcpy((void *)pointer,&w.value,size);revision_index++;}
+  if(ok&&memcmp(GUEST_DATA(offset),&w.before,size))ok=0;
+  if(ok){memcpy(GUEST_DATA(offset),&w.value,size);revision_index++;}
  }
  write_unlock();return ok;
 }
@@ -330,12 +373,12 @@ int tribes_memory_write_mission_literal(uint64_t base,uint32_t pc,uint32_t addre
  if(ok){
   unsigned char instruction[]={0xf3,0x0f,0x11,0x05,0,0,0,0};
   memcpy(instruction+4,&address,4);
-  const unsigned char *reader=(const unsigned char *)(guest_base+address-3);
-  ok=!memcmp((const void *)(guest_base+pc),instruction,8)&&
+  const unsigned char *reader=GUEST_DATA(address-3);
+  ok=!memcmp(GUEST_DATA(pc),instruction,8)&&
      reader[0]==0xc7&&reader[1]==0x45&&reader[2]==displacements[index];
   /* Preserve each conditional original store separately, including repeated
      and zero/NaN bit patterns. No instruction opcode or native code changes. */
-  if(ok)memcpy((void *)(guest_base+address),&value,4);
+  if(ok)memcpy(GUEST_DATA(address),&value,4);
  }
  write_unlock();return ok;
 }
@@ -364,6 +407,9 @@ int tribes_memory_initialize_static(uint64_t base,const unsigned char *access,ui
     never data. Dynamic user arenas retain their native mapping enforcement. */
  uint64_t user_end=(uint64_t)TRIBES_GUEST_MAXIMUM_ADDRESS+1;
  if(guest_size>user_end)memset(permissions+user_end/4096,0,(size_t)((guest_size-user_end)/4096));
+#ifdef TRIBES_HARDWARE_PERMISSIONS
+ apply_native(0,pages);if(guest_size>user_end)apply_native(user_end/4096,guest_size/4096);
+#endif
  write_unlock();return 1;
 }
 static int native_access(const unsigned char *access,uint32_t count){unsigned bits=0;for(uint32_t i=0;i<count;i++)bits|=access[i];return ((bits&1)?PROT_READ:0)|((bits&2)?PROT_WRITE:0);}
@@ -373,6 +419,9 @@ int tribes_memory_protect_pages(uint64_t base,uint32_t address,uint32_t size,con
  uint32_t pages=size/4096,group=(uint32_t)native_page/4096;
  for(uint32_t i=0;i<pages;i++)if(access[i]!=0&&access[i]!=1&&access[i]!=3)return 0;
  write_lock();unsigned char *previous=permissions+address/4096;
+#ifdef TRIBES_HARDWARE_PERMISSIONS
+ (void)group;memcpy(previous,access,pages);apply_native(address/4096,(uint64_t)address/4096+pages);write_unlock();return 1;
+#endif
  for(uint32_t i=0;i<pages;i+=group){
   if(mprotect((void *)(uintptr_t)(base+address+(uint64_t)i*4096),(size_t)native_page,native_access(access+i,group))){
    /* Include the failing native group in rollback; do not assume an OS failure
@@ -394,8 +443,13 @@ int tribes_memory_vm_initialize(uint64_t base,uint32_t address,uint32_t size){
  if(vm_initialized){write_unlock();return 0;}
  /* No existing VM allocation is allowed here. An OS failure cannot leave a
     partially enabled arena available for execution. */
+ memset(permissions+address/4096,0,size/4096);
+#ifdef TRIBES_HARDWARE_PERMISSIONS
+ apply_native(address/4096,((uint64_t)address+size)/4096);
+#else
  if(mprotect((void *)(uintptr_t)(base+address),size,PROT_NONE)){fputs("TribesPad: checked VM initialization failed\n",stderr);abort();}
- memset(permissions+address/4096,0,size/4096);vm_initialized=1;
+#endif
+ vm_initialized=1;
  write_unlock();return 1;
 }
 int tribes_memory_vm_change(uint64_t base,uint32_t address,uint32_t size,const unsigned char *access,const unsigned char *zero){
@@ -409,6 +463,13 @@ int tribes_memory_vm_change(uint64_t base,uint32_t address,uint32_t size,const u
  if(!vm_initialized){write_unlock();return 0;}
  unsigned char *previous=permissions+address/4096;
  for(uint32_t i=0;i<pages;i++)if(zero[i]&&previous[i]){write_unlock();return 0;}
+#ifdef TRIBES_HARDWARE_PERMISSIONS
+ /* Zero-filled 4 KiB pages were inaccessible (previous==0), so every native
+    access to them faults until the new protections are published below. */
+ (void)group;
+ for(uint32_t i=0;i<pages;i++)if(zero[i])memset(GUEST_DATA((uint64_t)address+(uint64_t)i*4096),0,4096);
+ memcpy(previous,access,pages);apply_native(address/4096,(uint64_t)address/4096+pages);write_unlock();return 1;
+#endif
  for(uint32_t i=0;i<pages;i+=group){
   void *host=(void *)(uintptr_t)(base+address+(uint64_t)i*4096);
   int final=native_access(access+i,group),writable=final;
@@ -425,3 +486,279 @@ int tribes_memory_vm_change(uint64_t base,uint32_t address,uint32_t size,const u
  }
  memcpy(previous,access,pages);write_unlock();return 1;
 }
+
+#ifdef TRIBES_HARDWARE_PERMISSIONS
+/* ---- MMU-enforced checked memory -------------------------------------------
+   Every 16 KiB host page whose four 4 KiB guest permissions agree receives the
+   exact native protection, so ordinary guest accesses need no software check.
+   A host page with mixed permissions is inaccessible, and a writable page that
+   holds published code is read-only ("narrowed"). Faults on narrowed pages are
+   decoded here, checked against the exact table and published intervals, and
+   either aborted or performed through the private alias and resumed. Faults
+   on pages this layer did not narrow (owner-managed residency, guard space,
+   uniform denials) abort: the original build also stopped on them. */
+#include <mach/mach.h>
+#include <mach/vm_map.h>
+#include <sched.h>
+#include <signal.h>
+#include <sys/ucontext.h>
+static uint64_t host_page,host_group;
+static unsigned char *narrowed;           /* per host page */
+static struct sigaction previous_segv,previous_bus;
+static _Atomic uint64_t emulated_accesses;
+static int native_protection(uint64_t page,int *narrow){
+ const unsigned char *q=permissions+page*host_group;unsigned all=3,any=0;
+ for(uint64_t j=0;j<host_group;j++){all&=q[j];any|=q[j];}
+ int prot;*narrow=0;
+ if(all!=any){prot=PROT_NONE;*narrow=1;}
+ else prot=((all&1)?PROT_READ:0)|((all&2)?PROT_WRITE:0);
+ if(prot&PROT_WRITE){
+  uint64_t lo=page*host_page,hi=lo+host_page;
+  for(uint32_t i=0;i<published_count;i++)if(published[i].begin<hi&&published[i].end>lo){prot=PROT_READ;*narrow=1;break;}
+ }
+ return prot;
+}
+/* Called with the writer lock held: no emulation or bracketed access runs. */
+static void apply_native(uint64_t first_page,uint64_t end_page){
+ uint64_t lo=first_page/host_group,hi=(end_page+host_group-1)/host_group;
+ if(hi>guest_size/host_page)hi=guest_size/host_page;
+ uint64_t run=lo;int run_prot=-1;
+ for(uint64_t h=lo;h<=hi;h++){
+  int narrow=0,prot=h<hi?native_protection(h,&narrow):-2;
+  if(h<hi)narrowed[h]=(unsigned char)narrow;
+  if(prot!=run_prot){
+   if(run_prot>=0&&mprotect((void *)(uintptr_t)(guest_base+run*host_page),(size_t)((h-run)*host_page),run_prot)){
+    fputs("TribesPad: native checked protection failed\n",stderr);abort();
+   }
+   run=h;run_prot=prot;
+  }
+ }
+}
+static void apply_published_native(void){
+ for(uint32_t i=0;i<published_count;i++)apply_native(published[i].begin/4096,(published[i].end+4095)/4096);
+}
+static void fault_handler(int,siginfo_t *,void *);
+static int hardware_configure(void){
+ long page=sysconf(_SC_PAGESIZE);
+ if(page<4096||page>65536||(page&(page-1))||guest_base%(uint64_t)page||guest_size%(uint64_t)page)return 0;
+ host_page=(uint64_t)page;host_group=host_page/4096;
+ narrowed=calloc((size_t)(guest_size/host_page),1);if(!narrowed)return 0;
+ /* Accesses near the top of the window must fault rather than reach an
+    adjacent host mapping: reserve an inaccessible guard after it. */
+ vm_address_t guard=(vm_address_t)(guest_base+guest_size);
+ if(vm_allocate(mach_task_self(),&guard,65536,VM_FLAGS_FIXED)!=KERN_SUCCESS||mprotect((void *)guard,65536,PROT_NONE))return 0;
+ vm_address_t alias=0;vm_prot_t current,maximum;
+ if(vm_remap(mach_task_self(),&alias,(vm_size_t)guest_size,0,VM_FLAGS_ANYWHERE,mach_task_self(),(vm_address_t)guest_base,FALSE,&current,&maximum,VM_INHERIT_NONE)!=KERN_SUCCESS)return 0;
+ if(mprotect((void *)alias,(size_t)guest_size,PROT_READ|PROT_WRITE))return 0;
+ alias_base=(uintptr_t)alias;
+ struct sigaction action;memset(&action,0,sizeof action);action.sa_sigaction=fault_handler;action.sa_flags=SA_SIGINFO;sigemptyset(&action.sa_mask);
+ if(sigaction(SIGSEGV,&action,&previous_segv)||sigaction(SIGBUS,&action,&previous_bus))return 0;
+ return 1;
+}
+/* ---- fault-path helpers (async-signal context: no allocation) ---- */
+static __attribute__((noreturn)) void fault_stop(const char *what,uint64_t pc,uint32_t insn,uintptr_t address){
+ char m[192];int n=snprintf(m,sizeof m,"TribesPad: %s pc=0x%llx insn=0x%08x address=0x%llx guest=0x%llx\n",what,(unsigned long long)pc,insn,(unsigned long long)address,(unsigned long long)(address-guest_base));
+ if(n>0)write(2,m,(size_t)(n<(int)sizeof m?n:(int)sizeof m-1));abort();
+}
+typedef struct { struct __darwin_mcontext64 *mc; } Regs;
+static uint64_t xget(Regs r,unsigned n,int sp){
+ if(n==31)return sp?__darwin_arm_thread_state64_get_sp(r.mc->__ss):0;
+ if(n<29)return r.mc->__ss.__x[n];
+ if(n==29)return (uint64_t)__darwin_arm_thread_state64_get_fp(r.mc->__ss);
+ return (uint64_t)__darwin_arm_thread_state64_get_lr(r.mc->__ss);
+}
+static void xset(Regs r,unsigned n,uint64_t v,int sp){
+ if(n==31){if(sp)__darwin_arm_thread_state64_set_sp(r.mc->__ss,v);return;}
+ if(n<29)r.mc->__ss.__x[n]=v;
+ else if(n==29)__darwin_arm_thread_state64_set_fp(r.mc->__ss,(void *)(uintptr_t)v);
+ else __darwin_arm_thread_state64_set_lr_fptr(r.mc->__ss,(void *)(uintptr_t)v);
+}
+static int64_t sext(uint64_t v,unsigned bits){return (int64_t)(v<<(64-bits))>>(64-bits);}
+/* Exact checks for one decoded access. access: 1 read, 2 write, 3 both. */
+static void check_access(uint64_t address,uint64_t size,unsigned access,uint64_t pc,uint32_t insn){
+ if(address<guest_base||address-guest_base>guest_size||size>guest_size-(address-guest_base))fault_stop("checked guest memory violation (window)",pc,insn,address);
+ uint64_t offset=address-guest_base;
+ for(uint64_t p=offset/4096;p<=(offset+size-1)/4096;p++)if((permissions[p]&access)!=access)fault_stop("checked guest memory violation",pc,insn,address);
+ if(access&2)for(uint32_t i=0;i<published_count;i++)if(published[i].begin<offset+size&&published[i].end>offset)fault_stop("write to published AOT code",pc,insn,address);
+}
+static unsigned char *alias_of(uint64_t address){return (unsigned char *)(uintptr_t)(alias_base+(address-guest_base));}
+static uint64_t load_bytes(uint64_t address,unsigned size){
+ unsigned char *a=alias_of(address);uint64_t v=0;
+ if(!((uintptr_t)a&(size-1))){
+  if(size==1)return __atomic_load_n(a,__ATOMIC_SEQ_CST);
+  if(size==2)return __atomic_load_n((uint16_t *)a,__ATOMIC_SEQ_CST);
+  if(size==4)return __atomic_load_n((uint32_t *)a,__ATOMIC_SEQ_CST);
+  if(size==8)return __atomic_load_n((uint64_t *)a,__ATOMIC_SEQ_CST);
+ }
+ memcpy(&v,a,size);return v;
+}
+static void store_bytes(uint64_t address,unsigned size,uint64_t v){
+ unsigned char *a=alias_of(address);
+ if(!((uintptr_t)a&(size-1))){
+  if(size==1){__atomic_store_n(a,(uint8_t)v,__ATOMIC_SEQ_CST);return;}
+  if(size==2){__atomic_store_n((uint16_t *)a,(uint16_t)v,__ATOMIC_SEQ_CST);return;}
+  if(size==4){__atomic_store_n((uint32_t *)a,(uint32_t)v,__ATOMIC_SEQ_CST);return;}
+  if(size==8){__atomic_store_n((uint64_t *)a,v,__ATOMIC_SEQ_CST);return;}
+ }
+ memcpy(a,&v,size);
+}
+/* Exclusive monitors for LDXR/STXR emulated on narrowed pages. */
+typedef struct { _Atomic(pthread_t) owner; uint64_t address; unsigned size,pair; uint64_t value[2]; } Monitor;
+static Monitor monitors[64];
+static Monitor *monitor(void){
+ pthread_t self=pthread_self();
+ for(unsigned i=0;i<64;i++)if(pthread_equal(atomic_load_explicit(&monitors[i].owner,memory_order_acquire),self))return monitors+i;
+ for(unsigned i=0;i<64;i++){pthread_t none=0;if(atomic_compare_exchange_strong(&monitors[i].owner,&none,self))return monitors+i;}
+ return NULL;
+}
+static int cas_bytes(uint64_t address,unsigned size,uint64_t expected,uint64_t desired,uint64_t *observed){
+ unsigned char *a=alias_of(address);int ok=0;
+ switch(size){
+  case 1:{uint8_t e=(uint8_t)expected;ok=__atomic_compare_exchange_n(a,&e,(uint8_t)desired,0,__ATOMIC_SEQ_CST,__ATOMIC_SEQ_CST);*observed=e;break;}
+  case 2:{uint16_t e=(uint16_t)expected;ok=__atomic_compare_exchange_n((uint16_t *)a,&e,(uint16_t)desired,0,__ATOMIC_SEQ_CST,__ATOMIC_SEQ_CST);*observed=e;break;}
+  case 4:{uint32_t e=(uint32_t)expected;ok=__atomic_compare_exchange_n((uint32_t *)a,&e,(uint32_t)desired,0,__ATOMIC_SEQ_CST,__ATOMIC_SEQ_CST);*observed=e;break;}
+  default:{uint64_t e=expected;ok=__atomic_compare_exchange_n((uint64_t *)a,&e,desired,0,__ATOMIC_SEQ_CST,__ATOMIC_SEQ_CST);*observed=e;break;}
+ }
+ return ok;
+}
+static uint64_t mask_bits(unsigned size){return size==8?~UINT64_C(0):(UINT64_C(1)<<(8*size))-1;}
+static int fault_native_allows(uintptr_t address,int write){
+ vm_address_t region=(vm_address_t)address;vm_size_t length=0;vm_region_basic_info_data_64_t info;mach_msg_type_number_t count=VM_REGION_BASIC_INFO_COUNT_64;mach_port_t object=MACH_PORT_NULL;
+ if(vm_region_64(mach_task_self(),&region,&length,VM_REGION_BASIC_INFO_64,(vm_region_info_t)&info,&count,&object)!=KERN_SUCCESS||region>address)return 0;
+ return (info.protection&VM_PROT_READ)&&(!write||(info.protection&VM_PROT_WRITE));
+}
+/* Decode and emulate one AArch64 data access. Returns 1 when emulated, 0 for
+   "not a narrowed guest page" (caller retries or stops), and never returns on
+   a violation. Only forms observed in practice need to be complete; anything
+   else in a narrowed page stops with the instruction word. */
+static int emulate(Regs r,uint64_t pc,uint32_t insn){
+ unsigned rt=insn&31,rn=(insn>>5)&31;uint64_t base=xget(r,rn,1);
+ /* Load/store register: unsigned immediate, unscaled/pre/post, register offset. */
+ int ui=(insn&0x3b000000u)==0x39000000u,imm9=(insn&0x3b200000u)==0x38000000u,reg=(insn&0x3b200c00u)==0x38200800u;
+ if(ui||imm9||reg){
+  unsigned size=insn>>30,v=(insn>>26)&1,opc=(insn>>22)&3,bytes;int load,sign=0,sign32=0;
+  if(v){if(size==0&&opc>=2){bytes=16;load=opc==3;}else{if(opc>1)fault_stop("unsupported SIMD access",pc,insn,base);bytes=1u<<size;load=opc==1;}}
+  else{bytes=1u<<size;load=opc!=0;if(opc==2){if(size==3)return 2;sign=1;}if(opc==3){if(size>=2)fault_stop("unsupported load",pc,insn,base);sign=1;sign32=1;}}
+  uint64_t address=base;int writeback=0;uint64_t final=base;
+  if(ui)address=base+(uint64_t)((insn>>10)&0xfff)*bytes;
+  else if(imm9){int64_t imm=sext((insn>>12)&0x1ff,9);unsigned mode=(insn>>10)&3;
+   if(mode==1){final=base+(uint64_t)imm;writeback=1;}else if(mode==3){address=base+(uint64_t)imm;final=address;writeback=1;}else address=base+(uint64_t)imm;}
+  else{unsigned option=(insn>>13)&7,rm=(insn>>16)&31,shift=((insn>>12)&1)?(bytes==16?4:size):0;uint64_t index=xget(r,rm,0);
+   if(option==2)index=(uint32_t)index;else if(option==6)index=(uint64_t)(int64_t)(int32_t)index;else if(option!=3&&option!=7)fault_stop("unsupported index",pc,insn,base);
+   address=base+(index<<shift);}
+  check_access(address,bytes,load?1:2,pc,insn);
+  if(v){
+   __uint128_t value=0;
+   if(load){memcpy(&value,alias_of(address),bytes);r.mc->__ns.__v[rt]=value;}
+   else{value=r.mc->__ns.__v[rt];memcpy(alias_of(address),&value,bytes);}
+  }else if(load){uint64_t value=load_bytes(address,bytes);if(sign){value=(uint64_t)sext(value,8*bytes);if(sign32)value&=0xffffffffu;}xset(r,rt,value,0);}
+  else store_bytes(address,bytes,xget(r,rt,0));
+  if(writeback)xset(r,rn,final,1);
+  return 1;
+ }
+ /* Load/store pair: no-allocate, post-index, offset, pre-index. */
+ if((insn&0x3a000000u)==0x28000000u){
+  unsigned opc=insn>>30,v=(insn>>26)&1,mode=(insn>>23)&3,load=(insn>>22)&1,rt2=(insn>>10)&31,bytes;int sign=0;
+  if(v){if(opc==3)fault_stop("unsupported SIMD pair",pc,insn,base);bytes=4u<<opc;}
+  else{if(opc==3||(opc==1&&!load))fault_stop("unsupported pair",pc,insn,base);bytes=opc==2?8:4;sign=opc==1;}
+  int64_t imm=sext((insn>>15)&0x7f,7)*(int64_t)bytes;uint64_t address=mode==1?base:base+(uint64_t)imm;
+  check_access(address,2*bytes,load?1:2,pc,insn);
+  for(unsigned k=0;k<2;k++){unsigned t=k?rt2:rt;uint64_t a=address+k*bytes;
+   if(v){__uint128_t value=0;if(load){memcpy(&value,alias_of(a),bytes);r.mc->__ns.__v[t]=value;}else{value=r.mc->__ns.__v[t];memcpy(alias_of(a),&value,bytes);}}
+   else if(load){uint64_t value=load_bytes(a,bytes);if(sign)value=(uint64_t)sext(value,32);xset(r,t,value,0);}
+   else store_bytes(a,bytes,xget(r,t,0));}
+  if(mode==1||mode==3)xset(r,rn,base+(uint64_t)imm,1);
+  return 1;
+ }
+ /* Exclusive, load-acquire/store-release and compare-and-swap. */
+ if((insn&0x3f000000u)==0x08000000u){
+  unsigned size=insn>>30,o2=(insn>>23)&1,load=(insn>>22)&1,o1=(insn>>21)&1,rs=(insn>>16)&31,rt2=(insn>>10)&31,bytes=1u<<size;
+  if(o2&&!o1){check_access(base,bytes,load?1:2,pc,insn);if(load)xset(r,rt,load_bytes(base,bytes),0);else store_bytes(base,bytes,xget(r,rt,0));return 1;}
+  if(o2&&o1){/* CAS{A}{L}{B,H,,} Rs,Rt,[Rn] */
+   check_access(base,bytes,3,pc,insn);uint64_t observed;cas_bytes(base,bytes,xget(r,rs,0)&mask_bits(bytes),xget(r,rt,0)&mask_bits(bytes),&observed);xset(r,rs,observed,0);return 1;}
+  if(!o2&&!o1){Monitor *m=monitor();if(!m)fault_stop("exclusive monitor table full",pc,insn,base);
+   if(load){check_access(base,bytes,1,pc,insn);uint64_t value=load_bytes(base,bytes);m->address=base;m->size=bytes;m->pair=0;m->value[0]=value;xset(r,rt,value,0);return 1;}
+   check_access(base,bytes,2,pc,insn);uint64_t observed;int ok=m->address==base&&m->size==bytes&&!m->pair&&cas_bytes(base,bytes,m->value[0],xget(r,rt,0)&mask_bits(bytes),&observed);
+   m->size=0;xset(r,rs,ok?0:1,0);return 1;}
+  (void)rt2;fault_stop("unsupported exclusive pair/CASP",pc,insn,base);
+ }
+ /* LSE atomic memory operations and LDAPR. */
+ if((insn&0x3b200c00u)==0x38200000u&&!((insn>>26)&1)){
+  unsigned size=insn>>30,rs=(insn>>16)&31,o3=(insn>>15)&1,opc=(insn>>12)&7,bytes=1u<<size;uint64_t m=mask_bits(bytes);
+  if(o3&&opc==4){check_access(base,bytes,1,pc,insn);xset(r,rt,load_bytes(base,bytes),0);return 1;}
+  if(o3&&opc!=0)fault_stop("unsupported atomic",pc,insn,base);
+  check_access(base,bytes,3,pc,insn);uint64_t operand=xget(r,rs,0)&m,old=load_bytes(base,bytes),observed;
+  for(;;){uint64_t next;unsigned bits=8*bytes;
+   if(o3)next=operand;
+   else switch(opc){case 0:next=old+operand;break;case 1:next=old&~operand;break;case 2:next=old^operand;break;case 3:next=old|operand;break;
+    case 4:next=sext(old,bits)>sext(operand,bits)?old:operand;break;case 5:next=sext(old,bits)<sext(operand,bits)?old:operand;break;
+    case 6:next=old>operand?old:operand;break;default:next=old<operand?old:operand;break;}
+   if(cas_bytes(base,bytes,old,next&m,&observed))break;old=observed;}
+  xset(r,rt,old,0);return 1;
+ }
+ /* LDAPUR/STLUR family. */
+ if((insn&0x3f200c00u)==0x19000000u){
+  unsigned size=insn>>30,opc=(insn>>22)&3,bytes=1u<<size;uint64_t address=base+(uint64_t)sext((insn>>12)&0x1ff,9);
+  check_access(address,bytes,opc?1:2,pc,insn);
+  if(!opc)store_bytes(address,bytes,xget(r,rt,0));
+  else{uint64_t value=load_bytes(address,bytes);if(opc>=2){value=(uint64_t)sext(value,8*bytes);if(opc==3)value&=0xffffffffu;}xset(r,rt,value,0);}
+  return 1;
+ }
+ /* SIMD LD1/ST1 multiple structures, 1-4 consecutive registers, optional post-index. */
+ if((insn&0xbfbf0000u)==0x0c000000u||(insn&0xbfa00000u)==0x0c800000u){
+  unsigned q=(insn>>30)&1,load=(insn>>22)&1,opcode=(insn>>12)&15,count=opcode==7?1:opcode==10?2:opcode==6?3:opcode==2?4:0,width=q?16:8;
+  if(!count)fault_stop("unsupported SIMD structure access",pc,insn,base);
+  check_access(base,(uint64_t)count*width,load?1:2,pc,insn);
+  for(unsigned k=0;k<count;k++){unsigned t=(rt+k)&31;__uint128_t value=0;
+   if(load){memcpy(&value,alias_of(base+k*width),width);r.mc->__ns.__v[t]=value;}else{value=r.mc->__ns.__v[t];memcpy(alias_of(base+k*width),&value,width);}}
+  if(insn&(1u<<23)){unsigned rm=(insn>>16)&31;xset(r,rn,base+(rm==31?(uint64_t)count*width:xget(r,rm,0)),1);}
+  return 1;
+ }
+ /* DC ZVA: zero one naturally aligned block. */
+ if((insn&0xffffffe0u)==0xd50b7420u){
+  uint64_t dczid;__asm__ volatile("mrs %0, dczid_el0":"=r"(dczid));uint64_t block=4u<<(dczid&15);
+  uint64_t address=xget(r,rt,0)&~(block-1);check_access(address,block,2,pc,insn);memset(alias_of(address),0,block);return 1;
+ }
+ return 0;
+}
+static void chain(int signal_number,siginfo_t *info,void *context){
+ struct sigaction *previous=signal_number==SIGBUS?&previous_bus:&previous_segv;
+ if((previous->sa_flags&SA_SIGINFO)&&previous->sa_sigaction){previous->sa_sigaction(signal_number,info,context);return;}
+ if(previous->sa_handler!=SIG_DFL&&previous->sa_handler!=SIG_IGN&&previous->sa_handler){previous->sa_handler(signal_number);return;}
+ sigaction(signal_number,previous,NULL); /* re-fault with the default action */
+}
+static void fault_handler(int signal_number,siginfo_t *info,void *context){
+ uintptr_t address=(uintptr_t)info->si_addr;
+ if(address<guest_base||address>=guest_base+guest_size+65536){chain(signal_number,info,context);return;}
+ int saved_errno=errno;
+ Regs r={((ucontext_t *)context)->uc_mcontext};uint64_t pc=__darwin_arm_thread_state64_get_pc(r.mc->__ss);uint32_t insn=*(const uint32_t *)(uintptr_t)pc;
+ if(address>=guest_base+guest_size)fault_stop("checked guest memory violation (window end)",pc,insn,address);
+ /* A thread inside a bracket already excludes writers; others enter as a
+    counted emulator and step aside while a publication is pending. */
+ MemoryReader *self=reader_local_peek();int held=self&&atomic_load_explicit(&self->active,memory_order_seq_cst);
+ if(!held)for(;;){
+  atomic_fetch_add_explicit(&emulators,1,memory_order_seq_cst);
+  if(!atomic_load_explicit(&writer_pending,memory_order_seq_cst))break;
+  atomic_fetch_sub_explicit(&emulators,1,memory_order_seq_cst);sched_yield();
+ }
+ uint64_t page=(address-guest_base)/host_page;int result=0;
+ if(narrowed[page])result=emulate(r,pc,insn);
+ else{
+  /* Not narrowed by this layer: either a protection change raced this fault
+     (retry) or the owner's native mapping denies it, as before (stop). */
+  int write=(int)((r.mc->__es.__esr>>6)&1); /* ESR WnR for data aborts */
+  if(fault_native_allows(address,write))result=-1;
+  else{
+   uint64_t offset=address-guest_base;
+   if((permissions[offset/4096]&(write?2:1))!=(write?2u:1u))fault_stop("checked guest memory violation",pc,insn,address);
+   fault_stop("guest access to memory without native backing",pc,insn,address);
+  }
+ }
+ if(result==0)fault_stop("unsupported faulting instruction in narrowed page",pc,insn,address);
+ if(result>0){__darwin_arm_thread_state64_set_pc_fptr(r.mc->__ss,(void *)(uintptr_t)(pc+4));atomic_fetch_add_explicit(&emulated_accesses,1,memory_order_relaxed);}
+ if(!held)atomic_fetch_sub_explicit(&emulators,1,memory_order_seq_cst);
+ errno=saved_errno;
+}
+uint64_t tribes_memory_emulated_accesses(void){return atomic_load_explicit(&emulated_accesses,memory_order_relaxed);}
+#endif
+

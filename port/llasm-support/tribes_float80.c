@@ -26,8 +26,30 @@ static TBExt80 tb(extFloat80_t x){return (TBExt80){x.signif,x.signExp};}
 typedef struct {uint_fast8_t rounding,flags,precision,tininess;} Environment;
 static NATIVE_CPU Environment begin(CPU){Environment e={softfloat_roundingMode,softfloat_exceptionFlags,extF80_roundingPrecision,softfloat_detectTininess};softfloat_roundingMode=(uint_fast8_t[]){0,2,3,1}[(cpu->_st_cw>>10)&3];softfloat_exceptionFlags=0;softfloat_detectTininess=softfloat_tininess_afterRounding;return e;}
 static unsigned finish(Environment e){unsigned f=softfloat_exceptionFlags;softfloat_roundingMode=e.rounding;softfloat_exceptionFlags=e.flags;extF80_roundingPrecision=e.precision;softfloat_detectTininess=e.tininess;return ((f&16)?1:0)|((f&8)?4:0)|((f&4)?8:0)|((f&2)?16:0)|((f&1)?32:0);}
-static NATIVE_CPU TBExt80 load32(CPU,uint32_t bits){Environment e=begin(cpu);TBExt80 v=tb(f32_to_extF80((float32_t){bits}));unsigned f=finish(e);if(!(bits&0x7f800000)&&(bits&0x7fffff))f|=2;exception(cpu,f);return v;}
-static NATIVE_CPU TBExt80 load64(CPU,uint32_t lo,uint32_t hi){uint64_t bits=lo|((uint64_t)hi<<32);Environment e=begin(cpu);TBExt80 v=tb(f64_to_extF80((float64_t){bits}));unsigned f=finish(e);if(!(bits&UINT64_C(0x7ff0000000000000))&&(bits&UINT64_C(0xfffffffffffff)))f|=2;exception(cpu,f);return v;}
+/* Exact binary32/binary64 -> extended conversions. Identical to SoftFloat's
+   f32_to_extF80/f64_to_extF80 with the 8086 NaN specialization (verified for
+   all 2^32 binary32 inputs and binary64 edge/random cases), without saving and
+   restoring SoftFloat's thread-local environment: these widenings never round,
+   and only a signaling NaN raises invalid. Denormal operands flag as before. */
+static TBExt80 widen(uint32_t sign,uint32_t exponent,uint64_t fraction,unsigned exponent_bits,unsigned fraction_bits,unsigned *flags){
+ uint32_t all_ones=(1u<<exponent_bits)-1,bias=all_ones>>1;TBExt80 v;
+ if(exponent==all_ones){
+  if(fraction){v.significand=UINT64_C(0xC000000000000000)|(fraction<<(63-fraction_bits));if(!(fraction>>(fraction_bits-1)))*flags|=1;}
+  else v.significand=UINT64_C(0x8000000000000000);
+  v.sign_exponent=(uint16_t)(sign<<15|0x7fff);return v;
+ }
+ if(!exponent){
+  if(!fraction){v.significand=0;v.sign_exponent=(uint16_t)(sign<<15);return v;}
+  unsigned msb=63-(unsigned)__builtin_clzll(fraction);
+  v.significand=fraction<<(63-msb);v.sign_exponent=(uint16_t)(sign<<15|(16383-bias+1-fraction_bits+msb));return v;
+ }
+ v.significand=(UINT64_C(1)<<63)|(fraction<<(63-fraction_bits));v.sign_exponent=(uint16_t)(sign<<15|(exponent-bias+16383));return v;
+}
+static NATIVE_CPU TBExt80 load32(CPU,uint32_t bits){unsigned f=0;TBExt80 v=widen(bits>>31,(bits>>23)&0xff,bits&0x7fffff,8,23,&f);if(!(bits&0x7f800000)&&(bits&0x7fffff))f|=2;exception(cpu,f);return v;}
+static NATIVE_CPU TBExt80 load64(CPU,uint32_t lo,uint32_t hi){uint64_t bits=lo|((uint64_t)hi<<32);unsigned f=0;TBExt80 v=widen((uint32_t)(bits>>63),(uint32_t)(bits>>52)&0x7ff,bits&UINT64_C(0xfffffffffffff),11,52,&f);if(!(bits&UINT64_C(0x7ff0000000000000))&&(bits&UINT64_C(0xfffffffffffff)))f|=2;exception(cpu,f);return v;}
+TBExt80 tribes_float80_widen32_for_test(uint32_t bits,unsigned *flags){*flags=0;return widen(bits>>31,(bits>>23)&0xff,bits&0x7fffff,8,23,flags);}
+TBExt80 tribes_float80_widen64_for_test(uint64_t bits,unsigned *flags){*flags=0;return widen((uint32_t)(bits>>63),(uint32_t)(bits>>52)&0x7ff,bits&UINT64_C(0xfffffffffffff),11,52,flags);}
+
 static TBExt80 integer(int64_t i){return tb(i64_to_extF80(i));}
 static NATIVE_CPU void arithmetic(CPU,unsigned op,unsigned dst,TBExt80 a,TBExt80 b){TBExt80 z;uint16_t f;if(!tb_bo_arithmetic(op,a,b,cpu->_st_cw,&z,&f))abort();cpu->_st_sw_cond&=~0x200u;exception(cpu,f);write_st(cpu,dst,z);}
 NATIVE_CPU void x87_fninit_void(CPU){cpu->_st_top=0;cpu->_st_sw_cond=0;cpu->_st_cw=0x37f;cpu->_st_tag=0xffff;cpu->_st_mmx_active=0;cpu->_st_extended=1;}

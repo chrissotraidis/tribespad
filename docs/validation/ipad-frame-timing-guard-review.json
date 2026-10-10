@@ -1,0 +1,142 @@
+{
+  "date": "2026-10-10",
+  "route": "iPad Air 11-inch (M4) Simulator, iOS 26.5, portrait. Offline LAN host, Katabatic CTF, two bots, audio on, untouched default observer view. No build, debugger, sampler or screen recording during the listed windows; the user desktop was active (load average 4.2-6.0).",
+  "measurement": "Opt-in TRIBES_FRAME_TIMING=1 native swap logger (gl4es_context.c): 30-second windows of SDL_GL_SwapWindow submissions. Measures CPU-side frame submission, not GPU completion or display.",
+  "baseline": {
+    "source": "d73c01c runtime + frame-timing logger",
+    "binary_sha256": "c99ee37bfe064956f83d4fbd75fbcc5b8c2f590d7c6c16e562102875790b43ab",
+    "binary_bytes": 104349424,
+    "load_seconds": 221,
+    "windows": [
+      {
+        "fps": 7.047,
+        "seconds": 30.081761,
+        "swap_mean_ms": 0.041,
+        "interval_max_ms": 249.395
+      },
+      {
+        "fps": 6.604,
+        "seconds": 30.132957,
+        "swap_mean_ms": 0.042,
+        "interval_max_ms": 679.14
+      },
+      {
+        "fps": 6.7,
+        "seconds": 30.000495,
+        "swap_mean_ms": 0.04,
+        "interval_max_ms": 447.783
+      },
+      {
+        "fps": 6.66,
+        "seconds": 30.029531,
+        "swap_mean_ms": 0.04,
+        "interval_max_ms": 481.606
+      }
+    ],
+    "fps_mean": 6.75,
+    "fps_range": [
+      6.604,
+      7.047
+    ]
+  },
+  "rejected_candidate": {
+    "change": "Compiler-inlined permission checks for later accesses in existing 16-access groups (docs/experiments/inline-grouped-guard-rejected.patch)",
+    "binary_sha256": "8e6ea701462f53ff5031ee74454ef0cf9a527d91581290ee6bc3e09dd98d96ac",
+    "binary_bytes": 190011120,
+    "build_minutes": 44,
+    "windows": [
+      {
+        "fps": 6.221,
+        "seconds": 30.060969,
+        "swap_mean_ms": 0.042,
+        "interval_max_ms": 418.211
+      },
+      {
+        "fps": 6.338,
+        "seconds": 30.137984,
+        "swap_mean_ms": 0.041,
+        "interval_max_ms": 268.92
+      },
+      {
+        "fps": 6.133,
+        "seconds": 30.163881,
+        "swap_mean_ms": 0.042,
+        "interval_max_ms": 284.023
+      },
+      {
+        "fps": 6.289,
+        "seconds": 30.054311,
+        "swap_mean_ms": 0.042,
+        "interval_max_ms": 283.403
+      },
+      {
+        "fps": 6.32,
+        "seconds": 30.062718,
+        "swap_mean_ms": 0.042,
+        "interval_max_ms": 266.209
+      }
+    ],
+    "component_tests": "Grouped-access runtime test: 6 inline-check faults abort before access; ThreadSanitizer clean; microbenchmark 3.2x faster per access. Not reflected in the game.",
+    "fps_mean": 6.26,
+    "fps_range": [
+      6.133,
+      6.338
+    ]
+  },
+  "profile": {
+    "tool": "macOS sample, 10 s, after timing windows",
+    "baseline_main_thread_self": {
+      "guard": 0.708,
+      "other": 0.114,
+      "softfloat_x87": 0.049,
+      "translated": 0.034,
+      "memcpy": 0.028,
+      "dispatch": 0.024,
+      "gl": 0.016
+    },
+    "candidate_main_thread_self": {
+      "guard": 0.595,
+      "translated": 0.115,
+      "other": 0.122
+    }
+  },
+  "conclusion": "Steady observer view runs at 6.0-7.0 FPS across two runs of the same source (mean 6.75 and 6.2): run-to-run variation is about 8% on this shared Mac. Swap submission is 0.04 ms, so the game thread is CPU-bound. The rejected candidate (6.0-6.3 FPS) is within that variation: no measurable whole-game change, while code size nearly doubled. Per-check cost (~8.5 ns: two calls, two TLS lookups, checks) times ~12M checked guest accesses per frame bounds this design well below 30 FPS.",
+  "window_selection": "Steady observer view only: excludes the match-start transition, the profiler window and windows overlapping other local work.",
+  "restored_source_rerun": {
+    "source": "d73c01c runtime + frame-timing logger, rebuilt after the experiments (same source as baseline)",
+    "binary_sha256": "9941fde3fc6afeb959a237b5a42156a6b3d3ff75ce5c68a5dc190c614d2b0b62",
+    "binary_bytes": 104349424,
+    "identity_note": "Same source and size as the baseline binary c99ee37b, but not byte-identical; the cause was not isolated. Functionally exercised on the same route (console-started host, two bots).",
+    "windows": [
+      {
+        "fps": 6.012,
+        "seconds": 30.104057,
+        "swap_mean_ms": 0.043,
+        "interval_max_ms": 331.423
+      },
+      {
+        "fps": 6.464,
+        "seconds": 30.013771,
+        "swap_mean_ms": 0.042,
+        "interval_max_ms": 770.199
+      },
+      {
+        "fps": 6.15,
+        "seconds": 30.080157,
+        "swap_mean_ms": 0.041,
+        "interval_max_ms": 364.726
+      },
+      {
+        "fps": 6.193,
+        "seconds": 30.035517,
+        "swap_mean_ms": 0.04,
+        "interval_max_ms": 335.735
+      }
+    ],
+    "fps_mean": 6.2,
+    "fps_range": [
+      6.012,
+      6.464
+    ]
+  }
+}

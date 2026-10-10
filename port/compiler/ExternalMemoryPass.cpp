@@ -134,6 +134,9 @@ struct ExternalMemoryPass : PassInfoMixin<ExternalMemoryPass>{
     if(Name=="gl4es_glFogCoordPointer")Name="glFogCoordPointerEXT";
     if(Name.starts_with("gl4es_gl")&&Host.contains(Name.drop_front(6)))Name=Name.drop_front(6);
     if(Strings.contains(Name)){
+     // Hardware mode: the MMU checks every byte the native string routine
+     // touches. Other modules keep the checked replacements below.
+     if(M.getModuleFlag("tribes.checked.hardware")){++RangeCalls;continue;}
      if(Name=="strcmp"||Name=="strncmp"){
       unsigned N=Name=="strcmp"?2:3;
       if(Call->arg_size()!=N||!Call->getType()->isIntegerTy(32)||!Call->getArgOperand(0)->getType()->isPointerTy()||!Call->getArgOperand(1)->getType()->isPointerTy()||(N==3&&!Call->getArgOperand(2)->getType()->isIntegerTy(64)))report_fatal_error("Invalid checked comparison ABI");
@@ -148,6 +151,7 @@ struct ExternalMemoryPass : PassInfoMixin<ExternalMemoryPass>{
      report_fatal_error(Twine("Missing intrinsic external contract: ")+Name);
     }
     if(Range.contains(Name)){
+     if(M.getModuleFlag("tribes.checked.hardware")){++RangeCalls;continue;}
      // The prior pass proves every byte of both operands within native-owned
      // storage (or a runtime-validated CPU span). This is never inferred here
      // from the library name; forged input metadata is rejected by that pass.

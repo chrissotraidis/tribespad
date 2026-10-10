@@ -12,6 +12,12 @@ static uint64_t span;
 static uintptr_t *targets;
 static size_t target_count;
 static int enabled;
+/* Frozen O(1) membership for the same sorted target set: one bit per 4-byte
+   code address between the lowest and highest registered target. Built once
+   at enable, before guest execution; absent if the span is unexpectedly large
+   or a target is unaligned, in which case the binary search is used. */
+static uint64_t *target_bits;
+static uintptr_t target_low,target_high;
 static _Noreturn void fault(const char *kind,const char *name){fprintf(stderr,"TribesPad: external memory contract stop: %s: %s\n",kind,name);abort();}
 void tribes_memory_external_configure(uint64_t address,uint64_t size){if(enabled||base||!address||!size||size>UINTPTR_MAX-address)abort();base=(uintptr_t)address;span=size;}
 void tribes_memory_register_targets(const void *const *values,uint64_t count){
@@ -20,11 +26,26 @@ void tribes_memory_register_targets(const void *const *values,uint64_t count){
  for(uint64_t i=0;i<count;i++)targets[target_count++]=(uintptr_t)values[i];
 }
 static int compare(const void *left,const void *right){uintptr_t a,b;memcpy(&a,left,sizeof a);memcpy(&b,right,sizeof b);return (a>b)-(a<b);}
-void tribes_memory_external_enable(void){if(enabled||!base||!target_count)abort();qsort(targets,target_count,sizeof *targets,compare);enabled=1;}
+void tribes_memory_external_enable(void){
+ if(enabled||!base||!target_count)abort();qsort(targets,target_count,sizeof *targets,compare);
+ uintptr_t low=targets[0],high=targets[target_count-1];int aligned=1;
+ for(size_t i=0;i<target_count;i++)if(targets[i]&3){aligned=0;break;}
+ if(aligned&&high-low<(UINT64_C(1)<<32)){
+  size_t words=(size_t)((high-low)/4/64+1);uint64_t *bits=calloc(words,sizeof *bits);
+  if(bits){for(size_t i=0;i<target_count;i++){uintptr_t k=(targets[i]-low)/4;bits[k/64]|=UINT64_C(1)<<(k%64);}target_bits=bits;target_low=low;target_high=high;}
+ }
+ enabled=1;
+}
 void tribes_memory_external_gate(const char *name,uint32_t allowed){if(enabled&&!allowed)fault("unverified call",name);}
 void tribes_memory_external_pointer(const char *name,const void *pointer){uintptr_t p=(uintptr_t)pointer;if(enabled&&p>=base&&p-base<span)fault("guest pointer passed to host-only call",name);}
 void tribes_memory_indirect_target(const void *pointer){
- if(!enabled)return;uintptr_t target=(uintptr_t)pointer;size_t low=0,high=target_count;
+ if(!enabled)return;uintptr_t target=(uintptr_t)pointer;
+ if(target_bits){
+  if(target<target_low||target>target_high||(target&3))fault("unregistered indirect target","<indirect>");
+  uintptr_t k=(target-target_low)/4;if(!(target_bits[k/64]&(UINT64_C(1)<<(k%64))))fault("unregistered indirect target","<indirect>");
+  return;
+ }
+ size_t low=0,high=target_count;
  while(low<high){size_t middle=low+(high-low)/2;if(targets[middle]<target)low=middle+1;else high=middle;}
  if(low==target_count||targets[low]!=target)fault("unregistered indirect target","<indirect>");
 }
