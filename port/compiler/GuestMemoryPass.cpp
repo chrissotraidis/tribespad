@@ -18,11 +18,27 @@
 using namespace llvm;
 namespace {
 struct GuestMemoryPass : PassInfoMixin<GuestMemoryPass> {
- bool CPUHost;
- explicit GuestMemoryPass(bool CPUHost=false):CPUHost(CPUHost){}
+ bool CPUHost,Hardware;
+ explicit GuestMemoryPass(bool CPUHost=false,bool Hardware=false):CPUHost(CPUHost),Hardware(Hardware){}
  PreservedAnalyses run(Module &M,ModuleAnalysisManager &AM) {
   if(M.getModuleFlag("tribes.checked.memory")||M.getModuleFlag("tribes.checked.cpu-host"))report_fatal_error("Tribes memory pass applied twice");
   for(auto &F:M)if(!F.isDeclaration()&&F.getName().starts_with("tribes_memory_"))report_fatal_error("Do not instrument the trusted memory-check runtime");
+  if(Hardware){
+   // MMU-enforced mode: every guest load, store, atomic and library access
+   // executes natively against page protections derived from the exact 4 KiB
+   // permission table; mixed or published-code host pages trap into the
+   // trusted runtime, which checks exactly and aborts or emulates. No access is
+   // exempted here, so no proof metadata is accepted or produced.
+   uint64_t Accesses=0;
+   for(auto &F:M)for(auto &I:instructions(F)){
+    if(I.getMetadata("tribes.checked.host.cpu")||I.getMetadata("tribes.checked.host.local")||I.getMetadata("tribes.checked.host.bulk"))report_fatal_error("Unverified host metadata");
+    if(isa<LoadInst>(I)||isa<StoreInst>(I)||isa<AtomicRMWInst>(I)||isa<AtomicCmpXchgInst>(I)||isa<MemIntrinsic>(I))++Accesses;
+   }
+   M.addModuleFlag(Module::Error,"tribes.checked.memory",1);
+   M.addModuleFlag(Module::Error,"tribes.checked.hardware",1);
+   errs()<<"TRIBES_MEMORY_PASS {\"hardware\":true,\"native_accesses\":"<<Accesses<<"}\n";
+   return PreservedAnalyses::all();
+  }
   auto &C=M.getContext();auto *I32=Type::getInt32Ty(C);auto *I64=Type::getInt64Ty(C);auto *P=PointerType::getUnqual(C);
   auto Begin=M.getOrInsertFunction("tribes_memory_access_begin",I32,P,I64,I32);
   auto Transfer=M.getOrInsertFunction("tribes_memory_transfer_begin",I32,P,P,I64);
@@ -222,4 +238,4 @@ struct GuestMemoryPass : PassInfoMixin<GuestMemoryPass> {
  static bool isRequired(){return true;}
 };
 }
-extern "C" LLVM_ATTRIBUTE_WEAK PassPluginLibraryInfo llvmGetPassPluginInfo(){return {LLVM_PLUGIN_API_VERSION,"TribesGuestMemory","1",[](PassBuilder &PB){PB.registerPipelineParsingCallback([](StringRef Name,ModulePassManager &MPM,ArrayRef<PassBuilder::PipelineElement>){if(Name!="tribes-guest-memory"&&Name!="tribes-guest-memory-cpu-host")return false;MPM.addPass(GuestMemoryPass(Name=="tribes-guest-memory-cpu-host"));return true;});}};}
+extern "C" LLVM_ATTRIBUTE_WEAK PassPluginLibraryInfo llvmGetPassPluginInfo(){return {LLVM_PLUGIN_API_VERSION,"TribesGuestMemory","1",[](PassBuilder &PB){PB.registerPipelineParsingCallback([](StringRef Name,ModulePassManager &MPM,ArrayRef<PassBuilder::PipelineElement>){if(Name!="tribes-guest-memory"&&Name!="tribes-guest-memory-cpu-host"&&Name!="tribes-guest-memory-hardware")return false;MPM.addPass(GuestMemoryPass(Name=="tribes-guest-memory-cpu-host",Name=="tribes-guest-memory-hardware"));return true;});}};}

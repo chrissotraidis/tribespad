@@ -1,10 +1,11 @@
 """Compile the supplemental bootstrap sources through the memory-check pass."""
 import hashlib,json,pathlib,re,subprocess
 R=pathlib.Path(__file__).resolve().parents[1]
-def compile_support(sources,destination,flags,*,target='arm64-apple-macos12',sdk_name='macosx',defer_codegen=False,cpu_host=False):
+def compile_support(sources,destination,flags,*,target='arm64-apple-macos12',sdk_name='macosx',defer_codegen=False,cpu_host=False,hardware=False):
+ assert not (cpu_host and hardware),'MMU-enforced builds make no host-span proofs'
  sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest();tools=pathlib.Path('/opt/homebrew/Cellar/llvm@20/20.1.8/bin');plugin=R/'generated/tools/guest-memory-pass/GuestMemoryPass.dylib';plugin_meta=plugin.with_name('result.json');meta=json.loads(plugin_meta.read_text());assert meta['plugin_sha256']==sha(plugin) and meta['source_sha256']==sha(R/'port/compiler/GuestMemoryPass.cpp');assert all(sha(pathlib.Path(n))==h for n,h in meta['tools_sha256'].items())
  sdk=subprocess.check_output(['xcrun','--sdk',sdk_name,'--show-sdk-path'],text=True).strip();flags=['-isysroot',sdk]+flags
- destination.mkdir(exist_ok=True);report=destination/'result.json';previous=json.loads(report.read_text()) if report.exists() else {};state=dict(state='building',target=target,bitcode_target=target,bitcode_mangling="darwin",cpu_host=cpu_host,sdk=sdk,coverage_complete=False,plugin_build_sha256=sha(plugin_meta),script_sha256=sha(pathlib.Path(__file__).resolve()),objects={});objects=[]
+ destination.mkdir(exist_ok=True);report=destination/'result.json';previous=json.loads(report.read_text()) if report.exists() else {};state=dict(state='building',target=target,bitcode_target=target,bitcode_mangling="darwin",cpu_host=cpu_host,hardware=hardware,sdk=sdk,coverage_complete=False,plugin_build_sha256=sha(plugin_meta),script_sha256=sha(pathlib.Path(__file__).resolve()),objects={});objects=[]
  def run(cmd,log):
   state['command']=cmd
   with log.open('w') as stream:
@@ -17,7 +18,7 @@ def compile_support(sources,destination,flags,*,target='arm64-apple-macos12',sdk
   # LLVM inputs have no textual includes or frontend flags. Reuse only the
   # exact checked source, pinned pass/tool build, bitcode and artifact. C/ObjC
   # inputs always rebuild so changed headers cannot hide behind this cache.
-  if source.suffix=='.ll' and previous.get('cpu_host',False)==cpu_host and previous.get('bitcode_mangling')=='darwin' and previous.get('bitcode_target')==target and previous.get('target','arm64-apple-macos12')==target and previous.get('state') in ('compiled','failed','step_finished') and previous.get('plugin_build_sha256')==sha(plugin_meta) and cached.get('source_sha256')==sha(source) and bool(cached.get('codegen_deferred'))==defer_codegen and artifact.exists() and bc.exists() and cached.get('object_sha256')==sha(artifact) and cached.get('bitcode_sha256')==sha(bc):
+  if source.suffix=='.ll' and previous.get('cpu_host',False)==cpu_host and previous.get('hardware',False)==hardware and previous.get('bitcode_mangling')=='darwin' and previous.get('bitcode_target')==target and previous.get('target','arm64-apple-macos12')==target and previous.get('state') in ('compiled','failed','step_finished') and previous.get('plugin_build_sha256')==sha(plugin_meta) and cached.get('source_sha256')==sha(source) and bool(cached.get('codegen_deferred'))==defer_codegen and artifact.exists() and bc.exists() and cached.get('object_sha256')==sha(artifact) and cached.get('bitcode_sha256')==sha(bc):
    state['objects'][name]=dict(cached,reused_verified_llvm=True);objects.append(str(artifact));continue
   if trusted:
    run([str(tools/'clang'),'-target',target,'-O2']+flags+['-c',str(source),'-o',str(obj)],destination/(name+'-compile.log'));census=None
@@ -36,7 +37,7 @@ def compile_support(sources,destination,flags,*,target='arm64-apple-macos12',sdk
        fields=[f for f in match[1].split('-') if not f.startswith('m:')]
        fields.insert(1,'m:o');layout_flags=['-data-layout='+'-'.join(fields)];break
       if line.startswith(('define ','declare ','@','%')):break
-   memory_pass='tribes-guest-memory-cpu-host' if cpu_host else 'tribes-guest-memory'
+   memory_pass='tribes-guest-memory-hardware' if hardware else 'tribes-guest-memory-cpu-host' if cpu_host else 'tribes-guest-memory'
    run([str(tools/'opt'),'-mtriple='+target,*layout_flags,'-load-pass-plugin',str(plugin),'-passes='+memory_pass+',verify',str(llvm),'-o',str(bc)],destination/(name+'-pass.log'))
    census=json.loads(next(l.split(' ',1)[1] for l in (destination/(name+'-pass.log')).read_text().splitlines() if l.startswith('TRIBES_MEMORY_PASS ')))
    # guard_link can collect defined symbols directly from checked bitcode.

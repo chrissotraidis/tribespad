@@ -2,7 +2,7 @@
 
 ## Read this first
 
-**The original game runs offline on Mac and in the iPad Simulator. It is not a finished, comfortably playable Apple port.** The primary engineering problem is runtime performance, followed by physical-device validation and reproducible packaging. This is not currently blocked on another missing startup API or on permission to use this Mac.
+**The original game runs offline on Mac and in the iPad Simulator, now near 30 FPS in the Simulator with the MMU-enforced build. It is not yet a finished, accepted Apple port.** The primary engineering problem is runtime performance, followed by physical-device validation and reproducible packaging. This is not currently blocked on another missing startup API or on permission to use this Mac.
 
 The 10 October performance review (below) replaced guesswork with a native frame baseline and a profile, rejected one guard optimization with evidence, and identified the one structural change large enough to matter. The earlier goal remains paused and there is no continuation automation. No full-engine app or build process was left running.
 
@@ -32,13 +32,18 @@ Key evidence, each with its own limitations:
 
 ## Performance: the central unresolved problem
 
-**Baseline (10 October, native timing):** offline Katabatic, two bots, untouched observer view in the iPad Air 11-inch (M4) Simulator runs at **6.0–7.0 FPS** (means 6.75 and 6.2 over clean 30-second windows in two runs of the same source); map load took 221 s. Swap submission averages 0.04 ms, so the game thread is CPU-bound, not presentation-bound. Evidence: [frame timing and guard review](validation/ipad-frame-timing-guard-review.json). The opt-in `TRIBES_FRAME_TIMING=1` logger in `gl4es_context.c` produced these numbers and is now part of the source; it measures CPU-side swap submission, not GPU completion. Run-to-run variation on this shared Mac is about 8%, so only large differences are meaningful.
+**Current result (10 October, MMU-enforced build):** offline Katabatic, two bots, observer view in the iPad Air 11-inch (M4) Simulator runs at **27.5–29.3 FPS** with worst frames of 57–221 ms, against 6.0–7.0 FPS for the bracketed build on the same route. The map now loads in about 70–80 seconds instead of 221. Evidence: [hardware permissions run log](validation/ipad-hardware-permissions.json); the earlier baseline and rejected experiment are in [frame timing and guard review](validation/ipad-frame-timing-guard-review.json). Measured with the opt-in `TRIBES_FRAME_TIMING=1` swap logger (CPU-side submission, not GPU completion). Run-to-run variation on this shared Mac is about 8%.
 
-**Where the time goes:** 71% of game-thread self time is the software memory guard (`tribes_memory_access_begin/end`, `require`, block-entry host-span checks, thread-local lookups). Translated game code is about 3% and x87/SoftFloat about 5%. The game performs roughly 12 million checked guest accesses per frame, and each out-of-line check costs about 8.5 ns (two calls, two thread-local lookups, bounds and permission tests). The reader announce/release atomics are not the cost: a sticky-reader variant was slower in isolation. Secondary hotspots: indirect-target verification binary-searches 523,444 registered targets per indirect call (~5%); the SDL/GL backend re-reads allocator callbacks and revalidates every public SDL buffer on every GL call, including immediate-mode vertices (~8%); Metal `waitUntilCompleted` under framebuffer binds (~4%).
+**What changed, in order of effect:**
 
-**Rejected:** inlining permission checks for later accesses in existing 16-access groups cut `access_begin` samples by 26% and passed fault and ThreadSanitizer tests, but measured 6.0–6.3 FPS (no measurable change), grew the binary from 104 to 190 MB and the build from 12 to 44 minutes. Most remaining checks are single accesses inside small runtime helpers, which grouping cannot reach. Patch: [inline-grouped-guard-rejected.patch](experiments/inline-grouped-guard-rejected.patch). Do not repeat call-path micro-tuning: even a free software guard would cap this scene near 23 FPS, and an out-of-line call per access cannot get close to that.
+1. **MMU-enforced checked memory** (`--hardware-permissions`): guest loads and stores run natively. Every 16 KiB host page whose four 4 KiB guest permissions agree gets exactly that protection; a mixed page, or a writable page holding published code, is narrowed and its faults are decoded, checked against the exact table and published intervals, then aborted or emulated through a private alias and resumed. Faults on pages the checker did not narrow still stop. A census found 0.47 mixed-page accesses per million in gameplay. 6.75 → 19.8 FPS; binary 104 → 64 MB; build 13 → 7 minutes.
+2. **Lighter GL entry and O(1) indirect-target check:** pure GL calls keep binding/owner checks but no longer copy and compare every SDL public buffer per call (still revalidated at the next SDL entry before SDL uses them); indirect calls use a frozen bitmap of the same 523,444 targets instead of a binary search.
+3. **ANGLE stall removal:** Metal has no triangle fans or line loops, so ANGLE generated their indices per draw from a capped pool and waited for the GPU when it ran out (~6.5 ms per frame). The GL4ES context now streams client arrays into its own fenced ring buffers and expands fans/loops into indexed triangles/lines (`TRIBES_GL_STREAMING=0` disables it).
+4. **Exact x87 loads without SoftFloat's thread-local environment**, verified bit- and flag-identical for all 2^32 binary32 inputs and 200 M binary64 cases.
 
-**Shortest credible route:** let the MMU enforce the checked permissions. Every 16 KiB host page whose four 4 KiB guest pages agree gets native protections and needs no software check; a page with mixed 4 KiB permissions is mapped inaccessible, and its faults are decoded, checked exactly, then aborted or emulated through a private alias and resumed. A census of 29.4 billion checked accesses found mixed-page accesses only at startup (7,610) and 0.47 per million in gameplay (one partly committed heap page), with no gameplay writes to pages holding published code: about 40 emulated faults per second. A component spike ([fault_emulation_spike.c](../tests/fault_emulation_spike.c)) passes on macOS and in the iOS Simulator: native 0.5–0.9 ns accesses, about 2.1 µs per emulated access, and denied accesses abort before taking effect. Evidence: [hardware permission feasibility](validation/hardware-permission-feasibility.json). This keeps abort-on-violation semantics but changes the enforcement mechanism, so it needs an explicit design review before it replaces the brackets.
+**What remains:** about 14% of the game thread waits in the original QoL frame-latency fence (`glClientWaitSync` on the previous frame), which looks GPU/Simulator bound and is intentionally unchanged. CPU time is now spread across real emulation work: x87 arithmetic in SoftFloat/Bochs (~14%), remaining hand-written software brackets in the GL staging path and SDL bridge (~10%), translated code and helpers. Physical-iPad frame rate, player-controlled (not observer) frame rate and long sessions are still unmeasured for this build.
+
+Rejected along the way, with evidence: inline grouped checks ([patch](experiments/inline-grouped-guard-rejected.patch); no FPS change, code size doubled), sticky readers (slower in isolation), GL4ES batching (`LIBGL_BATCH`, no change).
 
 ## Architecture and code map
 
@@ -72,7 +77,7 @@ Archived, unshipped experiments: [inline-grouped-guard-rejected.patch](experimen
 
 ## Known risks and unfinished work, in priority order
 
-1. **Hardware-enforced checked memory.** Design review, then implementation: native page protections for uniform host pages, exact fault emulation for mixed pages (complete AArch64 load/store/atomic/SIMD decoding, signal-safe coordination with permission publication, published-code write protection, debugger behaviour), removal of per-access brackets, then the same offline route with native timing. Acceptance: at least 2x steady observer FPS with all permission and abort tests passing; stop and reassess below 1.5x. Smaller follow-ups afterwards: O(1) indirect-target verification and lighter per-GL-call SDL validation.
+1. **Hardware-enforced checked memory: acceptance.** Done for the Simulator route above. Remaining: player-controlled gameplay with touch, long sessions, clean Quit and reload in the hardware build; the device build and physical-iPad measurement (Extended Virtual Addressing, signal-based fault handling with and without a debugger); then make `--hardware-permissions` the default once those pass. The bracketed build remains the reference.
 2. **Physical iPad acceptance.** Check current device/signing availability once. Earlier checks had neither a connected device nor development identity. Device packaging needs provisioning retaining Extended Virtual Addressing; the engine reserves a 4 GiB virtual range. This is not a claim of 4 GiB physical usage, nor proof it fits the device's memory budget. See [Development](DEVELOPMENT.md).
 3. **Reproducible build/package.** Remove dependence on unexplained local preparation; inventory required generated inputs and document regeneration. Verify source-to-bundle identity before distributing. Source backup is not a portable app release.
 4. **Stability and complete controls.** Investigate the isolated null guest-PC abort from an earlier eight-operation baseline (~404 seconds). Repeated and longer sessions did not reproduce it; it is not proven fixed. Prior report: `~/Library/Logs/DiagnosticReports/Retired/TribesPad-2026-10-09-172739.ips`, if still retained. Test real simultaneous touch, skiing, station navigation, controller, background/resume and long sessions.
@@ -100,13 +105,24 @@ export SDKROOT="$(xcrun --sdk iphoneos --show-sdk-path)"
 # Output: generated/ipad-engine-device/TribesPad.app (not provisioned)
 ```
 
+MMU-enforced variant (recommended for play testing; output `generated/ipad-engine-hw/TribesPad.app`):
+
+```sh
+export SDKROOT="$(xcrun --sdk iphonesimulator --show-sdk-path)"
+.venv/bin/python scripts/build-checked-bochs.py --platform simulator --hardware
+.venv/bin/python scripts/build-ipad-engine.py --angle --hardware-permissions \
+  --bundle-assets --build-only
+```
+
+Component checks for that mode: `clang -DTRIBES_HARDWARE_PERMISSIONS port/core/guest_memory_checks.c tests/hardware_permissions_test.c` (run on macOS and with `xcrun simctl spawn`), plus `tests/float80_widen_test.c` against SoftFloat.
+
 Boot only one Simulator. Install/launch `com.tribespad.full-engine.ipad` on its current UDID; don't rely on old process IDs. Start **LAN GAME → HOST → Katabatic → two bots → START GAME**. After loading, enable **Touch controls** and Fire to spawn. Leave the match, then **Launch → Quit** to exercise normal cleanup. [README](../README.md) has the control layout. The Mac development app path is `generated/integration-review/macos-engine-app/TribesPad.app`; see [Development](DEVELOPMENT.md) for packaging and native input-helper commands.
 
 Source/policy changes intentionally invalidate proof receipts. Refresh the specific affected tests, not every historical suite. For example, the interrupted context diagnostic required `test-sdl-io.py` and `test-guest-threads.py` after the reviewed-source identity changed; both passed normal/checked/ThreadSanitizer checks before the experiment build. Returning to validated source can invalidate those experimental receipts again. A build failure identifying stale proof is actionable dependency information, not permission to bypass it.
 
 ## Suggested next session
 
-1. Read this document and the two new validation records. Inspect Git status and confirm the Simulator binary hash before relying on it.
-2. Review the hardware-enforcement design (risk 1) with the user; it changes how checks are enforced, not what they enforce.
-3. If approved, extend the spike into the runtime behind an explicit build option, keep the bracketed build as the reference, and measure both on the same route with `TRIBES_FRAME_TIMING=1`.
+1. Read this document and [ipad-hardware-permissions.json](validation/ipad-hardware-permissions.json). Inspect Git status and confirm the Simulator binary hash before relying on it.
+2. Build the hardware variant (see Build), run the console route, then spawn with **Touch controls → Fire + Aim** and play for several minutes; record frame timing in player view and check clean **Launch → Quit**.
+3. Profile again before optimizing: x87 SoftFloat arithmetic and the remaining GL staging brackets are the largest CPU items; the per-frame QoL fence wait is likely GPU-side.
 4. Report what runs, measured frame rate, what failed and the next decision. Do not claim completion from component tests or rendering alone.

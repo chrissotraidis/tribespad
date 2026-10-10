@@ -11,11 +11,10 @@ the existing Tribes 2 community, with touch and controller support on mobile.
 
 **In development.** The Mac app and full iPad Simulator app run original offline
 matches with bots. iPad touch movement, aim, weapons, firing, jets and respawn
-have been exercised. Native frame timing measures about **7 FPS in the Simulator**
-(Katabatic observer view), with a 3–4 minute map load and input delay. Most of that
-time goes to per-access software memory checks; the [handoff](docs/HANDOFF.md)
-describes the planned fix. Physical-iPad gameplay is unverified; there is no
-playable iPad or iPhone release yet.
+have been exercised. With MMU-enforced memory checks (the `--hardware-permissions`
+build) an offline Katabatic match runs at about **28 FPS in the Simulator** (observer
+view), up from about 7, and the map loads in roughly 75 seconds. Physical-iPad gameplay
+is unverified; there is no playable iPad or iPhone release yet.
 
 ![Original Tribes 2 running through Metal with iPad touch controls](docs/validation/ipad-fog-touch-2026-10-09.png)
 

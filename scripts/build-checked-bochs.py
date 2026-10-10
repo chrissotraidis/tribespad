@@ -5,12 +5,12 @@ External calls are guarded later against the complete concrete runtime link.
 No CPU interpreter or JIT sources are selected.
 """
 import argparse,concurrent.futures,hashlib,json,os,pathlib,re,subprocess,time
-ap=argparse.ArgumentParser();ap.add_argument('--platform',choices=['macos','simulator','device'],default='macos');args=ap.parse_args()
+ap=argparse.ArgumentParser();ap.add_argument('--platform',choices=['macos','simulator','device'],default='macos');ap.add_argument('--hardware',action='store_true',help='MMU-enforced checked memory: no per-access brackets');args=ap.parse_args()
 target={'macos':'arm64-apple-macos12','simulator':'arm64-apple-ios16-simulator','device':'arm64-apple-ios16'}[args.platform]
 sdk_name={'macos':'macosx','simulator':'iphonesimulator','device':'iphoneos'}[args.platform]
 R=pathlib.Path(__file__).resolve().parents[1];sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
 lock=next(s for s in json.loads((R/'dependencies.lock.json').read_text())['sources'] if s['name']=='bochs-extended80-candidate')
-root=R/lock['path'];out=R/'generated/bochs-math'/('checked' if args.platform=='macos' else 'checked-'+args.platform);out.mkdir(exist_ok=True);report=out/'result.json'
+root=R/lock['path'];out=R/'generated/bochs-math'/(('checked' if args.platform=='macos' else 'checked-'+args.platform)+('-hw' if args.hardware else ''));out.mkdir(exist_ok=True);report=out/'result.json'
 if report.exists():
  old=json.loads(report.read_text())
  if old.get('state')=='building':
@@ -29,11 +29,11 @@ assert sha(plugin)==meta['plugin_sha256'] and sha(R/'port/compiler/GuestMemoryPa
 assert all(sha(pathlib.Path(p))==h for p,h in meta['tools_sha256'].items())
 sdk=subprocess.check_output(['xcrun','--sdk',sdk_name,'--show-sdk-path'],text=True).strip()
 flags=['-target',target,'-isysroot',sdk,'-std=c++17','-O2','-I',str(R/'port/bochs-support'),'-I',str(root/'bochs/cpu/softfloat3e/include'),'-I',str(root/'bochs/cpu'),'-I',str(root/'bochs/cpu/fpu')]
-state=dict(state='building',target=target,platform=args.platform,pid=os.getpid(),revision=lock['revision'],sources_sha256=inputs,plugin_build_sha256=sha(pm),script_sha256=sha(pathlib.Path(__file__).resolve()),cpu_interpreter_compiled=False,objects=[],flags=flags)
+state=dict(state='building',target=target,platform=args.platform,hardware=args.hardware,pid=os.getpid(),revision=lock['revision'],sources_sha256=inputs,plugin_build_sha256=sha(pm),script_sha256=sha(pathlib.Path(__file__).resolve()),cpu_interpreter_compiled=False,objects=[],flags=flags)
 report.write_text(json.dumps(state,indent=2)+'\n');start=time.monotonic()
 def compile_one(source):
  name=source.parent.name+'-'+source.stem;raw=out/(name+'.frontend.ll');ir=out/(name+'.ll');bc=out/(name+'.bc');obj=out/(name+'.o');hints=[]
- commands=[([str(tools/'clang++'),*flags,'-S','-emit-llvm',str(source),'-o',str(raw)],'frontend'),([str(tools/'opt'),'-load-pass-plugin',str(plugin),'-passes=tribes-guest-memory,verify',str(ir),'-o',str(bc)],'pass'),([str(tools/'clang++'),'-target',target,'-O0','-Wno-override-module','-c',str(bc),'-o',str(obj)],'codegen')]
+ commands=[([str(tools/'clang++'),*flags,'-S','-emit-llvm',str(source),'-o',str(raw)],'frontend'),([str(tools/'opt'),'-load-pass-plugin',str(plugin),'-passes='+('tribes-guest-memory-hardware' if args.hardware else 'tribes-guest-memory')+',verify',str(ir),'-o',str(bc)],'pass'),([str(tools/'clang++'),'-target',target,'-O0','-Wno-override-module','-c',str(bc),'-o',str(obj)],'codegen')]
  for command,stage in commands:
   log=out/(name+'-'+stage+'.log')
   with log.open('w') as f:run=subprocess.run(command,stdout=f,stderr=f)
