@@ -12,6 +12,7 @@
 #include "gl/framebuffers.h"
 #include "glx/hardext.h"
 #include <pthread.h>
+#include <stdatomic.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -423,6 +424,10 @@ TribesGL4ESContext *tribes_gl4es_context_create(SDL_Window *window, SDL_GLContex
     return context;
 }
 
+/* Presented frames since launch, for the optional on-screen FPS counter. */
+static _Atomic uint64_t presented_frames;
+uint64_t tribes_gl4es_presented_frames(void) { return atomic_load_explicit(&presented_frames,memory_order_relaxed); }
+
 bool tribes_gl4es_context_swap(TribesGL4ESContext *context) {
     require_current(context);
     if (glstate!=context->state) abort();
@@ -430,6 +435,7 @@ bool tribes_gl4es_context_swap(TribesGL4ESContext *context) {
     gl4es_glFlush();
     bool result=SDL_GL_SwapWindow(context->window);
     tribes_gl4es_context_activate(context);
+    if (result) atomic_fetch_add_explicit(&presented_frames,1,memory_order_relaxed);
     if (context->frame_timing && result) {
         /* Opt-in native submission timing, independent of screen recording.
            Includes flush/swap/reactivation; it is not GPU completion timing. */

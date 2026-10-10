@@ -54,7 +54,7 @@ appears, tap the controller button at the top, then **Fire** to spawn.
 | Jet, Ski / Jump, Grenade, Weapon | The ring around Fire |
 | Pack, Inventory | Above the move stick; Inventory hides the controls so its fields can be tapped |
 | Controller / X button (top) | Show or hide the touch controls |
-| Menu button (top) | Send Escape to the original game, including when the controls are hidden |
+| ··· menu (top) | Game Menu (Escape), show/hide controls, Console; touch-control size, opacity, look sensitivity, left-handed layout, hide with a controller; FPS counter; help |
 | Keyboard button (top) | Show the onscreen keyboard for a selected text field |
 
 Spawn, movement, look, fire, jet, ski / jump, weapon switching, grenades and inventory have been exercised with Simulator touches.
