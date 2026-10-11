@@ -20,8 +20,11 @@ static int host_nearest(void) {
     volatile float one=1.0f,half=0x1p-24f,three_quarters=0x1.8p-24f,tiny=0x1p-126f,scale=0.5f;
     return one+half==1.0f && -one-half==-1.0f && one+three_quarters==0x1.000002p0f && tiny*scale!=0.0f;
 }
-static int fast32(uint32_t x){uint32_t e=(x>>23)&0xff;return e>=48&&e<=200;}
-static int fast64(uint64_t x){uint64_t e=(x>>52)&0x7ff;return e>=128&&e<=1900;}
+static int fast32(uint32_t x){uint32_t e=(x>>23)&0xff;return (e>=48&&e<=200)||!(x<<1);}
+static int fast64(uint64_t x){uint64_t e=(x>>52)&0x7ff;return (e>=128&&e<=1900)||!(x<<1);}
+/* Zero operands and exact zero results are exact too: no flags, and the
+   result sign follows IEEE 754 round to nearest on both x86 and AArch64.
+   A zero divisor (divide-by-zero / invalid) still takes the reference. */
 static int evaluate_fast(unsigned op,uint64_t a,uint64_t b,uint32_t control,TBSSEResult *out) {
     if((control>>13)&3)return 0;
     if(op>=TB_SSE_MUL32) {
@@ -31,9 +34,9 @@ static int evaluate_fast(unsigned op,uint64_t a,uint64_t b,uint32_t control,TBSS
             if(op==TB_SSE_SUB32)r=-r;
             s=l+r;float v=s-l;e=(l-(s-v))+(r-v);
         } else if(op==TB_SSE_MUL32){s=l*r;e=fmaf(l,r,-s);}
-        else {s=l/r;e=fmaf(-s,r,l);}
+        else {if(!(y<<1))return 0;s=l/r;e=fmaf(-s,r,l);}
         uint32_t z;memcpy(&z,&s,4);
-        if(!fast32(z)&&!((z<<1)==0&&(op==TB_SSE_ADD32||op==TB_SSE_SUB32)))return 0;
+        if(!fast32(z)||(!(z<<1)&&op!=TB_SSE_ADD32&&op!=TB_SSE_SUB32&&(x<<1)&&(y<<1)))return 0; /* underflow */
         *out=(TBSSEResult){z,e!=0.0f?32u:0u,1};return 1;
     }
     if(!fast64(a)||!fast64(b)||!host_nearest())return 0;
@@ -41,7 +44,7 @@ static int evaluate_fast(unsigned op,uint64_t a,uint64_t b,uint32_t control,TBSS
     if(op==TB_SSE_SUB64)r=-r;
     s=l+r;double v=s-l;e=(l-(s-v))+(r-v);
     uint64_t z;memcpy(&z,&s,8);
-    if(!fast64(z)&&(z<<1)!=0)return 0;
+    if(!fast64(z))return 0;
     *out=(TBSSEResult){z,e!=0.0?32u:0u,1};return 1;
 }
 TBSSEResult tb_sse_evaluate_reference(unsigned op,uint64_t a,uint64_t b,uint32_t control);

@@ -3,6 +3,7 @@
 #include "llasm_cpu.h"
 #include "../core/ext80.h"
 #include "../core/bochs_math.h"
+#include "../core/x87_exact.h"
 #define LITTLEENDIAN 1
 #include "softfloat.h"
 #include <stdlib.h>
@@ -51,7 +52,8 @@ TBExt80 tribes_float80_widen32_for_test(uint32_t bits,unsigned *flags){*flags=0;
 TBExt80 tribes_float80_widen64_for_test(uint64_t bits,unsigned *flags){*flags=0;return widen((uint32_t)(bits>>63),(uint32_t)(bits>>52)&0x7ff,bits&UINT64_C(0xfffffffffffff),11,52,flags);}
 
 static TBExt80 integer(int64_t i){return tb(i64_to_extF80(i));}
-static NATIVE_CPU void arithmetic(CPU,unsigned op,unsigned dst,TBExt80 a,TBExt80 b){TBExt80 z;uint16_t f;if(!tb_bo_arithmetic(op,a,b,cpu->_st_cw,&z,&f))abort();cpu->_st_sw_cond&=~0x200u;exception(cpu,f);write_st(cpu,dst,z);}
+/* Exact results take the hardware path (see x87_exact.h); they raise no flags. */
+static NATIVE_CPU void arithmetic(CPU,unsigned op,unsigned dst,TBExt80 a,TBExt80 b){TBExt80 z;uint16_t f=0;if(!x87_exact_arithmetic(op,a,b,(uint16_t)cpu->_st_cw,&z)&&!tb_bo_arithmetic(op,a,b,cpu->_st_cw,&z,&f))abort();cpu->_st_sw_cond&=~0x200u;exception(cpu,f);write_st(cpu,dst,z);}
 NATIVE_CPU void x87_fninit_void(CPU){cpu->_st_top=0;cpu->_st_sw_cond=0;cpu->_st_cw=0x37f;cpu->_st_tag=0xffff;cpu->_st_mmx_active=0;cpu->_st_extended=1;}
 NATIVE_CPU void x87_fldcw_uint16(CPU,uint32_t cw){cpu->_st_cw=cw&0xffff;}
 NATIVE_CPU uint32_t x87_fnstcw_void(CPU){return cpu->_st_cw&0xffff;}
