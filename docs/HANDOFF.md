@@ -4,7 +4,7 @@
 
 **The original game runs offline on Mac and in the iPad Simulator, now near 30 FPS in the Simulator with the MMU-enforced build. It is not yet a finished, accepted Apple port.** The primary engineering problem is runtime performance, followed by physical-device validation and reproducible packaging. This is not currently blocked on another missing startup API or on permission to use this Mac.
 
-The 10 October performance review (below) replaced guesswork with a native frame baseline and a profile, rejected one guard optimization with evidence, and identified the one structural change large enough to matter. The earlier goal remains paused and there is no continuation automation. No full-engine app or build process was left running.
+On 10 October the MMU-enforced build took offline Katabatic from 6-7 to a steady ~30 FPS in the Simulator, every touch control was played by touch, an end-of-match map cycle and clean quit were verified, and the touch controls, TribesPad menu, app icon and public README were added. All of it is merged to main. No full-engine app or build process was left running.
 
 Start here instead of replaying the enormous checkpoint histories in [STATUS](STATUS.md) and [EXECUTION-PLAN](EXECUTION-PLAN.md). Their old “next,” “blocked,” and live-process statements are historical. The heartbeat's repeated GetQueuedCompletionStatusEx boundary was superseded long ago.
 
@@ -15,9 +15,9 @@ Start here instead of replaying the enormous checkpoint histories in [STATUS](ST
 | Area | Observed result | Remaining acceptance |
 | --- | --- | --- |
 | macOS original engine | Menus, offline Katabatic with bots, native movement/aim/disc fire, Retina mouse targeting | User hands-on review, responsive performance, fullscreen and regression testing after shared-runtime changes |
-| iPad Simulator original engine | Metal rendering; offline Katabatic, touch spawn/move/aim/weapon/fire/jet/respawn; saved profile | Comfortable performance, simultaneous gestures, skiing, sustained play, full visual/audio fidelity |
+| iPad Simulator original engine | Metal rendering; offline Katabatic at ~30 FPS (MMU-enforced build); every touch control (move, look, fire, jet, ski/jump, weapon, grenade, pack, inventory) played by touch; map cycle and clean quit; 30-minute soak; saved profile | Simultaneous gestures, full visual/audio fidelity |
 | iPad lifecycle/inventory | Two offline map loads in one 21+ minute session; equipment selection and station changes; original Quit exits code 0 | Station setup used diagnostic console positioning; a fully touch-navigated route remains untested |
-| Physical iPad | ARM64 device bundle builds and passes ad-hoc signature checks | Development provisioning, installation, actual launch, RAM/thermal/performance and input testing; no physical gameplay evidence |
+| Physical iPad | ARM64 device bundle (MMU-enforced, with app icon) builds and passes ad-hoc signature checks | Development provisioning, installation, actual launch, RAM/thermal/performance and input testing; no physical gameplay evidence |
 | iPhone | Shared mobile code and a separate controls diagnostic exist | Full game integration and acceptance; full-engine builder currently sets `UIDeviceFamily=[2]` (iPad only) |
 | Controller | Extended-gamepad mappings and native component checks | Physical controller gameplay on an actual device |
 | Server discovery | Mac original browser displayed 26 community servers and refreshed information | Mobile discovery acceptance; discovery does not prove joining/authentication |
@@ -127,9 +127,15 @@ export SDKROOT="$(xcrun --sdk iphonesimulator --show-sdk-path)"
 
 Component checks for that mode: `clang -DTRIBES_HARDWARE_PERMISSIONS port/core/guest_memory_checks.c tests/hardware_permissions_test.c` (run on macOS and with `xcrun simctl spawn`), plus `tests/float80_widen_test.c` against SoftFloat.
 
-Boot only one Simulator. Install/launch `com.tribespad.full-engine.ipad` on its current UDID; don't rely on old process IDs. Start **LAN GAME → HOST → Katabatic → two bots → START GAME**. After loading, enable **Touch controls** and Fire to spawn. Leave the match, then **Launch → Quit** to exercise normal cleanup. [README](../README.md) has the control layout. The Mac development app path is `generated/integration-review/macos-engine-app/TribesPad.app`; see [Development](DEVELOPMENT.md) for packaging and native input-helper commands.
+Boot only one Simulator. Install/launch `com.tribespad.full-engine.ipad` on its current UDID; don't rely on old process IDs. Start **LAN GAME → HOST → Katabatic → two bots → START GAME**. After loading, enable **Touch controls** and Fire to spawn. Leave the match, then **Launch → Quit** to exercise normal cleanup. [README](../README.md) has the control layout. The Mac development app path is `generated/integration-review/macos-engine-app/TribesPad.app` (its packaged engine predates the iPad performance work; rebuild through the Mac bootstrap before measuring Mac speed); see [Development](DEVELOPMENT.md) for packaging and native input-helper commands.
 
 Source/policy changes intentionally invalidate proof receipts. Refresh the specific affected tests, not every historical suite. For example, the interrupted context diagnostic required `test-sdl-io.py` and `test-guest-threads.py` after the reviewed-source identity changed; both passed normal/checked/ThreadSanitizer checks before the experiment build. Returning to validated source can invalidate those experimental receipts again. A build failure identifying stale proof is actionable dependency information, not permission to bypass it.
+
+## App icon and branding
+
+- **App icon:** `port/apple/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png`, a full-bleed square with no corners, border or transparency; the OS applies its own mask. `scripts/app_icon.py` compiles it with actool for the iPad (Simulator and device) and Mac app builds and returns the Info.plist icon keys. Verified on the iPad Simulator home screen and the macOS Dock.
+- **README logo:** `docs/images/tribespad-logo.png`, a transparent hexagon emblem used only in documentation.
+- `build-macos-engine-app.py --refresh-icon` updates the icon, Info.plist and signature of an already packaged Mac app after checking that its engine still matches `app-build.json`. A full Mac repackage needs a finished Mac bootstrap run; the current shared bootstrap record is an iPad input preparation.
 
 ## Suggested next session
 

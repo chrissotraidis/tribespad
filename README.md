@@ -173,6 +173,7 @@ preparation and validation are covered in the [development guide](docs/DEVELOPME
 - Check the iPhone touch layout
 - Play with a physical controller
 - Touch layout editor
+- Rebuild the Mac app on the current engine and measure Mac performance
 - Join TribesNEXT community servers
 - A distributable build
 
