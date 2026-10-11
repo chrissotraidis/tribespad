@@ -1,0 +1,58 @@
+{
+ "date": "2026-10-10",
+ "scenario": "tests/sim_reference_trace.cs: offline Katabatic CTF, no bots; spawn, wait for match start, place the player at (250,-100,terrain+12) with velocity (14,6,0), energy 60; log server-side position | velocity | energy | damage on every change for 8 s.",
+ "reference": "Original Tribes2.exe (ref/control, no TribesNEXT/QoL) under CrossOver 2026 (Wine) on Rosetta, launched with -nologin.",
+ "tribespad": "MMU-enforced iPad Simulator build (QoL client), same script.",
+ "tool": "scripts/compare-reference-trace.py",
+ "results": {
+  "windows -mod Classic run1 vs run2": "7 common states, 0 divergences, identical rest state",
+  "tribespad run1 vs run2": "8 common states, 0 divergences, identical rest state (266.924 -93.1029 77.1263)",
+  "windows (no mod) vs tribespad": "falling flight bit-identical (4 and 2 common states, 0 divergences); landing velocities identical to every printed digit; positions differ by a constant offset from first ground contact (y -0.0010, z +0.0101); rest 266.924 -93.1019 77.1161 vs 266.924 -93.1029 77.1263"
+ },
+ "interpretation": "Physics integration and the x87 arithmetic it uses match the original game in this scenario. The only difference is the ground-contact position, which QoL changes: its verified collision patch redirects the engine collision query to a community routine that transforms the returned coordinates. The reference here runs without QoL, so this offset is expected but not yet proven to be QoL rather than TribesPad.",
+ "also_found": "Classic mod (-mod Classic) changes player gravity: vertical speed changes 1.68125 per 62.5 ms sample vs 1.25 without it. TribesPad launches without -mod Classic, matching the original default.",
+ "limits": "The QoL client does not start under Whisky Wine 7.7 (SDL3.dll video init) or CrossOver (IFC22.dll 0x10032de7), so a QoL-to-QoL comparison is not yet possible on this Mac. One scenario; no weapons, jets, bots or networking.",
+ "samples": {
+  "windows_base": [
+   "0 250 -100 88.75 | 14 6 0 | 60 | 0",
+   "40 250.875 -99.625 88.6914 | 14 6 -1.25 | 60 | 0",
+   "100 251.75 -99.25 88.5547 | 14 6 -2.5 | 60 | 0",
+   "164 252.625 -98.875 88.3398 | 14 6 -3.75 | 60 | 0",
+   "232 253.5 -98.5 88.0469 | 14 6 -5 | 60 | 0",
+   "280 254.375 -98.125 87.6758 | 14 6 -6.25 | 60 | 0",
+   "348 255.25 -97.75 87.2266 | 14 6 -7.5 | 60 | 0",
+   "412 256.125 -97.375 86.6992 | 14 6 -8.75 | 60 | 0",
+   "512 257.438 -96.8125 85.7617 | 14 6 -10.625 | 60 | 0",
+   "572 258.312 -96.4375 85.0391 | 14 6 -11.875 | 60 | 0",
+   "664 259.625 -95.875 83.8086 | 14 6 -13.75 | 60 | 0",
+   "728 260.5 -95.5 82.8906 | 14 6 -15 | 60 | 0",
+   "804 261.375 -95.125 81.8945 | 14 6 -16.25 | 60 | 0",
+   "856 262.25 -94.75 80.8203 | 14 6 -17.5 | 60 | 0",
+   "916 263.125 -94.375 79.668 | 14 6 -18.75 | 60 | 0",
+   "992 264 -94 78.4375 | 14 6 -20 | 60 | 0",
+   "1088 265.307 -93.5027 77.0733 | 14 3.73873 0.389768 | 60 | 0",
+   "1184 266.307 -93.2451 77.1005 | 8.98986 2.2612 0.240559 | 60 | 0",
+   "1276 266.835 -93.1199 77.1141 | 3.95384 0.888493 0.0984153 | 60 | 0",
+   "1340 266.924 -93.1019 77.1161 | 0.568663 0.102903 0.0124209 | 60 | 0",
+   "1440 266.924 -93.1019 77.1161 | 0 0 0 | 60 | 0"
+  ],
+  "tribespad_run1": [
+   "0 250 -100 88.75 | 14 6 0 | 60 | 0",
+   "8 250.875 -99.625 88.6914 | 14 6 -1.25 | 60 | 0",
+   "620 259.625 -95.875 83.8086 | 14 6 -13.75 | 60 | 0",
+   "712 260.5 -95.5 82.8906 | 14 6 -15 | 60 | 0",
+   "740 260.938 -95.3125 82.4023 | 14 6 -15.625 | 60 | 0",
+   "804 261.813 -94.9375 81.3672 | 14 6 -16.875 | 60 | 0",
+   "872 262.688 -94.5625 80.2539 | 14 6 -18.125 | 60 | 0",
+   "936 263.563 -94.1875 79.0625 | 14 6 -19.375 | 60 | 0",
+   "988 264.438 -93.8125 77.793 | 14 6 -20.625 | 60 | 0",
+   "1040 265.307 -93.5037 77.0834 | 14 3.73873 0.389768 | 60 | 0",
+   "1096 265.693 -93.4025 77.094 | 12.3321 3.23781 0.339466 | 60 | 0",
+   "1148 266.307 -93.2461 77.1106 | 8.98986 2.2612 0.240559 | 60 | 0",
+   "1204 266.711 -93.1487 77.1211 | 5.63637 1.32962 0.144687 | 60 | 0",
+   "1264 266.906 -93.1061 77.1259 | 2.2657 0.473022 0.0538795 | 60 | 0",
+   "1316 266.924 -93.1029 77.1263 | 0.568663 0.102903 0.0124209 | 60 | 0",
+   "1368 266.924 -93.1029 77.1263 | 0 0 0 | 60 | 0"
+  ]
+ }
+}
