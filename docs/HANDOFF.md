@@ -131,6 +131,14 @@ Boot only one Simulator. Install/launch `com.tribespad.full-engine.ipad` on its 
 
 Source/policy changes intentionally invalidate proof receipts. Refresh the specific affected tests, not every historical suite. For example, the interrupted context diagnostic required `test-sdl-io.py` and `test-guest-threads.py` after the reviewed-source identity changed; both passed normal/checked/ThreadSanitizer checks before the experiment build. Returning to validated source can invalidate those experimental receipts again. A build failure identifying stale proof is actionable dependency information, not permission to bypass it.
 
+## Accuracy against the original game
+
+A reference recording now compares TribesPad with the original Windows game. [tests/sim_reference_trace.cs](../tests/sim_reference_trace.cs) runs the same offline scenario in both (Katabatic, fixed start position and velocity, server-side state on every tick) and [scripts/compare-reference-trace.py](../scripts/compare-reference-trace.py) compares the traces. Results ([record](validation/reference-trace-katabatic.json)):
+
+- Each version repeats its own runs exactly.
+- Against the original Tribes2.exe (no QoL) under CrossOver, TribesPad's flight is bit-identical and its landing velocities match to every printed digit. Positions differ by about 1 cm from the first ground contact, which is where QoL's collision patch changes the result; the reference lacks QoL, so this is expected but not yet proven.
+- QoL itself does not start under Wine on this Mac (SDL3 video init under Whisky, an IFC22 fault under CrossOver), so a QoL-to-QoL comparison is the next accuracy step. Running the reference under CrossOver: copy ref/control into the tribespad-reference bottle, add $pref::AcceptedEULA = 1; to base/prefs/ClientPrefs.cs, append the trace script to base/autoexec.cs, and launch Tribes2.exe -nologin in the foreground.
+
 ## App icon and branding
 
 - **App icon:** `port/apple/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png`, a full-bleed square with no corners, border or transparency; the OS applies its own mask. `scripts/app_icon.py` compiles it with actool for the iPad (Simulator and device) and Mac app builds and returns the Info.plist icon keys. Verified on the iPad Simulator home screen and the macOS Dock.
