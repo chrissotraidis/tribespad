@@ -5,7 +5,7 @@
       "name": "halopad",
       "url": "https://github.com/chrissotraidis/projectreach.git",
       "revision": "c4aad6873057e48cb7e6aca907797722ef7da5b9",
-      "local_reference": "/Users/chrissotraidis/GitHub/projectreach"
+      "local_reference": "../projectreach"
     },
     {
       "name": "rewise",

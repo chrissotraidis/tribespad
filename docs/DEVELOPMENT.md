@@ -24,7 +24,7 @@ To update only the app icon of an already packaged Mac app, run `build-macos-eng
 
 This development app depends on the prepared workspace assets and is not a portable distribution. See current status for the host audio workaround and the latest runtime boundary.
 
-The build needs Xcode, the pinned LLVM tools, prepared game inputs, translated images and native dependencies. A clean checkout cannot yet reproduce all of those from a single command: cached SRW baseline acquisition remains a setup gap. [Historical build commands](BUILD-HISTORY.md) are retained for investigation; their older status statements are superseded by the current status.
+The build needs Xcode, the pinned LLVM tools, prepared game inputs, translated images and native dependencies. A clean checkout cannot yet reproduce all of those from a single command: cached SRW baseline acquisition remains a setup gap. [Historical build commands](archive/BUILD-HISTORY.md) are retained for investigation; their older status statements are superseded by the current status.
 
 ## Full original engine on iPad Simulator
 
@@ -74,7 +74,7 @@ objects are verified before cache reuse. Native C sources rebuild to account for
 header changes. The native-object policy proves fixed-size copies and clears as
 well as scalar accesses; guest pointers retain their checks. Changing the memory
 pass requires rebuilding checked Bochs inputs for each target and rerunning the
-source-bound guard tests above. See [status](STATUS.md) for actual gameplay
+source-bound guard tests above. See [status](archive/STATUS.md) for actual gameplay
 evidence and outstanding acceptance work.
 
 Without `--bundle-assets`, the development Simulator bundle uses workspace paths.

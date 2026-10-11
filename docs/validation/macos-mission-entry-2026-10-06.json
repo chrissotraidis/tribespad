@@ -35,14 +35,14 @@
         "target": "arm64-apple-ios15",
         "metadata": "generated/integration-review/mission-entry-test/mobile-compile/iphoneos/result.json",
         "objects_sha256": {
-          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/mission-entry-test/mobile-compile/iphoneos/00-module.o": "fc5ef1bbe1d14357a9e4be0a336ac05163bcc2a0d4f842fbc4313639aa2ddd9e"
+          "generated/integration-review/mission-entry-test/mobile-compile/iphoneos/00-module.o": "fc5ef1bbe1d14357a9e4be0a336ac05163bcc2a0d4f842fbc4313639aa2ddd9e"
         }
       },
       {
         "target": "arm64-apple-ios15-simulator",
         "metadata": "generated/integration-review/mission-entry-test/mobile-compile/iphonesimulator/result.json",
         "objects_sha256": {
-          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/mission-entry-test/mobile-compile/iphonesimulator/00-module.o": "e44dfb314a7ed3a8239d6e7ab9740d91fd499aa720287e2c94d3145b30d6e647"
+          "generated/integration-review/mission-entry-test/mobile-compile/iphonesimulator/00-module.o": "e44dfb314a7ed3a8239d6e7ab9740d91fd499aa720287e2c94d3145b30d6e647"
         }
       }
     ],

@@ -21,7 +21,7 @@
   },
   "oracles": {
     "native": {
-      "architecture": "/Users/chrissotraidis/GitHub/tribespad/generated/mmx/libmmx.dylib: Mach-O 64-bit dynamically linked shared library arm64",
+      "architecture": "generated/mmx/libmmx.dylib: Mach-O 64-bit dynamically linked shared library arm64",
       "cases": 56096,
       "operations": {
         "movq": 2448,
@@ -712,7 +712,7 @@
         "exit": 0,
         "frames": 174,
         "video_seconds": 29.78,
-        "output": "Note: No display specified. Defaulting to display: 1E7E3028-03E7-4057-9D8B-E555C7AA69BE (screenID: 1, name: LCD)\nRecording started\nRecording completed. Writing to disk.\n\nWrote video to: /Users/chrissotraidis/GitHub/tribespad/generated/integration-review/mmx-vectors/after-1.mov\n",
+        "output": "Note: No display specified. Defaulting to display: 1E7E3028-03E7-4057-9D8B-E555C7AA69BE (screenID: 1, name: LCD)\nRecording started\nRecording completed. Writing to disk.\n\nWrote video to: generated/integration-review/mmx-vectors/after-1.mov\n",
         "scope": "Offline Katabatic, two bots, audio enabled; no builds, debugger or sampler during recording.",
         "presented_fps": 5.842847548690396
       },
@@ -722,7 +722,7 @@
         "exit": 0,
         "frames": 220,
         "video_seconds": 29.85,
-        "output": "Note: No display specified. Defaulting to display: 1E7E3028-03E7-4057-9D8B-E555C7AA69BE (screenID: 1, name: LCD)\nRecording started\nRecording completed. Writing to disk.\n\nWrote video to: /Users/chrissotraidis/GitHub/tribespad/generated/integration-review/mmx-vectors/after-2.mov\n",
+        "output": "Note: No display specified. Defaulting to display: 1E7E3028-03E7-4057-9D8B-E555C7AA69BE (screenID: 1, name: LCD)\nRecording started\nRecording completed. Writing to disk.\n\nWrote video to: generated/integration-review/mmx-vectors/after-2.mov\n",
         "scope": "Offline Katabatic, two bots, audio enabled; no builds, debugger or sampler during recording.",
         "presented_fps": 7.3701842546063645
       }

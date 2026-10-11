@@ -42,10 +42,10 @@
         "target": "arm64-apple-ios16",
         "receipt": "73ed4161555d30acf1c497bd299fe3a130cd801df847863c93c42de36cfd8a06",
         "objects": [
-          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/texcoord-vector/mobile-compile/iphoneos/00-guest_sdl_backend.o",
-          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/texcoord-vector/mobile-compile/iphoneos/01-native_winsock.o",
-          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/texcoord-vector/mobile-compile/iphoneos/02-guest_graphics.o",
-          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/texcoord-vector/mobile-compile/iphoneos/03-graphics-bindings.o"
+          "generated/integration-review/texcoord-vector/mobile-compile/iphoneos/00-guest_sdl_backend.o",
+          "generated/integration-review/texcoord-vector/mobile-compile/iphoneos/01-native_winsock.o",
+          "generated/integration-review/texcoord-vector/mobile-compile/iphoneos/02-guest_graphics.o",
+          "generated/integration-review/texcoord-vector/mobile-compile/iphoneos/03-graphics-bindings.o"
         ]
       },
       {
@@ -53,10 +53,10 @@
         "target": "arm64-apple-ios16-simulator",
         "receipt": "20d8d25fc900da5aaff746df585b3287c930c8ff6ad6a1f10b9adaa2c46b9333",
         "objects": [
-          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/texcoord-vector/mobile-compile/iphonesimulator/00-guest_sdl_backend.o",
-          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/texcoord-vector/mobile-compile/iphonesimulator/01-native_winsock.o",
-          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/texcoord-vector/mobile-compile/iphonesimulator/02-guest_graphics.o",
-          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/texcoord-vector/mobile-compile/iphonesimulator/03-graphics-bindings.o"
+          "generated/integration-review/texcoord-vector/mobile-compile/iphonesimulator/00-guest_sdl_backend.o",
+          "generated/integration-review/texcoord-vector/mobile-compile/iphonesimulator/01-native_winsock.o",
+          "generated/integration-review/texcoord-vector/mobile-compile/iphonesimulator/02-guest_graphics.o",
+          "generated/integration-review/texcoord-vector/mobile-compile/iphonesimulator/03-graphics-bindings.o"
         ]
       }
     ],

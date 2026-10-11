@@ -32,16 +32,16 @@
       {
         "platform": "device",
         "objects": [
-          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/guest-strings/mobile/device/00-guest_strings.o",
-          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/guest-strings/mobile/device/01-binding.o"
+          "generated/integration-review/guest-strings/mobile/device/00-guest_strings.o",
+          "generated/integration-review/guest-strings/mobile/device/01-binding.o"
         ],
         "receipt": "ee5adbcb77e074ed204a65e1c572d8ba62fd108b007625dc9d58020fdd37c33a"
       },
       {
         "platform": "simulator",
         "objects": [
-          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/guest-strings/mobile/simulator/00-guest_strings.o",
-          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/guest-strings/mobile/simulator/01-binding.o"
+          "generated/integration-review/guest-strings/mobile/simulator/00-guest_strings.o",
+          "generated/integration-review/guest-strings/mobile/simulator/01-binding.o"
         ],
         "receipt": "3c33bcece8ca3dd3822b08da5afb4f0cef909f5e681b3749fdb9c68547f67ec0"
       }

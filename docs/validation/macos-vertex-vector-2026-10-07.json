@@ -30,10 +30,10 @@
         "target": "arm64-apple-ios16",
         "receipt": "f898fff6a407dd991828641bc39fdde39da0b2779b308778aeffbdeb9b72bbcb",
         "objects": [
-          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/vertex-vector/mobile-compile/iphoneos/00-guest_sdl_backend.o",
-          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/vertex-vector/mobile-compile/iphoneos/01-guest_render_job.o",
-          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/vertex-vector/mobile-compile/iphoneos/02-guest_graphics.o",
-          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/vertex-vector/mobile-compile/iphoneos/03-graphics-bindings.o"
+          "generated/integration-review/vertex-vector/mobile-compile/iphoneos/00-guest_sdl_backend.o",
+          "generated/integration-review/vertex-vector/mobile-compile/iphoneos/01-guest_render_job.o",
+          "generated/integration-review/vertex-vector/mobile-compile/iphoneos/02-guest_graphics.o",
+          "generated/integration-review/vertex-vector/mobile-compile/iphoneos/03-graphics-bindings.o"
         ]
       },
       {
@@ -41,10 +41,10 @@
         "target": "arm64-apple-ios16-simulator",
         "receipt": "b7a2c06dda1383ae4b4e117b36e978583ae385bf413f500fdbf55903b794f371",
         "objects": [
-          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/vertex-vector/mobile-compile/iphonesimulator/00-guest_sdl_backend.o",
-          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/vertex-vector/mobile-compile/iphonesimulator/01-guest_render_job.o",
-          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/vertex-vector/mobile-compile/iphonesimulator/02-guest_graphics.o",
-          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/vertex-vector/mobile-compile/iphonesimulator/03-graphics-bindings.o"
+          "generated/integration-review/vertex-vector/mobile-compile/iphonesimulator/00-guest_sdl_backend.o",
+          "generated/integration-review/vertex-vector/mobile-compile/iphonesimulator/01-guest_render_job.o",
+          "generated/integration-review/vertex-vector/mobile-compile/iphonesimulator/02-guest_graphics.o",
+          "generated/integration-review/vertex-vector/mobile-compile/iphonesimulator/03-graphics-bindings.o"
         ]
       }
     ],

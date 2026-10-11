@@ -94,8 +94,8 @@
         "platform": "device",
         "target": "arm64-apple-ios16",
         "objects": [
-          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/local-time/mobile-compile/device/00-guest_datetime.o",
-          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/local-time/mobile-compile/device/01-bindings.o"
+          "generated/integration-review/local-time/mobile-compile/device/00-guest_datetime.o",
+          "generated/integration-review/local-time/mobile-compile/device/01-bindings.o"
         ],
         "proof": "56d20693f3841702aa197bb4cb4179b999496a5e59192bcc8bb09d33438550a8"
       },
@@ -103,8 +103,8 @@
         "platform": "simulator",
         "target": "arm64-apple-ios16-simulator",
         "objects": [
-          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/local-time/mobile-compile/simulator/00-guest_datetime.o",
-          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/local-time/mobile-compile/simulator/01-bindings.o"
+          "generated/integration-review/local-time/mobile-compile/simulator/00-guest_datetime.o",
+          "generated/integration-review/local-time/mobile-compile/simulator/01-bindings.o"
         ],
         "proof": "730641bd6715805f53e06b3bdf0aa14a85e16d5d179eb13ff7a65693577472ff"
       }

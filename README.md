@@ -183,6 +183,7 @@ preparation and validation are covered in the [development guide](docs/DEVELOPME
 - [Development guide](docs/DEVELOPMENT.md): building, packaging and validation
 - [Validation records](docs/validation): measurements and screenshots
 - [Product target](docs/Tribes2-Online-HD-Target.md): the intended experience
+- [Archive](docs/archive): historical status checkpoints, plans and rejected experiments
 
 ## Credits
 

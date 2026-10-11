@@ -113,7 +113,7 @@
         "sdk": "25F70"
       },
       "semantics": {
-        "architecture": "/Users/chrissotraidis/GitHub/tribespad/generated/mmx/libmmx.dylib: Mach-O 64-bit dynamically linked shared library arm64",
+        "architecture": "generated/mmx/libmmx.dylib: Mach-O 64-bit dynamically linked shared library arm64",
         "cases": 7936,
         "operations": {
           "movq": 320,
@@ -163,7 +163,7 @@
         "pass": true,
         "actual_sites": 6,
         "cases": 2304,
-        "lift": "/Users/chrissotraidis/GitHub/tribespad/generated/srw/run-20260930T090007-tribes2",
+        "lift": "generated/srw/run-20260930T090007-tribes2",
         "coverage": "All six Tribes SETAE/JCXZ sites; all combinations of arithmetic flags and CX zero with nonzero upper ECX"
       },
       "strict_failure": "0x48fbaf: incoming region flags unresolved in optimized mode",
@@ -182,7 +182,7 @@
           "repne scasw": 500
         },
         "total_cases": 3764,
-        "lift": "/Users/chrissotraidis/GitHub/tribespad/generated/srw/run-20260930T082836-tribes2",
+        "lift": "generated/srw/run-20260930T082836-tribes2",
         "binary_sha256": "5344e230406e46d058e05512d1c5cff93cf9c287356f4b575072c1411db24fe5",
         "limits": [
           "ADD flag hints force full arithmetic flags for testing",
@@ -244,7 +244,7 @@
         "emitted_blocks": 5477,
         "cases": 60247,
         "library_sha256": "b158f4cc8189d3112841a0a34f22fad0177f1aaf9f99c7a3c182087c167e18dc",
-        "lift": "/Users/chrissotraidis/GitHub/tribespad/generated/srw/run-20260930T090838-tribes2",
+        "lift": "generated/srw/run-20260930T090838-tribes2",
         "limits": [
           "Architecturally undefined flag bits excluded",
           "Individual emitted blocks; full engine and control-flow seam checks remain pending"
@@ -256,7 +256,7 @@
         "distinct_previously_rejected_branches": 11,
         "cases": 2736,
         "library_sha256": "f9e298e27d8e22f574388647bb24dd6ce4a7329109482af503f4299237538cfd",
-        "lift": "/Users/chrissotraidis/GitHub/tribespad/generated/srw/run-20260930T090838-tribes2",
+        "lift": "generated/srw/run-20260930T090838-tribes2",
         "limits": [
           "Actual selected producers and branches across procedure boundaries",
           "Full intervening control-flow paths and whole-engine execution remain pending"
@@ -290,9 +290,9 @@
             "command": [
               "make",
               "-j4",
-              "SOURCE_DIR=/Users/chrissotraidis/GitHub/tribespad/ref/softfloat/SoftFloat-3e/source",
+              "SOURCE_DIR=ref/softfloat/SoftFloat-3e/source",
               "SPECIALIZE_TYPE=8086",
-              "COMPILE_C=clang -c -target arm64-apple-macos12 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk -std=c11 -DSOFTFLOAT_FAST_INT64 -DTHREAD_LOCAL=_Thread_local -DINLINE_LEVEL=5 -DSOFTFLOAT_FAST_DIV32TO16 -DSOFTFLOAT_FAST_DIV64TO32 -I. -I/Users/chrissotraidis/GitHub/tribespad/ref/softfloat/SoftFloat-3e/source/8086 -I/Users/chrissotraidis/GitHub/tribespad/ref/softfloat/SoftFloat-3e/source/include -O2 -o $@"
+              "COMPILE_C=clang -c -target arm64-apple-macos12 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk -std=c11 -DSOFTFLOAT_FAST_INT64 -DTHREAD_LOCAL=_Thread_local -DINLINE_LEVEL=5 -DSOFTFLOAT_FAST_DIV32TO16 -DSOFTFLOAT_FAST_DIV64TO32 -I. -Iref/softfloat/SoftFloat-3e/source/8086 -Iref/softfloat/SoftFloat-3e/source/include -O2 -o $@"
             ],
             "engine_integrated": false,
             "adapter_sha256": "015b260926522f9d7163dea99be62ff48a7836acb4a0d9c92c326522a34a6107",
@@ -310,11 +310,11 @@
               "-DSOFTFLOAT_FAST_INT64",
               "-DTHREAD_LOCAL=_Thread_local",
               "-I",
-              "/Users/chrissotraidis/GitHub/tribespad/ref/softfloat/SoftFloat-3e/source/include",
+              "ref/softfloat/SoftFloat-3e/source/include",
               "-c",
-              "/Users/chrissotraidis/GitHub/tribespad/port/core/ext80.c",
+              "port/core/ext80.c",
               "-o",
-              "/Users/chrissotraidis/GitHub/tribespad/generated/softfloat/macos/ext80.o"
+              "generated/softfloat/macos/ext80.o"
             ]
           },
           "device": {
@@ -327,9 +327,9 @@
             "command": [
               "make",
               "-j4",
-              "SOURCE_DIR=/Users/chrissotraidis/GitHub/tribespad/ref/softfloat/SoftFloat-3e/source",
+              "SOURCE_DIR=ref/softfloat/SoftFloat-3e/source",
               "SPECIALIZE_TYPE=8086",
-              "COMPILE_C=clang -c -target arm64-apple-ios16 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk -std=c11 -DSOFTFLOAT_FAST_INT64 -DTHREAD_LOCAL=_Thread_local -DINLINE_LEVEL=5 -DSOFTFLOAT_FAST_DIV32TO16 -DSOFTFLOAT_FAST_DIV64TO32 -I. -I/Users/chrissotraidis/GitHub/tribespad/ref/softfloat/SoftFloat-3e/source/8086 -I/Users/chrissotraidis/GitHub/tribespad/ref/softfloat/SoftFloat-3e/source/include -O2 -o $@"
+              "COMPILE_C=clang -c -target arm64-apple-ios16 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk -std=c11 -DSOFTFLOAT_FAST_INT64 -DTHREAD_LOCAL=_Thread_local -DINLINE_LEVEL=5 -DSOFTFLOAT_FAST_DIV32TO16 -DSOFTFLOAT_FAST_DIV64TO32 -I. -Iref/softfloat/SoftFloat-3e/source/8086 -Iref/softfloat/SoftFloat-3e/source/include -O2 -o $@"
             ],
             "engine_integrated": false,
             "adapter_sha256": "d31dc48dd03bcc15a185ae399d43b91e09c46976f466c91b1cd9bc03d53dcb19",
@@ -347,11 +347,11 @@
               "-DSOFTFLOAT_FAST_INT64",
               "-DTHREAD_LOCAL=_Thread_local",
               "-I",
-              "/Users/chrissotraidis/GitHub/tribespad/ref/softfloat/SoftFloat-3e/source/include",
+              "ref/softfloat/SoftFloat-3e/source/include",
               "-c",
-              "/Users/chrissotraidis/GitHub/tribespad/port/core/ext80.c",
+              "port/core/ext80.c",
               "-o",
-              "/Users/chrissotraidis/GitHub/tribespad/generated/softfloat/device/ext80.o"
+              "generated/softfloat/device/ext80.o"
             ],
             "runtime_sha256": "4249e12207cbc941fb69437fa85ef2184eba3911b0f29f285df54484838fa5fa",
             "runtime_command": [
@@ -369,11 +369,11 @@
               "-DSOFTFLOAT_FAST_INT64",
               "-DTHREAD_LOCAL=_Thread_local",
               "-I",
-              "/Users/chrissotraidis/GitHub/tribespad/ref/softfloat/SoftFloat-3e/source/include",
+              "ref/softfloat/SoftFloat-3e/source/include",
               "-c",
-              "/Users/chrissotraidis/GitHub/tribespad/port/llasm-support/tribes_float80.c",
+              "port/llasm-support/tribes_float80.c",
               "-o",
-              "/Users/chrissotraidis/GitHub/tribespad/generated/softfloat/device/tribes_float80.o"
+              "generated/softfloat/device/tribes_float80.o"
             ]
           },
           "simulator": {
@@ -386,9 +386,9 @@
             "command": [
               "make",
               "-j4",
-              "SOURCE_DIR=/Users/chrissotraidis/GitHub/tribespad/ref/softfloat/SoftFloat-3e/source",
+              "SOURCE_DIR=ref/softfloat/SoftFloat-3e/source",
               "SPECIALIZE_TYPE=8086",
-              "COMPILE_C=clang -c -target arm64-apple-ios16-simulator -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.5.sdk -std=c11 -DSOFTFLOAT_FAST_INT64 -DTHREAD_LOCAL=_Thread_local -DINLINE_LEVEL=5 -DSOFTFLOAT_FAST_DIV32TO16 -DSOFTFLOAT_FAST_DIV64TO32 -I. -I/Users/chrissotraidis/GitHub/tribespad/ref/softfloat/SoftFloat-3e/source/8086 -I/Users/chrissotraidis/GitHub/tribespad/ref/softfloat/SoftFloat-3e/source/include -O2 -o $@"
+              "COMPILE_C=clang -c -target arm64-apple-ios16-simulator -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.5.sdk -std=c11 -DSOFTFLOAT_FAST_INT64 -DTHREAD_LOCAL=_Thread_local -DINLINE_LEVEL=5 -DSOFTFLOAT_FAST_DIV32TO16 -DSOFTFLOAT_FAST_DIV64TO32 -I. -Iref/softfloat/SoftFloat-3e/source/8086 -Iref/softfloat/SoftFloat-3e/source/include -O2 -o $@"
             ],
             "engine_integrated": false,
             "adapter_sha256": "e6b46fb5efa07b60e08066845406f4b5ecdab94248fc6abeeb26c94b6c8d873a",
@@ -406,11 +406,11 @@
               "-DSOFTFLOAT_FAST_INT64",
               "-DTHREAD_LOCAL=_Thread_local",
               "-I",
-              "/Users/chrissotraidis/GitHub/tribespad/ref/softfloat/SoftFloat-3e/source/include",
+              "ref/softfloat/SoftFloat-3e/source/include",
               "-c",
-              "/Users/chrissotraidis/GitHub/tribespad/port/core/ext80.c",
+              "port/core/ext80.c",
               "-o",
-              "/Users/chrissotraidis/GitHub/tribespad/generated/softfloat/simulator/ext80.o"
+              "generated/softfloat/simulator/ext80.o"
             ],
             "runtime_sha256": "20a09a8cf40cfdf2fb838abeb6bba55b52feb56e7a227c10bf75cfceba548839",
             "runtime_command": [
@@ -428,11 +428,11 @@
               "-DSOFTFLOAT_FAST_INT64",
               "-DTHREAD_LOCAL=_Thread_local",
               "-I",
-              "/Users/chrissotraidis/GitHub/tribespad/ref/softfloat/SoftFloat-3e/source/include",
+              "ref/softfloat/SoftFloat-3e/source/include",
               "-c",
-              "/Users/chrissotraidis/GitHub/tribespad/port/llasm-support/tribes_float80.c",
+              "port/llasm-support/tribes_float80.c",
               "-o",
-              "/Users/chrissotraidis/GitHub/tribespad/generated/softfloat/simulator/tribes_float80.o"
+              "generated/softfloat/simulator/tribes_float80.o"
             ]
           }
         },
@@ -464,7 +464,7 @@
           ],
           "library_sha256": "ba6de324cd3bb3cbfd2e73104106322ee664e35b6b07126ffd66c853b5ebbb54",
           "actual_instruction_sites": 3,
-          "lift": "/Users/chrissotraidis/GitHub/tribespad/generated/srw/run-20260930T101044-tribes2"
+          "lift": "generated/srw/run-20260930T101044-tribes2"
         },
         "comparisons": {
           "pass": true,
@@ -507,7 +507,7 @@
     },
     "native_diagnostic_object": {
       "playable": false,
-      "lift": "/Users/chrissotraidis/GitHub/tribespad/generated/srw/run-20260930T092611-tribes2",
+      "lift": "generated/srw/run-20260930T092611-tribes2",
       "image_sha256": "7ad1d40a6aa74a25d089af6bd6f34fcc20a172fd5932ded82c69fca673e7f8f9",
       "srw_sha256": "2b0c9b50b7d1e69095223969cd6d29b098f947434924d21b2e6fa23ad2cc4a94",
       "stages": {
@@ -619,7 +619,7 @@
         "verified": true,
         "sha256": "9a14b36da2eb2b6c6f20b3186a21fde03253fec646aed4711d388fb31912079f",
         "bytes": 55281432,
-        "identity": "/Users/chrissotraidis/GitHub/tribespad/generated/srw/run-20260930T092611-tribes2/native-census/engine.o: Mach-O 64-bit object arm64",
+        "identity": "generated/srw/run-20260930T092611-tribes2/native-census/engine.o: Mach-O 64-bit object arm64",
         "defined_text_symbols": 188413,
         "unresolved_symbols": 401,
         "inspection_time": "2026-09-30T09:56:21.902324+00:00"
@@ -637,7 +637,7 @@
     "native_strict_object": {
       "playable": false,
       "translation_diagnostic": false,
-      "lift": "/Users/chrissotraidis/GitHub/tribespad/generated/srw/run-20260930T101044-tribes2",
+      "lift": "generated/srw/run-20260930T101044-tribes2",
       "image_sha256": "7ad1d40a6aa74a25d089af6bd6f34fcc20a172fd5932ded82c69fca673e7f8f9",
       "srw_sha256": "a98375ab04bc4d6a0b29f3fbda9c0f247d552e3cee7b1aa6a40b82bc5787e081",
       "stages": {
@@ -744,12 +744,12 @@
         "_AIL_startup@0"
       ],
       "object_sha256": "8e2fadbb15e9c1d489fde6321cd70e4984f8dafb73302dccd795ac38c95393f8",
-      "object_identity": "/Users/chrissotraidis/GitHub/tribespad/generated/srw/run-20260930T101044-tribes2/native-census/engine.o: Mach-O 64-bit object arm64",
+      "object_identity": "generated/srw/run-20260930T101044-tribes2/native-census/engine.o: Mach-O 64-bit object arm64",
       "object": {
         "verified": true,
         "sha256": "8e2fadbb15e9c1d489fde6321cd70e4984f8dafb73302dccd795ac38c95393f8",
         "bytes": 55281464,
-        "identity": "/Users/chrissotraidis/GitHub/tribespad/generated/srw/run-20260930T101044-tribes2/native-census/engine.o: Mach-O 64-bit object arm64",
+        "identity": "generated/srw/run-20260930T101044-tribes2/native-census/engine.o: Mach-O 64-bit object arm64",
         "defined_text_symbols": 188413,
         "unresolved_symbols": 403,
         "inspection_time": "2026-09-30T10:35:14.468763+00:00"
@@ -2390,7 +2390,7 @@
       "independent_exact_remainder_scale_cases": 768,
       "transcendental_status_differences_from_rosetta": 3130,
       "library_sha256": "9ea20939e55e6b3efcac8d6cc424e9b13c074de6d7c955291d1eea45cd52294a",
-      "lift": "/Users/chrissotraidis/GitHub/tribespad/generated/srw/run-20260930T101044-tribes2",
+      "lift": "generated/srw/run-20260930T101044-tribes2",
       "limits": [
         "First sixteen recorded scenarios per operation; broad corpus is in pure-math evidence",
         "Six operations compare emitted ABI values to the tested math library; independent numeric bounds are separate",
@@ -2409,9 +2409,9 @@
         "command": [
           "make",
           "-j4",
-          "SOURCE_DIR=/Users/chrissotraidis/GitHub/tribespad/ref/softfloat/SoftFloat-3e/source",
+          "SOURCE_DIR=ref/softfloat/SoftFloat-3e/source",
           "SPECIALIZE_TYPE=8086",
-          "COMPILE_C=clang -c -target arm64-apple-ios16 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk -std=c11 -DSOFTFLOAT_FAST_INT64 -DTHREAD_LOCAL=_Thread_local -DINLINE_LEVEL=5 -DSOFTFLOAT_FAST_DIV32TO16 -DSOFTFLOAT_FAST_DIV64TO32 -I. -I/Users/chrissotraidis/GitHub/tribespad/ref/softfloat/SoftFloat-3e/source/8086 -I/Users/chrissotraidis/GitHub/tribespad/ref/softfloat/SoftFloat-3e/source/include -O2 -o $@"
+          "COMPILE_C=clang -c -target arm64-apple-ios16 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.5.sdk -std=c11 -DSOFTFLOAT_FAST_INT64 -DTHREAD_LOCAL=_Thread_local -DINLINE_LEVEL=5 -DSOFTFLOAT_FAST_DIV32TO16 -DSOFTFLOAT_FAST_DIV64TO32 -I. -Iref/softfloat/SoftFloat-3e/source/8086 -Iref/softfloat/SoftFloat-3e/source/include -O2 -o $@"
         ],
         "engine_integrated": false,
         "adapter_sha256": "d31dc48dd03bcc15a185ae399d43b91e09c46976f466c91b1cd9bc03d53dcb19",
@@ -2429,11 +2429,11 @@
           "-DSOFTFLOAT_FAST_INT64",
           "-DTHREAD_LOCAL=_Thread_local",
           "-I",
-          "/Users/chrissotraidis/GitHub/tribespad/ref/softfloat/SoftFloat-3e/source/include",
+          "ref/softfloat/SoftFloat-3e/source/include",
           "-c",
-          "/Users/chrissotraidis/GitHub/tribespad/port/core/ext80.c",
+          "port/core/ext80.c",
           "-o",
-          "/Users/chrissotraidis/GitHub/tribespad/generated/softfloat/device/ext80.o"
+          "generated/softfloat/device/ext80.o"
         ],
         "runtime_sha256": "f8af471da6c3b20b3f665a0808c1a4ab55a04f58b6f405ce8870ca18bd95e40f",
         "runtime_command": [
@@ -2451,11 +2451,11 @@
           "-DSOFTFLOAT_FAST_INT64",
           "-DTHREAD_LOCAL=_Thread_local",
           "-I",
-          "/Users/chrissotraidis/GitHub/tribespad/ref/softfloat/SoftFloat-3e/source/include",
+          "ref/softfloat/SoftFloat-3e/source/include",
           "-c",
-          "/Users/chrissotraidis/GitHub/tribespad/port/llasm-support/tribes_float80.c",
+          "port/llasm-support/tribes_float80.c",
           "-o",
-          "/Users/chrissotraidis/GitHub/tribespad/generated/softfloat/device/tribes_float80.o"
+          "generated/softfloat/device/tribes_float80.o"
         ]
       },
       "simulator": {
@@ -2468,9 +2468,9 @@
         "command": [
           "make",
           "-j4",
-          "SOURCE_DIR=/Users/chrissotraidis/GitHub/tribespad/ref/softfloat/SoftFloat-3e/source",
+          "SOURCE_DIR=ref/softfloat/SoftFloat-3e/source",
           "SPECIALIZE_TYPE=8086",
-          "COMPILE_C=clang -c -target arm64-apple-ios16-simulator -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.5.sdk -std=c11 -DSOFTFLOAT_FAST_INT64 -DTHREAD_LOCAL=_Thread_local -DINLINE_LEVEL=5 -DSOFTFLOAT_FAST_DIV32TO16 -DSOFTFLOAT_FAST_DIV64TO32 -I. -I/Users/chrissotraidis/GitHub/tribespad/ref/softfloat/SoftFloat-3e/source/8086 -I/Users/chrissotraidis/GitHub/tribespad/ref/softfloat/SoftFloat-3e/source/include -O2 -o $@"
+          "COMPILE_C=clang -c -target arm64-apple-ios16-simulator -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.5.sdk -std=c11 -DSOFTFLOAT_FAST_INT64 -DTHREAD_LOCAL=_Thread_local -DINLINE_LEVEL=5 -DSOFTFLOAT_FAST_DIV32TO16 -DSOFTFLOAT_FAST_DIV64TO32 -I. -Iref/softfloat/SoftFloat-3e/source/8086 -Iref/softfloat/SoftFloat-3e/source/include -O2 -o $@"
         ],
         "engine_integrated": false,
         "adapter_sha256": "e6b46fb5efa07b60e08066845406f4b5ecdab94248fc6abeeb26c94b6c8d873a",
@@ -2488,11 +2488,11 @@
           "-DSOFTFLOAT_FAST_INT64",
           "-DTHREAD_LOCAL=_Thread_local",
           "-I",
-          "/Users/chrissotraidis/GitHub/tribespad/ref/softfloat/SoftFloat-3e/source/include",
+          "ref/softfloat/SoftFloat-3e/source/include",
           "-c",
-          "/Users/chrissotraidis/GitHub/tribespad/port/core/ext80.c",
+          "port/core/ext80.c",
           "-o",
-          "/Users/chrissotraidis/GitHub/tribespad/generated/softfloat/simulator/ext80.o"
+          "generated/softfloat/simulator/ext80.o"
         ],
         "runtime_sha256": "2a5521f27f2ca055c5cee5779fc6943919185d96c8b8d65ab8db3ce98673de55",
         "runtime_command": [
@@ -2510,11 +2510,11 @@
           "-DSOFTFLOAT_FAST_INT64",
           "-DTHREAD_LOCAL=_Thread_local",
           "-I",
-          "/Users/chrissotraidis/GitHub/tribespad/ref/softfloat/SoftFloat-3e/source/include",
+          "ref/softfloat/SoftFloat-3e/source/include",
           "-c",
-          "/Users/chrissotraidis/GitHub/tribespad/port/llasm-support/tribes_float80.c",
+          "port/llasm-support/tribes_float80.c",
           "-o",
-          "/Users/chrissotraidis/GitHub/tribespad/generated/softfloat/simulator/tribes_float80.o"
+          "generated/softfloat/simulator/tribes_float80.o"
         ]
       }
     },
@@ -2590,7 +2590,7 @@
       "seconds": 18.24895275,
       "object_sha256": "6e5cd960d0fdc465f1da563bf7af0aa9ce412a30e370add63c7440839b8018ab",
       "object_bytes": 43368448,
-      "object_identity": "/Users/chrissotraidis/GitHub/tribespad/generated/srw/run-20260930T101044-tribes2/va/engine.o: Mach-O 64-bit object arm64"
+      "object_identity": "generated/srw/run-20260930T101044-tribes2/va/engine.o: Mach-O 64-bit object arm64"
     },
     "bootstrap": {
       "file_seek_calls": [
@@ -8668,7 +8668,7 @@
       "file_open_calls": [
         {
           "guest_path": "base\\audio.vl2",
-          "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/audio.vl2",
+          "host_path": "ref/product/base/audio.vl2",
           "handle": 3774873607,
           "bytes": 35233672,
           "sha256": "88668510265840cc65efda854f0064251cd7d23b2ab125c4d911455ac12f3b5c",
@@ -8678,7 +8678,7 @@
         },
         {
           "guest_path": "base\\badlands.vl2",
-          "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/badlands.vl2",
+          "host_path": "ref/product/base/badlands.vl2",
           "handle": 3774873608,
           "bytes": 23187002,
           "sha256": "a9f0e351465652433d6a3002f34df552d1f19cad75993fdb354617fd8ebcf8bb",
@@ -8688,7 +8688,7 @@
         },
         {
           "guest_path": "base\\base.vl2",
-          "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/base.vl2",
+          "host_path": "ref/product/base/base.vl2",
           "handle": 3774873609,
           "bytes": 530641,
           "sha256": "4576df3c2e7d0af1127f6e21e0d39fa8dcfdb4ce18038ca9f52019d885c18b94",
@@ -8698,7 +8698,7 @@
         },
         {
           "guest_path": "base\\Classic_maps_v1.vl2",
-          "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/Classic_maps_v1.vl2",
+          "host_path": "ref/product/base/Classic_maps_v1.vl2",
           "handle": 3774873610,
           "bytes": 44428355,
           "sha256": "1e4104a3c90e2d39ec5b3fd8fc14419824605eb08c4e8fdfbf8e7d5f1d7efd6a",
@@ -8708,7 +8708,7 @@
         },
         {
           "guest_path": "base\\desert.vl2",
-          "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/desert.vl2",
+          "host_path": "ref/product/base/desert.vl2",
           "handle": 3774873611,
           "bytes": 20789120,
           "sha256": "46b7e5e8d99d8e2afd32aff906f156d3a3cf25157421c736cc085f9185982c8d",
@@ -8718,7 +8718,7 @@
         },
         {
           "guest_path": "base\\ice.vl2",
-          "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/ice.vl2",
+          "host_path": "ref/product/base/ice.vl2",
           "handle": 3774873612,
           "bytes": 15592891,
           "sha256": "cc5963e4c97ade4a98a459b36adcb2a5ae89a7c3ef8debfef5f79972c3ddbe68",
@@ -8728,7 +8728,7 @@
         },
         {
           "guest_path": "base\\interiors.vl2",
-          "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/interiors.vl2",
+          "host_path": "ref/product/base/interiors.vl2",
           "handle": 3774873613,
           "bytes": 39255471,
           "sha256": "720d244f14000ecd1e8d06bd21dbefd52871c83cff6dc6947769f541998cac09",
@@ -8738,7 +8738,7 @@
         },
         {
           "guest_path": "base\\lava.vl2",
-          "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/lava.vl2",
+          "host_path": "ref/product/base/lava.vl2",
           "handle": 3774873614,
           "bytes": 11160820,
           "sha256": "57fe26876843691ed3a08c288039242c82f45794bd21994d40ff8fb44ebd6bd3",
@@ -8748,7 +8748,7 @@
         },
         {
           "guest_path": "base\\lush.vl2",
-          "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/lush.vl2",
+          "host_path": "ref/product/base/lush.vl2",
           "handle": 3774873615,
           "bytes": 20520462,
           "sha256": "42bc2092b63ef16edcdd924c20efa0c93ce08374a82b961279aecbfe8b4f17b9",
@@ -8758,7 +8758,7 @@
         },
         {
           "guest_path": "base\\missions.vl2",
-          "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/missions.vl2",
+          "host_path": "ref/product/base/missions.vl2",
           "handle": 3774873616,
           "bytes": 18038192,
           "sha256": "615445283585d0b9befb0bd2af4b68de4f6cbee618d9526645740c7d7f4eb67f",
@@ -8768,7 +8768,7 @@
         },
         {
           "guest_path": "base\\scripts.vl2",
-          "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/scripts.vl2",
+          "host_path": "ref/product/base/scripts.vl2",
           "handle": 3774873617,
           "bytes": 4694783,
           "sha256": "610463dbac0cd5e48f7cff775a6f04b23d2e35adc2779e8a00c127b86c530490",
@@ -8778,7 +8778,7 @@
         },
         {
           "guest_path": "base\\shapes.vl2",
-          "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/shapes.vl2",
+          "host_path": "ref/product/base/shapes.vl2",
           "handle": 3774873618,
           "bytes": 6275292,
           "sha256": "fdfcc6e06bc22a2e69eb1b7d5dd80beb7092f930985a4757b2351b83e82178d6",
@@ -8788,7 +8788,7 @@
         },
         {
           "guest_path": "base\\skins.vl2",
-          "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/skins.vl2",
+          "host_path": "ref/product/base/skins.vl2",
           "handle": 3774873619,
           "bytes": 103436425,
           "sha256": "f600ffd7dbc57067fa2c35d554c9e6d477628d14802e2f0be33c05b7d4d7eff8",
@@ -8798,7 +8798,7 @@
         },
         {
           "guest_path": "base\\t2csri.vl2",
-          "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/t2csri.vl2",
+          "host_path": "ref/product/base/t2csri.vl2",
           "handle": 3774873620,
           "bytes": 1318981,
           "sha256": "52762570008d4c3210212867bd9ca92c82b8fa3fc94f3f84736a6058bd53e64e",
@@ -8808,7 +8808,7 @@
         },
         {
           "guest_path": "base\\textures.vl2",
-          "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/textures.vl2",
+          "host_path": "ref/product/base/textures.vl2",
           "handle": 3774873621,
           "bytes": 120964025,
           "sha256": "98f3f4670e01862376284f7b205724bb9c5af82eec49c769a78f49e2bd279c7c",
@@ -8818,7 +8818,7 @@
         },
         {
           "guest_path": "base\\TR2final093-extras.vl2",
-          "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/TR2final093-extras.vl2",
+          "host_path": "ref/product/base/TR2final093-extras.vl2",
           "handle": 3774873622,
           "bytes": 29615896,
           "sha256": "9a797da1a8421820707169f828d4203917ce9c6eca0907458ac32678ef7cc06a",
@@ -8828,7 +8828,7 @@
         },
         {
           "guest_path": "base\\TR2final105-client.vl2",
-          "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/TR2final105-client.vl2",
+          "host_path": "ref/product/base/TR2final105-client.vl2",
           "handle": 3774873623,
           "bytes": 48083952,
           "sha256": "0a389be1d82abaf7f6f77c3a555e85a07648f14d996125a576c51bf7b299175b",
@@ -8838,7 +8838,7 @@
         },
         {
           "guest_path": "base\\TR2final105-server.vl2",
-          "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/TR2final105-server.vl2",
+          "host_path": "ref/product/base/TR2final105-server.vl2",
           "handle": 3774873624,
           "bytes": 395371,
           "sha256": "38decdbd54bc5b04875e0988f2b58087416b4fe5972ff9a2453c84dd9830b408",
@@ -8848,7 +8848,7 @@
         },
         {
           "guest_path": "base\\voice.vl2",
-          "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/voice.vl2",
+          "host_path": "ref/product/base/voice.vl2",
           "handle": 3774873625,
           "bytes": 57340260,
           "sha256": "db3f10f6194121776be038ebda62addfeac2cdb7bbc65e55a18acb835cb7131e",
@@ -8858,7 +8858,7 @@
         },
         {
           "guest_path": "base\\yHDTextures2.0.vl2",
-          "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/yHDTextures2.0.vl2",
+          "host_path": "ref/product/base/yHDTextures2.0.vl2",
           "handle": 3774873626,
           "bytes": 224650286,
           "sha256": "9c54108b2f598010d2f586ab96e748dfe0445dc2f22461df48a2de23e1fea255",
@@ -8868,7 +8868,7 @@
         },
         {
           "guest_path": "base\\zz_Classic_client_v1.vl2",
-          "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/zz_Classic_client_v1.vl2",
+          "host_path": "ref/product/base/zz_Classic_client_v1.vl2",
           "handle": 3774873627,
           "bytes": 64316,
           "sha256": "30af043fb104bedac416333407172b18eaabeb54c4a36256b851ba25195011ab",
@@ -8878,7 +8878,7 @@
         },
         {
           "guest_path": "console_start.cs",
-          "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/console_start.cs",
+          "host_path": "ref/product/console_start.cs",
           "handle": 3774873628,
           "bytes": 77417,
           "sha256": "412b6c81d9f8459c6d1c42034859422443387b1f92340cc017bd005256e203ae",
@@ -8888,7 +8888,7 @@
         },
         {
           "guest_path": "base\\scripts\\clientDefaults.cs.dso",
-          "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/scripts/clientDefaults.cs.dso",
+          "host_path": "ref/product/base/scripts/clientDefaults.cs.dso",
           "handle": 3774873629,
           "bytes": 10917,
           "sha256": "0a4cb26cf2afec607ea38521a4cff4357d0da4788e7f78e39ad4023f8ecd5c18",
@@ -8898,7 +8898,7 @@
         },
         {
           "guest_path": "base\\scripts\\serverDefaults.cs.dso",
-          "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/scripts/serverDefaults.cs.dso",
+          "host_path": "ref/product/base/scripts/serverDefaults.cs.dso",
           "handle": 3774873630,
           "bytes": 4767,
           "sha256": "1914d28bed1e3e1ea01dacc7086522d0bb065e74c156127bd8e03cdaadf46fff",
@@ -8908,7 +8908,7 @@
         },
         {
           "guest_path": "base\\prefs\\ClientPrefs.cs",
-          "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/prefs/ClientPrefs.cs",
+          "host_path": "ref/product/base/prefs/ClientPrefs.cs",
           "handle": 3774873631,
           "bytes": 11258,
           "sha256": "400cd6c0f127235f9f98f57a119f53bda5a2f75b51aaadeda2950595f566de74",
@@ -8918,7 +8918,7 @@
         },
         {
           "guest_path": "base\\prefs\\ServerPrefs.cs",
-          "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/prefs/ServerPrefs.cs",
+          "host_path": "ref/product/base/prefs/ServerPrefs.cs",
           "handle": 3774873632,
           "bytes": 4551,
           "sha256": "52e80d289e53a93f7fbb3e565e4cf3a5542d2bb5e03ef42ee51e0a5320907e4f",
@@ -43449,9 +43449,9 @@
       "clock_samples_replayed": 5,
       "disk_samples_replayed": 1,
       "filesystem_mounts": {
-        "C_root": "/Users/chrissotraidis/GitHub/tribespad/generated/srw/run-20260930T101044-tribes2/va/bootstrap/volume",
-        "game": "/Users/chrissotraidis/GitHub/tribespad/ref/product",
-        "temp": "/Users/chrissotraidis/GitHub/tribespad/generated/srw/run-20260930T101044-tribes2/va/bootstrap/volume/TribesPad/Temp"
+        "C_root": "generated/srw/run-20260930T101044-tribes2/va/bootstrap/volume",
+        "game": "ref/product",
+        "temp": "generated/srw/run-20260930T101044-tribes2/va/bootstrap/volume/TribesPad/Temp"
       },
       "disk_external_inputs": [
         [
@@ -43535,7 +43535,7 @@
       "seconds": 18.814774917,
       "object_sha256": "f7f001b9e551414d1a7576464302b21d7d1d303460aa408547a52bc32653275e",
       "object_bytes": 43368448,
-      "object_identity": "/Users/chrissotraidis/GitHub/tribespad/generated/srw/run-20260930T101044-tribes2/va/simulator/engine.o: Mach-O 64-bit object arm64"
+      "object_identity": "generated/srw/run-20260930T101044-tribes2/va/simulator/engine.o: Mach-O 64-bit object arm64"
     }
   },
   "native_win32": {
@@ -45767,9 +45767,9 @@
     },
     "filesystem": {
       "mounts": {
-        "C_root": "/Users/chrissotraidis/GitHub/tribespad/generated/srw/run-20260930T101044-tribes2/va/bootstrap/volume",
-        "game": "/Users/chrissotraidis/GitHub/tribespad/ref/product",
-        "temp": "/Users/chrissotraidis/GitHub/tribespad/generated/srw/run-20260930T101044-tribes2/va/bootstrap/volume/TribesPad/Temp"
+        "C_root": "generated/srw/run-20260930T101044-tribes2/va/bootstrap/volume",
+        "game": "ref/product",
+        "temp": "generated/srw/run-20260930T101044-tribes2/va/bootstrap/volume/TribesPad/Temp"
       },
       "concurrent_lookup_cases": 8000,
       "disk_sample_count": 1,
@@ -45860,7 +45860,7 @@
         "startup_calls": [
           {
             "guest_path": "base\\audio.vl2",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/audio.vl2",
+            "host_path": "ref/product/base/audio.vl2",
             "handle": 3774873607,
             "bytes": 35233672,
             "sha256": "88668510265840cc65efda854f0064251cd7d23b2ab125c4d911455ac12f3b5c",
@@ -45870,7 +45870,7 @@
           },
           {
             "guest_path": "base\\badlands.vl2",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/badlands.vl2",
+            "host_path": "ref/product/base/badlands.vl2",
             "handle": 3774873608,
             "bytes": 23187002,
             "sha256": "a9f0e351465652433d6a3002f34df552d1f19cad75993fdb354617fd8ebcf8bb",
@@ -45880,7 +45880,7 @@
           },
           {
             "guest_path": "base\\base.vl2",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/base.vl2",
+            "host_path": "ref/product/base/base.vl2",
             "handle": 3774873609,
             "bytes": 530641,
             "sha256": "4576df3c2e7d0af1127f6e21e0d39fa8dcfdb4ce18038ca9f52019d885c18b94",
@@ -45890,7 +45890,7 @@
           },
           {
             "guest_path": "base\\Classic_maps_v1.vl2",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/Classic_maps_v1.vl2",
+            "host_path": "ref/product/base/Classic_maps_v1.vl2",
             "handle": 3774873610,
             "bytes": 44428355,
             "sha256": "1e4104a3c90e2d39ec5b3fd8fc14419824605eb08c4e8fdfbf8e7d5f1d7efd6a",
@@ -45900,7 +45900,7 @@
           },
           {
             "guest_path": "base\\desert.vl2",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/desert.vl2",
+            "host_path": "ref/product/base/desert.vl2",
             "handle": 3774873611,
             "bytes": 20789120,
             "sha256": "46b7e5e8d99d8e2afd32aff906f156d3a3cf25157421c736cc085f9185982c8d",
@@ -45910,7 +45910,7 @@
           },
           {
             "guest_path": "base\\ice.vl2",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/ice.vl2",
+            "host_path": "ref/product/base/ice.vl2",
             "handle": 3774873612,
             "bytes": 15592891,
             "sha256": "cc5963e4c97ade4a98a459b36adcb2a5ae89a7c3ef8debfef5f79972c3ddbe68",
@@ -45920,7 +45920,7 @@
           },
           {
             "guest_path": "base\\interiors.vl2",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/interiors.vl2",
+            "host_path": "ref/product/base/interiors.vl2",
             "handle": 3774873613,
             "bytes": 39255471,
             "sha256": "720d244f14000ecd1e8d06bd21dbefd52871c83cff6dc6947769f541998cac09",
@@ -45930,7 +45930,7 @@
           },
           {
             "guest_path": "base\\lava.vl2",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/lava.vl2",
+            "host_path": "ref/product/base/lava.vl2",
             "handle": 3774873614,
             "bytes": 11160820,
             "sha256": "57fe26876843691ed3a08c288039242c82f45794bd21994d40ff8fb44ebd6bd3",
@@ -45940,7 +45940,7 @@
           },
           {
             "guest_path": "base\\lush.vl2",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/lush.vl2",
+            "host_path": "ref/product/base/lush.vl2",
             "handle": 3774873615,
             "bytes": 20520462,
             "sha256": "42bc2092b63ef16edcdd924c20efa0c93ce08374a82b961279aecbfe8b4f17b9",
@@ -45950,7 +45950,7 @@
           },
           {
             "guest_path": "base\\missions.vl2",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/missions.vl2",
+            "host_path": "ref/product/base/missions.vl2",
             "handle": 3774873616,
             "bytes": 18038192,
             "sha256": "615445283585d0b9befb0bd2af4b68de4f6cbee618d9526645740c7d7f4eb67f",
@@ -45960,7 +45960,7 @@
           },
           {
             "guest_path": "base\\scripts.vl2",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/scripts.vl2",
+            "host_path": "ref/product/base/scripts.vl2",
             "handle": 3774873617,
             "bytes": 4694783,
             "sha256": "610463dbac0cd5e48f7cff775a6f04b23d2e35adc2779e8a00c127b86c530490",
@@ -45970,7 +45970,7 @@
           },
           {
             "guest_path": "base\\shapes.vl2",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/shapes.vl2",
+            "host_path": "ref/product/base/shapes.vl2",
             "handle": 3774873618,
             "bytes": 6275292,
             "sha256": "fdfcc6e06bc22a2e69eb1b7d5dd80beb7092f930985a4757b2351b83e82178d6",
@@ -45980,7 +45980,7 @@
           },
           {
             "guest_path": "base\\skins.vl2",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/skins.vl2",
+            "host_path": "ref/product/base/skins.vl2",
             "handle": 3774873619,
             "bytes": 103436425,
             "sha256": "f600ffd7dbc57067fa2c35d554c9e6d477628d14802e2f0be33c05b7d4d7eff8",
@@ -45990,7 +45990,7 @@
           },
           {
             "guest_path": "base\\t2csri.vl2",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/t2csri.vl2",
+            "host_path": "ref/product/base/t2csri.vl2",
             "handle": 3774873620,
             "bytes": 1318981,
             "sha256": "52762570008d4c3210212867bd9ca92c82b8fa3fc94f3f84736a6058bd53e64e",
@@ -46000,7 +46000,7 @@
           },
           {
             "guest_path": "base\\textures.vl2",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/textures.vl2",
+            "host_path": "ref/product/base/textures.vl2",
             "handle": 3774873621,
             "bytes": 120964025,
             "sha256": "98f3f4670e01862376284f7b205724bb9c5af82eec49c769a78f49e2bd279c7c",
@@ -46010,7 +46010,7 @@
           },
           {
             "guest_path": "base\\TR2final093-extras.vl2",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/TR2final093-extras.vl2",
+            "host_path": "ref/product/base/TR2final093-extras.vl2",
             "handle": 3774873622,
             "bytes": 29615896,
             "sha256": "9a797da1a8421820707169f828d4203917ce9c6eca0907458ac32678ef7cc06a",
@@ -46020,7 +46020,7 @@
           },
           {
             "guest_path": "base\\TR2final105-client.vl2",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/TR2final105-client.vl2",
+            "host_path": "ref/product/base/TR2final105-client.vl2",
             "handle": 3774873623,
             "bytes": 48083952,
             "sha256": "0a389be1d82abaf7f6f77c3a555e85a07648f14d996125a576c51bf7b299175b",
@@ -46030,7 +46030,7 @@
           },
           {
             "guest_path": "base\\TR2final105-server.vl2",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/TR2final105-server.vl2",
+            "host_path": "ref/product/base/TR2final105-server.vl2",
             "handle": 3774873624,
             "bytes": 395371,
             "sha256": "38decdbd54bc5b04875e0988f2b58087416b4fe5972ff9a2453c84dd9830b408",
@@ -46040,7 +46040,7 @@
           },
           {
             "guest_path": "base\\voice.vl2",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/voice.vl2",
+            "host_path": "ref/product/base/voice.vl2",
             "handle": 3774873625,
             "bytes": 57340260,
             "sha256": "db3f10f6194121776be038ebda62addfeac2cdb7bbc65e55a18acb835cb7131e",
@@ -46050,7 +46050,7 @@
           },
           {
             "guest_path": "base\\yHDTextures2.0.vl2",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/yHDTextures2.0.vl2",
+            "host_path": "ref/product/base/yHDTextures2.0.vl2",
             "handle": 3774873626,
             "bytes": 224650286,
             "sha256": "9c54108b2f598010d2f586ab96e748dfe0445dc2f22461df48a2de23e1fea255",
@@ -46060,7 +46060,7 @@
           },
           {
             "guest_path": "base\\zz_Classic_client_v1.vl2",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/zz_Classic_client_v1.vl2",
+            "host_path": "ref/product/base/zz_Classic_client_v1.vl2",
             "handle": 3774873627,
             "bytes": 64316,
             "sha256": "30af043fb104bedac416333407172b18eaabeb54c4a36256b851ba25195011ab",
@@ -46070,7 +46070,7 @@
           },
           {
             "guest_path": "console_start.cs",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/console_start.cs",
+            "host_path": "ref/product/console_start.cs",
             "handle": 3774873628,
             "bytes": 77417,
             "sha256": "412b6c81d9f8459c6d1c42034859422443387b1f92340cc017bd005256e203ae",
@@ -46080,7 +46080,7 @@
           },
           {
             "guest_path": "base\\scripts\\clientDefaults.cs.dso",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/scripts/clientDefaults.cs.dso",
+            "host_path": "ref/product/base/scripts/clientDefaults.cs.dso",
             "handle": 3774873629,
             "bytes": 10917,
             "sha256": "0a4cb26cf2afec607ea38521a4cff4357d0da4788e7f78e39ad4023f8ecd5c18",
@@ -46090,7 +46090,7 @@
           },
           {
             "guest_path": "base\\scripts\\serverDefaults.cs.dso",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/scripts/serverDefaults.cs.dso",
+            "host_path": "ref/product/base/scripts/serverDefaults.cs.dso",
             "handle": 3774873630,
             "bytes": 4767,
             "sha256": "1914d28bed1e3e1ea01dacc7086522d0bb065e74c156127bd8e03cdaadf46fff",
@@ -46100,7 +46100,7 @@
           },
           {
             "guest_path": "base\\prefs\\ClientPrefs.cs",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/prefs/ClientPrefs.cs",
+            "host_path": "ref/product/base/prefs/ClientPrefs.cs",
             "handle": 3774873631,
             "bytes": 11258,
             "sha256": "400cd6c0f127235f9f98f57a119f53bda5a2f75b51aaadeda2950595f566de74",
@@ -46110,7 +46110,7 @@
           },
           {
             "guest_path": "base\\prefs\\ServerPrefs.cs",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/prefs/ServerPrefs.cs",
+            "host_path": "ref/product/base/prefs/ServerPrefs.cs",
             "handle": 3774873632,
             "bytes": 4551,
             "sha256": "52e80d289e53a93f7fbb3e565e4cf3a5542d2bb5e03ef42ee51e0a5320907e4f",
@@ -69928,7 +69928,7 @@
         "file_open_calls": [
           {
             "guest_path": "base\\audio.vl2",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/audio.vl2",
+            "host_path": "ref/product/base/audio.vl2",
             "handle": 3774873607,
             "bytes": 35233672,
             "sha256": "88668510265840cc65efda854f0064251cd7d23b2ab125c4d911455ac12f3b5c",
@@ -69938,7 +69938,7 @@
           },
           {
             "guest_path": "base\\badlands.vl2",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/badlands.vl2",
+            "host_path": "ref/product/base/badlands.vl2",
             "handle": 3774873608,
             "bytes": 23187002,
             "sha256": "a9f0e351465652433d6a3002f34df552d1f19cad75993fdb354617fd8ebcf8bb",
@@ -69948,7 +69948,7 @@
           },
           {
             "guest_path": "base\\base.vl2",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/base.vl2",
+            "host_path": "ref/product/base/base.vl2",
             "handle": 3774873609,
             "bytes": 530641,
             "sha256": "4576df3c2e7d0af1127f6e21e0d39fa8dcfdb4ce18038ca9f52019d885c18b94",
@@ -69958,7 +69958,7 @@
           },
           {
             "guest_path": "base\\Classic_maps_v1.vl2",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/Classic_maps_v1.vl2",
+            "host_path": "ref/product/base/Classic_maps_v1.vl2",
             "handle": 3774873610,
             "bytes": 44428355,
             "sha256": "1e4104a3c90e2d39ec5b3fd8fc14419824605eb08c4e8fdfbf8e7d5f1d7efd6a",
@@ -69968,7 +69968,7 @@
           },
           {
             "guest_path": "base\\desert.vl2",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/desert.vl2",
+            "host_path": "ref/product/base/desert.vl2",
             "handle": 3774873611,
             "bytes": 20789120,
             "sha256": "46b7e5e8d99d8e2afd32aff906f156d3a3cf25157421c736cc085f9185982c8d",
@@ -69978,7 +69978,7 @@
           },
           {
             "guest_path": "base\\ice.vl2",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/ice.vl2",
+            "host_path": "ref/product/base/ice.vl2",
             "handle": 3774873612,
             "bytes": 15592891,
             "sha256": "cc5963e4c97ade4a98a459b36adcb2a5ae89a7c3ef8debfef5f79972c3ddbe68",
@@ -69988,7 +69988,7 @@
           },
           {
             "guest_path": "base\\interiors.vl2",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/interiors.vl2",
+            "host_path": "ref/product/base/interiors.vl2",
             "handle": 3774873613,
             "bytes": 39255471,
             "sha256": "720d244f14000ecd1e8d06bd21dbefd52871c83cff6dc6947769f541998cac09",
@@ -69998,7 +69998,7 @@
           },
           {
             "guest_path": "base\\lava.vl2",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/lava.vl2",
+            "host_path": "ref/product/base/lava.vl2",
             "handle": 3774873614,
             "bytes": 11160820,
             "sha256": "57fe26876843691ed3a08c288039242c82f45794bd21994d40ff8fb44ebd6bd3",
@@ -70008,7 +70008,7 @@
           },
           {
             "guest_path": "base\\lush.vl2",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/lush.vl2",
+            "host_path": "ref/product/base/lush.vl2",
             "handle": 3774873615,
             "bytes": 20520462,
             "sha256": "42bc2092b63ef16edcdd924c20efa0c93ce08374a82b961279aecbfe8b4f17b9",
@@ -70018,7 +70018,7 @@
           },
           {
             "guest_path": "base\\missions.vl2",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/missions.vl2",
+            "host_path": "ref/product/base/missions.vl2",
             "handle": 3774873616,
             "bytes": 18038192,
             "sha256": "615445283585d0b9befb0bd2af4b68de4f6cbee618d9526645740c7d7f4eb67f",
@@ -70028,7 +70028,7 @@
           },
           {
             "guest_path": "base\\scripts.vl2",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/scripts.vl2",
+            "host_path": "ref/product/base/scripts.vl2",
             "handle": 3774873617,
             "bytes": 4694783,
             "sha256": "610463dbac0cd5e48f7cff775a6f04b23d2e35adc2779e8a00c127b86c530490",
@@ -70038,7 +70038,7 @@
           },
           {
             "guest_path": "base\\shapes.vl2",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/shapes.vl2",
+            "host_path": "ref/product/base/shapes.vl2",
             "handle": 3774873618,
             "bytes": 6275292,
             "sha256": "fdfcc6e06bc22a2e69eb1b7d5dd80beb7092f930985a4757b2351b83e82178d6",
@@ -70048,7 +70048,7 @@
           },
           {
             "guest_path": "base\\skins.vl2",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/skins.vl2",
+            "host_path": "ref/product/base/skins.vl2",
             "handle": 3774873619,
             "bytes": 103436425,
             "sha256": "f600ffd7dbc57067fa2c35d554c9e6d477628d14802e2f0be33c05b7d4d7eff8",
@@ -70058,7 +70058,7 @@
           },
           {
             "guest_path": "base\\t2csri.vl2",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/t2csri.vl2",
+            "host_path": "ref/product/base/t2csri.vl2",
             "handle": 3774873620,
             "bytes": 1318981,
             "sha256": "52762570008d4c3210212867bd9ca92c82b8fa3fc94f3f84736a6058bd53e64e",
@@ -70068,7 +70068,7 @@
           },
           {
             "guest_path": "base\\textures.vl2",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/textures.vl2",
+            "host_path": "ref/product/base/textures.vl2",
             "handle": 3774873621,
             "bytes": 120964025,
             "sha256": "98f3f4670e01862376284f7b205724bb9c5af82eec49c769a78f49e2bd279c7c",
@@ -70078,7 +70078,7 @@
           },
           {
             "guest_path": "base\\TR2final093-extras.vl2",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/TR2final093-extras.vl2",
+            "host_path": "ref/product/base/TR2final093-extras.vl2",
             "handle": 3774873622,
             "bytes": 29615896,
             "sha256": "9a797da1a8421820707169f828d4203917ce9c6eca0907458ac32678ef7cc06a",
@@ -70088,7 +70088,7 @@
           },
           {
             "guest_path": "base\\TR2final105-client.vl2",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/TR2final105-client.vl2",
+            "host_path": "ref/product/base/TR2final105-client.vl2",
             "handle": 3774873623,
             "bytes": 48083952,
             "sha256": "0a389be1d82abaf7f6f77c3a555e85a07648f14d996125a576c51bf7b299175b",
@@ -70098,7 +70098,7 @@
           },
           {
             "guest_path": "base\\TR2final105-server.vl2",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/TR2final105-server.vl2",
+            "host_path": "ref/product/base/TR2final105-server.vl2",
             "handle": 3774873624,
             "bytes": 395371,
             "sha256": "38decdbd54bc5b04875e0988f2b58087416b4fe5972ff9a2453c84dd9830b408",
@@ -70108,7 +70108,7 @@
           },
           {
             "guest_path": "base\\voice.vl2",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/voice.vl2",
+            "host_path": "ref/product/base/voice.vl2",
             "handle": 3774873625,
             "bytes": 57340260,
             "sha256": "db3f10f6194121776be038ebda62addfeac2cdb7bbc65e55a18acb835cb7131e",
@@ -70118,7 +70118,7 @@
           },
           {
             "guest_path": "base\\yHDTextures2.0.vl2",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/yHDTextures2.0.vl2",
+            "host_path": "ref/product/base/yHDTextures2.0.vl2",
             "handle": 3774873626,
             "bytes": 224650286,
             "sha256": "9c54108b2f598010d2f586ab96e748dfe0445dc2f22461df48a2de23e1fea255",
@@ -70128,7 +70128,7 @@
           },
           {
             "guest_path": "base\\zz_Classic_client_v1.vl2",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/zz_Classic_client_v1.vl2",
+            "host_path": "ref/product/base/zz_Classic_client_v1.vl2",
             "handle": 3774873627,
             "bytes": 64316,
             "sha256": "30af043fb104bedac416333407172b18eaabeb54c4a36256b851ba25195011ab",
@@ -70138,7 +70138,7 @@
           },
           {
             "guest_path": "console_start.cs",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/console_start.cs",
+            "host_path": "ref/product/console_start.cs",
             "handle": 3774873628,
             "bytes": 77417,
             "sha256": "412b6c81d9f8459c6d1c42034859422443387b1f92340cc017bd005256e203ae",
@@ -70148,7 +70148,7 @@
           },
           {
             "guest_path": "base\\scripts\\clientDefaults.cs.dso",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/scripts/clientDefaults.cs.dso",
+            "host_path": "ref/product/base/scripts/clientDefaults.cs.dso",
             "handle": 3774873629,
             "bytes": 10917,
             "sha256": "0a4cb26cf2afec607ea38521a4cff4357d0da4788e7f78e39ad4023f8ecd5c18",
@@ -70158,7 +70158,7 @@
           },
           {
             "guest_path": "base\\scripts\\serverDefaults.cs.dso",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/scripts/serverDefaults.cs.dso",
+            "host_path": "ref/product/base/scripts/serverDefaults.cs.dso",
             "handle": 3774873630,
             "bytes": 4767,
             "sha256": "1914d28bed1e3e1ea01dacc7086522d0bb065e74c156127bd8e03cdaadf46fff",
@@ -70168,7 +70168,7 @@
           },
           {
             "guest_path": "base\\prefs\\ClientPrefs.cs",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/prefs/ClientPrefs.cs",
+            "host_path": "ref/product/base/prefs/ClientPrefs.cs",
             "handle": 3774873631,
             "bytes": 11258,
             "sha256": "400cd6c0f127235f9f98f57a119f53bda5a2f75b51aaadeda2950595f566de74",
@@ -70178,7 +70178,7 @@
           },
           {
             "guest_path": "base\\prefs\\ServerPrefs.cs",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/prefs/ServerPrefs.cs",
+            "host_path": "ref/product/base/prefs/ServerPrefs.cs",
             "handle": 3774873632,
             "bytes": 4551,
             "sha256": "52e80d289e53a93f7fbb3e565e4cf3a5542d2bb5e03ef42ee51e0a5320907e4f",
@@ -104709,9 +104709,9 @@
         "clock_samples_replayed": 5,
         "disk_samples_replayed": 1,
         "filesystem_mounts": {
-          "C_root": "/Users/chrissotraidis/GitHub/tribespad/generated/srw/run-20260930T101044-tribes2/va/simulator/bootstrap-D80E9862-C29A-4D69-B8E5-D81D396C17D5/volume",
-          "game": "/Users/chrissotraidis/GitHub/tribespad/ref/product",
-          "temp": "/Users/chrissotraidis/GitHub/tribespad/generated/srw/run-20260930T101044-tribes2/va/simulator/bootstrap-D80E9862-C29A-4D69-B8E5-D81D396C17D5/volume/TribesPad/Temp"
+          "C_root": "generated/srw/run-20260930T101044-tribes2/va/simulator/bootstrap-D80E9862-C29A-4D69-B8E5-D81D396C17D5/volume",
+          "game": "ref/product",
+          "temp": "generated/srw/run-20260930T101044-tribes2/va/simulator/bootstrap-D80E9862-C29A-4D69-B8E5-D81D396C17D5/volume/TribesPad/Temp"
         },
         "disk_external_inputs": [
           [
@@ -110820,7 +110820,7 @@
         "file_open_calls": [
           {
             "guest_path": "base\\audio.vl2",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/audio.vl2",
+            "host_path": "ref/product/base/audio.vl2",
             "handle": 3774873607,
             "bytes": 35233672,
             "sha256": "88668510265840cc65efda854f0064251cd7d23b2ab125c4d911455ac12f3b5c",
@@ -110830,7 +110830,7 @@
           },
           {
             "guest_path": "base\\badlands.vl2",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/badlands.vl2",
+            "host_path": "ref/product/base/badlands.vl2",
             "handle": 3774873608,
             "bytes": 23187002,
             "sha256": "a9f0e351465652433d6a3002f34df552d1f19cad75993fdb354617fd8ebcf8bb",
@@ -110840,7 +110840,7 @@
           },
           {
             "guest_path": "base\\base.vl2",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/base.vl2",
+            "host_path": "ref/product/base/base.vl2",
             "handle": 3774873609,
             "bytes": 530641,
             "sha256": "4576df3c2e7d0af1127f6e21e0d39fa8dcfdb4ce18038ca9f52019d885c18b94",
@@ -110850,7 +110850,7 @@
           },
           {
             "guest_path": "base\\Classic_maps_v1.vl2",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/Classic_maps_v1.vl2",
+            "host_path": "ref/product/base/Classic_maps_v1.vl2",
             "handle": 3774873610,
             "bytes": 44428355,
             "sha256": "1e4104a3c90e2d39ec5b3fd8fc14419824605eb08c4e8fdfbf8e7d5f1d7efd6a",
@@ -110860,7 +110860,7 @@
           },
           {
             "guest_path": "base\\desert.vl2",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/desert.vl2",
+            "host_path": "ref/product/base/desert.vl2",
             "handle": 3774873611,
             "bytes": 20789120,
             "sha256": "46b7e5e8d99d8e2afd32aff906f156d3a3cf25157421c736cc085f9185982c8d",
@@ -110870,7 +110870,7 @@
           },
           {
             "guest_path": "base\\ice.vl2",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/ice.vl2",
+            "host_path": "ref/product/base/ice.vl2",
             "handle": 3774873612,
             "bytes": 15592891,
             "sha256": "cc5963e4c97ade4a98a459b36adcb2a5ae89a7c3ef8debfef5f79972c3ddbe68",
@@ -110880,7 +110880,7 @@
           },
           {
             "guest_path": "base\\interiors.vl2",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/interiors.vl2",
+            "host_path": "ref/product/base/interiors.vl2",
             "handle": 3774873613,
             "bytes": 39255471,
             "sha256": "720d244f14000ecd1e8d06bd21dbefd52871c83cff6dc6947769f541998cac09",
@@ -110890,7 +110890,7 @@
           },
           {
             "guest_path": "base\\lava.vl2",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/lava.vl2",
+            "host_path": "ref/product/base/lava.vl2",
             "handle": 3774873614,
             "bytes": 11160820,
             "sha256": "57fe26876843691ed3a08c288039242c82f45794bd21994d40ff8fb44ebd6bd3",
@@ -110900,7 +110900,7 @@
           },
           {
             "guest_path": "base\\lush.vl2",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/lush.vl2",
+            "host_path": "ref/product/base/lush.vl2",
             "handle": 3774873615,
             "bytes": 20520462,
             "sha256": "42bc2092b63ef16edcdd924c20efa0c93ce08374a82b961279aecbfe8b4f17b9",
@@ -110910,7 +110910,7 @@
           },
           {
             "guest_path": "base\\missions.vl2",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/missions.vl2",
+            "host_path": "ref/product/base/missions.vl2",
             "handle": 3774873616,
             "bytes": 18038192,
             "sha256": "615445283585d0b9befb0bd2af4b68de4f6cbee618d9526645740c7d7f4eb67f",
@@ -110920,7 +110920,7 @@
           },
           {
             "guest_path": "base\\scripts.vl2",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/scripts.vl2",
+            "host_path": "ref/product/base/scripts.vl2",
             "handle": 3774873617,
             "bytes": 4694783,
             "sha256": "610463dbac0cd5e48f7cff775a6f04b23d2e35adc2779e8a00c127b86c530490",
@@ -110930,7 +110930,7 @@
           },
           {
             "guest_path": "base\\shapes.vl2",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/shapes.vl2",
+            "host_path": "ref/product/base/shapes.vl2",
             "handle": 3774873618,
             "bytes": 6275292,
             "sha256": "fdfcc6e06bc22a2e69eb1b7d5dd80beb7092f930985a4757b2351b83e82178d6",
@@ -110940,7 +110940,7 @@
           },
           {
             "guest_path": "base\\skins.vl2",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/skins.vl2",
+            "host_path": "ref/product/base/skins.vl2",
             "handle": 3774873619,
             "bytes": 103436425,
             "sha256": "f600ffd7dbc57067fa2c35d554c9e6d477628d14802e2f0be33c05b7d4d7eff8",
@@ -110950,7 +110950,7 @@
           },
           {
             "guest_path": "base\\t2csri.vl2",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/t2csri.vl2",
+            "host_path": "ref/product/base/t2csri.vl2",
             "handle": 3774873620,
             "bytes": 1318981,
             "sha256": "52762570008d4c3210212867bd9ca92c82b8fa3fc94f3f84736a6058bd53e64e",
@@ -110960,7 +110960,7 @@
           },
           {
             "guest_path": "base\\textures.vl2",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/textures.vl2",
+            "host_path": "ref/product/base/textures.vl2",
             "handle": 3774873621,
             "bytes": 120964025,
             "sha256": "98f3f4670e01862376284f7b205724bb9c5af82eec49c769a78f49e2bd279c7c",
@@ -110970,7 +110970,7 @@
           },
           {
             "guest_path": "base\\TR2final093-extras.vl2",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/TR2final093-extras.vl2",
+            "host_path": "ref/product/base/TR2final093-extras.vl2",
             "handle": 3774873622,
             "bytes": 29615896,
             "sha256": "9a797da1a8421820707169f828d4203917ce9c6eca0907458ac32678ef7cc06a",
@@ -110980,7 +110980,7 @@
           },
           {
             "guest_path": "base\\TR2final105-client.vl2",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/TR2final105-client.vl2",
+            "host_path": "ref/product/base/TR2final105-client.vl2",
             "handle": 3774873623,
             "bytes": 48083952,
             "sha256": "0a389be1d82abaf7f6f77c3a555e85a07648f14d996125a576c51bf7b299175b",
@@ -110990,7 +110990,7 @@
           },
           {
             "guest_path": "base\\TR2final105-server.vl2",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/TR2final105-server.vl2",
+            "host_path": "ref/product/base/TR2final105-server.vl2",
             "handle": 3774873624,
             "bytes": 395371,
             "sha256": "38decdbd54bc5b04875e0988f2b58087416b4fe5972ff9a2453c84dd9830b408",
@@ -111000,7 +111000,7 @@
           },
           {
             "guest_path": "base\\voice.vl2",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/voice.vl2",
+            "host_path": "ref/product/base/voice.vl2",
             "handle": 3774873625,
             "bytes": 57340260,
             "sha256": "db3f10f6194121776be038ebda62addfeac2cdb7bbc65e55a18acb835cb7131e",
@@ -111010,7 +111010,7 @@
           },
           {
             "guest_path": "base\\yHDTextures2.0.vl2",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/yHDTextures2.0.vl2",
+            "host_path": "ref/product/base/yHDTextures2.0.vl2",
             "handle": 3774873626,
             "bytes": 224650286,
             "sha256": "9c54108b2f598010d2f586ab96e748dfe0445dc2f22461df48a2de23e1fea255",
@@ -111020,7 +111020,7 @@
           },
           {
             "guest_path": "base\\zz_Classic_client_v1.vl2",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/zz_Classic_client_v1.vl2",
+            "host_path": "ref/product/base/zz_Classic_client_v1.vl2",
             "handle": 3774873627,
             "bytes": 64316,
             "sha256": "30af043fb104bedac416333407172b18eaabeb54c4a36256b851ba25195011ab",
@@ -111030,7 +111030,7 @@
           },
           {
             "guest_path": "console_start.cs",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/console_start.cs",
+            "host_path": "ref/product/console_start.cs",
             "handle": 3774873628,
             "bytes": 77417,
             "sha256": "412b6c81d9f8459c6d1c42034859422443387b1f92340cc017bd005256e203ae",
@@ -111040,7 +111040,7 @@
           },
           {
             "guest_path": "base\\scripts\\clientDefaults.cs.dso",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/scripts/clientDefaults.cs.dso",
+            "host_path": "ref/product/base/scripts/clientDefaults.cs.dso",
             "handle": 3774873629,
             "bytes": 10917,
             "sha256": "0a4cb26cf2afec607ea38521a4cff4357d0da4788e7f78e39ad4023f8ecd5c18",
@@ -111050,7 +111050,7 @@
           },
           {
             "guest_path": "base\\scripts\\serverDefaults.cs.dso",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/scripts/serverDefaults.cs.dso",
+            "host_path": "ref/product/base/scripts/serverDefaults.cs.dso",
             "handle": 3774873630,
             "bytes": 4767,
             "sha256": "1914d28bed1e3e1ea01dacc7086522d0bb065e74c156127bd8e03cdaadf46fff",
@@ -111060,7 +111060,7 @@
           },
           {
             "guest_path": "base\\prefs\\ClientPrefs.cs",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/prefs/ClientPrefs.cs",
+            "host_path": "ref/product/base/prefs/ClientPrefs.cs",
             "handle": 3774873631,
             "bytes": 11258,
             "sha256": "400cd6c0f127235f9f98f57a119f53bda5a2f75b51aaadeda2950595f566de74",
@@ -111070,7 +111070,7 @@
           },
           {
             "guest_path": "base\\prefs\\ServerPrefs.cs",
-            "host_path": "/Users/chrissotraidis/GitHub/tribespad/ref/product/base/prefs/ServerPrefs.cs",
+            "host_path": "ref/product/base/prefs/ServerPrefs.cs",
             "handle": 3774873632,
             "bytes": 4551,
             "sha256": "52e80d289e53a93f7fbb3e565e4cf3a5542d2bb5e03ef42ee51e0a5320907e4f",
@@ -145601,9 +145601,9 @@
         "clock_samples_replayed": 5,
         "disk_samples_replayed": 1,
         "filesystem_mounts": {
-          "C_root": "/Users/chrissotraidis/GitHub/tribespad/generated/srw/run-20260930T101044-tribes2/va/simulator/bootstrap-7E8E357A-30DD-4EB3-B8C7-83BB555E67B7/volume",
-          "game": "/Users/chrissotraidis/GitHub/tribespad/ref/product",
-          "temp": "/Users/chrissotraidis/GitHub/tribespad/generated/srw/run-20260930T101044-tribes2/va/simulator/bootstrap-7E8E357A-30DD-4EB3-B8C7-83BB555E67B7/volume/TribesPad/Temp"
+          "C_root": "generated/srw/run-20260930T101044-tribes2/va/simulator/bootstrap-7E8E357A-30DD-4EB3-B8C7-83BB555E67B7/volume",
+          "game": "ref/product",
+          "temp": "generated/srw/run-20260930T101044-tribes2/va/simulator/bootstrap-7E8E357A-30DD-4EB3-B8C7-83BB555E67B7/volume/TribesPad/Temp"
         },
         "disk_external_inputs": [
           [
@@ -148583,7 +148583,7 @@
         ],
         "roots": [
           {
-            "root": "/Users/chrissotraidis/GitHub/tribespad/ref/product",
+            "root": "ref/product",
             "entries": 393,
             "names_sha256": "82d8abb0a906c2640d4361a28f4c3240d92e9d74269d2d352122e5481c44fce6",
             "dlls": [
@@ -148675,7 +148675,7 @@
             ]
           },
           {
-            "root": "/Users/chrissotraidis/GitHub/tribespad/generated/qol-initialization/filesystem",
+            "root": "generated/qol-initialization/filesystem",
             "entries": 2,
             "names_sha256": "428e09debfd7f45611feba13111f1b70441bb99c6e3703ca4e84dbb5c20bbb4f",
             "dlls": []
@@ -257145,8 +257145,8 @@
       "whole_engine": {
         "path": "generated/sse/vmovss-lowering-checkpoint-20261001/whole-engine.json",
         "sha256": "5c1dec599a4ed491da8d6d42dedb53cd657dd68839fd83ad1dc46a004899223f",
-        "source_report": "/Users/chrissotraidis/GitHub/tribespad/generated/srw/run-20261001T105359-tribes2/result.json",
-        "instruction_segment": "/Users/chrissotraidis/GitHub/tribespad/generated/srw/run-20261001T105359-tribes2/seg01_code.llinc",
+        "source_report": "generated/srw/run-20261001T105359-tribes2/result.json",
+        "instruction_segment": "generated/srw/run-20261001T105359-tribes2/seg01_code.llinc",
         "bytes": 109387538,
         "sha256_instruction_segment": "f43acf9287139d7ec39995da2a1ac1351142ceca354cee7a545c37279abf92a3",
         "scope": "Strict translation, not relinked full native bootstrap execution"
@@ -257154,7 +257154,7 @@
       "whole_qol": {
         "path": "generated/sse/vmovss-lowering-checkpoint-20261001/whole-qol.json",
         "sha256": "fba85995ddbd957b8a2f31f768a32aef13e96e088712fa4569db833e600a319a",
-        "source_report": "/Users/chrissotraidis/GitHub/tribespad/generated/srw/run-20261001T105359-ifc22/result.json",
+        "source_report": "generated/srw/run-20261001T105359-ifc22/result.json",
         "stderr_path": "generated/sse/vmovss-lowering-checkpoint-20261001/whole-qol-stderr.log",
         "stderr_sha256": "21cc4b749fe563d64ff68db7a9a2b366c2014219d386288eed87f848fe3cad36",
         "first_unsupported": {
@@ -257525,8 +257525,8 @@
       "whole_engine": {
         "path": "generated/sse/vex-scalar-checkpoint-20261001/whole-engine.json",
         "sha256": "bdf73bd1f7fac90d57475a94e0eddaa03167a9e49de2e5258eee976ced85b04b",
-        "source_report": "/Users/chrissotraidis/GitHub/tribespad/generated/srw/run-20261001T111157-tribes2/result.json",
-        "instruction_segment": "/Users/chrissotraidis/GitHub/tribespad/generated/srw/run-20261001T111157-tribes2/seg01_code.llinc",
+        "source_report": "generated/srw/run-20261001T111157-tribes2/result.json",
+        "instruction_segment": "generated/srw/run-20261001T111157-tribes2/seg01_code.llinc",
         "bytes": 109387538,
         "sha256_instruction_segment": "f43acf9287139d7ec39995da2a1ac1351142ceca354cee7a545c37279abf92a3",
         "scope": "Strict whole-engine translation only; no full native bootstrap rerun"
@@ -257534,7 +257534,7 @@
       "whole_qol": {
         "path": "generated/sse/vex-scalar-checkpoint-20261001/whole-qol.json",
         "sha256": "0c945d2a1ae3344de4b2c5fafb57635820f5287e608505ed5e91185b1a03e80e",
-        "source_report": "/Users/chrissotraidis/GitHub/tribespad/generated/srw/run-20261001T111157-ifc22/result.json",
+        "source_report": "generated/srw/run-20261001T111157-ifc22/result.json",
         "stderr_path": "generated/sse/vex-scalar-checkpoint-20261001/whole-qol-stderr.log",
         "stderr_sha256": "47e19eb974805dd3acf9e38fe9c9a1ea0518f4d0ca807697f99d2a7efff20d05",
         "first_unsupported": {
@@ -257826,8 +257826,8 @@
       "whole_engine": {
         "path": "generated/sse/vex-widen-checkpoint-20261001/whole-engine.json",
         "sha256": "c6a15b48fb7424cfb6d9fee3d4a77e63c82ef0e963c9434ccf42aa75aacf9d6e",
-        "source_report": "/Users/chrissotraidis/GitHub/tribespad/generated/srw/run-20261001T112617-tribes2/result.json",
-        "instruction_segment": "/Users/chrissotraidis/GitHub/tribespad/generated/srw/run-20261001T112617-tribes2/seg01_code.llinc",
+        "source_report": "generated/srw/run-20261001T112617-tribes2/result.json",
+        "instruction_segment": "generated/srw/run-20261001T112617-tribes2/seg01_code.llinc",
         "bytes": 109387538,
         "sha256_instruction_segment": "f43acf9287139d7ec39995da2a1ac1351142ceca354cee7a545c37279abf92a3",
         "scope": "Strict translation only; no full native engine bootstrap rerun"
@@ -257835,7 +257835,7 @@
       "whole_qol": {
         "path": "generated/sse/vex-widen-checkpoint-20261001/whole-qol.json",
         "sha256": "d0596eb58677891598650ee10d593ab5f38a5833724ed92bebaca9e7a00c5de9",
-        "source_report": "/Users/chrissotraidis/GitHub/tribespad/generated/srw/run-20261001T112617-ifc22/result.json",
+        "source_report": "generated/srw/run-20261001T112617-ifc22/result.json",
         "stderr_path": "generated/sse/vex-widen-checkpoint-20261001/whole-qol-stderr.log",
         "stderr_sha256": "e5806a0d32fdaa110fa605dc943ad32e36ef29a28f63f789c956517b86e108a3",
         "first_unsupported": {
@@ -258154,8 +258154,8 @@
       "whole_engine": {
         "path": "generated/sse/vex-xor-checkpoint-20261001/whole-engine.json",
         "sha256": "70c5d31803290646563759f5e94698f560e5b767273862b7da479e1832870f48",
-        "source_report": "/Users/chrissotraidis/GitHub/tribespad/generated/srw/run-20261001T114524-tribes2/result.json",
-        "instruction_segment": "/Users/chrissotraidis/GitHub/tribespad/generated/srw/run-20261001T114524-tribes2/seg01_code.llinc",
+        "source_report": "generated/srw/run-20261001T114524-tribes2/result.json",
+        "instruction_segment": "generated/srw/run-20261001T114524-tribes2/seg01_code.llinc",
         "bytes": 109387538,
         "sha256_instruction_segment": "f43acf9287139d7ec39995da2a1ac1351142ceca354cee7a545c37279abf92a3",
         "scope": "Strict translation only; no full native engine bootstrap rerun"
@@ -258163,7 +258163,7 @@
       "whole_qol": {
         "path": "generated/sse/vex-xor-checkpoint-20261001/whole-qol.json",
         "sha256": "3ee731dbbf05dc7e9fe3c04390848c9175487b87fa99d5fea12e1b6c9a6a5161",
-        "source_report": "/Users/chrissotraidis/GitHub/tribespad/generated/srw/run-20261001T114524-ifc22/result.json",
+        "source_report": "generated/srw/run-20261001T114524-ifc22/result.json",
         "stderr_path": "generated/sse/vex-xor-checkpoint-20261001/whole-qol-stderr.log",
         "stderr_sha256": "2699665404f15ccf90121686ccbde6e8fc90576d41005bee708a1b547868ef2c",
         "first_unsupported": {
@@ -272419,9 +272419,9 @@
         "HD rendering, refined playable controls, physical-device acceptance and authenticated community matches"
       ],
       "binary_identity": {
-        "macos": "/Users/chrissotraidis/GitHub/tribespad/generated/import-slot-cmp/macos/native: Mach-O 64-bit executable arm64",
-        "7E8E357A-30DD-4EB3-B8C7-83BB555E67B7": "/Users/chrissotraidis/GitHub/tribespad/generated/import-slot-cmp/7E8E357A-30DD-4EB3-B8C7-83BB555E67B7/native: Mach-O 64-bit executable arm64",
-        "B8138F85-0AE9-4494-9564-EDC7FD4E3B7F": "/Users/chrissotraidis/GitHub/tribespad/generated/import-slot-cmp/B8138F85-0AE9-4494-9564-EDC7FD4E3B7F/native: Mach-O 64-bit executable arm64"
+        "macos": "generated/import-slot-cmp/macos/native: Mach-O 64-bit executable arm64",
+        "7E8E357A-30DD-4EB3-B8C7-83BB555E67B7": "generated/import-slot-cmp/7E8E357A-30DD-4EB3-B8C7-83BB555E67B7/native: Mach-O 64-bit executable arm64",
+        "B8138F85-0AE9-4494-9564-EDC7FD4E3B7F": "generated/import-slot-cmp/B8138F85-0AE9-4494-9564-EDC7FD4E3B7F/native: Mach-O 64-bit executable arm64"
       },
       "decoders": {
         "vsmall-moves-decoder": {

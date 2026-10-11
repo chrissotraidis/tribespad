@@ -30,6 +30,6 @@ for name in ['audio-baseline-reproduction','audio-native-ownership']:
  root=R/'generated/integration-review'/name
  for p in root.iterdir():
   if p.is_file() and p.suffix in ['.json','.log','.c']:add(p)
-for name in ['docs/STATUS.md','docs/PROJECT-REVIEW-2026-10-03.md','docs/EXECUTION-PLAN.md','README.md','config/runtime/sdl-native-ownership.json','scripts/freeze-sdl-native-ownership.py','generated/integration-review/display-immediates-checkpoint-20261003/checkpoint.json']:add(R/name)
+for name in ['docs/archive/STATUS.md','docs/archive/PROJECT-REVIEW-2026-10-03.md','docs/archive/EXECUTION-PLAN.md','README.md','config/runtime/sdl-native-ownership.json','scripts/freeze-sdl-native-ownership.py','generated/integration-review/display-immediates-checkpoint-20261003/checkpoint.json']:add(R/name)
 (out/'checkpoint.json').write_text(json.dumps(dict(passed=True,created_utc=datetime.datetime.now(datetime.timezone.utc).isoformat(),files=files,binary_sha256=d['binary_sha256'],original_audio_return=capture,continuation=d['result'],scope='Real original audio initialization and native component silent playback. SDL TLS is the next import boundary. No original window/map/audio mixing/HD/authenticated multiplayer acceptance.'),indent=2)+'\n')
 print('PASS:',len(files),'source-verified files frozen')

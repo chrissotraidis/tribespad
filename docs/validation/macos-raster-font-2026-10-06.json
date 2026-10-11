@@ -151,9 +151,9 @@
           "-Wextra",
           "-Werror",
           "-c",
-          "/Users/chrissotraidis/GitHub/tribespad/port/apple/font.m",
+          "port/apple/font.m",
           "-o",
-          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/raster-font/mobile-compilation/iphoneos-font.o"
+          "generated/integration-review/raster-font/mobile-compilation/iphoneos-font.o"
         ]
       },
       {
@@ -172,9 +172,9 @@
           "-Wextra",
           "-Werror",
           "-c",
-          "/Users/chrissotraidis/GitHub/tribespad/port/core/gdi_memory.c",
+          "port/core/gdi_memory.c",
           "-o",
-          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/raster-font/mobile-compilation/iphoneos-gdi_memory.o"
+          "generated/integration-review/raster-font/mobile-compilation/iphoneos-gdi_memory.o"
         ]
       },
       {
@@ -193,9 +193,9 @@
           "-Wextra",
           "-Werror",
           "-c",
-          "/Users/chrissotraidis/GitHub/tribespad/port/apple/font.m",
+          "port/apple/font.m",
           "-o",
-          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/raster-font/mobile-compilation/iphonesimulator-font.o"
+          "generated/integration-review/raster-font/mobile-compilation/iphonesimulator-font.o"
         ]
       },
       {
@@ -214,9 +214,9 @@
           "-Wextra",
           "-Werror",
           "-c",
-          "/Users/chrissotraidis/GitHub/tribespad/port/core/gdi_memory.c",
+          "port/core/gdi_memory.c",
           "-o",
-          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/raster-font/mobile-compilation/iphonesimulator-gdi_memory.o"
+          "generated/integration-review/raster-font/mobile-compilation/iphonesimulator-gdi_memory.o"
         ]
       }
     ],

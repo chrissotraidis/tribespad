@@ -33,7 +33,7 @@ evidence=R/'generated/integration-review/curl-threads';c=json.loads((evidence/'w
 for root in [evidence,evidence/'first-perform-capture',R/'generated/integration-review/post-video']:
  for p in root.iterdir():
   if p.is_file() and p.suffix in ['.py','.log','.json','.bin']:add(p)
-for n in ['config/runtime/curl-threads.json','scripts/test-curl-thread-platforms.py','scripts/freeze-curl-threads.py','docs/STATUS.md','docs/EXECUTION-PLAN.md','generated/tools/external-memory-pass/result.json','generated/integration-review/nt-file-checkpoint-20261003/checkpoint.json']:add(R/n)
+for n in ['config/runtime/curl-threads.json','scripts/test-curl-thread-platforms.py','scripts/freeze-curl-threads.py','docs/archive/STATUS.md','docs/archive/EXECUTION-PLAN.md','generated/tools/external-memory-pass/result.json','generated/integration-review/nt-file-checkpoint-20261003/checkpoint.json']:add(R/n)
 report=dict(passed=True,goal_complete=False,created_utc=datetime.datetime.now(datetime.timezone.utc).isoformat(),files=files,continuation_result=d['result'],scope='Curl component threading/HTTPS passes Mac and sole iPad, original perform/cleanup observed without manual thread suspension. Ordinary full launch remains a rejected main code write; another worker schedule stops at byte LOCK CMPXCHG. No response body, original window, HD, gameplay or authenticated match acceptance.')
 (out/'checkpoint.json').write_text(json.dumps(report,indent=2)+'\n')
 for n,h in files.items():assert sha(out/n)==h

@@ -26,7 +26,7 @@ add(analysis,'analysis.json')
 for name in ['bootstrap','result.json','stdout.log','stderr.log','patch-inputs.json','support/result.json','guarded/result.json','guarded/policy.json']:
     add(native/name,'native/'+name)
 for p in sorted(native.glob('*.ll')): add(p,'native/llvm/'+p.name)
-for name in ['tests/qol_native_bootstrap.c','scripts/test-qol-native-bootstrap.py','scripts/analyze-console-animation.py','scripts/freeze-console-animation-capture.py','scripts/console_fade_inputs.py','port/core/guest_memory_checks.c','port/core/guest_memory_checks.h','docs/STATUS.md','docs/EXECUTION-PLAN.md']:
+for name in ['tests/qol_native_bootstrap.c','scripts/test-qol-native-bootstrap.py','scripts/analyze-console-animation.py','scripts/freeze-console-animation-capture.py','scripts/console_fade_inputs.py','port/core/guest_memory_checks.c','port/core/guest_memory_checks.h','docs/archive/STATUS.md','docs/archive/EXECUTION-PLAN.md']:
     add(R/name,'sources/'+name)
 add(R/'generated/integration-review/console-animation-capture.log','capture.log')
 add(R/'generated/integration-review/console-fade-checkpoint-20261003/checkpoint.json','dependencies/console-fade.json')

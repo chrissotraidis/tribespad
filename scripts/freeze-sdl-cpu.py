@@ -39,7 +39,7 @@ assert len(run['registry_events'])==32 and all(e['result']==0 for e in run['regi
 assert run['binary_sha256']==sha(p/'bootstrap') and run['external_build_sha256']==sha(p/'guarded/result.json')
 for n in ['bootstrap','result.json','stdout.log','stderr.log','patch-inputs.json','support/result.json','guarded/result.json','guarded/policy.json']:add(p/n,'continuation/'+n)
 for q in sorted(p.glob('*.ll')):add(q,'continuation/llvm/'+q.name)
-names=['port/core/guest_cpu.c','port/core/guest_cpu.h','port/core/guest_processor_features.c','port/core/guest_processor_features.h','port/llasm-runtime/win32-bindings.json','config/runtime/cpu.json','config/runtime/sdl-cpu-reference.json','scripts/test-sdl-cpu.py','scripts/test-processor-features.py','scripts/gen-win32-bindings.py','scripts/freeze-sdl-cpu.py','tests/sdl_cpu_test.c','tests/fixtures/sdl_cpu_dispatch.c','tests/fixtures/native_enter.ll','docs/STATUS.md']
+names=['port/core/guest_cpu.c','port/core/guest_cpu.h','port/core/guest_processor_features.c','port/core/guest_processor_features.h','port/llasm-runtime/win32-bindings.json','config/runtime/cpu.json','config/runtime/sdl-cpu-reference.json','scripts/test-sdl-cpu.py','scripts/test-processor-features.py','scripts/gen-win32-bindings.py','scripts/freeze-sdl-cpu.py','tests/sdl_cpu_test.c','tests/fixtures/sdl_cpu_dispatch.c','tests/fixtures/native_enter.ll','docs/archive/STATUS.md']
 for n in names:add(R/n,'sources/'+n)
 for row in json.loads((R/'config/runtime/sdl-cpu-reference.json').read_text())['references']:add(R/row['path'],'references/'+pathlib.Path(row['path']).name)
 add(R/'ref/downloads/SDL-release-3.2.18-LICENSE.txt','references/LICENSE.txt')
