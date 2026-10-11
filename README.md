@@ -31,13 +31,14 @@
 ## What is TribesPad?
 
 TribesPad runs the **original Tribes 2 executable and the TribesNEXT / QoL client**
-on Apple devices. It does not use an emulator at play time and is not a remake: the
+on Apple devices. It does not run a CPU emulator and is not a remake: the
 game's x86 code is translated ahead of time into native ARM64, and TribesPad supplies
 the Windows, OpenGL, audio, input and networking services the game expects. The
 original menus, maps, weapons, physics, bots and scripts are all the game's own.
 
-On iPad and iPhone it adds an analog touch layout, gamepad mapping and a small
-TribesPad menu for settings. On Mac it runs as a normal app with mouse and keyboard.
+On iPad it adds an analog touch layout, gamepad mapping and a small TribesPad menu
+for settings; iPhone support is planned. On Mac it runs as a normal app with mouse
+and keyboard.
 
 ## Screenshots
 
@@ -56,6 +57,7 @@ TribesPad menu for settings. On Mac it runs as a normal app with mouse and keybo
 | Can I play it today? | **In the iPad Simulator, yes:** host an offline match with bots and play it by touch at about 30 FPS. The Mac app runs offline matches with mouse and keyboard. There is no installable iPad or iPhone release yet. |
 | Does it work on a real iPad or iPhone? | **Not verified.** The iPad device build compiles, but it has not been installed or played on hardware. The iPhone layout has not been checked. |
 | What has been played? | Offline Katabatic CTF with two bots: spawning, movement, aiming, firing, jets, skiing/jumping, weapon switching, grenades, inventory, an end-of-match map change, and a clean quit. A 30-minute session ran without a crash. |
+| Does it match the original game? | In the one scenario measured so far, yes: a [reference trace](docs/validation/reference-trace-katabatic.json) of the same Katabatic flight is bit-identical to the original Windows game in the air and differs by about 1 cm after landing, where the QoL collision patch applies (the Windows reference ran without QoL). |
 | Online play? | The original server browser lists TribesNEXT community servers on Mac. Joining online matches and account sign-in have not been tested. |
 | Controllers? | One Xbox, PlayStation or MFi extended gamepad maps to the original bindings. Native input tests pass; play with a physical controller is unverified. |
 | Is the game included? | **No.** You need your own Tribes 2 installation and the TribesNEXT client files. See [Game data](#game-data). |
@@ -142,8 +144,8 @@ translated in advance, so code written at run time is never executed.
 
 This differs from decompilation ports, which rebuild readable C source and
 then modify it. TribesPad keeps the original program's behavior instruction for
-instruction, which is what keeps it faithful to the original and compatible
-with TribesNEXT servers.
+instruction, which keeps it faithful to the original and is what should keep it
+compatible with TribesNEXT servers (joining a server is not yet tested).
 
 ## How it works
 
@@ -197,6 +199,7 @@ preparation and validation are covered in the [development guide](docs/DEVELOPME
 - Play with a physical controller
 - Touch layout editor
 - Rebuild the Mac app on the current engine and measure Mac performance
+- Compare with the QoL client on Windows and add jet, weapon and bot scenarios to the reference trace
 - Join TribesNEXT community servers
 - A distributable build
 
@@ -214,6 +217,8 @@ Tribes 2 was developed by Dynamix and published by Sierra. Thanks to the
 [TribesNEXT](https://www.tribesnext.com) community, which keeps the game and its
 servers alive. Touch control design follows HaloPad /
 [ProjectReach](https://github.com/chrissotraidis/projectreach) and SunPad.
+
+The project does not yet have a license; until one is added, all rights are reserved.
 
 TribesPad is an unofficial fan project and is not affiliated with or endorsed by
 the owners of Tribes 2. Report problems in [issues](https://github.com/chrissotraidis/tribespad/issues).
