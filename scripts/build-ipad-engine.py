@@ -177,7 +177,9 @@ command=['clang','-target',target,'-isysroot',sdk,'-O2','-I',str(out),*sdl_flags
 command[1:1]=['-fobjc-arc']
 with (out/'link.log').open('w') as log:subprocess.run(command,stdout=log,stderr=log,check=True)
 identifier='com.tribespad.full-engine.ipad'
-(app/'Info.plist').write_bytes(plistlib.dumps(dict(CFBundleIdentifier=identifier,CFBundleExecutable='TribesPad',CFBundleName='TribesPad',CFBundlePackageType='APPL',CFBundleSupportedPlatforms=['iPhoneOS' if a.platform=='device' else 'iPhoneSimulator'],CFBundleVersion='1',CFBundleShortVersionString='0.1',MinimumOSVersion='16.0',UIDeviceFamily=[2],UIRequiresFullScreen=True,LSRequiresIPhoneOS=True,UIRequiredDeviceCapabilities=['arm64'],NSLocalNetworkUsageDescription='Find and connect to local Tribes 2 games.',UIApplicationSupportsIndirectInputEvents=True,UILaunchScreen={},UISupportedInterfaceOrientations=['UIInterfaceOrientationLandscapeLeft','UIInterfaceOrientationLandscapeRight'])))
+from app_icon import compile_icon
+icon_keys=compile_icon(app,a.platform)
+(app/'Info.plist').write_bytes(plistlib.dumps(dict(**icon_keys,CFBundleDisplayName='TribesPad',CFBundleIdentifier=identifier,CFBundleExecutable='TribesPad',CFBundleName='TribesPad',CFBundlePackageType='APPL',CFBundleSupportedPlatforms=['iPhoneOS' if a.platform=='device' else 'iPhoneSimulator'],CFBundleVersion='1',CFBundleShortVersionString='0.1',MinimumOSVersion='16.0',UIDeviceFamily=[2],UIRequiresFullScreen=True,LSRequiresIPhoneOS=True,UIRequiredDeviceCapabilities=['arm64'],NSLocalNetworkUsageDescription='Find and connect to local Tribes 2 games.',UIApplicationSupportsIndirectInputEvents=True,UILaunchScreen={},UISupportedInterfaceOrientations=['UIInterfaceOrientationLandscapeLeft','UIInterfaceOrientationLandscapeRight'])))
 signing=['--entitlements',str(R/'port/apple/TribesPad.entitlements')] if a.platform=='device' else []
 if a.angle:
  for framework in angle_bundle(app,a.platform):subprocess.run(['codesign','--force','--sign','-',str(framework)],check=True)
