@@ -20,6 +20,8 @@ To package the prepared full-engine build as a signed macOS app:
 open generated/integration-review/macos-engine-app/TribesPad.app
 ```
 
+To update only the app icon of an already packaged Mac app, run `build-macos-engine-app.py --refresh-icon`; it refuses if the packaged engine no longer matches its build record.
+
 This development app depends on the prepared workspace assets and is not a portable distribution. See current status for the host audio workaround and the latest runtime boundary.
 
 The build needs Xcode, the pinned LLVM tools, prepared game inputs, translated images and native dependencies. A clean checkout cannot yet reproduce all of those from a single command: cached SRW baseline acquisition remains a setup gap. [Historical build commands](BUILD-HISTORY.md) are retained for investigation; their older status statements are superseded by the current status.

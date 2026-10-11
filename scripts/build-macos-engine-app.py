@@ -6,7 +6,16 @@ ap=argparse.ArgumentParser();ap.add_argument('--bootstrap-directory',type=pathli
 ap.add_argument('--game-profile',type=pathlib.Path,default=R/'generated/apple-game-profile')
 ap.add_argument('--output-directory',type=pathlib.Path,default=R/'generated/integration-review/macos-engine-app')
 ap.add_argument('--bundle-identifier',default='com.tribespad.original-engine',help='Use a distinct identity for independently launched test profiles')
+ap.add_argument('--refresh-icon',action='store_true',help='Recompile only the app icon, Info.plist and signature of the existing packaged app; its engine must match app-build.json')
 a=ap.parse_args()
+if a.refresh_icon:
+ out=a.output_directory.resolve();app=out/'TribesPad.app';record=json.loads((out/'app-build.json').read_text())
+ engine=app/'Contents/MacOS/TribesPadEngine';assert hashlib.sha256(engine.read_bytes()).hexdigest()==record['signed_engine_sha256'],'engine changed; rebuild the app'
+ from app_icon import compile_icon
+ info=plistlib.loads((app/'Contents/Info.plist').read_bytes());info.update(compile_icon(app/'Contents/Resources','macos',minimum='12.0'))
+ (app/'Contents/Info.plist').write_bytes(plistlib.dumps(info))
+ subprocess.run(['codesign','--force','--sign','-',str(app)],check=True);subprocess.run(['codesign','--verify','--strict',str(app)],check=True)
+ print(app);raise SystemExit
 source=a.bootstrap_directory.resolve();out=a.output_directory.resolve();app=out/'TribesPad.app';bin=app/'Contents/MacOS';bin.mkdir(parents=True,exist_ok=True)
 sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
 meta=json.loads((source/'result.json').read_text());assert meta['state']=='finished' and meta['independent_subpages_enabled'];assert sha(source/'bootstrap')==meta['binary_sha256']
