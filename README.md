@@ -119,6 +119,32 @@ close the game, use **Launch → Quit** in the original menu.
 
 Disconnecting releases the controller's actions, and backgrounding the app releases all controls.
 
+## Recompiled, not decompiled
+
+TribesPad contains no Tribes 2 source code, original or reconstructed. It works
+from the game's shipped Windows machine code:
+
+1. **Input.** The original x86 binaries: `Tribes2.exe`, the TribesNEXT/QoL client
+   DLL and the Miles audio DLL and codec plugins.
+2. **Lift.** Each x86 code block is converted into compiler intermediate code
+   (LLVM IR), one function per original block, keeping the game's exact 32-bit
+   memory layout.
+3. **Compile.** That code is compiled ahead of time to native ARM64 and linked
+   with the TribesPad runtime. Nothing is interpreted or just-in-time compiled
+   while you play.
+
+Around the translated game, TribesPad supplies what Windows and the PC used to:
+the Windows API functions the game calls (files, threads, timers, memory,
+sockets), OpenGL through GL4ES and ANGLE to Metal, exact x87 floating point,
+DirectInput through SDL3, and Miles audio through OpenAL. The QoL client patches
+the engine's code while it runs; each of those patches was captured and
+translated in advance, so code written at run time is never executed.
+
+This differs from decompilation ports, which rebuild readable C source and
+then modify it. TribesPad keeps the original program's behavior instruction for
+instruction, which is what keeps it faithful to the original and compatible
+with TribesNEXT servers.
+
 ## How it works
 
 ```mermaid
@@ -131,9 +157,6 @@ flowchart LR
   B --> G[DirectInput → SDL3<br/>touch, gamepad, keyboard]
 ```
 
-- **Translation, not emulation.** The original game, TribesNEXT/QoL and their plugins are
-  translated to ARM64 before the app is built. The game's runtime code patches map to
-  finite, verified code revisions, so dynamically written x86 is never executed as ARM code.
 - **Memory checks the CPU enforces.** The game's 32-bit address space keeps exact 4 KiB
   Windows page permissions. Pages are protected in hardware, mixed pages are checked in a
   fault handler, and any violation stops the game.
