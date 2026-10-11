@@ -33,10 +33,10 @@
         "target": "arm64-apple-ios16",
         "receipt": "93f53a940978ee5bfa1d0a32b635777f1446cfb13a44b5c47a667f46b406785f",
         "objects": [
-          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/glu-project/mobile-compile/iphoneos/00-guest_sdl_backend.o",
-          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/glu-project/mobile-compile/iphoneos/01-guest_render_job.o",
-          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/glu-project/mobile-compile/iphoneos/02-guest_graphics.o",
-          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/glu-project/mobile-compile/iphoneos/03-graphics-bindings.o"
+          "generated/integration-review/glu-project/mobile-compile/iphoneos/00-guest_sdl_backend.o",
+          "generated/integration-review/glu-project/mobile-compile/iphoneos/01-guest_render_job.o",
+          "generated/integration-review/glu-project/mobile-compile/iphoneos/02-guest_graphics.o",
+          "generated/integration-review/glu-project/mobile-compile/iphoneos/03-graphics-bindings.o"
         ]
       },
       {
@@ -44,10 +44,10 @@
         "target": "arm64-apple-ios16-simulator",
         "receipt": "6b9fa6abfc86b208189c1429a0ecac4abeb493f74c0585a68caad795bfb40f64",
         "objects": [
-          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/glu-project/mobile-compile/iphonesimulator/00-guest_sdl_backend.o",
-          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/glu-project/mobile-compile/iphonesimulator/01-guest_render_job.o",
-          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/glu-project/mobile-compile/iphonesimulator/02-guest_graphics.o",
-          "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/glu-project/mobile-compile/iphonesimulator/03-graphics-bindings.o"
+          "generated/integration-review/glu-project/mobile-compile/iphonesimulator/00-guest_sdl_backend.o",
+          "generated/integration-review/glu-project/mobile-compile/iphonesimulator/01-guest_render_job.o",
+          "generated/integration-review/glu-project/mobile-compile/iphonesimulator/02-guest_graphics.o",
+          "generated/integration-review/glu-project/mobile-compile/iphonesimulator/03-graphics-bindings.o"
         ]
       }
     ],

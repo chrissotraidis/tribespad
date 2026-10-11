@@ -38,7 +38,7 @@ assert len(run['registry_events'])==32 and all(e['result']==0 for e in run['regi
 assert run['binary_sha256']==sha(p/'bootstrap') and run['external_build_sha256']==sha(p/'guarded/result.json')
 for n in ['bootstrap','result.json','stdout.log','stderr.log','patch-inputs.json','support/result.json','guarded/result.json','guarded/policy.json']:add(p/n,'continuation/'+n)
 for q in sorted(p.glob('*.ll')):add(q,'continuation/llvm/'+q.name)
-names=['port/core/guest_display.c','port/core/guest_display.h','port/apple/display.m','port/apple/display.h','port/llasm-runtime/win32-bindings.json','config/runtime/monitor.json','scripts/test-monitor.py','scripts/gen-win32-bindings.py','scripts/test-qol-native-bootstrap.py','scripts/freeze-monitor.py','tests/monitor_test.c','tests/fixtures/monitor_dispatch.c','tests/fixtures/native_enter.ll','tests/guest_display_test.c','tests/qol_native_bootstrap.c','tests/engine_bootstrap.c','docs/STATUS.md']
+names=['port/core/guest_display.c','port/core/guest_display.h','port/apple/display.m','port/apple/display.h','port/llasm-runtime/win32-bindings.json','config/runtime/monitor.json','scripts/test-monitor.py','scripts/gen-win32-bindings.py','scripts/test-qol-native-bootstrap.py','scripts/freeze-monitor.py','tests/monitor_test.c','tests/fixtures/monitor_dispatch.c','tests/fixtures/native_enter.ll','tests/guest_display_test.c','tests/qol_native_bootstrap.c','tests/engine_bootstrap.c','docs/archive/STATUS.md']
 for n in names:add(R/n,'sources/'+n)
 for q in sorted((R/'generated/integration-review').glob('monitor-*.log')):add(q,'logs/'+q.name)
 add(R/'generated/integration-review/scheduling-checkpoint-20261003/checkpoint.json','dependencies/scheduling.json')

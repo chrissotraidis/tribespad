@@ -49,7 +49,7 @@
           "target": "arm64-apple-ios16",
           "receipt": "8912b80980dd88e93dfe2d7c54fd6c54b7700860f7f854139582f9294c8fcf5e",
           "objects": [
-            "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/sdl-audio/worker-mobile-compile/iphoneos/00-guest_sdl_backend.o"
+            "generated/integration-review/sdl-audio/worker-mobile-compile/iphoneos/00-guest_sdl_backend.o"
           ]
         },
         {
@@ -57,7 +57,7 @@
           "target": "arm64-apple-ios16-simulator",
           "receipt": "065c1d826e20cc06d925161e721fa6ca4ad22bdcfa2278a64866bf1c33982c2b",
           "objects": [
-            "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/sdl-audio/worker-mobile-compile/iphonesimulator/00-guest_sdl_backend.o"
+            "generated/integration-review/sdl-audio/worker-mobile-compile/iphonesimulator/00-guest_sdl_backend.o"
           ]
         }
       ],

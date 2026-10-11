@@ -6,8 +6,8 @@
   "public_directory_entries": 33,
   "public_directory_url": "https://www.tribesnext.com/list.json",
   "profile": {
-    "profile": "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/mac-server-browser/game-profile",
-    "source_profile": "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/offline-menu/game-profile",
+    "profile": "generated/integration-review/mac-server-browser/game-profile",
+    "source_profile": "generated/integration-review/offline-menu/game-profile",
     "archive_sha256": "610463dbac0cd5e48f7cff775a6f04b23d2e35adc2779e8a00c127b86c530490",
     "original_script_sha256": "f624fb12dc55faa560792de880d757daeef5bb860ae4e6a5412f54376c1b39a4",
     "script_sha256": "0335daf23dcfcabf68fbbaf693ab6c21124c01a09096ba482353167aaaf3766a",
@@ -17,19 +17,19 @@
     "scope": "Original internet master/server queries enabled in an isolated offline profile; no authentication or game join."
   },
   "app": {
-    "app": "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/mac-server-browser/app/TribesPad.app",
+    "app": "generated/integration-review/mac-server-browser/app/TribesPad.app",
     "original_binary_sha256": "76f6464ac4d83a97a4d4141861cca444c83478fcfae506aedcd0c87b63254ae6",
     "signed_engine_sha256": "01f03c8c04ca7be50b40dbe58f99dbf9ea7c087dd8aca79a2f1498b579e665b2",
     "launcher_sha256": "1eaf5adcb6215ba3582457f94a5b12cc6e9a7c5d779f60e6b5a80b80a8b96ae8",
     "launcher_source_sha256": "81edaa8b3ea2e56aa3f822ea39e0556b67a7a3fdd5ad980874b09804daca632e",
     "arguments": [
-      "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/mac-server-browser/app/TribesPad.app/Contents/MacOS/TribesPadEngine",
-      "/Users/chrissotraidis/GitHub/tribespad/generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/engine.bin",
-      "/Users/chrissotraidis/GitHub/tribespad/generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/qol.bin",
-      "/Users/chrissotraidis/GitHub/tribespad/generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/volume",
-      "/Users/chrissotraidis/GitHub/tribespad/generated/integration-review/mac-server-browser/game-profile",
-      "/Users/chrissotraidis/GitHub/tribespad/generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/volume/TribesPad/Temp",
-      "/Users/chrissotraidis/GitHub/tribespad/generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe",
+      "generated/integration-review/mac-server-browser/app/TribesPad.app/Contents/MacOS/TribesPadEngine",
+      "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/engine.bin",
+      "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/qol.bin",
+      "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/volume",
+      "generated/integration-review/mac-server-browser/game-profile",
+      "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/volume/TribesPad/Temp",
+      "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe",
       "engine"
     ],
     "image_sha256": {

@@ -21,7 +21,7 @@ for p in sorted(analysis.glob('*')):
     if p.is_file():add(p,'analysis/'+p.name)
 for n in ['bootstrap','result.json','stdout.log','stderr.log','patch-inputs.json','support/result.json','guarded/result.json','guarded/policy.json']:add(native/n,'native/'+n)
 for p in sorted(native.glob('*.ll')):add(p,'native/llvm/'+p.name)
-for n in ['tests/qol_native_bootstrap.c','scripts/test-qol-native-bootstrap.py','scripts/analyze-highbyte-compare.py','scripts/freeze-highbyte-compare-capture.py','scripts/console_animation_inputs.py','scripts/patches/srw-tribes.patch','toolchains.lock.json','docs/STATUS.md','docs/EXECUTION-PLAN.md']:add(R/n,'sources/'+n)
+for n in ['tests/qol_native_bootstrap.c','scripts/test-qol-native-bootstrap.py','scripts/analyze-highbyte-compare.py','scripts/freeze-highbyte-compare-capture.py','scripts/console_animation_inputs.py','scripts/patches/srw-tribes.patch','toolchains.lock.json','docs/archive/STATUS.md','docs/archive/EXECUTION-PLAN.md']:add(R/n,'sources/'+n)
 add(R/'generated/tools/SRW-tribes/SR_full_llasm_instr.c','compiler/SR_full_llasm_instr.c')
 add(R/'generated/integration-review/highbyte-compare-capture.log','capture.log')
 add(R/'generated/integration-review/console-animation-publication-20261003/checkpoint.json','dependencies/console-animation.json')

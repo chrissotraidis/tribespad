@@ -49,7 +49,7 @@ else:
  assert sys.argv[1]=='finish' and not (out/'checkpoint.json').exists()
  files=json.loads((out/'proof-files.json').read_text());d=snapshot('continuation')
  assert d['string_patch_publication'] and d['result']['kind']!='string_patch_native_return'
- add(R/'docs/STATUS.md','sources/docs/STATUS.md')
+ add(R/'docs/archive/STATUS.md','sources/docs/archive/STATUS.md')
  add(R/'generated/integration-review/string-native-continuation.log','logs/string-native-continuation.log')
  report=dict(created_utc=datetime.datetime.now(datetime.timezone.utc).isoformat(),passed=True,files=files,native_string_phase_verified=True,continuation_result=d['result'],continuation_exit=d['exit'],continuation_is_boundary_only=True,scope='Seventh finite startup revision executes natively with114 ordered stores and12 intermediate flushes before route activation. Whole phase agrees with original x86 across CPU, permissions and17874944 readable bytes.2352 route checks,215 expected stops; guard tests reject21 ordinary writes; shared writer tests reject20 invalid writes. New bank records remain unpublished. Subsequent startup boundary retained separately. Diagnostic NT probes remain; no app/gameplay/HD/authenticated match acceptance.')
  (out/'checkpoint.json').write_text(json.dumps(report,indent=2)+'\n')

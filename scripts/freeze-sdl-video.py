@@ -36,7 +36,7 @@ for p in evidence.iterdir():
  if p.is_file() and p.suffix in ['.json','.log','.py']:add(p)
 for p in (evidence/'error-recursion').iterdir():
  if p.is_file():add(p)
-for name in ['config/runtime/sdl-video.json','config/runtime/sdl-events.json','scripts/build-sdl-backend.py','scripts/test-sdl-video.py','scripts/test-sdl-error-oom.py','scripts/freeze-sdl-video.py','port/licenses/SDL3-LICENSE.txt','generated/tools/external-memory-pass/result.json','generated/integration-review/read-file-checkpoint-20261003/checkpoint.json','docs/STATUS.md','docs/EXECUTION-PLAN.md']:add(R/name)
+for name in ['config/runtime/sdl-video.json','config/runtime/sdl-events.json','scripts/build-sdl-backend.py','scripts/test-sdl-video.py','scripts/test-sdl-error-oom.py','scripts/freeze-sdl-video.py','port/licenses/SDL3-LICENSE.txt','generated/tools/external-memory-pass/result.json','generated/integration-review/read-file-checkpoint-20261003/checkpoint.json','docs/archive/STATUS.md','docs/archive/EXECUTION-PLAN.md']:add(R/name)
 (out/'checkpoint.json').write_text(json.dumps(dict(passed=True,created_utc=datetime.datetime.now(datetime.timezone.utc).isoformat(),files=files,continuation_exit=d['exit'],continuation_result=d['result'],scope='Native Cocoa/UIKit video initialization with real guest ABI/allocator and Apple lifecycle passes component tests. Ordinary startup still stops at the worker file query. A separately qualified debugger run pauses that worker without returning its service, observes original main VIDEO success, then stops on a protected runtime code patch. No original game window/rendering/control/HD/authenticated multiplayer acceptance.'),indent=2)+'\n')
 for name,h in files.items():assert sha(out/name)==h
 print('PASS:',len(files),'source-verified files frozen')

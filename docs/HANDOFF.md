@@ -6,7 +6,7 @@
 
 On 10 October the MMU-enforced build took offline Katabatic from 6-7 to a steady ~30 FPS in the Simulator, every touch control was played by touch, an end-of-match map cycle and clean quit were verified, and the touch controls, TribesPad menu, app icon and public README were added. All of it is merged to main. No full-engine app or build process was left running.
 
-Start here instead of replaying the enormous checkpoint histories in [STATUS](STATUS.md) and [EXECUTION-PLAN](EXECUTION-PLAN.md). Their old “next,” “blocked,” and live-process statements are historical. The heartbeat's repeated GetQueuedCompletionStatusEx boundary was superseded long ago.
+Start here instead of replaying the enormous checkpoint histories in [STATUS](archive/STATUS.md) and [EXECUTION-PLAN](archive/EXECUTION-PLAN.md). Their old “next,” “blocked,” and live-process statements are historical. The heartbeat's repeated GetQueuedCompletionStatusEx boundary was superseded long ago.
 
 **Current human test scope: offline bot matches and server discovery only. Do not join public matches, register accounts or authenticate automatically.** The [PRD](Tribes2-Online-HD-Target.md) describes the broader online/HD product target; it does not override the user's later restriction. Online acceptance remains deferred and unverified, rather than silently satisfied by discovery.
 
@@ -54,7 +54,7 @@ Key evidence, each with its own limitations:
 
 **What remains:** about 14% of the game thread waits in the original QoL frame-latency fence (`glClientWaitSync` on the previous frame), which looks GPU/Simulator bound and is intentionally unchanged. CPU time is now spread across real emulation work: x87 arithmetic in SoftFloat/Bochs (~14%), remaining hand-written software brackets in the GL staging path and SDL bridge (~10%), translated code and helpers. Physical-iPad frame rate and touch-driven play are still unmeasured for this build.
 
-Rejected along the way, with evidence: inline grouped checks ([patch](experiments/inline-grouped-guard-rejected.patch); no FPS change, code size doubled), sticky readers (slower in isolation), GL4ES batching (`LIBGL_BATCH`, no change).
+Rejected along the way, with evidence: inline grouped checks ([patch](archive/experiments/inline-grouped-guard-rejected.patch); no FPS change, code size doubled), sticky readers (slower in isolation), GL4ES batching (`LIBGL_BATCH`, no change).
 
 ## Architecture and code map
 
@@ -82,7 +82,7 @@ The last gameplay-validated runtime is **`d73c01c`** ("Vectorize checked MMX ari
 | `ef4d47b` | Original iPad worker/DLL shutdown completes |
 | `967e053`, `33154f5`, `52ee95b` | WAV/MP3 repair, x87 fog-store repair, inventory touch/keyboard routing |
 
-Archived, unshipped experiments: [inline-grouped-guard-rejected.patch](experiments/inline-grouped-guard-rejected.patch) (rejected above) and [guest-page-census-diagnostic.patch](experiments/guest-page-census-diagnostic.patch) (opt-in counter used for the census). Earlier require-inlining, single-page shortcuts, grouped-continuation, cold/noinline reader paths and sticky readers also lacked whole-game gains.
+Archived, unshipped experiments: [inline-grouped-guard-rejected.patch](archive/experiments/inline-grouped-guard-rejected.patch) (rejected above) and [guest-page-census-diagnostic.patch](archive/experiments/guest-page-census-diagnostic.patch) (opt-in counter used for the census). Earlier require-inlining, single-page shortcuts, grouped-continuation, cold/noinline reader paths and sticky readers also lacked whole-game gains.
 
 **Repeatable offline route without clicking:** at the original menu, press the grave/tilde key to open the game console, type `LaunchGame("Host");` and Return, toggle the console off and on (the HOST pane takes keyboard focus), then type `tryToStartHostedGame();` and Return. These are the original script functions behind LAN GAME and START GAME; saved prefs select Katabatic, Capture the Flag and two bots. Close the console before timing.
 
@@ -97,7 +97,7 @@ Archived, unshipped experiments: [inline-grouped-guard-rejected.patch](experimen
 
 ## Build and workspace handoff
 
-Workspace: `/Users/chrissotraidis/GitHub/tribespad`. **Do not delete it after pulling GitHub.** At wrap-up, ignored `ref/` was about 3.7 GB and `generated/` about 250 GB. Git contains source, input manifests and selected validation evidence, not the game assets, complete translated inputs, native dependencies or all logs. A fresh clone is not currently a one-command reproducible build. Do not commit those ignored directories wholesale.
+Workspace: `~/GitHub/tribespad`. **Do not delete it after pulling GitHub.** At wrap-up, ignored `ref/` was about 3.7 GB and `generated/` about 250 GB. Git contains source, input manifests and selected validation evidence, not the game assets, complete translated inputs, native dependencies or all logs. A fresh clone is not currently a one-command reproducible build. Do not commit those ignored directories wholesale.
 
 Prepared baseline used by the full build: `generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe`. Preserve it until a clean reproduction succeeds. Local Python is `.venv/bin/python`; pinned LLVM was `/opt/homebrew/Cellar/llvm@20/20.1.8/bin`. Xcode SDK 26.5 was used; accidentally selecting the Command Line Tools SDK 27 previously caused TAPI incompatibilities. Component tests that link for macOS need both `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer` and `SDKROOT="$(xcrun --sdk macosx --show-sdk-path)"`; otherwise `clang` still picks the Command Line Tools SDK and fails with a TAPI error. A change to `guest_memory_checks.c` or `ExternalMemoryPass.cpp` invalidates eleven receipts the iPad builder checks; rerun cpu-host-checks, host-local-checks, native-cpu-checks, sse-host-locals, x87-host-checks, mobile-gpu-timing, code-revision (both modes), mobile-gpu-sync, sdl-io, guest-threads and guest-access-groups (about two minutes).
 

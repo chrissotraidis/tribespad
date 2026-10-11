@@ -24,7 +24,7 @@ for n,h in data['inputs_sha256'].items():assert sha(R/n)==h,n
 add(analysis,'analysis.json')
 for name in ['bootstrap','result.json','stdout.log','stderr.log','patch-inputs.json','support/result.json','guarded/result.json','guarded/policy.json']:add(native/name,'continuation/'+name)
 for p in sorted(native.glob('*.ll')):add(p,'continuation/llvm/'+p.name)
-for name in ['tests/qol_native_bootstrap.c','scripts/test-qol-native-bootstrap.py','scripts/analyze-console-patch.py','scripts/freeze-console-patch-capture.py','port/core/guest_memory_checks.c','port/core/guest_memory_checks.h','docs/STATUS.md']:add(R/name,'sources/'+name)
+for name in ['tests/qol_native_bootstrap.c','scripts/test-qol-native-bootstrap.py','scripts/analyze-console-patch.py','scripts/freeze-console-patch-capture.py','port/core/guest_memory_checks.c','port/core/guest_memory_checks.h','docs/archive/STATUS.md']:add(R/name,'sources/'+name)
 add(R/'generated/integration-review/console-patch-capture.log','capture.log')
 add(R/'generated/integration-review/monitor-checkpoint-20261003/checkpoint.json','dependencies/monitor.json')
 table=json.loads((native/'console-patch-pages.json').read_text())

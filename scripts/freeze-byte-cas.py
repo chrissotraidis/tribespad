@@ -28,7 +28,7 @@ assert t['preparation_sha256']==sha(prefix/'preparation.json');sources(p,'inputs
 for report in [p,t]:
  for n,h in report['outputs_sha256'].items():binary(prefix/n,h)
 add(prefix/'preparation.json');add(prefix/'test-result.json')
-for n in ['scripts/freeze-byte-cas.py','config/runtime/locked-cmpxchg-byte.json','port/llasm-support/tribes_atomic.llinc','generated/tools/SRW-tribes/tribes-build.json','scripts/build-tribes-lifter.py','scripts/update-lifter-patch.py','generated/tools/external-memory-pass/result.json','generated/integration-review/curl-threads-checkpoint-20261003/checkpoint.json','docs/STATUS.md','docs/EXECUTION-PLAN.md']:add(R/n)
+for n in ['scripts/freeze-byte-cas.py','config/runtime/locked-cmpxchg-byte.json','port/llasm-support/tribes_atomic.llinc','generated/tools/SRW-tribes/tribes-build.json','scripts/build-tribes-lifter.py','scripts/update-lifter-patch.py','generated/tools/external-memory-pass/result.json','generated/integration-review/curl-threads-checkpoint-20261003/checkpoint.json','docs/archive/STATUS.md','docs/archive/EXECUTION-PLAN.md']:add(R/n)
 report=dict(passed=True,goal_complete=False,created_utc=datetime.datetime.now(datetime.timezone.utc).isoformat(),files=files,continuation_result=d['result'],scope='Byte atomic verified in components and actual original worker. Full launch remains a rejected main code store. Two candidate post-video blocks validated but unpublished; no14th revision or gameplay acceptance.')
 (out/'checkpoint.json').write_text(json.dumps(report,indent=2)+'\n')
 for n,h in files.items():assert sha(out/n)==h

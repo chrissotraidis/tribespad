@@ -4,7 +4,7 @@ Tribes 2 build 25034 on iPad, iPhone and macOS, targeting the existing TribesNEX
 
 **This is an early port, not a playable client yet.** The current Apple app is explicitly an engine integration diagnostic. It runs two translated original game routines, exercises native controls, and can probe live community servers. Whole-game rendering, authentication and joining matches remain unfinished.
 
-The product target is [the PRD](docs/Tribes2-Online-HD-Target.md). The current [execution plan](docs/EXECUTION-PLAN.md) prioritizes integrated engine/module startup, original menus and maps, HD rendering, then authenticated multiplayer and physical Apple acceptance. [STATUS](docs/STATUS.md) retains component evidence; instruction test counts do not establish a playable build.
+The product target is [the PRD](../Tribes2-Online-HD-Target.md). The current [execution plan](EXECUTION-PLAN.md) prioritizes integrated engine/module startup, original menus and maps, HD rendering, then authenticated multiplayer and physical Apple acceptance. [STATUS](STATUS.md) retains component evidence; instruction test counts do not establish a playable build.
 
 ## Build
 

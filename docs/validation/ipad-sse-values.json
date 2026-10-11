@@ -152,7 +152,7 @@
       "exit": 0,
       "frames": 231,
       "video_seconds": 29.828333,
-      "output": "Note: No display specified. Defaulting to display: 1E7E3028-03E7-4057-9D8B-E555C7AA69BE (screenID: 1, name: LCD)\nRecording started\nRecording completed. Writing to disk.\n\nWrote video to: /Users/chrissotraidis/GitHub/tribespad/generated/integration-review/sse-value-results/observer.mov\n",
+      "output": "Note: No display specified. Defaulting to display: 1E7E3028-03E7-4057-9D8B-E555C7AA69BE (screenID: 1, name: LCD)\nRecording started\nRecording completed. Writing to disk.\n\nWrote video to: generated/integration-review/sse-value-results/observer.mov\n",
       "scope": "Offline Katabatic, two bots, audio enabled; no builds, debugger or sampler during recording.",
       "presented_fps": 7.744314776155945
     },
@@ -162,7 +162,7 @@
       "exit": 0,
       "frames": 200,
       "video_seconds": 29.628333,
-      "output": "Note: No display specified. Defaulting to display: 1E7E3028-03E7-4057-9D8B-E555C7AA69BE (screenID: 1, name: LCD)\nRecording started\nRecording completed. Writing to disk.\n\nWrote video to: /Users/chrissotraidis/GitHub/tribespad/generated/integration-review/sse-value-results/player.mov\n",
+      "output": "Note: No display specified. Defaulting to display: 1E7E3028-03E7-4057-9D8B-E555C7AA69BE (screenID: 1, name: LCD)\nRecording started\nRecording completed. Writing to disk.\n\nWrote video to: generated/integration-review/sse-value-results/player.mov\n",
       "scope": "Offline Katabatic, two bots, audio enabled; no builds, debugger or sampler during recording.",
       "presented_fps": 6.750295401364633
     }
