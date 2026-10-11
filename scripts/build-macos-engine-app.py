@@ -32,7 +32,9 @@ header=out/'macos-engine-launch-config.h'
 header.write_text('static const char *launch_workdir='+json.dumps(str(R))+';\nstatic char *launch_arguments[]={'+','.join(json.dumps(p) for p in args)+',NULL};\n'+''.join('static const char *launch_'+name+'='+json.dumps(str(out/file))+';\n' for name,file in [('stdout','app-stdout.log'),('stderr','app-stderr.log'),('pid','app.pid')]))
 sdk=subprocess.check_output(['xcrun','--sdk','macosx','--show-sdk-path'],text=True).strip()
 subprocess.run(['xcrun','clang','-target','arm64-apple-macos12','-isysroot',sdk,'-O2','-Wall','-Wextra','-Werror','-I',str(out),str(R/'port/apple/macos_engine_launcher.c'),'-o',str(bin/'TribesPad')],check=True)
-(app/'Contents/Info.plist').write_bytes(plistlib.dumps(dict(CFBundleIdentifier=a.bundle_identifier,CFBundleExecutable='TribesPad',CFBundleName='TribesPad',CFBundleDisplayName='TribesPad',CFBundlePackageType='APPL',CFBundleVersion='1',CFBundleShortVersionString='0.1',LSMinimumSystemVersion='12.0',NSHighResolutionCapable=True,NSMicrophoneUsageDescription='TribesPad uses microphone input for the original Tribes 2 voice chat.')))
+from app_icon import compile_icon
+icon_keys=compile_icon(app/'Contents/Resources','macos',minimum='12.0')
+(app/'Contents/Info.plist').write_bytes(plistlib.dumps(dict(**icon_keys,CFBundleIdentifier=a.bundle_identifier,CFBundleExecutable='TribesPad',CFBundleName='TribesPad',CFBundleDisplayName='TribesPad',CFBundlePackageType='APPL',CFBundleVersion='1',CFBundleShortVersionString='0.1',LSMinimumSystemVersion='12.0',NSHighResolutionCapable=True,NSMicrophoneUsageDescription='TribesPad uses microphone input for the original Tribes 2 voice chat.')))
 subprocess.run(['codesign','--force','--sign','-',str(engine)],check=True)
 subprocess.run(['codesign','--force','--sign','-',str(app)],check=True)
 subprocess.run(['codesign','--verify','--strict','--verbose=2',str(app)],check=True)
