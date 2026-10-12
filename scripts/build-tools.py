@@ -7,8 +7,10 @@
   generated/tools/*-pass     TribesPad's LLVM 20 passes (Homebrew llvm@20)
 
 Source identities are checked against toolchains.lock.json. Compiled binaries
-can differ between Xcode versions, so tools-build.json records this machine's
-binaries; the translation stage later checks the lifter output itself.
+embed this Mac's paths and OS version, so after a successful build from the
+locked sources their digests are recorded as this checkout's lifter identity
+in toolchains.lock.json ("artifacts"). The translation stage then checks the
+lifter's output against the recorded bases, which is what matters.
 
 Usage: scripts/build-tools.py
 """
@@ -77,14 +79,13 @@ def main():
         if not (TOOLS / name / 'result.json').exists():
             say('building ' + name)
             run([sys.executable, R / ('scripts/build-%s.py' % name)])
-    record = {
-        'base_sources': LOCK['tribes_extensions']['base_sources'],
-        'artifacts': {'SRW/SRW.exe': sha256(srw / 'SRW.exe'), 'llasm/llasm': sha256(tool / 'llasm'),
-                      'SRW-tribes/SRW.exe': sha256(tribes / 'SRW.exe')},
-        'clang': subprocess.check_output(['clang', '--version'], text=True),
-        'sdk': subprocess.check_output(['xcrun', '--sdk', 'macosx', '--show-sdk-build-version'], text=True).strip(),
-    }
-    (TOOLS / 'tools-build.json').write_text(json.dumps(record, indent=2) + '\n')
+    artifacts = {'SRW/SRW.exe': sha256(srw / 'SRW.exe'), 'llasm/llasm': sha256(tool / 'llasm')}
+    if artifacts != LOCK['artifacts']:
+        LOCK['artifacts'] = artifacts
+        LOCK['halopad_build_manifest']['artifacts'] = artifacts
+        LOCK['validation'] = 'Lifter built on this Mac from the locked sources by scripts/build-tools.py.'
+        (R / 'toolchains.lock.json').write_text(json.dumps(LOCK, indent=2) + '\n')
+        say('recorded this Mac\'s lifter build in toolchains.lock.json')
     say('tools ready')
 
 if __name__ == '__main__':
