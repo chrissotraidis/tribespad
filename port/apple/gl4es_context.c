@@ -12,6 +12,10 @@
 #include "gl/framebuffers.h"
 #include "glx/hardext.h"
 #include <pthread.h>
+#include <TargetConditionals.h>
+#if TARGET_OS_IPHONE
+#include "content_area.h"
+#endif
 #include <stdatomic.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -348,7 +352,11 @@ static void *native_proc(const char *name) {
 }
 static void framebuffer_size(int *width, int *height) {
     SDL_Window *window=SDL_GL_GetCurrentWindow();
+#if TARGET_OS_IPHONE
+    if (!window || !tb_content_pixels(window,width,height)) abort();
+#else
     if (!window || !SDL_GetWindowSizeInPixels(window,width,height)) abort();
+#endif
 }
 
 void tribes_gl4es_context_activate(TribesGL4ESContext *context) {

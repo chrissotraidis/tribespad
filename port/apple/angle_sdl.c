@@ -7,6 +7,10 @@
 #include <EGL/eglext.h>
 #include <EGL/eglext_angle.h>
 #include <pthread.h>
+#include <TargetConditionals.h>
+#if TARGET_OS_IPHONE
+#include "content_area.h"
+#endif
 #include <stdlib.h>
 
 typedef struct Surface {SDL_Window *window;SDL_MetalView view;EGLSurface egl;unsigned refs;struct Surface *next;} Surface;
@@ -42,7 +46,12 @@ SDL_GLContext tribes_angle_create_context(SDL_Window *window){
  if(!s){
   s=calloc(1,sizeof *s);if(!s){SDL_OutOfMemory();return NULL;}s->window=window;s->view=SDL_Metal_CreateView(window);
   if(!s->view){free(s);return NULL;}
-  s->egl=eglCreateWindowSurface(display,config,(EGLNativeWindowType)SDL_Metal_GetLayer(s->view),NULL);
+#if TARGET_OS_IPHONE
+  void *layer=tb_content_layer(s->view);
+#else
+  void *layer=SDL_Metal_GetLayer(s->view);
+#endif
+  s->egl=eglCreateWindowSurface(display,config,(EGLNativeWindowType)layer,NULL);
   if(s->egl==EGL_NO_SURFACE){failure("create Metal surface");SDL_Metal_DestroyView(s->view);free(s);return NULL;}
   s->next=surfaces;surfaces=s;
  }

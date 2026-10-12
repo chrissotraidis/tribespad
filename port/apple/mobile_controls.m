@@ -411,7 +411,10 @@ static UIButton *tb_round_button(NSString *symbol,NSString *label,id target,SEL 
     CGRect pack=CGRectMake(CGRectGetMinX(stickFrame)+stick*.05,CGRectGetMinY(stickFrame)-small-14*k,small,small);
     CGRect inventory=CGRectOffset(pack,small+12*k,0);
     // Fire bottom right with Jet, Jump, Grenade and Weapon in an even quarter ring.
-    CGFloat fire=112*k,ring=68*k,fireX=x+w-margin-fire/2,fireY=y+h-margin-fire/2;
+    // Phones show the game's weapon column at the safe-area edge, wider than
+    // the margin at their HUD scale; keep the right-hand cluster clear of it.
+    CGFloat column=(!TB_LEFT_HANDED&&(self.window.safeAreaInsets.left>0||self.window.safeAreaInsets.right>0))?26:0;
+    CGFloat fire=112*k,ring=68*k,fireX=x+w-margin-column-fire/2,fireY=y+h-margin-fire/2;
     CGFloat spacing=ring+12*k,radius=fmax(fire/2+ring/2+12*k,spacing/(2*sin(M_PI/12)));
     CGRect fireFrame=CGRectMake(fireX-fire/2,fireY-fire/2,fire,fire);
     CGRect ringFrames[4];
