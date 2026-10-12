@@ -154,7 +154,7 @@ static uint32_t path_error(uint64_t base,const char *guest,int native_error) {
    CREATE_ALWAYS/OPEN_ALWAYS support writable regular files with default security. Other creation
    dispositions, overlapped/device flags and templates remain gates. */
 static uint32_t create_file(uint64_t base,uint32_t name,uint32_t access,uint32_t share,uint32_t security,uint32_t creation,uint32_t flags,uint32_t template_handle,int wide){
-    if((creation!=3&&creation!=2&&creation!=4)||template_handle||(flags&~UINT32_C(0x0a200080))||(access&~UINT32_C(0xc0010180))){fprintf(stderr,"TribesPad: unsupported CreateFile access/creation/flags/template\n");abort();}
+    if((creation!=3&&creation!=2&&creation!=4)||template_handle||(flags&~UINT32_C(0x0a200080))||(access&~UINT32_C(0xc0010180))){fprintf(stderr,"TribesPad: unsupported CreateFile access=0x%x creation=%u flags=0x%x template=0x%x\n",access,creation,flags,template_handle);abort();}
     if(share&~7u||!name){tribes_set_last_error(87);return UINT32_MAX;}
     /* SECURITY_ATTRIBUTES has three 32-bit fields in the guest ABI. For
        OPEN_EXISTING the descriptor pointer is ignored, even when non-NULL;
