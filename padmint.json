@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "id": "tribespad",
+  "name": "TribesPad",
+  "game": "Tribes 2 (free official release) with the TribesNEXT client",
+  "kind": "disc-translation",
+  "status": "draft-untested",
+  "inputs": [
+    {
+      "type": "official-download",
+      "formats": [],
+      "when": "in-app",
+      "description": "Nothing to select. The build downloads the free official Tribes 2 installer and the TribesNEXT client and checks both by SHA-256; the game is included in your app."
+    }
+  ],
+  "targets": {
+    "ios": {
+      "hosts": {
+        "macos-arm64": "experimental"
+      },
+      "output": "ipa",
+      "check": "ipa",
+      "steps": [
+        {
+          "stage": "build",
+          "command": [
+            "{repo}/scripts/build-tribespad.sh",
+            "--platform",
+            "device",
+            "--output",
+            "{work}",
+            "--ipa",
+            "{output}"
+          ]
+        }
+      ]
+    }
+  },
+  "requirements": {
+    "disk_gb": 40,
+    "tools": [
+      {
+        "name": "xcodebuild",
+        "version_args": [
+          "-version"
+        ],
+        "player": true,
+        "note": "Install Xcode from the Mac App Store, open it once, and add the iOS platform."
+      },
+      {
+        "name": "/opt/homebrew/Cellar/llvm@20/20.1.8/bin/clang",
+        "version_args": [
+          "--version"
+        ],
+        "player": true,
+        "note": "brew install llvm@20 cmake ninja sevenzip zstd"
+      },
+      {
+        "name": "cmake",
+        "version_args": [
+          "--version"
+        ],
+        "player": true,
+        "note": "brew install llvm@20 cmake ninja sevenzip zstd"
+      },
+      {
+        "name": "ninja",
+        "version_args": [
+          "--version"
+        ],
+        "player": true,
+        "note": "brew install llvm@20 cmake ninja sevenzip zstd"
+      },
+      {
+        "name": "7zz",
+        "version_args": [],
+        "player": true,
+        "note": "brew install llvm@20 cmake ninja sevenzip zstd"
+      },
+      {
+        "name": "zstd",
+        "version_args": [
+          "--version"
+        ],
+        "player": true,
+        "note": "brew install llvm@20 cmake ninja sevenzip zstd"
+      }
+    ]
+  },
+  "publication": {
+    "public_binaries": false,
+    "reason": "Personal builds contain translated game code and the game's data."
+  }
+}

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Build TribesPad on an Apple Silicon Mac from the official free downloads.
 #
-#   scripts/build-tribespad.sh [--platform device|simulator] [--output DIR]
+#   scripts/build-tribespad.sh [--platform device|simulator] [--output DIR] [--ipa FILE]
 #
 # Downloads Tribes 2 and the TribesNEXT client, the pinned open-source
 # dependencies and tools, translates the game on this Mac and builds the app.
@@ -12,10 +12,12 @@ set -euo pipefail
 
 platform=device
 output=
+ipa=
 while [ $# -gt 0 ]; do
   case "$1" in
     --platform) platform="$2"; shift 2 ;;
     --output) output="$2"; shift 2 ;;
+    --ipa) ipa="$2"; shift 2 ;;
     -h|--help) sed -n '2,10p' "$0"; exit 0 ;;
     *) echo "unknown option: $1" >&2; exit 2 ;;
   esac
@@ -27,6 +29,8 @@ cd "$repo"
 output="${output:-$repo/build/output}"
 mkdir -p "$output"
 output="$(cd "$output" && pwd)"
+ipa="${ipa:-$output/TribesPad.ipa}"
+case "$ipa" in /*) ;; *) ipa="$PWD/$ipa" ;; esac
 
 step() { printf '\n==> %s\n' "$*"; }
 fail() { printf 'build-tribespad: %s\n' "$*" >&2; exit 1; }
@@ -97,8 +101,9 @@ if [ "$platform" = device ]; then
   stage="$(mktemp -d)"
   mkdir "$stage/Payload"
   ditto "$app" "$stage/Payload/TribesPad.app"
-  (cd "$stage" && zip -qry "$output/TribesPad.ipa" Payload)
-  printf '\nBuilt %s\nSign it with your own Apple account to install it (README: Install on iPhone or iPad).\n' "$output/TribesPad.ipa"
+  mkdir -p "$(dirname "$ipa")"
+  (cd "$stage" && zip -qry "$ipa" Payload)
+  printf '\nBuilt %s\nSign it with your own Apple account to install it (README: Install on iPhone or iPad).\n' "$ipa"
 else
   ditto "$app" "$output/TribesPad.app"
   printf '\nBuilt %s for the iOS Simulator.\n' "$output/TribesPad.app"

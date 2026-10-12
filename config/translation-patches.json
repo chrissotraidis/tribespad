@@ -197,6 +197,12 @@
    "patch": "d890a01ac110b5b9.zst"
   },
   {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/allocation_patch_publication.inc",
+   "sha256": "1e3bfec279bd5d6b1003ceddf703ec8ba0b4f43a947498ed5f27467debfe1e2c",
+   "base": "ifc22/module.ll",
+   "patch": "8157df13950659b0.zst"
+  },
+  {
    "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/audio-hooks-bank.ll",
    "sha256": "24a568de78e0a303ea856865a03cce08f81d4d190ec8a865ea1a58727cbd6206",
    "base": "ifc22/module.ll",
@@ -221,16 +227,46 @@
    "patch": "c8a30abde5f3d2be.zst"
   },
   {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/audio_hook_publication.inc",
+   "sha256": "cea65fb2fc2cc3d03001d9173f6f29aa3d82644cd51c7d57728f2fad00533a9c",
+   "base": "ifc22/module.ll",
+   "patch": "c7b4af54161ce35a.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/audio_tables_publication.inc",
+   "sha256": "4015b718af0ec01df2dbbf0d14313734a8004a753987d5b1f228f4cb67607c5f",
+   "base": "ifc22/module.ll",
+   "patch": "1c29711f15445901.zst"
+  },
+  {
    "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/clock-patch-engine.ll",
    "sha256": "bed9639dfac98a72776557f518876cdcdbca7ca64d712b7bd21956c7da83ca77",
    "base": "tribes2/engine.ll",
    "patch": "09c29844b7b39ff6.zst"
   },
   {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/clock_patch_publication.inc",
+   "sha256": "1db0650b608941aa83fcd44cb985dcfe76c557d93c6875cbdbd78c7a09655f5a",
+   "base": "ifc22/module.ll",
+   "patch": "1ebaee03f8a33b82.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/codec_bootstrap.inc",
+   "sha256": "1f0ed005451110fa2535bc8e3b436784236335719dbd089804fe8b81baa9c834",
+   "base": "ifc22/module.ll",
+   "patch": "8f5c0f6f6dfb786b.zst"
+  },
+  {
    "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/collision-patch-engine.ll",
    "sha256": "fa0545d4819117f98f8e5406c45e8798c9c8b1544153167360869d2a96c65952",
    "base": "tribes2/engine.ll",
    "patch": "c31fa12ec48166f1.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/collision_patch_publication.inc",
+   "sha256": "e0669015f0628a5330ee138421dd0eb1fd3b15d0267a6fa3646bee5f5b5017fa",
+   "base": "ifc22/module.ll",
+   "patch": "089e5fec70c32556.zst"
   },
   {
    "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/console-animation-engine.ll",
@@ -243,6 +279,18 @@
    "sha256": "a6056d27638336c0c412f0dea20337ce83150951fc5430077969271b582d6ed9",
    "base": "tribes2/engine.ll",
    "patch": "36b3b43262b506cc.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/console_animation_publication.inc",
+   "sha256": "e34fb0733b2e8ba635d473e786e7ed8c029add7473a06364c4190aabf0570845",
+   "base": "ifc22/module.ll",
+   "patch": "fb4c9d1e31ee5262.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/console_fade_publication.inc",
+   "sha256": "8012d6f830f3aaa89712983acc84e75b42a78691d4e059b58ab88f0a59fee36d",
+   "base": "ifc22/module.ll",
+   "patch": "79a829dfa9af8763.zst"
   },
   {
    "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/cross-imports.ll",
@@ -263,10 +311,22 @@
    "patch": "3f4e4e0267ddf419.zst"
   },
   {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/display_immediates_publication.inc",
+   "sha256": "5a6ca679734852a917a3c1c553a8f5f5e5116c9a085797f6867cd6cae57cef8f",
+   "base": "ifc22/module.ll",
+   "patch": "2e0c59e92c845ee6.zst"
+  },
+  {
    "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/dsound-bindings.ll",
    "sha256": "63f18d59d3f196c4fe5b12a8f6369d2ef9a2b3ecd5fbaa7b2ea422b5c2903a7b",
    "base": "ifc22/module.ll",
    "patch": "f6a35f30903a51ba.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/dsound-exports.inc",
+   "sha256": "7e52b48707a5d4b4296c9a7ea775cf21f19707be9902215ffa31bcdf21ad74a6",
+   "base": "ifc22/module.ll",
+   "patch": "a3281e5930e2cfdf.zst"
   },
   {
    "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/engine-routed.ll",
@@ -281,10 +341,22 @@
    "patch": "2f9fd9200f53a974.zst"
   },
   {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/engine_bootstrap.inc",
+   "sha256": "26b2fe690fff9bcc68e94e5e563dc49bb3dcc2376391ead7ac8a4e6662e5f65f",
+   "base": "tribes2/engine.ll",
+   "patch": "29d9b98cfdf1d99e.zst"
+  },
+  {
    "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/followup-engine.ll",
    "sha256": "ec47b7f992a1840d0007bd12cc08b8057788238c5abf57439062fd56cc74125f",
    "base": "tribes2/engine.ll",
    "patch": "86cc9e168df5e53d.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/followup_publication.inc",
+   "sha256": "6d8037b2b136bec7e9e9198da5559f8e3064e51aa140a96b677c204955abae1f",
+   "base": "ifc22/module.ll",
+   "patch": "4b10e6c157f90d4e.zst"
   },
   {
    "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/font-size-engine.ll",
@@ -293,10 +365,22 @@
    "patch": "bd2a646c78264130.zst"
   },
   {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/font_size_publication.inc",
+   "sha256": "ac74b01f114ace3a4cfc5ee4130cd8e9a2d5508b60677aed5d267b2f78571901",
+   "base": "ifc22/module.ll",
+   "patch": "d6a28c82ffb12f2c.zst"
+  },
+  {
    "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/graphics-bindings.ll",
    "sha256": "f32cd113e46495da2395c83379675daa80376b69e140e4d0b987fc0bec88f5b1",
    "base": "ifc22/module.ll",
    "patch": "a655bb7d6bc8a97a.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/graphics-exports.inc",
+   "sha256": "b78afaded01a27f3cd910ce80b212aa1bffe7fa6b1a3fc0ae92d1d05082f7f13",
+   "base": "ifc22/module.ll",
+   "patch": "b5b4ab441478e427.zst"
   },
   {
    "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/http-engine.ll",
@@ -305,16 +389,40 @@
    "patch": "98f334b2fadaa48f.zst"
   },
   {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/http_publication.inc",
+   "sha256": "c4233bf8735af1386a01f6629d8248cf1630d35e60fb63fceacf9c2ce64ed76e",
+   "base": "ifc22/module.ll",
+   "patch": "7ac582f5e633f0b2.zst"
+  },
+  {
    "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/input-nop-engine.ll",
    "sha256": "afeae467fc6b8d1d30fc0b86e1254e454f9bd4db9b3c4bb410f9b7e2654cb5df",
    "base": "tribes2/engine.ll",
    "patch": "7e4b1bf259ffb09c.zst"
   },
   {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/input_nop_publication.inc",
+   "sha256": "7f5d99eb91936e044f3aae2d6c4f0ff30a1394400468e6fcc83ea5c6b8f30583",
+   "base": "ifc22/module.ll",
+   "patch": "9367614ddb61ec99.zst"
+  },
+  {
    "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/late-engine.ll",
    "sha256": "eb0b2feed89cfb172618ead15aad42f46379c68e4fd5e308178066483087b214",
    "base": "tribes2/engine.ll",
    "patch": "7cb79a0459b817af.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/late_publication.inc",
+   "sha256": "e3c27e32faf76f311927375bb40d5576d2628efd2c8d70a03128fa68ca35e6c1",
+   "base": "ifc22/module.ll",
+   "patch": "ededa1947e1e1d46.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/library_publication.inc",
+   "sha256": "7b3d9a487ed9e1876d9a2ba6d57a72925a1a48fff73e67a6f00a82b86bbb1c64",
+   "base": "ifc22/module.ll",
+   "patch": "e273b40b8cdde2cd.zst"
   },
   {
    "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/merged-dispatch.ll",
@@ -333,6 +441,12 @@
    "sha256": "094f7646db1fdad9617ffcf3e8532dbb64cafec02257afd3824ad7540a392fbe",
    "base": "mss32/image",
    "patch": "235746a0f4ca0ec6.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/miles_bootstrap.inc",
+   "sha256": "2c916bb8227c8249b8a8c6e29230ca83da93a85e50dd192b27e004d3d3201a5e",
+   "base": "ifc22/module.ll",
+   "patch": "a072eb8b1c29a007.zst"
   },
   {
    "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/mission-entry/module.ll",
@@ -407,6 +521,12 @@
    "patch": "9b5d0d33d34a8ace.zst"
   },
   {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/network_publication.inc",
+   "sha256": "3e4591822c95e559958a6794c58c26b4fe7e4e456dfd6cd20f825f53dc12b4a5",
+   "base": "ifc22/module.ll",
+   "patch": "e879c746b8fb06cb.zst"
+  },
+  {
    "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/ntdll-probes.ll",
    "sha256": "8988a55bacdfadc504b93302dee21ee2cac2896c8ec1ce5c3039f07b874508ef",
    "base": "ifc22/module.ll",
@@ -425,6 +545,18 @@
    "patch": "637ca7efd9341224.zst"
   },
   {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/openal-exports.inc",
+   "sha256": "6352afb66b10feaffc7ef0cd2ee037fac396af3e2b6ec870f65bbeed741dc07e",
+   "base": "ifc22/module.ll",
+   "patch": "4a23e85e18c1251f.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/patch_publication.inc",
+   "sha256": "e7e08dea21cfe690200bab6b80907b978313b17320242def843787de46a965fe",
+   "base": "ifc22/module.ll",
+   "patch": "47d7608e0d4197a9.zst"
+  },
+  {
    "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/pending-hooks-bank.ll",
    "sha256": "e1ff6caf2af918005c4647371d0403660eb9032979397e57af0a2dce977349d5",
    "base": "ifc22/module.ll",
@@ -441,6 +573,12 @@
    "sha256": "7b319ae1eef7c8556be44ca2d357b6568217fe857fbc00232cd45899706a79a9",
    "base": "tribes2/engine.ll",
    "patch": "7c97a62e841da623.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/pending_hook_publication.inc",
+   "sha256": "2fc760bcaff38dfc70177956fdc065af83a0769e1cce27427266e3477dce1903",
+   "base": "ifc22/module.ll",
+   "patch": "e7dfaa848b9232bc.zst"
   },
   {
    "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/post-file-patch-engine.ll",
@@ -473,6 +611,36 @@
    "patch": "c6ba3e566245e36d.zst"
   },
   {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/post_file_patch_publication.inc",
+   "sha256": "e3b4b51b8deb6aafa4f410c37384c319f7713a3c9908a622980d4ab1d36de511",
+   "base": "ifc22/module.ll",
+   "patch": "c9180bbbecf0abf7.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/post_video_nop_publication.inc",
+   "sha256": "bca793b8484ed1c502a802d0e734ebf799c76ff5a55c30665c4a605235349ce9",
+   "base": "ifc22/module.ll",
+   "patch": "abef665ffad62b77.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/post_video_nop_second_publication.inc",
+   "sha256": "12a53d9f9cc706701d83bdc787e1267fac208143d138a1255c7ccc1f472c5b70",
+   "base": "ifc22/module.ll",
+   "patch": "34ece79984e93f48.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/post_video_prefix_publication.inc",
+   "sha256": "05ddeb1d97b69c6d71c7ddb990f9601127e8cd45bdec465ab69bf5c04244628b",
+   "base": "ifc22/module.ll",
+   "patch": "91665d1bd98d94df.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/post_video_tail_publication.inc",
+   "sha256": "a3cede85900f549c849859110b9573074cc75f29d622e53ee1d9239ae5ed4097",
+   "base": "ifc22/module.ll",
+   "patch": "9bd4a70d41ceed97.zst"
+  },
+  {
    "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/prepared-inputs.json",
    "sha256": "2213042be59d1db3645bbc69d19794fdbab8d99144981d16facba19f9d17a221",
    "base": "none",
@@ -483,6 +651,12 @@
    "sha256": "260789cf636c2070042a9cff22e05d21a0821ba9c99b3a4f7cc2435fd038b60b",
    "base": "ifc22/module.ll",
    "patch": "0c24e33ce11e3c24.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/probe-native-providers.inc",
+   "sha256": "970fd06d84aeafc14e62a1bd908b7459454f370baee282d9b4508de2c5631c75",
+   "base": "ifc22/module.ll",
+   "patch": "df2c340b5705fe78.zst"
   },
   {
    "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/publication-bindings.ll",
@@ -507,6 +681,12 @@
    "sha256": "f19d6aa3d29f3255e003074575a51d1e94c7104b8ca5501705d19efec4c10592",
    "base": "ifc22/image",
    "patch": "71a1038aaff8487f.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/qol_bootstrap.inc",
+   "sha256": "d57c7e3bb405264b5f5e377b09de77b651477ec52cb80a6988cb5ecfdc0d672f",
+   "base": "ifc22/module.ll",
+   "patch": "de5f87d52edd0440.zst"
   },
   {
    "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/renderer-batch-engine.ll",
@@ -569,6 +749,54 @@
    "patch": "bdcffa6ec5b948b1.zst"
   },
   {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/renderer_batch_publication.inc",
+   "sha256": "8aee81234e3c7299b98df4e6d416f3d66a0ee87d8c3c1b97e7f5e18b95d920ef",
+   "base": "ifc22/module.ll",
+   "patch": "4abafba2b3593df3.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/renderer_call_publication.inc",
+   "sha256": "e8268074a3d5a3983fe3841a4e6fb0f13f5f15f7b88b650422a9c20d00aa1b03",
+   "base": "ifc22/module.ll",
+   "patch": "28ce86bbf8d6c759.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/renderer_dimensions_publication.inc",
+   "sha256": "071aa05cee01f929a64acab0102931658a6cf7353af4f728e1fb271e3e4de83c",
+   "base": "ifc22/module.ll",
+   "patch": "464609b36441ec27.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/renderer_hook_publication.inc",
+   "sha256": "16defcd16dac8b896cc2764ed0dfc88691e738a44ef27bb02e9459685874a141",
+   "base": "ifc22/module.ll",
+   "patch": "d0654be09a95e6d7.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/renderer_nested_publication.inc",
+   "sha256": "684b4474ea2f2489f914366ce2f018335b39088824bcd4cb11680c71241de408",
+   "base": "ifc22/module.ll",
+   "patch": "7ce8d63cda29873c.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/renderer_outer_publication.inc",
+   "sha256": "be0da5fde82c67a93cc4fab010ef3e4969a22b2074dbf22b54fa30797ded268a",
+   "base": "ifc22/module.ll",
+   "patch": "fbd1755472dc125c.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/renderer_redirects_publication.inc",
+   "sha256": "76ab1242c2711d92c09f0fd1d5fbb3992afd5000ccbf97fa0bc667210d8c23cf",
+   "base": "ifc22/module.ll",
+   "patch": "516559b477f71d60.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/renderer_startup_publication.inc",
+   "sha256": "42ad5bce6f4e76d767d7e5cbfc48ca22f895003a11f1422dc80d3bc77c94f9a8",
+   "base": "ifc22/module.ll",
+   "patch": "68882e624a2afcb2.zst"
+  },
+  {
    "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/reverb3.bin",
    "sha256": "beae2bb80aab62e130d34b8c6ce92b573d5dcd347503bc8f89f43a9e82a0b2db",
    "base": "reverb3/image",
@@ -587,6 +815,24 @@
    "patch": "f374d22decc087ca.zst"
   },
   {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/startup_calls_publication.inc",
+   "sha256": "c05f362a05453ac3647954ba81d9d783ca2d09e7c3a95518c41387aac36d21d6",
+   "base": "ifc22/module.ll",
+   "patch": "d07e33778a539034.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/startup_input_code.inc",
+   "sha256": "d27ea6b79fd2860ed15fd531fefd5043efec0e885b72cf386f8e5b73ce112d8a",
+   "base": "ifc22/module.ll",
+   "patch": "98612bef52012386.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/startup_input_data.inc",
+   "sha256": "78ac3f85c532dc285fc431b540590cad5e288858695035341743889be89f84da",
+   "base": "ifc22/module.ll",
+   "patch": "5a417cbdcc5d42e7.zst"
+  },
+  {
    "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/stops.ll",
    "sha256": "0e61e7f6d4e1cd0148850657b5176dfb9617a8603c306b63b4e56d40ca2478a9",
    "base": "ifc22/module.ll",
@@ -597,6 +843,12 @@
    "sha256": "1cb95aa307f6ceaa29b8cdd998d0f44d9da5e34196ba9f54cadb19c02b87706b",
    "base": "tribes2/engine.ll",
    "patch": "5496ce762c4d0460.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/string_publication.inc",
+   "sha256": "fc442e510b44bfa9cad82f17228b49b2ef82911172e383086d9209937d9eedcd",
+   "base": "ifc22/module.ll",
+   "patch": "216e12ad2b5dea47.zst"
   },
   {
    "path": "generated/srw/run-20261003T190924-ifc22/native-zlib-routes/bindings.ll",
