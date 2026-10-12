@@ -13,7 +13,7 @@ from gl4es_backend_inputs import inputs as gl4es_inputs
 from sse_build_inputs import sse_inputs
 R=pathlib.Path(__file__).resolve().parents[1]
 ap=argparse.ArgumentParser(description=__doc__)
-ap.add_argument('--platform',choices=['simulator','device'],default='simulator')
+ap.add_argument('--platform',choices=['simulator','device','macos'],default='simulator')
 ap.add_argument('--simulator-device')
 ap.add_argument('--angle',action='store_true',help='Use the pinned ANGLE Metal renderer')
 ap.add_argument('--cpu-host-checks',action='store_true',help='Validate native CPU spans and prove bounded native-object accesses; keep guest accesses checked')
@@ -23,10 +23,13 @@ ap.add_argument('--prepared-directory',type=pathlib.Path,default=R/'generated/sr
 ap.add_argument('--build-only',action='store_true')
 a=ap.parse_args()
 if a.platform=='device' and not a.build_only:ap.error('Device builds require --build-only; sign and install with your Apple development identity')
+# The Mac app uses the same GL4ES/ANGLE (Metal) renderer as iOS.
+if a.platform=='macos' and (not a.angle or not a.build_only):ap.error('Mac builds require --angle and --build-only')
+mac=a.platform=='macos'
 if a.platform=='simulator' and not a.build_only and not a.simulator_device:ap.error('--simulator-device is required to launch')
-bundled=a.bundle_assets or a.platform=='device'
+bundled=a.bundle_assets or a.platform in ('device','macos')
 if a.hardware_permissions and a.cpu_host_checks:ap.error('--hardware-permissions replaces --cpu-host-checks')
-source=a.prepared_directory.resolve();out=R/(('generated/ipad-engine-device' if a.platform=='device' else 'generated/ipad-engine')+('-hw' if a.hardware_permissions else ''));out.mkdir(exist_ok=True)
+source=a.prepared_directory.resolve();out=R/(dict(device='generated/ipad-engine-device',simulator='generated/ipad-engine',macos='generated/macos-engine')[a.platform]+('-hw' if a.hardware_permissions else ''));out.mkdir(exist_ok=True)
 sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
 if a.cpu_host_checks:
  for proof_name in ['cpu-host-checks','host-local-checks','native-cpu-checks','sse-host-locals','x87-host-checks']:
@@ -111,9 +114,12 @@ from graphics_backend_inputs import prepare as graphics_inputs
 graphics_sources,_=graphics_inputs(mobile_inputs)
 old_wrapper=next(p for p in sources if p.name=='graphics-bindings.ll')
 sources[sources.index(old_wrapper)]=next(p for p in graphics_sources if p.name=='graphics-bindings.ll')
-sdk_name='iphoneos' if a.platform=='device' else 'iphonesimulator'
-target='arm64-apple-ios16'+('' if a.platform=='device' else '-simulator');sdk=subprocess.check_output(['xcrun','--sdk',sdk_name,'--show-sdk-path'],text=True).strip()
-sdl,sdl_flags,libraries=sdl_inputs(a.platform);gl4es,gl_flags,gl_libraries=gl4es_inputs(a.platform);math=sse_inputs(a.platform)
+sdk_name=dict(device='iphoneos',simulator='iphonesimulator',macos='macosx')[a.platform]
+target='arm64-apple-macos12' if mac else 'arm64-apple-ios16'+('' if a.platform=='device' else '-simulator');sdk=subprocess.check_output(['xcrun','--sdk',sdk_name,'--show-sdk-path'],text=True).strip()
+sdl,sdl_flags,libraries=sdl_inputs(a.platform)
+# GL4ES provides the GL entry points; never link Apple's desktop OpenGL beside it.
+if mac:libraries=[x for i,x in enumerate(libraries) if not (x=='OpenGL' or (x=='-framework' and i+1<len(libraries) and libraries[i+1]=='OpenGL'))]
+gl4es,gl_flags,gl_libraries=gl4es_inputs(a.platform);math=sse_inputs(a.platform)
 angle=None
 if a.angle:
  from angle_backend_inputs import inputs as angle_inputs,bundle as angle_bundle
@@ -158,7 +164,10 @@ for name,origin in image_sources.items():
  expected=json.loads((origin/'result.json').read_text())['mapped_sha256']
  assert sha(source/name)==expected,name
  shutil.copy2(source/name,capture/name)
-app=out/'TribesPad.app';app.mkdir(exist_ok=True);exe=app/'TribesPad'
+app=out/'TribesPad.app';app.mkdir(exist_ok=True)
+# Mac bundles keep code in Contents/MacOS and data in Contents/Resources.
+contents=app/'Contents' if mac else app;resources=contents/'Resources' if mac else app
+exe=(contents/'MacOS' if mac else app)/'TribesPad';exe.parent.mkdir(parents=True,exist_ok=True);resources.mkdir(parents=True,exist_ok=True)
 if not a.angle:
  # Remove only this backend's owned files when switching back to EAGL.
  for name in ('libEGL.framework','libGLESv2.framework'):
@@ -166,10 +175,10 @@ if not a.angle:
   if framework.exists():shutil.rmtree(framework)
  license=app/'LICENSE.ANGLE'
  if license.exists():license.unlink()
-shutil.copy2(R/'generated/gl4es'/a.platform/'LICENSE.gl4es',app/'LICENSE.gl4es')
+shutil.copy2(R/'generated/gl4es'/a.platform/'LICENSE.gl4es',resources/'LICENSE.gl4es')
 args=[str(exe),str(source/'engine.bin'),str(source/'qol.bin'),str(volume),str(profile),str(temp),str(capture),'engine']
 if bundled:
- data=app/'GameData';data.mkdir(exist_ok=True)
+ data=resources/'GameData';data.mkdir(exist_ok=True)
  # Incremental rsync avoids recopying hundreds of MB on native-code-only builds.
  # The isolated source profile is copied without following external symlinks.
  assert not any(p.is_symlink() for p in profile.rglob('*')), 'Bundled profile must not contain symlinks'
@@ -181,15 +190,20 @@ if bundled:
 else:
  config='#define TB_BUNDLED_GAME_DATA 0\nstatic const char *launch_workdir='+json.dumps(str(R))+';\nstatic char *launch_arguments[]={'+','.join(json.dumps(p) for p in args)+',NULL};\n'
 (out/'mobile-engine-launch-config.h').write_text(config)
-host=[R/'port/apple/mobile_engine_main.m',R/'port/apple/mobile_game_paths.m',R/'port/apple/sdl_main.c',R/'port/apple/gl4es_context.c',R/'port/apple/mobile_controls.m',R/'port/apple/mobile_controls.c',R/'port/core/input.c']
+host=[R/'port/apple/mobile_engine_main.m',R/'port/apple/mobile_game_paths.m',R/'port/apple/sdl_main.c',R/'port/apple/gl4es_context.c',R/'port/core/input.c']
+host+=[R/'port/apple/desktop_controls.c'] if mac else [R/'port/apple/mobile_controls.m',R/'port/apple/mobile_controls.c']
 if a.angle:host.append(R/'port/apple/angle_sdl.c')
-command=['clang','-target',target,'-isysroot',sdk,'-O2','-I',str(out),*sdl_flags,*gl_flags,'-DNOX11','-DNOEGL','-DNO_LOADER','-DDEFAULT_ES=2','-isystem',str(R/'ref/gl4es/src'),*map(str,host),*objects,*gl_libraries,*libraries,*math['libraries'],*[str(R/n) for n in http['libraries']],str(R/al['library']),str(zbuild/'libz-ng.a'),'-lz','-lc++','-framework','Foundation','-framework','GameController','-framework','CoreGraphics','-framework','CoreText','-framework','CoreFoundation','-framework','SystemConfiguration','-framework','AudioToolbox','-framework','CoreAudio','-o',str(exe)]
+command=['clang','-target',target,'-isysroot',sdk,'-O2','-I',str(out),*sdl_flags,*gl_flags,'-DNOX11','-DNOEGL','-DNO_LOADER','-DDEFAULT_ES=2','-isystem',str(R/'ref/gl4es/src'),*map(str,host),*objects,*gl_libraries,*libraries,*math['libraries'],*[str(R/n) for n in http['libraries']],str(R/al['library']),str(zbuild/'libz-ng.a'),'-lz','-lc++','-framework','Foundation','-framework','GameController','-framework','CoreGraphics','-framework','CoreText','-framework','CoreFoundation','-framework','SystemConfiguration','-framework','AudioToolbox','-framework','CoreAudio',*(['-framework','AppKit','-framework','Metal','-framework','QuartzCore'] if mac else []),'-o',str(exe)]
 command[1:1]=['-fobjc-arc']
 with (out/'link.log').open('w') as log:subprocess.run(command,stdout=log,stderr=log,check=True)
 identifier='com.tribespad.full-engine.ipad'
 from app_icon import compile_icon
-icon_keys=compile_icon(app,a.platform)
-(app/'Info.plist').write_bytes(plistlib.dumps(dict(**icon_keys,CFBundleDisplayName='TribesPad',CFBundleIdentifier=identifier,CFBundleExecutable='TribesPad',CFBundleName='TribesPad',CFBundlePackageType='APPL',CFBundleSupportedPlatforms=['iPhoneOS' if a.platform=='device' else 'iPhoneSimulator'],CFBundleVersion='1',CFBundleShortVersionString='0.1',MinimumOSVersion='16.0',UIDeviceFamily=[1,2],UIRequiresFullScreen=True,LSRequiresIPhoneOS=True,UIRequiredDeviceCapabilities=['arm64'],NSLocalNetworkUsageDescription='Find and connect to local Tribes 2 games.',UIApplicationSupportsIndirectInputEvents=True,UILaunchScreen={},UISupportedInterfaceOrientations=['UIInterfaceOrientationLandscapeLeft','UIInterfaceOrientationLandscapeRight'])))
+if mac:
+ icon_keys=compile_icon(resources,'macos',minimum='12.0')
+ (contents/'Info.plist').write_bytes(plistlib.dumps(dict(**icon_keys,CFBundleDisplayName='TribesPad',CFBundleIdentifier='com.tribespad.app',CFBundleExecutable='TribesPad',CFBundleName='TribesPad',CFBundlePackageType='APPL',CFBundleVersion='1',CFBundleShortVersionString='0.1',LSMinimumSystemVersion='12.0',NSHighResolutionCapable=True,LSApplicationCategoryType='public.app-category.action-games',NSLocalNetworkUsageDescription='Find and connect to local Tribes 2 games.')))
+else:
+ icon_keys=compile_icon(app,a.platform,families=('iphone','ipad'))
+ (app/'Info.plist').write_bytes(plistlib.dumps(dict(**icon_keys,CFBundleDisplayName='TribesPad',CFBundleIdentifier=identifier,CFBundleExecutable='TribesPad',CFBundleName='TribesPad',CFBundlePackageType='APPL',CFBundleSupportedPlatforms=['iPhoneOS' if a.platform=='device' else 'iPhoneSimulator'],CFBundleVersion='1',CFBundleShortVersionString='0.1',MinimumOSVersion='16.0',UIDeviceFamily=[1,2],UIRequiresFullScreen=True,LSRequiresIPhoneOS=True,UIRequiredDeviceCapabilities=['arm64'],NSLocalNetworkUsageDescription='Find and connect to local Tribes 2 games.',UIApplicationSupportsIndirectInputEvents=True,UILaunchScreen={},UISupportedInterfaceOrientations=['UIInterfaceOrientationLandscapeLeft','UIInterfaceOrientationLandscapeRight'])))
 signing=['--entitlements',str(R/'port/apple/TribesPad.entitlements')] if a.platform=='device' else []
 if a.angle:
  for framework in angle_bundle(app,a.platform):subprocess.run(['codesign','--force','--sign','-',str(framework)],check=True)

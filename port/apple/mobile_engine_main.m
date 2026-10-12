@@ -15,7 +15,8 @@ static int enter_engine(int argc,char **argv) {
         inDomain:NSUserDomainMask appropriateForURL:nil create:YES error:nil];
     if (!support) { fprintf(stderr,"TribesPad: no app support directory\n"); return 125; }
     NSString *storage = [support.path stringByAppendingPathComponent:@"TribesPad"];
-    NSString *resources = [NSBundle.mainBundle.bundlePath stringByAppendingPathComponent:@"GameData"];
+    /* iOS: resourcePath is the bundle itself. Mac: Contents/Resources. */
+    NSString *resources = [NSBundle.mainBundle.resourcePath stringByAppendingPathComponent:@"GameData"];
     if (!tb_mobile_prepare_paths(resources.fileSystemRepresentation, storage.fileSystemRepresentation, launch_arguments)) return 125;
     const char *launch_workdir = storage.fileSystemRepresentation;
 #endif

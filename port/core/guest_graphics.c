@@ -10,13 +10,20 @@ __attribute__((weak,noinline)) uint32_t tribes_openal_load(uint64_t base,const c
 __attribute__((weak,noinline)) void *tribes_openal_native_lookup(uint32_t address){(void)address;return 0;}
 #include <SDL3/SDL.h>
 #include <TargetConditionals.h>
+/* Guest GL is served by OpenGL ES (iOS, or GL4ES on any Apple platform)
+   instead of the Mac's desktop OpenGL. */
+#if TARGET_OS_IPHONE || defined(TB_GL4ES)
+#define TB_GLES_HOST 1
+#else
+#define TB_GLES_HOST 0
+#endif
 #include <stdlib.h>
 #include <string.h>
 typedef struct {const char *name;uint32_t address,module;void *function;uint32_t platforms;} GraphicsExport;
 #include "graphics-exports.inc"
 /* Only implemented mobile entry points are exposed. */
 static int available(const GraphicsExport *e){
-#if !TARGET_OS_IPHONE
+#if !TB_GLES_HOST
     return (e->platforms & 1u) != 0;
 #elif defined(TB_GL4ES)
     return (e->platforms & 4u) != 0;

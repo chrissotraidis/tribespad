@@ -34,6 +34,27 @@
           ]
         }
       ]
+    },
+    "macos": {
+      "hosts": {
+        "macos-arm64": "experimental"
+      },
+      "output": "zip",
+      "check": "none",
+      "steps": [
+        {
+          "stage": "build",
+          "command": [
+            "{repo}/scripts/build-tribespad.sh",
+            "--platform",
+            "macos",
+            "--output",
+            "{work}",
+            "--zip",
+            "{output}"
+          ]
+        }
+      ]
     }
   },
   "requirements": {
