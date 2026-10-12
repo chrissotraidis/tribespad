@@ -57,7 +57,7 @@ normal app with mouse and keyboard, on the same Metal renderer.
 |---|---|
 | Is this an emulator or streaming? | Neither. The x86 game and DLLs are translated ahead of time into native ARM64 code. Memory permissions are enforced by the CPU's page protections, and any access that breaks them stops the game. |
 | Can I play it today? | **You can build it and play offline.** [One command](#get-tribespad) builds an iPhone/iPad IPA or a Mac app from the official downloads. Offline matches with bots play by touch in the iPad Simulator at about 30 FPS and with mouse and keyboard on Mac. |
-| Does it work on a real iPad or iPhone? | **Not verified on hardware.** The IPA builds for iPhone and iPad and passes PadMint's package check. In the iPhone 17 Simulator an offline match plays by touch, with the game kept clear of the Dynamic Island; the Host screen is still cropped on wide phones. |
+| Does it work on a real iPad or iPhone? | **Not verified on hardware.** The IPA builds for iPhone and iPad and passes PadMint's package check. In the iPhone 17 Simulator an offline match plays by touch, with the game kept clear of the Dynamic Island and every menu fully on screen. |
 | What has been played? | Offline Katabatic CTF with two bots: spawning, movement, aiming, firing, jets, skiing/jumping, weapon switching, grenades, inventory, an end-of-match map change, and a clean quit. A 30-minute session ran without a crash. |
 | Does it match the original game? | In the one scenario measured so far, yes: a [reference trace](docs/validation/reference-trace-katabatic.json) of the same Katabatic flight is bit-identical to the original Windows game in the air and differs by about 1 cm after landing, where the QoL collision patch applies (the Windows reference ran without QoL). |
 | Online play? | The original server browser lists TribesNEXT community servers on Mac. Joining online matches and account sign-in have not been tested. |
@@ -223,7 +223,6 @@ How this works, stage by stage, is in [Reproducible build](docs/REPRODUCIBLE-BUI
 ## Roadmap
 
 - Install and play on a physical iPad; decide the VSync default on hardware
-- iPhone: fit the Host screen on wide phones
 - Play with a physical controller
 - Run the GitHub build workflow and PadMint's player check once the repository is public
 - Touch layout editor
