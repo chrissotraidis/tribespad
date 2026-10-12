@@ -62,6 +62,9 @@ def main():
     import SCons
     if SCons.__version__ != LOCK['tribes_extensions']['scons']:
         sys.exit('SCons %s required' % LOCK['tribes_extensions']['scons'])
+    # Build with the selected Xcode's macOS SDK, also inside SCons.
+    os.environ.setdefault('SDKROOT', subprocess.check_output(['xcrun', '--sdk', 'macosx', '--show-sdk-path'], text=True).strip())
+    os.environ['SCONSFLAGS'] = '--site-dir=' + str(R / 'scripts/scons_site')
     srw = srw_base()
     tool = llasm()
     tribes = TOOLS / 'SRW-tribes'
