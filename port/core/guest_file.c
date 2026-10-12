@@ -7,6 +7,7 @@
 #include <fcntl.h>
 #include <limits.h>
 #include <stdio.h>
+#include <sys/stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
@@ -249,6 +250,41 @@ static uint32_t get_attributes(uint64_t base,uint32_t name,int wide) {
     if(st.st_flags&UF_HIDDEN)attributes|=2;
 #endif
     return attributes;
+}
+/* MoveFileExW for regular files inside the guest mounts: REPLACE_EXISTING (1),
+   COPY_ALLOWED (2, one volume) and WRITE_THROUGH (8). Without REPLACE_EXISTING
+   an existing target fails with ERROR_ALREADY_EXISTS atomically (RENAME_EXCL).
+   Directory moves, delayed moves and other flags remain explicit gates.
+   https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-movefileexw */
+uint32_t tribes_move_file_ex_w(uint64_t base,uint32_t from,uint32_t to,uint32_t flags){
+    if(flags&~UINT32_C(0xb)){fprintf(stderr,"TribesPad: unsupported MoveFileEx flags 0x%x\n",flags);abort();}
+    if(!to){tribes_set_last_error(87);return 0;}
+    char source[PATH_MAX],target[PATH_MAX],source_host[PATH_MAX],target_host[PATH_MAX];
+    if(!read_path(base,from,1,source)||!read_path(base,to,1,target))return 0;
+    if(!tribes_filesystem_resolve_open(base,source,source_host,sizeof source_host,NULL,1)){
+        tribes_set_last_error(path_error(base,source,errno));return 0;
+    }
+    struct stat from_st,to_st;
+    if(lstat(source_host,&from_st)){tribes_set_last_error(path_error(base,source,errno));return 0;}
+    if(!S_ISREG(from_st.st_mode)){fputs("TribesPad: unsupported MoveFileEx source object\n",stderr);abort();}
+    if(!tribes_filesystem_resolve_create(base,target,target_host,sizeof target_host)){
+        tribes_set_last_error(path_error(base,target,errno));return 0;
+    }
+    int same=!lstat(target_host,&to_st)&&to_st.st_dev==from_st.st_dev&&to_st.st_ino==from_st.st_ino;
+    int result;
+    if(same||(flags&1)){
+        if(!same&&!lstat(target_host,&to_st)&&!S_ISREG(to_st.st_mode)){tribes_set_last_error(5);return 0;}
+        result=rename(source_host,target_host);
+    }else result=renamex_np(source_host,target_host,RENAME_EXCL);
+    if(result){
+        int e=errno;
+        tribes_set_last_error(e==EEXIST?183:e==EXDEV?17:e==ENOSPC?112:path_error(base,target,e));return 0;
+    }
+    if(flags&8){
+        char parent[PATH_MAX];strcpy(parent,target_host);char *slash=strrchr(parent,'/');
+        if(slash){*slash=0;int fd=open(parent,O_RDONLY|O_CLOEXEC);if(fd>=0){fsync(fd);close(fd);}}
+    }
+    return 1;
 }
 uint32_t tribes_get_file_attributes(uint64_t base,uint32_t name){return get_attributes(base,name,0);}
 uint32_t tribes_get_file_attributes_w(uint64_t base,uint32_t name){return get_attributes(base,name,1);}

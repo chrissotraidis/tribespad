@@ -74,7 +74,21 @@ static void cache_file(unsigned wide,const char *root){
  assert(tribes_get_file_information_by_handle(base,h,0)==0&&tribes_get_last_error()==998);
  assert(tribes_close_handle(h));
  assert(tribes_get_file_information_by_handle(base,h,0x13001)==0&&tribes_get_last_error()==6);
- snprintf(path,sizeof path,"%s/Download.dat",root);assert(!unlink(path));
+ /* MoveFileExW: rename, no-replace refusal, replace, missing source, case match. */
+ #define WIDE(addr,text) do{const char *s_=(text);for(size_t i_=0;i_<=strlen(s_);i_++){uint16_t c_=(unsigned char)s_[i_];memcpy(memory+(addr)+i_*2,&c_,2);}}while(0)
+ char moved[PATH_MAX];snprintf(moved,sizeof moved,"%s/Moved.dat",root);snprintf(path,sizeof path,"%s/Download.dat",root);
+ h=open_file_flags(wide,"Download.dat",0x120116,0,2,0x02000080);assert(h!=UINT32_MAX);assert(tribes_close_handle(h));
+ WIDE(0x14000,"Download.dat");WIDE(0x14400,"Moved.dat");
+ assert(tribes_move_file_ex_w(base,0x14000,0x14400,1)==1);assert(access(path,F_OK)&&!access(moved,F_OK));
+ h=open_file_flags(wide,"Download.dat",0x120116,0,2,0x02000080);assert(h!=UINT32_MAX);
+ memcpy(memory+0x12000,"new",3);assert(tribes_write_file(base,h,0x12000,3,0x20010,0));assert(tribes_close_handle(h));
+ tribes_set_last_error(0);assert(tribes_move_file_ex_w(base,0x14000,0x14400,0)==0&&tribes_get_last_error()==183&&!access(path,F_OK));
+ WIDE(0x14400,"MOVED.DAT");assert(tribes_move_file_ex_w(base,0x14000,0x14400,1|8)==1);
+ {struct stat st;assert(!stat(moved,&st)&&st.st_size==3&&access(path,F_OK));}
+ assert(tribes_move_file_ex_w(base,0x14000,0x14400,1)==0&&tribes_get_last_error()==2);
+ assert(tribes_move_file_ex_w(base,0x14000,0,1)==0&&tribes_get_last_error()==87);
+ assert(!unlink(moved));
+ #undef WIDE
 }
 static void check(unsigned wide,const char *name,uint32_t expected,uint32_t error){
  if(wide)for(size_t i=0;i<=strlen(name);i++){uint16_t ch=(unsigned char)name[i];memcpy(memory+0x10001+i*2,&ch,2);}

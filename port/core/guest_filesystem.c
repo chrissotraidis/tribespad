@@ -104,6 +104,14 @@ int tribes_filesystem_open_create(uint64_t base,const char *guest,char *host,siz
     }
     error=errno;pthread_mutex_unlock(&lock);errno=error;return fd;
 }
+/* Host path for a leaf that may not exist yet, with the same confinement,
+   case matching and name validation as CREATE_ALWAYS (resolve mode 3). */
+int tribes_filesystem_resolve_create(uint64_t base,const char *guest,char *host,size_t capacity) {
+    pthread_mutex_lock(&lock);Mounts *m=mounts;while(m&&m->base!=base)m=m->next;
+    int ok=0,error;
+    if(!m)errno=ENODEV;else ok=resolve_path(m,m->cwd,guest,host,capacity,NULL,3);
+    error=errno;pthread_mutex_unlock(&lock);errno=error;return ok;
+}
 int tribes_filesystem_resolve_open(uint64_t base,const char *guest,char *host,size_t capacity,char *canonical,int final_link) {
     char cwd[PATH_MAX];pthread_mutex_lock(&lock);Mounts *m=mounts;while(m&&m->base!=base)m=m->next;if(m)strcpy(cwd,m->cwd);pthread_mutex_unlock(&lock);
     if(!m){errno=ENODEV;return 0;}return resolve_path(m,cwd,guest,host,capacity,canonical,final_link);
