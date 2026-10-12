@@ -201,12 +201,13 @@ preparation and validation are covered in the [development guide](docs/DEVELOPME
 - Rebuild the Mac app on the current engine and measure Mac performance
 - Compare with the QoL client on Windows and add jet, weapon and bot scenarios to the reference trace
 - Join TribesNEXT community servers
-- A distributable build
+- A one-command build for PadMint's Build button and a GitHub runner for iPad-only players ([plan](docs/REPRODUCIBLE-BUILD.md))
 
 ## Documentation
 
 - [Handoff](docs/HANDOFF.md): what works, current evidence and next steps
 - [Development guide](docs/DEVELOPMENT.md): building, packaging and validation
+- [Reproducible build](docs/REPRODUCIBLE-BUILD.md): the path to a one-command build for PadMint
 - [Validation records](docs/validation): measurements and screenshots
 - [Product target](docs/Tribes2-Online-HD-Target.md): the intended experience
 - [Archive](docs/archive): historical status checkpoints, plans and rejected experiments
