@@ -1,6 +1,7 @@
 {
   "scope": "Diagnostic native runtime. Host-only calls reject every direct guest pointer argument. Unknown calls and unregistered indirect targets stop before invocation. Buffer operations are allowed only with verified compiler-inserted brackets. Nested-buffer APIs such as recvmsg and zlib streams have no exemption.",
   "host_only": [
+    "tb_content_inset",
     "rename",
     "renamex_np",
     "fsync",
@@ -697,9 +698,9 @@
     "port/apple/font.h": "e0e3340fc18b4a46240ef7ad28b85283d0236106546de392bed4028b87257df6",
     "port/core/gdi_memory.c": "f0ea3299f10fc01af5e84648a007f7a1ee01e15a10b5b8b9967127eb5306533c",
     "port/core/gdi_memory.h": "a83bdab6a4d2e3e25f85bf3ff038aa9a647482cf69f40e5e4af3e82f28690391",
-    "port/apple/gl4es_context.c": "9fca39ebf555621ea28b1dfd10041c6e10f5fae5aebb354f12d86f2ec675819c",
+    "port/apple/gl4es_context.c": "04342037b139eeb653643cb24c13c949425971cdc04fd38648648fef0e4847c8",
     "port/apple/gl4es_context.h": "d3d2fc37dea26d6e308b033cc6424de50000170422d6bd96842219636030420e",
-    "port/apple/angle_sdl.c": "1db1244af48c82253dc67c8037a2a3c0851731100c55f4d9f59af2624277a696",
+    "port/apple/angle_sdl.c": "237219b8c28018f0942b51a799956bd11d8290168d9b5498b5c9bec7ba1f1732",
     "port/apple/angle_sdl.h": "d66fd545320b83fa81797b93ae8177081d872d11d6bda2d5383478db1ed9c116"
   },
   "scalar_softfloat_contract": "f32/f64 add/sub/mul/div and sqrt only: Apple ARM64 scalar-struct ABI i32 (i64,i64) / i64 (i64,i64) for binary operations; sqrt is i32 (i64) / i64 (i64), exact nonvariadic C declaration/call. Arguments are values, never addresses. Reviewed dependencies use locals, bounded internal tables and host thread-local rounding/exception state. Exact library identity and header contents checked by sse_inputs.",

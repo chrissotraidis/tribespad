@@ -17,6 +17,23 @@
 #ifdef TB_ANGLE
 #include "../apple/angle_sdl.h"
 #endif
+#if TARGET_OS_IPHONE
+#include "../apple/content_area.h"
+#define CONTENT_INSET() tb_content_inset()
+#else
+#define CONTENT_INSET() 0.0f
+#endif
+/* Pixel size of the game area of a window; the whole window off phones. */
+static bool content_pixels(SDL_Window *window,int *width,int *height){
+    int pw=0,ph=0,w=0,h=0;float inset=CONTENT_INSET();
+    if(!SDL_GetWindowSizeInPixels(window,&pw,&ph))return false;
+    if(inset>0){
+        if(!SDL_GetWindowSize(window,&w,&h)||w<=0)return false;
+        pw-=(int)(2*inset*(float)pw/(float)w+0.5f);
+        if(pw<=0)return SDL_SetError("Game area has no width");
+    }
+    if(width)*width=pw;if(height)*height=ph;return true;
+}
 #if defined(TB_GL4ES)
 #include <GL/gl.h>
 /* GL4ES exports the core spelling; its EXT header alias has no native symbol. */
@@ -458,11 +475,14 @@ static void event_point_to_pixels(unsigned char out[128],unsigned offset,uint32_
     for(Window *w=windows;w;w=w->next){
         if(SDL_GetWindowID(w->native)!=id)continue;
         int width=0,height=0,pixels_w=0,pixels_h=0;
+        float inset=CONTENT_INSET();
         if(!SDL_GetWindowSize(w->native,&width,&height)||
-           !SDL_GetWindowSizeInPixels(w->native,&pixels_w,&pixels_h)||
-           width<=0||height<=0||pixels_w<=0||pixels_h<=0)stop();
+           !content_pixels(w->native,&pixels_w,&pixels_h)||
+           width-2*inset<=0||height<=0||pixels_w<=0||pixels_h<=0)stop();
         float point[2];memcpy(point,out+offset,sizeof point);
-        point[0]*=(float)pixels_w/(float)width;
+        /* Touches beside the game area land on its nearest edge. */
+        if(inset>0)point[0]=SDL_clamp(point[0]-inset,0.0f,(float)width-2*inset);
+        point[0]*=(float)pixels_w/((float)width-2*inset);
         point[1]*=(float)pixels_h/(float)height;
         memcpy(out+offset,point,sizeof point);return;
     }
@@ -473,7 +493,14 @@ static void event_to_guest(unsigned char out[128],const SDL_Event *e){
 #define EP(offset,value) do{uint32_t p=(value);memcpy(out+(offset),&p,4);}while(0)
     EF(0,type);EF(8,common.timestamp);
     if(e->type>=SDL_EVENT_DISPLAY_FIRST&&e->type<=SDL_EVENT_DISPLAY_LAST){EF(16,display.displayID);EF(20,display.data1);EF(24,display.data2);return;}
-    if(e->type>=SDL_EVENT_WINDOW_FIRST&&e->type<=SDL_EVENT_WINDOW_LAST){EF(16,window.windowID);EF(20,window.data1);EF(24,window.data2);return;}
+    if(e->type>=SDL_EVENT_WINDOW_FIRST&&e->type<=SDL_EVENT_WINDOW_LAST){
+        EF(16,window.windowID);EF(20,window.data1);EF(24,window.data2);
+        /* Sizes describe the game area (content_area.h). */
+        SDL_Window *native=NULL;int32_t width=e->window.data1;
+        for(Window *w=windows;w&&!native;w=w->next)if(SDL_GetWindowID(w->native)==e->window.windowID)native=w->native;
+        if(e->type==SDL_EVENT_WINDOW_RESIZED)width=(int32_t)((float)width-2*CONTENT_INSET()+0.5f);
+        else if(e->type==SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED&&native&&!content_pixels(native,&width,NULL))stop();
+        memcpy(out+20,&width,4);return;}
     switch(e->type){
     case SDL_EVENT_QUIT:case SDL_EVENT_TERMINATING:case SDL_EVENT_LOW_MEMORY:
     case SDL_EVENT_WILL_ENTER_BACKGROUND:case SDL_EVENT_DID_ENTER_BACKGROUND:
@@ -609,9 +636,11 @@ uint32_t tribes_sdl_get_primary_display(_cpu *cpu) {
    landscape (iPhone 17: 874x402 at 3x), so such displays are described to the
    guest in pixels; larger displays keep their point sizes. */
 static int pixel_modes(const SDL_DisplayMode *m){return m&&m->pixel_density>1.0f&&(m->w<640||m->h<480)&&(m->h<480||m->w<480);}
+/* Landscape phones also lose the safe-area inset on each side (content_area.h). */
 static void guest_mode_size(const SDL_DisplayMode *m,int *w,int *h,float *density){
-    *w=m->w;*h=m->h;*density=m->pixel_density;
-    if(pixel_modes(m)){*w=(int)(m->w*m->pixel_density+0.5f);*h=(int)(m->h*m->pixel_density+0.5f);*density=1.0f;}
+    float width=(float)m->w-2*CONTENT_INSET();
+    *w=(int)(width+0.5f);*h=m->h;*density=m->pixel_density;
+    if(pixel_modes(m)){*w=(int)(width*m->pixel_density+0.5f);*h=(int)(m->h*m->pixel_density+0.5f);*density=1.0f;}
 }
 static uint32_t display_mode(_cpu *cpu,uint32_t display,int current) {
     event_flags(SDL_INIT_VIDEO);uint32_t error=tribes_get_last_error();NativeFrame frame;uint32_t result=0;
@@ -1174,7 +1203,8 @@ uint32_t tribes_sdl_get_window_id(_cpu *cpu,uint32_t token){WINDOW_ENTER();WINDO
 uint32_t tribes_sdl_get_window_properties(_cpu *cpu,uint32_t token){WINDOW_ENTER();WINDOW_RETURN(SDL_GetWindowProperties(native_window(token)));}
 static uint32_t window_size(_cpu *cpu,uint32_t token,uint32_t width,uint32_t height,int pixels){
     WINDOW_ENTER();int w=0,h=0;SDL_Window *window=native_window(token);
-    uint32_t result=pixels?SDL_GetWindowSizeInPixels(window,width?&w:NULL,height?&h:NULL):SDL_GetWindowSize(window,width?&w:NULL,height?&h:NULL);
+    uint32_t result=pixels?content_pixels(window,&w,&h):SDL_GetWindowSize(window,&w,&h);
+    if(result&&!pixels)w=(int)((float)w-2*CONTENT_INSET()+0.5f);
     if(width)memcpy(guest(cpu,width,4),&w,4);if(height)memcpy(guest(cpu,height,4),&h,4);WINDOW_RETURN(result);
 }
 uint32_t tribes_sdl_get_window_size(_cpu *cpu,uint32_t token,uint32_t width,uint32_t height){return window_size(cpu,token,width,height,0);}

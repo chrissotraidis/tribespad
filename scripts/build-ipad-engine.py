@@ -152,9 +152,12 @@ if not profile.exists():shutil.copytree(R/'generated/apple-game-profile',profile
 # Use the game's supported offline launch override in this isolated profile.
 # No authentication or online match joining during mobile development.
 offline=profile/'base/autoexec.cs'
-offline_text='// TribesPad: original offline mode. A dedicated server would quit the app, so host in game.\n$SkipLogin = true;\n$LaunchMode = "Offline";\n$Host::Dedicated = 0;\n'
-if offline.exists():assert offline.read_text()==offline_text, 'Preserve custom autoexec.cs; select offline mode there before building'
-else:offline.write_text(offline_text)
+earlier_text='// TribesPad: original offline mode. A dedicated server would quit the app, so host in game.\n$SkipLogin = true;\n$LaunchMode = "Offline";\n$Host::Dedicated = 0;\n'
+# iOS and iPadOS end apps without the game's quit, which is where it saves
+# preferences (warriors, accepted license). Save them as its onExit does.
+offline_text=earlier_text+'// iOS and iPadOS close apps without a normal quit; save preferences as onExit does, once a minute.\nfunction TribesPadSavePrefs()\n{\n   export("$pref::*", "prefs/ClientPrefs.cs", False);\n   schedule(60000, 0, TribesPadSavePrefs);\n}\nschedule(60000, 0, TribesPadSavePrefs);\n'
+if offline.exists():assert offline.read_text() in (offline_text,earlier_text), 'Preserve custom autoexec.cs; select offline mode there before building'
+offline.write_text(offline_text)
 
 volume=out/'volume';temp=volume/'TribesPad/Temp';temp.mkdir(parents=True,exist_ok=True)
 # Publication descriptions and loaded original images are immutable inputs;
@@ -197,7 +200,7 @@ else:
  config='#define TB_BUNDLED_GAME_DATA 0\nstatic const char *launch_workdir='+json.dumps(str(R))+';\nstatic char *launch_arguments[]={'+','.join(json.dumps(p) for p in args)+',NULL};\n'
 (out/'mobile-engine-launch-config.h').write_text(config)
 host=[R/'port/apple/mobile_engine_main.m',R/'port/apple/mobile_game_paths.m',R/'port/apple/sdl_main.c',R/'port/apple/gl4es_context.c',R/'port/core/input.c']
-host+=[R/'port/apple/desktop_controls.c'] if mac else [R/'port/apple/mobile_controls.m',R/'port/apple/mobile_controls.c']
+host+=[R/'port/apple/desktop_controls.c'] if mac else [R/'port/apple/mobile_controls.m',R/'port/apple/mobile_controls.c',R/'port/apple/content_area.m']
 if a.angle:host.append(R/'port/apple/angle_sdl.c')
 command=['clang','-target',target,'-isysroot',sdk,'-O2','-I',str(out),*sdl_flags,*gl_flags,'-DNOX11','-DNOEGL','-DNO_LOADER','-DDEFAULT_ES=2','-isystem',str(R/'ref/gl4es/src'),*map(str,host),*objects,*gl_libraries,*libraries,*math['libraries'],*[str(R/n) for n in http['libraries']],str(R/al['library']),str(zbuild/'libz-ng.a'),'-lz','-lc++','-framework','Foundation','-framework','GameController','-framework','CoreGraphics','-framework','CoreText','-framework','CoreFoundation','-framework','SystemConfiguration','-framework','AudioToolbox','-framework','CoreAudio',*(['-framework','AppKit','-framework','Metal','-framework','QuartzCore'] if mac else []),'-o',str(exe)]
 command[1:1]=['-fobjc-arc']

@@ -31,6 +31,12 @@ int tb_mobile_prepare_paths(const char *resources, const char *storage, char *ar
             if (![fm copyItemAtPath:[inputs stringByAppendingPathComponent:@"Profile"] toPath:staging error:&error]) return storage_failed(error);
             if (![fm moveItemAtPath:staging toPath:profile error:&error]) return storage_failed(error);
         }
+        /* TribesPad owns base/autoexec.cs (offline mode, preference saving);
+           refresh it so updates reach existing profiles. Players' own scripts
+           belong in base/scripts/autoexec, which the game also runs. */
+        NSString *autoexec = @"base/autoexec.cs";
+        NSData *script = [NSData dataWithContentsOfFile:[[inputs stringByAppendingPathComponent:@"Profile"] stringByAppendingPathComponent:autoexec] options:0 error:&error];
+        if (!script || ![script writeToFile:[profile stringByAppendingPathComponent:autoexec] options:NSDataWritingAtomic error:&error]) return storage_failed(error);
         /* Refresh immutable loader inputs without deleting diagnostic captures
            or an existing user's profile. The app has only one engine instance. */
         NSString *loader = [inputs stringByAppendingPathComponent:@"Loader"];
