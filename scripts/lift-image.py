@@ -5,6 +5,12 @@ import pefile
 ROOT=pathlib.Path(__file__).resolve().parents[1]
 p=argparse.ArgumentParser();p.add_argument('--module',choices=['tribes2','ifc22','mss32']+[r['module'] for r in json.loads((ROOT/'config/runtime/miles-codecs.json').read_text())],default='tribes2');p.add_argument('--diagnostic',action='store_true');p.add_argument('--full-flags',action='store_true');p.add_argument('--flags-hints',type=pathlib.Path);p.add_argument('--tribes-tools',action='store_true');p.add_argument('--native-zlib-routes',action='store_true',help='IFC22 only: pinned native optimized Adler integration');p.add_argument('--timeout',type=int,default=600);a=p.parse_args()
 lock=json.loads((ROOT/'toolchains.lock.json').read_text())
+# Player builds compile the tools locally from the locked sources (build-tools.py);
+# their binaries are recorded in tools-build.json and the lift output is checked later.
+player_tools=ROOT/'generated/tools/tools-build.json'
+if player_tools.exists():
+ record=json.loads(player_tools.read_text());assert record['base_sources']==lock['tribes_extensions']['base_sources']
+ lock=dict(lock,artifacts=record['artifacts'])
 for name in ['SRW/SRW.exe','llasm/llasm']:
  if hashlib.sha256((ROOT/'generated/tools'/name).read_bytes()).hexdigest()!=lock['artifacts'][name]:raise SystemExit('Translator identity mismatch: '+name)
 srw=ROOT/'generated/tools/SRW/SRW.exe'

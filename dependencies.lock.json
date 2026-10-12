@@ -5,7 +5,8 @@
       "name": "halopad",
       "url": "https://github.com/chrissotraidis/projectreach.git",
       "revision": "c4aad6873057e48cb7e6aca907797722ef7da5b9",
-      "local_reference": "../projectreach"
+      "local_reference": "../projectreach",
+      "path": "ref/halopad"
     },
     {
       "name": "rewise",
@@ -360,6 +361,29 @@
       "revision": "d2e5e488da0c6215f8276e5b8d992a4a6ec20c32",
       "path": "ref/angle-prebuilt/ios",
       "usage": "Opt-in Metal backend. Pinned distributor XCFrameworks for ARM64 iOS and Simulator; reported ANGLE source revision, not a local source-build attestation."
+    },
+    {
+      "name": "sr",
+      "url": "https://github.com/M-HT/SR.git",
+      "revision": "ac690ddf3010bc3d2c875cb1b5e8da4f53a8d5b3",
+      "path": "ref/sr",
+      "usage": "SRW static recompiler and llasm, built by scripts/build-tools.py with HaloPad's macOS patch and scripts/patches/srw-tribes.patch."
+    },
+    {
+      "name": "ldc",
+      "url": "https://github.com/ldc-developers/ldc/releases/download/v1.42.0/ldc2-1.42.0-osx-arm64.tar.xz",
+      "revision": "1.42.0",
+      "archive": "ldc2-1.42.0-osx-arm64.tar.xz",
+      "root": "ldc2-1.42.0-osx-arm64",
+      "sha256": "7a68e21c5305766a74f4736cc891a7942db7842a9226623209504bc85c701382",
+      "usage": "D compiler for llasm only."
+    },
+    {
+      "name": "gl4es",
+      "url": "https://github.com/ptitSeb/gl4es.git",
+      "revision": "ec16bedd8819c475326f4f1a3063772c6d986e06",
+      "path": "ref/gl4es",
+      "usage": "OpenGL 1.x to OpenGL ES translation for the iOS renderer."
     }
   ]
 }
