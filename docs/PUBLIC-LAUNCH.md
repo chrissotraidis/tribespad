@@ -14,8 +14,10 @@ repository to be public, in this order.
       and from TribesNEXT; publishing them is the owner's call.
 - [x] Repository scan for personal paths, secrets and game files (see "Repository scan").
 - [x] One-command build from a clean clone (iPhone/iPad IPA and Mac zip).
-- [x] PadMint build from a local checkout with Apple's Python 3.9 and an empty PadMint
-      folder (see [Reproducible build](REPRODUCIBLE-BUILD.md)).
+- [x] PadMint player check from a local checkout (`scripts/player-check.sh tribespad ios - CHECKOUT`):
+      Apple's Python 3.9, an empty PadMint folder and a fresh copy of the source built the
+      IPA in 32 minutes; the checkout stayed clean and PadMint's publication gate passed.
+- [x] iPhone 17 Simulator: offline match from a fresh install.
 
 ## After it is public
 
