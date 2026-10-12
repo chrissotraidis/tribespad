@@ -29,6 +29,12 @@ case "$platform" in device|simulator|macos) ;; *) echo "--platform must be devic
 
 repo="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$repo"
+# build-tools.py records this Mac's lifter build in toolchains.lock.json for the
+# scripts that check it; restore the committed file when the build exits so the
+# checkout stays clean (PadMint requires that).
+lock_backup="$(mktemp)"
+cp toolchains.lock.json "$lock_backup"
+trap 'cp "$lock_backup" "$repo/toolchains.lock.json"; rm -f "$lock_backup"' EXIT
 output="${output:-$repo/build/output}"
 mkdir -p "$output"
 output="$(cd "$output" && pwd)"

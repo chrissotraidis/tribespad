@@ -114,6 +114,12 @@ from graphics_backend_inputs import prepare as graphics_inputs
 graphics_sources,_=graphics_inputs(mobile_inputs)
 old_wrapper=next(p for p in sources if p.name=='graphics-bindings.ll')
 sources[sources.index(old_wrapper)]=next(p for p in graphics_sources if p.name=='graphics-bindings.ll')
+# DirectSound COM routes are generated from dsound_backend_inputs.py, so methods
+# implemented after the frozen preparation replace their stops.
+from dsound_backend_inputs import prepare as dsound_inputs
+dsound_sources,_=dsound_inputs(mobile_inputs)
+old_dsound=next(p for p in sources if p.name=='dsound-bindings.ll')
+sources[sources.index(old_dsound)]=next(p for p in dsound_sources if p.name=='dsound-bindings.ll')
 sdk_name=dict(device='iphoneos',simulator='iphonesimulator',macos='macosx')[a.platform]
 target='arm64-apple-macos12' if mac else 'arm64-apple-ios16'+('' if a.platform=='device' else '-simulator');sdk=subprocess.check_output(['xcrun','--sdk',sdk_name,'--show-sdk-path'],text=True).strip()
 sdl,sdl_flags,libraries=sdl_inputs(a.platform)
@@ -146,7 +152,7 @@ if not profile.exists():shutil.copytree(R/'generated/apple-game-profile',profile
 # Use the game's supported offline launch override in this isolated profile.
 # No authentication or online match joining during mobile development.
 offline=profile/'base/autoexec.cs'
-offline_text='// TribesPad mobile development: original offline mode.\n$SkipLogin = true;\n$LaunchMode = "Offline";\n'
+offline_text='// TribesPad: original offline mode. A dedicated server would quit the app, so host in game.\n$SkipLogin = true;\n$LaunchMode = "Offline";\n$Host::Dedicated = 0;\n'
 if offline.exists():assert offline.read_text()==offline_text, 'Preserve custom autoexec.cs; select offline mode there before building'
 else:offline.write_text(offline_text)
 
