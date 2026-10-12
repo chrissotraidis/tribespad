@@ -1,8 +1,10 @@
-# TribesPad handoff — 10 October 2026
+# TribesPad handoff — 12 October 2026
 
 ## Read this first
 
 **The original game runs offline on Mac and in the iPad Simulator, now near 30 FPS in the Simulator with the MMU-enforced build. It is not yet a finished, accepted Apple port.** The primary engineering problem is runtime performance, followed by physical-device validation and reproducible packaging. This is not currently blocked on another missing startup API or on permission to use this Mac.
+
+On 12 October a fresh clone became a one-command build: `scripts/build-tribespad.sh` downloads the official game files and pinned sources, lifts the game on the player's Mac, recreates the tested translated code from small patches and builds an iPhone/iPad IPA, a Mac app or a Simulator app ([Reproducible build](REPRODUCIBLE-BUILD.md)). PadMint's recipe (`padmint.json`) and a GitHub runner workflow use it. A clean-clone Simulator build played offline Katabatic from a fresh install, after two first-run file services were added (`GetFileInformationByHandle`, `MoveFileExW`, plus specific CreateFile rights); before that every fresh install aborted on its first TribesNEXT download. The Mac app now uses the same engine build and GL4ES → ANGLE (Metal) renderer as iOS and played offline Katabatic.
 
 On 10 October the MMU-enforced build took offline Katabatic from 6-7 to a steady ~30 FPS in the Simulator, every touch control was played by touch, an end-of-match map cycle and clean quit were verified, and the touch controls, TribesPad menu, app icon and public README were added. All of it is merged to main. No full-engine app or build process was left running.
 
@@ -14,11 +16,11 @@ Start here instead of replaying the enormous checkpoint histories in [STATUS](ar
 
 | Area | Observed result | Remaining acceptance |
 | --- | --- | --- |
-| macOS original engine | Menus, offline Katabatic with bots, native movement/aim/disc fire, Retina mouse targeting | User hands-on review, responsive performance, fullscreen and regression testing after shared-runtime changes |
+| macOS original engine | Same checked engine and GL4ES/ANGLE renderer as iOS (`build-ipad-engine.py --platform macos --angle`); fresh profile reached offline Katabatic with bots and spawned | Performance measurement, fullscreen, longer play; a fresh profile shows the Dedicated host option ticked |
 | iPad Simulator original engine | Metal rendering; offline Katabatic at ~30 FPS (MMU-enforced build); every touch control (move, look, fire, jet, ski/jump, weapon, grenade, pack, inventory) played by touch; map cycle and clean quit; 30-minute soak; saved profile | Simultaneous gestures, full visual/audio fidelity |
 | iPad lifecycle/inventory | Two offline map loads in one 21+ minute session; equipment selection and station changes; original Quit exits code 0 | Station setup used diagnostic console positioning; a fully touch-navigated route remains untested |
-| Physical iPad | ARM64 device bundle (MMU-enforced, with app icon) builds and passes ad-hoc signature checks | Development provisioning, installation, actual launch, RAM/thermal/performance and input testing; no physical gameplay evidence |
-| iPhone | Shared mobile code and a separate controls diagnostic exist | Full game integration and acceptance; full-engine builder currently sets `UIDeviceFamily=[2]` (iPad only) |
+| Physical iPad | Unsigned IPA from a clean clone passes PadMint's package check and carries Extended Virtual Addressing | Signing, installation, launch, RAM/thermal/performance and input testing; no physical gameplay evidence |
+| iPhone | The IPA now declares iPhone and iPad (`UIDeviceFamily=[1,2]`) | iPhone Simulator layout check and device play |
 | Controller | Extended-gamepad mappings and native component checks | Physical controller gameplay on an actual device |
 | Server discovery | Mac original browser displayed 26 community servers and refreshed information | Mobile discovery acceptance; discovery does not prove joining/authentication |
 | Online matches | No accepted authenticated session | Deferred under current user scope |
@@ -92,14 +94,16 @@ Archived, unshipped experiments: [inline-grouped-guard-rejected.patch](archive/e
 
 1. **Hardware-enforced checked memory: acceptance.** Done for the Simulator route above, including touch-driven play of every control and a scripted map cycle and quit. Remaining: the touch Launch → Quit menu route; the device build and physical-iPad measurement (Extended Virtual Addressing, signal-based fault handling with and without a debugger); then make `--hardware-permissions` the default once those pass. The bracketed build remains the reference.
 2. **Physical iPad acceptance.** Check current device/signing availability once. Earlier checks had neither a connected device nor development identity. Device packaging needs provisioning retaining Extended Virtual Addressing; the engine reserves a 4 GiB virtual range. This is not a claim of 4 GiB physical usage, nor proof it fits the device's memory budget. See [Development](DEVELOPMENT.md).
-3. **Reproducible build/package.** Remove dependence on unexplained local preparation; inventory required generated inputs and document regeneration. Verify source-to-bundle identity before distributing. Source backup is not a portable app release.
+3. **Reproducible build: public verification.** Done on this Mac from a clean clone. Remaining: make the repository public, run the GitHub workflow (7 GB runner; the build peaked at 6.3 GB in one process) and PadMint's `scripts/player-check.sh`, tag a release, then add the PadMint catalog entry. Other Xcode versions may lift differently; the build stops with a clear message if a base digest differs.
 4. **Stability and complete controls.** The earlier isolated null guest-PC abort most likely came from cycling missions without the original end-of-match cleanup (see Map cycle and quit); the original end-of-match route works. Not proven to be the same event. Test real simultaneous touch, station navigation by touch, controller and background/resume.
-5. **Mac and iPhone.** Rebuild/regress Mac shared-runtime changes and get hands-on acceptance. Implement and exercise full iPhone layout/device-family support, one Simulator at a time; do not present the diagnostic controls shell as the full game.
+5. **Mac and iPhone.** Mac hands-on acceptance and performance; iPhone layout in the iPhone Simulator, one Simulator at a time; do not present the diagnostic controls shell as the full game.
 6. **Fidelity and product completion.** Compare representative terrain/interiors/water/weapons/players/vehicles, HD sampling and audio against the pinned reference. Resolve online test scope with the human only when ready; no automatic joining. Full original product acceptance remains outstanding.
 
 ## Build and workspace handoff
 
-Workspace: `~/GitHub/tribespad`. **Do not delete it after pulling GitHub.** At wrap-up, ignored `ref/` was about 3.7 GB and `generated/` about 250 GB. Git contains source, input manifests and selected validation evidence, not the game assets, complete translated inputs, native dependencies or all logs. A fresh clone is not currently a one-command reproducible build. Do not commit those ignored directories wholesale.
+Players and fresh clones: `scripts/build-tribespad.sh [--platform device|macos|simulator]`. After changing translated inputs or receipts, re-record patches with `scripts/translation-patches.py make` (see Reproducible build).
+
+Workspace: `~/GitHub/tribespad`. **Do not delete it after pulling GitHub.** At wrap-up, ignored `ref/` was about 3.7 GB and `generated/` about 250 GB. Git contains source, input manifests and selected validation evidence, not the game assets, complete translated inputs, native dependencies or all logs. A fresh clone builds with the one command above. Do not commit those ignored directories wholesale.
 
 Prepared baseline used by the full build: `generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe`. Preserve it until a clean reproduction succeeds. Local Python is `.venv/bin/python`; pinned LLVM was `/opt/homebrew/Cellar/llvm@20/20.1.8/bin`. Xcode SDK 26.5 was used; accidentally selecting the Command Line Tools SDK 27 previously caused TAPI incompatibilities. Component tests that link for macOS need both `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer` and `SDKROOT="$(xcrun --sdk macosx --show-sdk-path)"`; otherwise `clang` still picks the Command Line Tools SDK and fails with a TAPI error. A change to `guest_memory_checks.c` or `ExternalMemoryPass.cpp` invalidates eleven receipts the iPad builder checks; rerun cpu-host-checks, host-local-checks, native-cpu-checks, sse-host-locals, x87-host-checks, mobile-gpu-timing, code-revision (both modes), mobile-gpu-sync, sdl-io, guest-threads and guest-access-groups (about two minutes).
 
@@ -129,7 +133,7 @@ export SDKROOT="$(xcrun --sdk iphonesimulator --show-sdk-path)"
 
 Component checks for that mode: `clang -DTRIBES_HARDWARE_PERMISSIONS port/core/guest_memory_checks.c tests/hardware_permissions_test.c` (run on macOS and with `xcrun simctl spawn`), plus `tests/float80_widen_test.c` against SoftFloat.
 
-Boot only one Simulator. Install/launch `com.tribespad.full-engine.ipad` on its current UDID; don't rely on old process IDs. Start **LAN GAME → HOST → Katabatic → two bots → START GAME**. After loading, enable **Touch controls** and Fire to spawn. Leave the match, then **Launch → Quit** to exercise normal cleanup. [README](../README.md) has the control layout. The Mac development app path is `generated/integration-review/macos-engine-app/TribesPad.app` (its packaged engine predates the iPad performance work; rebuild through the Mac bootstrap before measuring Mac speed); see [Development](DEVELOPMENT.md) for packaging and native input-helper commands.
+Boot only one Simulator. Install/launch `com.tribespad.full-engine.ipad` on its current UDID; don't rely on old process IDs. Start **LAN GAME → HOST → Katabatic → two bots → START GAME**. After loading, enable **Touch controls** and Fire to spawn. Leave the match, then **Launch → Quit** to exercise normal cleanup. [README](../README.md) has the control layout. The Mac app is `generated/macos-engine-hw/TribesPad.app` (`build-ipad-engine.py --platform macos --angle --hardware-permissions --bundle-assets --build-only`); the older bootstrap-packaged Mac app is superseded. See [Development](DEVELOPMENT.md) for packaging and native input-helper commands.
 
 Source/policy changes intentionally invalidate proof receipts. Refresh the specific affected tests, not every historical suite. For example, the interrupted context diagnostic required `test-sdl-io.py` and `test-guest-threads.py` after the reviewed-source identity changed; both passed normal/checked/ThreadSanitizer checks before the experiment build. Returning to validated source can invalidate those experimental receipts again. A build failure identifying stale proof is actionable dependency information, not permission to bypass it.
 
@@ -145,7 +149,7 @@ A reference recording now compares TribesPad with the original Windows game. [te
 
 - **App icon:** `port/apple/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png`, a full-bleed square with no corners, border or transparency; the OS applies its own mask. `scripts/app_icon.py` compiles it with actool for the iPad (Simulator and device) and Mac app builds and returns the Info.plist icon keys. Verified on the iPad Simulator home screen and the macOS Dock.
 - **README logo:** `docs/images/tribespad-logo.png`, a transparent hexagon emblem used only in documentation.
-- `build-macos-engine-app.py --refresh-icon` updates the icon, Info.plist and signature of an already packaged Mac app after checking that its engine still matches `app-build.json`. A full Mac repackage needs a finished Mac bootstrap run; the current shared bootstrap record is an iPad input preparation.
+- The Mac app built by `build-ipad-engine.py --platform macos` compiles the same icon with actool.
 
 ## Suggested next session
 

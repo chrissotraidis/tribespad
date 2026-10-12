@@ -14,6 +14,8 @@
   <img alt="Metal renderer" src="https://img.shields.io/badge/renderer-Metal%20(ANGLE)-5E5CE6">
   <img alt="Ahead-of-time translation" src="https://img.shields.io/badge/x86-ahead--of--time%20translation-FF9F0A">
   <img alt="iPad Simulator playable" src="https://img.shields.io/badge/iPad%20Simulator-offline%20play%20~30%20FPS-30D158">
+  <img alt="Mac playable" src="https://img.shields.io/badge/Mac-offline%20play-30D158">
+  <img alt="One-command build" src="https://img.shields.io/badge/build-one%20command%20%2F%20PadMint-0A84FF">
   <img alt="Physical devices unverified" src="https://img.shields.io/badge/physical%20iPad%20%2F%20iPhone-unverified-FFD60A">
   <img alt="TribesNEXT" src="https://img.shields.io/badge/client-TribesNEXT%20%2B%20QoL-2EC4C9">
   <img alt="Game data not included" src="https://img.shields.io/badge/game%20data-not%20included-FF453A">
@@ -22,11 +24,11 @@
 ![TribesPad: jetting over Katabatic on iPad with touch controls](docs/images/tribespad-gameplay-jet.jpg)
 
 > [!IMPORTANT]
-> **TribesPad is in development and has no release yet.** Offline matches against
-> bots play by touch in the iPad Simulator at about 30 FPS, and the Mac build runs
-> the original game. Physical iPad, iPhone and controller play have not been
-> verified, and online joining is not yet tested. Building requires your own
-> prepared Tribes 2 and TribesNEXT files; no game data is included.
+> **TribesPad is in development.** One command (or PadMint's **Build** button) downloads
+> the free official Tribes 2 and TribesNEXT files and builds your own copy for iPhone,
+> iPad and Mac. Offline matches against bots play in the iPad Simulator and on Mac.
+> Physical iPad, iPhone and controller play have not been verified, and online joining
+> is not yet tested. See [Get TribesPad](#get-tribespad).
 
 ## What is TribesPad?
 
@@ -36,9 +38,9 @@ game's x86 code is translated ahead of time into native ARM64, and TribesPad sup
 the Windows, OpenGL, audio, input and networking services the game expects. The
 original menus, maps, weapons, physics, bots and scripts are all the game's own.
 
-On iPad it adds an analog touch layout, gamepad mapping and a small TribesPad menu
-for settings; iPhone support is planned. On Mac it runs as a normal app with mouse
-and keyboard.
+On iPhone and iPad it adds an analog touch layout, gamepad mapping and a small
+TribesPad menu for settings (the iPhone layout is not yet checked). On Mac it runs as a
+normal app with mouse and keyboard, on the same Metal renderer.
 
 ## Screenshots
 
@@ -54,13 +56,13 @@ and keyboard.
 | Question | Answer |
 |---|---|
 | Is this an emulator or streaming? | Neither. The x86 game and DLLs are translated ahead of time into native ARM64 code. Memory permissions are enforced by the CPU's page protections, and any access that breaks them stops the game. |
-| Can I play it today? | **In the iPad Simulator, yes:** host an offline match with bots and play it by touch at about 30 FPS. The Mac app runs offline matches with mouse and keyboard. There is no installable iPad or iPhone release yet. |
-| Does it work on a real iPad or iPhone? | **Not verified.** The iPad device build compiles, but it has not been installed or played on hardware. The iPhone layout has not been checked. |
+| Can I play it today? | **You can build it and play offline.** [One command](#get-tribespad) builds an iPhone/iPad IPA or a Mac app from the official downloads. Offline matches with bots play by touch in the iPad Simulator at about 30 FPS and with mouse and keyboard on Mac. |
+| Does it work on a real iPad or iPhone? | **Not verified.** The IPA builds for iPhone and iPad and passes PadMint's package check, but it has not been installed or played on hardware. The iPhone layout has not been checked. |
 | What has been played? | Offline Katabatic CTF with two bots: spawning, movement, aiming, firing, jets, skiing/jumping, weapon switching, grenades, inventory, an end-of-match map change, and a clean quit. A 30-minute session ran without a crash. |
 | Does it match the original game? | In the one scenario measured so far, yes: a [reference trace](docs/validation/reference-trace-katabatic.json) of the same Katabatic flight is bit-identical to the original Windows game in the air and differs by about 1 cm after landing, where the QoL collision patch applies (the Windows reference ran without QoL). |
 | Online play? | The original server browser lists TribesNEXT community servers on Mac. Joining online matches and account sign-in have not been tested. |
 | Controllers? | One Xbox, PlayStation or MFi extended gamepad maps to the original bindings. Native input tests pass; play with a physical controller is unverified. |
-| Is the game included? | **No.** You need your own Tribes 2 installation and the TribesNEXT client files. See [Game data](#game-data). |
+| Is the game included? | **No.** Your build downloads the free official Tribes 2 installer and the TribesNEXT client and checks them by SHA-256. See [Game data](#game-data). |
 
 ### Performance
 
@@ -165,49 +167,75 @@ flowchart LR
 - **Original rendering.** The game's fixed-function OpenGL runs through GL4ES and ANGLE
   on Metal, with streaming paths added for draws and texture uploads.
 
-## Game data
+## Get TribesPad
 
-TribesPad does not include Tribes 2 or TribesNEXT. Downloads, textures and generated
-translations stay in the ignored `ref/` and `generated/` directories. The selected
-files are identified by hash in [inputs-manifest.json](inputs-manifest.json), and pinned
-dependencies are in [dependencies.lock.json](dependencies.lock.json). That a game is
-available for free download does not grant redistribution rights.
+TribesPad never ships the game. Each build downloads the free official Tribes 2
+installer and the TribesNEXT client, checks both by SHA-256, translates the game on a
+Mac with Apple Silicon and packages a personal copy for you. The first build takes
+about 40 minutes and 15 GB of disk space; later builds reuse most of the work.
 
-## Build from source
+### With PadMint
 
-The build needs Xcode, the pinned LLVM toolchain, prepared game inputs and translated
-images. A clean checkout is not yet a one-command build. In a prepared workspace, with
-one iPad Simulator booted:
+On a Mac with Apple Silicon, install Xcode (with its iOS platform) and run
+`brew install llvm@20 cmake ninja sevenzip zstd`. Then choose TribesPad in
+[PadMint](https://github.com/chrissotraidis/padmint) and press **Build**. There is no
+game file to select.
+
+### From Terminal
 
 ```sh
-export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
-export SDKROOT="$(xcrun --sdk iphonesimulator --show-sdk-path)"
-.venv/bin/python scripts/build-checked-bochs.py --platform simulator --hardware
-.venv/bin/python scripts/build-ipad-engine.py --angle --hardware-permissions \
-  --bundle-assets --build-only
-# Output: generated/ipad-engine-hw/TribesPad.app
+git clone https://github.com/chrissotraidis/tribespad.git
+cd tribespad
+scripts/build-tribespad.sh                    # iPhone and iPad: build/output/TribesPad.ipa
+scripts/build-tribespad.sh --platform macos   # Mac: build/output/TribesPad-mac.zip
 ```
 
-For a physical iPad build, use the `iphoneos` SDK with `--platform device`; the app
-then needs Apple development signing before installation. Mac packaging, dependency
-preparation and validation are covered in the [development guide](docs/DEVELOPMENT.md).
+### Without a Mac
+
+Fork this repository, open **Actions**, choose **Build TribesPad for iPhone and iPad**
+and press **Run workflow**. GitHub's free macOS runner builds the IPA in your fork and
+keeps it with the run for 7 days; nothing is published. This route has not been run yet.
+
+### Install
+
+- **Mac:** unzip `TribesPad-mac.zip`, move TribesPad to Applications and open it.
+- **iPhone and iPad:** sign and install `TribesPad.ipa` with
+  [Sideloadly](https://sideloadly.io) or another tool that signs with your own Apple ID.
+  TribesPad reserves the game's full 32-bit address space and asks for the
+  **Extended Virtual Addressing** capability, so sign with a development profile that
+  allows it; a paid Apple Developer account does. Installation on hardware is untested.
+
+## Game data
+
+No Tribes 2 or TribesNEXT files are stored in this repository or published by it. The
+build keeps the downloads in the ignored `ref/` folder and its own work in `generated/`.
+The accepted files are listed by SHA-256 in [inputs-manifest.json](inputs-manifest.json)
+and [config/game-inputs.json](config/game-inputs.json). That a game is free to
+download does not grant the right to redistribute it.
+
+To recreate the exact translated code the engine was tested with, the build lifts your
+downloaded binaries with the pinned recompiler and then applies small binary differences
+from [patches/translation](patches/translation) (about 3.5 MB, recorded in
+[config/translation-patches.json](config/translation-patches.json)). Each result is
+checked by SHA-256. The patches are useless without your own lift of the official files.
+How this works, stage by stage, is in [Reproducible build](docs/REPRODUCIBLE-BUILD.md).
 
 ## Roadmap
 
 - Install and play on a physical iPad; decide the VSync default on hardware
 - Check the iPhone touch layout
 - Play with a physical controller
+- Run the GitHub build workflow and PadMint's player check once the repository is public
 - Touch layout editor
-- Rebuild the Mac app on the current engine and measure Mac performance
+- Measure Mac performance
 - Compare with the QoL client on Windows and add jet, weapon and bot scenarios to the reference trace
 - Join TribesNEXT community servers
-- A one-command build for PadMint's Build button and a GitHub runner for iPad-only players ([plan](docs/REPRODUCIBLE-BUILD.md))
 
 ## Documentation
 
 - [Handoff](docs/HANDOFF.md): what works, current evidence and next steps
 - [Development guide](docs/DEVELOPMENT.md): building, packaging and validation
-- [Reproducible build](docs/REPRODUCIBLE-BUILD.md): the path to a one-command build for PadMint
+- [Reproducible build](docs/REPRODUCIBLE-BUILD.md): how the one-command build recreates the game from the official downloads
 - [Validation records](docs/validation): measurements and screenshots
 - [Product target](docs/Tribes2-Online-HD-Target.md): the intended experience
 - [Archive](docs/archive): historical status checkpoints, plans and rejected experiments

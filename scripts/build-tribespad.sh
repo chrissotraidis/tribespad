@@ -112,7 +112,7 @@ if [ "$platform" = device ]; then
   ditto "$app" "$stage/Payload/TribesPad.app"
   mkdir -p "$(dirname "$ipa")"
   (cd "$stage" && zip -qry "$ipa" Payload)
-  printf '\nBuilt %s\nSign it with your own Apple account to install it (README: Install on iPhone or iPad).\n' "$ipa"
+  printf '\nBuilt %s\nSign it with your own Apple account to install it (README: Install).\n' "$ipa"
 elif [ "$platform" = macos ]; then
   zip_path="${zip:-$output/TribesPad-mac.zip}"
   ditto -c -k --sequesterRsrc --keepParent "$app" "$zip_path"
