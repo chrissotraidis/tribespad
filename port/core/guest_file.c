@@ -154,6 +154,16 @@ static uint32_t path_error(uint64_t base,const char *guest,int native_error) {
    CREATE_ALWAYS/OPEN_ALWAYS support writable regular files with default security. Other creation
    dispositions, overlapped/device flags and templates remain gates. */
 static uint32_t create_file(uint64_t base,uint32_t name,uint32_t access,uint32_t share,uint32_t security,uint32_t creation,uint32_t flags,uint32_t template_handle,int wide){
+    /* Specific file rights, such as FILE_GENERIC_WRITE (0x120116) or
+       FILE_GENERIC_READ (0x120089), grant the same data access as the generic
+       rights. This filesystem has no extended attributes, so FILE_READ_EA and
+       FILE_WRITE_EA grant nothing more; READ_CONTROL and SYNCHRONIZE do not
+       change data access. Append-only access is not modelled and stays a gate.
+       https://learn.microsoft.com/en-us/windows/win32/fileio/file-security-and-access-rights */
+    if((access&4u)&&!(access&2u)){fprintf(stderr,"TribesPad: unsupported append-only CreateFile access=0x%x\n",access);abort();}
+    if(access&2u)access|=UINT32_C(0x40000000);
+    if(access&1u)access|=UINT32_C(0x80000000);
+    access&=~UINT32_C(0x0012001f);
     if((creation!=3&&creation!=2&&creation!=4)||template_handle||(flags&~UINT32_C(0x0a200080))||(access&~UINT32_C(0xc0010180))){fprintf(stderr,"TribesPad: unsupported CreateFile access=0x%x creation=%u flags=0x%x template=0x%x\n",access,creation,flags,template_handle);abort();}
     if(share&~7u||!name){tribes_set_last_error(87);return UINT32_MAX;}
     /* SECURITY_ATTRIBUTES has three 32-bit fields in the guest ABI. For
@@ -181,7 +191,9 @@ static uint32_t create_file(uint64_t base,uint32_t name,uint32_t access,uint32_t
     }
     int reparse=(flags&0x00200000)!=0,backup=(flags&0x02000000)!=0;
     if(creation==2&&reparse){tribes_set_last_error(87);return UINT32_MAX;}
-    if(creation!=3&&(backup||reparse||!(access&0x40000000))){fputs("TribesPad: unsupported CreateFile creation access/backup mode\n",stderr);abort();}
+    /* FILE_FLAG_BACKUP_SEMANTICS only matters for directories and backup
+       privileges; creating a regular file with it behaves like a normal create. */
+    if(creation!=3&&(reparse||!(access&0x40000000))){fputs("TribesPad: unsupported CreateFile creation access/reparse mode\n",stderr);abort();}
     TribesFileOpenInfo info={0};char host[PATH_MAX],canonical[PATH_MAX];
     uint32_t data=(access&0x80000000?1:0)|(access&0x40000000?2:0);
     uint32_t rights=data|TRIBES_FILE_READ_ATTRIBUTES|(access&0x10000?TRIBES_FILE_DELETE:0)|
