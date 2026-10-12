@@ -7,6 +7,7 @@
 #include <fcntl.h>
 #include <limits.h>
 #include <stdio.h>
+#include <sys/stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
@@ -154,7 +155,17 @@ static uint32_t path_error(uint64_t base,const char *guest,int native_error) {
    CREATE_ALWAYS/OPEN_ALWAYS support writable regular files with default security. Other creation
    dispositions, overlapped/device flags and templates remain gates. */
 static uint32_t create_file(uint64_t base,uint32_t name,uint32_t access,uint32_t share,uint32_t security,uint32_t creation,uint32_t flags,uint32_t template_handle,int wide){
-    if((creation!=3&&creation!=2&&creation!=4)||template_handle||(flags&~UINT32_C(0x0a200080))||(access&~UINT32_C(0xc0010180))){fprintf(stderr,"TribesPad: unsupported CreateFile access/creation/flags/template\n");abort();}
+    /* Specific file rights, such as FILE_GENERIC_WRITE (0x120116) or
+       FILE_GENERIC_READ (0x120089), grant the same data access as the generic
+       rights. This filesystem has no extended attributes, so FILE_READ_EA and
+       FILE_WRITE_EA grant nothing more; READ_CONTROL and SYNCHRONIZE do not
+       change data access. Append-only access is not modelled and stays a gate.
+       https://learn.microsoft.com/en-us/windows/win32/fileio/file-security-and-access-rights */
+    if((access&4u)&&!(access&2u)){fprintf(stderr,"TribesPad: unsupported append-only CreateFile access=0x%x\n",access);abort();}
+    if(access&2u)access|=UINT32_C(0x40000000);
+    if(access&1u)access|=UINT32_C(0x80000000);
+    access&=~UINT32_C(0x0012001f);
+    if((creation!=3&&creation!=2&&creation!=4)||template_handle||(flags&~UINT32_C(0x0a200080))||(access&~UINT32_C(0xc0010180))){fprintf(stderr,"TribesPad: unsupported CreateFile access=0x%x creation=%u flags=0x%x template=0x%x\n",access,creation,flags,template_handle);abort();}
     if(share&~7u||!name){tribes_set_last_error(87);return UINT32_MAX;}
     /* SECURITY_ATTRIBUTES has three 32-bit fields in the guest ABI. For
        OPEN_EXISTING the descriptor pointer is ignored, even when non-NULL;
@@ -181,7 +192,9 @@ static uint32_t create_file(uint64_t base,uint32_t name,uint32_t access,uint32_t
     }
     int reparse=(flags&0x00200000)!=0,backup=(flags&0x02000000)!=0;
     if(creation==2&&reparse){tribes_set_last_error(87);return UINT32_MAX;}
-    if(creation!=3&&(backup||reparse||!(access&0x40000000))){fputs("TribesPad: unsupported CreateFile creation access/backup mode\n",stderr);abort();}
+    /* FILE_FLAG_BACKUP_SEMANTICS only matters for directories and backup
+       privileges; creating a regular file with it behaves like a normal create. */
+    if(creation!=3&&(reparse||!(access&0x40000000))){fputs("TribesPad: unsupported CreateFile creation access/reparse mode\n",stderr);abort();}
     TribesFileOpenInfo info={0};char host[PATH_MAX],canonical[PATH_MAX];
     uint32_t data=(access&0x80000000?1:0)|(access&0x40000000?2:0);
     uint32_t rights=data|TRIBES_FILE_READ_ATTRIBUTES|(access&0x10000?TRIBES_FILE_DELETE:0)|
@@ -238,8 +251,76 @@ static uint32_t get_attributes(uint64_t base,uint32_t name,int wide) {
 #endif
     return attributes;
 }
+/* MoveFileExW for regular files inside the guest mounts: REPLACE_EXISTING (1),
+   COPY_ALLOWED (2, one volume) and WRITE_THROUGH (8). Without REPLACE_EXISTING
+   an existing target fails with ERROR_ALREADY_EXISTS atomically (RENAME_EXCL).
+   Directory moves, delayed moves and other flags remain explicit gates.
+   https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-movefileexw */
+uint32_t tribes_move_file_ex_w(uint64_t base,uint32_t from,uint32_t to,uint32_t flags){
+    if(flags&~UINT32_C(0xb)){fprintf(stderr,"TribesPad: unsupported MoveFileEx flags 0x%x\n",flags);abort();}
+    if(!to){tribes_set_last_error(87);return 0;}
+    char source[PATH_MAX],target[PATH_MAX],source_host[PATH_MAX],target_host[PATH_MAX];
+    if(!read_path(base,from,1,source)||!read_path(base,to,1,target))return 0;
+    if(!tribes_filesystem_resolve_open(base,source,source_host,sizeof source_host,NULL,1)){
+        tribes_set_last_error(path_error(base,source,errno));return 0;
+    }
+    struct stat from_st,to_st;
+    if(lstat(source_host,&from_st)){tribes_set_last_error(path_error(base,source,errno));return 0;}
+    if(!S_ISREG(from_st.st_mode)){fputs("TribesPad: unsupported MoveFileEx source object\n",stderr);abort();}
+    if(!tribes_filesystem_resolve_create(base,target,target_host,sizeof target_host)){
+        tribes_set_last_error(path_error(base,target,errno));return 0;
+    }
+    int same=!lstat(target_host,&to_st)&&to_st.st_dev==from_st.st_dev&&to_st.st_ino==from_st.st_ino;
+    int result;
+    if(same||(flags&1)){
+        if(!same&&!lstat(target_host,&to_st)&&!S_ISREG(to_st.st_mode)){tribes_set_last_error(5);return 0;}
+        result=rename(source_host,target_host);
+    }else result=renamex_np(source_host,target_host,RENAME_EXCL);
+    if(result){
+        int e=errno;
+        tribes_set_last_error(e==EEXIST?183:e==EXDEV?17:e==ENOSPC?112:path_error(base,target,e));return 0;
+    }
+    if(flags&8){
+        char parent[PATH_MAX];strcpy(parent,target_host);char *slash=strrchr(parent,'/');
+        if(slash){*slash=0;int fd=open(parent,O_RDONLY|O_CLOEXEC);if(fd>=0){fsync(fd);close(fd);}}
+    }
+    return 1;
+}
 uint32_t tribes_get_file_attributes(uint64_t base,uint32_t name){return get_attributes(base,name,0);}
 uint32_t tribes_get_file_attributes_w(uint64_t base,uint32_t name){return get_attributes(base,name,1);}
+/* BY_HANDLE_FILE_INFORMATION (52 bytes) for regular files and directories,
+   from the same native metadata as NtQueryInformationFile: attributes, times,
+   the C: virtual volume serial (native mount ID), size, links and the inode
+   as the file index. Other objects (pipes, devices) fail with
+   ERROR_INVALID_FUNCTION instead of inventing metadata.
+   https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-getfileinformationbyhandle */
+uint32_t tribes_get_file_information_by_handle(uint64_t base,uint32_t handle,uint32_t output){
+    if(!output||output>UINT32_MAX-51||base>UINTPTR_MAX-output-51){tribes_set_last_error(998);return 0;}
+    int fd=tribes_fd_borrow(handle);if(fd<0)return 0;
+    struct stat st;struct statfs fs;
+    if(fstat(fd,&st)||fstatfs(fd,&fs)){close(fd);tribes_set_last_error(6);return 0;}
+    close(fd);
+    if(!S_ISREG(st.st_mode)&&!S_ISDIR(st.st_mode)){tribes_set_last_error(1);return 0;}
+    if(st.st_size<0){tribes_set_last_error(1);return 0;}
+    unsigned char record[52]={0};
+    uint32_t attributes=S_ISDIR(st.st_mode)?16:32;
+    if(!(st.st_mode&S_IWUSR))attributes|=1;
+    if(st.st_flags&UF_HIDDEN)attributes|=2;
+    nt_u32(record,0,attributes);
+    if(!nt_time(record,4,st.st_birthtimespec)||!nt_time(record,12,st.st_atimespec)||!nt_time(record,20,st.st_mtimespec)){
+        tribes_set_last_error(1);return 0;
+    }
+    uint64_t size=S_ISDIR(st.st_mode)?0:(uint64_t)st.st_size,index=(uint64_t)st.st_ino;
+    nt_u32(record,28,(uint32_t)fs.f_fsid.val[0]);
+    nt_u32(record,32,(uint32_t)(size>>32));nt_u32(record,36,(uint32_t)size);
+    nt_u32(record,40,st.st_nlink);
+    nt_u32(record,44,(uint32_t)(index>>32));nt_u32(record,48,(uint32_t)index);
+    void *destination=(void *)(uintptr_t)(base+output);
+    uint32_t access=tribes_memory_access_begin(destination,sizeof record,2);
+    memcpy(destination,record,sizeof record);
+    tribes_memory_access_end(access);
+    tribes_set_last_error(0);return 1;
+}
 /* DWORD size with optional high word. Clear LastError on success so a valid
    low word of INVALID_FILE_SIZE is distinguishable from failure. */
 uint32_t tribes_get_file_size(uint64_t base,uint32_t handle,uint32_t high){

@@ -2,7 +2,7 @@
 import hashlib,json,pathlib,subprocess
 R=pathlib.Path(__file__).resolve().parents[1]
 def inputs(platform):
-    assert platform in ('simulator','device')
+    assert platform in ('simulator','device','macos')
     root=R/'generated/gl4es'/platform
     report=json.loads((root/'result.json').read_text())
     assert report['platform']==platform

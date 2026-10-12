@@ -7,6 +7,7 @@
 int tribes_filesystem_configure(uint64_t base,const char *volume,const char *game,const char *temp);
 int tribes_filesystem_open_create(uint64_t base,const char *guest,char *host,size_t capacity,char *canonical,int mode,int *created);
 int tribes_filesystem_create_directory(uint64_t base,const char *guest);
+int tribes_filesystem_resolve_create(uint64_t base,const char *guest,char *host,size_t capacity);
 int tribes_filesystem_resolve(uint64_t base,const char *guest,char *host,size_t capacity);
 /* Resolve the final link itself; intermediate links retain mount confinement. */
 int tribes_filesystem_resolve_link(uint64_t base,const char *guest,char *host,size_t capacity);

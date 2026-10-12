@@ -7,6 +7,13 @@
 #include "process_environment.h"
 #include <SDL3/SDL.h>
 #include <TargetConditionals.h>
+/* Guest GL is served by OpenGL ES (iOS, or GL4ES on any Apple platform)
+   instead of the Mac's desktop OpenGL. */
+#if TARGET_OS_IPHONE || defined(TB_GL4ES)
+#define TB_GLES_HOST 1
+#else
+#define TB_GLES_HOST 0
+#endif
 #ifdef TB_ANGLE
 #include "../apple/angle_sdl.h"
 #endif
@@ -41,7 +48,7 @@ extern void glGetSynciv(GLsync,GLenum,GLsizei,GLsizei *,GLint *);
 extern void glDeleteSync(GLsync);
 #endif
 
-#elif TARGET_OS_IPHONE
+#elif TB_GLES_HOST
 #include <SDL3/SDL_opengles2.h>
 #else
 #include <SDL3/SDL_opengl.h>
@@ -151,7 +158,7 @@ static uint32_t next_gamepad_token=0xd9000001;
 typedef struct Window {SDL_Window *native;uint32_t token;int swap_set,swap_interval;struct Window *next;} Window;
 typedef struct AutoMipmap {GLuint name;struct AutoMipmap *next;} AutoMipmap;
 typedef struct SyncObject {void *native;uint32_t token;struct SyncObject *next;} SyncObject;
-#if !TARGET_OS_IPHONE || defined(TB_GL4ES)
+#if !TB_GLES_HOST || defined(TB_GL4ES)
 static uint32_t next_sync_token=0xdd000001;
 #endif
 typedef struct TextureState {unsigned refs;AutoMipmap *automatic;SyncObject *syncs;} TextureState;
@@ -1133,7 +1140,7 @@ static int set_swap_interval(int interval){
     int actual=0;if(!SDL_GL_GetSwapInterval(&actual))return 0;
     w->swap_interval=actual;w->swap_set=1;return 1;
 }
-#if !TARGET_OS_IPHONE
+#if !TB_GLES_HOST
 static int restore_swap_interval(void){
     Window *w=current_window();if(!w)return 0;
     return set_swap_interval(w->swap_set?w->swap_interval:1);
@@ -1179,7 +1186,7 @@ uint32_t tribes_sdl_gl_create_context(_cpu *cpu,uint32_t token){
     }
 #endif
     c->native=SDL_GL_CreateContext(window);
-#if !TARGET_OS_IPHONE
+#if !TB_GLES_HOST
     /* The original UI uses fixed-function matrices. Cocoa cannot create the
        requested 3.2 compatibility profile; use its real 2.1 compatibility
        context, with the reached copy-buffer targets adapted below. */
@@ -1203,7 +1210,7 @@ uint32_t tribes_sdl_gl_create_context(_cpu *cpu,uint32_t token){
     if(!c->native){free(c);WINDOW_RETURN(0);}
     /* UIKit/EAGL has no SDL swap-interval setter. Context binding still works;
        explicit interval requests retain the native unsupported result. */
-#if !TARGET_OS_IPHONE
+#if !TB_GLES_HOST
     if(!restore_swap_interval()){SDL_GL_DestroyContext(c->native);free(c);WINDOW_RETURN(0);}
 #endif
 #ifdef TB_GL4ES
@@ -1213,7 +1220,7 @@ uint32_t tribes_sdl_gl_create_context(_cpu *cpu,uint32_t token){
     c->mipmap_hint=GL_DONT_CARE;
     if(share){c->textures=shared->textures;c->textures->refs++;}
     else {c->textures=calloc(1,sizeof *c->textures);if(!c->textures)stop();c->textures->refs=1;}
-#if !TARGET_OS_IPHONE
+#if !TB_GLES_HOST
     int profile=0;if(SDL_GL_GetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,&profile))c->core=profile==SDL_GL_CONTEXT_PROFILE_CORE;
 #endif
     if(next_context_token>=0xdb100000)stop();c->token=next_context_token++;c->next=contexts;contexts=c;WINDOW_RETURN(c->token);
@@ -1227,7 +1234,7 @@ uint32_t tribes_sdl_gl_make_current(_cpu *cpu,uint32_t window,uint32_t context){
 #ifdef TB_GL4ES
     if(result&&context)tribes_gl4es_context_activate((*context_slot(context))->renderer);
 #endif
-#if !TARGET_OS_IPHONE
+#if !TB_GLES_HOST
     if(result&&context)result=restore_swap_interval();
 #endif
     WINDOW_RETURN(result);
@@ -1277,7 +1284,7 @@ void tribes_gl_clear_color(_cpu *cpu,uint32_t r,uint32_t g,uint32_t b,uint32_t a
 }
 void tribes_gl_bind_framebuffer(_cpu *cpu,uint32_t target,uint32_t framebuffer){
     WINDOW_ENTER();
-#if TARGET_OS_IPHONE && !defined(TB_GL4ES)
+#if TB_GLES_HOST && !defined(TB_GL4ES)
     /* UIKit's real window drawable is a native FBO, not framebuffer zero.
        Bind guest default zero to SDL's published drawable. User-created FBO
        name conversion is a separate, currently unsupported object API. */
@@ -1301,7 +1308,7 @@ void tribes_gl_draw_buffer(_cpu *cpu,uint32_t buffer){
         if(framebuffer||buffer!=GL_BACK)stop();
     }
     DRAW_RETURN();
-#elif TARGET_OS_IPHONE
+#elif TB_GLES_HOST
     (void)buffer;(void)error;stop(); /* Deliberately absent from the mobile export catalog. */
 #else
     glDrawBuffer(buffer);DRAW_RETURN();
@@ -1310,14 +1317,14 @@ void tribes_gl_draw_buffer(_cpu *cpu,uint32_t buffer){
 void tribes_gl_pixel_store(_cpu *cpu,uint32_t parameter,uint32_t value){GL_ENTER();glPixelStorei(parameter,(int32_t)value);DRAW_RETURN();}
 /* Sync objects share the native context group. Only typed, monotonically
    allocated tokens cross the guest ABI; never truncate or forward guest pointers. */
-#if !TARGET_OS_IPHONE || defined(TB_GL4ES)
+#if !TB_GLES_HOST || defined(TB_GL4ES)
 static SyncObject **sync_slot(GLContext *c,uint32_t token){
     SyncObject **p=&c->textures->syncs;while(*p&&(*p)->token!=token)p=&(*p)->next;return p;
 }
 #endif
 uint32_t tribes_gl_fence_sync(_cpu *cpu,uint32_t condition,uint32_t flags){
     GL_ENTER();
-#if TARGET_OS_IPHONE && !defined(TB_GL4ES)
+#if TB_GLES_HOST && !defined(TB_GL4ES)
     (void)condition;(void)flags;(void)error;stop();
 #else
     GLContext *c=current_context();if(!c)stop();
@@ -1334,7 +1341,7 @@ uint32_t tribes_gl_fence_sync(_cpu *cpu,uint32_t condition,uint32_t flags){
 }
 uint32_t tribes_gl_is_sync(_cpu *cpu,uint32_t token){
     GL_ENTER();
-#if TARGET_OS_IPHONE && !defined(TB_GL4ES)
+#if TB_GLES_HOST && !defined(TB_GL4ES)
     (void)token;(void)error;stop();
 #else
     GLContext *c=current_context();if(!c)stop();SyncObject *s=*sync_slot(c,token);
@@ -1344,7 +1351,7 @@ uint32_t tribes_gl_is_sync(_cpu *cpu,uint32_t token){
 }
 uint32_t tribes_gl_client_wait_sync(_cpu *cpu,uint32_t token,uint32_t flags,uint32_t low,uint32_t high){
     GL_ENTER();
-#if TARGET_OS_IPHONE && !defined(TB_GL4ES)
+#if TB_GLES_HOST && !defined(TB_GL4ES)
     (void)token;(void)flags;(void)low;(void)high;(void)error;stop();
 #else
     GLContext *c=current_context();if(!c)stop();SyncObject *s=*sync_slot(c,token);
@@ -1355,7 +1362,7 @@ uint32_t tribes_gl_client_wait_sync(_cpu *cpu,uint32_t token,uint32_t flags,uint
 }
 void tribes_gl_get_sync_iv(_cpu *cpu,uint32_t token,uint32_t name,uint32_t capacity,uint32_t length,uint32_t output){
     GL_ENTER();
-#if TARGET_OS_IPHONE && !defined(TB_GL4ES)
+#if TB_GLES_HOST && !defined(TB_GL4ES)
     (void)token;(void)name;(void)capacity;(void)length;(void)output;(void)error;stop();
 #else
     GLContext *c=current_context();if(!c)stop();SyncObject *s=*sync_slot(c,token);
@@ -1372,7 +1379,7 @@ void tribes_gl_get_sync_iv(_cpu *cpu,uint32_t token,uint32_t name,uint32_t capac
 }
 void tribes_gl_delete_sync(_cpu *cpu,uint32_t token){
     GL_ENTER();
-#if TARGET_OS_IPHONE && !defined(TB_GL4ES)
+#if TB_GLES_HOST && !defined(TB_GL4ES)
     (void)token;(void)error;stop();
 #else
     GLContext *c=current_context();if(!c)stop();
@@ -1387,7 +1394,7 @@ void tribes_gl_finish(_cpu *cpu){GL_ENTER();glFinish();DRAW_RETURN();}
 void tribes_gl_active_texture(_cpu *cpu,uint32_t texture){GL_ENTER();glActiveTexture(texture);DRAW_RETURN();}
 void tribes_gl_client_active_texture(_cpu *cpu,uint32_t texture){
     GL_ENTER();
-#if TARGET_OS_IPHONE && !defined(TB_GL4ES)
+#if TB_GLES_HOST && !defined(TB_GL4ES)
     (void)texture;(void)error;stop();
 #else
     glClientActiveTexture(texture);DRAW_RETURN();
@@ -1395,7 +1402,7 @@ void tribes_gl_client_active_texture(_cpu *cpu,uint32_t texture){
 }
 void tribes_gl_multitex_coord2f(_cpu *cpu,uint32_t texture,uint32_t s,uint32_t t){
     GL_ENTER();
-#if TARGET_OS_IPHONE && !defined(TB_GL4ES)
+#if TB_GLES_HOST && !defined(TB_GL4ES)
     (void)texture;(void)s;(void)t;(void)error;stop();
 #else
     uint32_t bits[]={s,t};GLfloat v[2];memcpy(v,bits,sizeof v);
@@ -1404,7 +1411,7 @@ void tribes_gl_multitex_coord2f(_cpu *cpu,uint32_t texture,uint32_t s,uint32_t t
 }
 void tribes_gl_multitex_coord2fv(_cpu *cpu,uint32_t texture,uint32_t address){
     GL_ENTER();
-#if TARGET_OS_IPHONE && !defined(TB_GL4ES)
+#if TB_GLES_HOST && !defined(TB_GL4ES)
     (void)texture;(void)address;(void)error;stop();
 #else
     GLfloat v[2];checked_copy(v,guest(cpu,address,sizeof v),sizeof v);
@@ -1413,7 +1420,7 @@ void tribes_gl_multitex_coord2fv(_cpu *cpu,uint32_t texture,uint32_t address){
 }
 void tribes_gl_multitex_coord3fv(_cpu *cpu,uint32_t texture,uint32_t address){
     GL_ENTER();
-#if TARGET_OS_IPHONE && !defined(TB_GL4ES)
+#if TB_GLES_HOST && !defined(TB_GL4ES)
     (void)texture;(void)address;(void)error;stop();
 #else
     GLfloat v[3];checked_copy(v,guest(cpu,address,sizeof v),sizeof v);
@@ -1430,7 +1437,7 @@ void tribes_gl_hint(_cpu *cpu,uint32_t target,uint32_t mode){
 }
 void tribes_gl_gen_queries(_cpu *cpu,uint32_t count,uint32_t output){
     GL_ENTER();
-#if TARGET_OS_IPHONE
+#if TB_GLES_HOST
     (void)count;(void)output;(void)error;stop(); /* Desktop query API is not a GLES2 export. */
 #else
     if(!SDL_GL_GetCurrentContext())stop();
@@ -1449,7 +1456,7 @@ void tribes_gl_gen_queries(_cpu *cpu,uint32_t count,uint32_t output){
    timing and GL errors; no CPU-clock substitute or fabricated result. */
 void tribes_gl_begin_query(_cpu *cpu,uint32_t target,uint32_t name){
     GL_ENTER();
-#if TARGET_OS_IPHONE
+#if TB_GLES_HOST
     (void)target;(void)name;(void)error;stop();
 #else
     glBeginQueryARB(target,name);DRAW_RETURN();
@@ -1457,7 +1464,7 @@ void tribes_gl_begin_query(_cpu *cpu,uint32_t target,uint32_t name){
 }
 void tribes_gl_end_query(_cpu *cpu,uint32_t target){
     GL_ENTER();
-#if TARGET_OS_IPHONE
+#if TB_GLES_HOST
     (void)target;(void)error;stop();
 #else
     glEndQueryARB(target);DRAW_RETURN();
@@ -1465,7 +1472,7 @@ void tribes_gl_end_query(_cpu *cpu,uint32_t target){
 }
 void tribes_gl_get_query_object_ui64(_cpu *cpu,uint32_t name,uint32_t parameter,uint32_t output){
     GL_ENTER();
-#if TARGET_OS_IPHONE
+#if TB_GLES_HOST
     (void)name;(void)parameter;(void)output;(void)error;stop();
 #else
     if(!SDL_GL_GetCurrentContext())stop();
@@ -1493,7 +1500,7 @@ void tribes_gl_gen_buffers(_cpu *cpu,uint32_t count,uint32_t output){
    context use a temporary ARRAY binding only during the storage operation.
    Native buffers retain all data; the adapter stores only binding names. */
 static GLuint *copy_buffer_slot(GLContext *c,uint32_t target){
-#if TARGET_OS_IPHONE
+#if TB_GLES_HOST
     (void)c;(void)target;return NULL;
 #else
     return c&&!c->core&&(target==0x8f36||target==0x8f37)?&c->copy_bindings[target-0x8f36]:NULL;
@@ -1505,7 +1512,7 @@ void tribes_gl_delete_buffers(_cpu *cpu,uint32_t count,uint32_t input){
     if(count>UINT32_MAX/sizeof(GLuint))stop();
     size_t bytes=(size_t)count*sizeof(GLuint);GLuint *names=malloc(bytes);if(!names)stop();
     checked_copy(names,guest(cpu,input,bytes),bytes);GLContext *c=current_context();
-#if !TARGET_OS_IPHONE
+#if !TB_GLES_HOST
     /* While a legacy context shares objects, native ARRAY bindings as well
        as copy bindings can retain a buffer deleted in another context. Our
        temporary rebind cannot restore such an anonymous object by its old
@@ -1546,7 +1553,7 @@ void tribes_gl_buffer_data(_cpu *cpu,uint32_t target,uint32_t size,uint32_t inpu
 }
 void tribes_gl_matrix_mode(_cpu *cpu,uint32_t mode){
     GL_ENTER();
-#if TARGET_OS_IPHONE && !defined(TB_GL4ES)
+#if TB_GLES_HOST && !defined(TB_GL4ES)
     (void)mode;(void)error;stop();
 #else
     glMatrixMode(mode);DRAW_RETURN();
@@ -1554,7 +1561,7 @@ void tribes_gl_matrix_mode(_cpu *cpu,uint32_t mode){
 }
 void tribes_gl_load_identity(_cpu *cpu){
     GL_ENTER();
-#if TARGET_OS_IPHONE && !defined(TB_GL4ES)
+#if TB_GLES_HOST && !defined(TB_GL4ES)
     (void)error;stop();
 #else
     glLoadIdentity();DRAW_RETURN();
@@ -1562,7 +1569,7 @@ void tribes_gl_load_identity(_cpu *cpu){
 }
 void tribes_gl_load_matrix_f(_cpu *cpu,uint32_t input){
     GL_ENTER();
-#if TARGET_OS_IPHONE && !defined(TB_GL4ES)
+#if TB_GLES_HOST && !defined(TB_GL4ES)
     (void)input;(void)error;stop();
 #else
     GLfloat matrix[16];checked_copy(matrix,guest(cpu,input,sizeof matrix),sizeof matrix);
@@ -1571,7 +1578,7 @@ void tribes_gl_load_matrix_f(_cpu *cpu,uint32_t input){
 }
 void tribes_gl_load_matrix_d(_cpu *cpu,uint32_t input){
     GL_ENTER();
-#if TARGET_OS_IPHONE && !defined(TB_GL4ES)
+#if TB_GLES_HOST && !defined(TB_GL4ES)
     (void)input;(void)error;stop();
 #else
     GLdouble matrix[16];checked_copy(matrix,guest(cpu,input,sizeof matrix),sizeof matrix);
@@ -1580,7 +1587,7 @@ void tribes_gl_load_matrix_d(_cpu *cpu,uint32_t input){
 }
 void tribes_gl_mult_matrix_f(_cpu *cpu,uint32_t input){
     GL_ENTER();
-#if TARGET_OS_IPHONE && !defined(TB_GL4ES)
+#if TB_GLES_HOST && !defined(TB_GL4ES)
     (void)input;(void)error;stop();
 #else
     GLfloat matrix[16];checked_copy(matrix,guest(cpu,input,sizeof matrix),sizeof matrix);
@@ -1589,7 +1596,7 @@ void tribes_gl_mult_matrix_f(_cpu *cpu,uint32_t input){
 }
 void tribes_gl_mult_matrix_d(_cpu *cpu,uint32_t input){
     GL_ENTER();
-#if TARGET_OS_IPHONE && !defined(TB_GL4ES)
+#if TB_GLES_HOST && !defined(TB_GL4ES)
     (void)input;(void)error;stop();
 #else
     GLdouble matrix[16];checked_copy(matrix,guest(cpu,input,sizeof matrix),sizeof matrix);
@@ -1601,7 +1608,7 @@ void tribes_gl_viewport(_cpu *cpu,uint32_t x,uint32_t y,uint32_t width,uint32_t 
 }
 /* Apple legacy GL lacks primitive restart. Keep context-local state and split
    checked client-index draws at markers; markers never fetch vertex data. */
-#if !TARGET_OS_IPHONE || defined(TB_GL4ES)
+#if !TB_GLES_HOST || defined(TB_GL4ES)
 static int restart_state_available(GLContext *c){
     if(!c||c->core)return 0;
     /* This native query is invalid inside glBegin/glEnd. It preserves GL's
@@ -1610,7 +1617,7 @@ static int restart_state_available(GLContext *c){
 }
 #endif
 static int restart_enable(uint32_t cap,int enabled){
-#if TARGET_OS_IPHONE && !defined(TB_GL4ES)
+#if TB_GLES_HOST && !defined(TB_GL4ES)
     (void)cap;(void)enabled;return 0;
 #else
     GLContext *c=current_context();if(cap!=0x8f9d||!c||c->core)return 0;
@@ -1621,7 +1628,7 @@ void tribes_gl_disable(_cpu *cpu,uint32_t cap){GL_ENTER();if(!restart_enable(cap
 void tribes_gl_enable(_cpu *cpu,uint32_t cap){GL_ENTER();if(!restart_enable(cap,1))glEnable(cap);DRAW_RETURN();}
 void tribes_gl_primitive_restart_index(_cpu *cpu,uint32_t index){
     GL_ENTER();
-#if TARGET_OS_IPHONE && !defined(TB_GL4ES)
+#if TB_GLES_HOST && !defined(TB_GL4ES)
     (void)index;(void)error;stop();
 #else
     GLContext *c=current_context();if(!c)stop();
@@ -1639,7 +1646,7 @@ void tribes_gl_primitive_restart_index(_cpu *cpu,uint32_t index){
 /* Client pointers remain guest descriptors. Only draw-time host copies are
    submitted to GL, and the native pointers are detached before those copies
    are released. The reached path uses client memory, not VBO offsets. */
-#if !TARGET_OS_IPHONE || defined(TB_GL4ES)
+#if !TB_GLES_HOST || defined(TB_GL4ES)
 static GLContext *legacy_context(void){GLContext *c=current_context();if(!c||c->core)stop();return c;}
 static unsigned client_texture_unit(void){GLint unit=0;glGetIntegerv(GL_CLIENT_ACTIVE_TEXTURE,&unit);if(unit<GL_TEXTURE0||unit>=GL_TEXTURE0+32)stop();return (unsigned)(unit-GL_TEXTURE0);}
 static void client_state(uint32_t cap,int enabled){
@@ -1691,7 +1698,7 @@ static void *stage_array(_cpu *cpu,const ClientArray *a,const unsigned char *ind
 #endif
 void tribes_gl_push_matrix(_cpu *cpu){
     GL_ENTER();
-#if TARGET_OS_IPHONE && !defined(TB_GL4ES)
+#if TB_GLES_HOST && !defined(TB_GL4ES)
     (void)error;stop();
 #else
     glPushMatrix();DRAW_RETURN();
@@ -1699,7 +1706,7 @@ void tribes_gl_push_matrix(_cpu *cpu){
 }
 void tribes_gl_pop_matrix(_cpu *cpu){
     GL_ENTER();
-#if TARGET_OS_IPHONE && !defined(TB_GL4ES)
+#if TB_GLES_HOST && !defined(TB_GL4ES)
     (void)error;stop();
 #else
     glPopMatrix();DRAW_RETURN();
@@ -1707,7 +1714,7 @@ void tribes_gl_pop_matrix(_cpu *cpu){
 }
 void tribes_gl_scale_f(_cpu *cpu,uint32_t x,uint32_t y,uint32_t z){
     GL_ENTER();
-#if TARGET_OS_IPHONE && !defined(TB_GL4ES)
+#if TB_GLES_HOST && !defined(TB_GL4ES)
     (void)x;(void)y;(void)z;(void)error;stop();
 #else
     uint32_t bits[]={x,y,z};GLfloat v[3];memcpy(v,bits,sizeof v);glScalef(v[0],v[1],v[2]);DRAW_RETURN();
@@ -1721,7 +1728,7 @@ void tribes_gl_polygon_offset(_cpu *cpu,uint32_t factor,uint32_t units){
 }
 uint32_t tribes_gl_is_enabled(_cpu *cpu,uint32_t cap){
     GL_ENTER();
-#if !TARGET_OS_IPHONE || defined(TB_GL4ES)
+#if !TB_GLES_HOST || defined(TB_GL4ES)
     GLContext *c=current_context();
     if(cap==0x8f9d&&c&&!c->core){uint32_t result=restart_state_available(c)?c->restart_enabled:0;WINDOW_RETURN(result);}
 #endif
@@ -1729,7 +1736,7 @@ uint32_t tribes_gl_is_enabled(_cpu *cpu,uint32_t cap){
 }
 void tribes_gl_color4fv(_cpu *cpu,uint32_t input){
     GL_ENTER();
-#if TARGET_OS_IPHONE && !defined(TB_GL4ES)
+#if TB_GLES_HOST && !defined(TB_GL4ES)
     (void)input;(void)error;stop();
 #else
     GLfloat value[4];checked_copy(value,guest(cpu,input,sizeof value),sizeof value);glColor4fv(value);DRAW_RETURN();
@@ -1737,7 +1744,7 @@ void tribes_gl_color4fv(_cpu *cpu,uint32_t input){
 }
 void tribes_gl_material_fv(_cpu *cpu,uint32_t face,uint32_t name,uint32_t input){
     GL_ENTER();
-#if TARGET_OS_IPHONE && !defined(TB_GL4ES)
+#if TB_GLES_HOST && !defined(TB_GL4ES)
     (void)face;(void)name;(void)input;(void)error;stop();
 #else
     unsigned count=0;
@@ -1753,7 +1760,7 @@ void tribes_gl_material_fv(_cpu *cpu,uint32_t face,uint32_t name,uint32_t input)
 }
 void tribes_gl_light_fv(_cpu *cpu,uint32_t light,uint32_t name,uint32_t input){
     GL_ENTER();
-#if TARGET_OS_IPHONE && !defined(TB_GL4ES)
+#if TB_GLES_HOST && !defined(TB_GL4ES)
     (void)light;(void)name;(void)input;(void)error;stop();
 #else
     (void)legacy_context();unsigned count=0;GLfloat value[4]={0};
@@ -1771,7 +1778,7 @@ void tribes_gl_light_fv(_cpu *cpu,uint32_t light,uint32_t name,uint32_t input){
 }
 void tribes_gl_light_f(_cpu *cpu,uint32_t light,uint32_t name,uint32_t bits){
     GL_ENTER();
-#if TARGET_OS_IPHONE && !defined(TB_GL4ES)
+#if TB_GLES_HOST && !defined(TB_GL4ES)
     (void)light;(void)name;(void)bits;(void)error;stop();
 #else
     (void)legacy_context();GLfloat value;memcpy(&value,&bits,sizeof value);
@@ -1780,7 +1787,7 @@ void tribes_gl_light_f(_cpu *cpu,uint32_t light,uint32_t name,uint32_t bits){
 }
 void tribes_gl_light_model_fv(_cpu *cpu,uint32_t name,uint32_t input){
     GL_ENTER();
-#if TARGET_OS_IPHONE && !defined(TB_GL4ES)
+#if TB_GLES_HOST && !defined(TB_GL4ES)
     (void)name;(void)input;(void)error;stop();
 #else
     (void)legacy_context();unsigned count=0;GLfloat value[4]={0};
@@ -1794,7 +1801,7 @@ void tribes_gl_light_model_fv(_cpu *cpu,uint32_t name,uint32_t input){
 }
 void tribes_gl_tex_gen_i(_cpu *cpu,uint32_t coord,uint32_t name,uint32_t value){
     GL_ENTER();
-#if TARGET_OS_IPHONE && !defined(TB_GL4ES)
+#if TB_GLES_HOST && !defined(TB_GL4ES)
     (void)coord;(void)name;(void)value;(void)error;stop();
 #else
     (void)legacy_context();glTexGeni(coord,name,(GLint)(int32_t)value);DRAW_RETURN();
@@ -1802,7 +1809,7 @@ void tribes_gl_tex_gen_i(_cpu *cpu,uint32_t coord,uint32_t name,uint32_t value){
 }
 void tribes_gl_tex_gen_fv(_cpu *cpu,uint32_t coord,uint32_t name,uint32_t input){
     GL_ENTER();
-#if TARGET_OS_IPHONE && !defined(TB_GL4ES)
+#if TB_GLES_HOST && !defined(TB_GL4ES)
     (void)coord;(void)name;(void)input;(void)error;stop();
 #else
     (void)legacy_context();unsigned count=0;GLfloat value[4]={0};
@@ -1816,7 +1823,7 @@ void tribes_gl_tex_gen_fv(_cpu *cpu,uint32_t coord,uint32_t name,uint32_t input)
 }
 void tribes_gl_polygon_mode(_cpu *cpu,uint32_t face,uint32_t mode){
     GL_ENTER();
-#if TARGET_OS_IPHONE && !defined(TB_GL4ES)
+#if TB_GLES_HOST && !defined(TB_GL4ES)
     (void)face;(void)mode;(void)error;stop();
 #else
     (void)legacy_context();glPolygonMode(face,mode);DRAW_RETURN();
@@ -1824,7 +1831,7 @@ void tribes_gl_polygon_mode(_cpu *cpu,uint32_t face,uint32_t mode){
 }
 void tribes_gl_alpha_func(_cpu *cpu,uint32_t function,uint32_t bits){
     GL_ENTER();
-#if TARGET_OS_IPHONE && !defined(TB_GL4ES)
+#if TB_GLES_HOST && !defined(TB_GL4ES)
     (void)function;(void)bits;(void)error;stop();
 #else
     (void)legacy_context();GLfloat reference;memcpy(&reference,&bits,sizeof reference);
@@ -1833,7 +1840,7 @@ void tribes_gl_alpha_func(_cpu *cpu,uint32_t function,uint32_t bits){
 }
 void tribes_gl_fog_i(_cpu *cpu,uint32_t name,uint32_t value){
     GL_ENTER();
-#if TARGET_OS_IPHONE && !defined(TB_GL4ES)
+#if TB_GLES_HOST && !defined(TB_GL4ES)
     (void)name;(void)value;(void)error;stop();
 #else
     (void)legacy_context();glFogi(name,(GLint)(int32_t)value);DRAW_RETURN();
@@ -1841,7 +1848,7 @@ void tribes_gl_fog_i(_cpu *cpu,uint32_t name,uint32_t value){
 }
 void tribes_gl_fog_f(_cpu *cpu,uint32_t name,uint32_t bits){
     GL_ENTER();
-#if TARGET_OS_IPHONE && !defined(TB_GL4ES)
+#if TB_GLES_HOST && !defined(TB_GL4ES)
     (void)name;(void)bits;(void)error;stop();
 #else
     (void)legacy_context();GLfloat value;memcpy(&value,&bits,sizeof value);
@@ -1850,7 +1857,7 @@ void tribes_gl_fog_f(_cpu *cpu,uint32_t name,uint32_t bits){
 }
 void tribes_gl_fog_fv(_cpu *cpu,uint32_t name,uint32_t input){
     GL_ENTER();
-#if TARGET_OS_IPHONE && !defined(TB_GL4ES)
+#if TB_GLES_HOST && !defined(TB_GL4ES)
     (void)name;(void)input;(void)error;stop();
 #else
     (void)legacy_context();unsigned count=0;GLfloat value[4]={0};
@@ -1863,7 +1870,7 @@ void tribes_gl_fog_fv(_cpu *cpu,uint32_t name,uint32_t input){
     glFogfv(name,value);DRAW_RETURN();
 #endif
 }
-#if !TARGET_OS_IPHONE || defined(TB_GL4ES)
+#if !TB_GLES_HOST || defined(TB_GL4ES)
 static unsigned tex_env_count(uint32_t target,uint32_t name){
     if(target==GL_TEXTURE_FILTER_CONTROL)return name==GL_TEXTURE_LOD_BIAS?1:0;
     if(target==GL_POINT_SPRITE)return name==GL_COORD_REPLACE?1:0;
@@ -1879,7 +1886,7 @@ static unsigned tex_env_count(uint32_t target,uint32_t name){
 #endif
 void tribes_gl_tex_env_fv(_cpu *cpu,uint32_t target,uint32_t name,uint32_t input){
     GL_ENTER();
-#if TARGET_OS_IPHONE && !defined(TB_GL4ES)
+#if TB_GLES_HOST && !defined(TB_GL4ES)
     (void)target;(void)name;(void)input;(void)error;stop();
 #else
     unsigned count=tex_env_count(target,name);GLfloat value[4]={0};
@@ -1889,7 +1896,7 @@ void tribes_gl_tex_env_fv(_cpu *cpu,uint32_t target,uint32_t name,uint32_t input
 }
 void tribes_gl_tex_env_f(_cpu *cpu,uint32_t target,uint32_t name,uint32_t bits){
     GL_ENTER();
-#if TARGET_OS_IPHONE && !defined(TB_GL4ES)
+#if TB_GLES_HOST && !defined(TB_GL4ES)
     (void)target;(void)name;(void)bits;(void)error;stop();
 #else
     GLfloat value;memcpy(&value,&bits,sizeof value);glTexEnvf(target,name,value);DRAW_RETURN();
@@ -1897,7 +1904,7 @@ void tribes_gl_tex_env_f(_cpu *cpu,uint32_t target,uint32_t name,uint32_t bits){
 }
 void tribes_gl_normal_pointer(_cpu *cpu,uint32_t type,uint32_t stride,uint32_t address){
     GL_ENTER();
-#if TARGET_OS_IPHONE && !defined(TB_GL4ES)
+#if TB_GLES_HOST && !defined(TB_GL4ES)
     (void)type;(void)stride;(void)address;(void)error;stop();
 #else
     GLContext *c=legacy_context();
@@ -1908,7 +1915,7 @@ void tribes_gl_normal_pointer(_cpu *cpu,uint32_t type,uint32_t stride,uint32_t a
 }
 void tribes_gl_tex_env_i(_cpu *cpu,uint32_t target,uint32_t name,uint32_t value){
     GL_ENTER();
-#if TARGET_OS_IPHONE && !defined(TB_GL4ES)
+#if TB_GLES_HOST && !defined(TB_GL4ES)
     (void)target;(void)name;(void)value;(void)error;stop();
 #else
     glTexEnvi(target,name,(int32_t)value);DRAW_RETURN();
@@ -1916,7 +1923,7 @@ void tribes_gl_tex_env_i(_cpu *cpu,uint32_t target,uint32_t name,uint32_t value)
 }
 void tribes_gl_color4ub(_cpu *cpu,uint32_t r,uint32_t g,uint32_t b,uint32_t a){
     GL_ENTER();
-#if TARGET_OS_IPHONE && !defined(TB_GL4ES)
+#if TB_GLES_HOST && !defined(TB_GL4ES)
     (void)r;(void)g;(void)b;(void)a;(void)error;stop();
 #else
     glColor4ub((GLubyte)r,(GLubyte)g,(GLubyte)b,(GLubyte)a);DRAW_RETURN();
@@ -1924,7 +1931,7 @@ void tribes_gl_color4ub(_cpu *cpu,uint32_t r,uint32_t g,uint32_t b,uint32_t a){
 }
 void tribes_gl_color3ub(_cpu *cpu,uint32_t r,uint32_t g,uint32_t b){
     GL_ENTER();
-#if TARGET_OS_IPHONE && !defined(TB_GL4ES)
+#if TB_GLES_HOST && !defined(TB_GL4ES)
     (void)r;(void)g;(void)b;(void)error;stop();
 #else
     (void)legacy_context();glColor3ub((GLubyte)r,(GLubyte)g,(GLubyte)b);DRAW_RETURN();
@@ -1932,7 +1939,7 @@ void tribes_gl_color3ub(_cpu *cpu,uint32_t r,uint32_t g,uint32_t b){
 }
 void tribes_gl_tex_coord2f(_cpu *cpu,uint32_t s,uint32_t t){
     GL_ENTER();
-#if TARGET_OS_IPHONE && !defined(TB_GL4ES)
+#if TB_GLES_HOST && !defined(TB_GL4ES)
     (void)s;(void)t;(void)error;stop();
 #else
     (void)legacy_context();uint32_t bits[]={s,t};GLfloat value[2];memcpy(value,bits,sizeof value);
@@ -1941,7 +1948,7 @@ void tribes_gl_tex_coord2f(_cpu *cpu,uint32_t s,uint32_t t){
 }
 void tribes_gl_tex_coord2fv(_cpu *cpu,uint32_t address){
     GL_ENTER();
-#if TARGET_OS_IPHONE && !defined(TB_GL4ES)
+#if TB_GLES_HOST && !defined(TB_GL4ES)
     (void)address;(void)error;stop();
 #else
     (void)legacy_context();GLfloat value[2];
@@ -1951,7 +1958,7 @@ void tribes_gl_tex_coord2fv(_cpu *cpu,uint32_t address){
 }
 void tribes_gl_rotate_f(_cpu *cpu,uint32_t angle,uint32_t x,uint32_t y,uint32_t z){
     GL_ENTER();
-#if TARGET_OS_IPHONE && !defined(TB_GL4ES)
+#if TB_GLES_HOST && !defined(TB_GL4ES)
     (void)angle;(void)x;(void)y;(void)z;(void)error;stop();
 #else
     (void)legacy_context();uint32_t bits[]={angle,x,y,z};GLfloat value[4];memcpy(value,bits,sizeof value);
@@ -1960,7 +1967,7 @@ void tribes_gl_rotate_f(_cpu *cpu,uint32_t angle,uint32_t x,uint32_t y,uint32_t 
 }
 void tribes_gl_translate_f(_cpu *cpu,uint32_t x,uint32_t y,uint32_t z){
     GL_ENTER();
-#if TARGET_OS_IPHONE && !defined(TB_GL4ES)
+#if TB_GLES_HOST && !defined(TB_GL4ES)
     (void)x;(void)y;(void)z;(void)error;stop();
 #else
     (void)legacy_context();uint32_t bits[]={x,y,z};GLfloat value[3];memcpy(value,bits,sizeof value);
@@ -1969,7 +1976,7 @@ void tribes_gl_translate_f(_cpu *cpu,uint32_t x,uint32_t y,uint32_t z){
 }
 void tribes_gl_vertex3f(_cpu *cpu,uint32_t x,uint32_t y,uint32_t z){
     GL_ENTER();
-#if TARGET_OS_IPHONE && !defined(TB_GL4ES)
+#if TB_GLES_HOST && !defined(TB_GL4ES)
     (void)x;(void)y;(void)z;(void)error;stop();
 #else
     (void)legacy_context();uint32_t bits[]={x,y,z};GLfloat value[3];memcpy(value,bits,sizeof value);
@@ -1978,7 +1985,7 @@ void tribes_gl_vertex3f(_cpu *cpu,uint32_t x,uint32_t y,uint32_t z){
 }
 void tribes_gl_vertex3fv(_cpu *cpu,uint32_t address){
     GL_ENTER();
-#if TARGET_OS_IPHONE && !defined(TB_GL4ES)
+#if TB_GLES_HOST && !defined(TB_GL4ES)
     (void)address;(void)error;stop();
 #else
     (void)legacy_context();GLfloat value[3];
@@ -1989,7 +1996,7 @@ void tribes_gl_vertex3fv(_cpu *cpu,uint32_t address){
 void tribes_gl_blend_func(_cpu *cpu,uint32_t source,uint32_t destination){GL_ENTER();glBlendFunc(source,destination);DRAW_RETURN();}
 void tribes_gl_color4f(_cpu *cpu,uint32_t r,uint32_t g,uint32_t b,uint32_t a){
     GL_ENTER();
-#if TARGET_OS_IPHONE && !defined(TB_GL4ES)
+#if TB_GLES_HOST && !defined(TB_GL4ES)
     (void)r;(void)g;(void)b;(void)a;(void)error;stop();
 #else
     (void)legacy_context();uint32_t bits[]={r,g,b,a};GLfloat value[4];memcpy(value,bits,sizeof value);
@@ -1998,7 +2005,7 @@ void tribes_gl_color4f(_cpu *cpu,uint32_t r,uint32_t g,uint32_t b,uint32_t a){
 }
 void tribes_gl_vertex2i(_cpu *cpu,uint32_t x,uint32_t y){
     GL_ENTER();
-#if TARGET_OS_IPHONE && !defined(TB_GL4ES)
+#if TB_GLES_HOST && !defined(TB_GL4ES)
     (void)x;(void)y;(void)error;stop();
 #else
     (void)legacy_context();glVertex2i((GLint)x,(GLint)y);DRAW_RETURN();
@@ -2006,7 +2013,7 @@ void tribes_gl_vertex2i(_cpu *cpu,uint32_t x,uint32_t y){
 }
 void tribes_gl_begin(_cpu *cpu,uint32_t mode){
     GL_ENTER();
-#if TARGET_OS_IPHONE && !defined(TB_GL4ES)
+#if TB_GLES_HOST && !defined(TB_GL4ES)
     (void)mode;(void)error;stop();
 #else
     (void)legacy_context();glBegin(mode);DRAW_RETURN();
@@ -2014,7 +2021,7 @@ void tribes_gl_begin(_cpu *cpu,uint32_t mode){
 }
 void tribes_gl_vertex2f(_cpu *cpu,uint32_t x,uint32_t y){
     GL_ENTER();
-#if TARGET_OS_IPHONE && !defined(TB_GL4ES)
+#if TB_GLES_HOST && !defined(TB_GL4ES)
     (void)x;(void)y;(void)error;stop();
 #else
     (void)legacy_context();uint32_t bits[]={x,y};GLfloat v[2];memcpy(v,bits,sizeof v);
@@ -2023,7 +2030,7 @@ void tribes_gl_vertex2f(_cpu *cpu,uint32_t x,uint32_t y){
 }
 void tribes_gl_end(_cpu *cpu){
     GL_ENTER();
-#if TARGET_OS_IPHONE && !defined(TB_GL4ES)
+#if TB_GLES_HOST && !defined(TB_GL4ES)
     (void)error;stop();
 #else
     (void)legacy_context();glEnd();DRAW_RETURN();
@@ -2035,7 +2042,7 @@ void tribes_gl_uniform2i(_cpu *cpu,uint32_t location,uint32_t x,uint32_t y){GL_E
 void tribes_gl_uniform4i(_cpu *cpu,uint32_t location,uint32_t x,uint32_t y,uint32_t z,uint32_t w){GL_ENTER();glUniform4i((int32_t)location,(int32_t)x,(int32_t)y,(int32_t)z,(int32_t)w);DRAW_RETURN();}
 void tribes_gl_enable_client_state(_cpu *cpu,uint32_t cap){
     GL_ENTER();
-#if TARGET_OS_IPHONE && !defined(TB_GL4ES)
+#if TB_GLES_HOST && !defined(TB_GL4ES)
     (void)cap;(void)error;stop();
 #else
     client_state(cap,1);DRAW_RETURN();
@@ -2043,7 +2050,7 @@ void tribes_gl_enable_client_state(_cpu *cpu,uint32_t cap){
 }
 void tribes_gl_disable_client_state(_cpu *cpu,uint32_t cap){
     GL_ENTER();
-#if TARGET_OS_IPHONE && !defined(TB_GL4ES)
+#if TB_GLES_HOST && !defined(TB_GL4ES)
     (void)cap;(void)error;stop();
 #else
     client_state(cap,0);DRAW_RETURN();
@@ -2051,7 +2058,7 @@ void tribes_gl_disable_client_state(_cpu *cpu,uint32_t cap){
 }
 void tribes_gl_vertex_pointer(_cpu *cpu,uint32_t size,uint32_t type,uint32_t stride,uint32_t address){
     GL_ENTER();
-#if TARGET_OS_IPHONE && !defined(TB_GL4ES)
+#if TB_GLES_HOST && !defined(TB_GL4ES)
     (void)size;(void)type;(void)stride;(void)address;(void)error;stop();
 #else
     client_pointer(size,type,stride,address,0);DRAW_RETURN();
@@ -2059,7 +2066,7 @@ void tribes_gl_vertex_pointer(_cpu *cpu,uint32_t size,uint32_t type,uint32_t str
 }
 void tribes_gl_color_pointer(_cpu *cpu,uint32_t size,uint32_t type,uint32_t stride,uint32_t address){
     GL_ENTER();
-#if TARGET_OS_IPHONE && !defined(TB_GL4ES)
+#if TB_GLES_HOST && !defined(TB_GL4ES)
     (void)size;(void)type;(void)stride;(void)address;(void)error;stop();
 #else
     GLContext *c=legacy_context();
@@ -2071,7 +2078,7 @@ void tribes_gl_color_pointer(_cpu *cpu,uint32_t size,uint32_t type,uint32_t stri
 }
 void tribes_gl_texcoord_pointer(_cpu *cpu,uint32_t size,uint32_t type,uint32_t stride,uint32_t address){
     GL_ENTER();
-#if TARGET_OS_IPHONE && !defined(TB_GL4ES)
+#if TB_GLES_HOST && !defined(TB_GL4ES)
     (void)size;(void)type;(void)stride;(void)address;(void)error;stop();
 #else
     client_pointer(size,type,stride,address,1);DRAW_RETURN();
@@ -2079,7 +2086,7 @@ void tribes_gl_texcoord_pointer(_cpu *cpu,uint32_t size,uint32_t type,uint32_t s
 }
 void tribes_gl_fog_coord_pointer(_cpu *cpu,uint32_t type,uint32_t stride,uint32_t address){
     GL_ENTER();
-#if TARGET_OS_IPHONE && !defined(TB_GL4ES)
+#if TB_GLES_HOST && !defined(TB_GL4ES)
     (void)type;(void)stride;(void)address;(void)error;stop();
 #else
     GLContext *c=legacy_context();
@@ -2088,7 +2095,7 @@ void tribes_gl_fog_coord_pointer(_cpu *cpu,uint32_t type,uint32_t stride,uint32_
     ClientArray *a=&c->fog;a->address=address;a->size=1;a->type=type;a->stride=stride;a->defined=1;DRAW_RETURN();
 #endif
 }
-#if !TARGET_OS_IPHONE || defined(TB_GL4ES)
+#if !TB_GLES_HOST || defined(TB_GL4ES)
 static void draw_staged_elements(uint32_t mode,uint32_t count,uint32_t type,const unsigned char *indices,unsigned width){
 #if defined(TB_GL4ES) && defined(TB_ANGLE)
     /* Metal has no triangle fan primitive. ANGLE's iOS fan conversion uses
@@ -2158,7 +2165,7 @@ static void draw_client_arrays(_cpu *cpu,GLContext *c,uint32_t mode,uint32_t cou
 #endif
 void tribes_gl_draw_elements(_cpu *cpu,uint32_t mode,uint32_t count,uint32_t type,uint32_t input){
     GL_ENTER();
-#if TARGET_OS_IPHONE && !defined(TB_GL4ES)
+#if TB_GLES_HOST && !defined(TB_GL4ES)
     (void)mode;(void)count;(void)type;(void)input;(void)error;stop();
 #else
     GLContext *c=legacy_context();if(mode>GL_POLYGON)stop();
@@ -2176,7 +2183,7 @@ void tribes_gl_draw_elements(_cpu *cpu,uint32_t mode,uint32_t count,uint32_t typ
    generated indices are private host data; primitive restart does not apply. */
 void tribes_gl_draw_arrays(_cpu *cpu,uint32_t mode,uint32_t first,uint32_t count){
     GL_ENTER();
-#if TARGET_OS_IPHONE && !defined(TB_GL4ES)
+#if TB_GLES_HOST && !defined(TB_GL4ES)
     (void)mode;(void)first;(void)count;(void)error;stop();
 #else
     GLContext *c=legacy_context();if(mode>GL_POLYGON)stop();
@@ -2246,7 +2253,7 @@ void tribes_gl_generate_mipmap(_cpu *cpu,uint32_t target){
 }
 static void *texture_2d_pixels(_cpu *cpu,uint32_t width,uint32_t height,uint32_t format,uint32_t type,uint32_t input,int allocation){
     GLint alignment=4,row_length=0,skip_rows=0,skip_pixels=0;
-#if !TARGET_OS_IPHONE
+#if !TB_GLES_HOST
     GLint pbo=0;glGetIntegerv(GL_PIXEL_UNPACK_BUFFER_BINDING,&pbo);if(pbo)stop();
     glGetIntegerv(GL_UNPACK_ROW_LENGTH,&row_length);glGetIntegerv(GL_UNPACK_SKIP_ROWS,&skip_rows);glGetIntegerv(GL_UNPACK_SKIP_PIXELS,&skip_pixels);
 #else
@@ -2273,7 +2280,7 @@ static void *texture_2d_pixels(_cpu *cpu,uint32_t width,uint32_t height,uint32_t
             switch(format){
                 case GL_RGB:bpp=3;break;case GL_RGBA:bpp=4;break;
                 case GL_ALPHA:case GL_LUMINANCE:bpp=1;break;case GL_LUMINANCE_ALPHA:bpp=2;break;
-#if !TARGET_OS_IPHONE
+#if !TB_GLES_HOST
                 case GL_COLOR_INDEX:bpp=1;break;case GL_BGR:bpp=3;break;case GL_BGRA:bpp=4;break;
 #endif
             }
@@ -2298,7 +2305,7 @@ static void *texture_2d_pixels(_cpu *cpu,uint32_t width,uint32_t height,uint32_t
 }
 static int texture_2d_automatic(GLContext *c,uint32_t target,uint32_t level){
     int generate=0;
-#if !TARGET_OS_IPHONE
+#if !TB_GLES_HOST
     if(c&&c->core&&target==GL_TEXTURE_2D){
         GLint name=0,base_level=0;glGetIntegerv(GL_TEXTURE_BINDING_2D,&name);
         if(name&&*automatic_slot(c,(GLuint)name)){
@@ -2347,7 +2354,7 @@ void tribes_gl_tex_sub_image_2d(_cpu *cpu,uint32_t target,uint32_t level,uint32_
 /* Array textures use the same checked row staging as 2D uploads, extended
    across image strides. Native unpack state is retained; skipped bytes are
    zero-filled host padding, never reads of unrelated guest memory. */
-#if !TARGET_OS_IPHONE
+#if !TB_GLES_HOST
 static void *texture_3d_pixels(_cpu *cpu,uint32_t width,uint32_t height,uint32_t depth,uint32_t format,uint32_t type,uint32_t input,int allocation){
     GLint pbo=0;glGetIntegerv(GL_PIXEL_UNPACK_BUFFER_BINDING,&pbo);if(pbo)stop();
     if((int32_t)width<=0||(int32_t)height<=0||(int32_t)depth<=0)return NULL;
@@ -2376,7 +2383,7 @@ static void *texture_3d_pixels(_cpu *cpu,uint32_t width,uint32_t height,uint32_t
 #endif
 void tribes_gl_tex_image_3d(_cpu *cpu,uint32_t target,uint32_t level,uint32_t internal,uint32_t width,uint32_t height,uint32_t depth,uint32_t border,uint32_t format,uint32_t type,uint32_t input){
     GL_ENTER();
-#if TARGET_OS_IPHONE
+#if TB_GLES_HOST
     (void)target;(void)level;(void)internal;(void)width;(void)height;(void)depth;(void)border;(void)format;(void)type;(void)input;stop();
 #else
     if(!SDL_GL_GetCurrentContext())stop();void *pixels=texture_3d_pixels(cpu,width,height,depth,format,type,input,1);
@@ -2386,7 +2393,7 @@ void tribes_gl_tex_image_3d(_cpu *cpu,uint32_t target,uint32_t level,uint32_t in
 }
 void tribes_gl_tex_sub_image_3d(_cpu *cpu,uint32_t target,uint32_t level,uint32_t x,uint32_t y,uint32_t z,uint32_t width,uint32_t height,uint32_t depth,uint32_t format,uint32_t type,uint32_t input){
     GL_ENTER();
-#if TARGET_OS_IPHONE
+#if TB_GLES_HOST
     (void)target;(void)level;(void)x;(void)y;(void)z;(void)width;(void)height;(void)depth;(void)format;(void)type;(void)input;stop();
 #else
     if(!SDL_GL_GetCurrentContext())stop();void *pixels=texture_3d_pixels(cpu,width,height,depth,format,type,input,0);
@@ -2399,7 +2406,7 @@ void tribes_gl_tex_sub_image_3d(_cpu *cpu,uint32_t target,uint32_t level,uint32_
 static double gl_double_words(uint32_t low,uint32_t high){uint64_t bits=((uint64_t)high<<32)|low;double value;memcpy(&value,&bits,8);return value;}
 void tribes_gl_frustum(_cpu *cpu,uint32_t ll,uint32_t lh,uint32_t rl,uint32_t rh,uint32_t bl,uint32_t bh,uint32_t tl,uint32_t th,uint32_t nl,uint32_t nh,uint32_t fl,uint32_t fh){
     GL_ENTER();
-#if TARGET_OS_IPHONE && !defined(TB_GL4ES)
+#if TB_GLES_HOST && !defined(TB_GL4ES)
     (void)ll;(void)lh;(void)rl;(void)rh;(void)bl;(void)bh;(void)tl;(void)th;(void)nl;(void)nh;(void)fl;(void)fh;(void)error;stop();
 #else
     glFrustum(gl_double_words(ll,lh),gl_double_words(rl,rh),gl_double_words(bl,bh),gl_double_words(tl,th),gl_double_words(nl,nh),gl_double_words(fl,fh));DRAW_RETURN();
@@ -2407,7 +2414,7 @@ void tribes_gl_frustum(_cpu *cpu,uint32_t ll,uint32_t lh,uint32_t rl,uint32_t rh
 }
 void tribes_gl_depth_range(_cpu *cpu,uint32_t lo,uint32_t hi,uint32_t flo,uint32_t fhi){
     GL_ENTER();double near=gl_double_words(lo,hi),far=gl_double_words(flo,fhi);
-#if TARGET_OS_IPHONE
+#if TB_GLES_HOST
     glDepthRangef((float)near,(float)far);
 #else
     glDepthRange(near,far);
@@ -2416,7 +2423,7 @@ void tribes_gl_depth_range(_cpu *cpu,uint32_t lo,uint32_t hi,uint32_t flo,uint32
 }
 void tribes_gl_clear_depth(_cpu *cpu,uint32_t lo,uint32_t hi){
     GL_ENTER();double value=gl_double_words(lo,hi);
-#if TARGET_OS_IPHONE
+#if TB_GLES_HOST
     glClearDepthf((float)value);
 #else
     glClearDepth(value);
@@ -2441,7 +2448,7 @@ void tribes_gl_uniform4fv(_cpu *cpu,uint32_t location,uint32_t count,uint32_t va
     }
     glUniform4fv((int32_t)location,(int32_t)count,copy);free(copy);DRAW_RETURN();
 }
-#if !TARGET_OS_IPHONE || defined(TB_GL4ES)
+#if !TB_GLES_HOST || defined(TB_GL4ES)
 typedef struct LegacyShaderTemplate {const char *name;int injected;const char *prefix,*suffix,*replacement_prefix,*replacement_suffix;} LegacyShaderTemplate;
 #ifdef TB_GL4ES
 #include "mobile_shader_sources.inc"
@@ -2491,7 +2498,7 @@ void tribes_gl_shader_source(_cpu *cpu,uint32_t shader,uint32_t count,uint32_t p
         else {size_t bytes=(uint32_t)sizes[i];sources[i]=malloc(bytes+1);if(!sources[i])stop();
             if(bytes)checked_copy(sources[i],guest(cpu,addresses[i],bytes),bytes);sources[i][bytes]=0;}
     }
-#if !TARGET_OS_IPHONE || defined(TB_GL4ES)
+#if !TB_GLES_HOST || defined(TB_GL4ES)
     /* Exact shipped source templates only. Preserve the original injected
        defines/line directives and leave other programs to the native compiler. */
     if(count==1){size_t bytes=sizes[0]<0?strlen(sources[0]):(size_t)sizes[0];char *adapted=legacy_shader_source(sources[0],bytes);
@@ -2544,7 +2551,7 @@ uint32_t tribes_gl_get_attrib_location(_cpu *cpu,uint32_t program,uint32_t input
 #undef DRAW_OBSERVE
 uint32_t tribes_gl_get_string(_cpu *cpu,uint32_t name){
     WINDOW_ENTER();if(!SDL_GL_GetCurrentContext())stop();
-#if !TARGET_OS_IPHONE
+#if !TB_GLES_HOST
     /* Core drivers expose the same capability names as indexed strings.
        Adapt only their representation for the original extension parser;
        never add compatibility extensions or consume the native error state. */
@@ -2576,7 +2583,7 @@ void tribes_gl_get_integer(_cpu *cpu,uint32_t name,uint32_t output){
     if(name!=0x8f9e&&name!=0x8d57&&name!=GL_MAX_TEXTURE_SIZE&&name!=0x84e2&&name!=0x8192&&name!=0x0d31&&name!=0x8f36&&name!=0x8f37&&name!=GL_ARRAY_BUFFER_BINDING)stop();
     GLint value;checked_copy(&value,guest(cpu,output,4),4);GLContext *c=current_context();
     GLuint *copy=copy_buffer_slot(c,name);
-    #if !TARGET_OS_IPHONE || defined(TB_GL4ES)
+    #if !TB_GLES_HOST || defined(TB_GL4ES)
     if(c&&!c->core&&name==0x8f9e){if(restart_state_available(c))value=(GLint)c->restart_index;}else
 #endif
     if(copy)value=(GLint)*copy;else if(c&&c->core&&name==0x8192)value=(GLint)c->mipmap_hint;else glGetIntegerv(name,&value);
@@ -2588,7 +2595,7 @@ void tribes_gl_get_float(_cpu *cpu,uint32_t name,uint32_t output){
     GL_ENTER();if(!SDL_GL_GetCurrentContext())stop();
     size_t count=1;
     if(name==0x0ba6||name==0x0ba7||name==0x0b66){
-#if TARGET_OS_IPHONE && !defined(TB_GL4ES)
+#if TB_GLES_HOST && !defined(TB_GL4ES)
         stop();
 #else
         (void)legacy_context();count=name==0x0b66?4:16;
@@ -2622,7 +2629,7 @@ uint32_t tribes_glu_project(_cpu *cpu,uint32_t xl,uint32_t xh,uint32_t yl,uint32
 }
 uint32_t tribes_glu_error_string(_cpu *cpu,uint32_t code){
     WINDOW_ENTER();const char *text=NULL;
-#if !TARGET_OS_IPHONE
+#if !TB_GLES_HOST
     text=(const char *)gluErrorString(code);
 #else
     /* GLU's portable error-name mapping requires no graphics context. */

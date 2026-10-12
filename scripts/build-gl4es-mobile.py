@@ -14,7 +14,8 @@ URL = 'https://github.com/ptitSeb/gl4es.git'
 
 
 def build(platform):
-    env = dict(os.environ, DEVELOPER_DIR='/Applications/Xcode.app/Contents/Developer')
+    env = dict(os.environ)
+    env.setdefault('DEVELOPER_DIR', '/Applications/Xcode.app/Contents/Developer')
     ref = ROOT / 'ref/gl4es'
     if not ref.exists():
         subprocess.run(['git', 'clone', URL, str(ref)], check=True)
@@ -50,10 +51,10 @@ def build(platform):
     if getter_target.read_text() != getter:
         getter_target.write_text(getter)
     out = ROOT / 'generated/gl4es' / platform
-    sdk = 'iphonesimulator' if platform == 'simulator' else 'iphoneos'
+    sdk = {'simulator': 'iphonesimulator', 'device': 'iphoneos', 'macos': 'macosx'}[platform]
     command = ['cmake', '-S', str(source), '-B', str(out / 'apple-build'),
-               '-DCMAKE_SYSTEM_NAME=iOS', '-DCMAKE_OSX_SYSROOT=' + sdk,
-               '-DCMAKE_OSX_ARCHITECTURES=arm64', '-DCMAKE_OSX_DEPLOYMENT_TARGET=16.0',
+               *([] if platform == 'macos' else ['-DCMAKE_SYSTEM_NAME=iOS']), '-DCMAKE_OSX_SYSROOT=' + sdk,
+               '-DCMAKE_OSX_ARCHITECTURES=arm64', '-DCMAKE_OSX_DEPLOYMENT_TARGET=' + ('12.0' if platform == 'macos' else '16.0'),
                '-DCMAKE_BUILD_TYPE=Release', '-DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE=' + str(out / 'lib'),
                '-DNOX11=ON', '-DNOEGL=ON', '-DSTATICLIB=ON', '-DNO_LOADER=ON',
                '-DNO_INIT_CONSTRUCTOR=ON', '-DDEFAULT_ES=2']
@@ -72,5 +73,5 @@ def build(platform):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--platform', choices=['simulator', 'device'], default='simulator')
+    parser.add_argument('--platform', choices=['simulator', 'device', 'macos'], default='simulator')
     print(build(parser.parse_args().platform))

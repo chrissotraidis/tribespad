@@ -4,3 +4,4 @@ ref/
 generated/
 __pycache__/
 *.pyc
+build/

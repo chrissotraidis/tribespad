@@ -1,0 +1,42 @@
+name: Build TribesPad for iPhone and iPad
+# For players without an Apple Silicon Mac: fork this repository, open Actions,
+# choose this workflow and press "Run workflow". GitHub's free macOS runner
+# (free for public repositories) downloads the free official Tribes 2 installer
+# and the TribesNEXT client, translates the game and builds an unsigned IPA.
+# Nothing is published: the IPA stays with this run for 7 days, visible only to
+# you. Sign and install it with your own Apple account (README).
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 240
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
+      HOMEBREW_NO_AUTO_UPDATE: '1'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Install build tools
+        run: |
+          xcodebuild -version
+          xcrun --sdk iphoneos --show-sdk-version
+          brew install llvm@20 cmake ninja sevenzip zstd
+          df -h "$GITHUB_WORKSPACE"
+      - name: Build TribesPad
+        run: scripts/build-tribespad.sh --platform device --output "$RUNNER_TEMP/out" --ipa "$RUNNER_TEMP/out/TribesPad-unsigned.ipa"
+      - name: Checksum
+        working-directory: ${{ runner.temp }}/out
+        run: shasum -a 256 TribesPad-unsigned.ipa | tee SHA256SUMS
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: TribesPad-${{ github.run_number }}
+          path: |
+            ${{ runner.temp }}/out/TribesPad-unsigned.ipa
+            ${{ runner.temp }}/out/SHA256SUMS
+          retention-days: 7
+          if-no-files-found: error
+

@@ -1,53 +1,79 @@
 # Reproducible build
 
-Goal: a fresh clone builds TribesPad from the official free downloads with one
-command, so that PadMint's **Build** button (Apple Silicon Mac with Xcode) and a
-GitHub Actions macOS runner (for iPad-only players) can make a personal copy.
-No game data or translated game code is ever committed or published.
+One command builds TribesPad from a fresh clone, on any Apple Silicon Mac with Xcode,
+and it is what PadMint's **Build** button and the GitHub runner workflow run:
 
-The current build works only in the original development workspace, which keeps
-about 260 GB of prepared inputs, evidence and old builds under the ignored
-`ref/` and `generated/` folders. This document tracks replacing each of those
-inputs with a recorded, repeatable stage.
+```sh
+scripts/build-tribespad.sh                    # iPhone and iPad: build/output/TribesPad.ipa
+scripts/build-tribespad.sh --platform macos   # Mac: build/output/TribesPad-mac.zip
+scripts/build-tribespad.sh --platform simulator
+```
 
-## How the current build was measured
-
-`scripts/audit-build-inputs.py` runs any build script with Python audit hooks
-and records every file it opens and every program it starts. For the MMU-enforced
-iPad Simulator build (`build-ipad-engine.py --angle --hardware-permissions
---bundle-assets`) it recorded about 2,400 input files and 644 tool runs (clang,
-opt, llvm-nm, codesign) in these groups:
-
-| Group | Examples | Count |
-|---|---|---|
-| Compiled runtime and support objects (rebuilt by the build itself) | `generated/ipad-engine-hw/{guarded,support}`, `generated/bochs-math/checked-simulator-hw` | ~1,700 |
-| Pinned third-party sources and prebuilts | Bochs, SoftFloat, ANGLE, GL4ES, OpenAL Soft, zlib-ng | ~400 |
-| Repository sources | `port/`, `scripts/`, `tests/`, `config/` | ~180 |
-| Third-party libraries built for the target | SDL3, GL4ES, OpenAL, zlib-ng, curl/LibreSSL | ~100 |
-| **Translated game sources** | `generated/srw/run-…-ifc22/…/bootstrap-published-ntdll-probe`, Miles modules, `generated/integration-review/*-engine` | ~110 |
-| Test receipts the build checks | `generated/integration-review/<test>/result.json` | ~15 |
-| Tools | Homebrew `llvm@20`, Xcode | — |
+Prerequisites: Xcode with the iOS platform, and
+`brew install llvm@20 cmake ninja sevenzip zstd`. No game data or translated game
+code is committed or published; every stage downloads or derives its inputs on the
+player's Mac and checks them by SHA-256.
 
 ## Stages
 
-| # | Stage | Produces | Status |
-|---|---|---|---|
-| 0 | **Game inputs** — `scripts/prepare-game-inputs.py` | `ref/control`, `ref/qol`, `ref/product` | **Done.** Verified from an empty folder with macOS's Python 3.9: downloads the official installer and TribesNEXT client, checks SHA-256, builds pinned REWise, and reproduces all 170 game files and 22 TribesNEXT files byte for byte ([config/game-inputs.json](../config/game-inputs.json) holds only paths and digests). |
-| 1 | Tools | SRW/llasm static recompiler (`toolchains.lock.json`), LLVM 20 passes (`generated/tools/*-pass`) | Sources pinned; a from-scratch build script is still needed. |
-| 2 | Third-party runtime libraries | SDL3, GL4ES, ANGLE (prebuilt, pinned), OpenAL Soft, zlib-ng, curl/LibreSSL, SoftFloat, Bochs math | Each has a build script; not yet run from a clean clone. |
-| 3 | Lift | SRW output for `Tribes2.exe`, `IFC22.dll` and the Miles DLLs/codecs | Scripts exist; run directories are dated and hand-selected. |
-| 4 | **TribesNEXT patch preparation** | The ~110 translated sources: finite code revisions for the runtime patches the QoL client applies, routes, hooks and continuations | **Hardest stage.** About 40 `*_runtime_inputs.py` modules read 13.5 GB of evidence in 40 `generated/integration-review` folders, produced over weeks by capture and freeze scripts that ran parts of the original QoL code. Plan: record the small, game-independent part of that evidence (addresses, patch order, block lists, expected hashes) in the repository and regenerate the translated code from a fresh lift, instead of re-running every capture. |
-| 5 | Receipts | Component tests the build checks by source hash | For player builds, check source hashes against committed receipt summaries rather than re-running long tests. |
-| 6 | App and packaging | Device `TribesPad.app`, unsigned IPA, Mac app | Exists (`build-ipad-engine.py --platform device`); IPA packaging and entitlements notes still needed. |
-| 7 | PadMint and GitHub runner | `padmint.json`, a workflow that builds the IPA in a player's own fork | Not started; depends on stages 1–6. |
+| Stage | Script | What it does |
+|---|---|---|
+| Python | `.venv` | Apple's Python 3.9 with `scripts/requirements.txt` |
+| Game files | `prepare-game-inputs.py` | Downloads the official Tribes 2 installer and the TribesNEXT client, builds pinned REWise, extracts `ref/control`, `ref/qol` and `ref/product` and checks all 192 files ([config/game-inputs.json](../config/game-inputs.json)) |
+| Sources | `fetch-sources.py` | Fetches the pinned SR (SRW, llasm), HaloPad helpers, LDC, OpenAL Soft, zlib-ng, Bochs, GL4ES and SDL ([dependencies.lock.json](../dependencies.lock.json)); curl, LibreSSL, SoftFloat and ANGLE are fetched and checked by their build scripts |
+| Tools | `build-tools.py` | Builds SRW, llasm, the Tribes lifter patch and the two LLVM 20 passes from the locked sources (checked against [toolchains.lock.json](../toolchains.lock.json)) |
+| Translation | `translation-patches.py bases`, `apply` | Analyses and lifts `Tribes2.exe`, `IFC22.dll`, `Mss32.dll` and 11 Miles codecs; then recreates the 166 translated sources and receipts the engine was tested with (below) |
+| Libraries | `build-*.py` | SDL3, GL4ES, OpenAL Soft, zlib-ng, curl/LibreSSL, SoftFloat and checked Bochs math for the target |
+| Game profile | `apple_game_profile.py` | The game folder the app bundles, without the optional Discord SDK |
+| App | `build-ipad-engine.py` | Compiles and checks the full engine with hardware memory permissions and the GL4ES → ANGLE (Metal) renderer, then signs the app ad hoc; the device build carries the Extended Virtual Addressing entitlement |
+| Package | | Unsigned IPA (iPhone and iPad) or a zipped Mac app |
 
-The game cannot be shipped or built on an iPad: iOS only runs code signed at
-install time, so the translated game must be compiled on a Mac (the player's own,
-or a GitHub runner in the player's own fork) before installing.
+Each stage skips work it has already verified, so a failed build resumes where it stopped.
+
+## How the translation is recreated
+
+The engine links about 2 GB of translated code and test receipts that were produced over
+weeks of capture and verification. Re-running that history on a player's Mac is not
+practical, and shipping it would distribute game code. Instead the build works like a
+ROM patch:
+
+1. The player's Mac lifts its own downloaded binaries with the pinned lifter. The lifted
+   outputs ("bases") must match the SHA-256 digests in
+   [config/translation-patches.json](../config/translation-patches.json); a mismatch
+   stops the build.
+2. [patches/translation](../patches/translation) holds zstd binary differences from
+   those bases to each file the engine needs (166 files, 3.5 MB in total). Receipts that
+   contain no game code are stored compressed without a base.
+3. Every recreated file must match its recorded SHA-256 before the app build uses it,
+   and the app build then repeats its own receipt checks.
+
+Maintainers record new patches after changing translated inputs:
+
+```sh
+TB_AUDIT_LOG=/tmp/inputs.jsonl .venv/bin/python scripts/audit-build-inputs.py \
+  scripts/build-ipad-engine.py --angle --hardware-permissions --bundle-assets --build-only
+.venv/bin/python scripts/translation-patches.py bases
+.venv/bin/python scripts/translation-patches.py make /tmp/inputs.jsonl --keep
+```
+
+Files a compiler reads through include paths are not seen by the audit and must be
+added with `--extra` (the prepared folder's `.inc` files are recorded this way).
+
+## Verified so far
+
+- From an empty clone on this Mac with Apple's Python 3.9: tools built from source
+  produced byte-identical bases, all 166 files were recreated, and the build produced an
+  IPA that passes PadMint's package check and a Mac app.
+- The Simulator app from that clean clone was installed fresh and played an offline
+  Katabatic match (spawn, touch controls, jetting). The Mac app played an offline match.
+- Peak memory of one build process was 6.3 GB; the build used about 10 GB of disk.
+
+Not yet verified: the GitHub runner workflow and PadMint's player check (both need the
+repository to be public), other Xcode versions, and installation on a physical device.
 
 ## Licensing of inputs
 
 Tribes 2 is a free download from its rights holders but is not public domain, so
-TribesPad never redistributes it. Stage 0 downloads it from the official sources
-on the player's computer. The optional HD texture pack comes from a third-party
-link and is only used when the player supplies it (`--hd-textures`).
+TribesPad never redistributes it. The build downloads it from the official sources on
+the player's computer. The optional HD texture pack comes from a third-party link and is
+only used when the player supplies it.

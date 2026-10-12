@@ -32,13 +32,16 @@ static void create_check(unsigned wide,const char *name,uint32_t expected,uint32
  else strcpy((char *)memory+0x10001,name);
  tribes_set_last_error(1234);assert(make_directory(wide,0x10001)==expected);assert(tribes_get_last_error()==error);
 }
-static uint32_t open_file(unsigned wide,const char *name,uint32_t access,uint32_t share,uint32_t disposition){
+static uint32_t open_file_flags(unsigned wide,const char *name,uint32_t access,uint32_t share,uint32_t disposition,uint32_t flags){
  if(wide)for(size_t i=0;i<=strlen(name);i++){uint16_t ch=(unsigned char)name[i];memcpy(memory+0x10001+i*2,&ch,2);}
  else strcpy((char *)memory+0x10001,name);
  _cpu cpu={0};cpu._pointer_offset=base;cpu._esp=0x28003;
- uint32_t args[]={0x10001,access,share,0,disposition,0x08000080,0};memcpy(memory+cpu._esp,args,sizeof args);
+ uint32_t args[]={0x10001,access,share,0,disposition,flags,0};memcpy(memory+cpu._esp,args,sizeof args);
  _cpu expected=cpu;tribes_enter(&cpu,wide?6:5);expected._eax=cpu._eax;expected._esp+=sizeof args;
  assert(!memcmp(&cpu,&expected,sizeof cpu));return cpu._eax;
+}
+static uint32_t open_file(unsigned wide,const char *name,uint32_t access,uint32_t share,uint32_t disposition){
+ return open_file_flags(wide,name,access,share,disposition,0x08000080);
 }
 static void cache_file(unsigned wide,const char *root){
  uint32_t h=open_file(wide,"Cache.gui.dso",0x40000000,1,2);assert(h!=UINT32_MAX&&tribes_get_last_error()==0);
@@ -58,6 +61,34 @@ static void cache_file(unsigned wide,const char *root){
  assert(open_file(wide,"bad?name",0x40000000,1,2)==UINT32_MAX&&tribes_get_last_error()==123);
  assert(!unlink(path));
  h=open_file(wide,"Cache.gui.dso",0x40000000,1,4);assert(h!=UINT32_MAX&&tribes_get_last_error()==0);assert(tribes_close_handle(h)&&!unlink(path));
+ /* Downloader pattern: FILE_GENERIC_WRITE, CREATE_ALWAYS, backup semantics on a
+    regular file, then FILE_GENERIC_READ. Specific rights act as data rights. */
+ h=open_file_flags(wide,"Download.dat",0x120116,0,2,0x02000080);assert(h!=UINT32_MAX&&tribes_get_last_error()==0);
+ memcpy(memory+0x12000,"downloaded",10);assert(tribes_write_file(base,h,0x12000,10,0x20010,0));assert(tribes_close_handle(h));
+ h=open_file_flags(wide,"Download.dat",0x120089,1,3,0x80);assert(h!=UINT32_MAX&&tribes_get_file_size(base,h,0)==10);
+ memset(memory+0x13000,0xa5,60);tribes_set_last_error(123);
+ assert(tribes_get_file_information_by_handle(base,h,0x13001)==1&&tribes_get_last_error()==0);
+ {uint32_t v[13];memcpy(v,memory+0x13001,52);struct stat st;char p[PATH_MAX];snprintf(p,sizeof p,"%s/Download.dat",root);assert(!stat(p,&st));
+  assert(v[0]==32&&v[8]==0&&v[9]==10&&v[10]==1&&v[12]==(uint32_t)st.st_ino&&v[11]==(uint32_t)((uint64_t)st.st_ino>>32));
+  assert(memory[0x13000]==0xa5&&memory[0x13001+52]==0xa5);}
+ assert(tribes_get_file_information_by_handle(base,h,0)==0&&tribes_get_last_error()==998);
+ assert(tribes_close_handle(h));
+ assert(tribes_get_file_information_by_handle(base,h,0x13001)==0&&tribes_get_last_error()==6);
+ /* MoveFileExW: rename, no-replace refusal, replace, missing source, case match. */
+ #define WIDE(addr,text) do{const char *s_=(text);for(size_t i_=0;i_<=strlen(s_);i_++){uint16_t c_=(unsigned char)s_[i_];memcpy(memory+(addr)+i_*2,&c_,2);}}while(0)
+ char moved[PATH_MAX];snprintf(moved,sizeof moved,"%s/Moved.dat",root);snprintf(path,sizeof path,"%s/Download.dat",root);
+ h=open_file_flags(wide,"Download.dat",0x120116,0,2,0x02000080);assert(h!=UINT32_MAX);assert(tribes_close_handle(h));
+ WIDE(0x14000,"Download.dat");WIDE(0x14400,"Moved.dat");
+ assert(tribes_move_file_ex_w(base,0x14000,0x14400,1)==1);assert(access(path,F_OK)&&!access(moved,F_OK));
+ h=open_file_flags(wide,"Download.dat",0x120116,0,2,0x02000080);assert(h!=UINT32_MAX);
+ memcpy(memory+0x12000,"new",3);assert(tribes_write_file(base,h,0x12000,3,0x20010,0));assert(tribes_close_handle(h));
+ tribes_set_last_error(0);assert(tribes_move_file_ex_w(base,0x14000,0x14400,0)==0&&tribes_get_last_error()==183&&!access(path,F_OK));
+ WIDE(0x14400,"MOVED.DAT");assert(tribes_move_file_ex_w(base,0x14000,0x14400,1|8)==1);
+ {struct stat st;assert(!stat(moved,&st)&&st.st_size==3&&access(path,F_OK));}
+ assert(tribes_move_file_ex_w(base,0x14000,0x14400,1)==0&&tribes_get_last_error()==2);
+ assert(tribes_move_file_ex_w(base,0x14000,0,1)==0&&tribes_get_last_error()==87);
+ assert(!unlink(moved));
+ #undef WIDE
 }
 static void check(unsigned wide,const char *name,uint32_t expected,uint32_t error){
  if(wide)for(size_t i=0;i<=strlen(name);i++){uint16_t ch=(unsigned char)name[i];memcpy(memory+0x10001+i*2,&ch,2);}

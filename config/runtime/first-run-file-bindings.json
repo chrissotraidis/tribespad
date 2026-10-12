@@ -1,0 +1,8 @@
+{
+  "scope": "First-run TribesNEXT downloads: native file services that replace reached import stops. Indexes are the QoL import-stop numbers in stops.ll.",
+  "bindings": {
+    "GetFileInformationByHandle": {"helper": "tribes_get_file_information_by_handle", "arguments": 2, "returns": true, "guest_base": true},
+    "MoveFileExW": {"helper": "tribes_move_file_ex_w", "arguments": 3, "returns": true, "guest_base": true}
+  },
+  "stops": {"GetFileInformationByHandle": 144, "MoveFileExW": 129}
+}
