@@ -169,41 +169,49 @@ flowchart LR
 
 ## Get TribesPad
 
-TribesPad never ships the game. Each build downloads the free official Tribes 2
-installer and the TribesNEXT client, checks both by SHA-256, translates the game on a
-Mac with Apple Silicon and packages a personal copy for you. The first build takes
-about 40 minutes and 15 GB of disk space; later builds reuse most of the work.
+TribesPad never ships the game. You build your own copy: the build downloads the free
+official Tribes 2 and TribesNEXT files and turns them into an app on your Mac. It needs a
+Mac with Apple Silicon, about 40 minutes the first time and 15 GB of free space.
 
-### With PadMint
+### Mac
 
-On a Mac with Apple Silicon, install Xcode (with its iOS platform) and run
-`brew install llvm@20 cmake ninja sevenzip zstd`. Then choose TribesPad in
-[PadMint](https://github.com/chrissotraidis/padmint) and press **Build**. There is no
-game file to select.
+1. Install **Xcode** from the App Store and open it once.
+2. Install [Homebrew](https://brew.sh), then run:
+   ```sh
+   brew install llvm@20 cmake ninja sevenzip zstd
+   ```
+3. Build:
+   - **With [PadMint](https://github.com/chrissotraidis/padmint):** choose TribesPad and press **Build**.
+   - **Or in Terminal:**
+     ```sh
+     git clone https://github.com/chrissotraidis/tribespad.git
+     cd tribespad
+     scripts/build-tribespad.sh --platform macos
+     ```
+4. Unzip `build/output/TribesPad-mac.zip`, drag **TribesPad** to Applications and open it.
 
-### From Terminal
+No Apple account is needed for the Mac.
 
-```sh
-git clone https://github.com/chrissotraidis/tribespad.git
-cd tribespad
-scripts/build-tribespad.sh                    # iPhone and iPad: build/output/TribesPad.ipa
-scripts/build-tribespad.sh --platform macos   # Mac: build/output/TribesPad-mac.zip
-```
+### iPhone and iPad (experimental)
 
-### Without a Mac
+1. Do steps 1–2 above, then build with PadMint, or in the `tribespad` folder in Terminal:
+   ```sh
+   scripts/build-tribespad.sh
+   ```
+   No Mac? Fork this repository, open **Actions → Build TribesPad for iPhone and iPad →
+   Run workflow**, and download the IPA from the finished run.
+2. Install `build/output/TribesPad.ipa` with [Sideloadly](https://sideloadly.io),
+   signed with an Apple ID in the **paid Apple Developer Program**.
 
-Fork this repository, open **Actions**, choose **Build TribesPad for iPhone and iPad**
-and press **Run workflow**. GitHub's free macOS runner builds the IPA in your fork and
-keeps it with the run for 7 days; nothing is published. This route has not been run yet.
+> [!NOTE]
+> TribesPad needs Apple's *Extended Virtual Addressing* permission. Free Apple IDs most
+> likely cannot grant it, so plan on a paid developer account. TribesPad has not yet been
+> installed on a real iPhone or iPad; the GitHub build has not been run yet either.
 
-### Install
+### First launch
 
-- **Mac:** unzip `TribesPad-mac.zip`, move TribesPad to Applications and open it.
-- **iPhone and iPad:** sign and install `TribesPad.ipa` with
-  [Sideloadly](https://sideloadly.io) or another tool that signs with your own Apple ID.
-  TribesPad reserves the game's full 32-bit address space and asks for the
-  **Extended Virtual Addressing** capability, so sign with a development profile that
-  allows it; a paid Apple Developer account does. Installation on hardware is untested.
+Accept the license, create a warrior, then choose **LAN GAME → HOST → START GAME** for a
+match against bots. On iPhone and iPad, tap the controller button to show touch controls.
 
 ## Game data
 
