@@ -1,0 +1,782 @@
+{
+ "note": "Each file is recreated from the player's own lift (bases) with patches/translation; no game data is stored.",
+ "bases": {
+  "ifc22/image": "eaf5a42d301cc64a6e526aa49a82dbaefe655ed1ac0ba67939d0bab2fb6ab607",
+  "ifc22/module.ll": "afa594f831d6952cc796c518a9e55c3bde06411b1b241b464488c65322cfcb1e",
+  "mp3dec/image": "0a6db88a5fad28168c1dac700473c5709b17802c33e36b2668c3300c1e580fad",
+  "mp3dec/module.ll": "1c2842855ef2f2b0d678b0a2b4a02bcd2dfd3769be79e9e817fbbaba648d1a01",
+  "mp3dec/seg01_code.llinc": "3683cc018411316380242a72564460b5aef1ba01dd5a738e85758e005b41ed09",
+  "mss32/image": "cd3c9b26cd1f4e7037bac56056427908c2ef8dc9fb6f899ab9f47bd8046ba9fb",
+  "mss32/module.ll": "5a55c7c6ee4176ff60bf2fbb8d16e2fefbadbe15f9691875e2fca3fbf25e825e",
+  "mssds3dh/image": "b90b26d654b7edc746f326ed34bbfd65e6cee4ecf6876eda5c7d04de4d54d1de",
+  "mssds3dh/module.ll": "ced23b67d2d73563d3850009295daa1cfc2d8c1796727b40278f19a652c338cc",
+  "mssds3ds/image": "4f6642c0a7ebf33f2f5adf01149eaf5749159082fdd8ed5930d2cd1458e94709",
+  "mssds3ds/module.ll": "430aad3f32759ecff9f0165c6de2605379f45c87e4e8a3c989302247e45e0565",
+  "mssdx7sn/image": "efa0feedc9e66ef290f56dd5b68f5fb83ea216e030ae64cc687f1043b0197269",
+  "mssdx7sn/module.ll": "c7de1eebabec7be7f99b747f2fe8cd258abd98f797a59039199b6fa4697570f6",
+  "msseax/image": "34617f321bd68616c4c4a96c2ca17a8ca92c3c381f699102e7584c1881f734cc",
+  "msseax/module.ll": "56a577fd63dab4980c09c373abb0b8816bc6d0ea4bfa982e2314a25c6a20ef41",
+  "msseax2/image": "005b8966d8c67fe705c1497f5199e14108c960914305cd846a8e9905f7d14142",
+  "msseax2/module.ll": "bae0017f6380847648f3a0e59ef48df737eaf0d473eb950017f85325b2e447d5",
+  "mssfast/image": "343ba39b3e5d0f220e0d15ec5f9eb9b84a04617599ba6cd1d815539637f10647",
+  "mssfast/module.ll": "f12a8ee3d8f7849ad26d07446e78e54f29f111993341f2afee9c632b6cb94d11",
+  "mssv12/image": "d08c3d1051c62429f66c0c6cbaa6acae13f0b8b7e41d0b7482a1810a85984ead",
+  "mssv12/module.ll": "a65f3992de98687247d25a13c1bcee323b7d70c74b5ac036e1ca035de2b5c74a",
+  "mssv24/image": "b742241256dbb7b54661625ebf0b400ae2ad5a08a92d02cac815635fa3a09299",
+  "mssv24/module.ll": "60423a86c420324288789a4a0d89c571b4038866772bc03bb42430ca4cc6c34b",
+  "mssv29/image": "ff4364a198f695dc95285cc66b6758635bae6ee099bef32f2d3de9691e295a17",
+  "mssv29/module.ll": "87322f20382ae11ffafd7352ea938c92155e820e85504a6939f4d75810985ba2",
+  "none": null,
+  "reverb3/image": "e106854e123efa1396474b8a65369514c5b86f9a891fac74170ea5846faad62c",
+  "reverb3/module.ll": "06e42e95f405eb61f0856042bca5412f669a3db413b84f75e988118af2c85062",
+  "tribes2/engine.ll": "75a497ceb4100e36d5778b5f76d69bbfe6b01116f7f3b7f4c22f08a39a53ef22",
+  "tribes2/image": "7ad1d40a6aa74a25d089af6bd6f34fcc20a172fd5932ded82c69fca673e7f8f9",
+  "tribes2/seg01_code.llinc": "b569377d069dd947802abb611f51c98bd35d1ed099172d0550ace34e9ac101ba"
+ },
+ "files": [
+  {
+   "path": "generated/integration-review/audio-hook-bank/plan.json",
+   "sha256": "12c9f557a6feeee674b0e6d01e30c0ba6fb1d8ca0ca677ef6e9bec95f84b7674",
+   "base": "none",
+   "patch": "c7f3b62730f60d62.zst"
+  },
+  {
+   "path": "generated/integration-review/code-revision-mobile/result.json",
+   "sha256": "5b6b0033d5a27d20336c5de6c11142cf1ccd0a2d608800b6e2bcaa5f06894a38",
+   "base": "none",
+   "patch": "5ca46765f89fcb52.zst"
+  },
+  {
+   "path": "generated/integration-review/guest-threads/macos/bindings.ll",
+   "sha256": "9378ba3f4124935ee895b632455af341f1bb7cf16d56519703611ae2a0d2d6b5",
+   "base": "ifc22/module.ll",
+   "patch": "646115d874750097.zst"
+  },
+  {
+   "path": "generated/integration-review/guest-threads/macos/result.json",
+   "sha256": "06c753df09167fc2f91f117693c4ba6fc6c151f2aa1c8924414e12bdef7163e6",
+   "base": "none",
+   "patch": "596b01e8eb069ceb.zst"
+  },
+  {
+   "path": "generated/integration-review/mobile-gpu-sync/result.json",
+   "sha256": "bfbf2eb3dcf8e15bd359a80bf46d5764a575eb537a08e6ef38342ed62e19e456",
+   "base": "none",
+   "patch": "dcd3b88fe8781e7f.zst"
+  },
+  {
+   "path": "generated/integration-review/mobile-gpu-timing/result.json",
+   "sha256": "ad20ede642da11118dfd7273c064cc4a531554d0911e481f6d0015294895bd26",
+   "base": "none",
+   "patch": "306cb54720692cb5.zst"
+  },
+  {
+   "path": "generated/integration-review/mp3-window-tables/result.json",
+   "sha256": "63ad445ded410e2f86458213e244d334e1c0d8e317cd715de10b4108cef95025",
+   "base": "none",
+   "patch": "15737b023fe59266.zst"
+  },
+  {
+   "path": "generated/integration-review/native-continuations/bridges.ll",
+   "sha256": "20972ff9176bb4cf99b69bb072efec2ff1406a95e102bc26cf6d52567371fd9d",
+   "base": "ifc22/module.ll",
+   "patch": "1f7ca006df44a932.zst"
+  },
+  {
+   "path": "generated/integration-review/native-continuations/qol/module.ll",
+   "sha256": "f10628d44c14816f962210613ccb7bc368fd71b9d000fb59deda176fea2b7cfb",
+   "base": "ifc22/module.ll",
+   "patch": "319f9e847eac4eb8.zst"
+  },
+  {
+   "path": "generated/integration-review/native-trampolines/module.ll",
+   "sha256": "53d225dbfe6108b4b66fcff6a3ecf7e751048e39c1bff6fa31952f51086c01ac",
+   "base": "ifc22/module.ll",
+   "patch": "4d22955a9b683aa1.zst"
+  },
+  {
+   "path": "generated/integration-review/patched-engine/seg01_code.llinc",
+   "sha256": "56665ab88cf22b5ecb9ff73869c7e6f6ff8773dfce2dad4b7cd2a9fde75c85a1",
+   "base": "tribes2/seg01_code.llinc",
+   "patch": "e7776203cde13bb4.zst"
+  },
+  {
+   "path": "generated/integration-review/patched-engine/va/engine.ll",
+   "sha256": "a4413d20b8ca4b972cfa4d7fcf275532ec84957508a5cf4247b4f28013b447cc",
+   "base": "tribes2/engine.ll",
+   "patch": "dc1af634de308cf8.zst"
+  },
+  {
+   "path": "generated/integration-review/patched-engine/va/result.json",
+   "sha256": "76886b54173055b101e13b09d49cce6c1f0879ebf37aeae4979075c46289ac84",
+   "base": "none",
+   "patch": "8ee1f1521dab3f23.zst"
+  },
+  {
+   "path": "generated/integration-review/pending-hook-bank/detours/module.ll",
+   "sha256": "83b55c842b274ccc7e3fd69a3d68f86daeb99d0146e4a0f1e704278f08a2bc30",
+   "base": "ifc22/module.ll",
+   "patch": "f9778eb1e0cffe07.zst"
+  },
+  {
+   "path": "generated/integration-review/renderer-hook-bank-before-font/plan.json",
+   "sha256": "dd74bc60c019057b461da11341b3be225691556ba3bb680be90cc0673812bd2b",
+   "base": "none",
+   "patch": "b2cd892f0764a5b0.zst"
+  },
+  {
+   "path": "generated/integration-review/renderer-hook-bank/plan.json",
+   "sha256": "4cd3d94d28a4b99690be304dde1f6954ea836e21f59e2fc3f72ad08f0f449701",
+   "base": "none",
+   "patch": "1c17a59c38dc4627.zst"
+  },
+  {
+   "path": "generated/integration-review/sdl-io/result.json",
+   "sha256": "315a4ac87da68de59c0575e600917b5c32f31c4e4dcf31754b917b54f685bb0c",
+   "base": "none",
+   "patch": "c7f2e10cbee1c0e0.zst"
+  },
+  {
+   "path": "generated/integration-review/x87-indexed-stores/result.json",
+   "sha256": "9ecda65fefa2146b63d24081ddd6bb38222a56469beddd280259ed1180f2023e",
+   "base": "none",
+   "patch": "49574028f727a57f.zst"
+  },
+  {
+   "path": "generated/integration-review/x87-store-engine/result.json",
+   "sha256": "a54faa4782d645ab8f1e5e64b747f3ad5147f26e99d24617a092160f5209ba40",
+   "base": "none",
+   "patch": "89ebf4d6c37fab38.zst"
+  },
+  {
+   "path": "generated/integration-review/x87-store-engine/seg01_code.llinc",
+   "sha256": "c604b2b6e61d3a64a5a270b9d68b022fb2e2fc2fc1d58a6589788e161f819b9d",
+   "base": "tribes2/seg01_code.llinc",
+   "patch": "f99c89f9e9cdbe3b.zst"
+  },
+  {
+   "path": "generated/integration-review/x87-store-engine/va/engine.ll",
+   "sha256": "9201f7581c79197bfe12948475cbedf3bb84e6546e632c7bf0e66d26c41849d6",
+   "base": "tribes2/engine.ll",
+   "patch": "3a2d2b9df3b85b48.zst"
+  },
+  {
+   "path": "generated/integration-review/x87-store-engine/va/result.json",
+   "sha256": "2add8d128b592566abca1fdd15b69d25b7be11f308a22a04e4d15f3b38049f46",
+   "base": "none",
+   "patch": "ae18049e927ef2d8.zst"
+  },
+  {
+   "path": "generated/native-win32/slist-abi/macos/bindings.ll",
+   "sha256": "2bf3ecd0cf935f32f8e2668b687e84b416c5d193737a734e6f658273fa7a3ea8",
+   "base": "ifc22/module.ll",
+   "patch": "29c3900fbeace464.zst"
+  },
+  {
+   "path": "generated/native-win32/slist-abi/macos/lookup.ll",
+   "sha256": "17ad2972d5617898654264f02e610d6ee91346078adba85fccee95293da1efe5",
+   "base": "ifc22/module.ll",
+   "patch": "08d24d6d9d05176c.zst"
+  },
+  {
+   "path": "generated/native-win32/slist-abi/macos/result.json",
+   "sha256": "283a2c3eadcf83727de93301392452d54143dc9e57a51eccc3a075cc90c31734",
+   "base": "none",
+   "patch": "318e78a1a781f9c8.zst"
+  },
+  {
+   "path": "generated/qol-feature-dispatch/result.json",
+   "sha256": "9e4cfa3331baa27b8d148a4f73d2c9bcaff574a5d4e2616dd296095a81f9bd76",
+   "base": "none",
+   "patch": "33852b064295a83a.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/allocation-patch-engine.ll",
+   "sha256": "3731563e3cfd87b364b7521e26223002be7e0dd39700aa134cd2d82decffd0cf",
+   "base": "tribes2/engine.ll",
+   "patch": "d890a01ac110b5b9.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/audio-hooks-bank.ll",
+   "sha256": "24a568de78e0a303ea856865a03cce08f81d4d190ec8a865ea1a58727cbd6206",
+   "base": "ifc22/module.ll",
+   "patch": "5bbb62ae4843d96c.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/audio-hooks-bridges.ll",
+   "sha256": "f6042f4891333a97d45229de66da28ee667742152943dc3a8a0e86db10100d21",
+   "base": "ifc22/module.ll",
+   "patch": "9de962ff8bdf2d0d.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/audio-hooks-continuations.ll",
+   "sha256": "ff39308678601b6cdb5c4d95ba972f6d5e7fca92463c679070014c1f24ab9a20",
+   "base": "tribes2/engine.ll",
+   "patch": "2b7070e04685eccd.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/audio-tables-engine.ll",
+   "sha256": "db3c7f3769350a6920af4e14e89ec238f10c0ba92fa3eb5f4a60d64527525ef8",
+   "base": "tribes2/engine.ll",
+   "patch": "c8a30abde5f3d2be.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/clock-patch-engine.ll",
+   "sha256": "bed9639dfac98a72776557f518876cdcdbca7ca64d712b7bd21956c7da83ca77",
+   "base": "tribes2/engine.ll",
+   "patch": "09c29844b7b39ff6.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/collision-patch-engine.ll",
+   "sha256": "fa0545d4819117f98f8e5406c45e8798c9c8b1544153167360869d2a96c65952",
+   "base": "tribes2/engine.ll",
+   "patch": "c31fa12ec48166f1.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/console-animation-engine.ll",
+   "sha256": "004bf27733395d96d6a0c48648843dd7955fcbbfe5e923723b106af94ced93c1",
+   "base": "tribes2/engine.ll",
+   "patch": "2d5206745ff034ef.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/console-fade-engine.ll",
+   "sha256": "a6056d27638336c0c412f0dea20337ce83150951fc5430077969271b582d6ed9",
+   "base": "tribes2/engine.ll",
+   "patch": "36b3b43262b506cc.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/cross-imports.ll",
+   "sha256": "edaa25d36ca458bce81ae222e07c0a6430d9912030025b6c11563dce6a0f9595",
+   "base": "ifc22/module.ll",
+   "patch": "288346e17385b616.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/curl-bindings.ll",
+   "sha256": "17c406cd5923e82f39a846d4a4cbf370986c5ab8ff5dccbc80a3051f151b8ce6",
+   "base": "ifc22/module.ll",
+   "patch": "c93d758a450e7ace.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/display-immediates-engine.ll",
+   "sha256": "3667fd73ffb106aab4dad9ee91731b3eb3d173b0f26ad956f1119c4a9c53af39",
+   "base": "tribes2/engine.ll",
+   "patch": "3f4e4e0267ddf419.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/dsound-bindings.ll",
+   "sha256": "63f18d59d3f196c4fe5b12a8f6369d2ef9a2b3ecd5fbaa7b2ea422b5c2903a7b",
+   "base": "ifc22/module.ll",
+   "patch": "f6a35f30903a51ba.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/engine-routed.ll",
+   "sha256": "edbe3663b3d1be7f555edba601fde05cfa25fd2352d0da4b3d3cdf09303e8410",
+   "base": "tribes2/engine.ll",
+   "patch": "5202191127841dee.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/engine.bin",
+   "sha256": "d93ed9a1b411c510840a2a1206a182ff927626f8ead8d0eaea4620e2b5b09c8b",
+   "base": "tribes2/image",
+   "patch": "2f9fd9200f53a974.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/followup-engine.ll",
+   "sha256": "ec47b7f992a1840d0007bd12cc08b8057788238c5abf57439062fd56cc74125f",
+   "base": "tribes2/engine.ll",
+   "patch": "86cc9e168df5e53d.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/font-size-engine.ll",
+   "sha256": "5a3bbc3b79eac6fe6ed4726a6a310235b904bb2511fda667b4f6a25118a78e87",
+   "base": "tribes2/engine.ll",
+   "patch": "bd2a646c78264130.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/graphics-bindings.ll",
+   "sha256": "f32cd113e46495da2395c83379675daa80376b69e140e4d0b987fc0bec88f5b1",
+   "base": "ifc22/module.ll",
+   "patch": "a655bb7d6bc8a97a.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/http-engine.ll",
+   "sha256": "1cb2105914824b8ca91f95311f7556926963d0c9df5ebe806c90a4ce2314de9d",
+   "base": "tribes2/engine.ll",
+   "patch": "98f334b2fadaa48f.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/input-nop-engine.ll",
+   "sha256": "afeae467fc6b8d1d30fc0b86e1254e454f9bd4db9b3c4bb410f9b7e2654cb5df",
+   "base": "tribes2/engine.ll",
+   "patch": "7e4b1bf259ffb09c.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/late-engine.ll",
+   "sha256": "eb0b2feed89cfb172618ead15aad42f46379c68e4fd5e308178066483087b214",
+   "base": "tribes2/engine.ll",
+   "patch": "7cb79a0459b817af.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/merged-dispatch.ll",
+   "sha256": "26bba5c56ce86874c9aeaa4ab420ee82952e315784639e14748531da954654a3",
+   "base": "tribes2/engine.ll",
+   "patch": "75627b37dd5d3ed2.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/miles-imports.ll",
+   "sha256": "4edb452903199a33fe7eea235a19e0674282495f1161854e225a52708bd6c276",
+   "base": "ifc22/module.ll",
+   "patch": "3c54d449aa186a20.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/miles.bin",
+   "sha256": "094f7646db1fdad9617ffcf3e8532dbb64cafec02257afd3824ad7540a392fbe",
+   "base": "mss32/image",
+   "patch": "235746a0f4ca0ec6.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/mission-entry/module.ll",
+   "sha256": "b68ba1c9d615f8aa23bd348bb9fddb399c229781cbd9c0ff5c4e099b202ee8e7",
+   "base": "ifc22/module.ll",
+   "patch": "7669a43ecc64a8bf.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/mp3dec.bin",
+   "sha256": "043b648af4171959a16adc7fbfa3d38289f4701bacb759dd37a193c4b4b5d82f",
+   "base": "mp3dec/image",
+   "patch": "5d81ab8c3b526ed7.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/mssds3dh.bin",
+   "sha256": "f11a4592d8779f4136988e558cf537ea94e5b182bbd4deca3cd7ebdcce31e007",
+   "base": "mssds3dh/image",
+   "patch": "b19cb58a1108e831.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/mssds3ds.bin",
+   "sha256": "ae3a941fa660f7aab0394535eeff85b14d93a0105bca4b432172e0bdae51c3c5",
+   "base": "mssds3ds/image",
+   "patch": "5ab7ac31c1683534.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/mssdx7sn.bin",
+   "sha256": "b36968204ab7cf905626e0738147d2ebdaaa9b9f6365d628e8d28e0588aeb52e",
+   "base": "mssdx7sn/image",
+   "patch": "a4ad56d15ac8cd2c.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/msseax.bin",
+   "sha256": "beaf0a3b9a6dfc063517083721332391eb6abb2c1f463f6047e751fc62ae0aad",
+   "base": "msseax/image",
+   "patch": "4515cf9de2167505.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/msseax2.bin",
+   "sha256": "3ac62baebd66679416898f83ac1adf8d3ae964e4da2aa22e99ac8e14123f967f",
+   "base": "msseax2/image",
+   "patch": "311ef0c9492de321.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/mssfast.bin",
+   "sha256": "239ccd3e086aa4e67294291dbd0b84ecc1777df743d3f8097ace60e8c5f12e61",
+   "base": "mssfast/image",
+   "patch": "1ed29ca8a5f5e7e9.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/mssv12.bin",
+   "sha256": "2279665426ef268c4b2c068cf4d2df4892ed5268e1eecce7940f270677ca6850",
+   "base": "mssv12/image",
+   "patch": "dc429c87067ab6c6.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/mssv24.bin",
+   "sha256": "579d0c48f92e5ab65152c787b36feae310049079c742a1cbed422e09812bfa05",
+   "base": "mssv24/image",
+   "patch": "3c8df2e160360894.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/mssv29.bin",
+   "sha256": "1efa7538a08d3cb99ebaee25cea3ad8cf505989933eaabfc9eaad32a38baba8f",
+   "base": "mssv29/image",
+   "patch": "51925909f3008152.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/network-engine.ll",
+   "sha256": "25cb4fb6e1bb934ad1f7eff4c0c8138fd3d528453e14005b1e1120c135850d5c",
+   "base": "tribes2/engine.ll",
+   "patch": "9b5d0d33d34a8ace.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/ntdll-probes.ll",
+   "sha256": "8988a55bacdfadc504b93302dee21ee2cac2896c8ec1ce5c3039f07b874508ef",
+   "base": "ifc22/module.ll",
+   "patch": "0d47cad65cdd6894.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/observed-bindings.ll",
+   "sha256": "fff1ee6ecd62b300ea4db59c051c95d0b25144e248c36ba18ad1c2df3faa9095",
+   "base": "ifc22/module.ll",
+   "patch": "427d951349e67c3f.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/openal-bindings.ll",
+   "sha256": "05abf7bf2b33afd0b84c094156c0858b359817e74489ff6b4b83ada3ff24db01",
+   "base": "ifc22/module.ll",
+   "patch": "637ca7efd9341224.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/pending-hooks-bank.ll",
+   "sha256": "e1ff6caf2af918005c4647371d0403660eb9032979397e57af0a2dce977349d5",
+   "base": "ifc22/module.ll",
+   "patch": "5af5a64691236645.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/pending-hooks-bridges.ll",
+   "sha256": "8da094962fb9b75439272e67e19eabae1d0e11d4b38856675caffc94bea0623f",
+   "base": "ifc22/module.ll",
+   "patch": "8c55f16cfd2a123e.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/pending-hooks-continuations.ll",
+   "sha256": "7b319ae1eef7c8556be44ca2d357b6568217fe857fbc00232cd45899706a79a9",
+   "base": "tribes2/engine.ll",
+   "patch": "7c97a62e841da623.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/post-file-patch-engine.ll",
+   "sha256": "017df552934224de7ca5e47a88b76fa4263707500af5f0c77236b3170e4fb9b3",
+   "base": "tribes2/engine.ll",
+   "patch": "a78b275aced2b1fc.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/post-video-nop-engine.ll",
+   "sha256": "52c07ef6f6ed1aba2a33d1040d29fadd79dcec95e0a02d1b6821d8ecad1995a3",
+   "base": "tribes2/engine.ll",
+   "patch": "8cceeee5040d7fb2.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/post-video-nop-second-engine.ll",
+   "sha256": "24d85d8ec71c4f2ac35581e7c96ceae5b09181a39d52ba1e63bf50750133a7da",
+   "base": "tribes2/engine.ll",
+   "patch": "5a29d186b2f626e4.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/post-video-prefix-engine.ll",
+   "sha256": "c649fa1901b5f60b55982459466349c9ce693b14a993cf0f54a3a647799388ec",
+   "base": "tribes2/engine.ll",
+   "patch": "ad8c3251fb604e1b.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/post-video-tail-engine.ll",
+   "sha256": "4266ffe9e1bc8734939397139a274edf7882b1bef5f2aa5503133f085a600560",
+   "base": "tribes2/engine.ll",
+   "patch": "c6ba3e566245e36d.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/prepared-inputs.json",
+   "sha256": "2213042be59d1db3645bbc69d19794fdbab8d99144981d16facba19f9d17a221",
+   "base": "none",
+   "patch": "427bddce0d46f11f.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/probe-native-providers.c",
+   "sha256": "260789cf636c2070042a9cff22e05d21a0821ba9c99b3a4f7cc2435fd038b60b",
+   "base": "ifc22/module.ll",
+   "patch": "0c24e33ce11e3c24.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/publication-bindings.ll",
+   "sha256": "c4ac49c4df9baa8694364912bc46264e4e6d43a0c3048b598a26f42a3e45f59b",
+   "base": "ifc22/module.ll",
+   "patch": "261938c4af8169c1.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/published-code.bin",
+   "sha256": "6b40e062127ec81e989c1e0839c90f2f6e92047fc5d802bdedc746424da4569c",
+   "base": "tribes2/image",
+   "patch": "d1fc1820e69a0d4d.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/qol-patched.ll",
+   "sha256": "877e54822c43221a73ce5622cd5299fbd9eca24e6615c8170b514b442f30334e",
+   "base": "ifc22/module.ll",
+   "patch": "ea598c4353996df2.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/qol.bin",
+   "sha256": "f19d6aa3d29f3255e003074575a51d1e94c7104b8ca5501705d19efec4c10592",
+   "base": "ifc22/image",
+   "patch": "71a1038aaff8487f.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/renderer-batch-engine.ll",
+   "sha256": "b9bffcfbe6c07e68751d1985584311385d06a89ab5973358e9c701263272cc14",
+   "base": "tribes2/engine.ll",
+   "patch": "d8a3d7022d3649d7.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/renderer-call-engine.ll",
+   "sha256": "0102e6f9444d067f1daebfed3a2115e4c947bdca46e7798f3caea53bd72d38ad",
+   "base": "tribes2/engine.ll",
+   "patch": "fdb5d44b4aec7f3e.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/renderer-dimensions-engine.ll",
+   "sha256": "1f991fbb78896aef1214d0fff162531d4ff593a01d199826a50290fe282ab6af",
+   "base": "tribes2/engine.ll",
+   "patch": "e95a22f1f7e3c9e2.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/renderer-hooks-bank.ll",
+   "sha256": "228fc2e81260d4d2724816cef964ec2e97aada6c47c2fd3a608df0332aba11b8",
+   "base": "ifc22/module.ll",
+   "patch": "2129b8f72c5e5286.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/renderer-hooks-bridges.ll",
+   "sha256": "847508e350df79875853f7d2b73d83f5ab866f7ae9c37de9386bc0751678ae36",
+   "base": "ifc22/module.ll",
+   "patch": "e9b2ddf1b2a7b7ca.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/renderer-hooks-continuations.ll",
+   "sha256": "eaa81cb28fc5dc44baa320d2762419eae42c1d0505529d41560377318ecfcd5f",
+   "base": "tribes2/engine.ll",
+   "patch": "1b858f7bd3423e82.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/renderer-nested-engine.ll",
+   "sha256": "e97fba0ab5d92c1a064e7a232ab3b51c0c10146cfac4f14deb13afe467a77d29",
+   "base": "tribes2/engine.ll",
+   "patch": "03e3e7d1abd15abe.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/renderer-outer-engine.ll",
+   "sha256": "459600696ca6f5e2925a57796a1937880ded9f2518b27728818d38ad29d84700",
+   "base": "tribes2/engine.ll",
+   "patch": "87d28da70587f5e8.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/renderer-redirects-engine.ll",
+   "sha256": "94d24b69922e8b1b95a6c499f392512566a65bce9294cb65a72dc4dc7f7cb5f3",
+   "base": "tribes2/engine.ll",
+   "patch": "f5ea6ea9ce8a1713.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/renderer-startup-engine.ll",
+   "sha256": "8f759489e99c74563b1004017f6846bd7fd2ba0e28016778880f1de3f19c3682",
+   "base": "tribes2/engine.ll",
+   "patch": "bdcffa6ec5b948b1.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/reverb3.bin",
+   "sha256": "beae2bb80aab62e130d34b8c6ce92b573d5dcd347503bc8f89f43a9e82a0b2db",
+   "base": "reverb3/image",
+   "patch": "1c89f7e76503212f.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/sdl-bindings.ll",
+   "sha256": "c78bbbda8cf30b0017b52bf5f7c04da844488703533d9e9e137d0725a225a6ad",
+   "base": "ifc22/module.ll",
+   "patch": "9944c431dd484c5c.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/startup-calls-engine.ll",
+   "sha256": "a71f4786a6e07e01e26dd8a1d5a8538e9a915b940dccc95bdcd8f297606d096b",
+   "base": "tribes2/engine.ll",
+   "patch": "f374d22decc087ca.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/stops.ll",
+   "sha256": "0e61e7f6d4e1cd0148850657b5176dfb9617a8603c306b63b4e56d40ca2478a9",
+   "base": "ifc22/module.ll",
+   "patch": "490cfbe1af5c9869.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-diagnostic/checked/bootstrap-published-ntdll-probe/string-engine.ll",
+   "sha256": "1cb95aa307f6ceaa29b8cdd998d0f44d9da5e34196ba9f54cadb19c02b87706b",
+   "base": "tribes2/engine.ll",
+   "patch": "5496ce762c4d0460.zst"
+  },
+  {
+   "path": "generated/srw/run-20261003T190924-ifc22/native-zlib-routes/bindings.ll",
+   "sha256": "98c88a2570543d987e5860855dd0c065b2e0d6d846a30d27a041eebb05e2daae",
+   "base": "ifc22/module.ll",
+   "patch": "01e19677a0389a7b.zst"
+  },
+  {
+   "path": "generated/srw/run-20261004T204722-mss32/native-diagnostic/module.ll",
+   "sha256": "f8a7da310a27f5b5999d164a2692492eb162a7de6d06e404bfd9518165b11950",
+   "base": "mss32/module.ll",
+   "patch": "3da9042f416c9a0b.zst"
+  },
+  {
+   "path": "generated/srw/run-20261004T204722-mss32/native-diagnostic/result.json",
+   "sha256": "14705d1baf7a4793eae8dd7e11322e89728e3402f7af511da82b7145ba3f8ec6",
+   "base": "none",
+   "patch": "8a74b1d655af1ffe.zst"
+  },
+  {
+   "path": "generated/srw/run-20261004T210704-mp3dec/native-diagnostic/module.ll",
+   "sha256": "df5e63a496761c6e483ef635529c97872b80c798ef71ff063d189f513620514b",
+   "base": "mp3dec/module.ll",
+   "patch": "dd4e56b353bb7776.zst"
+  },
+  {
+   "path": "generated/srw/run-20261004T210704-mp3dec/native-diagnostic/result.json",
+   "sha256": "c48edeafedb8c213e24f6bb457d0ca9b67071fb836f6e48f6c9539be0a05b221",
+   "base": "none",
+   "patch": "c767e0473d2151f9.zst"
+  },
+  {
+   "path": "generated/srw/run-20261004T210704-mp3dec/seg01_code.llinc",
+   "sha256": "93909d899fe8147c0e1a4342a2b7e53cd152cbd0eea07c3bde0332a34efcabfb",
+   "base": "mp3dec/seg01_code.llinc",
+   "patch": "f2e68f79c6dba9c8.zst"
+  },
+  {
+   "path": "generated/srw/run-20261004T210704-mssv12/native-diagnostic/module.ll",
+   "sha256": "9d7cda4fc3bb8639eb2cff2b021254442b696292213f5814c186079fd50adc34",
+   "base": "mssv12/module.ll",
+   "patch": "10c43af61b34fd70.zst"
+  },
+  {
+   "path": "generated/srw/run-20261004T210704-mssv12/native-diagnostic/result.json",
+   "sha256": "5c371ad9fb4afda2fcd1673c2ef250b7feb5d044bd6c4563781e9fc16937046e",
+   "base": "none",
+   "patch": "696ee99e86c63fc8.zst"
+  },
+  {
+   "path": "generated/srw/run-20261004T210704-mssv24/native-diagnostic/module.ll",
+   "sha256": "a8782bf136695ee0cc6b1ea9cd5de620c0de4ecb4ed3390cbc4d229344e03d7b",
+   "base": "mssv24/module.ll",
+   "patch": "19986dba90ecd54a.zst"
+  },
+  {
+   "path": "generated/srw/run-20261004T210704-mssv24/native-diagnostic/result.json",
+   "sha256": "38e5b044c68a9d1d332a72599b01cc30db0877249cf9e866917edf11a3b73522",
+   "base": "none",
+   "patch": "3703b72a588ea299.zst"
+  },
+  {
+   "path": "generated/srw/run-20261004T210704-mssv29/native-diagnostic/module.ll",
+   "sha256": "b2154fdb55b29a017b8e99f7290be380cafa581a11b1964140571dc3072dad39",
+   "base": "mssv29/module.ll",
+   "patch": "65be31c16684620f.zst"
+  },
+  {
+   "path": "generated/srw/run-20261004T210704-mssv29/native-diagnostic/result.json",
+   "sha256": "1b8d53b24292222175a79e632989b011a90b9aca62a465c13a519c0a6b9fca87",
+   "base": "none",
+   "patch": "7348f33a56ef3b46.zst"
+  },
+  {
+   "path": "generated/srw/run-20261004T230306-mssds3dh/native-diagnostic/module.ll",
+   "sha256": "64dab6d1de2d55bb67b82b7b24c2189f06d34c399d986ada2a640e55140b9a16",
+   "base": "mssds3dh/module.ll",
+   "patch": "c930ebfbfc878c42.zst"
+  },
+  {
+   "path": "generated/srw/run-20261004T230306-mssds3dh/native-diagnostic/result.json",
+   "sha256": "581615ede3b5568c709e12f8ced415c9767492439962e66a25bcfe7820879fe1",
+   "base": "none",
+   "patch": "ea0d0925c685ac74.zst"
+  },
+  {
+   "path": "generated/srw/run-20261004T230307-mssds3ds/native-diagnostic/module.ll",
+   "sha256": "45bfef960ccf558525aac4040b110b4a71b6d68ed6f0262bbf6134f36019691d",
+   "base": "mssds3ds/module.ll",
+   "patch": "02dcfbf9b74643e9.zst"
+  },
+  {
+   "path": "generated/srw/run-20261004T230307-mssds3ds/native-diagnostic/result.json",
+   "sha256": "f80eed490d238850e4c423d99c1ff8a3a888e5e363f1d352dcd4dd02f0352c71",
+   "base": "none",
+   "patch": "6ccdcedb50b663ab.zst"
+  },
+  {
+   "path": "generated/srw/run-20261004T230307-mssdx7sn/native-diagnostic/module.ll",
+   "sha256": "fdb370a162340f9e10089eab2a1faf3836f99b903a6bf8d794d37460be50a85c",
+   "base": "mssdx7sn/module.ll",
+   "patch": "98175cb1b368de98.zst"
+  },
+  {
+   "path": "generated/srw/run-20261004T230307-mssdx7sn/native-diagnostic/result.json",
+   "sha256": "a5b8d67016c11644dd9c760719b1b4c1df39899fa4280a7008243647f37e5bbc",
+   "base": "none",
+   "patch": "4322d0c53ac49bb0.zst"
+  },
+  {
+   "path": "generated/srw/run-20261004T230308-msseax/native-diagnostic/module.ll",
+   "sha256": "7d2bba70fec41b8c1d95fa98b0f2232e75b1fae4291abbba2a47dff4d7e5a25f",
+   "base": "msseax/module.ll",
+   "patch": "08b07be81104521b.zst"
+  },
+  {
+   "path": "generated/srw/run-20261004T230308-msseax/native-diagnostic/result.json",
+   "sha256": "6ae45df27dc0e3f8482d899365af2be7b9a360a52f2f70dad9b706cd983b9ca6",
+   "base": "none",
+   "patch": "b0e9a4fa0ed122ca.zst"
+  },
+  {
+   "path": "generated/srw/run-20261004T230308-msseax2/native-diagnostic/module.ll",
+   "sha256": "f0546f254bf215aea6817629f398c608c31734ef12f0bc9e0e88e92a0d206c98",
+   "base": "msseax2/module.ll",
+   "patch": "737e5dde7fb42c63.zst"
+  },
+  {
+   "path": "generated/srw/run-20261004T230308-msseax2/native-diagnostic/result.json",
+   "sha256": "741fdba7de94ed474735a4a4640fd2d980e33815c06f0814ef02564045568fd7",
+   "base": "none",
+   "patch": "50f61aaa5e0c7c92.zst"
+  },
+  {
+   "path": "generated/srw/run-20261004T230309-mssfast/native-diagnostic/module.ll",
+   "sha256": "09720e77a26c00f17f40638a59797b5f9005cd6be00068901155f2317d81ff86",
+   "base": "mssfast/module.ll",
+   "patch": "7809369576eb4c52.zst"
+  },
+  {
+   "path": "generated/srw/run-20261004T230309-mssfast/native-diagnostic/result.json",
+   "sha256": "5475a322b530aeb71613be027574b5231dbbd5e93d2543c0d9f861db57e99161",
+   "base": "none",
+   "patch": "5a59bb130741ff86.zst"
+  },
+  {
+   "path": "generated/srw/run-20261004T231511-reverb3/native-diagnostic/module.ll",
+   "sha256": "e063a10c85858be3bd66dc9e9acb953c6f2dd6fad913f1ca31431e2045c0250b",
+   "base": "reverb3/module.ll",
+   "patch": "115b4e766a4e5a2a.zst"
+  },
+  {
+   "path": "generated/srw/run-20261004T231511-reverb3/native-diagnostic/result.json",
+   "sha256": "d6d41fc3213aa0a8ff48bd0cbe8913dcf26557f0963f78a37dc7ac9c76a38fb3",
+   "base": "none",
+   "patch": "386c5601f449251b.zst"
+  },
+  {
+   "path": "generated/srw/run-20261009T191518-mp3dec/native-diagnostic/module.ll",
+   "sha256": "1c2842855ef2f2b0d678b0a2b4a02bcd2dfd3769be79e9e817fbbaba648d1a01",
+   "base": "mp3dec/module.ll",
+   "patch": "56bbffea42206683.zst"
+  },
+  {
+   "path": "generated/srw/run-20261009T191518-mp3dec/native-diagnostic/result.json",
+   "sha256": "c5e04e319047df50ce2114d252c3e31feacc7a73eb2c8577c703be3292886e19",
+   "base": "none",
+   "patch": "a3768c566b186e88.zst"
+  },
+  {
+   "path": "generated/srw/run-20261009T191518-mp3dec/result.json",
+   "sha256": "5d8970b78d232149adeac6b389e163fb0b44bd7478e0f7d6699a5d35722ad1c7",
+   "base": "none",
+   "patch": "93d1ae2380562a5e.zst"
+  },
+  {
+   "path": "generated/srw/run-20261009T191518-mp3dec/seg01_code.llinc",
+   "sha256": "3683cc018411316380242a72564460b5aef1ba01dd5a738e85758e005b41ed09",
+   "base": "mp3dec/seg01_code.llinc",
+   "patch": "330e9b6378e2fe0d.zst"
+  }
+ ]
+}
