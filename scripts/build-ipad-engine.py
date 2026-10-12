@@ -95,6 +95,14 @@ flush_stop='define hidden fastcc void @tbimp_InterlockedFlushSList(ptr %cpu) { c
 assert stops_text.count(flush_stop)==1
 stops_text=stops_text.replace(flush_stop,'',1)
 wave_stops=mobile_inputs/'stops.ll';wave_stops.write_text(stops_text)
+# First-run TribesNEXT downloads query the file they just wrote. Replace only
+# that reached import stop with the native metadata service (guest_file.c).
+info_bindings=json.loads((R/'config/runtime/file-information-bindings.json').read_text())
+info_wrapper=mobile_inputs/'file-information-bindings.ll'
+info_wrapper.write_text(generator.generate(info_bindings,False))
+info_stop='define hidden fastcc void @tbimp_GetFileInformationByHandle(ptr %cpu) { call void @qol_missing_import(ptr %cpu, i32 144)\n unreachable\n}'
+assert stops_text.count(info_stop)==1
+stops_text=stops_text.replace(info_stop,'',1);wave_stops.write_text(stops_text);sources.append(info_wrapper)
 sources[sources.index(old_stops)]=wave_stops;sources.append(wave_wrapper)
 # Refresh finite host exports without relifting unchanged original images.
 from graphics_backend_inputs import prepare as graphics_inputs

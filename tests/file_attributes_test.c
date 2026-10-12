@@ -65,7 +65,15 @@ static void cache_file(unsigned wide,const char *root){
     regular file, then FILE_GENERIC_READ. Specific rights act as data rights. */
  h=open_file_flags(wide,"Download.dat",0x120116,0,2,0x02000080);assert(h!=UINT32_MAX&&tribes_get_last_error()==0);
  memcpy(memory+0x12000,"downloaded",10);assert(tribes_write_file(base,h,0x12000,10,0x20010,0));assert(tribes_close_handle(h));
- h=open_file_flags(wide,"Download.dat",0x120089,1,3,0x80);assert(h!=UINT32_MAX&&tribes_get_file_size(base,h,0)==10);assert(tribes_close_handle(h));
+ h=open_file_flags(wide,"Download.dat",0x120089,1,3,0x80);assert(h!=UINT32_MAX&&tribes_get_file_size(base,h,0)==10);
+ memset(memory+0x13000,0xa5,60);tribes_set_last_error(123);
+ assert(tribes_get_file_information_by_handle(base,h,0x13001)==1&&tribes_get_last_error()==0);
+ {uint32_t v[13];memcpy(v,memory+0x13001,52);struct stat st;char p[PATH_MAX];snprintf(p,sizeof p,"%s/Download.dat",root);assert(!stat(p,&st));
+  assert(v[0]==32&&v[8]==0&&v[9]==10&&v[10]==1&&v[12]==(uint32_t)st.st_ino&&v[11]==(uint32_t)((uint64_t)st.st_ino>>32));
+  assert(memory[0x13000]==0xa5&&memory[0x13001+52]==0xa5);}
+ assert(tribes_get_file_information_by_handle(base,h,0)==0&&tribes_get_last_error()==998);
+ assert(tribes_close_handle(h));
+ assert(tribes_get_file_information_by_handle(base,h,0x13001)==0&&tribes_get_last_error()==6);
  snprintf(path,sizeof path,"%s/Download.dat",root);assert(!unlink(path));
 }
 static void check(unsigned wide,const char *name,uint32_t expected,uint32_t error){

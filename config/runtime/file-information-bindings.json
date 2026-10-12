@@ -1,0 +1,3 @@
+{
+  "GetFileInformationByHandle": {"helper": "tribes_get_file_information_by_handle", "arguments": 2, "returns": true, "guest_base": true}
+}

@@ -252,6 +252,39 @@ static uint32_t get_attributes(uint64_t base,uint32_t name,int wide) {
 }
 uint32_t tribes_get_file_attributes(uint64_t base,uint32_t name){return get_attributes(base,name,0);}
 uint32_t tribes_get_file_attributes_w(uint64_t base,uint32_t name){return get_attributes(base,name,1);}
+/* BY_HANDLE_FILE_INFORMATION (52 bytes) for regular files and directories,
+   from the same native metadata as NtQueryInformationFile: attributes, times,
+   the C: virtual volume serial (native mount ID), size, links and the inode
+   as the file index. Other objects (pipes, devices) fail with
+   ERROR_INVALID_FUNCTION instead of inventing metadata.
+   https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-getfileinformationbyhandle */
+uint32_t tribes_get_file_information_by_handle(uint64_t base,uint32_t handle,uint32_t output){
+    if(!output||output>UINT32_MAX-51||base>UINTPTR_MAX-output-51){tribes_set_last_error(998);return 0;}
+    int fd=tribes_fd_borrow(handle);if(fd<0)return 0;
+    struct stat st;struct statfs fs;
+    if(fstat(fd,&st)||fstatfs(fd,&fs)){close(fd);tribes_set_last_error(6);return 0;}
+    close(fd);
+    if(!S_ISREG(st.st_mode)&&!S_ISDIR(st.st_mode)){tribes_set_last_error(1);return 0;}
+    if(st.st_size<0){tribes_set_last_error(1);return 0;}
+    unsigned char record[52]={0};
+    uint32_t attributes=S_ISDIR(st.st_mode)?16:32;
+    if(!(st.st_mode&S_IWUSR))attributes|=1;
+    if(st.st_flags&UF_HIDDEN)attributes|=2;
+    nt_u32(record,0,attributes);
+    if(!nt_time(record,4,st.st_birthtimespec)||!nt_time(record,12,st.st_atimespec)||!nt_time(record,20,st.st_mtimespec)){
+        tribes_set_last_error(1);return 0;
+    }
+    uint64_t size=S_ISDIR(st.st_mode)?0:(uint64_t)st.st_size,index=(uint64_t)st.st_ino;
+    nt_u32(record,28,(uint32_t)fs.f_fsid.val[0]);
+    nt_u32(record,32,(uint32_t)(size>>32));nt_u32(record,36,(uint32_t)size);
+    nt_u32(record,40,st.st_nlink);
+    nt_u32(record,44,(uint32_t)(index>>32));nt_u32(record,48,(uint32_t)index);
+    void *destination=(void *)(uintptr_t)(base+output);
+    uint32_t access=tribes_memory_access_begin(destination,sizeof record,2);
+    memcpy(destination,record,sizeof record);
+    tribes_memory_access_end(access);
+    tribes_set_last_error(0);return 1;
+}
 /* DWORD size with optional high word. Clear LastError on success so a valid
    low word of INVALID_FILE_SIZE is distinguishable from failure. */
 uint32_t tribes_get_file_size(uint64_t base,uint32_t handle,uint32_t high){
