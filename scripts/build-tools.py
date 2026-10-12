@@ -9,8 +9,10 @@
 Source identities are checked against toolchains.lock.json. Compiled binaries
 embed this Mac's paths and OS version, so after a successful build from the
 locked sources their digests are recorded as this checkout's lifter identity
-in toolchains.lock.json ("artifacts"). The translation stage then checks the
-lifter's output against the recorded bases, which is what matters.
+in toolchains.lock.json ("artifacts") for the rest of the build;
+build-tribespad.sh restores the committed file when it exits. The translation
+stage checks the lifter's output against the recorded bases, which is what
+matters.
 
 Usage: scripts/build-tools.py
 """

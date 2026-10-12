@@ -66,10 +66,13 @@ added with `--extra` (the prepared folder's `.inc` files are recorded this way).
   IPA that passes PadMint's package check and a Mac app.
 - The Simulator app from that clean clone was installed fresh and played an offline
   Katabatic match (spawn, touch controls, jetting). The Mac app played an offline match.
+- PadMint's player check (Apple's Python 3.9, empty PadMint folder, fresh copy of the
+  committed source) built the IPA in 32 minutes with a clean checkout afterwards.
 - Peak memory of one build process was 6.3 GB; the build used about 10 GB of disk.
 
-Not yet verified: the GitHub runner workflow and PadMint's player check (both need the
-repository to be public), other Xcode versions, and installation on a physical device.
+Not yet verified: the GitHub runner workflow and PadMint's check of a published release
+(both need the repository to be public), other Xcode versions, and installation on a
+physical device. The steps for launch day are in [Public launch](PUBLIC-LAUNCH.md).
 
 ## Licensing of inputs
 

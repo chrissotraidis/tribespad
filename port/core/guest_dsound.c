@@ -17,14 +17,16 @@ extern void *tribes_lookup(uint32_t);
 #define OOM 0x8007000eu
 #define UNSUPPORTED 0x80004001u
 #define GENERIC 0x80004005u
-typedef struct Device {uint64_t base;uint32_t object,refs,level,window;SDL_AudioDeviceID native;SDL_AudioSpec format;int frames;uint32_t primary,listener_state[16],listener_active[16];struct Device *next;} Device;
+typedef struct Device {uint64_t base;uint32_t object,refs,level,window,speaker;SDL_AudioDeviceID native;SDL_AudioSpec format;int frames;uint32_t primary,listener_state[16],listener_active[16];struct Device *next;} Device;
 static Device *devices;
 static pthread_mutex_t lock=PTHREAD_MUTEX_INITIALIZER;
 /* Namespace for process-local SDL physical device identities. */
 static const unsigned char device_tail[12]={0x54,0x50,0x41,0x44,0x80,0x32,0x44,0x53,0x4f,0x55,0x4e,0x44};
 static const unsigned char ds_iid[16]={0x83,0xfa,0x9a,0x27,0x81,0x49,0xce,0x11,0xa5,0x21,0,0x20,0xaf,0xb,0xe5,0x60};
 static const unsigned char unknown_iid[16]={0,0,0,0,0,0,0,0,0xc0,0,0,0,0,0,0,0x46};
-extern int tribes_sdl_has_window_handle(uint64_t,uint32_t);
+/* Windows accepts any valid top-level HWND from any thread; Miles calls
+   SetCooperativeLevel from its own thread, so use the locked window catalog. */
+extern uint32_t tribes_window_known(uint64_t,uint32_t);
 typedef struct {const char *name;uint32_t address;void *function;} SoundExport;
 #include "dsound-exports.inc"
 int tribes_dsound_configure(uint64_t base){
@@ -56,7 +58,7 @@ uint32_t tribes_dsound_create(uint64_t base,uint32_t guid,uint32_t output,uint32
  d->object=alloc(base,48);if(!d->object){SDL_CloseAudioDevice(d->native);free(d);return OOM;}
  uint32_t table[12];table[0]=d->object+4;for(unsigned i=0;i<11;i++)table[i+1]=TB_DS_METHOD(i);memcpy(ptr(base,d->object,sizeof table),table,sizeof table);
  d->listener_state[0]=64;d->listener_state[9]=d->listener_state[11]=d->listener_state[13]=d->listener_state[14]=d->listener_state[15]=0x3f800000u;memcpy(d->listener_active,d->listener_state,64);
- d->base=base;d->refs=1;d->level=1;pthread_mutex_lock(&lock);d->next=devices;devices=d;pthread_mutex_unlock(&lock);*out=d->object;
+ d->base=base;d->refs=1;d->level=1;d->speaker=4;pthread_mutex_lock(&lock);d->next=devices;devices=d;pthread_mutex_unlock(&lock);*out=d->object;
  fprintf(stderr,"TribesPad: DirectSound device opened object=0x%08x rate=%d channels=%d frames=%d\n",d->object,d->format.freq,d->format.channels,d->frames);return 0;
 }
 uint32_t tribes_ds_query(uint64_t base,uint32_t object,uint32_t iid,uint32_t output){
@@ -79,10 +81,23 @@ uint32_t tribes_ds_caps(uint64_t base,uint32_t object,uint32_t output){
 }
 uint32_t tribes_ds_cooperative(uint64_t base,uint32_t object,uint32_t window,uint32_t level){
  pthread_mutex_lock(&lock);(void)find(base,object);pthread_mutex_unlock(&lock);
- if(level<1||level>4||!tribes_sdl_has_window_handle(base,window))return INVALID;
+ if(level<1||level>4||!tribes_window_known(base,window))return INVALID;
  if(level==4)return UNSUPPORTED; /* Direct writes to the primary mix are unsupported. */
  if(level==3){fprintf(stderr,"TribesPad: unsupported DirectSound exclusive focus\n");abort();}
  pthread_mutex_lock(&lock);Device *d=find(base,object);d->window=window;d->level=level;pthread_mutex_unlock(&lock);return 0;
+}
+/* Speaker configuration is recorded per device and reported back; mixing
+   stays SDL stereo. DSSPEAKER_* values: low byte 0-9, geometry (bits 16-23)
+   only with stereo, 5-180 degrees.
+   https://learn.microsoft.com/en-us/previous-versions/windows/desktop/ee418063(v=vs.85) */
+uint32_t tribes_ds_get_speaker(uint64_t base,uint32_t object,uint32_t output){
+ uint32_t *out=ptr(base,output,4);if(!out)return INVALID;
+ pthread_mutex_lock(&lock);uint32_t value=find(base,object)->speaker;pthread_mutex_unlock(&lock);*out=value;return 0;
+}
+uint32_t tribes_ds_set_speaker(uint64_t base,uint32_t object,uint32_t config){
+ uint32_t kind=config&0xff,geometry=(config>>16)&0xff;
+ if(config&0xff00ff00u||kind>9||(geometry&&(kind!=4||geometry<5||geometry>180)))return INVALID;
+ pthread_mutex_lock(&lock);find(base,object)->speaker=config;pthread_mutex_unlock(&lock);return 0;
 }
 uint32_t tribes_ds_compact(uint64_t base,uint32_t object){pthread_mutex_lock(&lock);Device *d=find(base,object);uint32_t r=d->level<2?0x88780046u:0;pthread_mutex_unlock(&lock);return r;}
 uint32_t tribes_ds_initialize(uint64_t base,uint32_t object,uint32_t guid){(void)guid;pthread_mutex_lock(&lock);(void)find(base,object);pthread_mutex_unlock(&lock);return 0x88780082u;}

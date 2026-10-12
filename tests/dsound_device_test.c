@@ -2,8 +2,10 @@
 #include "../port/core/guest_heap.h"
 #include "../port/core/guest_modules.h"
 #include "../port/core/guest_memory_checks.h"
+#include "../port/core/guest_window_catalog.h"
 #include <SDL3/SDL.h>
 #include <assert.h>
+#include <pthread.h>
 #include <stdatomic.h>
 #include <math.h>
 #include <stdio.h>
@@ -23,7 +25,8 @@ static void SDLCALL observe_mix(void *u,const SDL_AudioSpec *spec,float *samples
 }
 static void reset_mix(void){atomic_store(&observed_frames,0);atomic_store(&observed_left,0);atomic_store(&observed_right,0);}
 static unsigned char *memory;static uint32_t callback_count;static int cancel;
-int tribes_sdl_has_window_handle(uint64_t base,uint32_t hwnd){return base==(uintptr_t)memory&&hwnd==0x73000001;}
+/* Miles calls SetCooperativeLevel from its own thread with the game window. */
+static void *cooperate_elsewhere(void *object){return (void *)(uintptr_t)tribes_ds_cooperative((uintptr_t)memory,*(uint32_t *)object,0x73000001,2);}
 void *tribes_lookup(uint32_t address){if(address==0xfffff000)return (void *)tribes_return_to_host;if(address==1)return (void *)tbimp_TestSoundCallback;void *p=tribes_dsound_native_lookup(address);assert(p);return p;}
 uint32_t test_sound_callback(_cpu *cpu,uint32_t guid,uint32_t description,uint32_t driver,uint32_t context){
  assert(context==0x12345678);assert(!strcmp((char *)memory+driver,"dsound.dll"));assert(memory[description]);
@@ -80,7 +83,15 @@ int main(int argc,char **argv){
  uint32_t table;memcpy(&table,memory+object,4);assert(table==object+4);for(unsigned i=0;i<11;i++){uint32_t token;memcpy(&token,memory+table+4*i,4);assert(token==TB_DS_METHOD(i)&&tribes_dsound_native_lookup(token));}
  uint32_t caps[]={object,0x103000};*(uint32_t *)(memory+0x103000)=96;memset(memory+0x103060,0xac,4);assert(!invoke(&cpu,TB_DS_METHOD(4),2,caps));uint32_t *c=(void *)(memory+0x103000);assert(!(c[1]&0x20));assert(c[2]==100&&c[3]==200000&&c[4]==1);for(unsigned i=5;i<24;i++)assert(!c[i]);assert(memory[0x103060]==0xac);
  *(uint32_t *)(memory+0x103000)=95;assert(invoke(&cpu,TB_DS_METHOD(4),2,caps)==0x80070057u);
+ assert(tribes_window_add((uintptr_t)memory,0x73000001,0,0));
+ {pthread_t thread;void *result=(void *)1;assert(!pthread_create(&thread,NULL,cooperate_elsewhere,&object)&&!pthread_join(thread,&result)&&!result);}
  uint32_t coop[]={object,0,2};assert(invoke(&cpu,TB_DS_METHOD(6),3,coop)==0x80070057u);coop[1]=0x73000001;coop[2]=4;assert(invoke(&cpu,TB_DS_METHOD(6),3,coop)==0x80004001u);coop[2]=2;assert(!invoke(&cpu,TB_DS_METHOD(6),3,coop));assert(!invoke(&cpu,TB_DS_METHOD(7),1,&object));
+ /* Speaker configuration: default stereo, accepted values round-trip, invalid ones are rejected. */
+ uint32_t speaker[]={object,0x103400};assert(!invoke(&cpu,TB_DS_METHOD(8),2,speaker)&&*(uint32_t *)(memory+0x103400)==4);
+ uint32_t speaker_set[]={object,0x00140004};assert(!invoke(&cpu,TB_DS_METHOD(9),2,speaker_set));assert(!invoke(&cpu,TB_DS_METHOD(8),2,speaker)&&*(uint32_t *)(memory+0x103400)==0x00140004);
+ speaker_set[1]=0x00140006;assert(invoke(&cpu,TB_DS_METHOD(9),2,speaker_set)==0x80070057u);speaker_set[1]=10;assert(invoke(&cpu,TB_DS_METHOD(9),2,speaker_set)==0x80070057u);
+ speaker[1]=0;assert(invoke(&cpu,TB_DS_METHOD(8),2,speaker)==0x80070057u);
+ speaker_set[1]=4;assert(!invoke(&cpu,TB_DS_METHOD(9),2,speaker_set));
  uint32_t init[]={object,0};assert(invoke(&cpu,TB_DS_METHOD(10),2,init)==0x88780082u);
  const unsigned char iid[16]={0x83,0xfa,0x9a,0x27,0x81,0x49,0xce,0x11,0xa5,0x21,0,0x20,0xaf,0xb,0xe5,0x60};memcpy(memory+0x104000,iid,16);uint32_t query[]={object,0x104000,0x104020};assert(!invoke(&cpu,TB_DS_METHOD(0),3,query));assert(*(uint32_t *)(memory+0x104020)==object);assert(invoke(&cpu,TB_DS_METHOD(2),1,&object)==1);
  memory[0x104000]++;assert(invoke(&cpu,TB_DS_METHOD(0),3,query)==0x80004002u);assert(!*(uint32_t *)(memory+0x104020));

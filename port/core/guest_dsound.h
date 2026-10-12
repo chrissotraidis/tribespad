@@ -17,6 +17,8 @@ uint32_t tribes_ds_release(uint64_t,uint32_t);
 uint32_t tribes_ds_caps(uint64_t,uint32_t,uint32_t);
 uint32_t tribes_ds_cooperative(uint64_t,uint32_t,uint32_t,uint32_t);
 uint32_t tribes_ds_compact(uint64_t,uint32_t);
+uint32_t tribes_ds_get_speaker(uint64_t,uint32_t,uint32_t);
+uint32_t tribes_ds_set_speaker(uint64_t,uint32_t,uint32_t);
 uint32_t tribes_ds_initialize(uint64_t,uint32_t,uint32_t);
 /* Unimplemented buffer/speaker methods stop before returning a guest result. */
 _Noreturn void tribes_ds_stop(_cpu *,uint32_t method);

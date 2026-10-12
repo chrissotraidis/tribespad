@@ -605,6 +605,14 @@ uint32_t tribes_sdl_get_primary_display(_cpu *cpu) {
     uint32_t result=enter(cpu,&frame)?SDL_GetPrimaryDisplay():0;
     leave(&frame);tribes_set_last_error(error);return result;
 }
+/* Tribes 2 needs at least 640x480. Phones report fewer points than that in
+   landscape (iPhone 17: 874x402 at 3x), so such displays are described to the
+   guest in pixels; larger displays keep their point sizes. */
+static int pixel_modes(const SDL_DisplayMode *m){return m&&m->pixel_density>1.0f&&(m->w<640||m->h<480)&&(m->h<480||m->w<480);}
+static void guest_mode_size(const SDL_DisplayMode *m,int *w,int *h,float *density){
+    *w=m->w;*h=m->h;*density=m->pixel_density;
+    if(pixel_modes(m)){*w=(int)(m->w*m->pixel_density+0.5f);*h=(int)(m->h*m->pixel_density+0.5f);*density=1.0f;}
+}
 static uint32_t display_mode(_cpu *cpu,uint32_t display,int current) {
     event_flags(SDL_INIT_VIDEO);uint32_t error=tribes_get_last_error();NativeFrame frame;uint32_t result=0;
     if(enter(cpu,&frame)) {
@@ -623,8 +631,9 @@ static uint32_t display_mode(_cpu *cpu,uint32_t display,int current) {
             }
             if(*slot){
                 DisplayMode *m=*slot;m->native=*native;
-                *m->public=(TribesSDLDisplayMode){native->displayID,native->format,native->w,native->h,
-                    native->pixel_density,native->refresh_rate,native->refresh_rate_numerator,
+                int mw,mh;float md;guest_mode_size(native,&mw,&mh,&md);
+                *m->public=(TribesSDLDisplayMode){native->displayID,native->format,mw,mh,
+                    md,native->refresh_rate,native->refresh_rate_numerator,
                     native->refresh_rate_denominator,native->internal?m->token:0};
                 PublicBuffer *b=public_find(m->public);public_publish(&frame,b);result=b->address;
             }
@@ -651,7 +660,8 @@ uint32_t tribes_sdl_get_fullscreen_display_modes(_cpu *cpu,uint32_t display,uint
                 for(int n=0;n<count;n++){
                     const SDL_DisplayMode *m=native[n];if(!m||!next_mode_token)stop();
                     uint32_t at=result+table+(uint32_t)n*36;
-                    TribesSDLDisplayMode copy={m->displayID,m->format,m->w,m->h,m->pixel_density,m->refresh_rate,m->refresh_rate_numerator,m->refresh_rate_denominator,m->internal?next_mode_token++:0};
+                    int mw,mh;float md;guest_mode_size(m,&mw,&mh,&md);
+                    TribesSDLDisplayMode copy={m->displayID,m->format,mw,mh,md,m->refresh_rate,m->refresh_rate_numerator,m->refresh_rate_denominator,m->internal?next_mode_token++:0};
                     checked_copy(guest(cpu,result+(uint32_t)n*4,4),&at,4);checked_copy(guest(cpu,at,36),&copy,36);
                 }
                 if(native[count])stop();uint32_t zero=0;checked_copy(guest(cpu,result+(uint32_t)count*4,4),&zero,4);
