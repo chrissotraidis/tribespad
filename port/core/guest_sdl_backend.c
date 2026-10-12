@@ -1122,8 +1122,20 @@ uint32_t tribes_sdl_show_window(_cpu *cpu,uint32_t token){WINDOW_ENTER();WINDOW_
 /* These i686 float returns belong in ST0; the cdecl wrapper preserves EAX. */
 extern void x87_fld_float(_cpu *,uint32_t);
 static void return_float(_cpu *cpu,float value){uint32_t bits;memcpy(&bits,&value,4);x87_fld_float(cpu,bits);}
+/* QoL scales its UI by the display scale, and the original menus need
+   640x480 after scaling. Phones are described in pixels with a 3x display
+   scale (2250x1206 / 3 = 750x402 on iPhone 17), which cropped the menus.
+   QoL rounds the scale up, so report at most the largest whole scale that
+   keeps 640x480 visible (2 there: 1125x603). */
+static float fit_display_scale(SDL_Window *window,float value){
+    int width=0,height=0;
+    if(value<=1.0f||!content_pixels(window,&width,&height))return value;
+    float fit=(float)width/640.0f;if((float)height/480.0f<fit)fit=(float)height/480.0f;
+    fit=(float)(int)fit;
+    return fit>=1.0f&&fit<value?fit:value;
+}
 void tribes_sdl_get_window_display_scale(_cpu *cpu,uint32_t token){
-    WINDOW_ENTER();float value=SDL_GetWindowDisplayScale(native_window(token));
+    WINDOW_ENTER();SDL_Window *window=native_window(token);float value=fit_display_scale(window,SDL_GetWindowDisplayScale(window));
     graphics_active=0;leave(&frame);tribes_set_last_error(error);return_float(cpu,value);
 }
 void tribes_sdl_ceilf(_cpu *cpu,uint32_t bits){
@@ -1137,7 +1149,15 @@ void tribes_sdl_randf(_cpu *cpu){
 uint32_t tribes_sdl_get_display_for_window(_cpu *cpu,uint32_t token){WINDOW_ENTER();WINDOW_RETURN(SDL_GetDisplayForWindow(native_window(token)));}
 uint32_t tribes_sdl_get_closest_fullscreen_mode(_cpu *cpu,uint32_t display,uint32_t width,uint32_t height,uint32_t rate_bits,uint32_t high_density,uint32_t output){
     WINDOW_ENTER();float rate;memcpy(&rate,&rate_bits,4);SDL_DisplayMode native={0};TribesSDLDisplayMode copy={0};
-    uint32_t result=SDL_GetClosestFullscreenDisplayMode(display,(int32_t)width,(int32_t)height,rate,(high_density&0xffu)!=0,output?&native:NULL);
+    bool dense=(high_density&0xffu)!=0;
+#if TARGET_OS_OSX && defined(TB_GL4ES)
+    /* The game asks for the desktop size (1470x956 points on a Retina
+       MacBook) without high-density modes, and SDL answered with the scaled
+       2048x1332 mode, which ran off the screen. Retina modes are the real
+       desktop modes; the GL4ES path renders in pixels either way. */
+    dense=true;
+#endif
+    uint32_t result=SDL_GetClosestFullscreenDisplayMode(display,(int32_t)width,(int32_t)height,rate,dense,output?&native:NULL);
     if(result){
         ClosestMode *m=closest_modes;while(m&&memcmp(&m->native,&native,sizeof native))m=m->next;
         if(!m){m=calloc(1,sizeof *m);if(!m){SDL_OutOfMemory();result=0;}

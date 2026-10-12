@@ -1,0 +1,27 @@
+{
+  "date": "2026-10-12",
+  "scope": "Simulator and this Mac only; no physical device, no online join or authentication.",
+  "checks": [
+    {
+      "platform": "iPhone 17 Simulator",
+      "result": "UI scale 2 (was 3): Training, Warrior Setup, Host, Join and the in-game lobby fit on screen; offline Katabatic with two bots; background to Settings for 15 s and resume kept the match running; Leave Game and Launch -> Quit exited without a crash report."
+    },
+    {
+      "platform": "iPhone 17 Simulator",
+      "result": "Server discovery: the original browser listed 26 community servers with a temporary test profile that enables the internet query (same patch as scripts/prepare-macos-server-browser.py); the profile was restored afterwards.",
+      "evidence": "iphone-server-discovery-2026-10-12.jpg"
+    },
+    {
+      "platform": "iPad Air 11-inch Simulator",
+      "result": "UI scale stays 2; inset 0; license screen renders full screen."
+    },
+    {
+      "platform": "macOS (MacBook Air, 1470x956 points)",
+      "result": "Window 1470x923 at the top of the screen instead of 2048x1286 running off it; license, new warrior, Host and an offline Katabatic match by mouse; Cmd-Q saved AcceptedEULA and the warrior."
+    }
+  ],
+  "tests": [
+    "test-sdl-window.py normal/checked/TSan PASS",
+    "Simulator and macOS app builds"
+  ]
+}
