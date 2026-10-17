@@ -49,7 +49,7 @@ normal app with mouse and keyboard, on the same Metal renderer.
 | ![Katabatic vista from the Starwolf base](docs/images/tribespad-katabatic-vista.jpg) | ![Inside a base on Katabatic](docs/images/tribespad-base-interior.jpg) |
 | **Katabatic**, original terrain, fog and snow through Metal | **Base interiors** with the original lighting and HUD |
 | ![The original inventory station](docs/images/tribespad-inventory.jpg) | ![The TribesPad menu](docs/images/tribespad-menu.jpg) |
-| **Inventory**: touch controls step aside so the original screen can be tapped | **TribesPad menu**: control size, opacity, look sensitivity, left-handed layout, FPS counter |
+| **Inventory**: touch controls step aside so the original screen can be tapped | **TribesPad menu**: scores, chat, in-match actions and touch settings during a match |
 
 ## Current status
 
@@ -97,19 +97,28 @@ The steady 30 FPS is the vertical-sync pacing: with VSync off the same match run
 | **Pack · Inventory** | Above the move stick; Inventory hides the controls so the original screen can be tapped |
 | **Controller / X button** | Show or hide the touch controls |
 | **Keyboard button** | Onscreen keyboard for chat and text fields |
-| **··· menu** | Game Menu (Escape), Console, touch-control settings, FPS counter, help |
+| **··· menu** | Game Menu (Escape), Scores, Chat, in-match actions, Touch Settings, help |
 
 In Inventory, tap the original **Done**, then the controller button to resume. To
 close the game, use **Launch → Quit** in the original menu.
 
 ### TribesPad menu
 
-| Section | Options |
+The menu reaches the original game's keyboard-only features by touch. Each item
+sends the game's own key, so the original screens open.
+
+| Item | What it does |
 |---|---|
-| Game | Game Menu (original Escape menu), show/hide touch controls, original console |
-| Touch Controls | Size, opacity, look sensitivity, left-handed layout, hide with a controller |
-| Display | FPS counter |
-| Help | TribesPad on GitHub, About |
+| Game Menu | The original Escape menu |
+| Show / Hide Touch Controls | Same as the controller button |
+| Scores | The original score screen (F2); choose it again to close |
+| Chat | All Chat, Team Chat (the keyboard opens and the controls return after sending) and the Quick Chat menu |
+| Actions | Repair kit, mine, beacon, targeting laser, throw flag, zoom, third-person view, command map, suicide |
+| Touch Settings… | Live sliders for control size, opacity and look sensitivity; left-handed layout, hide with a controller, FPS counter; reset to defaults |
+| Controller | Controller button layout, and the connected controller's name |
+| Help | Touch controls guide, original console, TribesPad on GitHub, About |
+
+![Touch Settings during a match](docs/images/tribespad-touch-settings.jpg)
 
 ### Controller layout
 
