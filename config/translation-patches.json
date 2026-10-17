@@ -42,7 +42,7 @@
   },
   {
    "path": "generated/integration-review/code-revision-mobile/result.json",
-   "sha256": "5b6b0033d5a27d20336c5de6c11142cf1ccd0a2d608800b6e2bcaa5f06894a38",
+   "sha256": "f5bf121fe3ccad941052a81fd5d26e0dbf6d8a1f11b20371d7659de53ba788b0",
    "base": "none",
    "patch": "5ca46765f89fcb52.zst"
   },
@@ -54,19 +54,19 @@
   },
   {
    "path": "generated/integration-review/guest-threads/macos/result.json",
-   "sha256": "7b13491500ac8394e70923231269d823e0289319a724a41b2ca3513235ad46d2",
+   "sha256": "79414c6fad9b89b192fdd798dc8a6aac86e819f67804e4ff28c6b4464b96c89d",
    "base": "none",
    "patch": "596b01e8eb069ceb.zst"
   },
   {
    "path": "generated/integration-review/mobile-gpu-sync/result.json",
-   "sha256": "bfbf2eb3dcf8e15bd359a80bf46d5764a575eb537a08e6ef38342ed62e19e456",
+   "sha256": "9a27b4bd4f268c0fcbe739344e8eb5de43a7a7145a495a96d326d8f61b23105c",
    "base": "none",
    "patch": "dcd3b88fe8781e7f.zst"
   },
   {
    "path": "generated/integration-review/mobile-gpu-timing/result.json",
-   "sha256": "ad20ede642da11118dfd7273c064cc4a531554d0911e481f6d0015294895bd26",
+   "sha256": "d9ebd551d0d01172dd9a404b3ee1e87a3b074f362352cb253e062c7d3890bb38",
    "base": "none",
    "patch": "306cb54720692cb5.zst"
   },
@@ -132,7 +132,7 @@
   },
   {
    "path": "generated/integration-review/sdl-io/result.json",
-   "sha256": "208961272a485e2516f2b74cd2305c3a0dbb9306d0abb67255151d00cf21473d",
+   "sha256": "c4d4e56ba7fe9a2855823429e0fe2b3fd1db464ed75240551c089a23593ec6d3",
    "base": "none",
    "patch": "c7f2e10cbee1c0e0.zst"
   },

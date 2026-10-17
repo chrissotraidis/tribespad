@@ -1,9 +1,10 @@
 /* Read-only volatile HKLM hardware registry for native CPU metadata.
  * UTF-16 names address the finite ASCII hardware namespace below. Handles
  * belong to a guest address space, carry rights, and are never reused.
- * ProcessorNameString comes from machdep.cpu.brand_string. ~MHz is present
- * uses hw.cpufrequency when available, otherwise the declared libuv Apple
- * compatibility fallback. That fallback is not measured physical CPU speed.
+ * ProcessorNameString comes from machdep.cpu.brand_string, or a fixed name on
+ * iOS devices, which refuse it. ~MHz uses hw.cpufrequency when available,
+ * otherwise the declared libuv Apple compatibility fallback. That fallback is
+ * not measured physical CPU speed.
  * Other registry namespaces stop until their persistence/profile exists.
  */
 #include "guest_registry.h"
@@ -123,15 +124,20 @@ uint32_t tribes_reg_close_key(uint64_t base,uint32_t token){
 static uint32_t value(const char *name,unsigned char bytes[512],uint32_t *type,uint32_t *length){
  if(!strcmp(name,"PROCESSORNAMESTRING")){
   char brand[256];size_t n=sizeof brand;
-  if(sysctlbyname("machdep.cpu.brand_string",brand,&n,NULL,0)){return errno==ENOENT?2:31;}
+  /* Macs report the brand; iOS devices refuse the query (EPERM). QoL assumes
+     the read succeeds, so a refused query gets a fixed compatibility name. */
+  if(sysctlbyname("machdep.cpu.brand_string",brand,&n,NULL,0)){
+   static const char fallback[]="Apple processor";memcpy(brand,fallback,sizeof fallback);n=sizeof fallback;
+  }
   if(!n||n>sizeof brand||brand[n-1])return 13;
   for(size_t i=0;i<n;i++){unsigned char c=(unsigned char)brand[i];if(c>127)return 13;bytes[2*i]=c;bytes[2*i+1]=0;}
   *type=1;*length=(uint32_t)(n*2);return 0;
  }
  if(!strcmp(name,"~MHZ")){
   uint64_t hz=0;size_t n=sizeof hz;
+  /* Apple Silicon Macs report no frequency (ENOENT) and iOS devices refuse the
+     query (EPERM): either way use the compatibility value. */
   int native=sysctlbyname("hw.cpufrequency",&hz,&n,NULL,0);
-  if(native&&errno!=ENOENT)return 31;
   if(!native&&n&&n!=sizeof hz)return 13;
   if(native||!n||!hz)hz=UINT64_C(1000000)*TRIBES_CPU_COMPATIBILITY_MHZ;
   uint64_t mhz=hz/1000000;if(!mhz||mhz>UINT32_MAX)return 13;

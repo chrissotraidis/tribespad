@@ -55,6 +55,9 @@ int main(void){
  unsigned pages=0x30000000/4096;unsigned char *access=calloc(pages,1);assert(access);
  memset(access,3,0x40000/4096);access[(MIXED>>12)+1]=1;access[(MIXED>>12)+2]=0;memset(access+0x8000/4096,1,4);memset(access+0xc000/4096,0,4);
  assert(tribes_memory_initialize_static((uintptr_t)g,access,pages));
+ /* The private alias covers only the 2 GiB user space; access above it is refused. */
+ assert(!tribes_memory_permissions_set(0x80000000u,4096,1));
+ assert(!tribes_memory_permissions_set(0x7fff0000u,0x20000,3));
  /* uniform pages: native */
  uint64_t before=tribes_memory_emulated_accesses();
  *(volatile uint32_t *)g=42;assert(*(volatile uint32_t *)g==42&&*(volatile uint32_t *)(g+0x8000)==0);
