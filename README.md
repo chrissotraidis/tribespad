@@ -107,8 +107,9 @@ than a fingertip. With the **trackpad cursor** (on by default on iPhone), the wh
 screen works like a laptop trackpad while the touch controls are hidden: drag to
 move the cursor, tap anywhere to click, touch and hold then drag to hold the
 button (sliders, scroll bars), and drag with two fingers to scroll. Turn it off
-with the cursor button to tap the menus directly. On iPhone the game fills the
-whole screen; **Settings → Keep Clear of the Notch** shrinks it instead.
+with the cursor button to tap the menus directly. On iPhone the game stays clear
+of the notch and rounded corners, with TribesPad's buttons in the side margin;
+turn off **Settings → Keep Clear of the Notch** to fill the whole screen.
 
 In Inventory, tap the original **Done**, then the controller button to resume. To
 close the game, use **Launch → Quit** in the original menu.

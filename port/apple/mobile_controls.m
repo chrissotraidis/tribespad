@@ -194,7 +194,8 @@ typedef struct {int section;BOOL slider;const char *title,*key,*detail;double lo
 static const char *tb_sections[][2]={
     {"Touch Controls","Show the touch controls first to see size and opacity change as you drag."},
     {"Trackpad Cursor","With the touch controls hidden, drag anywhere to move the cursor and tap to click. Touch and hold, then drag, to hold the button (sliders, scroll bars). Drag with two fingers to scroll."},
-    {"Display",NULL}};
+    {"Display",NULL},
+    {"Online","Online Play starts Tribes 2 in its normal mode: the TribesNEXT login (create a free account there), PLAY GAME and the internet server list. Off, it starts offline with Training and LAN Game. Applies the next time TribesPad opens."}};
 static const TBSettingRow tb_rows[]={
     {0,YES,"Control Size","TribesPad.controlSize",NULL,.75,1.3,NO},
     {0,YES,"Control Opacity","TribesPad.controlOpacity",NULL,.3,1.0,NO},
@@ -203,16 +204,24 @@ static const TBSettingRow tb_rows[]={
     {0,NO,"Hide with a Controller","TribesPad.hideWithController","Touch controls step aside when a gamepad connects.",0,0,NO},
     {1,NO,"Trackpad Cursor","TribesPad.trackpad","Point and click in menus instead of tapping them directly.",0,0,NO},
     {1,YES,"Cursor Speed","TribesPad.cursorSpeed",NULL,.5,2.5,YES},
-    {2,NO,"Keep Clear of the Notch","TribesPad.avoidNotch","Shrinks the game so nothing sits under the notch. Applies the next time TribesPad opens.",0,0,NO},
-    {2,NO,"Show FPS Counter","TribesPad.showFPS","Frames presented each second.",0,0,NO}};
+    {2,NO,"Keep Clear of the Notch","TribesPad.avoidNotch","Keeps the game clear of the notch and rounded corners. Turn off to fill the screen. Applies the next time TribesPad opens.",0,0,NO},
+    {2,NO,"Show FPS Counter","TribesPad.showFPS","Frames presented each second.",0,0,NO},
+    {3,NO,"Online Play","TribesPad.onlinePlay","Sign in with TribesNEXT to join internet servers.",0,0,NO}};
 enum {TBRowCount=sizeof tb_rows/sizeof tb_rows[0],TBSectionCount=sizeof tb_sections/sizeof tb_sections[0]};
 static void tb_register_defaults(void){
     static dispatch_once_t once;dispatch_once(&once,^{
         BOOL phone=UIDevice.currentDevice.userInterfaceIdiom==UIUserInterfaceIdiomPhone;
         [NSUserDefaults.standardUserDefaults registerDefaults:@{@"TribesPad.controlSize":@1.0,@"TribesPad.controlOpacity":@1.0,
             @"TribesPad.lookSensitivity":@1.0,@"TribesPad.leftHanded":@0,@"TribesPad.hideWithController":@1,
-            @"TribesPad.trackpad":@(phone?1:0),@"TribesPad.cursorSpeed":@1.2,@"TribesPad.avoidNotch":@0,@"TribesPad.showFPS":@0}];
+            @"TribesPad.trackpad":@(phone?1:0),@"TribesPad.cursorSpeed":@1.2,@"TribesPad.avoidNotch":@1,@"TribesPad.showFPS":@0,@"TribesPad.onlinePlay":@0}];
     });
+}
+/* base/autoexec.cs starts offline unless this file exists (build-ipad-engine.py). */
+static void tb_sync_online(void){
+    NSString *path=[NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,NSUserDomainMask,YES).firstObject
+        stringByAppendingPathComponent:@"TribesPad/Game/base/prefs/tribespad-online.txt"];
+    if(tb_setting(@"TribesPad.onlinePlay",0)!=0)[@"1" writeToFile:path atomically:YES encoding:NSUTF8StringEncoding error:nil];
+    else [NSFileManager.defaultManager removeItemAtPath:path error:nil];
 }
 static const TBSettingRow *tb_row(NSIndexPath *path){
     NSInteger n=0;for(unsigned i=0;i<TBRowCount;i++)if(tb_rows[i].section==path.section&&n++==path.row)return &tb_rows[i];return NULL;
@@ -276,12 +285,14 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
 }
 -(void)switched:(UISwitch *)toggle {
     const TBSettingRow *r=&tb_rows[toggle.tag];tb_set(@(r->key),toggle.on);[self.owner settingsChanged];
+    if(!strcmp(r->key,"TribesPad.onlinePlay"))tb_sync_online();
     // Turning this on with a controller already connected steps the controls aside now.
     if(toggle.on&&!strcmp(r->key,"TribesPad.hideWithController"))[self.owner hideForController];
 }
 -(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)path {
     [tableView deselectRowAtIndexPath:path animated:YES];if(path.section!=TBSectionCount)return;
     for(unsigned i=0;i<TBRowCount;i++)[NSUserDefaults.standardUserDefaults removeObjectForKey:@(tb_rows[i].key)];
+    tb_sync_online();
     [tableView reloadData];[self.owner settingsChanged];
 }
 @end
@@ -682,9 +693,9 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
 -(void)showTouchGuide {
     [self showMessage:@"Touch and Trackpad" text:@"Menus: with the cursor button on, drag anywhere to move the cursor and tap to click. "
         "Touch and hold, then drag, to move sliders. Drag with two fingers to scroll. Turn the cursor off to tap menus directly.\n\n"
-        "Playing: the controller button on the right shows the touch controls.\n"
+        "Playing: the touch controls appear by themselves when play starts and step aside for menus.\n"
         "Move: stick, bottom left\nAim: drag on the right side\n"
-        "Fire: hold; drag while firing to aim\nJet, Ski / Jump, Grenade, Weapon: the ring around Fire\n"
+        "Fire: hold; drag while firing to aim\nJet (orange): hold to fly. Ski / Jump: hold on downhill slopes to keep speed\nGrenade and Weapon: beside Jet and above Fire\n"
         "Pack and Inventory: above the stick\n\n"
         "Chat, Scores and other keys are in the ··· menu."];
 }
@@ -693,7 +704,7 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
     [self showMessage:name.length?name:@"Controller Guide" text:[NSString stringWithFormat:@"%@\n\n"
         "Left stick: move\nRight stick: aim\nRT: fire · LT: jet\nA: ski / jump · X: use pack\n"
         "LB: grenade · RB: next weapon\nY: inventory · Menu: game menu",
-        name.length?@"Connected. Touch controls hide while it is in use (Touch Settings).":@"Connect an Xbox, PlayStation or MFi controller in Settings > Bluetooth."]];
+        name.length?@"Connected. Touch controls hide once you use it (Settings).":@"Connect an Xbox, PlayStation or MFi controller in Settings > Bluetooth."]];
 }
 /* The original console toggles on the grave key; open the keyboard for typing. */
 -(void)openConsole {

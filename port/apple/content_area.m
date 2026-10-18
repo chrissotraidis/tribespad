@@ -14,7 +14,10 @@ static bool measure(void){
     for(UIWindow *w in windows){
         CGSize s=w.bounds.size;if(s.width<=s.height)continue;
         UIEdgeInsets e=w.safeAreaInsets;
-        BOOL avoid=[NSUserDefaults.standardUserDefaults boolForKey:@"TribesPad.avoidNotch"];
+        /* On by default: the notch and rounded corners would cover the HUD and
+           menu edges. The inset margins hold TribesPad's own buttons. */
+        id setting=[NSUserDefaults.standardUserDefaults objectForKey:@"TribesPad.avoidNotch"];
+        BOOL avoid=setting?[setting boolValue]:YES;
         inset=avoid?(float)ceil(MAX(e.left,e.right)):0;
         /* Phones are under 480 points tall. The original UI needs 480 lines at
            its scale, and QoL only uses whole scales, so render the game 960
