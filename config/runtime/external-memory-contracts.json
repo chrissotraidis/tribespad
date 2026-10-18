@@ -3,6 +3,10 @@
   "host_only": [
     "tb_content_inset",
     "tb_content_density",
+    "tb_audio_session_restore",
+    "SDL_IsAudioDevicePlayback",
+    "getenv",
+    "alGetListenerf",
     "rename",
     "unlink",
     "rmdir",

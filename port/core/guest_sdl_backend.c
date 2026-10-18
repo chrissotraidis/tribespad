@@ -880,6 +880,7 @@ uint32_t tribes_sdl_open_audio_device(_cpu *cpu,uint32_t id,uint32_t specificati
     if(specification){checked_copy(&spec,guest(cpu,specification,sizeof spec),sizeof spec);requested=&spec;}
     AudioDevice *record=calloc(1,sizeof *record);if(!record){SDL_OutOfMemory();AUDIO_RETURN(0);}
     SDL_AudioDeviceID result=SDL_OpenAudioDevice(id,requested);
+    fprintf(stderr,"TribesPad: SDL audio device 0x%x opened as 0x%x (%s)\n",id,result,SDL_IsAudioDevicePlayback(id)?"playback":"recording");
     if(result){record->native=result;record->next=audio_devices;audio_devices=record;}else free(record);
     AUDIO_RETURN(result);
 }
@@ -893,7 +894,12 @@ uint32_t tribes_sdl_pause_audio_device(_cpu *cpu,uint32_t id){
     AUDIO_ENTER();if(id)(void)audio_device_slot(id);bool result=SDL_PauseAudioDevice(id);AUDIO_RETURN(result);
 }
 void tribes_sdl_close_audio_device(_cpu *cpu,uint32_t id){
-    AUDIO_ENTER();if(id){AudioDevice **slot=audio_device_slot(id);AudioDevice *v=*slot;SDL_CloseAudioDevice(id);*slot=v->next;free(v);}else SDL_CloseAudioDevice(0);AUDIO_DONE();
+    AUDIO_ENTER();if(id){AudioDevice **slot=audio_device_slot(id);AudioDevice *v=*slot;SDL_CloseAudioDevice(id);*slot=v->next;free(v);}else SDL_CloseAudioDevice(0);
+    fprintf(stderr,"TribesPad: SDL audio device 0x%x closed\n",id);
+#if TARGET_OS_IPHONE
+    tb_audio_session_restore();
+#endif
+    AUDIO_DONE();
 }
 uint32_t tribes_sdl_create_audio_stream(_cpu *cpu,uint32_t source,uint32_t destination){
     AUDIO_ENTER();SDL_AudioSpec src,dst;

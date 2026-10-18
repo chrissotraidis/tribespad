@@ -17,4 +17,6 @@ bool tb_content_pixels(SDL_Window *window,int *width,int *height);
    view, which UIKit always stretches over the whole screen, so an inset game
    area gets its own layer inside it. Owned by the view's layer. */
 void *tb_content_layer(SDL_MetalView view);
+/* Reapply the app audio session after SDL closes an audio device (mobile_engine_main.m). */
+void tb_audio_session_restore(void);
 #endif

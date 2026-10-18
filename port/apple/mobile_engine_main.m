@@ -4,6 +4,7 @@
 #if TARGET_OS_IOS
 #import <UIKit/UIKit.h>
 #import <AVFoundation/AVFoundation.h>
+#include <SDL3/SDL.h>
 #import <objc/runtime.h>
 #endif
 #include "mobile_game_paths.h"
@@ -68,6 +69,10 @@ static void tb_adopt_window_scene(void) {
    speaker like other games (and HaloPad): Playback, mixed with other audio,
    reactivated after interruptions such as calls. */
 static void tb_audio_session(void) {
+    /* SDL also manages the session when the game opens an SDL audio device.
+       Without this hint it picks PlayAndRecord for a microphone, which routes
+       output to the earpiece. */
+    SDL_SetHint(SDL_HINT_AUDIO_CATEGORY,"playback");
     AVAudioSession *session=AVAudioSession.sharedInstance;NSError *error=nil;
     if(![session setCategory:AVAudioSessionCategoryPlayback mode:AVAudioSessionModeDefault
         options:AVAudioSessionCategoryOptionMixWithOthers error:&error]||![session setActive:YES error:&error])
@@ -76,6 +81,20 @@ static void tb_audio_session(void) {
         queue:NSOperationQueue.mainQueue usingBlock:^(NSNotification *note){
         if([note.userInfo[AVAudioSessionInterruptionTypeKey] unsignedIntegerValue]==AVAudioSessionInterruptionTypeEnded)
             [AVAudioSession.sharedInstance setActive:YES error:nil];}];
+    // Report where sound goes once the game has set up its audio.
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW,(int64_t)(45*NSEC_PER_SEC)),dispatch_get_main_queue(),^{
+        AVAudioSession *s=AVAudioSession.sharedInstance;NSMutableArray *outs=[NSMutableArray new];
+        for(AVAudioSessionPortDescription *p in s.currentRoute.outputs)[outs addObject:p.portType];
+        NSLog(@"TribesPad audio route: category=%@ outputs=%@ volume=%.2f other_audio=%d",s.category,
+            [outs componentsJoinedByString:@","],s.outputVolume,s.otherAudioPlaying);});
+}
+/* SDL deactivates the session when the game closes its last SDL audio device,
+   which also silences OpenAL. Called after every close (guest_sdl_backend.c). */
+void tb_audio_session_restore(void) {
+    AVAudioSession *session=AVAudioSession.sharedInstance;NSError *error=nil;
+    if(![session setCategory:AVAudioSessionCategoryPlayback mode:AVAudioSessionModeDefault
+        options:AVAudioSessionCategoryOptionMixWithOthers error:&error]||![session setActive:YES error:&error])
+        NSLog(@"TribesPad audio session restore: %@",error.localizedDescription);
 }
 #endif
 int main(int argc,char **argv){

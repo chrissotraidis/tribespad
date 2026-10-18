@@ -34,6 +34,22 @@ static Device *device(uint32_t t){if(!t)return NULL;for(Device *d=devices;d;d=d-
 static Context *context(uint32_t t){if(!t)return NULL;for(Context *x=contexts;x;x=x->next)if(x->token==t)return x;stop("invalid context token");return NULL;}
 #define DN(t) (device(t)?device(t)->native:NULL)
 #define CN(t) (context(t)?context(t)->native:NULL)
+/* TRIBES_AUDIO_TRACE=1: every two seconds, report what the game asked the
+   mixer to play, so silent output can be told apart from silent input. */
+#include <stdatomic.h>
+#include <time.h>
+static int trace_on=-1;static uint64_t trace_last;
+static unsigned trace_plays,trace_buffers,trace_errors;static uint64_t trace_bytes;static int trace_peak;
+static void trace_report(void){
+ if(trace_on<0)trace_on=getenv("TRIBES_AUDIO_TRACE")!=NULL;if(!trace_on)return;
+ ALenum e=alGetError();if(e!=AL_NO_ERROR)trace_errors++;
+ struct timespec t;clock_gettime(CLOCK_MONOTONIC,&t);uint64_t now=(uint64_t)t.tv_sec;
+ if(now<trace_last+2)return;trace_last=now;
+ float gain=-1;ALCcontext *cx=alcGetCurrentContext();if(cx)alGetListenerf(AL_GAIN,&gain);
+ fprintf(stderr,"TribesPad audio: plays=%u buffers=%u bytes=%llu peak=%d listener_gain=%.2f context=%p errors=%u last_error=0x%x\n",
+  trace_plays,trace_buffers,(unsigned long long)trace_bytes,trace_peak,gain,(void *)cx,trace_errors,e);
+ trace_plays=trace_buffers=trace_errors=0;trace_bytes=0;trace_peak=0;
+}
 static uint32_t token(void){if(serial>=0x75ffffff)stop("token exhaustion");return ++serial;}
 uint32_t tribes_openal_load(uint64_t base,const char *name){
  if(strcmp(name,"openal32.dll")&&strcmp(name,"soft_oal.dll"))return 0;
@@ -85,7 +101,8 @@ uint32_t tribes_oa_alcGetProcAddress(_cpu *c,uint32_t a,uint32_t b){BEGIN;char s
 uint32_t tribes_oa_alcGetIntegerv(_cpu *c,uint32_t a,uint32_t b,uint32_t n,uint32_t out){BEGIN;if(n>1024)stop("integer query span");ALCint v[1024];if(n)memcpy(v,guest(c,out,4*n),4*n);alcGetIntegerv(DN(a),b,n,v);if(n)memcpy(guest(c,out,4*n),v,4*n);DONE(0);}
 #define VOID1(name,type,convert) uint32_t tribes_oa_##name(_cpu *c,uint32_t a){BEGIN;name((type)(convert));DONE(0);}
 VOID1(alEnable,ALenum,a) VOID1(alDisable,ALenum,a)
-VOID1(alSourcePlay,ALuint,a) VOID1(alSourcePause,ALuint,a) VOID1(alSourceStop,ALuint,a) VOID1(alSourceRewind,ALuint,a)
+uint32_t tribes_oa_alSourcePlay(_cpu *c,uint32_t a){BEGIN;alSourcePlay((ALuint)a);trace_plays++;trace_report();DONE(0);}
+VOID1(alSourcePause,ALuint,a) VOID1(alSourceStop,ALuint,a) VOID1(alSourceRewind,ALuint,a)
 VOID1(alDistanceModel,ALenum,a) VOID1(alSpeedOfSound,ALfloat,f32(a)) VOID1(alDopplerFactor,ALfloat,f32(a))
 #define RET1(name) uint32_t tribes_oa_##name(_cpu *c,uint32_t a){BEGIN;DONE(name(a));}
 RET1(alIsEnabled) RET1(alGetBoolean) RET1(alGetInteger) RET1(alIsSource) RET1(alIsBuffer)
@@ -108,12 +125,15 @@ uint32_t tribes_oa_alSource3i(_cpu *c,uint32_t o,uint32_t p,uint32_t x,uint32_t 
 OBJECT_VECTOR(alSourceiv,ALint,0,0) OBJECT_VECTOR(alSourcefv,ALfloat,0,0) OBJECT_VECTOR(alGetSourceiv,ALint,1,0) OBJECT_VECTOR(alGetSourcefv,ALfloat,1,0) OBJECT_VECTOR(alGetBufferi,ALint,1,1) OBJECT_VECTOR(alGetBufferf,ALfloat,1,1)
 uint32_t tribes_oa_alGetSource3f(_cpu *c,uint32_t o,uint32_t p,uint32_t a,uint32_t b,uint32_t d){BEGIN;float x,y,z;memcpy(&x,guest(c,a,4),4);memcpy(&y,guest(c,b,4),4);memcpy(&z,guest(c,d,4),4);alGetSource3f(o,p,&x,&y,&z);memcpy(guest(c,a,4),&x,4);memcpy(guest(c,b,4),&y,4);memcpy(guest(c,d,4),&z,4);DONE(0);}
 #define IDS(name,output) uint32_t tribes_oa_##name(_cpu *c,uint32_t n,uint32_t a){BEGIN;if(n>65536)stop("object count");ALuint *v=n?malloc(n*4):NULL;if(n&&!v)stop("object array allocation");if(n)memcpy(v,guest(c,a,n*4),n*4);name(n,v);if((output)&&n)memcpy(guest(c,a,n*4),v,n*4);free(v);DONE(0);}
-IDS(alGenSources,1) IDS(alDeleteSources,0) IDS(alGenBuffers,1) IDS(alDeleteBuffers,0) IDS(alSourcePlayv,0) IDS(alSourceStopv,0)
+IDS(alGenSources,1) IDS(alDeleteSources,0) IDS(alGenBuffers,1) IDS(alDeleteBuffers,0) IDS(alSourceStopv,0)
 #define QUEUE(name,output) uint32_t tribes_oa_##name(_cpu *c,uint32_t o,uint32_t n,uint32_t a){BEGIN;if(n>65536)stop("queue count");ALuint *v=n?malloc(n*4):NULL;if(n&&!v)stop("queue allocation");if(n)memcpy(v,guest(c,a,n*4),n*4);name(o,n,v);if((output)&&n)memcpy(guest(c,a,n*4),v,n*4);free(v);DONE(0);}
 QUEUE(alSourceQueueBuffers,0) QUEUE(alSourceUnqueueBuffers,1)
+uint32_t tribes_oa_alSourcePlayv(_cpu *c,uint32_t n,uint32_t a){BEGIN;if(n>65536)stop("object count");ALuint *v=n?malloc(n*4):NULL;if(n&&!v)stop("object array allocation");if(n)memcpy(v,guest(c,a,n*4),n*4);alSourcePlayv(n,v);free(v);trace_plays+=n;trace_report();DONE(0);}
 uint32_t tribes_oa_alBufferData(_cpu *c,uint32_t o,uint32_t format,uint32_t a,uint32_t n,uint32_t hz){BEGIN;
  if(format!=AL_FORMAT_MONO8&&format!=AL_FORMAT_MONO16&&format!=AL_FORMAT_STEREO8&&format!=AL_FORMAT_STEREO16)stop("unbridged sample format");
- if(n>64*1024*1024)stop("PCM size");void *data=n?malloc(n):NULL;if(n&&!data)stop("PCM allocation");if(n&&a)memcpy(data,guest(c,a,n),n);alBufferData(o,format,a?data:NULL,n,hz);free(data);DONE(0);}
+ if(n>64*1024*1024)stop("PCM size");void *data=n?malloc(n):NULL;if(n&&!data)stop("PCM allocation");if(n&&a)memcpy(data,guest(c,a,n),n);alBufferData(o,format,a?data:NULL,n,hz);
+ if(data&&(format==AL_FORMAT_MONO16||format==AL_FORMAT_STEREO16))for(uint32_t i=0;i+1<n;i+=2){int v=abs((int)((int16_t *)data)[i/2]);if(v>trace_peak)trace_peak=v;}
+ trace_buffers++;trace_bytes+=n;trace_report();free(data);DONE(0);}
 
 /* Native EFX object IDs are integers. All pointer arguments below refer only
  * to bounded host copies; the mixer never retains guest memory. */
