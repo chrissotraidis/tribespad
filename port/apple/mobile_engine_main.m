@@ -87,6 +87,13 @@ static void tb_audio_session(void) {
         for(AVAudioSessionPortDescription *p in s.currentRoute.outputs)[outs addObject:p.portType];
         NSLog(@"TribesPad audio route: category=%@ outputs=%@ volume=%.2f other_audio=%d",s.category,
             [outs componentsJoinedByString:@","],s.outputVolume,s.otherAudioPlaying);});
+    // And which screens exist: an external display mirrors unless the app gives it its own scene.
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW,(int64_t)(45*NSEC_PER_SEC)),dispatch_get_main_queue(),^{
+        for(UIScene *scene in UIApplication.sharedApplication.connectedScenes)if([scene isKindOfClass:UIWindowScene.class]){
+            UIScreen *screen=((UIWindowScene *)scene).screen;
+            NSLog(@"TribesPad screen: role=%@ bounds=%@ native=%@ scale=%.1f mirrored=%d max_fps=%ld",scene.session.role,
+                NSStringFromCGRect(screen.bounds),NSStringFromCGRect(screen.nativeBounds),screen.scale,screen.mirroredScreen!=nil,(long)screen.maximumFramesPerSecond);}
+    });
 }
 /* SDL deactivates the session when the game closes its last SDL audio device,
    which also silences OpenAL. Called after every close (guest_sdl_backend.c). */

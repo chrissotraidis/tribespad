@@ -879,8 +879,13 @@ uint32_t tribes_sdl_open_audio_device(_cpu *cpu,uint32_t id,uint32_t specificati
     AUDIO_ENTER();SDL_AudioSpec spec;SDL_AudioSpec *requested=NULL;
     if(specification){checked_copy(&spec,guest(cpu,specification,sizeof spec),sizeof spec);requested=&spec;}
     AudioDevice *record=calloc(1,sizeof *record);if(!record){SDL_OutOfMemory();AUDIO_RETURN(0);}
+#if TARGET_OS_IPHONE
+    /* Voice chat capture: opening the microphone asks for permission and
+       switches iOS to call audio. Report no device instead; the game then
+       runs without voice capture. */
+    if(!SDL_IsAudioDevicePlayback(id)){free(record);AUDIO_RETURN(0);}
+#endif
     SDL_AudioDeviceID result=SDL_OpenAudioDevice(id,requested);
-    fprintf(stderr,"TribesPad: SDL audio device 0x%x opened as 0x%x (%s)\n",id,result,SDL_IsAudioDevicePlayback(id)?"playback":"recording");
     if(result){record->native=result;record->next=audio_devices;audio_devices=record;}else free(record);
     AUDIO_RETURN(result);
 }
@@ -895,7 +900,6 @@ uint32_t tribes_sdl_pause_audio_device(_cpu *cpu,uint32_t id){
 }
 void tribes_sdl_close_audio_device(_cpu *cpu,uint32_t id){
     AUDIO_ENTER();if(id){AudioDevice **slot=audio_device_slot(id);AudioDevice *v=*slot;SDL_CloseAudioDevice(id);*slot=v->next;free(v);}else SDL_CloseAudioDevice(0);
-    fprintf(stderr,"TribesPad: SDL audio device 0x%x closed\n",id);
 #if TARGET_OS_IPHONE
     tb_audio_session_restore();
 #endif

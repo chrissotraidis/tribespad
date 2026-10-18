@@ -42,7 +42,7 @@
   },
   {
    "path": "generated/integration-review/code-revision-mobile/result.json",
-   "sha256": "e43eebe6322d12a1961d738eb090c6ad7c147b449c4aebf30e64b10bc2531ef4",
+   "sha256": "ea167eb5e66a3e8b4131ff317a42cf19c1cddcbd93c7826a9e01632bc37bf800",
    "base": "none",
    "patch": "5ca46765f89fcb52.zst"
   },
@@ -54,7 +54,7 @@
   },
   {
    "path": "generated/integration-review/guest-threads/macos/result.json",
-   "sha256": "694622abdbb041a973214f0c6fc3db1567a5ecd329be9b6923060367a20b98c3",
+   "sha256": "d59f1f4de9c52287034ebbc28302b94489f38bb1d4267cfe13ad9239769b6a4f",
    "base": "none",
    "patch": "596b01e8eb069ceb.zst"
   },
