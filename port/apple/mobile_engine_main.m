@@ -3,6 +3,7 @@
 #import <TargetConditionals.h>
 #if TARGET_OS_IOS
 #import <UIKit/UIKit.h>
+#import <AVFoundation/AVFoundation.h>
 #import <objc/runtime.h>
 #endif
 #include "mobile_game_paths.h"
@@ -61,10 +62,26 @@ static void tb_adopt_window_scene(void) {
     Method m=class_getInstanceMethod(UIWindow.class,@selector(initWithFrame:));
     tb_window_init_frame=method_setImplementation(m,(IMP)tb_window_init_in_scene);
 }
+/* OpenAL drives CoreAudio directly and never chooses an audio session, so iOS
+   used its default, which the silent switch mutes, and the library's input
+   probe could move output to the earpiece. Play game audio through the
+   speaker like other games (and HaloPad): Playback, mixed with other audio,
+   reactivated after interruptions such as calls. */
+static void tb_audio_session(void) {
+    AVAudioSession *session=AVAudioSession.sharedInstance;NSError *error=nil;
+    if(![session setCategory:AVAudioSessionCategoryPlayback mode:AVAudioSessionModeDefault
+        options:AVAudioSessionCategoryOptionMixWithOthers error:&error]||![session setActive:YES error:&error])
+        NSLog(@"TribesPad audio session: %@",error.localizedDescription);
+    [NSNotificationCenter.defaultCenter addObserverForName:AVAudioSessionInterruptionNotification object:session
+        queue:NSOperationQueue.mainQueue usingBlock:^(NSNotification *note){
+        if([note.userInfo[AVAudioSessionInterruptionTypeKey] unsignedIntegerValue]==AVAudioSessionInterruptionTypeEnded)
+            [AVAudioSession.sharedInstance setActive:YES error:nil];}];
+}
 #endif
 int main(int argc,char **argv){
 #if TARGET_OS_IOS
     tb_adopt_window_scene();
+    tb_audio_session();
 #endif
     return tribes_sdl_run_application(argc,argv,enter_engine);
 }

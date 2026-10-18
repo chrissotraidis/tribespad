@@ -162,7 +162,10 @@ earlier_text='// TribesPad: original offline mode. A dedicated server would quit
 # iOS and iPadOS end apps without the game's quit, which is where it saves
 # preferences (warriors, accepted license). Save them as its onExit does.
 offline_text=earlier_text+'// iOS and iPadOS close apps without a normal quit; save preferences as onExit does, once a minute.\nfunction TribesPadSavePrefs()\n{\n   export("$pref::*", "prefs/ClientPrefs.cs", False);\n   schedule(60000, 0, TribesPadSavePrefs);\n}\nschedule(60000, 0, TribesPadSavePrefs);\n'
-if offline.exists():assert offline.read_text() in (offline_text,earlier_text), 'Preserve custom autoexec.cs; select offline mode there before building'
+previous_texts=(offline_text,earlier_text)
+# The touch layer follows play and menus through this report (mobile_controls.m).
+offline_text+='// TribesPad: report whether the player is in play (mouse captured, no menu or\n// station screen open) so the touch layer can switch between touch controls and\n// the menu cursor. The touch layer reads base/prefs/tribespad-state.txt.\nfunction TribesPadInPlay()\n{\n   if ( !isObject( PlayGui ) || Canvas.getContent() != PlayGui.getId() )\n      return 0;\n   for ( %i = 0; %i < Canvas.getCount(); %i++ )\n   {\n      %name = Canvas.getObject( %i ).getName();\n      if ( %name !$= "PlayGui" && %name !$= "MainChatHud" && %name !$= "MessageHud" )\n         return 0;\n   }\n   return 1;\n}\nfunction TribesPadReportState()\n{\n   %state = TribesPadInPlay();\n   if ( %state !$= $TribesPadLastState )\n   {\n      $TribesPadLastState = %state;\n      %file = new FileObject();\n      if ( %file.openForWrite( "prefs/tribespad-state.txt" ) )\n      {\n         %file.writeLine( %state );\n         %file.close();\n      }\n      %file.delete();\n   }\n   schedule( 200, 0, TribesPadReportState );\n}\nschedule( 200, 0, TribesPadReportState );\n'
+if offline.exists():assert offline.read_text() in previous_texts+(offline_text,), 'Preserve custom autoexec.cs; select offline mode there before building'
 offline.write_text(offline_text)
 
 volume=out/'volume';temp=volume/'TribesPad/Temp';temp.mkdir(parents=True,exist_ok=True)
@@ -208,7 +211,7 @@ else:
 host=[R/'port/apple/mobile_engine_main.m',R/'port/apple/mobile_game_paths.m',R/'port/apple/sdl_main.c',R/'port/apple/gl4es_context.c',R/'port/core/input.c']
 host+=[R/'port/apple/desktop_controls.c'] if mac else [R/'port/apple/mobile_controls.m',R/'port/apple/mobile_controls.c',R/'port/apple/content_area.m']
 if a.angle:host.append(R/'port/apple/angle_sdl.c')
-command=['clang','-target',target,'-isysroot',sdk,'-O2','-I',str(out),*sdl_flags,*gl_flags,'-DNOX11','-DNOEGL','-DNO_LOADER','-DDEFAULT_ES=2','-isystem',str(R/'ref/gl4es/src'),*map(str,host),*objects,*gl_libraries,*libraries,*math['libraries'],*[str(R/n) for n in http['libraries']],str(R/al['library']),str(zbuild/'libz-ng.a'),'-lz','-lc++','-framework','Foundation','-framework','GameController','-framework','CoreGraphics','-framework','CoreText','-framework','CoreFoundation','-framework','SystemConfiguration','-framework','AudioToolbox','-framework','CoreAudio',*(['-framework','AppKit','-framework','Metal','-framework','QuartzCore'] if mac else []),'-o',str(exe)]
+command=['clang','-target',target,'-isysroot',sdk,'-O2','-I',str(out),*sdl_flags,*gl_flags,'-DNOX11','-DNOEGL','-DNO_LOADER','-DDEFAULT_ES=2','-isystem',str(R/'ref/gl4es/src'),*map(str,host),*objects,*gl_libraries,*libraries,*math['libraries'],*[str(R/n) for n in http['libraries']],str(R/al['library']),str(zbuild/'libz-ng.a'),'-lz','-lc++','-framework','Foundation','-framework','GameController','-framework','AVFoundation','-framework','CoreGraphics','-framework','CoreText','-framework','CoreFoundation','-framework','SystemConfiguration','-framework','AudioToolbox','-framework','CoreAudio',*(['-framework','AppKit','-framework','Metal','-framework','QuartzCore'] if mac else []),'-o',str(exe)]
 command[1:1]=['-fobjc-arc']
 with (out/'link.log').open('w') as log:subprocess.run(command,stdout=log,stderr=log,check=True)
 identifier='com.tribespad.full-engine.ipad'
