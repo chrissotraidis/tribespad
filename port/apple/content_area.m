@@ -2,10 +2,11 @@
 #import <QuartzCore/QuartzCore.h>
 #include "content_area.h"
 #include <math.h>
-static float inset=-1;
-float tb_content_inset(void){
-    if(inset>=0)return inset;
-    if(![NSThread isMainThread])return 0;
+static float inset=-1,density=0;
+/* Measured once, on the main thread, from the first landscape window. */
+static bool measure(void){
+    if(inset>=0)return true;
+    if(![NSThread isMainThread])return false;
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
     NSArray<UIWindow *> *windows=UIApplication.sharedApplication.windows;
@@ -13,26 +14,36 @@ float tb_content_inset(void){
     for(UIWindow *w in windows){
         CGSize s=w.bounds.size;if(s.width<=s.height)continue;
         UIEdgeInsets e=w.safeAreaInsets;
-        inset=(float)ceil(MAX(e.left,e.right));
-        NSLog(@"TribesPad content inset %.0f points on each side of %.0fx%.0f",inset,s.width,s.height);
-        return inset;
+        BOOL avoid=[NSUserDefaults.standardUserDefaults boolForKey:@"TribesPad.avoidNotch"];
+        inset=avoid?(float)ceil(MAX(e.left,e.right)):0;
+        /* Phones are under 480 points tall. The original UI needs 480 lines at
+           its scale, and QoL only uses whole scales, so render the game 960
+           pixels tall: scale 2 then draws the UI over exactly 480 lines, as
+           large as it can be. iPad and Mac keep the native resolution. */
+        density=s.height<480?(float)fmin(w.screen.scale,960.0/s.height):0;
+        NSLog(@"TribesPad content inset %.0f points on each side of %.0fx%.0f, %.3f pixels per point",inset,s.width,s.height,density);
+        return true;
     }
-    return 0;
+    return false;
 }
+float tb_content_inset(void){return measure()?inset:0;}
+float tb_content_density(void){return measure()?density:0;}
 bool tb_content_pixels(SDL_Window *window,int *width,int *height){
-    int w=0,h=0,pw=0,ph=0;
+    int w=0,h=0,pw=0,ph=0;float d=tb_content_inset(),scale=tb_content_density();
     if(!SDL_GetWindowSize(window,&w,&h)||!SDL_GetWindowSizeInPixels(window,&pw,&ph)||w<=0||pw<=0)return false;
-    pw-=(int)lroundf(2*tb_content_inset()*(float)pw/(float)w);
+    if(scale>0){pw=(int)lroundf(((float)w-2*d)*scale);ph=(int)lroundf((float)h*scale);}
+    else pw-=(int)lroundf(2*d*(float)pw/(float)w);
     if(pw<=0)return SDL_SetError("Game area has no width");
     if(width)*width=pw;if(height)*height=ph;return true;
 }
 void *tb_content_layer(SDL_MetalView view){
-    UIView *v=(__bridge UIView *)view;CAMetalLayer *full=(CAMetalLayer *)v.layer;float d=tb_content_inset();
-    if(d<=0)return (__bridge void *)full;
+    UIView *v=(__bridge UIView *)view;CAMetalLayer *full=(CAMetalLayer *)v.layer;
+    float d=tb_content_inset(),scale=tb_content_density();
+    if(d<=0&&scale<=0)return (__bridge void *)full;
     full.backgroundColor=UIColor.blackColor.CGColor;
     CAMetalLayer *layer=[CAMetalLayer layer];
-    layer.frame=CGRectInset(v.bounds,d,0);layer.contentsScale=full.contentsScale;
+    layer.frame=CGRectInset(v.bounds,d,0);layer.contentsScale=scale>0?scale:full.contentsScale;
     layer.pixelFormat=full.pixelFormat;layer.device=full.device;layer.opaque=YES;
-    layer.drawableSize=CGSizeMake(layer.bounds.size.width*layer.contentsScale,layer.bounds.size.height*layer.contentsScale);
+    layer.drawableSize=CGSizeMake(round(layer.bounds.size.width*layer.contentsScale),round(layer.bounds.size.height*layer.contentsScale));
     [full addSublayer:layer];return (__bridge void *)layer;
 }

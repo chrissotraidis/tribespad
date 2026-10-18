@@ -27,6 +27,16 @@
 static bool content_pixels(SDL_Window *window,int *width,int *height){
     int pw=0,ph=0,w=0,h=0;float inset=CONTENT_INSET();
     if(!SDL_GetWindowSizeInPixels(window,&pw,&ph))return false;
+#if TARGET_OS_IPHONE
+    /* Phones render at their own density (content_area.m). */
+    float density=tb_content_density();
+    if(density>0){
+        if(!SDL_GetWindowSize(window,&w,&h)||w<=0)return false;
+        pw=(int)(((float)w-2*inset)*density+0.5f);ph=(int)((float)h*density+0.5f);
+        if(pw<=0)return SDL_SetError("Game area has no width");
+        if(width)*width=pw;if(height)*height=ph;return true;
+    }
+#endif
     if(inset>0){
         if(!SDL_GetWindowSize(window,&w,&h)||w<=0)return false;
         pw-=(int)(2*inset*(float)pw/(float)w+0.5f);
@@ -640,7 +650,13 @@ static int pixel_modes(const SDL_DisplayMode *m){return m&&m->pixel_density>1.0f
 static void guest_mode_size(const SDL_DisplayMode *m,int *w,int *h,float *density){
     float width=(float)m->w-2*CONTENT_INSET();
     *w=(int)(width+0.5f);*h=m->h;*density=m->pixel_density;
-    if(pixel_modes(m)){*w=(int)(width*m->pixel_density+0.5f);*h=(int)(m->h*m->pixel_density+0.5f);*density=1.0f;}
+    if(pixel_modes(m)){
+        float d=m->pixel_density;
+#if TARGET_OS_IPHONE
+        if(tb_content_density()>0)d=tb_content_density();
+#endif
+        *w=(int)(width*d+0.5f);*h=(int)(m->h*d+0.5f);*density=1.0f;
+    }
 }
 static uint32_t display_mode(_cpu *cpu,uint32_t display,int current) {
     event_flags(SDL_INIT_VIDEO);uint32_t error=tribes_get_last_error();NativeFrame frame;uint32_t result=0;

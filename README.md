@@ -81,7 +81,7 @@ The steady 30 FPS is the vertical-sync pacing: with VSync off the same match run
 ## Play an offline match
 
 1. Choose **LAN GAME → HOST → Katabatic**, enable two bots and tap **START GAME**.
-2. When the world appears, tap the **controller button** at the top to show the touch controls.
+2. When the world appears, tap the **controller button** on the right edge to show the touch controls.
 3. Tap **Fire** to spawn.
 
 ![Third-person view in the pre-match countdown](docs/images/tribespad-third-person.jpg)
@@ -95,9 +95,20 @@ The steady 30 FPS is the vertical-sync pacing: with VSync off the same match run
 | **Fire** (bottom right) | Hold to fire; drag to aim while firing |
 | **Jet · Ski / Jump · Grenade · Weapon** | The ring around Fire |
 | **Pack · Inventory** | Above the move stick; Inventory hides the controls so the original screen can be tapped |
-| **Controller / X button** | Show or hide the touch controls |
-| **Keyboard button** | Onscreen keyboard for chat and text fields |
-| **··· menu** | Game Menu (Escape), Scores, Chat, in-match actions, Touch Settings, help |
+| **Controller / X button** (right edge) | Show or hide the touch controls |
+| **Cursor button** (right edge) | Turn the trackpad cursor on or off |
+| **Keyboard button** (right edge) | Onscreen keyboard for chat and text fields |
+| **··· menu** (right edge) | Game Menu (Escape), Scores, Chat, in-match actions, settings, help |
+
+### Menus on iPhone
+
+The original menus were made for a mouse, and on a phone their buttons are smaller
+than a fingertip. With the **trackpad cursor** (on by default on iPhone), the whole
+screen works like a laptop trackpad while the touch controls are hidden: drag to
+move the cursor, tap anywhere to click, touch and hold then drag to hold the
+button (sliders, scroll bars), and drag with two fingers to scroll. Turn it off
+with the cursor button to tap the menus directly. On iPhone the game fills the
+whole screen; **Settings → Keep Clear of the Notch** shrinks it instead.
 
 In Inventory, tap the original **Done**, then the controller button to resume. To
 close the game, use **Launch → Quit** in the original menu.
@@ -110,13 +121,12 @@ sends the game's own key, so the original screens open.
 | Item | What it does |
 |---|---|
 | Game Menu | The original Escape menu |
-| Show / Hide Touch Controls | Same as the controller button |
 | Scores | The original score screen (F2); choose it again to close |
 | Chat | All Chat, Team Chat (the keyboard opens and the controls return after sending) and the Quick Chat menu |
 | Actions | Repair kit, mine, beacon, targeting laser, throw flag, zoom, third-person view, command map, suicide |
-| Touch Settings… | Live sliders for control size, opacity and look sensitivity; left-handed layout, hide with a controller, FPS counter; reset to defaults |
-| Controller | Controller button layout, and the connected controller's name |
-| Help | Touch controls guide, original console, TribesPad on GitHub, About |
+| Show / Hide Touch Controls, Trackpad Cursor | Same as the buttons on the right edge |
+| Settings… | Touch controls (size, opacity, look sensitivity, left-handed, hide with a controller), trackpad cursor and speed, keep clear of the notch, FPS counter; reset to defaults |
+| Help | Touch and trackpad guide, controller guide, original console, TribesPad on GitHub, About |
 
 ![Touch Settings during a match](docs/images/tribespad-touch-settings.jpg)
 

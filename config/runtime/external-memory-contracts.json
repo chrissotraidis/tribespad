@@ -2,7 +2,10 @@
   "scope": "Diagnostic native runtime. Host-only calls reject every direct guest pointer argument. Unknown calls and unregistered indirect targets stop before invocation. Buffer operations are allowed only with verified compiler-inserted brackets. Nested-buffer APIs such as recvmsg and zlib streams have no exemption.",
   "host_only": [
     "tb_content_inset",
+    "tb_content_density",
     "rename",
+    "unlink",
+    "rmdir",
     "renamex_np",
     "fsync",
     "tribes_memory_code_revision",

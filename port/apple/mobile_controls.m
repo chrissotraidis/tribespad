@@ -21,6 +21,9 @@ static void tb_set(NSString *key,double value){[NSUserDefaults.standardUserDefau
 #define TB_LEFT_HANDED (tb_setting(@"TribesPad.leftHanded",0)!=0)
 #define TB_HIDE_WITH_CONTROLLER (tb_setting(@"TribesPad.hideWithController",1)!=0)
 #define TB_SHOW_FPS (tb_setting(@"TribesPad.showFPS",0)!=0)
+#define TB_TRACKPAD (tb_setting(@"TribesPad.trackpad",0)!=0)
+
+@class TBTrackpad;
 
 @interface TBGameControls : UIView
 @property(nonatomic) TBMobileControls *controls;
@@ -28,6 +31,8 @@ static void tb_set(NSString *key,double value){[NSUserDefaults.standardUserDefau
 @property(nonatomic,strong) UIButton *toggle;
 @property(nonatomic,strong) UIButton *menu;
 @property(nonatomic,strong) UIButton *keyboard;
+@property(nonatomic,strong) UIButton *cursor;
+@property(nonatomic,strong) TBTrackpad *trackpad;
 @property(nonatomic) BOOL expanded;
 @property(nonatomic,strong) GCController *controller;
 @property(nonatomic,strong) CADisplayLink *aimClock;
@@ -43,6 +48,10 @@ static void tb_set(NSString *key,double value){[NSUserDefaults.standardUserDefau
 -(void)toggleControls;
 -(void)settingsChanged;
 -(void)hideForController;
+-(void)pointerMoveTo:(CGPoint)point delta:(CGPoint)delta held:(BOOL)held;
+-(void)pointerButton:(BOOL)down at:(CGPoint)point;
+-(void)pointerClickAt:(CGPoint)point;
+-(void)pointerWheel:(int)steps at:(CGPoint)point;
 @end
 
 @interface TBGamePad : UIView
@@ -172,49 +181,72 @@ static UIButton *tb_round_button(NSString *symbol,NSString *label,id target,SEL 
     return button;
 }
 
-/* Touch Settings sheet: continuous sliders and switches that apply live, so
-   the controls behind the sheet show each change as it is made. */
-static const struct {const char *title,*key;double low,high,fallback;BOOL multiplier;} tb_sliders[]={
-    {"Control Size","TribesPad.controlSize",.75,1.3,1.0,NO},
-    {"Control Opacity","TribesPad.controlOpacity",.3,1.0,1.0,NO},
-    {"Look Sensitivity","TribesPad.lookSensitivity",.4,2.5,1.0,YES}};
-static const struct {const char *title,*key,*detail;double fallback;} tb_switches[]={
-    {"Left-Handed Layout","TribesPad.leftHanded","Move on the right, fire and aim on the left.",0},
-    {"Hide with a Controller","TribesPad.hideWithController","Touch controls step aside when a gamepad connects.",1},
-    {"Show FPS Counter","TribesPad.showFPS","Frames presented each second.",0}};
-enum {TBSliderCount=sizeof tb_sliders/sizeof tb_sliders[0],TBSwitchCount=sizeof tb_switches/sizeof tb_switches[0]};
+/* Settings sheet: grouped rows that apply live, so the controls behind the
+   sheet show each change as it is made. */
+typedef struct {int section;BOOL slider;const char *title,*key,*detail;double low,high;BOOL multiplier;} TBSettingRow;
+static const char *tb_sections[][2]={
+    {"Touch Controls","Show the touch controls first to see size and opacity change as you drag."},
+    {"Trackpad Cursor","With the touch controls hidden, drag anywhere to move the cursor and tap to click. Touch and hold, then drag, to hold the button (sliders, scroll bars). Drag with two fingers to scroll."},
+    {"Display",NULL}};
+static const TBSettingRow tb_rows[]={
+    {0,YES,"Control Size","TribesPad.controlSize",NULL,.75,1.3,NO},
+    {0,YES,"Control Opacity","TribesPad.controlOpacity",NULL,.3,1.0,NO},
+    {0,YES,"Look Sensitivity","TribesPad.lookSensitivity",NULL,.4,2.5,YES},
+    {0,NO,"Left-Handed Layout","TribesPad.leftHanded","Move on the right, fire and aim on the left.",0,0,NO},
+    {0,NO,"Hide with a Controller","TribesPad.hideWithController","Touch controls step aside when a gamepad connects.",0,0,NO},
+    {1,NO,"Trackpad Cursor","TribesPad.trackpad","Point and click in menus instead of tapping them directly.",0,0,NO},
+    {1,YES,"Cursor Speed","TribesPad.cursorSpeed",NULL,.6,3,YES},
+    {2,NO,"Keep Clear of the Notch","TribesPad.avoidNotch","Shrinks the game so nothing sits under the notch. Applies the next time TribesPad opens.",0,0,NO},
+    {2,NO,"Show FPS Counter","TribesPad.showFPS","Frames presented each second.",0,0,NO}};
+enum {TBRowCount=sizeof tb_rows/sizeof tb_rows[0],TBSectionCount=sizeof tb_sections/sizeof tb_sections[0]};
+static void tb_register_defaults(void){
+    static dispatch_once_t once;dispatch_once(&once,^{
+        BOOL phone=UIDevice.currentDevice.userInterfaceIdiom==UIUserInterfaceIdiomPhone;
+        [NSUserDefaults.standardUserDefaults registerDefaults:@{@"TribesPad.controlSize":@1.0,@"TribesPad.controlOpacity":@1.0,
+            @"TribesPad.lookSensitivity":@1.0,@"TribesPad.leftHanded":@0,@"TribesPad.hideWithController":@1,
+            @"TribesPad.trackpad":@(phone?1:0),@"TribesPad.cursorSpeed":@1.6,@"TribesPad.avoidNotch":@0,@"TribesPad.showFPS":@0}];
+    });
+}
+static const TBSettingRow *tb_row(NSIndexPath *path){
+    NSInteger n=0;for(unsigned i=0;i<TBRowCount;i++)if(tb_rows[i].section==path.section&&n++==path.row)return &tb_rows[i];return NULL;
+}
 
 @interface TBSettingsController : UITableViewController
 @property(nonatomic,weak) TBGameControls *owner;
 @end
 @implementation TBSettingsController
 -(void)viewDidLoad {
-    [super viewDidLoad];self.title=@"Touch Settings";
+    [super viewDidLoad];self.title=@"Settings";
     self.navigationItem.rightBarButtonItem=[[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone target:self action:@selector(done)];
 }
 -(void)done{[self dismissViewControllerAnimated:YES completion:nil];}
--(NSInteger)numberOfSectionsInTableView:(UITableView *)tableView{(void)tableView;return 3;}
+-(NSInteger)numberOfSectionsInTableView:(UITableView *)tableView{(void)tableView;return TBSectionCount+1;}
 -(NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    (void)tableView;return section==0?TBSliderCount:section==1?TBSwitchCount:1;
+    (void)tableView;if(section==TBSectionCount)return 1;
+    NSInteger n=0;for(unsigned i=0;i<TBRowCount;i++)n+=tb_rows[i].section==section;return n;
 }
 -(NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section {
-    (void)tableView;return section==0?@"Touch Controls":section==1?@"Options":nil;
+    (void)tableView;return section<TBSectionCount?@(tb_sections[section][0]):nil;
 }
 -(NSString *)tableView:(UITableView *)tableView titleForFooterInSection:(NSInteger)section {
-    (void)tableView;return section==0?@"Show the touch controls first to see size and opacity change as you drag.":nil;
+    (void)tableView;return section<TBSectionCount&&tb_sections[section][1]?@(tb_sections[section][1]):nil;
 }
-static NSString *tb_slider_text(unsigned i,double v){return tb_sliders[i].multiplier?[NSString stringWithFormat:@"%.1f×",v]:[NSString stringWithFormat:@"%.0f%%",v*100];}
+static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multiplier?[NSString stringWithFormat:@"%.1f×",v]:[NSString stringWithFormat:@"%.0f%%",v*100];}
 -(UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)path {
     (void)tableView;UITableViewCell *cell=[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:nil];
-    cell.selectionStyle=UITableViewCellSelectionStyleNone;unsigned i=(unsigned)path.row;
-    if(path.section==0) {
-        double v=tb_setting(@(tb_sliders[i].key),tb_sliders[i].fallback);
-        UILabel *title=[UILabel new],*value=[UILabel new];title.text=@(tb_sliders[i].title);
-        value.text=tb_slider_text(i,v);value.textColor=UIColor.secondaryLabelColor;value.tag=100;
+    cell.selectionStyle=UITableViewCellSelectionStyleNone;
+    if(path.section==TBSectionCount) {
+        cell.textLabel.text=@"Reset to Defaults";cell.textLabel.textColor=UIColor.systemRedColor;
+        cell.textLabel.textAlignment=NSTextAlignmentCenter;cell.selectionStyle=UITableViewCellSelectionStyleDefault;return cell;
+    }
+    const TBSettingRow *r=tb_row(path);NSInteger index=r-tb_rows;double v=tb_setting(@(r->key),0);
+    if(r->slider) {
+        UILabel *title=[UILabel new],*value=[UILabel new];title.text=@(r->title);
+        value.text=tb_slider_text(r,v);value.textColor=UIColor.secondaryLabelColor;value.tag=100;
         value.font=[UIFont monospacedDigitSystemFontOfSize:UIFont.labelFontSize weight:UIFontWeightRegular];
         [value setContentHuggingPriority:UILayoutPriorityRequired forAxis:UILayoutConstraintAxisHorizontal];
-        UISlider *slider=[UISlider new];slider.minimumValue=tb_sliders[i].low;slider.maximumValue=tb_sliders[i].high;
-        slider.value=v;slider.tag=i;slider.accessibilityLabel=title.text;
+        UISlider *slider=[UISlider new];slider.minimumValue=r->low;slider.maximumValue=r->high;
+        slider.value=v;slider.tag=index;slider.accessibilityLabel=title.text;
         [slider addTarget:self action:@selector(slid:) forControlEvents:UIControlEventValueChanged];
         UIStackView *row=[[UIStackView alloc] initWithArrangedSubviews:@[title,value]];
         UIStackView *stack=[[UIStackView alloc] initWithArrangedSubviews:@[row,slider]];
@@ -223,41 +255,111 @@ static NSString *tb_slider_text(unsigned i,double v){return tb_sliders[i].multip
         [NSLayoutConstraint activateConstraints:@[[stack.leadingAnchor constraintEqualToAnchor:m.leadingAnchor],
             [stack.trailingAnchor constraintEqualToAnchor:m.trailingAnchor],[stack.topAnchor constraintEqualToAnchor:m.topAnchor],
             [stack.bottomAnchor constraintEqualToAnchor:m.bottomAnchor]]];
-    } else if(path.section==1) {
-        cell.textLabel.text=@(tb_switches[i].title);cell.detailTextLabel.text=@(tb_switches[i].detail);
-        cell.detailTextLabel.textColor=UIColor.secondaryLabelColor;cell.detailTextLabel.numberOfLines=0;
-        UISwitch *toggle=[UISwitch new];toggle.on=tb_setting(@(tb_switches[i].key),tb_switches[i].fallback)!=0;toggle.tag=i;
-        [toggle addTarget:self action:@selector(switched:) forControlEvents:UIControlEventValueChanged];cell.accessoryView=toggle;
     } else {
-        cell.textLabel.text=@"Reset to Defaults";cell.textLabel.textColor=UIColor.systemRedColor;
-        cell.textLabel.textAlignment=NSTextAlignmentCenter;cell.selectionStyle=UITableViewCellSelectionStyleDefault;
+        cell.textLabel.text=@(r->title);cell.detailTextLabel.text=r->detail?@(r->detail):nil;
+        cell.detailTextLabel.textColor=UIColor.secondaryLabelColor;cell.detailTextLabel.numberOfLines=0;
+        UISwitch *toggle=[UISwitch new];toggle.on=v!=0;toggle.tag=index;
+        [toggle addTarget:self action:@selector(switched:) forControlEvents:UIControlEventValueChanged];cell.accessoryView=toggle;
     }
     return cell;
 }
 -(void)slid:(UISlider *)slider {
-    unsigned i=(unsigned)slider.tag;tb_set(@(tb_sliders[i].key),slider.value);
-    ((UILabel *)[slider.superview viewWithTag:100]).text=tb_slider_text(i,slider.value);[self.owner settingsChanged];
+    const TBSettingRow *r=&tb_rows[slider.tag];tb_set(@(r->key),slider.value);
+    ((UILabel *)[slider.superview viewWithTag:100]).text=tb_slider_text(r,slider.value);[self.owner settingsChanged];
 }
 -(void)switched:(UISwitch *)toggle {
-    tb_set(@(tb_switches[toggle.tag].key),toggle.on);[self.owner settingsChanged];
+    const TBSettingRow *r=&tb_rows[toggle.tag];tb_set(@(r->key),toggle.on);[self.owner settingsChanged];
     // Turning this on with a controller already connected steps the controls aside now.
-    if(toggle.on&&!strcmp(tb_switches[toggle.tag].key,"TribesPad.hideWithController"))[self.owner hideForController];
+    if(toggle.on&&!strcmp(r->key,"TribesPad.hideWithController"))[self.owner hideForController];
 }
 -(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)path {
-    [tableView deselectRowAtIndexPath:path animated:YES];if(path.section!=2)return;
-    for(unsigned i=0;i<TBSliderCount;i++)[NSUserDefaults.standardUserDefaults removeObjectForKey:@(tb_sliders[i].key)];
-    for(unsigned i=0;i<TBSwitchCount;i++)[NSUserDefaults.standardUserDefaults removeObjectForKey:@(tb_switches[i].key)];
+    [tableView deselectRowAtIndexPath:path animated:YES];if(path.section!=TBSectionCount)return;
+    for(unsigned i=0;i<TBRowCount;i++)[NSUserDefaults.standardUserDefaults removeObjectForKey:@(tb_rows[i].key)];
     [tableView reloadData];[self.owner settingsChanged];
+}
+@end
+
+/* Trackpad cursor: shown while the touch controls are hidden. One finger moves
+   the cursor relative to where it was, like a laptop trackpad; a tap clicks at
+   the cursor; touch and hold, then drag, holds the button down; two fingers
+   scroll. Events go through the same SDL queue as a real mouse. */
+@interface TBTrackpad : UIView
+@property(nonatomic,weak) TBGameControls *owner;
+@property(nonatomic) CGPoint cursor;
+@property(nonatomic,strong) UIImageView *arrow;
+@property(nonatomic,strong) UITouch *finger;
+@property(nonatomic) CGPoint last;
+@property(nonatomic) CGFloat travel;
+@property(nonatomic) CFTimeInterval began;
+@property(nonatomic) BOOL dragging;
+@property(nonatomic,strong) NSTimer *hold;
+@property(nonatomic) CGFloat scrollCarry;
+@end
+
+@implementation TBTrackpad
+-(instancetype)initWithFrame:(CGRect)frame {
+    if(!(self=[super initWithFrame:frame]))return nil;
+    self.backgroundColor=UIColor.clearColor;self.multipleTouchEnabled=YES;self.cursor=CGPointMake(-1,-1);
+    UIImage *image=[UIImage systemImageNamed:@"cursorarrow" withConfiguration:[UIImageSymbolConfiguration configurationWithPointSize:22 weight:UIImageSymbolWeightBold]];
+    self.arrow=[[UIImageView alloc] initWithImage:[image imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate]];
+    self.arrow.tintColor=UIColor.whiteColor;self.arrow.userInteractionEnabled=NO;
+    self.arrow.layer.shadowColor=UIColor.blackColor.CGColor;self.arrow.layer.shadowOpacity=.9;self.arrow.layer.shadowRadius=1.5;self.arrow.layer.shadowOffset=CGSizeZero;
+    [self addSubview:self.arrow];
+    UIPanGestureRecognizer *scroll=[[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(scrolled:)];
+    scroll.minimumNumberOfTouches=2;scroll.maximumNumberOfTouches=2;[self addGestureRecognizer:scroll];
+    return self;
+}
+-(void)layoutSubviews {
+    [super layoutSubviews];
+    if(self.cursor.x<0||!CGRectContainsPoint(self.bounds,self.cursor))self.cursor=CGPointMake(CGRectGetMidX(self.bounds),CGRectGetMidY(self.bounds));
+    [self placeArrow];
+}
+-(void)placeArrow{CGSize s=self.arrow.bounds.size;self.arrow.frame=CGRectMake(self.cursor.x-s.width*.28,self.cursor.y-s.height*.12,s.width,s.height);}
+-(void)setDragging:(BOOL)dragging{_dragging=dragging;self.arrow.tintColor=dragging?[UIColor colorWithRed:.6 green:.85 blue:1 alpha:1]:UIColor.whiteColor;}
+-(void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+    (void)event;if(self.finger)return;self.finger=touches.anyObject;
+    self.last=[self.finger locationInView:self];self.travel=0;self.began=CACurrentMediaTime();
+    __weak TBTrackpad *weak=self;[self.hold invalidate];
+    self.hold=[NSTimer scheduledTimerWithTimeInterval:.35 repeats:NO block:^(NSTimer *t){(void)t;TBTrackpad *pad=weak;
+        if(pad.finger&&pad.travel<8){pad.dragging=YES;[pad.owner pointerButton:YES at:pad.cursor];}}];
+}
+-(void)touchesMoved:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+    (void)event;if(![touches containsObject:self.finger])return;
+    CGPoint p=[self.finger locationInView:self];CGFloat dx=p.x-self.last.x,dy=p.y-self.last.y;self.last=p;
+    self.travel+=hypot(dx,dy);
+    // Faster strokes travel further, for small screens.
+    CGFloat speed=tb_setting(@"TribesPad.cursorSpeed",1.6)*(1+fmin(hypot(dx,dy),24)/24);
+    CGPoint c=CGPointMake(fmin(fmax(self.cursor.x+dx*speed,0),self.bounds.size.width-1),fmin(fmax(self.cursor.y+dy*speed,0),self.bounds.size.height-1));
+    CGPoint delta=CGPointMake(c.x-self.cursor.x,c.y-self.cursor.y);self.cursor=c;[self placeArrow];
+    [self.owner pointerMoveTo:c delta:delta held:self.dragging];
+}
+-(void)finish:(BOOL)click {
+    [self.hold invalidate];self.hold=nil;
+    if(self.dragging){self.dragging=NO;[self.owner pointerButton:NO at:self.cursor];}
+    else if(click&&self.travel<8&&CACurrentMediaTime()-self.began<.35)[self.owner pointerClickAt:self.cursor];
+    self.finger=nil;
+}
+-(void)touchesEnded:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event{(void)event;if([touches containsObject:self.finger])[self finish:YES];}
+-(void)touchesCancelled:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event{(void)event;if([touches containsObject:self.finger])[self finish:NO];}
+-(void)scrolled:(UIPanGestureRecognizer *)pan {
+    if(pan.state==UIGestureRecognizerStateBegan)self.scrollCarry=0;
+    CGFloat dy=[pan translationInView:self].y;[pan setTranslation:CGPointZero inView:self];
+    self.scrollCarry+=dy;int steps=(int)(self.scrollCarry/18);
+    if(steps){self.scrollCarry-=steps*18;[self.owner pointerWheel:steps at:self.cursor];}
 }
 @end
 
 @implementation TBGameControls
 -(instancetype)initWithFrame:(CGRect)frame {
     if(!(self=[super initWithFrame:frame]))return nil;
+    tb_register_defaults();
     self.autoresizingMask=UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleHeight;
     self.multipleTouchEnabled=YES;
+    // Below everything else, so the buttons stay tappable over it.
+    self.trackpad=[[TBTrackpad alloc] initWithFrame:self.bounds];self.trackpad.owner=self;[self addSubview:self.trackpad];
     self.keyboard=tb_round_button(@"keyboard",@"Keyboard",self,@selector(toggleKeyboard));
     self.toggle=tb_round_button(@"gamecontroller.fill",@"Touch controls",self,@selector(toggleControls));
+    self.cursor=tb_round_button(@"cursorarrow.rays",@"Trackpad cursor",self,@selector(toggleTrackpad));
     self.menu=tb_round_button(@"ellipsis",@"Menu",self,nil);
     self.menu.showsMenuAsPrimaryAction=YES;
     self.fps=[UILabel new];self.fps.font=[UIFont monospacedDigitSystemFontOfSize:12 weight:UIFontWeightSemibold];
@@ -282,7 +384,7 @@ static NSString *tb_slider_text(unsigned i,double v){return tb_sliders[i].multip
         [pads addObject:pad];[self addSubview:pad];
     }
     self.pads=pads;
-    for(UIButton *button in @[self.keyboard,self.toggle,self.menu])[self addSubview:button];
+    for(UIButton *button in @[self.keyboard,self.toggle,self.cursor,self.menu])[self addSubview:button];
     [self addSubview:self.fps];[self rebuildMenu];[self applyFPSSetting];
     [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(releaseControls)
         name:UIApplicationWillResignActiveNotification object:nil];
@@ -361,6 +463,7 @@ static NSString *tb_slider_text(unsigned i,double v){return tb_sliders[i].multip
         // Original menus retain their own field focus. The last game touch
         // identifies the field; tell UIKit to keep that point above the IME.
         float x=0,y=0;SDL_GetMouseState(&x,&y);
+        if(!self.trackpad.hidden){x=(float)self.trackpad.cursor.x;y=(float)self.trackpad.cursor.y;}
         SDL_Rect caret={(int)x,(int)y,1,24};
         SDL_SetTextInputArea(window,&caret,0);
         SDL_SetHint(SDL_HINT_RETURN_KEY_HIDES_IME,"1");
@@ -392,10 +495,34 @@ static NSString *tb_slider_text(unsigned i,double v){return tb_sliders[i].multip
 -(void)settingsChanged {
     self.laidOutArea=CGRectNull;[self applyFPSSetting];[self rebuildMenu];[self setNeedsLayout];
 }
+-(void)toggleTrackpad{tb_set(@"TribesPad.trackpad",!TB_TRACKPAD);[self settingsChanged];}
+/* Pointer events from the trackpad cursor, in window points like SDL's own. */
+-(void)pointerMoveTo:(CGPoint)point delta:(CGPoint)delta held:(BOOL)held {
+    SDL_Event e={0};e.type=SDL_EVENT_MOUSE_MOTION;e.common.timestamp=SDL_GetTicksNS();e.motion.windowID=self.controls->window;
+    e.motion.x=(float)point.x;e.motion.y=(float)point.y;e.motion.xrel=(float)delta.x;e.motion.yrel=(float)delta.y;
+    e.motion.state=held?SDL_BUTTON_LMASK:0;SDL_PushEvent(&e);
+}
+-(void)pointerButton:(BOOL)down at:(CGPoint)point {
+    [self pointerMoveTo:point delta:CGPointZero held:!down];
+    SDL_Event e={0};e.type=down?SDL_EVENT_MOUSE_BUTTON_DOWN:SDL_EVENT_MOUSE_BUTTON_UP;e.common.timestamp=SDL_GetTicksNS();
+    e.button.windowID=self.controls->window;e.button.button=SDL_BUTTON_LEFT;e.button.down=down;e.button.clicks=1;
+    e.button.x=(float)point.x;e.button.y=(float)point.y;SDL_PushEvent(&e);
+}
+/* The original GUI ignores a press and release within one frame, so hold the
+   button briefly, as a finger on a real mouse does. */
+-(void)pointerClickAt:(CGPoint)point {
+    [self pointerButton:YES at:point];__weak TBGameControls *weak=self;
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW,(int64_t)(.08*NSEC_PER_SEC)),dispatch_get_main_queue(),^{[weak pointerButton:NO at:point];});
+}
+-(void)pointerWheel:(int)steps at:(CGPoint)point {
+    SDL_Event e={0};e.type=SDL_EVENT_MOUSE_WHEEL;e.common.timestamp=SDL_GetTicksNS();e.wheel.windowID=self.controls->window;
+    e.wheel.y=(float)steps;e.wheel.integer_y=steps;e.wheel.direction=SDL_MOUSEWHEEL_NORMAL;
+    e.wheel.mouse_x=(float)point.x;e.wheel.mouse_y=(float)point.y;SDL_PushEvent(&e);
+}
 -(void)hideForController{if(self.controller&&TB_HIDE_WITH_CONTROLLER&&self.expanded)[self toggleControls];}
 /* The menu holds what the original menus cannot reach by touch: chat, scores
-   and the in-match keys that have no touch button, plus touch settings and help.
-   Everything the game's own menus do stays there. */
+   and the in-match keys that have no touch button, then TribesPad's own
+   controls, then help. Everything the game's own menus do stays there. */
 -(void)rebuildMenu {
     __weak TBGameControls *weak=self;
     UIImage *(^icon)(NSString *)=^UIImage *(NSString *name){return [UIImage systemImageNamed:name];};
@@ -404,41 +531,45 @@ static NSString *tb_slider_text(unsigned i,double v){return tb_sliders[i].multip
     // Keys from the original controlDefaults.cs; each is a tap, as on a keyboard.
     UIAction *(^key)(NSString *,NSString *,SDL_Scancode,SDL_Keymod)=^UIAction *(NSString *title,NSString *symbol,SDL_Scancode code,SDL_Keymod mod){
         return item(title,symbol,^{[weak sendGameKey:code mod:mod];});};
+    UIMenu *(^group)(NSArray *)=^UIMenu *(NSArray *children){
+        return [UIMenu menuWithTitle:@"" image:nil identifier:nil options:UIMenuOptionsDisplayInline children:children];};
     UIAction *suicide=key(@"Suicide",@"xmark.octagon",SDL_SCANCODE_K,SDL_KMOD_LCTRL);suicide.attributes=UIMenuElementAttributesDestructive;
-    NSArray *play=@[
+    NSArray *game=@[
         item(@"Game Menu",@"list.bullet",^{[weak openMenu];}),
-        item(self.expanded?@"Hide Touch Controls":@"Show Touch Controls",self.expanded?@"xmark.circle":@"gamecontroller",^{[weak toggleControls];}),
         key(@"Scores",@"trophy",SDL_SCANCODE_F2,SDL_KMOD_NONE),
         [UIMenu menuWithTitle:@"Chat" image:icon(@"bubble.left.and.bubble.right") identifier:nil options:0 children:@[
             item(@"All Chat",@"bubble.left.and.bubble.right",^{[weak openChat:SDL_SCANCODE_U];}),
             item(@"Team Chat",@"bubble.left",^{[weak openChat:SDL_SCANCODE_Y];}),
             item(@"Quick Chat Menu",@"text.bubble",^{[weak openChat:SDL_SCANCODE_V];})]],
         [UIMenu menuWithTitle:@"Actions" image:icon(@"bolt") identifier:nil options:0 children:@[
-            [UIMenu menuWithTitle:@"" image:nil identifier:nil options:UIMenuOptionsDisplayInline children:@[
-                key(@"Use Repair Kit",@"cross.case",SDL_SCANCODE_Q,SDL_KMOD_NONE),
+            group(@[key(@"Use Repair Kit",@"cross.case",SDL_SCANCODE_Q,SDL_KMOD_NONE),
                 key(@"Place Mine",@"smallcircle.filled.circle",SDL_SCANCODE_B,SDL_KMOD_NONE),
                 key(@"Place Beacon",@"dot.radiowaves.left.and.right",SDL_SCANCODE_H,SDL_KMOD_NONE),
                 key(@"Targeting Laser",@"scope",SDL_SCANCODE_L,SDL_KMOD_NONE),
-                key(@"Throw Flag",@"flag",SDL_SCANCODE_F,SDL_KMOD_LCTRL)]],
-            [UIMenu menuWithTitle:@"" image:nil identifier:nil options:UIMenuOptionsDisplayInline children:@[
-                key(@"Zoom",@"plus.magnifyingglass",SDL_SCANCODE_A,SDL_KMOD_NONE),
+                key(@"Throw Flag",@"flag",SDL_SCANCODE_F,SDL_KMOD_LCTRL)]),
+            group(@[key(@"Zoom",@"plus.magnifyingglass",SDL_SCANCODE_A,SDL_KMOD_NONE),
                 key(@"Third-Person View",@"person.crop.square",SDL_SCANCODE_TAB,SDL_KMOD_NONE),
-                key(@"Command Map",@"map",SDL_SCANCODE_C,SDL_KMOD_NONE)]],
-            [UIMenu menuWithTitle:@"" image:nil identifier:nil options:UIMenuOptionsDisplayInline children:@[suicide]]]]];
+                key(@"Command Map",@"map",SDL_SCANCODE_C,SDL_KMOD_NONE)]),
+            group(@[suicide])]]];
+    UIAction *trackpad=item(@"Trackpad Cursor",@"cursorarrow.rays",^{[weak toggleTrackpad];});
+    trackpad.state=TB_TRACKPAD?UIMenuElementStateOn:UIMenuElementStateOff;
+    NSArray *controls=@[
+        item(self.expanded?@"Hide Touch Controls":@"Show Touch Controls",self.expanded?@"xmark.circle":@"gamecontroller",^{[weak toggleControls];}),
+        trackpad,
+        item(@"Settings…",@"gearshape",^{[weak showSettings];})];
     NSString *pad=self.controller.vendorName;
-    NSArray *setup=@[
-        item(@"Touch Settings…",@"slider.horizontal.3",^{[weak showSettings];}),
-        item(pad.length?[NSString stringWithFormat:@"Controller: %@",pad]:@"Controller Guide",@"gamecontroller.fill",^{[weak showControllerGuide];})];
     UIMenu *help=[UIMenu menuWithTitle:@"Help" image:icon(@"questionmark.circle") identifier:nil options:0 children:@[
-        item(@"Touch Controls Guide",@"hand.tap",^{[weak showTouchGuide];}),
-        item(@"Console",@"terminal",^{[weak openConsole];}),
-        item(@"TribesPad on GitHub",@"safari",^{
-            [UIApplication.sharedApplication openURL:[NSURL URLWithString:TBRepositoryURL] options:@{} completionHandler:nil];}),
-        item(@"About TribesPad",@"info.circle",^{[weak showAbout];})]];
-    self.menu.menu=[UIMenu menuWithTitle:@"TribesPad" children:@[
-        [UIMenu menuWithTitle:@"" image:nil identifier:nil options:UIMenuOptionsDisplayInline children:play],
-        [UIMenu menuWithTitle:@"" image:nil identifier:nil options:UIMenuOptionsDisplayInline children:setup],
-        [UIMenu menuWithTitle:@"" image:nil identifier:nil options:UIMenuOptionsDisplayInline children:@[help]]]];
+        group(@[item(@"Touch and Trackpad Guide",@"hand.tap",^{[weak showTouchGuide];}),
+            item(pad.length?[NSString stringWithFormat:@"Controller: %@",pad]:@"Controller Guide",@"gamecontroller.fill",^{[weak showControllerGuide];})]),
+        group(@[item(@"Console",@"terminal",^{[weak openConsole];}),
+            item(@"TribesPad on GitHub",@"safari",^{
+                [UIApplication.sharedApplication openURL:[NSURL URLWithString:TBRepositoryURL] options:@{} completionHandler:nil];}),
+            item(@"About TribesPad",@"info.circle",^{[weak showAbout];})])]];
+    self.menu.menu=[UIMenu menuWithTitle:@"TribesPad" children:@[group(game),group(controls),group(@[help])]];
+    // The column button shows whether the cursor is on.
+    UIButtonConfiguration *c=self.cursor.configuration;
+    c.baseBackgroundColor=TB_TRACKPAD?[UIColor colorWithRed:.12 green:.32 blue:.43 alpha:.85]:[UIColor colorWithWhite:.06 alpha:.72];
+    self.cursor.configuration=c;self.cursor.accessibilityValue=TB_TRACKPAD?@"On":@"Off";
 }
 -(void)applyFPSSetting {
     [self.fpsClock invalidate];self.fpsClock=nil;self.fps.hidden=!TB_SHOW_FPS;
@@ -491,11 +622,13 @@ static NSString *tb_slider_text(unsigned i,double v){return tb_sliders[i].multip
     alert.overrideUserInterfaceStyle=UIUserInterfaceStyleDark;[[self presenter] presentViewController:alert animated:YES completion:nil];
 }
 -(void)showTouchGuide {
-    [self showMessage:@"Touch Controls" text:@"Tap the controller button at the top to show or hide the controls.\n\n"
-        "Move: stick, bottom left\nAim: drag anywhere on the right that is not a button\n"
+    [self showMessage:@"Touch and Trackpad" text:@"Menus: with the cursor button on, drag anywhere to move the cursor and tap to click. "
+        "Touch and hold, then drag, to move sliders. Drag with two fingers to scroll. Turn the cursor off to tap menus directly.\n\n"
+        "Playing: the controller button on the right shows the touch controls.\n"
+        "Move: stick, bottom left\nAim: drag on the right side\n"
         "Fire: hold; drag while firing to aim\nJet, Ski / Jump, Grenade, Weapon: the ring around Fire\n"
         "Pack and Inventory: above the stick\n\n"
-        "Inventory hides the controls so the original screen can be tapped. Chat, Scores and other keys are in this menu."];
+        "Chat, Scores and other keys are in the ··· menu."];
 }
 -(void)showControllerGuide {
     NSString *name=self.controller.vendorName;
@@ -542,14 +675,21 @@ static NSString *tb_slider_text(unsigned i,double v){return tb_sliders[i].multip
     CGFloat w=area.size.width,h=area.size.height,x=area.origin.x,y=area.origin.y;
     // One scale for iPad and iPhone: 1.0 on an 11-inch iPad in landscape.
     CGFloat k=fmin(1.15,fmax(.62,fmin(w,h)/780))*TB_SIZE,margin=fmax(14,22*k);
-    // Utility buttons: compact, near the top centre, clear of the chat (left) and compass (right) HUD.
-    CGFloat b=fmax(38,44*k),gap=10*k,top=y+fmax(8,10*k);
-    CGFloat mid=x+w*.565;
-    self.keyboard.frame=CGRectMake(mid-b*1.5-gap,top,b,b);
-    self.toggle.frame=CGRectMake(mid-b/2,top,b,b);
-    self.menu.frame=CGRectMake(mid+b/2+gap,top,b,b);
-    // Below the utility buttons, centered, away from the HUD corners.
-    self.fps.frame=CGRectMake(mid-36,top+b+6,72,22);
+    // Utility buttons: a column on the right edge, between the original
+    // compass (top right) and weapon column (bottom right). The game fills the
+    // screen, so on phones the column sits in the outer margin, beside the
+    // notch's safe area, and stays small and faint so the menus underneath
+    // remain readable.
+    BOOL phone=self.traitCollection.verticalSizeClass==UIUserInterfaceSizeClassCompact;
+    CGFloat edge=fmax(self.window.safeAreaInsets.right,0);
+    CGFloat b=phone?30:40,gap=phone?6:9,top=y+h*(phone?.24:.17);
+    CGFloat right=phone?CGRectGetMaxX(self.bounds)-edge*.5-b/2-2:x+w-b-10;
+    if(phone)right=fmin(right,CGRectGetMaxX(self.bounds)-b-2);
+    NSArray<UIButton *> *utility=@[self.menu,self.toggle,self.cursor,self.keyboard];
+    for(NSUInteger i=0;i<utility.count;i++){utility[i].frame=CGRectMake(right,top+i*(b+gap),b,b);utility[i].alpha=phone?.8:1;}
+    // Beside the menu button.
+    self.fps.frame=CGRectMake(right-80,top+(b-22)/2,72,22);
+    self.trackpad.frame=self.bounds;self.trackpad.hidden=!TB_TRACKPAD||self.expanded;
     // Movement stick bottom left; Pack and Inventory above it.
     CGFloat stick=170*k,small=58*k;
     CGRect stickFrame=CGRectMake(x+margin,y+h-margin-stick,stick,stick);
@@ -565,8 +705,8 @@ static NSString *tb_slider_text(unsigned i,double v){return tb_sliders[i].multip
     CGRect ringFrames[4];
     for(int i=0;i<4;i++){CGFloat a=M_PI-i*(M_PI/6); /* 180, 150, 120, 90 degrees */
         CGFloat cx=fireX+radius*cos(a),cy=fireY-radius*sin(a);ringFrames[i]=CGRectMake(cx-ring/2,cy-ring/2,ring,ring);}
-    // Look anywhere on the right half that is not a button.
-    CGRect look=CGRectMake(x+w*.42,top+b+8,w*.58,h-(top+b+8-y));
+    // Look anywhere on the right half that is not a button, left of the column.
+    CGRect look=CGRectMake(x+w*.42,y,right-4-(x+w*.42),h);
     const CGRect frames[]={stickFrame,look,fireFrame,ringFrames[0],ringFrames[1],ringFrames[3],ringFrames[2],pack,inventory};
     BOOL mirror=TB_LEFT_HANDED;CGFloat opacity=TB_OPACITY;
     for(unsigned i=0;i<self.pads.count;i++){TBGamePad *pad=(TBGamePad *)self.pads[i];

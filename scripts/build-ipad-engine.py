@@ -108,6 +108,12 @@ for name,index in first_run['stops'].items():
     assert stops_text.count(info_stop)==1,name
     stops_text=stops_text.replace(info_stop,'',1)
 wave_stops.write_text(stops_text);sources.append(info_wrapper)
+probe_source=next(p for p in sources if p.name=='ntdll-probes.ll');probe_text=probe_source.read_text()
+for name,index in first_run.get('ntdll_probes',{}).items():
+    probe='define hidden fastcc void @tbimp_'+name+'(ptr %cpu) {\n call void @qol_ntdll_probe(ptr %cpu, i32 '+str(index)+')\n unreachable\n}\n'
+    assert probe_text.count(probe)==1,name
+    probe_text=probe_text.replace(probe,'',1)
+probe_wrapper=mobile_inputs/'ntdll-probes.ll';probe_wrapper.write_text(probe_text);sources[sources.index(probe_source)]=probe_wrapper
 sources[sources.index(old_stops)]=wave_stops;sources.append(wave_wrapper)
 # Refresh finite host exports without relifting unchanged original images.
 from graphics_backend_inputs import prepare as graphics_inputs

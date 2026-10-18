@@ -9,6 +9,7 @@ uint32_t tribes_get_file_attributes(uint64_t base,uint32_t name);
 uint32_t tribes_get_file_attributes_w(uint64_t base,uint32_t name);
 uint32_t tribes_nt_query_volume_information_file(uint64_t base,uint32_t handle,uint32_t iosb,uint32_t output,uint32_t capacity,uint32_t information_class);
 uint32_t tribes_nt_query_information_file(uint64_t base,uint32_t handle,uint32_t iosb,uint32_t output,uint32_t capacity,uint32_t information_class);
+uint32_t tribes_nt_set_information_file(uint64_t base,uint32_t handle,uint32_t iosb,uint32_t input,uint32_t length,uint32_t information_class);
 uint32_t tribes_get_file_size(uint64_t base,uint32_t handle,uint32_t high);
 uint32_t tribes_get_file_information_by_handle(uint64_t base,uint32_t handle,uint32_t output);
 uint32_t tribes_move_file_ex_w(uint64_t base,uint32_t from,uint32_t to,uint32_t flags);

@@ -287,6 +287,45 @@ uint32_t tribes_move_file_ex_w(uint64_t base,uint32_t from,uint32_t to,uint32_t 
     return 1;
 }
 uint32_t tribes_get_file_attributes(uint64_t base,uint32_t name){return get_attributes(base,name,0);}
+/* NtSetInformationFile for the delete classes TribesNEXT uses to remove files
+   by handle: FileDispositionInformation (13, a BOOLEAN) and
+   FileDispositionInformationEx (64, flags DELETE 1, POSIX_SEMANTICS 2,
+   FORCE_IMAGE_SECTION_CHECK 4, ON_CLOSE 8, IGNORE_READONLY_ATTRIBUTE 16).
+   POSIX unlinks a file at once while open descriptors stay valid, which is
+   the POSIX-semantics behavior; delete-on-close is approximated the same way.
+   The handle needs DELETE access. Other classes remain explicit gates.
+   https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntddk/ns-ntddk-_file_disposition_information_ex */
+uint32_t tribes_nt_set_information_file(uint64_t base,uint32_t handle,
+    uint32_t iosb,uint32_t input,uint32_t length,uint32_t information_class){
+    if(information_class!=13&&information_class!=64){
+        fprintf(stderr,"TribesPad: unsupported NtSetInformationFile class %u\n",information_class);abort();
+    }
+    if(length<(information_class==13?1u:4u))return 0xc0000004u;
+    if(!base||!iosb||!input||iosb>UINT32_MAX-7||input>UINT32_MAX-3||
+       base>UINTPTR_MAX-iosb-7||base>UINTPTR_MAX-input-3)return 0xc0000005u;
+    if(iosb&3)return 0x80000002u;
+    uint32_t flags=0;const void *source=(const void *)(uintptr_t)(base+input);
+    uint32_t a=tribes_memory_access_begin(source,information_class==13?1:4,1);
+    if(information_class==13)flags=*(const unsigned char *)source?1u:0u;else memcpy(&flags,source,4);
+    tribes_memory_access_end(a);
+    if(flags&~UINT32_C(0x1f))return 0xc000000du;
+    uint32_t status=0;TribesFileOpenInfo info;int fd=tribes_named_file_borrow_nt(handle,&status,&info);
+    if(fd<0)return status;
+    if(!(info.access&(UINT32_C(0x10000)|UINT32_C(0x10000000))))status=0xc0000022u;
+    else if(flags&1){
+        struct stat st,named;
+        if(fstat(fd,&st))status=0xc0000001u;
+        else if(lstat(info.host,&named)){if(errno!=ENOENT)status=0xc0000001u;} /* already gone */
+        else if(st.st_dev!=named.st_dev||st.st_ino!=named.st_ino)status=0xc0000001u; /* name now another object */
+        else if(!(flags&16)&&!(st.st_mode&S_IWUSR))status=0xc0000121u;
+        else if(S_ISDIR(st.st_mode)?rmdir(info.host):unlink(info.host))
+            status=errno==ENOTEMPTY||errno==EEXIST?0xc0000101u:errno==EACCES||errno==EPERM?0xc0000121u:0xc0000001u;
+    }
+    close(fd);
+    uint32_t completion[2]={status,0};void *io=(void *)(uintptr_t)(base+iosb);
+    uint32_t b=tribes_memory_access_begin(io,8,2);memcpy(io,completion,8);tribes_memory_access_end(b);
+    return status;
+}
 uint32_t tribes_get_file_attributes_w(uint64_t base,uint32_t name){return get_attributes(base,name,1);}
 /* BY_HANDLE_FILE_INFORMATION (52 bytes) for regular files and directories,
    from the same native metadata as NtQueryInformationFile: attributes, times,
