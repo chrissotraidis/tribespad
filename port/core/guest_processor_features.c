@@ -13,6 +13,7 @@ uint32_t tribes_processor_feature_present(uint32_t feature) {
     case 8:return (cpu._edx>>4)&1;  /* RDTSC */
     case 10:return (cpu._edx>>26)&1;/* SSE2 */
     case 13:return cpu._ecx&1;     /* SSE3 */
+    case 23:return 0;              /* PF_FASTFAIL_AVAILABLE: no __fastfail (int 0x29) in the guest */
     default:fprintf(stderr,"TribesPad: unsupported Windows processor feature %u\n",feature);abort();
     }
 }

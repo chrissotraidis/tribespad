@@ -654,10 +654,15 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
     if(tap.state==UIGestureRecognizerStateEnded)[self loginTapAt:[tap locationInView:self]];
 }
 /* The TribesNEXT login comes before the game reports its state, so a tap
-   there (on Account or Password) opens the keyboard, keeping that field and
-   the one below it in view above it. */
+   on its Account or Password field opens the keyboard, keeping that field
+   and the one below it in view above it. The original 640x480 layout,
+   centered: the fields end 41 units right of center, the buttons start at
+   61; the fields sit in the lower half. */
 -(void)loginTapAt:(CGPoint)point {
     if(self.gameReported||tb_setting(@"TribesPad.onlinePlay",1)==0||!self.controls)return;
+    CGFloat unit=self.bounds.size.height/480;
+    CGFloat x=(point.x-CGRectGetMidX(self.bounds))/unit,y=(point.y-CGRectGetMidY(self.bounds))/unit;
+    if(x>51||x<-120||y<0)return;
     SDL_Window *window=SDL_GetWindowFromID(self.controls->window);if(!window)return;
     SDL_Rect caret={(int)point.x,(int)point.y-12,1,72};SDL_SetTextInputArea(window,&caret,0);
     if(!SDL_TextInputActive(window)){SDL_SetHint(SDL_HINT_RETURN_KEY_HIDES_IME,"1");tb_start_typing(window);}
