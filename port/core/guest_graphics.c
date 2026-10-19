@@ -1,3 +1,4 @@
+#include <stdio.h>
 /* Finite graphics providers backed by native queries. Unknown exports return
    failure; there are no placeholder successful rendering functions. */
 #include "guest_graphics.h"
@@ -67,7 +68,7 @@ uint32_t tribes_graphics_load_object(_cpu *cpu,uint32_t name){
 uint32_t tribes_graphics_load_function(_cpu *cpu,uint32_t module,uint32_t name){
     uint32_t error=tribes_get_last_error();char text[256];name_copy(cpu,name,text);(void)text;
     uint32_t result=(module==gl_module||module==glu_module||module==TB_OPENAL_MODULE)?tribes_get_proc_address(cpu->_pointer_offset,module,name):0;
-    if(!result)SDL_SetError("%s","No implemented native export for this SDL function");
+    if(!result){SDL_SetError("%s","No implemented native export for this SDL function");fprintf(stderr,"TribesPad: no native GL export %s\n",text);}
     tribes_set_last_error(error);return result;
 }
 void tribes_graphics_unload_object(_cpu *cpu,uint32_t module){
@@ -79,7 +80,7 @@ uint32_t tribes_graphics_get_proc(_cpu *cpu,uint32_t name){
     if(tribes_sdl_gl_get_current_context(cpu))
         for(unsigned i=0;i<sizeof graphics_exports/sizeof *graphics_exports;i++)
             if(available(&graphics_exports[i])&&graphics_exports[i].module==gl_module&&!strcmp(graphics_exports[i].name,text)){result=graphics_exports[i].address;break;}
-    if(!result)SDL_SetError("%s","No implemented native GL entry point for this procedure");
+    if(!result){SDL_SetError("%s","No implemented native GL entry point for this procedure");fprintf(stderr,"TribesPad: no native GL procedure %s\n",text);}
     tribes_set_last_error(error);return result;
 }
 
@@ -97,5 +98,6 @@ uint32_t tribes_wgl_get_proc(_cpu *cpu,uint32_t name){
             tribes_set_last_error(error);return e->address;
         }
     }
+    fprintf(stderr,"TribesPad: no native WGL procedure %s\n",text);
     tribes_set_last_error(127);return 0;
 }

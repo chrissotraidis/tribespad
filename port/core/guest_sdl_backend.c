@@ -2659,9 +2659,38 @@ uint32_t tribes_gl_get_string(_cpu *cpu,uint32_t name){
             const char *s=(const char *)glGetStringi(GL_EXTENSIONS,(GLuint)i);size_t n=strlen(s);
             if(i)text[used++]=' ';memcpy(text+used,s,n);used+=n;
         }
-        text[used]=0;uint32_t result=graphics_string(&frame,text);free(text);WINDOW_RETURN(result);
+        text[used]=0;static int shown;if(!shown){shown=1;fprintf(stderr,"TribesPad: GL extensions for the game: %s\n",text);}
+        uint32_t result=graphics_string(&frame,text);free(text);WINDOW_RETURN(result);
     }
 #endif
+    /* The original engine trusts the extension list: it turns on locked
+       arrays, fog coordinates and compressed textures when they are listed,
+       without checking that wglGetProcAddress found their functions. Their
+       entry points have no native provider here, so a listed extension became
+       a call to address 0 (online on iPad, Katabatic At Night). The engine
+       finds names by substring, so GL4ES's GL_EXT_compiled_vertex_arrays also
+       enabled them. Leave out names that start with these; the engine then
+       uses its standard paths. */
+    if(name==GL_EXTENSIONS){
+        static const char *const unprovided[]={"GL_EXT_compiled_vertex_array","GL_EXT_fog_coord",
+            "GL_ARB_texture_compression","GL_EXT_texture_compression_s3tc","GL_3DFX_texture_compression_FXT1"};
+        const char *all=(const char *)glGetString(name);
+        if(!all)WINDOW_RETURN(graphics_string(&frame,NULL));
+        size_t length=strnlen(all,1048576);if(length==1048576)stop();
+        char *text=malloc(length+1);if(!text){SDL_OutOfMemory();WINDOW_RETURN(0);}
+        size_t used=0;const char *p=all;
+        while(*p){
+            while(*p==' ')p++;
+            const char *end=p;while(*end&&*end!=' ')end++;
+            size_t n=(size_t)(end-p);int keep=n>0;
+            for(unsigned i=0;keep&&i<sizeof unprovided/sizeof *unprovided;i++)
+                if(strlen(unprovided[i])<=n&&!memcmp(unprovided[i],p,strlen(unprovided[i])))keep=0;
+            if(keep){if(used)text[used++]=' ';memcpy(text+used,p,n);used+=n;}
+            p=end;
+        }
+        text[used]=0;static int shown;if(!shown){shown=1;fprintf(stderr,"TribesPad: GL extensions for the game: %s\n",text);}
+        uint32_t result=graphics_string(&frame,text);free(text);WINDOW_RETURN(result);
+    }
     WINDOW_RETURN(graphics_string(&frame,(const char *)glGetString(name)));
 }
 uint32_t tribes_gl_get_error(_cpu *cpu){
