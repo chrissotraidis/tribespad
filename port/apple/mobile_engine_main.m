@@ -11,6 +11,8 @@
 #include "sdl_main.h"
 #include <stdio.h>
 #include <unistd.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 #include "mobile-engine-launch-config.h"
 extern int tribes_mobile_engine_main(int,char **);
 extern void tb_mobile_controls_install(void);
@@ -120,8 +122,29 @@ void tb_audio_session_restore(void) {
         NSLog(@"TribesPad audio session restore: %@",error.localizedDescription);
 }
 #endif
+#if TARGET_OS_IOS
+/* Opened from the Home Screen, the game's diagnostics (including the reason
+   it stops) go to /dev/null. Keep them in Library/Logs/TribesPad.log, and the
+   previous session in TribesPad.previous.log, so a crash can be explained.
+   Under Xcode or devicectl --console, stderr stays on the console. */
+static void tb_keep_log(void){
+    struct stat err,null;
+    if(fstat(STDERR_FILENO,&err)||stat("/dev/null",&null)||!S_ISCHR(err.st_mode)||err.st_rdev!=null.st_rdev)return;
+    NSString *logs=[NSSearchPathForDirectoriesInDomains(NSLibraryDirectory,NSUserDomainMask,YES).firstObject stringByAppendingPathComponent:@"Logs"];
+    [NSFileManager.defaultManager createDirectoryAtPath:logs withIntermediateDirectories:YES attributes:nil error:nil];
+    NSString *log=[logs stringByAppendingPathComponent:@"TribesPad.log"];
+    rename(log.fileSystemRepresentation,[logs stringByAppendingPathComponent:@"TribesPad.previous.log"].fileSystemRepresentation);
+    int fd=open(log.fileSystemRepresentation,O_WRONLY|O_CREAT|O_TRUNC|O_APPEND,0644);
+    if(fd<0)return;
+    dup2(fd,STDERR_FILENO);close(fd);setvbuf(stderr,NULL,_IONBF,0);
+    NSDictionary *info=NSBundle.mainBundle.infoDictionary;
+    fprintf(stderr,"TribesPad %s (%s) on %s, iOS %s\n",[info[@"CFBundleShortVersionString"]?:@"dev" UTF8String],
+        [info[@"CFBundleVersion"]?:@"0" UTF8String],UIDevice.currentDevice.model.UTF8String,UIDevice.currentDevice.systemVersion.UTF8String);
+}
+#endif
 int main(int argc,char **argv){
 #if TARGET_OS_IOS
+    tb_keep_log();
     tb_adopt_window_scene();
     tb_filter_controller_presses();
     tb_audio_session();
