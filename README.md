@@ -133,15 +133,28 @@ sends the game's own key, so the original screens open.
 
 ### Controller layout
 
+While playing:
+
 | Control | Action | Control | Action |
 |---|---|---|---|
-| Left stick | Move | Right stick | Aim |
+| Left stick | Move | Right stick | Aim (fine near center, fast at full tilt) |
 | RT | Fire | LT | Jet |
-| A | Ski / jump | X | Use pack |
-| LB | Grenade | RB | Next weapon |
-| Y | Inventory | Menu | Escape |
+| A | Ski / jump | B | Place mine |
+| X | Use pack | Y | Grenade |
+| RB / LB | Next / previous weapon | Click right / left stick | Zoom / third person |
+| D-pad up / down | Repair kit / inventory | D-pad left / right | Beacon / quick chat |
+| Menu | Game menu | View | Scores |
+
+In menus, lobbies and screens the left stick or D-pad moves the cursor, A clicks
+(hold to drag), B or Menu goes back, and the right stick scrolls. The game does
+not see the controller while a menu is open. Look speed is in Settings.
 
 Disconnecting releases the controller's actions, and backgrounding the app releases all controls.
+
+### Online servers
+
+**LAN GAME → JOIN** lists the TribesNEXT internet servers as well as LAN games.
+Joining one is untested; the TribesNEXT account sign-in does not run yet.
 
 ## Recompiled, not decompiled
 

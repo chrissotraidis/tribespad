@@ -37,6 +37,8 @@ static void tb_set(NSString *key,double value){[NSUserDefaults.standardUserDefau
 @property(nonatomic,strong) GCController *controller;
 @property(nonatomic,strong) CADisplayLink *aimClock;
 @property(nonatomic) CGPoint stickAim;
+@property(nonatomic) CGPoint stickMove;
+@property(nonatomic) CGFloat scrollCarry;
 @property(nonatomic) CFTimeInterval lastAimTime;
 @property(nonatomic) CGRect laidOutArea;
 @property(nonatomic,strong) UILabel *fps;
@@ -194,8 +196,7 @@ typedef struct {int section;BOOL slider;const char *title,*key,*detail;double lo
 static const char *tb_sections[][2]={
     {"Touch Controls","Show the touch controls first to see size and opacity change as you drag."},
     {"Trackpad Cursor","With the touch controls hidden, drag anywhere to move the cursor and tap to click. Touch and hold, then drag, to hold the button (sliders, scroll bars). Drag with two fingers to scroll."},
-    {"Display",NULL},
-    {"Online","Online Play starts Tribes 2 in its normal mode: the TribesNEXT login (create a free account there), PLAY GAME and the internet server list. Off, it starts offline with Training and LAN Game. Applies the next time TribesPad opens."}};
+    {"Display",NULL}};
 static const TBSettingRow tb_rows[]={
     {0,YES,"Control Size","TribesPad.controlSize",NULL,.75,1.3,NO},
     {0,YES,"Control Opacity","TribesPad.controlOpacity",NULL,.3,1.0,NO},
@@ -205,23 +206,15 @@ static const TBSettingRow tb_rows[]={
     {1,NO,"Trackpad Cursor","TribesPad.trackpad","Point and click in menus instead of tapping them directly.",0,0,NO},
     {1,YES,"Cursor Speed","TribesPad.cursorSpeed",NULL,.5,2.5,YES},
     {2,NO,"Keep Clear of the Notch","TribesPad.avoidNotch","Keeps the game clear of the notch and rounded corners. Turn off to fill the screen. Applies the next time TribesPad opens.",0,0,NO},
-    {2,NO,"Show FPS Counter","TribesPad.showFPS","Frames presented each second.",0,0,NO},
-    {3,NO,"Online Play","TribesPad.onlinePlay","Sign in with TribesNEXT to join internet servers.",0,0,NO}};
+    {2,NO,"Show FPS Counter","TribesPad.showFPS","Frames presented each second.",0,0,NO}};
 enum {TBRowCount=sizeof tb_rows/sizeof tb_rows[0],TBSectionCount=sizeof tb_sections/sizeof tb_sections[0]};
 static void tb_register_defaults(void){
     static dispatch_once_t once;dispatch_once(&once,^{
         BOOL phone=UIDevice.currentDevice.userInterfaceIdiom==UIUserInterfaceIdiomPhone;
         [NSUserDefaults.standardUserDefaults registerDefaults:@{@"TribesPad.controlSize":@1.0,@"TribesPad.controlOpacity":@1.0,
             @"TribesPad.lookSensitivity":@1.0,@"TribesPad.leftHanded":@0,@"TribesPad.hideWithController":@1,
-            @"TribesPad.trackpad":@(phone?1:0),@"TribesPad.cursorSpeed":@1.2,@"TribesPad.avoidNotch":@1,@"TribesPad.showFPS":@0,@"TribesPad.onlinePlay":@0}];
+            @"TribesPad.trackpad":@(phone?1:0),@"TribesPad.cursorSpeed":@1.2,@"TribesPad.avoidNotch":@1,@"TribesPad.showFPS":@0}];
     });
-}
-/* base/autoexec.cs starts offline unless this file exists (build-ipad-engine.py). */
-static void tb_sync_online(void){
-    NSString *path=[NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,NSUserDomainMask,YES).firstObject
-        stringByAppendingPathComponent:@"TribesPad/Game/base/prefs/tribespad-online.txt"];
-    if(tb_setting(@"TribesPad.onlinePlay",0)!=0)[@"1" writeToFile:path atomically:YES encoding:NSUTF8StringEncoding error:nil];
-    else [NSFileManager.defaultManager removeItemAtPath:path error:nil];
 }
 static const TBSettingRow *tb_row(NSIndexPath *path){
     NSInteger n=0;for(unsigned i=0;i<TBRowCount;i++)if(tb_rows[i].section==path.section&&n++==path.row)return &tb_rows[i];return NULL;
@@ -285,14 +278,12 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
 }
 -(void)switched:(UISwitch *)toggle {
     const TBSettingRow *r=&tb_rows[toggle.tag];tb_set(@(r->key),toggle.on);[self.owner settingsChanged];
-    if(!strcmp(r->key,"TribesPad.onlinePlay"))tb_sync_online();
     // Turning this on with a controller already connected steps the controls aside now.
     if(toggle.on&&!strcmp(r->key,"TribesPad.hideWithController"))[self.owner hideForController];
 }
 -(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)path {
     [tableView deselectRowAtIndexPath:path animated:YES];if(path.section!=TBSectionCount)return;
     for(unsigned i=0;i<TBRowCount;i++)[NSUserDefaults.standardUserDefaults removeObjectForKey:@(tb_rows[i].key)];
-    tb_sync_online();
     [tableView reloadData];[self.owner settingsChanged];
 }
 @end
@@ -313,6 +304,7 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
 @property(nonatomic,strong) NSTimer *hold;
 @property(nonatomic) CGFloat scrollCarry;
 @property(nonatomic) CFTimeInterval lastMove;
+-(void)moveBy:(CGPoint)d;
 @end
 
 @implementation TBTrackpad
@@ -332,6 +324,12 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
     [super layoutSubviews];
     if(self.cursor.x<0||!CGRectContainsPoint(self.bounds,self.cursor))self.cursor=CGPointMake(CGRectGetMidX(self.bounds),CGRectGetMidY(self.bounds));
     [self placeArrow];
+}
+-(void)moveBy:(CGPoint)d {
+    self.hidden=NO;
+    CGPoint c=CGPointMake(fmin(fmax(self.cursor.x+d.x,0),self.bounds.size.width-1),fmin(fmax(self.cursor.y+d.y,0),self.bounds.size.height-1));
+    CGPoint delta=CGPointMake(c.x-self.cursor.x,c.y-self.cursor.y);if(!delta.x&&!delta.y)return;
+    self.cursor=c;[self placeArrow];[self.owner pointerMoveTo:c delta:delta held:NO];
 }
 -(void)placeArrow{CGSize s=self.arrow.bounds.size;self.arrow.frame=CGRectMake(self.cursor.x-s.width*.28,self.cursor.y-s.height*.12,s.width,s.height);}
 -(void)setDragging:(BOOL)dragging{_dragging=dragging;self.arrow.tintColor=dragging?[UIColor colorWithRed:.6 green:.85 blue:1 alpha:1]:UIColor.whiteColor;}
@@ -420,6 +418,9 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
     // inventory and the score screen. Follow it: touch controls in play, the
     // trackpad cursor everywhere else.
     __weak TBGameControls *weakSelf=self;
+    // Earlier builds had an Online Play switch whose file now means nothing.
+    [NSFileManager.defaultManager removeItemAtPath:[NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,NSUserDomainMask,YES).firstObject
+        stringByAppendingPathComponent:@"TribesPad/Game/base/prefs/tribespad-online.txt"] error:nil];
     // A previous session may have ended in play; start from the menus.
     [@"0" writeToFile:[NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,NSUserDomainMask,YES).firstObject
         stringByAppendingPathComponent:@"TribesPad/Game/base/prefs/tribespad-state.txt"] atomically:YES encoding:NSUTF8StringEncoding error:nil];
@@ -444,7 +445,11 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
 -(void)detachController {
     self.controllerUsed=NO;
     GCExtendedGamepad *pad=self.controller.extendedGamepad;
-    pad.valueChangedHandler=nil;pad.buttonMenu.pressedChangedHandler=nil;
+    pad.valueChangedHandler=nil;
+    if(pad)for(GCControllerButtonInput *b in @[pad.buttonA,pad.buttonB,pad.buttonX,pad.buttonY,pad.leftShoulder,pad.rightShoulder,pad.buttonMenu,
+        pad.dpad.up,pad.dpad.down,pad.dpad.left,pad.dpad.right])b.pressedChangedHandler=nil;
+    pad.buttonOptions.pressedChangedHandler=nil;pad.leftThumbstickButton.pressedChangedHandler=nil;pad.rightThumbstickButton.pressedChangedHandler=nil;
+    self.stickMove=CGPointZero;
     [self.aimClock invalidate];self.aimClock=nil;self.controller=nil;
     self.stickAim=CGPointZero;self.lastAimTime=0;
     if(self.controls){tb_input_release(&self.controls->input,9);tb_mobile_controls_emit(self.controls);}
@@ -458,36 +463,75 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
     }
     [self rebuildMenu];
     if(!self.controller)return;
+    GCExtendedGamepad *pad=self.controller.extendedGamepad;
     __weak TBGameControls *weakSelf=self;
-    self.controller.extendedGamepad.valueChangedHandler=^(GCExtendedGamepad *pad,GCControllerElement *element){
-        TBGameControls *owner=weakSelf;
-        if(!owner.controls||pad!=owner.controller.extendedGamepad||element==pad.buttonMenu||
-            UIApplication.sharedApplication.applicationState!=UIApplicationStateActive)return;
-        // A paired controller that is not being used leaves touch alone; the
-        // first real input hides the touch controls.
-        if(!owner.controllerUsed&&(fabsf(pad.leftThumbstick.xAxis.value)>.3f||fabsf(pad.leftThumbstick.yAxis.value)>.3f||
-            fabsf(pad.rightThumbstick.xAxis.value)>.3f||fabsf(pad.rightThumbstick.yAxis.value)>.3f||pad.buttonA.pressed||
-            pad.rightTrigger.pressed||pad.leftTrigger.pressed)){owner.controllerUsed=YES;[owner hideForController];}
-        tb_input_move(&owner.controls->input,9,pad.leftThumbstick.xAxis.value,pad.leftThumbstick.yAxis.value,.15);
-        owner.stickAim=CGPointMake(pad.rightThumbstick.xAxis.value,pad.rightThumbstick.yAxis.value);
-        const uint32_t actions[]={TBFire,TBJet,TBJump,TBGrenade,TBWeapon,TBUse,TBInventory};
-        NSArray<GCControllerButtonInput *> *buttons=@[pad.rightTrigger,pad.leftTrigger,pad.buttonA,
-            pad.leftShoulder,pad.rightShoulder,pad.buttonX,pad.buttonY];
-        for(unsigned i=0;i<buttons.count;i++)tb_input_action(&owner.controls->input,9,actions[i],buttons[i].pressed);
+    /* Playing: sticks, triggers and A are held actions through the input
+       layer; the other buttons hold their original keys while pressed.
+       Menus: the left stick or D-pad moves the cursor, A clicks (hold to
+       drag), B and Menu go back, the right stick scrolls. */
+    pad.valueChangedHandler=^(GCExtendedGamepad *p,GCControllerElement *element){
+        (void)element;TBGameControls *owner=weakSelf;
+        if(!owner.controls||p!=owner.controller.extendedGamepad||UIApplication.sharedApplication.applicationState!=UIApplicationStateActive)return;
+        if(!owner.controllerUsed&&(fabsf(p.leftThumbstick.xAxis.value)>.3f||fabsf(p.leftThumbstick.yAxis.value)>.3f||
+            fabsf(p.rightThumbstick.xAxis.value)>.3f||fabsf(p.rightThumbstick.yAxis.value)>.3f||p.buttonA.pressed||
+            p.rightTrigger.pressed||p.leftTrigger.pressed||p.dpad.xAxis.value||p.dpad.yAxis.value)){
+            owner.controllerUsed=YES;[owner hideForController];[owner setNeedsLayout];}
+        owner.stickAim=CGPointMake(p.rightThumbstick.xAxis.value,p.rightThumbstick.yAxis.value);
+        owner.stickMove=CGPointMake(p.leftThumbstick.xAxis.value+p.dpad.xAxis.value,p.leftThumbstick.yAxis.value+p.dpad.yAxis.value);
+        if(!owner.inMatch)return;
+        tb_input_move(&owner.controls->input,9,p.leftThumbstick.xAxis.value,p.leftThumbstick.yAxis.value,.15);
+        const uint32_t actions[]={TBFire,TBJet,TBJump};
+        NSArray<GCControllerButtonInput *> *held=@[p.rightTrigger,p.leftTrigger,p.buttonA];
+        for(unsigned i=0;i<held.count;i++)tb_input_action(&owner.controls->input,9,actions[i],held[i].pressed);
         tb_mobile_controls_emit(owner.controls);
     };
-    self.controller.extendedGamepad.buttonMenu.pressedChangedHandler=^(GCControllerButtonInput *button,float value,BOOL pressed){
-        (void)value;TBGameControls *owner=weakSelf;
-        if(pressed&&button==owner.controller.extendedGamepad.buttonMenu&&
-            UIApplication.sharedApplication.applicationState==UIApplicationStateActive)[owner openMenu];
+    // Buttons that hold an original key (controlDefaults.cs) while pressed.
+    void (^key)(GCControllerButtonInput *,SDL_Scancode,SDL_Keymod)=^(GCControllerButtonInput *button,SDL_Scancode code,SDL_Keymod mod){
+        if(!button)return;
+        button.pressedChangedHandler=^(GCControllerButtonInput *b,float v,BOOL pressed){(void)b;(void)v;TBGameControls *owner=weakSelf;
+            if(!owner.controls||UIApplication.sharedApplication.applicationState!=UIApplicationStateActive)return;
+            if(pressed&&!owner.inMatch)return;
+            if(mod&SDL_KMOD_SHIFT)[owner pushKey:SDL_SCANCODE_LSHIFT down:pressed mod:pressed?mod:SDL_KMOD_NONE];
+            [owner pushKey:code down:pressed mod:pressed?mod:SDL_KMOD_NONE];};
+    };
+    key(pad.rightShoulder,SDL_SCANCODE_W,SDL_KMOD_NONE);          // next weapon
+    key(pad.leftShoulder,SDL_SCANCODE_W,SDL_KMOD_LSHIFT);         // previous weapon
+    key(pad.buttonX,SDL_SCANCODE_R,SDL_KMOD_NONE);                // use pack
+    key(pad.buttonY,SDL_SCANCODE_G,SDL_KMOD_NONE);                // grenade
+    key(pad.rightThumbstickButton,SDL_SCANCODE_A,SDL_KMOD_NONE);  // zoom
+    key(pad.leftThumbstickButton,SDL_SCANCODE_TAB,SDL_KMOD_NONE); // third person
+    key(pad.dpad.up,SDL_SCANCODE_Q,SDL_KMOD_NONE);                // repair kit
+    key(pad.dpad.down,SDL_SCANCODE_KP_ENTER,SDL_KMOD_NONE);       // inventory
+    key(pad.dpad.left,SDL_SCANCODE_H,SDL_KMOD_NONE);              // beacon
+    key(pad.dpad.right,SDL_SCANCODE_V,SDL_KMOD_NONE);             // quick chat
+    key(pad.buttonOptions,SDL_SCANCODE_F2,SDL_KMOD_NONE);         // scores
+    pad.buttonA.pressedChangedHandler=^(GCControllerButtonInput *b,float v,BOOL pressed){(void)b;(void)v;TBGameControls *owner=weakSelf;
+        if(owner.inMatch||!owner.controls)return;
+        [owner pointerButton:pressed at:owner.trackpad.cursor];};
+    pad.buttonB.pressedChangedHandler=^(GCControllerButtonInput *b,float v,BOOL pressed){(void)b;(void)v;TBGameControls *owner=weakSelf;
+        if(!pressed||!owner.controls)return;
+        if(owner.inMatch)[owner pushKey:SDL_SCANCODE_B down:YES mod:SDL_KMOD_NONE],[owner pushKey:SDL_SCANCODE_B down:NO mod:SDL_KMOD_NONE];
+        else [owner tapKey:SDL_SCANCODE_ESCAPE];};
+    pad.buttonMenu.pressedChangedHandler=^(GCControllerButtonInput *button,float value,BOOL pressed){
+        (void)value;(void)button;TBGameControls *owner=weakSelf;
+        if(pressed&&UIApplication.sharedApplication.applicationState==UIApplicationStateActive)[owner openMenu];
     };
     self.aimClock=[CADisplayLink displayLinkWithTarget:self selector:@selector(aimTick:)];
     [self.aimClock addToRunLoop:NSRunLoop.mainRunLoop forMode:NSRunLoopCommonModes];
 }
 -(void)aimTick:(CADisplayLink *)clock {
     CFTimeInterval previous=self.lastAimTime;self.lastAimTime=clock.timestamp;
-    if(previous&&UIApplication.sharedApplication.applicationState==UIApplicationStateActive)
-        tb_mobile_controls_gamepad_look(self.controls,self.stickAim.x,self.stickAim.y,clock.timestamp-previous);
+    if(!previous||UIApplication.sharedApplication.applicationState!=UIApplicationStateActive)return;
+    double dt=fmin(clock.timestamp-previous,.05);
+    if(self.inMatch){
+        tb_mobile_controls_gamepad_look(self.controls,self.stickAim.x,self.stickAim.y,dt,(float)(520*TB_LOOK));
+        return;
+    }
+    // Menu cursor: same dead zone and curve as aiming, up to 900 points a second.
+    CGPoint s=self.stickMove;CGFloat m=hypot(s.x,s.y);
+    if(m>.14){CGFloat n=fmin(1,(m-.14)/.86),v=(120+780*n*n)*dt/m;[self.trackpad moveBy:CGPointMake(s.x*v,-s.y*v)];}
+    CGFloat r=self.stickAim.y;
+    if(fabs(r)>.4){self.scrollCarry+=r*dt*12;int steps=(int)self.scrollCarry;if(steps){self.scrollCarry-=steps;[self pointerWheel:steps at:self.trackpad.cursor];}}
 }
 -(UIView *)hitTest:(CGPoint)point withEvent:(UIEvent *)event {
     UIView *hit=[super hitTest:point withEvent:event];return hit==self?nil:hit;
@@ -548,6 +592,7 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
     NSString *state=[NSString stringWithContentsOfFile:support encoding:NSUTF8StringEncoding error:nil];
     BOOL playing=[state hasPrefix:@"1"];if(playing==self.inMatch)return;
     self.inMatch=playing;if(playing)self.matchSeen=YES;
+    if(self.controls){tb_input_release(&self.controls->input,9);tb_mobile_controls_emit(self.controls);}
     if(playing){
         if(!self.expanded&&!(self.controllerUsed&&TB_HIDE_WITH_CONTROLLER))[self toggleControls];
         if(self.expanded)[self showHint];
@@ -702,9 +747,12 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
 -(void)showControllerGuide {
     NSString *name=self.controller.vendorName;
     [self showMessage:name.length?name:@"Controller Guide" text:[NSString stringWithFormat:@"%@\n\n"
-        "Left stick: move\nRight stick: aim\nRT: fire · LT: jet\nA: ski / jump · X: use pack\n"
-        "LB: grenade · RB: next weapon\nY: inventory · Menu: game menu",
-        name.length?@"Connected. Touch controls hide once you use it (Settings).":@"Connect an Xbox, PlayStation or MFi controller in Settings > Bluetooth."]];
+        "PLAYING\nLeft stick: move · Right stick: aim\nRT: fire · LT: jet · A: ski / jump\n"
+        "RB / LB: next / previous weapon\nY: grenade · X: use pack · B: mine\n"
+        "D-pad: up repair kit · down inventory · left beacon · right quick chat\n"
+        "Click right stick: zoom · click left stick: third person\nMenu: game menu · View: scores\n\n"
+        "MENUS\nLeft stick or D-pad: move the cursor · A: click (hold to drag)\nB or Menu: back · Right stick: scroll",
+        name.length?@"Connected. Touch controls step aside once you use it.":@"Connect an Xbox, PlayStation or MFi controller in Settings > Bluetooth."]];
 }
 /* The original console toggles on the grave key; open the keyboard for typing. */
 -(void)openConsole {
@@ -766,7 +814,7 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
     self.hint.frame=CGRectMake(x+(w-hintSize.width-28)/2,y+h*.16,hintSize.width+28,hintSize.height+18);
     // Beside the menu button.
     self.fps.frame=CGRectMake(right-80,top+(b-22)/2,72,22);
-    self.trackpad.frame=self.bounds;self.trackpad.hidden=!TB_TRACKPAD||self.expanded;
+    self.trackpad.frame=self.bounds;self.trackpad.hidden=self.expanded||self.inMatch||!(TB_TRACKPAD||self.controllerUsed);
     // Movement stick bottom left; Pack and Inventory above it.
     CGFloat stick=170*k,small=58*k;
     CGRect stickFrame=CGRectMake(x+margin,y+h-margin-stick,stick,stick);

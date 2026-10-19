@@ -63,6 +63,22 @@ static void tb_adopt_window_scene(void) {
     Method m=class_getInstanceMethod(UIWindow.class,@selector(initWithFrame:));
     tb_window_init_frame=method_setImplementation(m,(IMP)tb_window_init_in_scene);
 }
+/* iPadOS also delivers game controller buttons (B, Menu) as UIKit presses,
+   which SDL turns into Escape and Return. TribesPad maps the controller
+   itself (mobile_controls.m), so SDL's view only receives keyboard presses. */
+static IMP tb_presses[4];
+static NSSet<UIPress *> *tb_keyboard_presses(NSSet<UIPress *> *presses){
+    return [presses objectsPassingTest:^BOOL(UIPress *press,BOOL *stop){(void)stop;return press.key!=nil;}];
+}
+#define TB_PRESS_FILTER(n) static void tb_press_##n(id self,SEL cmd,NSSet<UIPress *> *presses,UIPressesEvent *event){ \
+    NSSet *keys=tb_keyboard_presses(presses);if(keys.count)((void(*)(id,SEL,NSSet *,UIPressesEvent *))tb_presses[n])(self,cmd,keys,event);}
+TB_PRESS_FILTER(0) TB_PRESS_FILTER(1) TB_PRESS_FILTER(2) TB_PRESS_FILTER(3)
+static void tb_filter_controller_presses(void){
+    Class view=NSClassFromString(@"SDL_uikitview");if(!view)return;
+    SEL selectors[4]={@selector(pressesBegan:withEvent:),@selector(pressesEnded:withEvent:),@selector(pressesCancelled:withEvent:),@selector(pressesChanged:withEvent:)};
+    IMP filters[4]={(IMP)tb_press_0,(IMP)tb_press_1,(IMP)tb_press_2,(IMP)tb_press_3};
+    for(int i=0;i<4;i++){Method m=class_getInstanceMethod(view,selectors[i]);if(m)tb_presses[i]=method_setImplementation(m,filters[i]);}
+}
 /* OpenAL drives CoreAudio directly and never chooses an audio session, so iOS
    used its default, which the silent switch mutes, and the library's input
    probe could move output to the earpiece. Play game audio through the
@@ -107,6 +123,7 @@ void tb_audio_session_restore(void) {
 int main(int argc,char **argv){
 #if TARGET_OS_IOS
     tb_adopt_window_scene();
+    tb_filter_controller_presses();
     tb_audio_session();
 #endif
     return tribes_sdl_run_application(argc,argv,enter_engine);

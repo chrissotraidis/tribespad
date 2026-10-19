@@ -4,7 +4,7 @@
 Run test-qol-native-bootstrap.py --enter-engine --probe-ntdll --prepare-only first.
 Device builds bundle assets and require Apple development signing before installation.
 """
-import argparse,hashlib,importlib.util,json,os,pathlib,plistlib,re,shutil,subprocess
+import zipfile,argparse,hashlib,importlib.util,json,os,pathlib,plistlib,re,shutil,subprocess
 from checked_support import compile_support
 from guard_checked_link import guard_link
 from checked_bochs_inputs import checked_bochs_inputs
@@ -162,14 +162,20 @@ earlier_text='// TribesPad: original offline mode. A dedicated server would quit
 # iOS and iPadOS end apps without the game's quit, which is where it saves
 # preferences (warriors, accepted license). Save them as its onExit does.
 offline_text=earlier_text+'// iOS and iPadOS close apps without a normal quit; save preferences as onExit does, once a minute.\nfunction TribesPadSavePrefs()\n{\n   export("$pref::*", "prefs/ClientPrefs.cs", False);\n   schedule(60000, 0, TribesPadSavePrefs);\n}\nschedule(60000, 0, TribesPadSavePrefs);\n'
-# Settings > Online Play writes base/prefs/tribespad-online.txt (mobile_controls.m);
-# with it the game starts in its normal mode with the TribesNEXT login.
-online_head='// TribesPad: offline mode unless Settings > Online Play is on. A dedicated server would quit the app, so host in game.\nif ( !isFile( "prefs/tribespad-online.txt" ) )\n{\n   $SkipLogin = true;\n   $LaunchMode = "Offline";\n}\n$Host::Dedicated = 0;\n'
+# The original login path does not run yet; JOIN lists internet servers instead (GameGui.cs below).
+online_head='// TribesPad: offline mode with the internet server list in JOIN. A dedicated server would quit the app, so host in game.\n$SkipLogin = true;\n$LaunchMode = "Offline";\n$TribesPadInternetBrowser = true;\n$Host::Dedicated = 0;\n'
 offline_text=online_head+offline_text[len(earlier_text):]
 # The touch layer follows play and menus through this report (mobile_controls.m).
 offline_text+='// TribesPad: report whether the player is in play (PlayGui showing and the\n// game cursor off) so the touch layer switches between touch controls and the\n// menu cursor. Menus, the lobby, inventory and score screens turn the cursor on.\nfunction TribesPadInPlay()\n{\n   if ( !isObject( PlayGui ) || Canvas.getContent() != PlayGui.getId() )\n      return 0;\n   return !Canvas.isCursorOn();\n}\nfunction TribesPadReportState()\n{\n   %state = TribesPadInPlay();\n   if ( %state !$= $TribesPadLastState )\n   {\n      $TribesPadLastState = %state;\n      %file = new FileObject();\n      if ( %file.openForWrite( "prefs/tribespad-state.txt" ) )\n      {\n         %file.writeLine( %state );\n         %file.close();\n      }\n      %file.delete();\n   }\n   schedule( 200, 0, TribesPadReportState );\n}\nschedule( 200, 0, TribesPadReportState );\n'
-if offline.exists():assert offline.read_text().startswith((earlier_text,online_head)), 'Preserve custom autoexec.cs; select offline mode there before building'
+if offline.exists():assert offline.read_text().startswith((earlier_text,'// TribesPad: offline mode')), 'Preserve custom autoexec.cs; select offline mode there before building'
 offline.write_text(offline_text)
+# JOIN queries the internet master server in offline mode too (as prepare-macos-server-browser.py
+# did for testing). The app refreshes this file in existing profiles (mobile_game_paths.m).
+with zipfile.ZipFile(profile/'base/scripts.vl2') as archive:game_gui=archive.read('scripts/GameGui.cs')
+for before,after in [(b'if ( isDemo() || $PlayingOnline )',b'if ( isDemo() || $PlayingOnline || $TribesPadInternetBrowser )'),
+    (b'GMJ_Browser.lastQuery = $PlayingOnline ? "Master" : "LanServers";',b'GMJ_Browser.lastQuery = ($PlayingOnline || $TribesPadInternetBrowser) ? "Master" : "LanServers";')]:
+    assert game_gui.count(before)==1;game_gui=game_gui.replace(before,after)
+(profile/'base/scripts').mkdir(exist_ok=True);(profile/'base/scripts/GameGui.cs').write_bytes(game_gui)
 
 volume=out/'volume';temp=volume/'TribesPad/Temp';temp.mkdir(parents=True,exist_ok=True)
 # Publication descriptions and loaded original images are immutable inputs;

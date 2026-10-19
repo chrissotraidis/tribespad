@@ -33,24 +33,33 @@ void tb_mobile_controls_emit(TBMobileControls *controls) {
         send_event(&event);
     }
     controls->held=held;
-    if(frame.lookX||frame.lookY) {
+    /* The game reads whole mouse units. Carry the fraction to the next event,
+       so slow aim moves smoothly instead of stalling and then jumping. */
+    controls->carryX+=frame.lookX;controls->carryY+=frame.lookY;
+    float dx=truncf(controls->carryX),dy=truncf(controls->carryY);
+    controls->carryX-=dx;controls->carryY-=dy;
+    if(dx||dy) {
         SDL_Event event={0};event.type=SDL_EVENT_MOUSE_MOTION;
         event.motion.windowID=controls->window;
         event.motion.state=((held&(1u<<9))?SDL_BUTTON_LMASK:0)|
             ((held&(1u<<10))?SDL_BUTTON_RMASK:0);
-        event.motion.xrel=frame.lookX;event.motion.yrel=frame.lookY;
+        event.motion.xrel=dx;event.motion.yrel=dy;
         send_event(&event);
     }
 }
 void tb_mobile_controls_release(TBMobileControls *controls) {
-    tb_input_reset(&controls->input);tb_mobile_controls_emit(controls);
+    tb_input_reset(&controls->input);controls->carryX=controls->carryY=0;tb_mobile_controls_emit(controls);
 }
-void tb_mobile_controls_gamepad_look(TBMobileControls *controls,float x,float y,double seconds) {
+void tb_mobile_controls_gamepad_look(TBMobileControls *controls,float x,float y,double seconds,float speed) {
     if(!isfinite(seconds)||seconds<=0)return;
     /* A delayed display callback must not turn a pause into a large aim jump. */
     seconds=fmin(seconds,.05);
-    x=isfinite(x)&&fabsf(x)>.15f?fmaxf(-1,fminf(1,x)):0;
-    y=isfinite(y)&&fabsf(y)>.15f?fmaxf(-1,fminf(1,y)):0;
-    tb_input_look(&controls->input,9,x*900*seconds,-y*900*seconds);
+    if(!isfinite(x)||!isfinite(y))return;
+    /* Radial dead zone, rescaled so aim starts from zero at its edge, then a
+       squared response: small deflections aim finely, full deflection turns fast. */
+    float m=hypotf(x,y);const float dead=.14f;
+    if(m<=dead){tb_mobile_controls_emit(controls);return;}
+    float n=fminf(1,(m-dead)/(1-dead)),scale=n*n/m;
+    tb_input_look(&controls->input,9,x*scale*speed*(float)seconds,-y*scale*speed*(float)seconds);
     tb_mobile_controls_emit(controls);
 }
