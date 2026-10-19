@@ -14,6 +14,13 @@ static NSString * const TBRepositoryURL=@"https://github.com/chrissotraidis/trib
 
 /* Touch preferences (NSUserDefaults, TribesPad-owned keys). */
 static double tb_setting(NSString *key,double fallback){id v=[NSUserDefaults.standardUserDefaults objectForKey:key];return v?[v doubleValue]:fallback;}
+/* Account names and passwords: no automatic capitals or corrections. */
+static void tb_start_typing(SDL_Window *window){
+    static SDL_PropertiesID props;
+    if(!props){props=SDL_CreateProperties();SDL_SetNumberProperty(props,SDL_PROP_TEXTINPUT_CAPITALIZATION_NUMBER,SDL_CAPITALIZE_NONE);
+        SDL_SetBooleanProperty(props,SDL_PROP_TEXTINPUT_AUTOCORRECT_BOOLEAN,false);}
+    SDL_StartTextInputWithProperties(window,props);
+}
 static void tb_set(NSString *key,double value){[NSUserDefaults.standardUserDefaults setDouble:value forKey:key];}
 #define TB_SIZE tb_setting(@"TribesPad.controlSize",1.0)
 #define TB_OPACITY tb_setting(@"TribesPad.controlOpacity",1.0)
@@ -47,6 +54,8 @@ static void tb_set(NSString *key,double value){[NSUserDefaults.standardUserDefau
 @property(nonatomic) BOOL restoreControlsAfterKeyboard;
 @property(nonatomic) BOOL inMatch;
 @property(nonatomic) BOOL matchSeen;
+@property(nonatomic) BOOL typingDialog;
+@property(nonatomic) BOOL gameReported;
 @property(nonatomic) BOOL controllerUsed;
 @property(nonatomic,strong) NSTimer *matchClock;
 @property(nonatomic,strong) UILabel *hint;
@@ -58,6 +67,7 @@ static void tb_set(NSString *key,double value){[NSUserDefaults.standardUserDefau
 -(void)pointerMoveTo:(CGPoint)point delta:(CGPoint)delta held:(BOOL)held;
 -(void)pointerButton:(BOOL)down at:(CGPoint)point;
 -(void)pointerClickAt:(CGPoint)point;
+-(void)loginTapAt:(CGPoint)point;
 -(void)pointerWheel:(int)steps at:(CGPoint)point;
 @end
 
@@ -196,7 +206,8 @@ typedef struct {int section;BOOL slider;const char *title,*key,*detail;double lo
 static const char *tb_sections[][2]={
     {"Touch Controls","Show the touch controls first to see size and opacity change as you drag."},
     {"Trackpad Cursor","With the touch controls hidden, drag anywhere to move the cursor and tap to click. Touch and hold, then drag, to hold the button (sliders, scroll bars). Drag with two fingers to scroll."},
-    {"Display",NULL}};
+    {"Display",NULL},
+    {"Online","On, TribesPad opens to the TribesNEXT login: sign in or create a free account, then JOIN lists internet servers. Off, it opens offline with Training, LAN Game and the server list. Applies the next time TribesPad opens."}};
 static const TBSettingRow tb_rows[]={
     {0,YES,"Control Size","TribesPad.controlSize",NULL,.75,1.3,NO},
     {0,YES,"Control Opacity","TribesPad.controlOpacity",NULL,.3,1.0,NO},
@@ -206,14 +217,16 @@ static const TBSettingRow tb_rows[]={
     {1,NO,"Trackpad Cursor","TribesPad.trackpad","Point and click in menus instead of tapping them directly.",0,0,NO},
     {1,YES,"Cursor Speed","TribesPad.cursorSpeed",NULL,.5,2.5,YES},
     {2,NO,"Keep Clear of the Notch","TribesPad.avoidNotch","Keeps the game clear of the notch and rounded corners. Turn off to fill the screen. Applies the next time TribesPad opens.",0,0,NO},
-    {2,NO,"Show FPS Counter","TribesPad.showFPS","Frames presented each second.",0,0,NO}};
+    {2,NO,"Show FPS Counter","TribesPad.showFPS","Frames presented each second.",0,0,NO},
+    {3,NO,"Online Play","TribesPad.onlinePlay","Sign in with TribesNEXT at launch.",0,0,NO}};
 enum {TBRowCount=sizeof tb_rows/sizeof tb_rows[0],TBSectionCount=sizeof tb_sections/sizeof tb_sections[0]};
 static void tb_register_defaults(void){
     static dispatch_once_t once;dispatch_once(&once,^{
         BOOL phone=UIDevice.currentDevice.userInterfaceIdiom==UIUserInterfaceIdiomPhone;
         [NSUserDefaults.standardUserDefaults registerDefaults:@{@"TribesPad.controlSize":@1.0,@"TribesPad.controlOpacity":@1.0,
             @"TribesPad.lookSensitivity":@1.0,@"TribesPad.leftHanded":@0,@"TribesPad.hideWithController":@1,
-            @"TribesPad.trackpad":@(phone?1:0),@"TribesPad.cursorSpeed":@1.2,@"TribesPad.avoidNotch":@1,@"TribesPad.showFPS":@0}];
+            @"TribesPad.trackpad":@(phone?1:0),@"TribesPad.cursorSpeed":@1.2,@"TribesPad.avoidNotch":@1,@"TribesPad.showFPS":@0,
+            @"TribesPad.onlinePlay":@1}];
     });
 }
 static const TBSettingRow *tb_row(NSIndexPath *path){
@@ -418,11 +431,9 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
     // inventory and the score screen. Follow it: touch controls in play, the
     // trackpad cursor everywhere else.
     __weak TBGameControls *weakSelf=self;
-    // Earlier builds had an Online Play switch whose file now means nothing.
-    [NSFileManager.defaultManager removeItemAtPath:[NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,NSUserDomainMask,YES).firstObject
-        stringByAppendingPathComponent:@"TribesPad/Game/base/prefs/tribespad-online.txt"] error:nil];
-    // A previous session may have ended in play; start from the menus.
-    [@"0" writeToFile:[NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,NSUserDomainMask,YES).firstObject
+    // A previous session may have ended in play; start from the menus. "-"
+    // means the game has not reported yet: it reports once past the login.
+    [@"-" writeToFile:[NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,NSUserDomainMask,YES).firstObject
         stringByAppendingPathComponent:@"TribesPad/Game/base/prefs/tribespad-state.txt"] atomically:YES encoding:NSUTF8StringEncoding error:nil];
     self.matchClock=[NSTimer scheduledTimerWithTimeInterval:.2 repeats:YES block:^(NSTimer *t){(void)t;[weakSelf followMatch];}];
     [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(releaseControls)
@@ -439,7 +450,12 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
 }
 -(void)didMoveToSuperview {
     [super didMoveToSuperview];
-    if(self.superview)[self controllerChanged:nil];
+    if(self.superview){
+        [self controllerChanged:nil];
+        // Taps on the game itself pass through to SDL; watch them for the login.
+        UITapGestureRecognizer *tap=[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(gameTapped:)];
+        tap.cancelsTouchesInView=NO;tap.delaysTouchesEnded=NO;[self.superview addGestureRecognizer:tap];
+    }
     else [self detachController];
 }
 -(void)detachController {
@@ -554,7 +570,7 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
         SDL_Rect caret={(int)x,(int)y,1,24};
         SDL_SetTextInputArea(window,&caret,0);
         SDL_SetHint(SDL_HINT_RETURN_KEY_HIDES_IME,"1");
-        SDL_StartTextInput(window);
+        tb_start_typing(window);
     }
 }
 -(void)keyboardFrameChanged:(NSNotification *)notification {
@@ -585,12 +601,25 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
 -(void)toggleTrackpad{tb_set(@"TribesPad.trackpad",!TB_TRACKPAD);[self settingsChanged];}
 -(void)followMatch {
     if(!self.controls||UIApplication.sharedApplication.applicationState!=UIApplicationStateActive)return;
-    // base/autoexec.cs reports 1 while playing and 0 in menus, the lobby,
-    // inventory and the score screen (build-ipad-engine.py).
+    // base/autoexec.cs reports "<playing> <typing>": playing is 1 in play and
+    // 0 in menus, the lobby, inventory and the score screen; typing is 1 while
+    // a dialog made for typing (login, server password...) is open.
     NSString *support=[NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,NSUserDomainMask,YES).firstObject
         stringByAppendingPathComponent:@"TribesPad/Game/base/prefs/tribespad-state.txt"];
     NSString *state=[NSString stringWithContentsOfFile:support encoding:NSUTF8StringEncoding error:nil];
-    BOOL playing=[state hasPrefix:@"1"];if(playing==self.inMatch)return;
+    if(!state.length||[state hasPrefix:@"-"])return;
+    if(!self.gameReported){
+        // Past the login: a keyboard opened there closes with the next report.
+        self.gameReported=YES;SDL_Window *window=SDL_GetWindowFromID(self.controls->window);
+        self.typingDialog=window&&SDL_TextInputActive(window);
+    }
+    BOOL playing=[state hasPrefix:@"1"],typing=[state hasPrefix:@"0 1"];
+    if(typing!=self.typingDialog){
+        // Open the keyboard with the dialog; close it when the dialog goes.
+        self.typingDialog=typing;SDL_Window *window=SDL_GetWindowFromID(self.controls->window);
+        if(window&&typing!=SDL_TextInputActive(window))[self toggleKeyboard];
+    }
+    if(playing==self.inMatch)return;
     self.inMatch=playing;if(playing)self.matchSeen=YES;
     if(self.controls){tb_input_release(&self.controls->input,9);tb_mobile_controls_emit(self.controls);}
     if(playing){
@@ -621,7 +650,20 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
 }
 /* The original GUI ignores a press and release within one frame, so hold the
    button briefly, as a finger on a real mouse does. */
+-(void)gameTapped:(UITapGestureRecognizer *)tap {
+    if(tap.state==UIGestureRecognizerStateEnded)[self loginTapAt:[tap locationInView:self]];
+}
+/* The TribesNEXT login comes before the game reports its state, so a tap
+   there (on Account or Password) opens the keyboard, keeping that field and
+   the one below it in view above it. */
+-(void)loginTapAt:(CGPoint)point {
+    if(self.gameReported||tb_setting(@"TribesPad.onlinePlay",1)==0||!self.controls)return;
+    SDL_Window *window=SDL_GetWindowFromID(self.controls->window);if(!window)return;
+    SDL_Rect caret={(int)point.x,(int)point.y-12,1,72};SDL_SetTextInputArea(window,&caret,0);
+    if(!SDL_TextInputActive(window)){SDL_SetHint(SDL_HINT_RETURN_KEY_HIDES_IME,"1");tb_start_typing(window);}
+}
 -(void)pointerClickAt:(CGPoint)point {
+    [self loginTapAt:point];
     [self pointerButton:YES at:point];__weak TBGameControls *weak=self;
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW,(int64_t)(.08*NSEC_PER_SEC)),dispatch_get_main_queue(),^{[weak pointerButton:NO at:point];});
 }
@@ -715,7 +757,7 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
     if(self.expanded)[self toggleControls];else [self releaseControls];
     [self tapKey:scancode];
     SDL_Window *window=SDL_GetWindowFromID(self.controls->window);
-    if(window&&!SDL_TextInputActive(window)){SDL_SetHint(SDL_HINT_RETURN_KEY_HIDES_IME,"1");SDL_StartTextInput(window);}
+    if(window&&!SDL_TextInputActive(window)){SDL_SetHint(SDL_HINT_RETURN_KEY_HIDES_IME,"1");tb_start_typing(window);}
 }
 -(UIViewController *)presenter {
     UIViewController *presenter=self.window.rootViewController;
@@ -759,7 +801,7 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
     if(self.expanded)[self toggleControls];else [self releaseControls];
     [self tapKey:SDL_SCANCODE_GRAVE];
     SDL_Window *window=SDL_GetWindowFromID(self.controls->window);
-    if(window&&!SDL_TextInputActive(window)){SDL_SetHint(SDL_HINT_RETURN_KEY_HIDES_IME,"0");SDL_StartTextInput(window);}
+    if(window&&!SDL_TextInputActive(window)){SDL_SetHint(SDL_HINT_RETURN_KEY_HIDES_IME,"0");tb_start_typing(window);}
 }
 -(void)showAbout {
     NSDictionary *info=NSBundle.mainBundle.infoDictionary;

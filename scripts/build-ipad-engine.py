@@ -162,12 +162,67 @@ earlier_text='// TribesPad: original offline mode. A dedicated server would quit
 # iOS and iPadOS end apps without the game's quit, which is where it saves
 # preferences (warriors, accepted license). Save them as its onExit does.
 offline_text=earlier_text+'// iOS and iPadOS close apps without a normal quit; save preferences as onExit does, once a minute.\nfunction TribesPadSavePrefs()\n{\n   export("$pref::*", "prefs/ClientPrefs.cs", False);\n   schedule(60000, 0, TribesPadSavePrefs);\n}\nschedule(60000, 0, TribesPadSavePrefs);\n'
-# The original login path does not run yet; JOIN lists internet servers instead (GameGui.cs below).
-online_head='// TribesPad: offline mode with the internet server list in JOIN. A dedicated server would quit the app, so host in game.\n$SkipLogin = true;\n$LaunchMode = "Offline";\n$TribesPadInternetBrowser = true;\n$Host::Dedicated = 0;\n'
+# Settings > Online Play (on by default) starts the original TribesNEXT login;
+# off, the app puts $TribesPadOffline = 1; before this script when it copies it
+# into the profile (mobile_game_paths.m) and the game starts offline, with the internet server list in JOIN (GameGui.cs below).
+# The login script asks for a 500 fps software limiter, an SDL timer the port
+# does not provide; iOS paces frames with VSync, so the limiter stays off.
+online_head="""// TribesPad: TribesNEXT online mode unless Settings > Online Play is off. A dedicated server would quit the app, so host in game.
+if ( $TribesPadOffline )
+{
+   $SkipLogin = true;
+   $LaunchMode = "Offline";
+   $TribesPadInternetBrowser = true;
+}
+else
+   $fromLauncher = true;
+$Host::Dedicated = 0;
+// iOS paces frames with VSync; the optional software frame limiter is not available.
+$pref::Engine::FramerateLimit = 0;
+function setFramerateLimit( %fps )
+{
+}
+"""
 offline_text=online_head+offline_text[len(earlier_text):]
-# The touch layer follows play and menus through this report (mobile_controls.m).
-offline_text+='// TribesPad: report whether the player is in play (PlayGui showing and the\n// game cursor off) so the touch layer switches between touch controls and the\n// menu cursor. Menus, the lobby, inventory and score screens turn the cursor on.\nfunction TribesPadInPlay()\n{\n   if ( !isObject( PlayGui ) || Canvas.getContent() != PlayGui.getId() )\n      return 0;\n   return !Canvas.isCursorOn();\n}\nfunction TribesPadReportState()\n{\n   %state = TribesPadInPlay();\n   if ( %state !$= $TribesPadLastState )\n   {\n      $TribesPadLastState = %state;\n      %file = new FileObject();\n      if ( %file.openForWrite( "prefs/tribespad-state.txt" ) )\n      {\n         %file.writeLine( %state );\n         %file.close();\n      }\n      %file.delete();\n   }\n   schedule( 200, 0, TribesPadReportState );\n}\nschedule( 200, 0, TribesPadReportState );\n'
-if offline.exists():assert offline.read_text().startswith((earlier_text,'// TribesPad: offline mode')), 'Preserve custom autoexec.cs; select offline mode there before building'
+# The touch layer follows play, menus and text fields through this report
+# (mobile_controls.m): "<playing> <typing>". Scheduled script events only run
+# once the game is past the TribesNEXT login; the app handles that screen.
+offline_text+="""// TribesPad: report whether the player is in play (PlayGui showing and the
+// game cursor off) so the touch layer switches between touch controls and the
+// menu cursor. Menus, the lobby, inventory and score screens turn the cursor on.
+// Also report dialogs made for typing, so the on-screen keyboard opens with them.
+function TribesPadInPlay()
+{
+   if ( !isObject( PlayGui ) || Canvas.getContent() != PlayGui.getId() )
+      return 0;
+   return !Canvas.isCursorOn();
+}
+function TribesPadTyping()
+{
+   for ( %i = 0; ( %dlg = getWord( "LoginDlg CreateAccountDlg PasswordDlg NewWarriorDlg EnterIPDlg FindServerDlg BrowserSearchDlg JoinChatDlg ChannelKeyDlg CreateTribeDlg DemoRenameFileDlg", %i ) ) !$= ""; %i++ )
+      if ( isObject( %dlg ) && %dlg.isAwake() )
+         return 1;
+   return 0;
+}
+function TribesPadReportState()
+{
+   %state = TribesPadInPlay() SPC TribesPadTyping();
+   if ( %state !$= $TribesPadLastState )
+   {
+      $TribesPadLastState = %state;
+      %file = new FileObject();
+      if ( %file.openForWrite( "prefs/tribespad-state.txt" ) )
+      {
+         %file.writeLine( %state );
+         %file.close();
+      }
+      %file.delete();
+   }
+   schedule( 200, 0, TribesPadReportState );
+}
+schedule( 200, 0, TribesPadReportState );
+"""
+if offline.exists():assert offline.read_text().startswith((earlier_text,'// TribesPad: offline mode','// TribesPad: TribesNEXT online mode')), 'Preserve custom autoexec.cs; select the launch mode there before building'
 offline.write_text(offline_text)
 # JOIN queries the internet master server in offline mode too (as prepare-macos-server-browser.py
 # did for testing). The app refreshes this file in existing profiles (mobile_game_paths.m).

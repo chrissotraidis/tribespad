@@ -60,7 +60,7 @@ normal app with mouse and keyboard, on the same Metal renderer.
 | Does it work on a real iPad or iPhone? | **Not verified on hardware.** The IPA builds for iPhone and iPad and passes PadMint's package check. In the iPhone 17 Simulator an offline match plays by touch, with the game kept clear of the Dynamic Island and every menu fully on screen. |
 | What has been played? | Offline Katabatic CTF with two bots: spawning, movement, aiming, firing, jets, skiing/jumping, weapon switching, grenades, inventory, an end-of-match map change, and a clean quit. A 30-minute session ran without a crash. |
 | Does it match the original game? | In the one scenario measured so far, yes: a [reference trace](docs/validation/reference-trace-katabatic.json) of the same Katabatic flight is bit-identical to the original Windows game in the air and differs by about 1 cm after landing, where the QoL collision patch applies (the Windows reference ran without QoL). |
-| Online play? | The original server browser lists TribesNEXT community servers on Mac. Joining online matches and account sign-in have not been tested. |
+| Online play? | On iPhone and iPad TribesPad opens to the TribesNEXT login. Signing in with a real account and joining an online match have not been tested yet. |
 | Controllers? | One Xbox, PlayStation or MFi extended gamepad maps to the original bindings. Native input tests pass; play with a physical controller is unverified. |
 | Is the game included? | **No.** Your build downloads the free official Tribes 2 installer and the TribesNEXT client and checks them by SHA-256. See [Game data](#game-data). |
 
@@ -153,8 +153,14 @@ Disconnecting releases the controller's actions, and backgrounding the app relea
 
 ### Online servers
 
-**LAN GAME → JOIN** lists the TribesNEXT internet servers as well as LAN games.
-Joining one is untested; the TribesNEXT account sign-in does not run yet.
+On iPhone and iPad, TribesPad opens to the TribesNEXT login. Tap **Account** or
+**Password** and the keyboard opens with the login pane above it. Sign in with
+your TribesNEXT account (**CREATE NEW ACCOUNT** makes a free one), then
+**PLAY GAME → JOIN** lists the internet servers. Signing in with a real account
+and joining a match have not been tested yet.
+
+**Settings → Online Play** off starts offline instead: Training, LAN Game, and
+the internet server list in JOIN without signing in.
 
 ## Recompiled, not decompiled
 

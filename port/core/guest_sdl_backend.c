@@ -1152,12 +1152,18 @@ static void return_float(_cpu *cpu,float value){uint32_t bits;memcpy(&bits,&valu
    640x480 after scaling. Phones are described in pixels with a 3x display
    scale (2250x1206 / 3 = 750x402 on iPhone 17), which cropped the menus.
    QoL rounds the scale up, so report at most the largest whole scale that
-   keeps 640x480 visible (2 there: 1125x603). */
+   keeps 640x480 visible (2 there: 1125x603). On iPhone and iPad report that
+   largest scale even when the display scale is smaller: the 2x display scale
+   drew the menus over less than half of an iPad's screen (4 fits a 12.9-inch
+   iPad Pro, 3 an 11-inch iPad). The QoL UI Scale setting still overrides. */
 static float fit_display_scale(SDL_Window *window,float value){
     int width=0,height=0;
     if(value<=1.0f||!content_pixels(window,&width,&height))return value;
     float fit=(float)width/640.0f;if((float)height/480.0f<fit)fit=(float)height/480.0f;
     fit=(float)(int)fit;
+#if TARGET_OS_IPHONE
+    if(fit>=1.0f)return fit;
+#endif
     return fit>=1.0f&&fit<value?fit:value;
 }
 void tribes_sdl_get_window_display_scale(_cpu *cpu,uint32_t token){
