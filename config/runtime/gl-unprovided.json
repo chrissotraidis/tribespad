@@ -944,6 +944,178 @@
   "wglSwapLayerBuffers": [
    2,
    true
+  ],
+  "glAccum": [
+   2,
+   false
+  ],
+  "glAreTexturesResident": [
+   3,
+   true
+  ],
+  "glArrayElement": [
+   1,
+   false
+  ],
+  "glBitmap": [
+   7,
+   false
+  ],
+  "glCallList": [
+   1,
+   false
+  ],
+  "glCallLists": [
+   3,
+   false
+  ],
+  "glClearAccum": [
+   4,
+   false
+  ],
+  "glClearIndex": [
+   1,
+   false
+  ],
+  "glClearStencil": [
+   1,
+   false
+  ],
+  "glClipPlane": [
+   2,
+   false
+  ],
+  "glColor3b": [
+   3,
+   false
+  ],
+  "glColor3bv": [
+   1,
+   false
+  ],
+  "glColor3d": [
+   6,
+   false
+  ],
+  "glColor3dv": [
+   1,
+   false
+  ],
+  "glColor3fv": [
+   1,
+   false
+  ],
+  "glColor3i": [
+   3,
+   false
+  ],
+  "glColor3iv": [
+   1,
+   false
+  ],
+  "glColor3s": [
+   3,
+   false
+  ],
+  "glColor3sv": [
+   1,
+   false
+  ],
+  "glColor3ubv": [
+   1,
+   false
+  ],
+  "glColor3ui": [
+   3,
+   false
+  ],
+  "glColor3uiv": [
+   1,
+   false
+  ],
+  "glColor3us": [
+   3,
+   false
+  ],
+  "glColor3usv": [
+   1,
+   false
+  ],
+  "glColor4b": [
+   4,
+   false
+  ],
+  "glColor4bv": [
+   1,
+   false
+  ],
+  "glColor4d": [
+   8,
+   false
+  ],
+  "glColor4dv": [
+   1,
+   false
+  ],
+  "glColor4i": [
+   4,
+   false
+  ],
+  "glColor4iv": [
+   1,
+   false
+  ],
+  "glColor4s": [
+   4,
+   false
+  ],
+  "glColor4sv": [
+   1,
+   false
+  ],
+  "glColor4ubv": [
+   1,
+   false
+  ],
+  "glColor4ui": [
+   4,
+   false
+  ],
+  "glColor4uiv": [
+   1,
+   false
+  ],
+  "glColor4us": [
+   4,
+   false
+  ],
+  "glColor4usv": [
+   1,
+   false
+  ],
+  "glColorMask": [
+   4,
+   false
+  ],
+  "glColorMaterial": [
+   2,
+   false
+  ],
+  "glCopyPixels": [
+   5,
+   false
+  ],
+  "glCopyTexImage1D": [
+   7,
+   false
+  ],
+  "glCopyTexImage2D": [
+   8,
+   false
+  ],
+  "glCopyTexSubImage1D": [
+   6,
+   false
   ]
  }
 }

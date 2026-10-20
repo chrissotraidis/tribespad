@@ -2086,6 +2086,17 @@ void tribes_gl_vertex3fv(_cpu *cpu,uint32_t address){
 #endif
 }
 void tribes_gl_blend_func(_cpu *cpu,uint32_t source,uint32_t destination){GL_ENTER();glBlendFunc(source,destination);DRAW_RETURN();}
+/* glColor3f: alpha 1, as OpenGL defines it. Tribes2.exe draws triangle fans
+   with it (crash at 0x63f60b, online on iPad). */
+void tribes_gl_color3f(_cpu *cpu,uint32_t r,uint32_t g,uint32_t b){
+    GL_ENTER();
+#if TB_GLES_HOST && !defined(TB_GL4ES)
+    (void)r;(void)g;(void)b;(void)error;stop();
+#else
+    (void)legacy_context();uint32_t bits[]={r,g,b};GLfloat value[3];memcpy(value,bits,sizeof value);
+    glColor4f(value[0],value[1],value[2],1.0f);DRAW_RETURN();
+#endif
+}
 void tribes_gl_color4f(_cpu *cpu,uint32_t r,uint32_t g,uint32_t b,uint32_t a){
     GL_ENTER();
 #if TB_GLES_HOST && !defined(TB_GL4ES)

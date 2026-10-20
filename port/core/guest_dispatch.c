@@ -13,9 +13,8 @@ _Static_assert(offsetof(_cpu, _dispatch_target) == 172, "LLVM dispatch mailbox A
 static void report_null_call(_cpu *cpu){
     uint32_t words[8]={0};uint64_t offset=cpu->_pointer_offset;uint32_t sp=cpu->_esp;
     if(sp>=0x10000&&sp<0xffff0000u)for(unsigned i=0;i<8;i++)words[i]=*(const uint32_t *)(uintptr_t)(offset+sp+4*i);
-    fprintf(stderr,"TribesPad: call to address 0 esp=0x%08x eax=0x%08x ecx=0x%08x edx=0x%08x stack=",sp,cpu->_eax,cpu->_ecx,cpu->_edx);
-    for(unsigned i=0;i<8;i++)fprintf(stderr,"%s0x%08x",i?",":"",words[i]);
-    fprintf(stderr,"\n");
+    fprintf(stderr,"TribesPad: call to address 0 esp=0x%08x eax=0x%08x ecx=0x%08x edx=0x%08x stack=0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x\n",
+        sp,cpu->_eax,cpu->_ecx,cpu->_edx,words[0],words[1],words[2],words[3],words[4],words[5],words[6],words[7]);
 }
 void tribes_set_dispatch_target(_cpu *cpu,uint32_t target) {
     if(__builtin_expect(!target,0))report_null_call(cpu);
