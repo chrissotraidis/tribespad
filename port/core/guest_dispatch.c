@@ -7,7 +7,20 @@
 _Static_assert(offsetof(_cpu, _esp) == 16, "LLVM guest stack ABI");
 _Static_assert(offsetof(_cpu, _pointer_offset) == 112, "LLVM guest address ABI");
 _Static_assert(offsetof(_cpu, _dispatch_target) == 172, "LLVM dispatch mailbox ABI");
-void tribes_set_dispatch_target(_cpu *cpu,uint32_t target) { cpu->_dispatch_target=target; }
+/* A call through a function pointer the game never filled in. Name the
+   caller (return address on the guest stack) so the missing provider can be
+   found from the session log. */
+static void report_null_call(_cpu *cpu){
+    uint32_t words[8]={0};uint64_t offset=cpu->_pointer_offset;uint32_t sp=cpu->_esp;
+    if(sp>=0x10000&&sp<0xffff0000u)for(unsigned i=0;i<8;i++)words[i]=*(const uint32_t *)(uintptr_t)(offset+sp+4*i);
+    fprintf(stderr,"TribesPad: call to address 0 esp=0x%08x eax=0x%08x ecx=0x%08x edx=0x%08x stack=",sp,cpu->_eax,cpu->_ecx,cpu->_edx);
+    for(unsigned i=0;i<8;i++)fprintf(stderr,"%s0x%08x",i?",":"",words[i]);
+    fprintf(stderr,"\n");
+}
+void tribes_set_dispatch_target(_cpu *cpu,uint32_t target) {
+    if(__builtin_expect(!target,0))report_null_call(cpu);
+    cpu->_dispatch_target=target;
+}
 extern const uint32_t tribes_dispatch_count;
 extern const uint32_t tribes_dispatch_vas[];
 extern void (*const tribes_dispatch_fns[])(_cpu *);

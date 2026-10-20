@@ -2333,11 +2333,34 @@ static unsigned collect_gl_errors(GLContext *c){
         if(e<0x500||e>0x507)stop();flags|=1u<<(e-0x500);
     }c->errors|=flags;return flags;
 }
+/* Font glyph sheets (GL_ALPHA): QoL draws text with a shader that keeps
+   sampling inside each glyph's cell (text.frag: texelFetch within
+   charBounds). That shader needs texture arrays, which the mobile GL path
+   lacks, so the fixed-function fallback samples the sheets bilinearly and
+   blends in the bright gaps between cells: a faint box around every letter.
+   Sample glyph sheets with GL_NEAREST, which stays inside the cell. */
+static GLuint alpha_textures[512];static unsigned alpha_texture_count;
+static int alpha_texture_bound(void){
+    GLint bound=0;glGetIntegerv(0x8069,&bound);if(!bound)return 0;
+    for(unsigned i=0;i<alpha_texture_count;i++)if(alpha_textures[i]==(GLuint)bound)return 1;
+    return 0;
+}
+static void note_alpha_texture(uint32_t format){
+    if(format!=0x1906)return;
+    if(!alpha_texture_bound()){
+        GLint bound=0;glGetIntegerv(0x8069,&bound);if(!bound)return;
+        if(alpha_texture_count<sizeof alpha_textures/sizeof *alpha_textures)alpha_textures[alpha_texture_count++]=(GLuint)bound;
+    }
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+}
 void tribes_gl_tex_parameter_i(_cpu *cpu,uint32_t target,uint32_t parameter,uint32_t value){
-    GL_ENTER();if(!set_automatic_mipmap(target,parameter,value!=0))glTexParameteri(target,parameter,(int32_t)value);DRAW_RETURN();
+    GL_ENTER();
+    if(target==GL_TEXTURE_2D&&(parameter==GL_TEXTURE_MIN_FILTER||parameter==GL_TEXTURE_MAG_FILTER)&&alpha_texture_bound())value=GL_NEAREST;
+    if(!set_automatic_mipmap(target,parameter,value!=0))glTexParameteri(target,parameter,(int32_t)value);DRAW_RETURN();
 }
 void tribes_gl_tex_parameter_f(_cpu *cpu,uint32_t target,uint32_t parameter,uint32_t bits){
     GL_ENTER();GLfloat value;memcpy(&value,&bits,4);
+    if(target==GL_TEXTURE_2D&&(parameter==GL_TEXTURE_MIN_FILTER||parameter==GL_TEXTURE_MAG_FILTER)&&alpha_texture_bound())value=(GLfloat)GL_NEAREST;
     if(!set_automatic_mipmap(target,parameter,value!=0.0f))glTexParameterf(target,parameter,value);DRAW_RETURN();
 }
 void tribes_gl_generate_mipmap(_cpu *cpu,uint32_t target){
@@ -2423,6 +2446,7 @@ void tribes_gl_tex_image_2d(_cpu *cpu,uint32_t target,uint32_t level,uint32_t in
     GLContext *c=current_context();int generate=texture_2d_automatic(c,target,level);
     if(generate)collect_gl_errors(c);
     glTexImage2D(target,(int32_t)level,(int32_t)internal,(int32_t)width,(int32_t)height,(int32_t)border,format,type,pixels);
+    if(target==GL_TEXTURE_2D&&level==0)note_alpha_texture(format);
     if(generate&&!collect_gl_errors(c)&&(int32_t)width>0&&(int32_t)height>0){
         glGenerateMipmap(target);
 #ifdef TB_CAPTURE_PATCHES

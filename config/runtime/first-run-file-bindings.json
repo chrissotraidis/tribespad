@@ -1,5 +1,5 @@
 {
-  "scope": "TribesNEXT downloads and account sign-in: native file and random services that replace reached import stops (stops: QoL import-stop numbers in stops.ll) and reached ntdll diagnostic probes (ntdll_probes: probe indexes in ntdll-probes.ll).",
+  "scope": "TribesNEXT downloads and account sign-in: native file, random and settings-registry services that replace reached import stops (stops: QoL import-stop numbers in stops.ll) and reached ntdll diagnostic probes (ntdll_probes: probe indexes in ntdll-probes.ll).",
   "bindings": {
     "GetFileInformationByHandle": {"helper": "tribes_get_file_information_by_handle", "arguments": 2, "returns": true, "guest_base": true},
     "MoveFileExW": {"helper": "tribes_move_file_ex_w", "arguments": 3, "returns": true, "guest_base": true},
@@ -8,8 +8,11 @@
     "GetFileSizeEx": {"helper": "tribes_get_file_size_ex", "arguments": 2, "returns": true, "guest_base": true},
     "FlushFileBuffers": {"helper": "tribes_flush_file_buffers", "arguments": 1, "returns": true, "guest_base": true},
     "SetEndOfFile": {"helper": "tribes_set_end_of_file", "arguments": 1, "returns": true, "guest_base": true},
-    "SystemFunction036": {"helper": "tribes_rtl_gen_random", "arguments": 2, "returns": true, "guest_base": true}
+    "SystemFunction036": {"helper": "tribes_rtl_gen_random", "arguments": 2, "returns": true, "guest_base": true},
+    "RegQueryValueExA": {"helper": "tribes_reg_query_value_ex_a", "arguments": 6, "returns": true, "guest_base": true},
+    "RegSetValueExA": {"helper": "tribes_reg_set_value_ex_a", "arguments": 6, "returns": true, "guest_base": true},
+    "RegDeleteValueA": {"helper": "tribes_reg_delete_value_a", "arguments": 2, "returns": true, "guest_base": true}
   },
-  "stops": {"GetFileInformationByHandle": 144, "MoveFileExW": 129, "SetFilePointerEx": 139, "GetFileSizeEx": 143, "FlushFileBuffers": 147, "SetEndOfFile": 68, "SystemFunction036": 5},
+  "stops": {"GetFileInformationByHandle": 144, "MoveFileExW": 129, "SetFilePointerEx": 139, "GetFileSizeEx": 143, "FlushFileBuffers": 147, "SetEndOfFile": 68, "SystemFunction036": 5, "RegQueryValueExA": 441, "RegDeleteValueA": 443, "RegSetValueExA": 444},
   "ntdll_probes": {"NtSetInformationFile": 2}
 }

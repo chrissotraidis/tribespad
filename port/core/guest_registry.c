@@ -6,6 +6,12 @@
  * otherwise the declared libuv Apple compatibility fallback. That fallback is
  * not measured physical CPU speed.
  * Other registry namespaces stop until their persistence/profile exists.
+ * Settings keys: HKLM\SOFTWARE\Sierra On-Line\Tribes2 and
+ * ...\Microsoft\Windows\CurrentVersion (HKLM and HKCU). "Remember password"
+ * stores the masked password in HKLM CurrentVersion (_mMaskFileKey). Their
+ * values persist, named "<key path>\<value>", in tribes2-registry.bin in the
+ * working directory (the app's storage). A settings key exists once it holds
+ * a value or is opened to set one.
  */
 #include "guest_registry.h"
 #include "cpu_metadata_profile.h"
@@ -70,6 +76,43 @@ static Key *find(uint64_t base,uint32_t token){for(Key *k=keys;k;k=k->next)if(k-
 static unsigned cpu_count(void){long n=sysconf(_SC_NPROCESSORS_ONLN);if(n<1){fputs("TribesPad: registry CPU count unavailable\n",stderr);abort();}return n>32?32:(unsigned)n;}
 /* Returns -1 for a parent, a CPU index for a leaf, -2 for absent profile keys.
  * No assumptions about unimplemented software/profile registry namespaces. */
+static int settings_path(const char *path){
+ static const char *paths[]={"SOFTWARE\\SIERRA ON-LINE\\TRIBES2","SOFTWARE\\MICROSOFT\\WINDOWS\\CURRENTVERSION",
+  "HKCU\\SOFTWARE\\MICROSOFT\\WINDOWS\\CURRENTVERSION"};
+ for(unsigned i=0;i<sizeof paths/sizeof *paths;i++)if(!strcmp(path,paths[i]))return 1;
+ return 0;
+}
+static const char settings_file[]="tribes2-registry.bin";
+#define KEY_SET_VALUE 2u
+/* Records: name length, name, type, data length, data (little endian). */
+typedef struct Setting {char name[2*PATH_BYTES];uint32_t type,length;unsigned char data[4096];} Setting;
+static unsigned load_settings(Setting *out,unsigned capacity){
+ FILE *f=fopen(settings_file,"rb");if(!f)return 0;unsigned n=0;
+ for(;n<capacity;n++){
+  uint32_t name_length;Setting *v=out+n;
+  if(fread(&name_length,4,1,f)!=1||name_length>=sizeof v->name||fread(v->name,1,name_length,f)!=name_length)break;
+  v->name[name_length]=0;
+  if(fread(&v->type,4,1,f)!=1||fread(&v->length,4,1,f)!=1||v->length>sizeof v->data||fread(v->data,1,v->length,f)!=v->length)break;
+ }
+ fclose(f);return n;
+}
+static int save_settings(const Setting *values,unsigned n){
+ FILE *f=fopen("tribes2-registry.bin.new","wb");if(!f)return 0;int ok=1;
+ for(unsigned i=0;i<n;i++){
+  uint32_t name_length=(uint32_t)strlen(values[i].name);
+  ok&=fwrite(&name_length,4,1,f)==1&&fwrite(values[i].name,1,name_length,f)==name_length&&fwrite(&values[i].type,4,1,f)==1&&
+   fwrite(&values[i].length,4,1,f)==1&&fwrite(values[i].data,1,values[i].length,f)==values[i].length;
+ }
+ ok&=fclose(f)==0;
+ if(!ok){unlink("tribes2-registry.bin.new");return 0;}
+ if(!n){unlink("tribes2-registry.bin.new");unlink(settings_file);return 1;}
+ return rename("tribes2-registry.bin.new",settings_file)==0;
+}
+static int settings_exist(const char *path){
+ static Setting v[16];unsigned n=load_settings(v,16);size_t length=strlen(path);
+ for(unsigned i=0;i<n;i++)if(!strncmp(v[i].name,path,length)&&v[i].name[length]=='\\')return 1;
+ return 0;
+}
 static int path_kind(const char *path){
  if(!*path)return -1;
  /* This file-based Apple installation has no Windows installer registry key.
@@ -89,12 +132,22 @@ static uint32_t open_path(uint64_t base,uint32_t key,const char *sub,uint32_t op
  if(options){fputs("TribesPad: registry open options not implemented\n",stderr);abort();}
  /* Hardware is a shared read-only view; select either WOW64 view, not both. */
  if((access&0x300u)==0x300u)return 87;
- if(access&~(KEY_READ|0x300u))return 5;
  char path[PATH_BYTES];
  if(key==HKCU){
   if(!*sub){*output=HKCU;return 0;}
   if(absent_user_path(sub)||absent_font_path(sub))return 2;
-  fputs("TribesPad: user registry namespace not implemented\n",stderr);abort();
+  char user[PATH_BYTES];size_t n=strlen(sub);while(n&&sub[n-1]=='\\')n--;
+  if(n+5<sizeof user){memcpy(user,"HKCU\\",5);memcpy(user+5,sub,n);user[n+5]=0;
+   if(settings_path(user)){
+    if(access&~(KEY_READ|0x300u|0x20006u))return 5;
+    pthread_mutex_lock(&mutex);
+    if(!(access&KEY_SET_VALUE)&&!settings_exist(user)){pthread_mutex_unlock(&mutex);return 2;}
+    Key *entry=calloc(1,sizeof *entry);if(!entry||next_token>=0xe6000000u){free(entry);pthread_mutex_unlock(&mutex);return 8;}
+    entry->base=base;entry->token=next_token++;entry->access=access&~0x300u;strcpy(entry->path,user);entry->next=keys;keys=entry;
+    uint32_t token=entry->token;pthread_mutex_unlock(&mutex);*output=token;return 0;
+   }
+  }
+  fprintf(stderr,"TribesPad: user registry namespace not implemented: HKCU %s\n",sub);abort();
  }
  pthread_mutex_lock(&mutex);Key *parent=find(base,key);
  if(key!=HKLM&&!parent){pthread_mutex_unlock(&mutex);return 6;}
@@ -103,7 +156,10 @@ static uint32_t open_path(uint64_t base,uint32_t key,const char *sub,uint32_t op
  memcpy(path,prefix,a);size_t at=a;if(a&&b)path[at++]='\\';memcpy(path+at,sub,b+1);
  size_t total=at+b;while(total&&path[total-1]=='\\')path[--total]=0;
  if(key==HKLM&&!*path){pthread_mutex_unlock(&mutex);*output=HKLM;return 0;}
- if(path_kind(path)==-2){pthread_mutex_unlock(&mutex);return 2;}
+ int settings=settings_path(path);
+ if(access&~(KEY_READ|0x300u|(settings?0x20006u:0))){pthread_mutex_unlock(&mutex);return 5;}
+ if(settings&&!(access&KEY_SET_VALUE)&&!settings_exist(path)){pthread_mutex_unlock(&mutex);return 2;}
+ if(!settings&&path_kind(path)==-2){pthread_mutex_unlock(&mutex);return 2;}
  Key *entry=calloc(1,sizeof *entry);if(!entry||next_token>=0xe6000000u){free(entry);pthread_mutex_unlock(&mutex);return 8;}
  entry->base=base;entry->token=next_token++;entry->access=access&~0x300u;strcpy(entry->path,path);entry->next=keys;keys=entry;
  uint32_t token=entry->token;pthread_mutex_unlock(&mutex);*output=token;return 0;
@@ -187,4 +243,57 @@ uint32_t tribes_reg_get_value_a(uint64_t base,uint32_t key,uint32_t subkey,uint3
  if(opened)tribes_reg_close_key(base,handle);
  if(status&&(flags&0x20000000u)&&data&&capacity)memset((void *)(uintptr_t)(base+data),0,capacity);
  return status;
+}
+
+/* ANSI value access for the persisted settings key (see the top of the file). */
+static Key *settings_key(uint64_t base,uint32_t token,uint32_t right,uint32_t *status);
+static void setting_name(const Key *entry,const char *field,char out[2*PATH_BYTES]){snprintf(out,2*PATH_BYTES,"%s\\%s",entry->path,field);}
+static Key *settings_key(uint64_t base,uint32_t token,uint32_t right,uint32_t *status){
+ Key *entry=find(base,token);
+ if(!entry){*status=token==HKLM||token==HKCU?2:6;return NULL;}
+ if(!settings_path(entry->path)){fputs("TribesPad: registry value namespace not implemented\n",stderr);abort();}
+ if(!(entry->access&right)){*status=5;return NULL;}
+ return entry;
+}
+uint32_t tribes_reg_query_value_ex_a(uint64_t base,uint32_t key,uint32_t name,uint32_t reserved,uint32_t type,uint32_t data,uint32_t size){
+ if(reserved||(data&&!size)||(type&&!range(base,type,4))||(size&&!range(base,size,4)))return 87;
+ char field[PATH_BYTES];int error=ansi_name(base,name,field,sizeof field);if(error)return (uint32_t)error;
+ static Setting values[16];uint32_t status=0;
+ pthread_mutex_lock(&mutex);
+ Key *entry=settings_key(base,key,KEY_QUERY_VALUE,&status);if(!entry){pthread_mutex_unlock(&mutex);return status;}
+ char full[2*PATH_BYTES];setting_name(entry,field,full);
+ unsigned n=load_settings(values,16),i=0;while(i<n&&strcmp(values[i].name,full))i++;
+ if(i==n){pthread_mutex_unlock(&mutex);return 2;}
+ uint32_t capacity=0;if(data)memcpy(&capacity,(void *)(uintptr_t)(base+size),4);
+ if(data&&capacity>=values[i].length&&values[i].length&&!range(base,data,values[i].length)){pthread_mutex_unlock(&mutex);return 87;}
+ if(type)put32(base,type,values[i].type);
+ if(size)put32(base,size,values[i].length);
+ if(data&&capacity<values[i].length)status=234;
+ else if(data&&values[i].length)memcpy((void *)(uintptr_t)(base+data),values[i].data,values[i].length);
+ pthread_mutex_unlock(&mutex);return status;
+}
+uint32_t tribes_reg_set_value_ex_a(uint64_t base,uint32_t key,uint32_t name,uint32_t reserved,uint32_t type,uint32_t data,uint32_t size){
+ if(reserved||(size&&!range(base,data,size)))return 87;
+ char field[PATH_BYTES];int error=ansi_name(base,name,field,sizeof field);if(error)return (uint32_t)error;
+ static Setting values[16];uint32_t status=0;
+ pthread_mutex_lock(&mutex);
+ Key *entry=settings_key(base,key,KEY_SET_VALUE,&status);if(!entry){pthread_mutex_unlock(&mutex);return status;}
+ char full[2*PATH_BYTES];setting_name(entry,field,full);
+ unsigned n=load_settings(values,16),i=0;while(i<n&&strcmp(values[i].name,full))i++;
+ if(size>sizeof values[0].data||(i==n&&n==16)){pthread_mutex_unlock(&mutex);return 8;}
+ if(i==n)n++;
+ strcpy(values[i].name,full);values[i].type=type;values[i].length=size;
+ if(size)memcpy(values[i].data,(const void *)(uintptr_t)(base+data),size);
+ status=save_settings(values,n)?0:1016;pthread_mutex_unlock(&mutex);return status;
+}
+uint32_t tribes_reg_delete_value_a(uint64_t base,uint32_t key,uint32_t name){
+ char field[PATH_BYTES];int error=ansi_name(base,name,field,sizeof field);if(error)return (uint32_t)error;
+ static Setting values[16];uint32_t status=0;
+ pthread_mutex_lock(&mutex);
+ Key *entry=settings_key(base,key,KEY_SET_VALUE,&status);if(!entry){pthread_mutex_unlock(&mutex);return status;}
+ char full[2*PATH_BYTES];setting_name(entry,field,full);
+ unsigned n=load_settings(values,16),i=0;while(i<n&&strcmp(values[i].name,full))i++;
+ if(i==n){pthread_mutex_unlock(&mutex);return 2;}
+ values[i]=values[--n];
+ status=save_settings(values,n)?0:1016;pthread_mutex_unlock(&mutex);return status;
 }

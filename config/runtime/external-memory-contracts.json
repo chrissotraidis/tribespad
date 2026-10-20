@@ -695,7 +695,7 @@
     "ref/softfloat/SoftFloat-3e/source/8086/s_commonNaNToF64UI.c": "be1ecb12428036b40d9bb249231d94c1c7b362633c8e5b7cf1ff0ca1d160b945",
     "port/llasm-support/tribes_result.c": "983b85e4760dfbabccf08711b6007f8bdd0612f037164e6698aaeabf9b00bed5",
     "port/core/guest_system_query.c": "dee5fc63fd78f93e11ec874229dd011170f4cd82e2ebfe13e4f6b5de20457911",
-    "port/core/guest_registry.c": "604f209de5aaafc3439b2f7dcbef0b475b9a90e8512706c38f98043c656d4f35",
+    "port/core/guest_registry.c": "3f9d4c9c1c414455db55d03953c0160acd00b886a6d12fdc4aeba1b405e86d7b",
     "port/core/guest_scheduling.c": "b65bd6dc622f06e331e970fffe58c9ce5baf92d542586aa4bd213b669d141a17",
     "ref/softfloat/SoftFloat-3e/source/f32_sqrt.c": "7e6c3c65e5cff08b05ddd34c6d29330f8fe30237a809086af394072488bf80fe",
     "ref/softfloat/SoftFloat-3e/source/f64_sqrt.c": "181790dd6916704eb333c314384943fbe75f2174988d4e75b4f9f76f032d4664",
