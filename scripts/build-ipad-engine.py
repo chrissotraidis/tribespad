@@ -120,6 +120,8 @@ from graphics_backend_inputs import prepare as graphics_inputs
 graphics_sources,_=graphics_inputs(mobile_inputs)
 old_wrapper=next(p for p in sources if p.name=='graphics-bindings.ll')
 sources[sources.index(old_wrapper)]=next(p for p in graphics_sources if p.name=='graphics-bindings.ll')
+# The generated no-op stubs for unprovided GL entry points (gl-unprovided.json).
+sources.append(next(p for p in graphics_sources if p.name=='graphics-unprovided.c'))
 # DirectSound COM routes are generated from dsound_backend_inputs.py, so methods
 # implemented after the frozen preparation replace their stops.
 from dsound_backend_inputs import prepare as dsound_inputs

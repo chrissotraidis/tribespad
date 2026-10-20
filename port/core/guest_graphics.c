@@ -101,3 +101,9 @@ uint32_t tribes_wgl_get_proc(_cpu *cpu,uint32_t name){
     fprintf(stderr,"TribesPad: no native WGL procedure %s\n",text);
     tribes_set_last_error(127);return 0;
 }
+
+/* Called by the generated no-op stubs for OpenGL entry points that have no
+   native provider (gl-unprovided.json): name each one once in the log. */
+void tribes_gl_unprovided(const char *name,int *seen){
+    if(*seen)return;*seen=1;fprintf(stderr,"TribesPad: unprovided GL function called: %s (ignored)\n",name);
+}
