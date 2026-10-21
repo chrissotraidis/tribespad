@@ -88,6 +88,31 @@ static void cache_file(unsigned wide,const char *root){
  assert(tribes_move_file_ex_w(base,0x14000,0x14400,1)==0&&tribes_get_last_error()==2);
  assert(tribes_move_file_ex_w(base,0x14000,0,1)==0&&tribes_get_last_error()==87);
  assert(!unlink(moved));
+ /* NtSetInformationFile disposition: DELETE access required; class 64 flags and
+    class 13 BOOLEAN; read-only refused unless IGNORE_READONLY; no-op without DELETE. */
+ {uint32_t flags=1|2;memcpy(memory+0x15000,&flags,4);memset(memory+0x15100,0xa5,8);
+  h=open_file_flags(wide,"Download.dat",0x120116,0,2,0x02000080);assert(h!=UINT32_MAX);
+  assert(tribes_nt_set_information_file(base,h,0x15100,0x15000,4,64)==0xc0000022u&&!access(path,F_OK));
+  assert(tribes_close_handle(h));
+  h=open_file_flags(wide,"Download.dat",0x10000|0x120116,0,3,0x02000080);assert(h!=UINT32_MAX);
+  assert(tribes_nt_set_information_file(base,h,0x15100,0x15000,3,64)==0xc0000004u);
+  flags=0;memcpy(memory+0x15000,&flags,4);
+  assert(tribes_nt_set_information_file(base,h,0x15100,0x15000,4,64)==0&&!access(path,F_OK));
+  flags=1|2;memcpy(memory+0x15000,&flags,4);
+  assert(tribes_nt_set_information_file(base,h,0x15100,0x15000,4,64)==0&&access(path,F_OK));
+  {uint32_t io[2];memcpy(io,memory+0x15100,8);assert(io[0]==0&&io[1]==0);}
+  memcpy(memory+0x12000,"x",1);assert(tribes_write_file(base,h,0x12000,1,0x20010,0));
+  assert(tribes_close_handle(h));
+  h=open_file_flags(wide,"Download.dat",0x10000|0x120116,0,2,0x02000080);assert(h!=UINT32_MAX);
+  assert(!chmod(path,0444));
+  assert(tribes_nt_set_information_file(base,h,0x15100,0x15000,4,64)==0xc0000121u&&!access(path,F_OK));
+  memory[0x15000]=1;assert(tribes_nt_set_information_file(base,h,0x15100,0x15000,1,13)==0xc0000121u);
+  flags=1|16;memcpy(memory+0x15000,&flags,4);
+  assert(tribes_nt_set_information_file(base,h,0x15100,0x15000,4,64)==0&&access(path,F_OK));
+  assert(tribes_close_handle(h));
+  h=open_file_flags(wide,"Download.dat",0x10000|0x120116,0,2,0x02000080);assert(h!=UINT32_MAX);
+  memory[0x15000]=1;assert(tribes_nt_set_information_file(base,h,0x15100,0x15000,1,13)==0&&access(path,F_OK));
+  assert(tribes_close_handle(h));}
  #undef WIDE
 }
 static void check(unsigned wide,const char *name,uint32_t expected,uint32_t error){

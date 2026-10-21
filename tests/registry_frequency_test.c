@@ -5,10 +5,11 @@
 #include <stdio.h>
 #include <string.h>
 
-/* Inject OS responses at the actual registry service boundary. */
+/* Inject OS responses at the actual registry service boundary. Any refused
+   query (iOS devices answer EPERM) uses the declared compatibility value. */
 static struct { int error; size_t size; uint64_t hz; uint32_t result,mhz; } cases[]={
  {ENOENT,8,0,0,2400},{0,0,0,0,2400},{0,8,0,0,2400},
- {0,8,3200999999,0,3200},{EIO,0,0,31,0},{EPERM,8,0,31,0},
+ {0,8,3200999999,0,3200},{EIO,0,0,0,2400},{EPERM,8,0,0,2400},
  {0,4,0,13,0},{0,4,3200000000,13,0},{0,16,0,13,0},
  {0,8,999999,13,0},{0,8,UINT64_MAX,13,0}
 };
@@ -34,5 +35,5 @@ int main(void){
   else assert(read32(1024)==0xa5a5a5a5&&read32(1028)==0xa5a5a5a5&&read32(1032)==4);
  }
  assert(!tribes_reg_close_key(base,key));
- puts("PASS: 11 injected CPU-frequency results: native value, declared fallback, OS errors, malformed sizes and numeric bounds");
+ puts("PASS: 11 injected CPU-frequency results: native value, declared fallback for absent or refused queries, malformed sizes and numeric bounds");
 }

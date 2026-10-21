@@ -18,9 +18,17 @@ static unsigned char *permissions;
 /* Trusted runtime data path. In MMU-enforced builds the guest view may be
    narrowed (inaccessible mixed pages, read-only published code), so trusted
    reads/writes made under the writer lock use a private RW alias of the same
-   memory. Without that mode the alias is absent and this is the guest view. */
+   memory. Without that mode the alias is absent and this is the guest view.
+   The alias covers only the guest user space (below 2 GiB): data never lives
+   above it, and iOS without Extended Virtual Addressing has no room for a
+   second 4 GiB view. */
 static uintptr_t alias_base;
-#define GUEST_DATA(offset) ((unsigned char *)(uintptr_t)((alias_base?alias_base:guest_base)+(uint64_t)(offset)))
+static uint64_t alias_size;
+static unsigned char *guest_data(uint64_t offset){
+ if(alias_base&&offset>=alias_size){fputs("TribesPad: trusted access above guest user space\n",stderr);abort();}
+ return (unsigned char *)(uintptr_t)((alias_base?alias_base:guest_base)+offset);
+}
+#define GUEST_DATA(offset) guest_data((uint64_t)(offset))
 #ifdef TRIBES_HARDWARE_PERMISSIONS
 static _Atomic uint32_t emulators;
 static int hardware_configure(void);
@@ -156,6 +164,8 @@ int tribes_memory_checks_configure(uint64_t base,uint64_t size){
 }
 int tribes_memory_permissions_set(uint32_t address,uint64_t size,uint32_t access){
  if(!permissions||!size||(address|size)%4096||access>3||address>=guest_size||size>guest_size-address)return 0;
+ /* Data access is granted only inside the alias (the guest user space). */
+ if(access&&alias_base&&(uint64_t)address+size>alias_size)return 0;
  write_lock();memset(permissions+address/4096,(int)access,(size_t)(size/4096));
 #ifdef TRIBES_HARDWARE_PERMISSIONS
  apply_native(address/4096,(address+size)/4096);
@@ -548,9 +558,13 @@ static int hardware_configure(void){
  vm_address_t guard=(vm_address_t)(guest_base+guest_size);
  if(vm_allocate(mach_task_self(),&guard,65536,VM_FLAGS_FIXED)!=KERN_SUCCESS||mprotect((void *)guard,65536,PROT_NONE))return 0;
  vm_address_t alias=0;vm_prot_t current,maximum;
- if(vm_remap(mach_task_self(),&alias,(vm_size_t)guest_size,0,VM_FLAGS_ANYWHERE,mach_task_self(),(vm_address_t)guest_base,FALSE,&current,&maximum,VM_INHERIT_NONE)!=KERN_SUCCESS)return 0;
- if(mprotect((void *)alias,(size_t)guest_size,PROT_READ|PROT_WRITE))return 0;
- alias_base=(uintptr_t)alias;
+ uint64_t user=((uint64_t)TRIBES_GUEST_MAXIMUM_ADDRESS+1+host_page-1)&~(host_page-1);
+ uint64_t size=guest_size<user?guest_size:user;
+ if(vm_remap(mach_task_self(),&alias,(vm_size_t)size,0,VM_FLAGS_ANYWHERE,mach_task_self(),(vm_address_t)guest_base,FALSE,&current,&maximum,VM_INHERIT_NONE)!=KERN_SUCCESS){
+  fprintf(stderr,"TribesPad: no address space for the %llu MiB guest alias\n",(unsigned long long)(size>>20));return 0;
+ }
+ if(mprotect((void *)alias,(size_t)size,PROT_READ|PROT_WRITE))return 0;
+ alias_base=(uintptr_t)alias;alias_size=size;
  struct sigaction action;memset(&action,0,sizeof action);action.sa_sigaction=fault_handler;action.sa_flags=SA_SIGINFO;sigemptyset(&action.sa_mask);
  if(sigaction(SIGSEGV,&action,&previous_segv)||sigaction(SIGBUS,&action,&previous_bus))return 0;
  return 1;
@@ -578,6 +592,7 @@ static int64_t sext(uint64_t v,unsigned bits){return (int64_t)(v<<(64-bits))>>(6
 static void check_access(uint64_t address,uint64_t size,unsigned access,uint64_t pc,uint32_t insn){
  if(address<guest_base||address-guest_base>guest_size||size>guest_size-(address-guest_base))fault_stop("checked guest memory violation (window)",pc,insn,address);
  uint64_t offset=address-guest_base;
+ if(offset+size>alias_size)fault_stop("checked guest memory violation (above user space)",pc,insn,address);
  for(uint64_t p=offset/4096;p<=(offset+size-1)/4096;p++)if((permissions[p]&access)!=access)fault_stop("checked guest memory violation",pc,insn,address);
  if(access&2)for(uint32_t i=0;i<published_count;i++)if(published[i].begin<offset+size&&published[i].end>offset)fault_stop("write to published AOT code",pc,insn,address);
 }

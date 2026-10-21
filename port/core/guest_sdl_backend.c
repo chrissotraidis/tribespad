@@ -27,6 +27,16 @@
 static bool content_pixels(SDL_Window *window,int *width,int *height){
     int pw=0,ph=0,w=0,h=0;float inset=CONTENT_INSET();
     if(!SDL_GetWindowSizeInPixels(window,&pw,&ph))return false;
+#if TARGET_OS_IPHONE
+    /* Phones render at their own density (content_area.m). */
+    float density=tb_content_density();
+    if(density>0){
+        if(!SDL_GetWindowSize(window,&w,&h)||w<=0)return false;
+        pw=(int)(((float)w-2*inset)*density+0.5f);ph=(int)((float)h*density+0.5f);
+        if(pw<=0)return SDL_SetError("Game area has no width");
+        if(width)*width=pw;if(height)*height=ph;return true;
+    }
+#endif
     if(inset>0){
         if(!SDL_GetWindowSize(window,&w,&h)||w<=0)return false;
         pw-=(int)(2*inset*(float)pw/(float)w+0.5f);
@@ -640,7 +650,13 @@ static int pixel_modes(const SDL_DisplayMode *m){return m&&m->pixel_density>1.0f
 static void guest_mode_size(const SDL_DisplayMode *m,int *w,int *h,float *density){
     float width=(float)m->w-2*CONTENT_INSET();
     *w=(int)(width+0.5f);*h=m->h;*density=m->pixel_density;
-    if(pixel_modes(m)){*w=(int)(width*m->pixel_density+0.5f);*h=(int)(m->h*m->pixel_density+0.5f);*density=1.0f;}
+    if(pixel_modes(m)){
+        float d=m->pixel_density;
+#if TARGET_OS_IPHONE
+        if(tb_content_density()>0)d=tb_content_density();
+#endif
+        *w=(int)(width*d+0.5f);*h=(int)(m->h*d+0.5f);*density=1.0f;
+    }
 }
 static uint32_t display_mode(_cpu *cpu,uint32_t display,int current) {
     event_flags(SDL_INIT_VIDEO);uint32_t error=tribes_get_last_error();NativeFrame frame;uint32_t result=0;
@@ -863,6 +879,12 @@ uint32_t tribes_sdl_open_audio_device(_cpu *cpu,uint32_t id,uint32_t specificati
     AUDIO_ENTER();SDL_AudioSpec spec;SDL_AudioSpec *requested=NULL;
     if(specification){checked_copy(&spec,guest(cpu,specification,sizeof spec),sizeof spec);requested=&spec;}
     AudioDevice *record=calloc(1,sizeof *record);if(!record){SDL_OutOfMemory();AUDIO_RETURN(0);}
+#if TARGET_OS_IPHONE
+    /* Voice chat capture: opening the microphone asks for permission and
+       switches iOS to call audio. Report no device instead; the game then
+       runs without voice capture. */
+    if(!SDL_IsAudioDevicePlayback(id)){free(record);AUDIO_RETURN(0);}
+#endif
     SDL_AudioDeviceID result=SDL_OpenAudioDevice(id,requested);
     if(result){record->native=result;record->next=audio_devices;audio_devices=record;}else free(record);
     AUDIO_RETURN(result);
@@ -877,7 +899,11 @@ uint32_t tribes_sdl_pause_audio_device(_cpu *cpu,uint32_t id){
     AUDIO_ENTER();if(id)(void)audio_device_slot(id);bool result=SDL_PauseAudioDevice(id);AUDIO_RETURN(result);
 }
 void tribes_sdl_close_audio_device(_cpu *cpu,uint32_t id){
-    AUDIO_ENTER();if(id){AudioDevice **slot=audio_device_slot(id);AudioDevice *v=*slot;SDL_CloseAudioDevice(id);*slot=v->next;free(v);}else SDL_CloseAudioDevice(0);AUDIO_DONE();
+    AUDIO_ENTER();if(id){AudioDevice **slot=audio_device_slot(id);AudioDevice *v=*slot;SDL_CloseAudioDevice(id);*slot=v->next;free(v);}else SDL_CloseAudioDevice(0);
+#if TARGET_OS_IPHONE
+    tb_audio_session_restore();
+#endif
+    AUDIO_DONE();
 }
 uint32_t tribes_sdl_create_audio_stream(_cpu *cpu,uint32_t source,uint32_t destination){
     AUDIO_ENTER();SDL_AudioSpec src,dst;
@@ -1126,12 +1152,18 @@ static void return_float(_cpu *cpu,float value){uint32_t bits;memcpy(&bits,&valu
    640x480 after scaling. Phones are described in pixels with a 3x display
    scale (2250x1206 / 3 = 750x402 on iPhone 17), which cropped the menus.
    QoL rounds the scale up, so report at most the largest whole scale that
-   keeps 640x480 visible (2 there: 1125x603). */
+   keeps 640x480 visible (2 there: 1125x603). On iPhone and iPad report that
+   largest scale even when the display scale is smaller: the 2x display scale
+   drew the menus over less than half of an iPad's screen (4 fits a 12.9-inch
+   iPad Pro, 3 an 11-inch iPad). The QoL UI Scale setting still overrides. */
 static float fit_display_scale(SDL_Window *window,float value){
     int width=0,height=0;
     if(value<=1.0f||!content_pixels(window,&width,&height))return value;
     float fit=(float)width/640.0f;if((float)height/480.0f<fit)fit=(float)height/480.0f;
     fit=(float)(int)fit;
+#if TARGET_OS_IPHONE
+    if(fit>=1.0f)return fit;
+#endif
     return fit>=1.0f&&fit<value?fit:value;
 }
 void tribes_sdl_get_window_display_scale(_cpu *cpu,uint32_t token){
@@ -2054,6 +2086,17 @@ void tribes_gl_vertex3fv(_cpu *cpu,uint32_t address){
 #endif
 }
 void tribes_gl_blend_func(_cpu *cpu,uint32_t source,uint32_t destination){GL_ENTER();glBlendFunc(source,destination);DRAW_RETURN();}
+/* glColor3f: alpha 1, as OpenGL defines it. Tribes2.exe draws triangle fans
+   with it (crash at 0x63f60b, online on iPad). */
+void tribes_gl_color3f(_cpu *cpu,uint32_t r,uint32_t g,uint32_t b){
+    GL_ENTER();
+#if TB_GLES_HOST && !defined(TB_GL4ES)
+    (void)r;(void)g;(void)b;(void)error;stop();
+#else
+    (void)legacy_context();uint32_t bits[]={r,g,b};GLfloat value[3];memcpy(value,bits,sizeof value);
+    glColor4f(value[0],value[1],value[2],1.0f);DRAW_RETURN();
+#endif
+}
 void tribes_gl_color4f(_cpu *cpu,uint32_t r,uint32_t g,uint32_t b,uint32_t a){
     GL_ENTER();
 #if TB_GLES_HOST && !defined(TB_GL4ES)
@@ -2301,11 +2344,34 @@ static unsigned collect_gl_errors(GLContext *c){
         if(e<0x500||e>0x507)stop();flags|=1u<<(e-0x500);
     }c->errors|=flags;return flags;
 }
+/* Font glyph sheets (GL_ALPHA): QoL draws text with a shader that keeps
+   sampling inside each glyph's cell (text.frag: texelFetch within
+   charBounds). That shader needs texture arrays, which the mobile GL path
+   lacks, so the fixed-function fallback samples the sheets bilinearly and
+   blends in the bright gaps between cells: a faint box around every letter.
+   Sample glyph sheets with GL_NEAREST, which stays inside the cell. */
+static GLuint alpha_textures[512];static unsigned alpha_texture_count;
+static int alpha_texture_bound(void){
+    GLint bound=0;glGetIntegerv(0x8069,&bound);if(!bound)return 0;
+    for(unsigned i=0;i<alpha_texture_count;i++)if(alpha_textures[i]==(GLuint)bound)return 1;
+    return 0;
+}
+static void note_alpha_texture(uint32_t format){
+    if(format!=0x1906)return;
+    if(!alpha_texture_bound()){
+        GLint bound=0;glGetIntegerv(0x8069,&bound);if(!bound)return;
+        if(alpha_texture_count<sizeof alpha_textures/sizeof *alpha_textures)alpha_textures[alpha_texture_count++]=(GLuint)bound;
+    }
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+}
 void tribes_gl_tex_parameter_i(_cpu *cpu,uint32_t target,uint32_t parameter,uint32_t value){
-    GL_ENTER();if(!set_automatic_mipmap(target,parameter,value!=0))glTexParameteri(target,parameter,(int32_t)value);DRAW_RETURN();
+    GL_ENTER();
+    if(target==GL_TEXTURE_2D&&(parameter==GL_TEXTURE_MIN_FILTER||parameter==GL_TEXTURE_MAG_FILTER)&&alpha_texture_bound())value=GL_NEAREST;
+    if(!set_automatic_mipmap(target,parameter,value!=0))glTexParameteri(target,parameter,(int32_t)value);DRAW_RETURN();
 }
 void tribes_gl_tex_parameter_f(_cpu *cpu,uint32_t target,uint32_t parameter,uint32_t bits){
     GL_ENTER();GLfloat value;memcpy(&value,&bits,4);
+    if(target==GL_TEXTURE_2D&&(parameter==GL_TEXTURE_MIN_FILTER||parameter==GL_TEXTURE_MAG_FILTER)&&alpha_texture_bound())value=(GLfloat)GL_NEAREST;
     if(!set_automatic_mipmap(target,parameter,value!=0.0f))glTexParameterf(target,parameter,value);DRAW_RETURN();
 }
 void tribes_gl_generate_mipmap(_cpu *cpu,uint32_t target){
@@ -2386,15 +2452,16 @@ void tribes_gl_tex_image_2d(_cpu *cpu,uint32_t target,uint32_t level,uint32_t in
     GL_ENTER();if(!SDL_GL_GetCurrentContext())stop();
     void *pixels=texture_2d_pixels(cpu,width,height,format,type,input,1);
 #ifdef TB_CAPTURE_PATCHES
-    fprintf(stderr,"Observed texture upload target=0x%x level=%d internal=0x%x size=%ux%u format=0x%x type=0x%x input=0x%08x\n",target,(int32_t)level,internal,width,height,format,type,input);
+    {static unsigned seen;if(seen++<16)fprintf(stderr,"Observed texture upload target=0x%x level=%d internal=0x%x size=%ux%u format=0x%x type=0x%x input=0x%08x\n",target,(int32_t)level,internal,width,height,format,type,input);}
 #endif
     GLContext *c=current_context();int generate=texture_2d_automatic(c,target,level);
     if(generate)collect_gl_errors(c);
     glTexImage2D(target,(int32_t)level,(int32_t)internal,(int32_t)width,(int32_t)height,(int32_t)border,format,type,pixels);
+    if(target==GL_TEXTURE_2D&&level==0)note_alpha_texture(format);
     if(generate&&!collect_gl_errors(c)&&(int32_t)width>0&&(int32_t)height>0){
         glGenerateMipmap(target);
 #ifdef TB_CAPTURE_PATCHES
-        fprintf(stderr,"Observed native automatic mipmap generation target=0x%x base=%d\n",target,(int32_t)level);
+        {static unsigned seen;if(seen++<16)fprintf(stderr,"Observed native automatic mipmap generation target=0x%x base=%d\n",target,(int32_t)level);}
 #endif
     }
     free(pixels);DRAW_RETURN();
@@ -2407,7 +2474,7 @@ void tribes_gl_tex_sub_image_2d(_cpu *cpu,uint32_t target,uint32_t level,uint32_
     glTexSubImage2D(target,(int32_t)level,(int32_t)x,(int32_t)y,(int32_t)width,(int32_t)height,format,type,pixels);
     if(generate&&!collect_gl_errors(c)&&(int32_t)width>0&&(int32_t)height>0)glGenerateMipmap(target);
 #ifdef TB_CAPTURE_PATCHES
-    fprintf(stderr,"Observed texture subregion target=0x%x level=%d offsets=%d/%d size=%ux%u format=0x%x type=0x%x input=0x%08x\n",target,(int32_t)level,(int32_t)x,(int32_t)y,width,height,format,type,input);
+    {static unsigned seen;if(seen++<16)fprintf(stderr,"Observed texture subregion target=0x%x level=%d offsets=%d/%d size=%ux%u format=0x%x type=0x%x input=0x%08x\n",target,(int32_t)level,(int32_t)x,(int32_t)y,width,height,format,type,input);}
 #endif
     free(pixels);DRAW_RETURN();
 }
@@ -2627,9 +2694,38 @@ uint32_t tribes_gl_get_string(_cpu *cpu,uint32_t name){
             const char *s=(const char *)glGetStringi(GL_EXTENSIONS,(GLuint)i);size_t n=strlen(s);
             if(i)text[used++]=' ';memcpy(text+used,s,n);used+=n;
         }
-        text[used]=0;uint32_t result=graphics_string(&frame,text);free(text);WINDOW_RETURN(result);
+        text[used]=0;static int shown;if(!shown){shown=1;fprintf(stderr,"TribesPad: GL extensions for the game: %s\n",text);}
+        uint32_t result=graphics_string(&frame,text);free(text);WINDOW_RETURN(result);
     }
 #endif
+    /* The original engine trusts the extension list: it turns on locked
+       arrays, fog coordinates and compressed textures when they are listed,
+       without checking that wglGetProcAddress found their functions. Their
+       entry points have no native provider here, so a listed extension became
+       a call to address 0 (online on iPad, Katabatic At Night). The engine
+       finds names by substring, so GL4ES's GL_EXT_compiled_vertex_arrays also
+       enabled them. Leave out names that start with these; the engine then
+       uses its standard paths. */
+    if(name==GL_EXTENSIONS){
+        static const char *const unprovided[]={"GL_EXT_compiled_vertex_array","GL_EXT_fog_coord",
+            "GL_ARB_texture_compression","GL_EXT_texture_compression_s3tc","GL_3DFX_texture_compression_FXT1"};
+        const char *all=(const char *)glGetString(name);
+        if(!all)WINDOW_RETURN(graphics_string(&frame,NULL));
+        size_t length=strnlen(all,1048576);if(length==1048576)stop();
+        char *text=malloc(length+1);if(!text){SDL_OutOfMemory();WINDOW_RETURN(0);}
+        size_t used=0;const char *p=all;
+        while(*p){
+            while(*p==' ')p++;
+            const char *end=p;while(*end&&*end!=' ')end++;
+            size_t n=(size_t)(end-p);int keep=n>0;
+            for(unsigned i=0;keep&&i<sizeof unprovided/sizeof *unprovided;i++)
+                if(strlen(unprovided[i])<=n&&!memcmp(unprovided[i],p,strlen(unprovided[i])))keep=0;
+            if(keep){if(used)text[used++]=' ';memcpy(text+used,p,n);used+=n;}
+            p=end;
+        }
+        text[used]=0;static int shown;if(!shown){shown=1;fprintf(stderr,"TribesPad: GL extensions for the game: %s\n",text);}
+        uint32_t result=graphics_string(&frame,text);free(text);WINDOW_RETURN(result);
+    }
     WINDOW_RETURN(graphics_string(&frame,(const char *)glGetString(name)));
 }
 uint32_t tribes_gl_get_error(_cpu *cpu){

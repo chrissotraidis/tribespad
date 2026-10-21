@@ -1,0 +1,1121 @@
+{
+ "scope": "OpenGL 1.1 and WGL entry points Tribes2.exe loads by name that have no native provider. Each resolves to a stdcall stub with the original argument size that logs its name once and does nothing (returns 0), so an unprovided call cannot jump to address 0. Argument sizes from the OpenGL 1.1 prototypes (GLdouble = 8 bytes) and the WGL API.",
+ "functions": {
+  "glCopyTexSubImage2D": [
+   8,
+   false
+  ],
+  "glCullFace": [
+   1,
+   false
+  ],
+  "glDeleteLists": [
+   2,
+   false
+  ],
+  "glDrawPixels": [
+   5,
+   false
+  ],
+  "glEdgeFlag": [
+   1,
+   false
+  ],
+  "glEdgeFlagPointer": [
+   2,
+   false
+  ],
+  "glEdgeFlagv": [
+   1,
+   false
+  ],
+  "glEndList": [
+   0,
+   false
+  ],
+  "glEvalCoord1d": [
+   2,
+   false
+  ],
+  "glEvalCoord1dv": [
+   1,
+   false
+  ],
+  "glEvalCoord1f": [
+   1,
+   false
+  ],
+  "glEvalCoord1fv": [
+   1,
+   false
+  ],
+  "glEvalCoord2d": [
+   4,
+   false
+  ],
+  "glEvalCoord2dv": [
+   1,
+   false
+  ],
+  "glEvalCoord2f": [
+   2,
+   false
+  ],
+  "glEvalCoord2fv": [
+   1,
+   false
+  ],
+  "glEvalMesh1": [
+   3,
+   false
+  ],
+  "glEvalMesh2": [
+   5,
+   false
+  ],
+  "glEvalPoint1": [
+   1,
+   false
+  ],
+  "glEvalPoint2": [
+   2,
+   false
+  ],
+  "glFeedbackBuffer": [
+   3,
+   false
+  ],
+  "glFogiv": [
+   2,
+   false
+  ],
+  "glGenLists": [
+   1,
+   true
+  ],
+  "glGetBooleanv": [
+   2,
+   false
+  ],
+  "glGetClipPlane": [
+   2,
+   false
+  ],
+  "glGetDoublev": [
+   2,
+   false
+  ],
+  "glGetLightfv": [
+   3,
+   false
+  ],
+  "glGetLightiv": [
+   3,
+   false
+  ],
+  "glGetMapdv": [
+   3,
+   false
+  ],
+  "glGetMapfv": [
+   3,
+   false
+  ],
+  "glGetMapiv": [
+   3,
+   false
+  ],
+  "glGetMaterialfv": [
+   3,
+   false
+  ],
+  "glGetMaterialiv": [
+   3,
+   false
+  ],
+  "glGetPixelMapfv": [
+   2,
+   false
+  ],
+  "glGetPixelMapuiv": [
+   2,
+   false
+  ],
+  "glGetPixelMapusv": [
+   2,
+   false
+  ],
+  "glGetPointerv": [
+   2,
+   false
+  ],
+  "glGetPolygonStipple": [
+   1,
+   false
+  ],
+  "glGetTexEnvfv": [
+   3,
+   false
+  ],
+  "glGetTexEnviv": [
+   3,
+   false
+  ],
+  "glGetTexGendv": [
+   3,
+   false
+  ],
+  "glGetTexGenfv": [
+   3,
+   false
+  ],
+  "glGetTexGeniv": [
+   3,
+   false
+  ],
+  "glGetTexImage": [
+   5,
+   false
+  ],
+  "glGetLevelParameterfv": [
+   4,
+   false
+  ],
+  "glGetLevelParameteriv": [
+   4,
+   false
+  ],
+  "glGetTexParameterfv": [
+   3,
+   false
+  ],
+  "glGetTexParameteriv": [
+   3,
+   false
+  ],
+  "glIndexMask": [
+   1,
+   false
+  ],
+  "glIndexPointer": [
+   3,
+   false
+  ],
+  "glIndexd": [
+   2,
+   false
+  ],
+  "glIndexdv": [
+   1,
+   false
+  ],
+  "glIndexf": [
+   1,
+   false
+  ],
+  "glIndexfv": [
+   1,
+   false
+  ],
+  "glIndexi": [
+   1,
+   false
+  ],
+  "glIndexiv": [
+   1,
+   false
+  ],
+  "glIndexs": [
+   1,
+   false
+  ],
+  "glIndexsv": [
+   1,
+   false
+  ],
+  "glIndexub": [
+   1,
+   false
+  ],
+  "glIndexubv": [
+   1,
+   false
+  ],
+  "glInitNames": [
+   0,
+   false
+  ],
+  "glInterleavedArrays": [
+   3,
+   false
+  ],
+  "glIsList": [
+   1,
+   true
+  ],
+  "glIsTexture": [
+   1,
+   true
+  ],
+  "glLightModelf": [
+   2,
+   false
+  ],
+  "glLightModeli": [
+   2,
+   false
+  ],
+  "glLightModeliv": [
+   2,
+   false
+  ],
+  "glLighti": [
+   3,
+   false
+  ],
+  "glLightiv": [
+   3,
+   false
+  ],
+  "glLineStipple": [
+   2,
+   false
+  ],
+  "glLineWidth": [
+   1,
+   false
+  ],
+  "glListBase": [
+   1,
+   false
+  ],
+  "glLoadName": [
+   1,
+   false
+  ],
+  "glLogicOp": [
+   1,
+   false
+  ],
+  "glMap1d": [
+   8,
+   false
+  ],
+  "glMap1f": [
+   6,
+   false
+  ],
+  "glMap2d": [
+   14,
+   false
+  ],
+  "glMap2f": [
+   10,
+   false
+  ],
+  "glMapGrid1d": [
+   5,
+   false
+  ],
+  "glMapGrid1f": [
+   3,
+   false
+  ],
+  "glMapGrid2d": [
+   10,
+   false
+  ],
+  "glMapGrid2f": [
+   6,
+   false
+  ],
+  "glMaterialf": [
+   3,
+   false
+  ],
+  "glMateriali": [
+   3,
+   false
+  ],
+  "glMaterialiv": [
+   3,
+   false
+  ],
+  "glNewList": [
+   2,
+   false
+  ],
+  "glNormal3b": [
+   3,
+   false
+  ],
+  "glNormal3bv": [
+   1,
+   false
+  ],
+  "glNormal3d": [
+   6,
+   false
+  ],
+  "glNormal3dv": [
+   1,
+   false
+  ],
+  "glNormal3f": [
+   3,
+   false
+  ],
+  "glNormal3fv": [
+   1,
+   false
+  ],
+  "glNormal3i": [
+   3,
+   false
+  ],
+  "glNormal3iv": [
+   1,
+   false
+  ],
+  "glNormal3s": [
+   3,
+   false
+  ],
+  "glNormal3sv": [
+   1,
+   false
+  ],
+  "glOrtho": [
+   12,
+   false
+  ],
+  "glPassThrough": [
+   1,
+   false
+  ],
+  "glPixelMapfv": [
+   3,
+   false
+  ],
+  "glPixelMapuiv": [
+   3,
+   false
+  ],
+  "glPixelMapusv": [
+   3,
+   false
+  ],
+  "glPixelStoref": [
+   2,
+   false
+  ],
+  "glPixelTransferf": [
+   2,
+   false
+  ],
+  "glPixelTransferi": [
+   2,
+   false
+  ],
+  "glPixelZoom": [
+   2,
+   false
+  ],
+  "glPointSize": [
+   1,
+   false
+  ],
+  "glPolygonStipple": [
+   1,
+   false
+  ],
+  "glPopAttrib": [
+   0,
+   false
+  ],
+  "glPopClientAttrib": [
+   0,
+   false
+  ],
+  "glPopName": [
+   0,
+   false
+  ],
+  "glPrioritizeTextures": [
+   3,
+   false
+  ],
+  "glPushAttrib": [
+   1,
+   false
+  ],
+  "glPushClientAttrib": [
+   1,
+   false
+  ],
+  "glPushName": [
+   1,
+   false
+  ],
+  "glRasterPos2d": [
+   4,
+   false
+  ],
+  "glRasterPos2dv": [
+   1,
+   false
+  ],
+  "glRasterPos2f": [
+   2,
+   false
+  ],
+  "glRasterPos2fv": [
+   1,
+   false
+  ],
+  "glRasterPos2i": [
+   2,
+   false
+  ],
+  "glRasterPos2iv": [
+   1,
+   false
+  ],
+  "glRasterPos2s": [
+   2,
+   false
+  ],
+  "glRasterPos2sv": [
+   1,
+   false
+  ],
+  "glRasterPos3d": [
+   6,
+   false
+  ],
+  "glRasterPos3dv": [
+   1,
+   false
+  ],
+  "glRasterPos3f": [
+   3,
+   false
+  ],
+  "glRasterPos3fv": [
+   1,
+   false
+  ],
+  "glRasterPos3i": [
+   3,
+   false
+  ],
+  "glRasterPos3iv": [
+   1,
+   false
+  ],
+  "glRasterPos3s": [
+   3,
+   false
+  ],
+  "glRasterPos3sv": [
+   1,
+   false
+  ],
+  "glRasterPos4d": [
+   8,
+   false
+  ],
+  "glRasterPos4dv": [
+   1,
+   false
+  ],
+  "glRasterPos4f": [
+   4,
+   false
+  ],
+  "glRasterPos4fv": [
+   1,
+   false
+  ],
+  "glRasterPos4i": [
+   4,
+   false
+  ],
+  "glRasterPos4iv": [
+   1,
+   false
+  ],
+  "glRasterPos4s": [
+   4,
+   false
+  ],
+  "glRasterPos4sv": [
+   1,
+   false
+  ],
+  "glReadBuffer": [
+   1,
+   false
+  ],
+  "glReadPixels": [
+   7,
+   false
+  ],
+  "glRectd": [
+   8,
+   false
+  ],
+  "glRectdv": [
+   2,
+   false
+  ],
+  "glRectf": [
+   4,
+   false
+  ],
+  "glRectfv": [
+   2,
+   false
+  ],
+  "glRecti": [
+   4,
+   false
+  ],
+  "glRectiv": [
+   2,
+   false
+  ],
+  "glRects": [
+   4,
+   false
+  ],
+  "glRectsv": [
+   2,
+   false
+  ],
+  "glRenderMode": [
+   1,
+   true
+  ],
+  "glRotated": [
+   8,
+   false
+  ],
+  "glScaled": [
+   6,
+   false
+  ],
+  "glScissor": [
+   4,
+   false
+  ],
+  "glSelectBuffer": [
+   2,
+   false
+  ],
+  "glShadeModel": [
+   1,
+   false
+  ],
+  "glStencilFunc": [
+   3,
+   false
+  ],
+  "glStencilMask": [
+   1,
+   false
+  ],
+  "glStencilOp": [
+   3,
+   false
+  ],
+  "glTexCoord1d": [
+   2,
+   false
+  ],
+  "glTexCoord1dv": [
+   1,
+   false
+  ],
+  "glTexCoord1f": [
+   1,
+   false
+  ],
+  "glTexCoord1fv": [
+   1,
+   false
+  ],
+  "glTexCoord1i": [
+   1,
+   false
+  ],
+  "glTexCoord1iv": [
+   1,
+   false
+  ],
+  "glTexCoord1s": [
+   1,
+   false
+  ],
+  "glTexCoord1sv": [
+   1,
+   false
+  ],
+  "glTexCoord2d": [
+   4,
+   false
+  ],
+  "glTexCoord2dv": [
+   1,
+   false
+  ],
+  "glTexCoord2i": [
+   2,
+   false
+  ],
+  "glTexCoord2iv": [
+   1,
+   false
+  ],
+  "glTexCoord2s": [
+   2,
+   false
+  ],
+  "glTexCoord2sv": [
+   1,
+   false
+  ],
+  "glTexCoord3d": [
+   6,
+   false
+  ],
+  "glTexCoord3dv": [
+   1,
+   false
+  ],
+  "glTexCoord3f": [
+   3,
+   false
+  ],
+  "glTexCoord3fv": [
+   1,
+   false
+  ],
+  "glTexCoord3i": [
+   3,
+   false
+  ],
+  "glTexCoord3iv": [
+   1,
+   false
+  ],
+  "glTexCoord3s": [
+   3,
+   false
+  ],
+  "glTexCoord3sv": [
+   1,
+   false
+  ],
+  "glTexCoord4d": [
+   8,
+   false
+  ],
+  "glTexCoord4dv": [
+   1,
+   false
+  ],
+  "glTexCoord4f": [
+   4,
+   false
+  ],
+  "glTexCoord4fv": [
+   1,
+   false
+  ],
+  "glTexCoord4i": [
+   4,
+   false
+  ],
+  "glTexCoord4iv": [
+   1,
+   false
+  ],
+  "glTexCoord4s": [
+   4,
+   false
+  ],
+  "glTexCoord4sv": [
+   1,
+   false
+  ],
+  "glTexEnviv": [
+   3,
+   false
+  ],
+  "glTexGend": [
+   4,
+   false
+  ],
+  "glTexGendv": [
+   3,
+   false
+  ],
+  "glTexGenf": [
+   3,
+   false
+  ],
+  "glTexGeniv": [
+   3,
+   false
+  ],
+  "glTexImage1D": [
+   8,
+   false
+  ],
+  "glTexParameterfv": [
+   3,
+   false
+  ],
+  "glTexParameteriv": [
+   3,
+   false
+  ],
+  "glTexSubImage1D": [
+   7,
+   false
+  ],
+  "glTranslated": [
+   6,
+   false
+  ],
+  "glVertex2d": [
+   4,
+   false
+  ],
+  "glVertex2dv": [
+   1,
+   false
+  ],
+  "glVertex2fv": [
+   1,
+   false
+  ],
+  "glVertex2iv": [
+   1,
+   false
+  ],
+  "glVertex2s": [
+   2,
+   false
+  ],
+  "glVertex2sv": [
+   1,
+   false
+  ],
+  "glVertex3d": [
+   6,
+   false
+  ],
+  "glVertex3dv": [
+   1,
+   false
+  ],
+  "glVertex3i": [
+   3,
+   false
+  ],
+  "glVertex3iv": [
+   1,
+   false
+  ],
+  "glVertex3s": [
+   3,
+   false
+  ],
+  "glVertex3sv": [
+   1,
+   false
+  ],
+  "glVertex4d": [
+   8,
+   false
+  ],
+  "glVertex4dv": [
+   1,
+   false
+  ],
+  "glVertex4f": [
+   4,
+   false
+  ],
+  "glVertex4fv": [
+   1,
+   false
+  ],
+  "glVertex4i": [
+   4,
+   false
+  ],
+  "glVertex4iv": [
+   1,
+   false
+  ],
+  "glVertex4s": [
+   4,
+   false
+  ],
+  "glVertex4sv": [
+   1,
+   false
+  ],
+  "wglChoosePixelFormat": [
+   2,
+   true
+  ],
+  "wglDescribePixelFormat": [
+   4,
+   true
+  ],
+  "wglGetPixelFormat": [
+   1,
+   true
+  ],
+  "wglSetPixelFormat": [
+   3,
+   true
+  ],
+  "wglSwapBuffers": [
+   1,
+   true
+  ],
+  "wglUseFontBitmapsA": [
+   4,
+   true
+  ],
+  "wglUseFontOutlinesA": [
+   8,
+   true
+  ],
+  "wglCreateContext": [
+   1,
+   true
+  ],
+  "wglDeleteContext": [
+   1,
+   true
+  ],
+  "wglGetCurrentDC": [
+   0,
+   true
+  ],
+  "wglMakeCurrent": [
+   2,
+   true
+  ],
+  "wglCopyContext": [
+   3,
+   true
+  ],
+  "wglCreateLayerContext": [
+   2,
+   true
+  ],
+  "wglDescribeLayerPlane": [
+   5,
+   true
+  ],
+  "wglGetLayerPaletteEntries": [
+   5,
+   true
+  ],
+  "wglRealizeLayerPalette": [
+   3,
+   true
+  ],
+  "wglSetLayerPaletteEntries": [
+   5,
+   true
+  ],
+  "wglShareLists": [
+   2,
+   true
+  ],
+  "wglSwapLayerBuffers": [
+   2,
+   true
+  ],
+  "glAccum": [
+   2,
+   false
+  ],
+  "glAreTexturesResident": [
+   3,
+   true
+  ],
+  "glArrayElement": [
+   1,
+   false
+  ],
+  "glBitmap": [
+   7,
+   false
+  ],
+  "glCallList": [
+   1,
+   false
+  ],
+  "glCallLists": [
+   3,
+   false
+  ],
+  "glClearAccum": [
+   4,
+   false
+  ],
+  "glClearIndex": [
+   1,
+   false
+  ],
+  "glClearStencil": [
+   1,
+   false
+  ],
+  "glClipPlane": [
+   2,
+   false
+  ],
+  "glColor3b": [
+   3,
+   false
+  ],
+  "glColor3bv": [
+   1,
+   false
+  ],
+  "glColor3d": [
+   6,
+   false
+  ],
+  "glColor3dv": [
+   1,
+   false
+  ],
+  "glColor3fv": [
+   1,
+   false
+  ],
+  "glColor3i": [
+   3,
+   false
+  ],
+  "glColor3iv": [
+   1,
+   false
+  ],
+  "glColor3s": [
+   3,
+   false
+  ],
+  "glColor3sv": [
+   1,
+   false
+  ],
+  "glColor3ubv": [
+   1,
+   false
+  ],
+  "glColor3ui": [
+   3,
+   false
+  ],
+  "glColor3uiv": [
+   1,
+   false
+  ],
+  "glColor3us": [
+   3,
+   false
+  ],
+  "glColor3usv": [
+   1,
+   false
+  ],
+  "glColor4b": [
+   4,
+   false
+  ],
+  "glColor4bv": [
+   1,
+   false
+  ],
+  "glColor4d": [
+   8,
+   false
+  ],
+  "glColor4dv": [
+   1,
+   false
+  ],
+  "glColor4i": [
+   4,
+   false
+  ],
+  "glColor4iv": [
+   1,
+   false
+  ],
+  "glColor4s": [
+   4,
+   false
+  ],
+  "glColor4sv": [
+   1,
+   false
+  ],
+  "glColor4ubv": [
+   1,
+   false
+  ],
+  "glColor4ui": [
+   4,
+   false
+  ],
+  "glColor4uiv": [
+   1,
+   false
+  ],
+  "glColor4us": [
+   4,
+   false
+  ],
+  "glColor4usv": [
+   1,
+   false
+  ],
+  "glColorMask": [
+   4,
+   false
+  ],
+  "glColorMaterial": [
+   2,
+   false
+  ],
+  "glCopyPixels": [
+   5,
+   false
+  ],
+  "glCopyTexImage1D": [
+   7,
+   false
+  ],
+  "glCopyTexImage2D": [
+   8,
+   false
+  ],
+  "glCopyTexSubImage1D": [
+   6,
+   false
+  ]
+ }
+}

@@ -4,7 +4,7 @@
 Run test-qol-native-bootstrap.py --enter-engine --probe-ntdll --prepare-only first.
 Device builds bundle assets and require Apple development signing before installation.
 """
-import argparse,hashlib,importlib.util,json,os,pathlib,plistlib,re,shutil,subprocess
+import zipfile,argparse,hashlib,importlib.util,json,os,pathlib,plistlib,re,shutil,subprocess
 from checked_support import compile_support
 from guard_checked_link import guard_link
 from checked_bochs_inputs import checked_bochs_inputs
@@ -108,12 +108,20 @@ for name,index in first_run['stops'].items():
     assert stops_text.count(info_stop)==1,name
     stops_text=stops_text.replace(info_stop,'',1)
 wave_stops.write_text(stops_text);sources.append(info_wrapper)
+probe_source=next(p for p in sources if p.name=='ntdll-probes.ll');probe_text=probe_source.read_text()
+for name,index in first_run.get('ntdll_probes',{}).items():
+    probe='define hidden fastcc void @tbimp_'+name+'(ptr %cpu) {\n call void @qol_ntdll_probe(ptr %cpu, i32 '+str(index)+')\n unreachable\n}\n'
+    assert probe_text.count(probe)==1,name
+    probe_text=probe_text.replace(probe,'',1)
+probe_wrapper=mobile_inputs/'ntdll-probes.ll';probe_wrapper.write_text(probe_text);sources[sources.index(probe_source)]=probe_wrapper
 sources[sources.index(old_stops)]=wave_stops;sources.append(wave_wrapper)
 # Refresh finite host exports without relifting unchanged original images.
 from graphics_backend_inputs import prepare as graphics_inputs
 graphics_sources,_=graphics_inputs(mobile_inputs)
 old_wrapper=next(p for p in sources if p.name=='graphics-bindings.ll')
 sources[sources.index(old_wrapper)]=next(p for p in graphics_sources if p.name=='graphics-bindings.ll')
+# The generated no-op stubs for unprovided GL entry points (gl-unprovided.json).
+sources.append(next(p for p in graphics_sources if p.name=='graphics-unprovided.c'))
 # DirectSound COM routes are generated from dsound_backend_inputs.py, so methods
 # implemented after the frozen preparation replace their stops.
 from dsound_backend_inputs import prepare as dsound_inputs
@@ -156,8 +164,84 @@ earlier_text='// TribesPad: original offline mode. A dedicated server would quit
 # iOS and iPadOS end apps without the game's quit, which is where it saves
 # preferences (warriors, accepted license). Save them as its onExit does.
 offline_text=earlier_text+'// iOS and iPadOS close apps without a normal quit; save preferences as onExit does, once a minute.\nfunction TribesPadSavePrefs()\n{\n   export("$pref::*", "prefs/ClientPrefs.cs", False);\n   schedule(60000, 0, TribesPadSavePrefs);\n}\nschedule(60000, 0, TribesPadSavePrefs);\n'
-if offline.exists():assert offline.read_text() in (offline_text,earlier_text), 'Preserve custom autoexec.cs; select offline mode there before building'
+# Settings > Online Play (on by default) starts the original TribesNEXT login;
+# off, the app puts $TribesPadOffline = 1; before this script when it copies it
+# into the profile (mobile_game_paths.m) and the game starts offline, with the internet server list in JOIN (GameGui.cs below).
+# The login script asks for a 500 fps software limiter, an SDL timer the port
+# does not provide; iOS paces frames with VSync, so the limiter stays off.
+online_head="""// TribesPad: TribesNEXT online mode unless Settings > Online Play is off. A dedicated server would quit the app, so host in game.
+if ( $TribesPadOffline )
+{
+   $SkipLogin = true;
+   $LaunchMode = "Offline";
+   $TribesPadInternetBrowser = true;
+}
+else
+   $fromLauncher = true;
+$Host::Dedicated = 0;
+// Community maps bring interiors and textures players may not have. Turn on
+// the TribesNEXT asset depot once (off by default on PC); the game's own
+// option still switches it off.
+if ( $pref::TribesPad::depotDefaulted $= "" )
+{
+   $pref::TribesPad::depotDefaulted = 1;
+   $pref::Net::allowDownloads = true;
+   $pref::Net::cacheDownloads = true;
+}
+// iOS paces frames with VSync; the optional software frame limiter is not available.
+$pref::Engine::FramerateLimit = 0;
+function setFramerateLimit( %fps )
+{
+}
+"""
+offline_text=online_head+offline_text[len(earlier_text):]
+# The touch layer follows play, menus and text fields through this report
+# (mobile_controls.m): "<playing> <typing>". Scheduled script events only run
+# once the game is past the TribesNEXT login; the app handles that screen.
+offline_text+="""// TribesPad: report whether the player is in play (PlayGui showing and the
+// game cursor off) so the touch layer switches between touch controls and the
+// menu cursor. Menus, the lobby, inventory and score screens turn the cursor on.
+// Also report dialogs made for typing, so the on-screen keyboard opens with them.
+function TribesPadInPlay()
+{
+   if ( !isObject( PlayGui ) || Canvas.getContent() != PlayGui.getId() )
+      return 0;
+   return !Canvas.isCursorOn();
+}
+function TribesPadTyping()
+{
+   for ( %i = 0; ( %dlg = getWord( "LoginDlg CreateAccountDlg PasswordDlg NewWarriorDlg EnterIPDlg FindServerDlg BrowserSearchDlg JoinChatDlg ChannelKeyDlg CreateTribeDlg DemoRenameFileDlg", %i ) ) !$= ""; %i++ )
+      if ( isObject( %dlg ) && %dlg.isAwake() )
+         return 1;
+   return 0;
+}
+function TribesPadReportState()
+{
+   %state = TribesPadInPlay() SPC TribesPadTyping();
+   if ( %state !$= $TribesPadLastState )
+   {
+      $TribesPadLastState = %state;
+      %file = new FileObject();
+      if ( %file.openForWrite( "prefs/tribespad-state.txt" ) )
+      {
+         %file.writeLine( %state );
+         %file.close();
+      }
+      %file.delete();
+   }
+   schedule( 200, 0, TribesPadReportState );
+}
+schedule( 200, 0, TribesPadReportState );
+"""
+if offline.exists():assert offline.read_text().startswith((earlier_text,'// TribesPad: offline mode','// TribesPad: TribesNEXT online mode')), 'Preserve custom autoexec.cs; select the launch mode there before building'
 offline.write_text(offline_text)
+# JOIN queries the internet master server in offline mode too (as prepare-macos-server-browser.py
+# did for testing). The app refreshes this file in existing profiles (mobile_game_paths.m).
+with zipfile.ZipFile(profile/'base/scripts.vl2') as archive:game_gui=archive.read('scripts/GameGui.cs')
+for before,after in [(b'if ( isDemo() || $PlayingOnline )',b'if ( isDemo() || $PlayingOnline || $TribesPadInternetBrowser )'),
+    (b'GMJ_Browser.lastQuery = $PlayingOnline ? "Master" : "LanServers";',b'GMJ_Browser.lastQuery = ($PlayingOnline || $TribesPadInternetBrowser) ? "Master" : "LanServers";')]:
+    assert game_gui.count(before)==1;game_gui=game_gui.replace(before,after)
+(profile/'base/scripts').mkdir(exist_ok=True);(profile/'base/scripts/GameGui.cs').write_bytes(game_gui)
 
 volume=out/'volume';temp=volume/'TribesPad/Temp';temp.mkdir(parents=True,exist_ok=True)
 # Publication descriptions and loaded original images are immutable inputs;
@@ -202,7 +286,7 @@ else:
 host=[R/'port/apple/mobile_engine_main.m',R/'port/apple/mobile_game_paths.m',R/'port/apple/sdl_main.c',R/'port/apple/gl4es_context.c',R/'port/core/input.c']
 host+=[R/'port/apple/desktop_controls.c'] if mac else [R/'port/apple/mobile_controls.m',R/'port/apple/mobile_controls.c',R/'port/apple/content_area.m']
 if a.angle:host.append(R/'port/apple/angle_sdl.c')
-command=['clang','-target',target,'-isysroot',sdk,'-O2','-I',str(out),*sdl_flags,*gl_flags,'-DNOX11','-DNOEGL','-DNO_LOADER','-DDEFAULT_ES=2','-isystem',str(R/'ref/gl4es/src'),*map(str,host),*objects,*gl_libraries,*libraries,*math['libraries'],*[str(R/n) for n in http['libraries']],str(R/al['library']),str(zbuild/'libz-ng.a'),'-lz','-lc++','-framework','Foundation','-framework','GameController','-framework','CoreGraphics','-framework','CoreText','-framework','CoreFoundation','-framework','SystemConfiguration','-framework','AudioToolbox','-framework','CoreAudio',*(['-framework','AppKit','-framework','Metal','-framework','QuartzCore'] if mac else []),'-o',str(exe)]
+command=['clang','-target',target,'-isysroot',sdk,'-O2','-I',str(out),*sdl_flags,*gl_flags,'-DNOX11','-DNOEGL','-DNO_LOADER','-DDEFAULT_ES=2','-isystem',str(R/'ref/gl4es/src'),*map(str,host),*objects,*gl_libraries,*libraries,*math['libraries'],*[str(R/n) for n in http['libraries']],str(R/al['library']),str(zbuild/'libz-ng.a'),'-lz','-lc++','-framework','Foundation','-framework','GameController','-framework','AVFoundation','-framework','CoreGraphics','-framework','CoreText','-framework','CoreFoundation','-framework','SystemConfiguration','-framework','AudioToolbox','-framework','CoreAudio',*(['-framework','AppKit','-framework','Metal','-framework','QuartzCore'] if mac else []),'-o',str(exe)]
 command[1:1]=['-fobjc-arc']
 with (out/'link.log').open('w') as log:subprocess.run(command,stdout=log,stderr=log,check=True)
 identifier='com.tribespad.full-engine.ipad'
@@ -212,7 +296,7 @@ if mac:
  (contents/'Info.plist').write_bytes(plistlib.dumps(dict(**icon_keys,CFBundleDisplayName='TribesPad',CFBundleIdentifier='com.tribespad.app',CFBundleExecutable='TribesPad',CFBundleName='TribesPad',CFBundlePackageType='APPL',CFBundleVersion='1',CFBundleShortVersionString='0.1',LSMinimumSystemVersion='12.0',NSHighResolutionCapable=True,LSApplicationCategoryType='public.app-category.action-games',NSLocalNetworkUsageDescription='Find and connect to local Tribes 2 games.')))
 else:
  icon_keys=compile_icon(app,a.platform,families=('iphone','ipad'))
- (app/'Info.plist').write_bytes(plistlib.dumps(dict(**icon_keys,CFBundleDisplayName='TribesPad',CFBundleIdentifier=identifier,CFBundleExecutable='TribesPad',CFBundleName='TribesPad',CFBundlePackageType='APPL',CFBundleSupportedPlatforms=['iPhoneOS' if a.platform=='device' else 'iPhoneSimulator'],CFBundleVersion='1',CFBundleShortVersionString='0.1',MinimumOSVersion='16.0',UIDeviceFamily=[1,2],UIRequiresFullScreen=True,LSRequiresIPhoneOS=True,UIRequiredDeviceCapabilities=['arm64'],NSLocalNetworkUsageDescription='Find and connect to local Tribes 2 games.',UIApplicationSupportsIndirectInputEvents=True,UILaunchScreen={},UISupportedInterfaceOrientations=['UIInterfaceOrientationLandscapeLeft','UIInterfaceOrientationLandscapeRight'])))
+ (app/'Info.plist').write_bytes(plistlib.dumps(dict(**icon_keys,CFBundleDisplayName='TribesPad',CFBundleIdentifier=identifier,CFBundleExecutable='TribesPad',CFBundleName='TribesPad',CFBundlePackageType='APPL',CFBundleSupportedPlatforms=['iPhoneOS' if a.platform=='device' else 'iPhoneSimulator'],CFBundleVersion='1',CFBundleShortVersionString='0.1',MinimumOSVersion='16.0',UIDeviceFamily=[1,2],UIRequiresFullScreen=True,LSRequiresIPhoneOS=True,UIRequiredDeviceCapabilities=['arm64'],NSLocalNetworkUsageDescription='Find and connect to local Tribes 2 games.',NSMicrophoneUsageDescription='Tribes 2 voice chat uses the microphone while you hold the voice key.',UIApplicationSupportsIndirectInputEvents=True,UIApplicationSceneManifest=dict(UIApplicationSupportsMultipleScenes=False,UISceneConfigurations=dict(UIWindowSceneSessionRoleApplication=[dict(UISceneConfigurationName='TribesPad',UISceneDelegateClassName='TBSceneDelegate')])),UILaunchScreen={},UISupportedInterfaceOrientations=['UIInterfaceOrientationLandscapeLeft','UIInterfaceOrientationLandscapeRight'])))
 signing=['--entitlements',str(R/'port/apple/TribesPad.entitlements')] if a.platform=='device' else []
 if a.angle:
  for framework in angle_bundle(app,a.platform):subprocess.run(['codesign','--force','--sign','-',str(framework)],check=True)

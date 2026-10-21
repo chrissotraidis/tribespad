@@ -742,8 +742,8 @@ struct ExternalMemoryPass : PassInfoMixin<ExternalMemoryPass>{
      uint64_t Value=Option?Option->getZExtValue():0;
      if(Name=="curl_easy_getinfo")Allowed=Allowed&&Option&&(Value==0x100015||Value==0x200002||Value==0x200019||Value==0x10003d)&&Call->getArgOperand(2)->getType()==P;
      else {
-      bool PointerOption=Value==10010||Value==10029||Value==20079||Value==10057||Value==20219||Value==10282||Value==10023||Value==20208||Value==10209||Value==10002||Value==10177||Value==10103||Value==10065||Value==10018||Value==20011||Value==10001;
-      Allowed=Allowed&&Option&&(PointerOption||Value==43||Value==52||Value==113||Value==155||Value==99||Value==13||Value==33||Value==75||Value==216||Value==30270)&&Call->getArgOperand(2)->getType()==(PointerOption?static_cast<Type *>(P):static_cast<Type *>(I64));
+      bool PointerOption=Value==10010||Value==10029||Value==20079||Value==10057||Value==20219||Value==10282||Value==10023||Value==20208||Value==10209||Value==10002||Value==10177||Value==10103||Value==10065||Value==10018||Value==20011||Value==10001||Value==10165;
+      Allowed=Allowed&&Option&&(PointerOption||Value==43||Value==52||Value==113||Value==155||Value==99||Value==13||Value==33||Value==75||Value==216||Value==30270||Value==47||Value==60)&&Call->getArgOperand(2)->getType()==(PointerOption?static_cast<Type *>(P):static_cast<Type *>(I64));
       if(Allowed&&(Value==20208||Value==20011||Value==20079||Value==20219))B.CreateCall(Callback,{Call->getArgOperand(2),B.getInt32(1)});
      }
     }

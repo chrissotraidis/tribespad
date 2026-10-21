@@ -287,6 +287,45 @@ uint32_t tribes_move_file_ex_w(uint64_t base,uint32_t from,uint32_t to,uint32_t 
     return 1;
 }
 uint32_t tribes_get_file_attributes(uint64_t base,uint32_t name){return get_attributes(base,name,0);}
+/* NtSetInformationFile for the delete classes TribesNEXT uses to remove files
+   by handle: FileDispositionInformation (13, a BOOLEAN) and
+   FileDispositionInformationEx (64, flags DELETE 1, POSIX_SEMANTICS 2,
+   FORCE_IMAGE_SECTION_CHECK 4, ON_CLOSE 8, IGNORE_READONLY_ATTRIBUTE 16).
+   POSIX unlinks a file at once while open descriptors stay valid, which is
+   the POSIX-semantics behavior; delete-on-close is approximated the same way.
+   The handle needs DELETE access. Other classes remain explicit gates.
+   https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntddk/ns-ntddk-_file_disposition_information_ex */
+uint32_t tribes_nt_set_information_file(uint64_t base,uint32_t handle,
+    uint32_t iosb,uint32_t input,uint32_t length,uint32_t information_class){
+    if(information_class!=13&&information_class!=64){
+        fprintf(stderr,"TribesPad: unsupported NtSetInformationFile class %u\n",information_class);abort();
+    }
+    if(length<(information_class==13?1u:4u))return 0xc0000004u;
+    if(!base||!iosb||!input||iosb>UINT32_MAX-7||input>UINT32_MAX-3||
+       base>UINTPTR_MAX-iosb-7||base>UINTPTR_MAX-input-3)return 0xc0000005u;
+    if(iosb&3)return 0x80000002u;
+    uint32_t flags=0;const void *source=(const void *)(uintptr_t)(base+input);
+    uint32_t a=tribes_memory_access_begin(source,information_class==13?1:4,1);
+    if(information_class==13)flags=*(const unsigned char *)source?1u:0u;else memcpy(&flags,source,4);
+    tribes_memory_access_end(a);
+    if(flags&~UINT32_C(0x1f))return 0xc000000du;
+    uint32_t status=0;TribesFileOpenInfo info;int fd=tribes_named_file_borrow_nt(handle,&status,&info);
+    if(fd<0)return status;
+    if(!(info.access&(UINT32_C(0x10000)|UINT32_C(0x10000000))))status=0xc0000022u;
+    else if(flags&1){
+        struct stat st,named;
+        if(fstat(fd,&st))status=0xc0000001u;
+        else if(lstat(info.host,&named)){if(errno!=ENOENT)status=0xc0000001u;} /* already gone */
+        else if(st.st_dev!=named.st_dev||st.st_ino!=named.st_ino)status=0xc0000001u; /* name now another object */
+        else if(!(flags&16)&&!(st.st_mode&S_IWUSR))status=0xc0000121u;
+        else if(S_ISDIR(st.st_mode)?rmdir(info.host):unlink(info.host))
+            status=errno==ENOTEMPTY||errno==EEXIST?0xc0000101u:errno==EACCES||errno==EPERM?0xc0000121u:0xc0000001u;
+    }
+    close(fd);
+    uint32_t completion[2]={status,0};void *io=(void *)(uintptr_t)(base+iosb);
+    uint32_t b=tribes_memory_access_begin(io,8,2);memcpy(io,completion,8);tribes_memory_access_end(b);
+    return status;
+}
 uint32_t tribes_get_file_attributes_w(uint64_t base,uint32_t name){return get_attributes(base,name,1);}
 /* BY_HANDLE_FILE_INFORMATION (52 bytes) for regular files and directories,
    from the same native metadata as NtQueryInformationFile: attributes, times,
@@ -341,6 +380,59 @@ uint32_t tribes_set_file_pointer(uint64_t base,uint32_t handle,uint32_t low,uint
     int64_t target=origin+distance;if(!high&&(uint64_t)target>UINT32_MAX){close(fd);tribes_set_last_error(87);return UINT32_MAX;}
     off_t result=lseek(fd,(off_t)target,SEEK_SET);close(fd);if(result<0){tribes_set_last_error(87);return UINT32_MAX;}
     if(high){uint32_t upper=(uint32_t)((uint64_t)result>>32);memcpy((void *)(uintptr_t)(base+high),&upper,4);}tribes_set_last_error(0);return (uint32_t)result;
+}
+/* The C runtime in IFC22 seeks to the end before each append ("a" mode, as
+   t2csri_storeAccount writes public.store and private.store) and checks sizes
+   with these 64-bit forms. Same native file and rules as SetFilePointer.
+   https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-setfilepointerex */
+static uint32_t guest_u64_out(uint64_t base,uint32_t output,uint64_t value){
+    if(!output)return 1;
+    if(output>UINT32_MAX-7||base>UINTPTR_MAX-output-7)return 0;
+    void *destination=(void *)(uintptr_t)(base+output);
+    uint32_t access=tribes_memory_access_begin(destination,8,2);memcpy(destination,&value,8);tribes_memory_access_end(access);
+    return 1;
+}
+uint32_t tribes_set_file_pointer_ex(uint64_t base,uint32_t handle,uint32_t low,uint32_t high,uint32_t output,uint32_t method){
+    if(method>2){tribes_set_last_error(87);return 0;}
+    uint64_t bits=((uint64_t)high<<32)|low;int64_t distance;memcpy(&distance,&bits,8);
+    int fd=tribes_fd_borrow_access(handle,TRIBES_FILE_SEEK);if(fd<0)return 0;struct stat st;int64_t origin=0;
+    if(fstat(fd,&st)||!S_ISREG(st.st_mode)){close(fd);tribes_set_last_error(1);return 0;}
+    if(method==1)origin=lseek(fd,0,SEEK_CUR);else if(method==2)origin=st.st_size;
+    uint64_t magnitude=0-(uint64_t)distance;
+    if(origin<0||(distance<0&&(uint64_t)origin<magnitude)){close(fd);tribes_set_last_error(131);return 0;}
+    if(distance>0&&origin>INT64_MAX-distance){close(fd);tribes_set_last_error(87);return 0;}
+    off_t result=lseek(fd,(off_t)(origin+distance),SEEK_SET);close(fd);if(result<0){tribes_set_last_error(87);return 0;}
+    if(!guest_u64_out(base,output,(uint64_t)result)){tribes_set_last_error(998);return 0;}
+    tribes_set_last_error(0);return 1;
+}
+uint32_t tribes_get_file_size_ex(uint64_t base,uint32_t handle,uint32_t output){
+    if(!output){tribes_set_last_error(998);return 0;}
+    int fd=tribes_fd_borrow(handle);if(fd<0)return 0;struct stat st;int error=fstat(fd,&st);close(fd);
+    if(error){tribes_set_last_error(6);return 0;}if(!S_ISREG(st.st_mode)||st.st_size<0){tribes_set_last_error(1);return 0;}
+    if(!guest_u64_out(base,output,(uint64_t)st.st_size)){tribes_set_last_error(998);return 0;}
+    tribes_set_last_error(0);return 1;
+}
+uint32_t tribes_flush_file_buffers(uint64_t base,uint32_t handle){
+    (void)base;int fd=tribes_fd_borrow_access(handle,TRIBES_FILE_WRITE);if(fd<0)return 0;
+    int error=fsync(fd);close(fd);if(error){tribes_set_last_error(29);return 0;}
+    tribes_set_last_error(0);return 1;
+}
+/* Truncates or extends the file to the current position. */
+uint32_t tribes_set_end_of_file(uint64_t base,uint32_t handle){
+    (void)base;int fd=tribes_fd_borrow_access(handle,TRIBES_FILE_WRITE);if(fd<0)return 0;
+    off_t position=lseek(fd,0,SEEK_CUR);int error=position<0||ftruncate(fd,position);close(fd);
+    if(error){tribes_set_last_error(5);return 0;}
+    tribes_set_last_error(0);return 1;
+}
+/* SystemFunction036 (RtlGenRandom): the C runtime's rand_s and TribesNEXT's
+   key handling. Fills the guest buffer from the system's secure generator.
+   https://learn.microsoft.com/en-us/windows/win32/api/ntsecapi/nf-ntsecapi-rtlgenrandom */
+uint32_t tribes_rtl_gen_random(uint64_t base,uint32_t buffer,uint32_t length){
+    if(!length)return 1;
+    if(!buffer||buffer>UINT32_MAX-(length-1)||base>UINTPTR_MAX-buffer-(length-1))return 0;
+    void *destination=(void *)(uintptr_t)(base+buffer);
+    uint32_t access=tribes_memory_access_begin(destination,length,2);arc4random_buf(destination,length);tribes_memory_access_end(access);
+    return 1;
 }
 /* Update the retained native file, never a pathname reopened after borrowing.
    All optional guest inputs are staged before one real metadata operation.
