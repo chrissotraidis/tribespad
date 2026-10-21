@@ -13,10 +13,10 @@
   <img alt="Apple Silicon" src="https://img.shields.io/badge/Apple%20Silicon-arm64-0A84FF?logo=apple">
   <img alt="Metal renderer" src="https://img.shields.io/badge/renderer-Metal%20(ANGLE)-5E5CE6">
   <img alt="Ahead-of-time translation" src="https://img.shields.io/badge/x86-ahead--of--time%20translation-FF9F0A">
-  <img alt="iPad Simulator playable" src="https://img.shields.io/badge/iPad%20Simulator-offline%20play%20~30%20FPS-30D158">
+  <img alt="iPad and iPhone" src="https://img.shields.io/badge/iPad%20%2F%20iPhone-online%20play%20(early)-30D158">
   <img alt="Mac playable" src="https://img.shields.io/badge/Mac-offline%20play-30D158">
   <img alt="One-command build" src="https://img.shields.io/badge/build-one%20command%20%2F%20PadMint-0A84FF">
-  <img alt="Physical devices unverified" src="https://img.shields.io/badge/physical%20iPad%20%2F%20iPhone-unverified-FFD60A">
+  <img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-8E8E93">
   <img alt="TribesNEXT" src="https://img.shields.io/badge/client-TribesNEXT%20%2B%20QoL-2EC4C9">
   <img alt="Game data not included" src="https://img.shields.io/badge/game%20data-not%20included-FF453A">
 </p>
@@ -24,11 +24,16 @@
 ![TribesPad: jetting over Katabatic on iPad with touch controls](docs/images/tribespad-gameplay-jet.jpg)
 
 > [!IMPORTANT]
-> **TribesPad is in development.** One command (or PadMint's **Build** button) downloads
+> **TribesPad is an early release.** One command (or PadMint's **Build** button) downloads
 > the free official Tribes 2 and TribesNEXT files and builds your own copy for iPhone,
-> iPad and Mac. Offline matches against bots play in the iPad Simulator and on Mac.
-> Physical iPad, iPhone and controller play have not been verified, and online joining
-> is not yet tested. See [Get TribesPad](#get-tribespad).
+> iPad and Mac. On a real iPad and iPhone it signs in to TribesNEXT and joins online
+> matches with touch or a controller. Expect rough edges: some crashes are still being
+> found in online play, and every fix so far came from a session log. See
+> [Get TribesPad](#get-tribespad) and [Known issues](#known-issues).
+
+Tribes 2 never had a released Mac version: a Mac port was announced and then put on hold
+before the 2001 Windows launch, and only Loki's Linux port shipped. As far as we know,
+TribesPad is the first native Tribes 2 for Mac, iPhone and iPad.
 
 ## What is TribesPad?
 
@@ -56,12 +61,12 @@ normal app with mouse and keyboard, on the same Metal renderer.
 | Question | Answer |
 |---|---|
 | Is this an emulator or streaming? | Neither. The x86 game and DLLs are translated ahead of time into native ARM64 code. Memory permissions are enforced by the CPU's page protections, and any access that breaks them stops the game. |
-| Can I play it today? | **You can build it and play offline.** [One command](#get-tribespad) builds an iPhone/iPad IPA or a Mac app from the official downloads. Offline matches with bots play by touch in the iPad Simulator at about 30 FPS and with mouse and keyboard on Mac. |
-| Does it work on a real iPad or iPhone? | **Not verified on hardware.** The IPA builds for iPhone and iPad and passes PadMint's package check. In the iPhone 17 Simulator an offline match plays by touch, with the game kept clear of the Dynamic Island and every menu fully on screen. |
+| Can I play it today? | **Yes, if you build it.** [One command](#get-tribespad) builds an iPhone/iPad IPA or a Mac app from the official downloads. There is no prebuilt download. |
+| Does it work on a real iPad or iPhone? | **Yes, early.** Tested on a 12.9-inch iPad Pro (6th generation) and an iPhone 14 on iOS 27: TribesNEXT sign-in, the internet server list, joining Classic CTF servers and playing with touch and an Xbox controller. |
 | What has been played? | Offline Katabatic CTF with two bots: spawning, movement, aiming, firing, jets, skiing/jumping, weapon switching, grenades, inventory, an end-of-match map change, and a clean quit. A 30-minute session ran without a crash. |
 | Does it match the original game? | In the one scenario measured so far, yes: a [reference trace](docs/validation/reference-trace-katabatic.json) of the same Katabatic flight is bit-identical to the original Windows game in the air and differs by about 1 cm after landing, where the QoL collision patch applies (the Windows reference ran without QoL). |
-| Online play? | On iPhone and iPad TribesPad opens to the TribesNEXT login. Signing in with a real account and joining an online match have not been tested yet. |
-| Controllers? | One Xbox, PlayStation or MFi extended gamepad maps to the original bindings. Native input tests pass; play with a physical controller is unverified. |
+| Online play? | **Yes.** TribesPad opens to the TribesNEXT login, remembers your password if you ask it to, and joins community servers. Most servers are empty outside North American evenings; see [Online servers](#online-servers). |
+| Controllers? | One Xbox, PlayStation or MFi extended gamepad maps to the original bindings, played on iPad with an Xbox controller. |
 | Is the game included? | **No.** Your build downloads the free official Tribes 2 installer and the TribesNEXT client and checks them by SHA-256. See [Game data](#game-data). |
 
 ### Performance
@@ -81,7 +86,7 @@ The steady 30 FPS is the vertical-sync pacing: with VSync off the same match run
 ## Play an offline match
 
 1. Choose **LAN GAME → HOST → Katabatic**, enable two bots and tap **START GAME**.
-2. When the world appears, tap the **controller button** on the right edge to show the touch controls.
+2. When the world appears, the touch controls appear by themselves.
 3. Tap **Fire** to spawn.
 
 ![Third-person view in the pre-match countdown](docs/images/tribespad-third-person.jpg)
@@ -93,7 +98,7 @@ The steady 30 FPS is the vertical-sync pacing: with VSync off the same match run
 | **Move stick** (bottom left) | Analog movement |
 | **Right side of the screen** | Drag anywhere that is not a button to aim |
 | **Fire** (bottom right) | Hold to fire; drag to aim while firing |
-| **Jet · Ski / Jump · Grenade · Weapon** | The ring around Fire |
+| **Jet** (orange) · **Ski / Jump** · **Grenade** · **Weapon** | Beside and above Fire |
 | **Pack · Inventory** | Above the move stick; Inventory hides the controls so the original screen can be tapped |
 | **Controller / X button** (right edge) | Show or hide the touch controls |
 | **Cursor button** (right edge) | Turn the trackpad cursor on or off |
@@ -145,6 +150,9 @@ While playing:
 | D-pad up / down | Repair kit / inventory | D-pad left / right | Beacon / quick chat |
 | Menu | Game menu | View | Scores |
 
+The first few times you play with a controller, a short card shows this layout; the
+full guide is in **··· → Help → Controller Guide**.
+
 In menus, lobbies and screens the left stick or D-pad moves the cursor, A clicks
 (hold to drag), B or Menu goes back, and the right stick scrolls. The game does
 not see the controller while a menu is open. Look speed is in Settings.
@@ -156,8 +164,17 @@ Disconnecting releases the controller's actions, and backgrounding the app relea
 On iPhone and iPad, TribesPad opens to the TribesNEXT login. Tap **Account** or
 **Password** and the keyboard opens with the login pane above it. Sign in with
 your TribesNEXT account (**CREATE NEW ACCOUNT** makes a free one), then
-**PLAY GAME → JOIN** lists the internet servers. Signing in with a real account
-and joining a match have not been tested yet.
+**PLAY GAME → JOIN** lists the internet servers. Tick **Remember Password** to skip
+typing it next time. You join as an observer: press **Fire** (RT on a controller) to
+join a team. Change armor and weapons at an inventory station or with **Inventory**
+(D-pad down).
+
+The Tribes 2 community mostly plays at set times in North American evenings: pickup
+games, The Cut and the 25th Anniversary draft league. At other hours most public
+servers are empty or hold only bots. The PlayT2 and The Cut Discord servers and
+TribalOutpost list where and when people play.
+Missing maps and interiors download from the TribesNEXT asset depot (on by default
+in TribesPad).
 
 **Settings → Online Play** off starts offline instead: Training, LAN Game, and
 the internet server list in JOIN without signing in.
@@ -185,8 +202,8 @@ translated in advance, so code written at run time is never executed.
 
 This differs from decompilation ports, which rebuild readable C source and
 then modify it. TribesPad keeps the original program's behavior instruction for
-instruction, which keeps it faithful to the original and is what should keep it
-compatible with TribesNEXT servers (joining a server is not yet tested).
+instruction, which keeps it faithful to the original and compatible with TribesNEXT
+servers.
 
 ## How it works
 
@@ -239,13 +256,13 @@ No Apple account is needed for the Mac.
    ```
    No Mac? Fork this repository, open **Actions → Build TribesPad for iPhone and iPad →
    Run workflow**, and download the IPA from the finished run.
-2. Install `build/output/TribesPad.ipa` with [Sideloadly](https://sideloadly.io),
-   signed with an Apple ID in the **paid Apple Developer Program**.
+2. Install `build/output/TribesPad.ipa` with [Sideloadly](https://sideloadly.io) or
+   your usual signing tool.
 
 > [!NOTE]
-> TribesPad needs Apple's *Extended Virtual Addressing* permission. Free Apple IDs most
-> likely cannot grant it, so plan on a paid developer account. TribesPad has not yet been
-> installed on a real iPhone or iPad; the GitHub build has not been run yet either.
+> TribesPad runs without Apple's *Extended Virtual Addressing* permission. It was tested
+> with a paid Apple Developer account; a free Apple ID should work (apps then expire after
+> seven days) but has not been tried. The app is about 1 GB with the game data.
 
 ### First launch
 
@@ -267,11 +284,27 @@ from [patches/translation](patches/translation) (about 3.5 MB, recorded in
 checked by SHA-256. The patches are useless without your own lift of the official files.
 How this works, stage by stage, is in [Reproducible build](docs/REPRODUCIBLE-BUILD.md).
 
+## Known issues
+
+- **Crashes in online play.** Each crash so far was a Windows or OpenGL function the
+  translated game had not reached before. TribesPad now keeps a session log in its
+  app data (`Library/Logs/TribesPad.log`, previous session beside it); attach it to an
+  issue. Every OpenGL 1.1 function the game loads is now either implemented or a logged
+  no-op, so that family of crashes should be over.
+- **Performance.** Online matches can lag on busy maps, and loading datablocks takes a
+  while. High ping is usually distance: most servers are in North America.
+- **Hosting.** HOST works for a local game with bots. Registering a hosted server on the
+  internet list is new and lightly tested.
+- **Not implemented:** clipboard paste with a hardware keyboard, joining by host name
+  (the IP dialog), and deleting recorded demos stop the game.
+- **Night maps are dark**, as in the original.
+
 ## Roadmap
 
-- Install and play on a physical iPad; decide the VSync default on hardware
-- Play with a physical controller
-- Run the GitHub build workflow and PadMint's player check once the repository is public
+- Fix crashes reported in session logs; measure frame rate and heat on iPad
+- A server browser that sorts by human players, using the TribesNEXT server list
+- Automatic map downloads for community map packs
+- Run the GitHub build workflow and PadMint's player check
 - Touch layout editor
 - Measure Mac performance
 - Compare with the QoL client on Windows and add jet, weapon and bot scenarios to the reference trace
@@ -293,7 +326,10 @@ Tribes 2 was developed by Dynamix and published by Sierra. Thanks to the
 servers alive. Touch control design follows HaloPad /
 [ProjectReach](https://github.com/chrissotraidis/projectreach) and SunPad.
 
-The project does not yet have a license; until one is added, all rights are reserved.
+TribesPad's own code is released under the [MIT License](LICENSE). Tribes 2, TribesNEXT
+and their files belong to their owners and are not covered by it; this repository
+contains none of them. The translation patches in `patches/translation` apply only to
+your own lift of the official downloads.
 
 TribesPad is an unofficial fan project and is not affiliated with or endorsed by
 the owners of Tribes 2. Report problems in [issues](https://github.com/chrissotraidis/tribespad/issues).

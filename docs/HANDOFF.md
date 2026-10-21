@@ -1,4 +1,28 @@
-# TribesPad handoff — 12 October 2026
+# TribesPad handoff — 21 October 2026
+
+## Latest: physical devices and online play (18–21 October)
+
+TribesPad now runs on a physical 12.9-inch iPad Pro (6th generation) and iPhone 14 on
+iOS 27, signs in to TribesNEXT and joins online Classic CTF servers, played with touch
+and an Xbox controller. The owner authorized online sign-in and joining; the older
+"offline only" scope below is superseded. Changes on branch `codex/menu-icon-ios27`:
+
+- **Device runtime:** iOS 27 scene lifecycle; runs without Extended Virtual Addressing
+  (checked-memory alias limited to the 2 GiB user space); speaker audio session; no
+  microphone; session log in `Library/Logs/TribesPad.log` (previous session kept).
+- **TribesNEXT login:** the 500 fps software limiter (`setFramerateLimit`, an SDL timer
+  import stop) is disabled; account download saves via SetFilePointerEx, GetFileSizeEx,
+  FlushFileBuffers, SetEndOfFile and SystemFunction036; Remember Password persists the
+  game's registry keys in `tribes2-registry.bin`.
+- **Online crashes fixed from logs:** GL extensions with no providers are hidden from the
+  game; every OpenGL 1.1/WGL function the game loads is implemented or a logged no-op
+  stub (`config/runtime/gl-unprovided.json`); `glColor3f` implemented; curl POST options
+  for hosting; LCMapStringEx route; PF_FASTFAIL_AVAILABLE.
+- **Display and input:** UI scale fills iPad (4x on 12.9-inch); glyph sheets sampled
+  nearest (no boxes around text); touch/trackpad/controller layouts and a first-run
+  controller card; keyboard opens on the login fields.
+- **Still open:** frame rate and heat on device under load; long online sessions;
+  clipboard paste, IP-dialog host names and demo deletion are import stops.
 
 ## Read this first
 
@@ -10,7 +34,7 @@ On 10 October the MMU-enforced build took offline Katabatic from 6-7 to a steady
 
 Start here instead of replaying the enormous checkpoint histories in [STATUS](archive/STATUS.md) and [EXECUTION-PLAN](archive/EXECUTION-PLAN.md). Their old “next,” “blocked,” and live-process statements are historical. The heartbeat's repeated GetQueuedCompletionStatusEx boundary was superseded long ago.
 
-**Current human test scope: offline bot matches and server discovery only. Do not join public matches, register accounts or authenticate automatically.** The [PRD](Tribes2-Online-HD-Target.md) describes the broader online/HD product target; it does not override the user's later restriction. Online acceptance remains deferred and unverified, rather than silently satisfied by discovery.
+**Historical scope (superseded 19 October by the owner):** offline bot matches and server discovery only. The [PRD](Tribes2-Online-HD-Target.md) describes the broader online/HD product target; it does not override the user's later restriction. Online acceptance remains deferred and unverified, rather than silently satisfied by discovery.
 
 ## What actually works, and what does not
 
