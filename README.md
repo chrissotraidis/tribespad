@@ -19,6 +19,7 @@
   <img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-8E8E93">
   <img alt="TribesNEXT" src="https://img.shields.io/badge/client-TribesNEXT%20%2B%20QoL-2EC4C9">
   <img alt="Game data not included" src="https://img.shields.io/badge/game%20data-not%20included-FF453A">
+  <a href="https://discord.gg/xwHfUD2bxW"><img alt="Join the community on Discord" src="https://img.shields.io/badge/Discord-Join%20the%20community-5865F2?logo=discord&amp;logoColor=white"></a>
 </p>
 
 ![TribesPad: jetting over Katabatic on iPad with touch controls](docs/images/tribespad-gameplay-jet.jpg)
