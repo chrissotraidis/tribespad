@@ -2452,7 +2452,7 @@ void tribes_gl_tex_image_2d(_cpu *cpu,uint32_t target,uint32_t level,uint32_t in
     GL_ENTER();if(!SDL_GL_GetCurrentContext())stop();
     void *pixels=texture_2d_pixels(cpu,width,height,format,type,input,1);
 #ifdef TB_CAPTURE_PATCHES
-    fprintf(stderr,"Observed texture upload target=0x%x level=%d internal=0x%x size=%ux%u format=0x%x type=0x%x input=0x%08x\n",target,(int32_t)level,internal,width,height,format,type,input);
+    {static unsigned seen;if(seen++<16)fprintf(stderr,"Observed texture upload target=0x%x level=%d internal=0x%x size=%ux%u format=0x%x type=0x%x input=0x%08x\n",target,(int32_t)level,internal,width,height,format,type,input);}
 #endif
     GLContext *c=current_context();int generate=texture_2d_automatic(c,target,level);
     if(generate)collect_gl_errors(c);
@@ -2461,7 +2461,7 @@ void tribes_gl_tex_image_2d(_cpu *cpu,uint32_t target,uint32_t level,uint32_t in
     if(generate&&!collect_gl_errors(c)&&(int32_t)width>0&&(int32_t)height>0){
         glGenerateMipmap(target);
 #ifdef TB_CAPTURE_PATCHES
-        fprintf(stderr,"Observed native automatic mipmap generation target=0x%x base=%d\n",target,(int32_t)level);
+        {static unsigned seen;if(seen++<16)fprintf(stderr,"Observed native automatic mipmap generation target=0x%x base=%d\n",target,(int32_t)level);}
 #endif
     }
     free(pixels);DRAW_RETURN();
@@ -2474,7 +2474,7 @@ void tribes_gl_tex_sub_image_2d(_cpu *cpu,uint32_t target,uint32_t level,uint32_
     glTexSubImage2D(target,(int32_t)level,(int32_t)x,(int32_t)y,(int32_t)width,(int32_t)height,format,type,pixels);
     if(generate&&!collect_gl_errors(c)&&(int32_t)width>0&&(int32_t)height>0)glGenerateMipmap(target);
 #ifdef TB_CAPTURE_PATCHES
-    fprintf(stderr,"Observed texture subregion target=0x%x level=%d offsets=%d/%d size=%ux%u format=0x%x type=0x%x input=0x%08x\n",target,(int32_t)level,(int32_t)x,(int32_t)y,width,height,format,type,input);
+    {static unsigned seen;if(seen++<16)fprintf(stderr,"Observed texture subregion target=0x%x level=%d offsets=%d/%d size=%ux%u format=0x%x type=0x%x input=0x%08x\n",target,(int32_t)level,(int32_t)x,(int32_t)y,width,height,format,type,input);}
 #endif
     free(pixels);DRAW_RETURN();
 }

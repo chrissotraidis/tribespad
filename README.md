@@ -146,7 +146,7 @@ While playing:
 | RT | Fire | LT | Jet |
 | A | Ski / jump | B | Place mine |
 | X | Use pack | Y | Grenade |
-| RB / LB | Next / previous weapon | Click right / left stick | Zoom / third person |
+| RB / LB | Next / previous weapon | Click right / left stick | Zoom on / off / third person |
 | D-pad up / down | Repair kit / inventory | D-pad left / right | Beacon / quick chat |
 | Menu | Game menu | View | Scores |
 

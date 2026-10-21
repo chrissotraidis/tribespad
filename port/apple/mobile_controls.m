@@ -55,6 +55,7 @@ static void tb_set(NSString *key,double value){[NSUserDefaults.standardUserDefau
 @property(nonatomic) BOOL inMatch;
 @property(nonatomic) BOOL matchSeen;
 @property(nonatomic) BOOL typingDialog;
+@property(nonatomic) BOOL zoomed;
 @property(nonatomic) BOOL gameReported;
 @property(nonatomic) BOOL controllerUsed;
 @property(nonatomic,strong) NSTimer *matchClock;
@@ -64,6 +65,7 @@ static void tb_set(NSString *key,double value){[NSUserDefaults.standardUserDefau
 -(void)toggleControls;
 -(void)settingsChanged;
 -(void)hideForController;
+-(void)showControllerHint;
 -(void)pointerMoveTo:(CGPoint)point delta:(CGPoint)delta held:(BOOL)held;
 -(void)pointerButton:(BOOL)down at:(CGPoint)point;
 -(void)pointerClickAt:(CGPoint)point;
@@ -491,7 +493,8 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
         if(!owner.controllerUsed&&(fabsf(p.leftThumbstick.xAxis.value)>.3f||fabsf(p.leftThumbstick.yAxis.value)>.3f||
             fabsf(p.rightThumbstick.xAxis.value)>.3f||fabsf(p.rightThumbstick.yAxis.value)>.3f||p.buttonA.pressed||
             p.rightTrigger.pressed||p.leftTrigger.pressed||p.dpad.xAxis.value||p.dpad.yAxis.value)){
-            owner.controllerUsed=YES;[owner hideForController];[owner setNeedsLayout];}
+            owner.controllerUsed=YES;[owner hideForController];[owner setNeedsLayout];
+            if(owner.inMatch)[owner showControllerHint];}
         owner.stickAim=CGPointMake(p.rightThumbstick.xAxis.value,p.rightThumbstick.yAxis.value);
         owner.stickMove=CGPointMake(p.leftThumbstick.xAxis.value+p.dpad.xAxis.value,p.leftThumbstick.yAxis.value+p.dpad.yAxis.value);
         if(!owner.inMatch)return;
@@ -514,7 +517,12 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
     key(pad.leftShoulder,SDL_SCANCODE_W,SDL_KMOD_LSHIFT);         // previous weapon
     key(pad.buttonX,SDL_SCANCODE_R,SDL_KMOD_NONE);                // use pack
     key(pad.buttonY,SDL_SCANCODE_G,SDL_KMOD_NONE);                // grenade
-    key(pad.rightThumbstickButton,SDL_SCANCODE_A,SDL_KMOD_NONE);  // zoom
+    // Zoom toggles: click once to zoom (holding the game's zoom key), again to
+    // return, so a sniper shot does not need the stick held in.
+    pad.rightThumbstickButton.pressedChangedHandler=^(GCControllerButtonInput *b,float v,BOOL pressed){(void)b;(void)v;
+        TBGameControls *owner=weakSelf;
+        if(!pressed||!owner.controls||!owner.inMatch||UIApplication.sharedApplication.applicationState!=UIApplicationStateActive)return;
+        owner.zoomed=!owner.zoomed;[owner pushKey:SDL_SCANCODE_A down:owner.zoomed mod:SDL_KMOD_NONE];};
     key(pad.leftThumbstickButton,SDL_SCANCODE_TAB,SDL_KMOD_NONE); // third person
     key(pad.dpad.up,SDL_SCANCODE_Q,SDL_KMOD_NONE);                // repair kit
     key(pad.dpad.down,SDL_SCANCODE_KP_ENTER,SDL_KMOD_NONE);       // inventory
@@ -621,10 +629,12 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
     }
     if(playing==self.inMatch)return;
     self.inMatch=playing;if(playing)self.matchSeen=YES;
+    if(self.zoomed){self.zoomed=NO;[self pushKey:SDL_SCANCODE_A down:NO mod:SDL_KMOD_NONE];}
     if(self.controls){tb_input_release(&self.controls->input,9);tb_mobile_controls_emit(self.controls);}
     if(playing){
         if(!self.expanded&&!(self.controllerUsed&&TB_HIDE_WITH_CONTROLLER))[self toggleControls];
-        if(self.expanded)[self showHint];
+        if(self.controllerUsed)[self showControllerHint];
+        else if(self.expanded)[self showHint];
     } else if(self.expanded&&!self.restoreControlsAfterKeyboard)[self toggleControls];
     [self rebuildMenu];[self setNeedsLayout];
 }
@@ -635,6 +645,17 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
     [self setNeedsLayout];[self layoutIfNeeded];
     [UIView animateWithDuration:.3 animations:^{self.hint.alpha=1;}];
     [UIView animateWithDuration:.6 delay:7 options:0 animations:^{self.hint.alpha=0;} completion:nil];
+}
+/* The first few times play starts with a controller, show its layout without
+   blocking play. The full guide is in ··· > Help > Controller Guide. */
+-(void)showControllerHint {
+    double shown=tb_setting(@"TribesPad.controllerHintsShown",0);if(shown>=3)return;tb_set(@"TribesPad.controllerHintsShown",shown+1);
+    self.hint.text=@"RT fire  ·  LT jet  ·  A ski / jump  ·  RB / LB next / previous weapon\n"
+        "Y grenade  ·  X use pack  ·  B mine  ·  D-pad: up repair kit, down inventory, left beacon, right quick chat\n"
+        "Watching as an observer? Press RT to join a team  ·  Menu: game menu  ·  View: scores";
+    [self.hint.layer removeAllAnimations];[self setNeedsLayout];[self layoutIfNeeded];
+    [UIView animateWithDuration:.3 animations:^{self.hint.alpha=1;}];
+    [UIView animateWithDuration:.6 delay:12 options:UIViewAnimationOptionAllowUserInteraction animations:^{self.hint.alpha=0;} completion:nil];
 }
 /* Pointer events from the trackpad cursor, in window points like SDL's own. */
 -(void)pointerMoveTo:(CGPoint)point delta:(CGPoint)delta held:(BOOL)held {
@@ -797,7 +818,9 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
         "PLAYING\nLeft stick: move · Right stick: aim\nRT: fire · LT: jet · A: ski / jump\n"
         "RB / LB: next / previous weapon\nY: grenade · X: use pack · B: mine\n"
         "D-pad: up repair kit · down inventory · left beacon · right quick chat\n"
-        "Click right stick: zoom · click left stick: third person\nMenu: game menu · View: scores\n\n"
+        "Click right stick: zoom on / off · click left stick: third person\nMenu: game menu · View: scores\n"
+        "Observing after you join? Press RT to join a team.\n"
+        "Loadout: D-pad down opens inventory; pick armor and weapons there.\n\n"
         "MENUS\nLeft stick or D-pad: move the cursor · A: click (hold to drag)\nB or Menu: back · Right stick: scroll",
         name.length?@"Connected. Touch controls step aside once you use it.":@"Connect an Xbox, PlayStation or MFi controller in Settings > Bluetooth."]];
 }
@@ -857,7 +880,7 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
     if(self.expanded)utility=@[self.menu,self.toggle];
     self.cursor.hidden=self.keyboard.hidden=self.expanded;
     for(NSUInteger i=0;i<utility.count;i++){utility[i].frame=CGRectMake(right,top+i*(b+gap),b,b);utility[i].alpha=phone?.8:1;}
-    CGSize hintSize=[self.hint sizeThatFits:CGSizeMake(fmin(w-120,560),200)];
+    CGSize hintSize=[self.hint sizeThatFits:CGSizeMake(fmin(w-120,720),200)];
     self.hint.frame=CGRectMake(x+(w-hintSize.width-28)/2,y+h*.16,hintSize.width+28,hintSize.height+18);
     // Beside the menu button.
     self.fps.frame=CGRectMake(right-80,top+(b-22)/2,72,22);

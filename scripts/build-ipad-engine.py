@@ -179,6 +179,15 @@ if ( $TribesPadOffline )
 else
    $fromLauncher = true;
 $Host::Dedicated = 0;
+// Community maps bring interiors and textures players may not have. Turn on
+// the TribesNEXT asset depot once (off by default on PC); the game's own
+// option still switches it off.
+if ( $pref::TribesPad::depotDefaulted $= "" )
+{
+   $pref::TribesPad::depotDefaulted = 1;
+   $pref::Net::allowDownloads = true;
+   $pref::Net::cacheDownloads = true;
+}
 // iOS paces frames with VSync; the optional software frame limiter is not available.
 $pref::Engine::FramerateLimit = 0;
 function setFramerateLimit( %fps )

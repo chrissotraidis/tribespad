@@ -25,7 +25,7 @@ typedef struct Multi {
 typedef struct ListNode {struct curl_slist *native;uint32_t *public,guest;struct ListNode *next;} ListNode;
 typedef struct StringList {ListNode *head,*tail;struct StringList *next;} StringList;
 typedef struct Url {uint32_t guest;CURLU *native;struct Url *next;} Url;
-typedef struct Easy { uint32_t guest,private,write_function,write_data,header_function,header_data,progress_function,progress_data,error_address,ca_info,headers,url; char error_buffer[CURL_ERROR_SIZE]; int stale_headers,stale_url; CURL *native; Multi *borrowed,*attached; struct Easy *next; } Easy;
+typedef struct Easy { uint32_t guest,private,write_function,write_data,header_function,header_data,progress_function,progress_data,error_address,ca_info,headers,url; char error_buffer[CURL_ERROR_SIZE]; int stale_headers,stale_url; int64_t post_size; CURL *native; Multi *borrowed,*attached; struct Easy *next; } Easy;
 typedef struct {
     uint64_t base;
     pthread_t owner;
@@ -388,7 +388,7 @@ void tribes_curl_global_cleanup(_cpu *cpu) {
     }
 }
 uint32_t tribes_curl_easy_init(_cpu *cpu) {
-    CURL_SCOPE=get(cpu,1); Easy *entry=calloc(1,sizeof *entry); if(!entry) return 0;
+    CURL_SCOPE=get(cpu,1); Easy *entry=calloc(1,sizeof *entry); if(!entry) return 0; entry->post_size=-1;
     TribesCurlFrame frame; enter(s,cpu,&frame);
     CURL *native=curl_easy_init();
     if(native) {
@@ -411,7 +411,7 @@ void tribes_curl_easy_reset(_cpu *cpu,uint32_t handle) {
     TribesCurlFrame frame; enter(s,cpu,&frame);
     curl_easy_reset(entry->native);
     if(entry->ca_info&&tribes_global_free(s->base,entry->ca_info))stop();
-    *entry=(Easy){.guest=entry->guest,.native=entry->native,.next=entry->next};
+    *entry=(Easy){.guest=entry->guest,.native=entry->native,.next=entry->next,.post_size=-1};
     /* Reset guest options, but retain the bridge's socket ownership and
        signal policy. Native reset preserves the real connection/DNS caches. */
     if(curl_easy_setopt(entry->native,CURLOPT_NOSIGNAL,1L)!=CURLE_OK||
@@ -613,6 +613,25 @@ uint32_t tribes_curl_easy_setopt(_cpu *cpu,uint32_t handle,uint32_t option,uint3
             if(result==CURLE_OK)e->write_data=value;
             break;
         case CURLOPT_TIMEOUT_MS:result=curl_easy_setopt(e->native,CURLOPT_TIMEOUT_MS,(long)(int32_t)value);break;
+        /* HTTP POST: hosting a server registers it with the TribesNEXT master
+           list. The body is copied when it is set (COPYPOSTFIELDS), so the
+           transfer never reads guest memory later. */
+        case CURLOPT_POST:result=curl_easy_setopt(e->native,CURLOPT_POST,(long)(int32_t)value);break;
+        case CURLOPT_POSTFIELDSIZE:
+            e->post_size=(int32_t)value;result=curl_easy_setopt(e->native,CURLOPT_POSTFIELDSIZE,(long)(int32_t)value);break;
+        case CURLOPT_POSTFIELDS:
+        case CURLOPT_COPYPOSTFIELDS: {
+            if(!value){result=curl_easy_setopt(e->native,CURLOPT_COPYPOSTFIELDS,NULL);break;}
+            const char *source=guest(s,value,1);size_t limit=UINT64_C(0x100000000)-value;
+            size_t length=e->post_size>=0?(size_t)e->post_size:strnlen(source,limit);
+            if(length>=limit)stop();
+            void *body=malloc(length+1);if(!body){result=CURLE_OUT_OF_MEMORY;break;}
+            uint32_t token=tribes_memory_access_begin((void *)source,length?length:1,1);memcpy(body,source,length);tribes_memory_access_end(token);
+            ((char *)body)[length]=0;
+            result=curl_easy_setopt(e->native,CURLOPT_POSTFIELDSIZE,(long)length);
+            if(result==CURLE_OK)result=curl_easy_setopt(e->native,CURLOPT_COPYPOSTFIELDS,body);
+            free(body);break;
+        }
         case CURLOPT_PRIVATE:
             result=curl_easy_setopt(e->native,CURLOPT_PRIVATE,value?e:NULL);
             if(result==CURLE_OK)e->private=value;
