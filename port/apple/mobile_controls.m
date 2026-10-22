@@ -219,7 +219,7 @@ typedef struct {int section;BOOL slider;const char *title,*key,*detail;double lo
 static const char *tb_sections[][2]={
     {"Touch Controls","Show the touch controls first to see size and opacity change as you drag."},
     {"Trackpad Cursor","With the touch controls hidden, drag anywhere to move the cursor and tap to click. Touch and hold, then drag, to hold the button (sliders, scroll bars). Drag with two fingers to scroll."},
-    {"Display",NULL},
+    {"Display","Render Scale draws the game with fewer pixels on iPad and lets the screen scale them up: 100% is the full resolution, 50% a quarter of the pixels. Lower is faster and softer. Applies the next time TribesPad opens. iPhone already draws at a reduced size."},
     {"Online","On, TribesPad opens to the TribesNEXT login: sign in or create a free account, then JOIN lists internet servers. Off, it opens offline with Training, LAN Game and the server list. Applies the next time TribesPad opens."}};
 static const TBSettingRow tb_rows[]={
     {0,YES,"Control Size","TribesPad.controlSize",NULL,.75,1.3,NO},
@@ -231,6 +231,7 @@ static const TBSettingRow tb_rows[]={
     {1,YES,"Cursor Speed","TribesPad.cursorSpeed",NULL,.5,2.5,YES},
     {2,NO,"Keep Clear of the Notch","TribesPad.avoidNotch","Keeps the game clear of the notch and rounded corners. Turn off to fill the screen. Applies the next time TribesPad opens.",0,0,NO},
     {2,NO,"Show FPS Counter","TribesPad.showFPS","Frames each second and the longest frame among them. Also in the menu.",0,0,NO},
+    {2,YES,"Render Scale","TribesPad.renderScale",NULL,.5,1.0,NO},
     {3,NO,"Online Play","TribesPad.onlinePlay","Sign in with TribesNEXT at launch.",0,0,NO}};
 enum {TBRowCount=sizeof tb_rows/sizeof tb_rows[0],TBSectionCount=sizeof tb_sections/sizeof tb_sections[0]};
 static void tb_register_defaults(void){
@@ -238,7 +239,7 @@ static void tb_register_defaults(void){
         BOOL phone=UIDevice.currentDevice.userInterfaceIdiom==UIUserInterfaceIdiomPhone;
         [NSUserDefaults.standardUserDefaults registerDefaults:@{@"TribesPad.controlSize":@1.0,@"TribesPad.controlOpacity":@1.0,
             @"TribesPad.lookSensitivity":@1.0,@"TribesPad.leftHanded":@0,@"TribesPad.hideWithController":@1,
-            @"TribesPad.trackpad":@(phone?1:0),@"TribesPad.cursorSpeed":@1.2,@"TribesPad.avoidNotch":@1,@"TribesPad.showFPS":@0,
+            @"TribesPad.trackpad":@(phone?1:0),@"TribesPad.cursorSpeed":@1.2,@"TribesPad.avoidNotch":@1,@"TribesPad.showFPS":@0,@"TribesPad.renderScale":@1.0,
             @"TribesPad.onlinePlay":@1}];
     });
 }
@@ -791,6 +792,9 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
     NSArray *controls=@[
         item(self.expanded?@"Hide Touch Controls":@"Show Touch Controls",self.expanded?@"xmark.circle":@"gamecontroller",^{[weak toggleControls];}),
         trackpad,fps,
+        [UIMenu menuWithTitle:@"Graphics" image:icon(@"slider.horizontal.3") identifier:nil options:0 children:@[
+            item(@"Balanced",@"gauge.with.dots.needle.50percent",^{[weak confirmGraphics:@"balanced"];}),
+            item(@"Fast",@"hare",^{[weak confirmGraphics:@"fast"];})]],
         item(@"Settings…",@"gearshape",^{[weak showSettings];})];
     NSString *pad=self.controller.vendorName;
     UIMenu *help=[UIMenu menuWithTitle:@"Help" image:icon(@"questionmark.circle") identifier:nil options:0 children:@[
@@ -889,6 +893,28 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
     NSString *path=[NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,NSUserDomainMask,YES).firstObject
         stringByAppendingPathComponent:@"TribesPad/Game/base/prefs/tribespad-request.txt"];
     [[NSString stringWithFormat:@"%.0f %@\n",NSDate.date.timeIntervalSince1970*1000,request] writeToFile:path atomically:YES encoding:NSUTF8StringEncoding error:nil];
+}
+/* Graphics presets: the game's own detail settings, set in one step by
+   base/autoexec.cs (TribesPadGraphics). Balanced is Dynamix's High profile
+   for detail; Fast is its Medium profile. The game's Options still change
+   each setting afterwards. */
+-(void)confirmGraphics:(NSString *)preset {
+    if(!self.gameReported){
+        [self showMessage:@"Graphics" text:@"Sign in to TribesNEXT first; the presets apply once the game is past the login."];return;
+    }
+    [self releaseControls];
+    BOOL fast=[preset isEqualToString:@"fast"];
+    NSString *text=fast?
+        @"Coarser terrain and shapes, no clouds, decals, reflections or building lights, light shadows and no weather. The biggest gain on busy maps.":
+        @"The game's own High detail: terrain, shapes and buildings at the detail Dynamix tuned, one cloud layer, light shadows and no weather. Faster than the maximum detail sliders, with little visible difference.";
+    UIAlertController *alert=[UIAlertController alertControllerWithTitle:fast?@"Fast Graphics":@"Balanced Graphics"
+        message:[text stringByAppendingString:@"\n\nThis replaces the detail settings in the game's Options > Graphics, where you can still change each one."]
+        preferredStyle:UIAlertControllerStyleAlert];
+    __weak TBGameControls *weak=self;
+    [alert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
+    [alert addAction:[UIAlertAction actionWithTitle:@"Apply" style:UIAlertActionStyleDefault handler:^(UIAlertAction *a){(void)a;
+        [weak sendRequest:[@"graphics " stringByAppendingString:preset]];}]];
+    alert.overrideUserInterfaceStyle=UIUserInterfaceStyleDark;[[self presenter] presentViewController:alert animated:YES completion:nil];
 }
 /* Playing Now: people and bots per server, live; tap one to join it. */
 -(void)showLiveServers {

@@ -267,6 +267,12 @@ function TribesPadReadRequest()
    if ( %number $= "" || %number $= $TribesPadRequest )
       return;
    $TribesPadRequest = %number;
+   // ··· > Graphics: one of two detail presets, in a match or not.
+   if ( getWord( %line, 1 ) $= "graphics" )
+   {
+      TribesPadGraphics( getWord( %line, 2 ) );
+      return;
+   }
    // Find a Game: the original JOIN pane or a server, between matches only.
    if ( isObject( ServerConnection ) )
       return;
@@ -279,6 +285,33 @@ function TribesPadReadRequest()
          $JoinGamePassword = "";
          JoinGame( getWord( %line, 2 ) );
    }
+}
+// TribesPad: graphics presets from Dynamix's own profiles (HighProfile.cs and
+// MediumProfile.cs) for the detail that costs the most frames: terrain and
+// shape level of detail, terrain texture blending, clouds, decals, reflections,
+// building lights, shadows and weather. Applied the way OptionsDlg::saveSettings
+// applies them, then saved.
+function TribesPadGraphics( %preset )
+{
+   %fast = %preset $= "fast";
+   if ( !%fast && %preset !$= "balanced" )
+      return;
+   $pref::Terrain::screenError = %fast ? 20 : 8;
+   $pref::Terrain::texDetail = %fast ? 3 : 1;
+   $pref::TS::screenError = %fast ? 8 : 5;
+   $pref::TS::detailAdjust = %fast ? 0.675439 : 0.833333;
+   $pref::Interior::detailAdjust = %fast ? 0.7 : 1.0;
+   $pref::SkyOn = true;
+   $pref::numCloudLayers = %fast ? 0 : 1;
+   $pref::decalsOn = !%fast;
+   $pref::environmentMaps = !%fast;
+   $pref::Interior::ShowEnvironmentMaps = !%fast;
+   $pref::Interior::DynamicLights = !%fast;
+   $pref::precipitationOn = false;
+   $pref::Shadows = %fast ? 0.1 : 0.25;
+   setShadowDetailLevel( $pref::Shadows );
+   export( "$pref::*", "prefs/ClientPrefs.cs", False );
+   echo( "TribesPad: applied the" SPC %preset SPC "graphics preset" );
 }
 TribesPadStartRequests();
 schedule( 200, 0, TribesPadReportState );

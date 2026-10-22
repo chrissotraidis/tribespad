@@ -81,8 +81,14 @@ Performance went from unplayable to steady in the Simulator:
 | + lighter GL checks, draw streaming, texture-upload ring, faster float paths | **~30 FPS** steady, worst frames 50–90 ms, ~70 s map load |
 
 The steady 30 FPS is the vertical-sync pacing: with VSync off the same match runs
-36–37 FPS. Physical-device numbers will differ. Details are in the
-[handoff](docs/HANDOFF.md) and [performance records](docs/validation/ipad-hardware-permissions.json).
+36–37 FPS. Details are in the [handoff](docs/HANDOFF.md) and
+[performance records](docs/validation/ipad-hardware-permissions.json).
+
+On a physical 12.9-inch iPad Pro (M2), online with maximum detail settings, menus run
+at 74–104 FPS and matches at about 22–31 FPS. To go faster, try **··· → Graphics →
+Balanced** (or **Fast**) and **Settings → Render Scale** below 100%. The
+[performance notes](docs/PERFORMANCE.md) explain the measurements and how to read the
+FPS counter and session log.
 
 ## Play an offline match
 
@@ -133,8 +139,9 @@ sends the game's own key, so the original screens open.
 | Chat | All Chat, Team Chat (the keyboard opens and the controls return after sending) and the Quick Chat menu |
 | Actions | Repair kit, mine, beacon, targeting laser, throw flag, zoom, third-person view, command map, suicide |
 | Show / Hide Touch Controls, Trackpad Cursor | Same as the buttons on the right edge |
+| Graphics | **Balanced** (the game's own High detail, one cloud layer, light shadows, no weather) or **Fast** (its Medium detail). Asks first; the game's Options still change each setting |
 | FPS Counter | Frames each second and the slowest frame among them (orange when a frame takes 50 ms or more; "Hot" when the device is throttling) |
-| Settings… | Touch controls (size, opacity, look sensitivity, left-handed, hide with a controller), trackpad cursor and speed, keep clear of the notch, FPS counter; reset to defaults |
+| Settings… | Touch controls (size, opacity, look sensitivity, left-handed, hide with a controller), trackpad cursor and speed, keep clear of the notch, FPS counter, render scale (iPad); reset to defaults |
 | Help | Touch and trackpad guide, controller guide, original console, TribesPad on GitHub, About |
 
 ![Touch Settings during a match](docs/images/tribespad-touch-settings.jpg)
