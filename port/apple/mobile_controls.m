@@ -8,14 +8,13 @@
 #import <SafariServices/SafariServices.h>
 #include <math.h>
 #include "mobile_controls.h"
+#import "live_servers.h"
 
 typedef NS_ENUM(NSInteger, TBControlKind) { TBKindStick, TBKindLook, TBKindButton };
 extern uint64_t tribes_gl4es_presented_frames(void);
 extern uint64_t tribes_gl4es_take_longest_frame_ns(void);
 static NSString * const TBRepositoryURL=@"https://github.com/chrissotraidis/tribespad";
-/* Find a Game. Live list of TribesNEXT servers (read from the master server),
-   and the community's own places; checked 22 October 2026. */
-static NSString * const TBLiveServersURL=@"https://tribaloutpost.com/tribesnext/servers";
+/* Find a Game: the community's own places, checked 22 October 2026. */
 static NSString * const TBPlayT2Discord=@"https://discord.gg/EMMVhQJgf9";
 static NSString * const TBTheCutDiscord=@"https://discord.gg/yz3AhkJCxg";
 static NSString * const TBTribesPadDiscord=@"https://discord.gg/xwHfUD2bxW";
@@ -802,7 +801,7 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
        menu off a server; on one, the match actions lead and it folds away. */
     NSMutableArray *find=[NSMutableArray array];
     if(!self.connected)[find addObject:item(@"Server List",@"server.rack",^{[weak openServerList];})];
-    [find addObjectsFromArray:@[item(@"Who's Playing Now",@"person.3",^{[weak openPage:TBLiveServersURL];}),
+    [find addObjectsFromArray:@[item(@"Who's Playing Now",@"person.3",^{[weak showLiveServers];}),
         item(@"Game Nights",@"calendar",^{[weak showSchedule];}),
         [UIMenu menuWithTitle:@"Community" image:icon(@"bubble.left.and.text.bubble.right") identifier:nil options:0 children:@[
             group(@[item(@"PlayT2 Discord",@"person.2",^{[weak openLink:TBPlayT2Discord];}),
@@ -873,15 +872,31 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
     [alert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
     alert.overrideUserInterfaceStyle=UIUserInterfaceStyleDark;[[self presenter] presentViewController:alert animated:YES completion:nil];
 }
-/* Server List asks the game (base/autoexec.cs) for its original JOIN pane
-   through prefs/tribespad-request.txt; each new number is acted on once. */
+/* Requests to the game (base/autoexec.cs) go through prefs/tribespad-request.txt,
+   "<number> <request>"; each new number is acted on once. Server List asks for
+   the original JOIN pane. */
 -(void)openServerList {
     if(!self.gameReported){
         [self showMessage:@"Server List" text:@"Sign in to TribesNEXT first. Once you are past the login, this opens PLAY GAME > JOIN, the list of internet servers."];return;
     }
+    [self sendRequest:@"servers"];
+}
+-(void)sendRequest:(NSString *)request {
     NSString *path=[NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,NSUserDomainMask,YES).firstObject
         stringByAppendingPathComponent:@"TribesPad/Game/base/prefs/tribespad-request.txt"];
-    [[NSString stringWithFormat:@"%.0f servers\n",NSDate.date.timeIntervalSince1970*1000] writeToFile:path atomically:YES encoding:NSUTF8StringEncoding error:nil];
+    [[NSString stringWithFormat:@"%.0f %@\n",NSDate.date.timeIntervalSince1970*1000,request] writeToFile:path atomically:YES encoding:NSUTF8StringEncoding error:nil];
+}
+/* Playing Now: people and bots per server, live; tap one to join it. */
+-(void)showLiveServers {
+    SDL_Window *window=SDL_GetWindowFromID(self.controls->window);if(window)SDL_StopTextInput(window);
+    [self releaseControls];
+    __weak TBGameControls *weak=self;
+    TBLiveServersController *live=[[TBLiveServersController alloc] initWithStyle:UITableViewStyleInsetGrouped];
+    if(self.gameReported&&!self.connected)live.join=^(NSString *address){[weak sendRequest:[@"join " stringByAppendingString:address]];};
+    live.serverList=^{[weak openServerList];};
+    UINavigationController *sheet=[[UINavigationController alloc] initWithRootViewController:live];
+    sheet.modalPresentationStyle=UIModalPresentationFormSheet;sheet.overrideUserInterfaceStyle=UIUserInterfaceStyleDark;
+    [[self presenter] presentViewController:sheet animated:YES completion:nil];
 }
 /* Web pages open in a sheet over the game, so a match keeps running. */
 -(void)openPage:(NSString *)url {
@@ -919,7 +934,7 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
     UIAlertController *alert=[UIAlertController alertControllerWithTitle:@"Game Nights" message:text preferredStyle:UIAlertControllerStyleAlert];
     __weak TBGameControls *weak=self;
     [alert addAction:[UIAlertAction actionWithTitle:@"PlayT2 Discord" style:UIAlertActionStyleDefault handler:^(UIAlertAction *a){(void)a;[weak openLink:TBPlayT2Discord];}]];
-    [alert addAction:[UIAlertAction actionWithTitle:@"Who's Playing Now" style:UIAlertActionStyleDefault handler:^(UIAlertAction *a){(void)a;[weak openPage:TBLiveServersURL];}]];
+    [alert addAction:[UIAlertAction actionWithTitle:@"Who's Playing Now" style:UIAlertActionStyleDefault handler:^(UIAlertAction *a){(void)a;[weak showLiveServers];}]];
     [alert addAction:[UIAlertAction actionWithTitle:@"Done" style:UIAlertActionStyleCancel handler:nil]];
     alert.overrideUserInterfaceStyle=UIUserInterfaceStyleDark;[[self presenter] presentViewController:alert animated:YES completion:nil];
 }

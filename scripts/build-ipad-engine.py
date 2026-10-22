@@ -267,9 +267,18 @@ function TribesPadReadRequest()
    if ( %number $= "" || %number $= $TribesPadRequest )
       return;
    $TribesPadRequest = %number;
-   // Find a Game > Server List: the original JOIN pane, between matches only.
-   if ( getWord( %line, 1 ) $= "servers" && !isObject( ServerConnection ) )
-      LaunchGame( "Join" );
+   // Find a Game: the original JOIN pane or a server, between matches only.
+   if ( isObject( ServerConnection ) )
+      return;
+   switch$ ( getWord( %line, 1 ) )
+   {
+      case "servers":
+         LaunchGame( "Join" );
+      // Find a Game > Who's Playing Now > Join: the JOIN GAME button's own path.
+      case "join":
+         $JoinGamePassword = "";
+         JoinGame( getWord( %line, 2 ) );
+   }
 }
 TribesPadStartRequests();
 schedule( 200, 0, TribesPadReportState );
@@ -325,7 +334,7 @@ else:
  config='#define TB_BUNDLED_GAME_DATA 0\nstatic const char *launch_workdir='+json.dumps(str(R))+';\nstatic char *launch_arguments[]={'+','.join(json.dumps(p) for p in args)+',NULL};\n'
 (out/'mobile-engine-launch-config.h').write_text(config)
 host=[R/'port/apple/mobile_engine_main.m',R/'port/apple/mobile_game_paths.m',R/'port/apple/sdl_main.c',R/'port/apple/gl4es_context.c',R/'port/core/input.c']
-host+=[R/'port/apple/desktop_controls.c'] if mac else [R/'port/apple/mobile_controls.m',R/'port/apple/mobile_controls.c',R/'port/apple/content_area.m']
+host+=[R/'port/apple/desktop_controls.c'] if mac else [R/'port/apple/mobile_controls.m',R/'port/apple/mobile_controls.c',R/'port/apple/live_servers.m',R/'port/apple/content_area.m']
 if a.angle:host.append(R/'port/apple/angle_sdl.c')
 command=['clang','-target',target,'-isysroot',sdk,'-O2','-I',str(out),*sdl_flags,*gl_flags,'-DNOX11','-DNOEGL','-DNO_LOADER','-DDEFAULT_ES=2','-isystem',str(R/'ref/gl4es/src'),*map(str,host),*objects,*gl_libraries,*libraries,*math['libraries'],*[str(R/n) for n in http['libraries']],str(R/al['library']),str(zbuild/'libz-ng.a'),'-lz','-lc++','-framework','Foundation','-framework','GameController','-framework','AVFoundation','-framework','CoreGraphics','-framework','CoreText','-framework','CoreFoundation','-framework','SystemConfiguration','-framework','AudioToolbox','-framework','CoreAudio',*(['-framework','AppKit','-framework','Metal','-framework','QuartzCore'] if mac else ['-framework','SafariServices']),'-o',str(exe)]
 command[1:1]=['-fobjc-arc']
