@@ -307,11 +307,12 @@ How this works, stage by stage, is in [Reproducible build](docs/REPRODUCIBLE-BUI
 - Fix crashes reported in session logs; measure frame rate and heat on iPad
 - A server browser that sorts by human players, using the TribesNEXT server list
 - Automatic map downloads for community map packs
-- Run the GitHub build workflow and PadMint's player check
 - Touch layout editor
 - Measure Mac performance
 - Compare with the QoL client on Windows and add jet, weapon and bot scenarios to the reference trace
 - Join TribesNEXT community servers
+- Starsiege: Tribes (Tribes 1) as a second game, picked from a launcher beside Tribes 2
+  ([plan](docs/STARSIEGE-TRIBES-PLAN.md))
 
 ## Documentation
 
@@ -320,6 +321,7 @@ How this works, stage by stage, is in [Reproducible build](docs/REPRODUCIBLE-BUI
 - [Reproducible build](docs/REPRODUCIBLE-BUILD.md): how the one-command build recreates the game from the official downloads
 - [Validation records](docs/validation): measurements and screenshots
 - [Product target](docs/Tribes2-Online-HD-Target.md): the intended experience
+- [Starsiege: Tribes plan](docs/STARSIEGE-TRIBES-PLAN.md): evidence, a lift preview and gated steps for a second game
 - [Archive](docs/archive): historical status checkpoints, plans and rejected experiments
 
 ## Credits
