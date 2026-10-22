@@ -13,6 +13,7 @@
 typedef NS_ENUM(NSInteger, TBControlKind) { TBKindStick, TBKindLook, TBKindButton };
 extern uint64_t tribes_gl4es_presented_frames(void);
 extern uint64_t tribes_gl4es_take_longest_frame_ns(void);
+extern void tribes_gl4es_resume_frame_stats(void);
 static NSString * const TBRepositoryURL=@"https://github.com/chrissotraidis/tribespad";
 /* Find a Game: the community's own places, checked 22 October 2026. */
 static NSString * const TBPlayT2Discord=@"https://discord.gg/EMMVhQJgf9";
@@ -450,6 +451,9 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
     self.matchClock=[NSTimer scheduledTimerWithTimeInterval:.2 repeats:YES block:^(NSTimer *t){(void)t;[weakSelf followMatch];}];
     [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(releaseControls)
         name:UIApplicationWillResignActiveNotification object:nil];
+    // Time spent in the background is not a slow frame.
+    [NSNotificationCenter.defaultCenter addObserverForName:UIApplicationDidBecomeActiveNotification object:nil
+        queue:NSOperationQueue.mainQueue usingBlock:^(NSNotification *n){(void)n;tribes_gl4es_resume_frame_stats();}];
     [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(keyboardFrameChanged:)
         name:UIKeyboardDidChangeFrameNotification object:nil];
     [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(keyboardHidden:)

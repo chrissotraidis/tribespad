@@ -440,12 +440,18 @@ TribesGL4ESContext *tribes_gl4es_context_create(SDL_Window *window, SDL_GLContex
    the on-screen FPS counter. A stretch of slow play also leaves one line in
    the session log, so a report of "slow at times" can be read afterwards. */
 static _Atomic uint64_t presented_frames, longest_frame_ns;
+static _Atomic bool frame_stats_resumed;
 uint64_t tribes_gl4es_presented_frames(void) { return atomic_load_explicit(&presented_frames,memory_order_relaxed); }
 uint64_t tribes_gl4es_take_longest_frame_ns(void) { return atomic_exchange_explicit(&longest_frame_ns,0,memory_order_relaxed); }
+/* The app was in the background: no frames were due, so start measuring again. */
+void tribes_gl4es_resume_frame_stats(void) { atomic_store_explicit(&frame_stats_resumed,true,memory_order_relaxed); }
 static void note_present(void) {
     static Uint64 last, start, frames, longest, hitches; static unsigned logged;
     Uint64 now=SDL_GetTicksNS();
     atomic_fetch_add_explicit(&presented_frames,1,memory_order_relaxed);
+    if (atomic_exchange_explicit(&frame_stats_resumed,false,memory_order_relaxed)) {
+        last=0; atomic_store_explicit(&longest_frame_ns,0,memory_order_relaxed);
+    }
     if (last) {
         Uint64 gap=now-last;
         if (gap>atomic_load_explicit(&longest_frame_ns,memory_order_relaxed))
