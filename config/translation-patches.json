@@ -132,7 +132,7 @@
   },
   {
    "path": "generated/integration-review/sdl-io/result.json",
-   "sha256": "9e8b8efaa9dad60d59303f13975ff93cea0a3af64fb5767914b850b971d36837",
+   "sha256": "56e5697c49edae9aeec494231c4fd9c7293735d5342d31a1959ba78c5925b3a7",
    "base": "none",
    "patch": "c7f2e10cbee1c0e0.zst"
   },

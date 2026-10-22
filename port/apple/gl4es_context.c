@@ -423,6 +423,10 @@ TribesGL4ESContext *tribes_gl4es_context_create(SDL_Window *window, SDL_GLContex
         set_getmainfbsize(framebuffer_size);
         setenv("LIBGL_FBOFORCETEX","0",1);
         setenv("LIBGL_FB","0",1);
+        /* Keep 16-bit textures 16-bit. GL4ES otherwise widens every 5551/565/
+           4444 upload to RGBA8 on the CPU; the terrain blender re-uploads a
+           128x128 5551 texture with its whole mip chain as the camera moves. */
+        setenv("LIBGL_AVOID16BITS","0",1);
         initialize_gl4es();
         initialized=1;
     }
