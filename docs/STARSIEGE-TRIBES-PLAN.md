@@ -203,7 +203,7 @@ Build the picker, the per-game folders and Switch Game. Measure binary size and 
 
 ## First concrete milestone
 
-Finish G0 and G1 without touching the engine. The reproducible 1.11 `Tribes.exe` is done, and its lift preview matches 1.8 (641,074 instructions, the same 10 untranslated instructions, a 36.6 MB ARM64 object). Still to do: plus a one-page validation record holding the 1.11 PE inventory, the rerun coverage table, the Smacker and `mem.dll` decisions, the owner's answer on the 1.41 client, and two more population snapshots. That settles the input and rights questions and sizes G2. Repeat the lift preview on 1.11 and add the six decode seeds. The first engineering step after it is the Win32 window, pixel-format and WGL front end, because no Tribes 1 frame can appear without it.
+Finish G0 and G1 without touching the engine. The reproducible 1.11 `Tribes.exe` is done, and its lift preview matches 1.8 (641,074 instructions, the same 10 untranslated instructions, a 36.6 MB ARM64 object). Still to do: pin `tribes_gsi.exe` in the inputs manifest; add the six decode seeds; write a one-page validation record with the 1.11 PE inventory, the Smacker and `mem.dll` decisions and two more population snapshots; and get the owner's answer on the 1.41 client. That settles the input and rights questions and sizes G2. The first engineering step after it is the Win32 window, pixel-format and WGL front end, because no Tribes 1 frame can appear without it.
 
 ## Reproducing this research
 
