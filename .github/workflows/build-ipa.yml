@@ -3,8 +3,11 @@ name: Build TribesPad for iPhone and iPad
 # choose this workflow and press "Run workflow". GitHub's free macOS runner
 # (free for public repositories) downloads the free official Tribes 2 installer
 # and the TribesNEXT client, translates the game and builds an unsigned IPA.
-# Nothing is published: the IPA stays with this run for 7 days, visible only to
-# you. Sign and install it with your own Apple account (README).
+# Nothing is published as a release, but the IPA stays with this run as an
+# artifact for 7 days, and on a public repository or public fork anyone signed
+# in to GitHub can download a run's artifacts. The IPA contains the game: download
+# it, then delete the artifact (or the run). Sign and install it with your own
+# Apple account (README).
 on:
   workflow_dispatch:
 permissions:

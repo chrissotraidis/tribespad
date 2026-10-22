@@ -257,6 +257,8 @@ No Apple account is needed for the Mac.
    ```
    No Mac? Fork this repository, open **Actions → Build TribesPad for iPhone and iPad →
    Run workflow**, and download the IPA from the finished run.
+   On a public fork anyone signed in to GitHub can download that run's files, and the IPA
+   contains the game, so delete the artifact once you have it.
 2. Install `build/output/TribesPad.ipa` with [Sideloadly](https://sideloadly.io) or
    your usual signing tool.
 
