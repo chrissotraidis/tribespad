@@ -313,6 +313,10 @@ How this works, stage by stage, is in [Reproducible build](docs/REPRODUCIBLE-BUI
 - Join TribesNEXT community servers
 - Starsiege: Tribes (Tribes 1) as a second game, picked from a launcher beside Tribes 2
   ([plan](docs/STARSIEGE-TRIBES-PLAN.md))
+- A headless dedicated server on a Mac, then Linux on ARM
+  ([plan](docs/DEDICATED-SERVER-PLAN.md))
+- Raspberry Pi 5 / Linux on ARM, then Android, as personal builds
+  ([plan](docs/ANDROID-LINUX-PLAN.md))
 
 ## Documentation
 
@@ -322,6 +326,9 @@ How this works, stage by stage, is in [Reproducible build](docs/REPRODUCIBLE-BUI
 - [Validation records](docs/validation): measurements and screenshots
 - [Product target](docs/Tribes2-Online-HD-Target.md): the intended experience
 - [Starsiege: Tribes plan](docs/STARSIEGE-TRIBES-PLAN.md): evidence, a lift preview and gated steps for a second game
+- [Android and Linux plan](docs/ANDROID-LINUX-PLAN.md): what carries over from the Apple build, and gated steps for Raspberry Pi and Android
+- [Dedicated server plan](docs/DEDICATED-SERVER-PLAN.md): how Tribes 2 servers run today and a headless TribesPad server
+- [Community research](docs/COMMUNITY-RESEARCH.md): what players asked for, community data sources and ranked feature ideas
 - [Archive](docs/archive): historical status checkpoints, plans and rejected experiments
 
 ## Credits
