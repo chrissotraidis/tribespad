@@ -114,6 +114,13 @@ for name,index in first_run.get('ntdll_probes',{}).items():
     assert probe_text.count(probe)==1,name
     probe_text=probe_text.replace(probe,'',1)
 probe_wrapper=mobile_inputs/'ntdll-probes.ll';probe_wrapper.write_text(probe_text);sources[sources.index(probe_source)]=probe_wrapper
+# The recorded probe source names its headers by the absolute path of the
+# checkout it was generated in. Compile a copy that points at this checkout,
+# so the build works in any folder on any Mac (GitHub's runner included).
+probe_c=next(p for p in sources if p.name=='probe-native-providers.c')
+portable=re.sub(r'#include "[^"]*/port/core/(\w+\.h)"',lambda m:'#include "%s"'%(R/'port/core'/m.group(1)),probe_c.read_text())
+portable=portable.replace('#include "probe-native-providers.inc"','#include "%s"'%(probe_c.parent/'probe-native-providers.inc'))
+probe_copy=mobile_inputs/probe_c.name;probe_copy.write_text(portable);sources[sources.index(probe_c)]=probe_copy
 sources[sources.index(old_stops)]=wave_stops;sources.append(wave_wrapper)
 # Refresh finite host exports without relifting unchanged original images.
 from graphics_backend_inputs import prepare as graphics_inputs
