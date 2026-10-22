@@ -6,7 +6,7 @@ The owner wants Starsiege: Tribes (Tribes 1, 1998) as a second game, chosen from
 
 ## Summary
 
-The 2004 freeware installer is still downloadable from a stable archive, and its bytes match the hashes the archive publishes. Its sister Tribes 2 file in the same archive item has the same SHA-1 as the input TribesPad already pins, which ties the item to the FilePlanet freeware release TribesPad already depends on. Inside it is the retail 1.8 game plus the official 1.8 → 1.11 patch. The 1.8 `Tribes.exe` is a clean, unpacked 32-bit PE built with Borland C++. Its interface to the system is narrower than Tribes 2's in every way that matters: no Miles, no DirectInput, no DirectDraw, no SDL, one DirectSound entry point, and OpenGL loaded by name. The Borland compiler is the one new kind of input for the lifter. The Tribes 2 modules show no Borland markers.
+The 2004 freeware installer is still downloadable from a stable archive, and its bytes match the hashes the archive publishes. Its sister Tribes 2 file in the same archive item has the same SHA-1 as the input TribesPad already pins, which ties the item to the FilePlanet freeware release TribesPad already depends on. Inside it is the retail 1.8 game plus the official 1.8 → 1.11 patch. The 1.8 `Tribes.exe` is a clean, unpacked 32-bit PE built with Borland C++. Its interface to the system is narrower than Tribes 2's in every way that matters: no Miles, no DirectInput, no DirectDraw, no SDL, one DirectSound entry point, and OpenGL loaded by name. The Borland compiler is the one new kind of input for the lifter. The Tribes 2 modules show no Borland markers. A lift preview on 22 October put the whole 1.8 executable through TribesPad's pinned toolchain to a native ARM64 object: 10 of 640,112 instructions stayed untranslated, all of kinds TribesPad already handles, and every runtime helper the object needs already exists. Translation is no longer the main risk; the Windows layer and the 1.11 patch are.
 
 Three findings change the draft's plan:
 
@@ -53,9 +53,9 @@ The rights-cleanest input is the unmodified 2004 freeware installer, pinned by t
 
 The installer's EULA (Sierra, `Install/EULA.txt`) forbids translating, reverse engineering or decompiling the program. TribesPad already treats the Tribes 2 inputs this way, and the same treatment fits here: each player's build downloads the official file and translates it on their own Mac, and nothing derived from the game is published except small patches. `inputs-manifest.json` already records "redistribution authorization has not been established" for the Tribes 2 inputs, and the Tribes 1 entry should say the same.
 
-The 1.11 step is the first open engineering question. The freeware installs 1.8 and then applies a Wise binary patch to `Tribes.exe`, `scripts.vol` and `custom.vol`. TribesPad has two choices, and G0 picks one:
+The 1.11 step is the first open engineering question. The freeware installs 1.8 and then applies a Wise binary patch to `Tribes.exe` and `scripts.vol`. `custom.vol` ships whole in the patch (834,285 bytes, a complete `PVOL` file), so it needs no decoding. TribesPad has two choices, and G0 picks one:
 
-- **Decode the Wise patch format on the Mac** and apply it during input preparation. This is cleanest for players, but the format is undocumented in anything loaded here (Unknown).
+- **Decode the Wise patch format on the Mac** and apply it during input preparation. This is cleanest for players. The format is Wise's own SmartPatch, applied by the 16-bit `WISE0001.DLL` runtime inside `Patch/tribes18to111.exe` ("TRIBES 1.8 to 1.11 Update", PatchVersion 1.1.1.6); the installer carries no third-party differ. Each delta starts with a fixed header (Verified on both deltas): version byte `01`, the new file's DOS date and time, a CRC32 (`0xE0072958` for `Tribes.exe`, believed to be the new file's), the new size (2,632,192, matching the Wise script), a constant `0x19`, the old file's CRC32 (`0xDFA0EBBF`, an exact match for the 1.8 executable) and old size (2,627,072, exact), then what looks like the length of a command section (99,424 bytes for `Tribes.exe`, 206 for `scripts.vol`). Inserted bytes appear unencoded: the `scripts.vol` delta contains the 1.11 `validateShape = true;` lines. The copy/insert command encoding is still Unknown, and no open-source decoder was found (REWise lists patch support as missing; WiseUnpacker and Old File Viewer extract files but do not apply patches). The header gives a decoder a fail-closed check at both ends: refuse unless the old CRC and size match, and accept only output with the new size and CRC.
 - **Apply it once on a reference Windows or CrossOver install**, record the 1.11 output hashes, and ship a TribesPad-made delta from 1.8 to 1.11. This follows the same small-patch pattern as `patches/translation/`. It needs one run of the official patch on a reference machine, which is the kind of reference setup TribesPad already uses for the Tribes 2 trace.
 
 A third option, shipping 1.8, is weaker. 1.11 added server-side authentication of models, and its readme warns that modified shape files cannot join 1.11 servers, so a 1.8 client is unlikely to be accepted online (Estimate). The 1.9–1.11 crash and cheat fixes would also be missing.
@@ -128,9 +128,32 @@ OpenGL is nearly covered. 350 of the 365 GL/WGL/GLU names Tribes 1 can load are 
 2. **DirectSound as the only audio path.** `port/core/guest_dsound.c` already creates devices and plays PCM secondary buffers through SDL, but has no 3D voices. Start with `$pref::useDSound3D` off.
 3. **Renderer selection.** Make `LoadLibrary("glide2x.dll")` fail, provide `opengl32.dll` and `glu32.dll` natively, and never take the software path.
 4. **Smacker video.** Either lift the 96 KB `smackw32.dll` with the same toolchain or answer its 13 entry points natively. The intro movie (`dynlogoF.smk`) can be skipped at first.
-5. **Borland code and runtime.** Tribes 1 is the first Borland-built input. Its exception handling (`RaiseException`, `RtlUnwind`, the unhandled-exception filter), calling conventions and switch tables may use patterns the lifter has not met in the Tribes 2 modules. This is Unknown, and it is the main lifter risk G1 and G2 have to measure.
+5. **Borland code and runtime.** Tribes 1 is the first Borland-built input. The lift preview below measured the translation side, and it held up: the lifter decoded and compiled the whole 1.8 image. What remains Unknown is run time: Borland's exception handling (`RaiseException`, `RtlUnwind`, the unhandled-exception filter) and start-up code have not executed yet.
 
 From the Tribes 2 work, the lifter and toolchain locks, checked memory with hardware permissions, the x87/SSE/MMX exactness work, threads, files, heap, timers, Winsock, GL4ES → ANGLE → Metal, OpenAL/SDL3, the UIKit overlay, packaging and the PadMint recipe shape should carry over. Tribes 2 found its missing services one crash at a time, and Tribes 1 will too, but it starts with 42% of its static imports bound and 353 of its 365 GL names already handled.
+
+## Lift preview: the 1.8 executable through TribesPad's toolchain
+
+On 22 October the retail 1.8 `Tribes.exe` (SHA-256 `e0140d61…`) went through the same pinned tools that translate `Tribes2.exe`, in an ignored scratch folder (`generated/research-t1/`). Nothing was linked or run. This is a translation measurement, not a boot.
+
+| Step | Tribes 1 (1.8) | Tribes 2 for comparison |
+|---|---|---|
+| Recursive audit (`scripts/audit-code.py`) | 640,112 instructions, 12,509 functions; 0 bad decodes, 0 overlaps, 0 relocation errors | 953,370 instructions, 21,523 functions; 0 / 0 / 0 |
+| Uncertain relocations | 2,377 | 102 |
+| Unclassified bytes in `.text` | 128,063 (6.0%) | 107,065 (3.4%) |
+| SRW with Tribes extensions, diagnostic, full flags | 2.1 s, 440 MB peak; 10 untranslated instructions | 0 untranslated |
+| `llasm` to LLVM IR | 315.5 MB of IR in 18 s, after the boundary fix below | |
+| `clang -O0` to ARM64 | 36.5 MB Mach-O arm64 object in 36 s, 2.0 GB peak | |
+| Unresolved symbols in the object | 375: the 284 Windows imports and 91 runtime helpers | |
+
+The 10 untranslated instructions are all kinds TribesPad has handled before in the QoL client DLL with recorded instruction replacements: add- or subtract-with-carry on high-byte registers (`adc ch, dl` and similar, 8 cases), one `or` from a high-byte register into memory, and one 16-bit `fist word [esp]`. Each traps loudly if reached, so none can run wrong silently.
+
+All 91 runtime helpers the object needs (x87 operations, `rep` string moves, `cpuid`, `rdtsc`, 64-bit divides, `fs:` access, bit tests and shifts) are already defined in TribesPad's runtime or the HaloPad support library it builds on. The CPU side therefore needs no new runtime code. The remaining work is the Windows side measured above, the 1.11 patch, and these 10 instructions.
+
+One Borland-specific fix was needed. Borland packs sections back to back (`.text` ends at `0x60D000`, exactly where `.data` starts; the same at `.tls` and `.rdata`), so SRW emits each boundary label twice: once at the end of one segment and once at the start of the next. `llasm` rejects the duplicate. Dropping the trailing copy, which names the same address, fixed all three boundaries. G2 needs this as a deterministic, recorded preparation step, like the Tribes 2 preparation scripts.
+
+The 2,377 uncertain relocations are the main new translation risk: places where the audit could not tell an address from a number. Tribes 2 had 102. They need a Tribes 1 review in G1, because a wrong guess either way shows up only at run time.
+
 
 ## Launcher design for iPad, iPhone and Mac
 
@@ -161,7 +184,7 @@ Run the same PE inventory on the 1.11 executable. Decide how to handle `smackw32
 *Continue* if the image is unpacked and the import set is within about 10% of 1.8's. *Stop* if the code decrypts or generates itself at run time.
 
 **G2: lift and reach the main menu on Mac.**
-Lift `Tribes.exe` with the pinned toolchain. Add the Win32 window, GL pixel-format and WGL front end, and the remaining services, until the original menu renders through GL4ES/ANGLE. Glide must be refused and DirectSound 3D off.
+Lift `Tribes.exe` with the pinned toolchain, with the section-boundary label fix as a recorded preparation step and the 10 high-byte and `fist word` instructions replaced as in the QoL client. Add the Win32 window, GL pixel-format and WGL front end, and the remaining services, until the original menu renders through GL4ES/ANGLE. Glide must be refused and DirectSound 3D off.
 *Continue* when the menu is visible and the session log has no abort stops. *Stop and re-plan* if the import frontier is still growing after two weeks of focused work.
 
 **G3: offline match on Mac.**
@@ -179,7 +202,7 @@ Build the picker, the per-game folders and Switch Game. Measure binary size and 
 
 ## First concrete milestone
 
-Finish G0 and G1 without touching the engine: a reproducible 1.11 `Tribes.exe` with recorded SHA-256, plus a one-page validation record holding the 1.11 PE inventory, the rerun coverage table, the Smacker and `mem.dll` decisions, the owner's answer on the 1.41 client, and two more population snapshots. That settles the input and rights questions and sizes G2. The first engineering step after it is the Win32 window, pixel-format and WGL front end, because no Tribes 1 frame can appear without it.
+Finish G0 and G1 without touching the engine: a reproducible 1.11 `Tribes.exe` with recorded SHA-256 (decode SmartPatch, checked against the header's sizes and CRCs), plus a one-page validation record holding the 1.11 PE inventory, the rerun coverage table, the Smacker and `mem.dll` decisions, the owner's answer on the 1.41 client, and two more population snapshots. That settles the input and rights questions and sizes G2. Repeat the lift preview on 1.11 and review the uncertain relocations. The first engineering step after it is the Win32 window, pixel-format and WGL front end, because no Tribes 1 frame can appear without it.
 
 ## Reproducing this research
 
