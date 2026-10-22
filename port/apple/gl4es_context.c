@@ -432,9 +432,33 @@ TribesGL4ESContext *tribes_gl4es_context_create(SDL_Window *window, SDL_GLContex
     return context;
 }
 
-/* Presented frames since launch, for the optional on-screen FPS counter. */
-static _Atomic uint64_t presented_frames;
+/* Presented frames since launch and the longest gap between two of them, for
+   the on-screen FPS counter. A stretch of slow play also leaves one line in
+   the session log, so a report of "slow at times" can be read afterwards. */
+static _Atomic uint64_t presented_frames, longest_frame_ns;
 uint64_t tribes_gl4es_presented_frames(void) { return atomic_load_explicit(&presented_frames,memory_order_relaxed); }
+uint64_t tribes_gl4es_take_longest_frame_ns(void) { return atomic_exchange_explicit(&longest_frame_ns,0,memory_order_relaxed); }
+static void note_present(void) {
+    static Uint64 last, start, frames, longest, hitches; static unsigned logged;
+    Uint64 now=SDL_GetTicksNS();
+    atomic_fetch_add_explicit(&presented_frames,1,memory_order_relaxed);
+    if (last) {
+        Uint64 gap=now-last;
+        if (gap>atomic_load_explicit(&longest_frame_ns,memory_order_relaxed))
+            atomic_store_explicit(&longest_frame_ns,gap,memory_order_relaxed);
+        frames++; if (gap>longest) longest=gap; if (gap>UINT64_C(50000000)) hitches++;
+        if (now-start>=UINT64_C(10000000000)) {
+            double fps=frames*1e9/(now-start);
+            if ((fps<25 || longest>UINT64_C(250000000)) && logged<360) {
+                logged++;
+                fprintf(stderr,"TribesPad slow stretch: at %.0f s, %.1f FPS over %.0f s, longest frame %.0f ms, %llu frames over 50 ms\n",
+                    now/1e9,fps,(now-start)/1e9,longest/1e6,(unsigned long long)hitches);
+            }
+            start=now; frames=longest=hitches=0;
+        }
+    } else start=now;
+    last=now;
+}
 
 bool tribes_gl4es_context_swap(TribesGL4ESContext *context) {
     require_current(context);
@@ -443,7 +467,7 @@ bool tribes_gl4es_context_swap(TribesGL4ESContext *context) {
     gl4es_glFlush();
     bool result=SDL_GL_SwapWindow(context->window);
     tribes_gl4es_context_activate(context);
-    if (result) atomic_fetch_add_explicit(&presented_frames,1,memory_order_relaxed);
+    if (result) note_present();
     if (context->frame_timing && result) {
         /* Opt-in native submission timing, independent of screen recording.
            Includes flush/swap/reactivation; it is not GPU completion timing. */

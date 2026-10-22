@@ -10,7 +10,7 @@ def compile_support(sources,destination,flags,*,target='arm64-apple-macos12',sdk
   state['command']=cmd
   with log.open('w') as stream:
    process=subprocess.Popen(cmd,stdout=stream,stderr=stream);state.update(state='running',pid=process.pid);report.write_text(json.dumps(state,indent=2)+'\n');code=process.wait()
-  state.update(state='step_finished' if code==0 else 'failed',exit=code);report.write_text(json.dumps(state,indent=2)+'\n');assert code==0,log
+  state.update(state='step_finished' if code==0 else 'failed',exit=code);report.write_text(json.dumps(state,indent=2)+'\n');assert code==0,'%s\n%s'%(log,log.read_text(errors='replace')[-6000:])
  for index,source in enumerate(sources):
   name='%02d-%s'%(index,source.stem);llvm=destination/(name+'.ll');bc=destination/(name+'.bc');obj=destination/(name+'.o');trusted=source in [R/'port/core/guest_memory_checks.c',R/'port/core/guest_external_checks.c']
   cached=previous.get('objects',{}).get(name,{})

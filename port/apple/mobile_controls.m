@@ -10,6 +10,7 @@
 
 typedef NS_ENUM(NSInteger, TBControlKind) { TBKindStick, TBKindLook, TBKindButton };
 extern uint64_t tribes_gl4es_presented_frames(void);
+extern uint64_t tribes_gl4es_take_longest_frame_ns(void);
 static NSString * const TBRepositoryURL=@"https://github.com/chrissotraidis/tribespad";
 
 /* Touch preferences (NSUserDefaults, TribesPad-owned keys). */
@@ -58,6 +59,7 @@ static void tb_set(NSString *key,double value){[NSUserDefaults.standardUserDefau
 @property(nonatomic) BOOL zoomed;
 @property(nonatomic) BOOL gameReported;
 @property(nonatomic) BOOL controllerUsed;
+@property(nonatomic) BOOL mouseConnected;
 @property(nonatomic,strong) NSTimer *matchClock;
 @property(nonatomic,strong) UILabel *hint;
 -(void)rebuildMenu;
@@ -219,7 +221,7 @@ static const TBSettingRow tb_rows[]={
     {1,NO,"Trackpad Cursor","TribesPad.trackpad","Point and click in menus instead of tapping them directly.",0,0,NO},
     {1,YES,"Cursor Speed","TribesPad.cursorSpeed",NULL,.5,2.5,YES},
     {2,NO,"Keep Clear of the Notch","TribesPad.avoidNotch","Keeps the game clear of the notch and rounded corners. Turn off to fill the screen. Applies the next time TribesPad opens.",0,0,NO},
-    {2,NO,"Show FPS Counter","TribesPad.showFPS","Frames presented each second.",0,0,NO},
+    {2,NO,"Show FPS Counter","TribesPad.showFPS","Frames each second and the longest frame among them. Also in the menu.",0,0,NO},
     {3,NO,"Online Play","TribesPad.onlinePlay","Sign in with TribesNEXT at launch.",0,0,NO}};
 enum {TBRowCount=sizeof tb_rows/sizeof tb_rows[0],TBSectionCount=sizeof tb_sections/sizeof tb_sections[0]};
 static void tb_register_defaults(void){
@@ -446,6 +448,16 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
         name:UIKeyboardDidHideNotification object:nil];
     [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(controllerChanged:)
         name:GCControllerDidConnectNotification object:nil];
+    // Throttling is the usual cause of a game slowing after a while; log it.
+    [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(powerChanged:)
+        name:NSProcessInfoThermalStateDidChangeNotification object:nil];
+    [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(powerChanged:)
+        name:NSProcessInfoPowerStateDidChangeNotification object:nil];
+    [self powerChanged:nil];
+    [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(mouseChanged:)
+        name:GCMouseDidConnectNotification object:nil];
+    [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(mouseChanged:)
+        name:GCMouseDidDisconnectNotification object:nil];
     [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(controllerChanged:)
         name:GCControllerDidDisconnectNotification object:nil];
     return self;
@@ -453,7 +465,7 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
 -(void)didMoveToSuperview {
     [super didMoveToSuperview];
     if(self.superview){
-        [self controllerChanged:nil];
+        [self controllerChanged:nil];[self mouseChanged:nil];
         // Taps on the game itself pass through to SDL; watch them for the login.
         UITapGestureRecognizer *tap=[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(gameTapped:)];
         tap.cancelsTouchesInView=NO;tap.delaysTouchesEnded=NO;[self.superview addGestureRecognizer:tap];
@@ -471,6 +483,17 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
     [self.aimClock invalidate];self.aimClock=nil;self.controller=nil;
     self.stickAim=CGPointZero;self.lastAimTime=0;
     if(self.controls){tb_input_release(&self.controls->input,9);tb_mobile_controls_emit(self.controls);}
+}
+/* A hardware mouse or trackpad (Magic Keyboard, USB, Bluetooth): the game
+   uses it directly through SDL, which locks the pointer in play for mouse
+   look. The touch controls step aside, as they do for a controller, and come
+   back from the controller button or when it disconnects. */
+-(void)mouseChanged:(NSNotification *)notification {
+    (void)notification;BOOL connected=GCMouse.mice.count>0;if(connected==self.mouseConnected)return;
+    self.mouseConnected=connected;
+    if(connected&&self.expanded)[self toggleControls];
+    else if(!connected&&self.inMatch&&!self.expanded&&!(self.controllerUsed&&TB_HIDE_WITH_CONTROLLER))[self toggleControls];
+    [self setNeedsLayout];
 }
 -(void)controllerChanged:(NSNotification *)notification {
     (void)notification;if(!self.superview)return;
@@ -607,6 +630,12 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
     self.laidOutArea=CGRectNull;[self applyFPSSetting];[self rebuildMenu];[self setNeedsLayout];
 }
 -(void)toggleTrackpad{tb_set(@"TribesPad.trackpad",!TB_TRACKPAD);[self settingsChanged];}
+-(void)toggleFPS{tb_set(@"TribesPad.showFPS",!TB_SHOW_FPS);[self settingsChanged];}
+-(void)powerChanged:(NSNotification *)notification {
+    (void)notification;NSProcessInfo *p=NSProcessInfo.processInfo;
+    static const char *states[]={"nominal","fair","serious","critical"};NSInteger s=p.thermalState;
+    fprintf(stderr,"TribesPad thermal state: %s, Low Power Mode %s\n",s>=0&&s<4?states[s]:"unknown",p.lowPowerModeEnabled?"on":"off");
+}
 -(void)followMatch {
     if(!self.controls||UIApplication.sharedApplication.applicationState!=UIApplicationStateActive)return;
     // base/autoexec.cs reports "<playing> <typing>": playing is 1 in play and
@@ -632,7 +661,7 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
     if(self.zoomed){self.zoomed=NO;[self pushKey:SDL_SCANCODE_A down:NO mod:SDL_KMOD_NONE];}
     if(self.controls){tb_input_release(&self.controls->input,9);tb_mobile_controls_emit(self.controls);}
     if(playing){
-        if(!self.expanded&&!(self.controllerUsed&&TB_HIDE_WITH_CONTROLLER))[self toggleControls];
+        if(!self.expanded&&!(self.controllerUsed&&TB_HIDE_WITH_CONTROLLER)&&!self.mouseConnected)[self toggleControls];
         if(self.controllerUsed)[self showControllerHint];
         else if(self.expanded)[self showHint];
     } else if(self.expanded&&!self.restoreControlsAfterKeyboard)[self toggleControls];
@@ -733,9 +762,11 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
             group(@[suicide])]]];
     UIAction *trackpad=item(@"Trackpad Cursor",@"cursorarrow.rays",^{[weak toggleTrackpad];});
     trackpad.state=TB_TRACKPAD?UIMenuElementStateOn:UIMenuElementStateOff;
+    UIAction *fps=item(@"FPS Counter",@"speedometer",^{[weak toggleFPS];});
+    fps.state=TB_SHOW_FPS?UIMenuElementStateOn:UIMenuElementStateOff;
     NSArray *controls=@[
         item(self.expanded?@"Hide Touch Controls":@"Show Touch Controls",self.expanded?@"xmark.circle":@"gamecontroller",^{[weak toggleControls];}),
-        trackpad,
+        trackpad,fps,
         item(@"Settings…",@"gearshape",^{[weak showSettings];})];
     NSString *pad=self.controller.vendorName;
     UIMenu *help=[UIMenu menuWithTitle:@"Help" image:icon(@"questionmark.circle") identifier:nil options:0 children:@[
@@ -756,11 +787,15 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
 -(void)applyFPSSetting {
     [self.fpsClock invalidate];self.fpsClock=nil;self.fps.hidden=!TB_SHOW_FPS;
     if(!TB_SHOW_FPS)return;
-    self.fpsFrames=tribes_gl4es_presented_frames();self.fps.text=@"– FPS";
+    self.fpsFrames=tribes_gl4es_presented_frames();tribes_gl4es_take_longest_frame_ns();self.fps.text=@"– FPS";
     __weak TBGameControls *weak=self;
     self.fpsClock=[NSTimer scheduledTimerWithTimeInterval:1 repeats:YES block:^(NSTimer *timer){(void)timer;
         TBGameControls *owner=weak;if(!owner)return;uint64_t now=tribes_gl4es_presented_frames();
-        owner.fps.text=[NSString stringWithFormat:@"%llu FPS",(unsigned long long)(now-owner.fpsFrames)];owner.fpsFrames=now;}];
+        uint64_t frames=now-owner.fpsFrames;double longest=tribes_gl4es_take_longest_frame_ns()/1e6;owner.fpsFrames=now;
+        // Frames per second, then the longest frame: a hitch hides in the average.
+        BOOL hot=NSProcessInfo.processInfo.thermalState>=NSProcessInfoThermalStateSerious;
+        owner.fps.text=frames?[NSString stringWithFormat:@"%llu FPS · %.0f ms%@",(unsigned long long)frames,longest,hot?@" · Hot":@""]:@"0 FPS";
+        owner.fps.textColor=frames>=30&&longest<50&&!hot?UIColor.greenColor:UIColor.orangeColor;}];
 }
 -(void)tapKey:(SDL_Scancode)scancode {[self tapKey:scancode mod:SDL_KMOD_NONE];}
 -(void)tapKey:(SDL_Scancode)scancode mod:(SDL_Keymod)mod {
@@ -883,8 +918,10 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
     CGSize hintSize=[self.hint sizeThatFits:CGSizeMake(fmin(w-120,720),200)];
     self.hint.frame=CGRectMake(x+(w-hintSize.width-28)/2,y+h*.16,hintSize.width+28,hintSize.height+18);
     // Beside the menu button.
-    self.fps.frame=CGRectMake(right-80,top+(b-22)/2,72,22);
-    self.trackpad.frame=self.bounds;self.trackpad.hidden=self.expanded||self.inMatch||!(TB_TRACKPAD||self.controllerUsed);
+    self.fps.frame=CGRectMake(right-160,top+(b-22)/2,152,22);
+    /* A connected mouse or trackpad points at the game itself (SDL), so the
+       trackpad-cursor overlay must not take its clicks. */
+    self.trackpad.frame=self.bounds;self.trackpad.hidden=self.expanded||self.inMatch||!(TB_TRACKPAD||self.controllerUsed)||(self.mouseConnected&&!self.controllerUsed);
     // Movement stick bottom left; Pack and Inventory above it.
     CGFloat stick=170*k,small=58*k;
     CGRect stickFrame=CGRectMake(x+margin,y+h-margin-stick,stick,stick);
