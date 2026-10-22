@@ -4,7 +4,7 @@
   "name": "TribesPad",
   "game": "Tribes 2 (free official release) with the TribesNEXT client",
   "kind": "disc-translation",
-  "status": "draft-untested",
+  "status": "experimental",
   "inputs": [
     {
       "type": "official-download",
