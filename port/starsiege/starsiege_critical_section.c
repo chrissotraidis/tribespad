@@ -130,7 +130,14 @@ uint32_t tribes_critical_delete(uint64_t base,uint32_t guest) {
     pthread_mutex_lock(&catalog);Section **link=&sections;
     while(*link&&(*link)->key!=key)link=&(*link)->next;
     Section *s=*link;if(!s)stop("delete uninitialized",guest,EINVAL);
-    if(s->references||s->depth)stop("delete busy",guest,EBUSY);
+    /* Starsiege deletes a section it still holds while quitting. Windows lets
+       that pass; here the section leaves the table and its mutex is kept (not
+       destroyed or freed), so a thread blocked on it is not left on freed
+       memory. Logged, since anywhere but the way out it would be a bug. */
+    if(s->references||s->depth){
+        fprintf(stderr,"TribesPad: critical section 0x%08x deleted while held (depth %u, references %u); kept until exit\n",guest,s->depth,s->references);
+        *link=s->next;pthread_mutex_unlock(&catalog);return 0;
+    }
     int error=pthread_mutex_destroy(&s->mutex);if(error)stop("destroy",guest,error);
     *link=s->next;free(s);pthread_mutex_unlock(&catalog);return 0;
 }

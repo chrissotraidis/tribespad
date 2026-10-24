@@ -79,3 +79,6 @@ Reproduce: `.venv/bin/python scripts/starsiege/lift_preview.py --no-compile`, th
 - **Switch Game** in both games' ··· menus: TribesPad closes and the next launch starts the other game (TribesPad.nextGame).
 - **Modded servers:** servers running mods with their own models (for example the RPG servers) need those mods' client files; Starsiege servers can't send models. Standard and "no mods" servers need nothing extra.
 
+- **Quit (fixed).** With game threads running, quitting deleted a critical section a thread still held, and TribesPad stopped there. Windows lets that pass; Starsiege's critical sections now log it and keep the section until exit. `quit()` ends with "original process shutdown completed, code=0" after saving prefs.
+- **Mac app:** the picker renders offscreen with both cards on PLAY and live counts, and `TRIBESPAD_PICK=starsiege` with `STARSIEGE_HEADLESS=1` runs the bundled StarsiegeEngine from the app's Application Support folder to the main menu. Tribes 2 on the Mac has no headless mode; a visible run waits for the owner.
+- **Tribes 2 on the iPad** still starts with the existing profile (TribesNEXT login with the saved account) after these changes.
