@@ -18,6 +18,8 @@ extern uint32_t tribes_sdl_poll_event(_cpu *cpu,uint32_t address);
 extern uint32_t tribes_sdl_set_window_relative_mouse_mode(_cpu *cpu,uint32_t token,uint32_t value);
 extern uint32_t ss_sdl_window(void);
 extern uint64_t ss_frames(void);
+extern uint32_t ss_pointer_to_client(int32_t dx,int32_t dy,int32_t *cx,int32_t *cy);
+extern uint32_t tribes_post_message(uint64_t base,uint32_t window,uint32_t message,uint32_t wp,uint32_t lp);
 
 /* Host input state. Keyboard objects are identified by their DIK scan code,
    mouse objects by their catalog offset (X 0, Y 4, wheel 8, buttons 12-19). */
@@ -57,8 +59,22 @@ static void key_change(unsigned dik,int down){
  if(!!keys[dik]!=!!down){keys[dik]=down?0x80:0;queue(3,dik,keys[dik]);}
  pthread_mutex_unlock(&lock);
 }
+/* The game's canvas draws its own cursor only after a WM_MOUSEMOVE tells it
+   the pointer is over the window; it then acquires mouse0 and follows
+   DirectInput motion. When that motion crosses the window edge it releases
+   mouse0 and waits for the Windows pointer to come back. Windows sends
+   WM_MOUSEMOVE for both; so does the host: once when the window first shows,
+   and for motion while mouse0 is released (kept inside the window). */
+static uint64_t pointer_base;
+static void windows_pointer(int32_t dx,int32_t dy){
+ int32_t x,y;uint32_t window=ss_pointer_to_client(dx,dy,&x,&y);if(!window||!pointer_base)return;
+ uint32_t held=(buttons[0]?1u:0u)|(buttons[1]?2u:0u)|(buttons[2]?0x10u:0u);
+ uint32_t posted=tribes_post_message(pointer_base,window,0x0200,held,((uint32_t)(uint16_t)y<<16)|(uint16_t)x);TRACE("WM_MOUSEMOVE %d,%d to 0x%x posted %u error %u\n",x,y,window,posted,tribes_get_last_error());
+}
+static int mouse_acquired_locked(void){for(Input *p=inputs;p;p=p->next)if(p->is_device&&p->acquired&&kind(p)==2)return 1;return 0;}
 static void mouse_move(int32_t dx,int32_t dy,int32_t dz){
  pthread_mutex_lock(&lock);
+ if(!mouse_acquired_locked()){pthread_mutex_unlock(&lock);if(dx||dy)windows_pointer(dx,dy);return;}
  for(Input *p=inputs;p;p=p->next)if(p->is_device&&p->acquired&&kind(p)==2){DeviceState *s=state_of(p->object,1);if(s){s->dx+=dx;s->dy+=dy;s->dz+=dz;}}
  if(dx)queue(2,0,(uint32_t)dx);if(dy)queue(2,4,(uint32_t)dy);if(dz)queue(2,8,(uint32_t)dz);
  pthread_mutex_unlock(&lock);
@@ -123,7 +139,8 @@ static void run_script(void){
 /* Drain SDL's queue. The event buffer is guest stack scratch below ESP. */
 static float carry_x,carry_y;
 void ss_input_pump(_cpu *cpu){
- static int pumping;if(pumping)return;pumping=1;
+ static int pumping,introduced;if(pumping)return;pumping=1;pointer_base=cpu->_pointer_offset;
+ if(!introduced&&ss_sdl_window()){introduced=1;windows_pointer(0,0);} /* the pointer starts over the new window */
  run_script();
  uint32_t saved=cpu->_esp;cpu->_esp=(saved-512)&~15u;uint32_t address=cpu->_esp+256;
  while(tribes_sdl_poll_event(cpu,address)){

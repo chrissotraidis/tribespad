@@ -35,6 +35,7 @@ extern int tribes_teb_get_ids(uint64_t base,uint32_t *pid,uint32_t *tid);
 #define WS_EX_DLGMODALFRAME 0x1u
 #define CW_USEDEFAULT 0x80000000u
 
+static int32_t cursor_x,cursor_y,cursor_count;
 typedef struct Window {
  uint64_t base;uint32_t handle,atom,class_proc,proc,style,exstyle,instance,parent,id,userdata;
  int32_t x,y,width,height;int visible,destroying;unsigned char *extra;uint32_t extra_bytes;char title[256];
@@ -356,7 +357,6 @@ uint32_t ss_set_rect(uint64_t base,uint32_t address,uint32_t l,uint32_t t,uint32
 }
 /* The guest cursor position in desktop coordinates; the host updates it from
    real pointer events (ss_host_pointer). ShowCursor keeps Windows' counter. */
-static int32_t cursor_x,cursor_y,cursor_count;
 uint32_t ss_get_cursor_pos(uint64_t base,uint32_t output){
  uint32_t token;int32_t p[2];pthread_mutex_lock(&lock);p[0]=cursor_x;p[1]=cursor_y;pthread_mutex_unlock(&lock);
  memcpy(guest(base,output,8,2,&token),p,8);tribes_memory_access_end(token);
@@ -383,8 +383,20 @@ uint32_t ss_window_from_point(uint64_t base,uint32_t x,uint32_t y){
  for(Window *w=windows;w;w=w->next)if(w->base==base&&w->visible&&!w->parent&&px>=w->x&&py>=w->y&&px<w->x+w->width&&py<w->y+w->height){r=w->handle;break;}
  pthread_mutex_unlock(&lock);return r?r:tribes_get_desktop_window(base);
 }
+/* For the host, while the game has handed the mouse back to Windows: move
+   the desktop cursor by (dx, dy), kept inside the game window's client area
+   (an Apple screen has nothing beside the game), and report the client point
+   for a WM_MOUSEMOVE. Returns the window, or 0 when none is visible. */
+uint32_t ss_pointer_to_client(int32_t dx,int32_t dy,int32_t *cx,int32_t *cy){
+ pthread_mutex_lock(&lock);Window *w=windows;while(w&&!(w->visible&&!w->parent))w=w->next;
+ if(!w){pthread_mutex_unlock(&lock);return 0;}
+ int32_t fx,fy,cap;frame(w->style,w->exstyle,&fx,&fy,&cap);
+ int32_t left=w->x+fx,top=w->y+fy+cap,width=w->width-2*fx,height=w->height-2*fy-cap;
+ int32_t x=cursor_x+dx,y=cursor_y+dy;
+ if(x<left)x=left;if(y<top)y=top;if(x>left+width-1)x=left+width-1;if(y>top+height-1)y=top+height-1;
+ cursor_x=x;cursor_y=y;*cx=x-left;*cy=y-top;uint32_t handle=w->handle;pthread_mutex_unlock(&lock);return handle;
+}
 /* For the host: the visible game window, if any. */
 uint32_t ss_main_window(int32_t *width,int32_t *height){
  pthread_mutex_lock(&lock);uint32_t r=0;for(Window *w=windows;w;w=w->next)if(w->visible){r=w->handle;*width=w->width;*height=w->height;break;}pthread_mutex_unlock(&lock);return r;
 }
-

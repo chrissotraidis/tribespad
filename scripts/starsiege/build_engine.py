@@ -297,6 +297,21 @@ def link(objects, report):
     report['engine_sha256'] = sha(exe)
     return exe
 
+def tribespad_defaults(game):
+    """TribesPad's changes to a game folder, for every run and the app.
+    Polite GUI: the 1.41 canvas turns $pref::politeGui on when it creates its
+    window, and then never takes the pointer from Windows, so it leaves the
+    cursor to the Windows desktop. TribesPad has no desktop pointer: turn it off
+    once the window exists, so the canvas draws its own cursor and follows
+    DirectInput motion, as in fullscreen Tribes."""
+    script = game / 'console.cs'
+    text = script.read_text(errors='replace')
+    anchor = 'newObject(MainWindow, SimGui::Canvas'
+    at = text.index(anchor)
+    end = text.index('\n', at) + 1
+    text = text[:end] + '   $pref::politeGui = false; // TribesPad: the game draws its own cursor\n' + text[end:]
+    script.write_text(text)
+
 def run(exe, timeout, report, route=None):
     work = OUT / 'run'
     if work.exists():
@@ -307,6 +322,7 @@ def run(exe, timeout, report, route=None):
     for stale in (game / 'temp').glob('serverTempData*.cs'):
         stale.unlink()
     # Diagnostics in the run copy only: the game's own console log (console.log).
+    tribespad_defaults(game)
     script = game / 'console.cs'
     script.write_text('$Console::LogMode = 1;\n' + script.read_text(errors='replace'))
     if route:
