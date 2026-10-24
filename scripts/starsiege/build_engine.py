@@ -336,6 +336,9 @@ def tribespad_defaults(game):
     at = text.index(anchor)
     end = text.index('\n', at) + 1
     text = text[:end] + '   $pref::politeGui = false; // TribesPad: the game draws its own cursor\n' + text[end:]
+    # The console log (console.log) for diagnostics, and an optional checks
+    # script: TribesPad writes config/TribesPadRoute.cs only for test launches.
+    text = '$Console::LogMode = 1;\n' + text + '\nif(isFile("config/TribesPadRoute.cs")) schedule("exec(\\"TribesPadRoute.cs\\");", 2);\n'
     script.write_text(text)
 
 def embed(objects, report):
@@ -368,13 +371,10 @@ def run(exe, timeout, report, route=None):
         stale.unlink()
     # Diagnostics in the run copy only: the game's own console log (console.log).
     tribespad_defaults(game)
-    script = game / 'console.cs'
-    script.write_text('$Console::LogMode = 1;\n' + script.read_text(errors='replace'))
     if route:
-        # A scripted route for headless checks, run copy only: its own script,
-        # executed two seconds in, after the game's configs have loaded.
+        # A scripted route for headless checks, run copy only, executed two
+        # seconds in, after the game's configs have loaded (tribespad_defaults).
         (game / 'config/TribesPadRoute.cs').write_text(route + '\n')
-        script.write_text(script.read_text(errors='replace') + '\nschedule("exec(\\"TribesPadRoute.cs\\");", 2);\n')
     temp.mkdir(parents=True)
     say('running headless (no window)')
     capture = work / 'frames'

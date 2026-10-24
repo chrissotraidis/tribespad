@@ -32,6 +32,11 @@ static int enter_starsiege(void) {
     char *paths[5];
     if(!tb_starsiege_prepare_paths(gamedata.fileSystemRepresentation,[support.path stringByAppendingPathComponent:@"TribesPad"].fileSystemRepresentation,paths))return 125;
     if(chdir(paths[2])){perror("TribesPad Starsiege folder");return 125;}
+    /* Test launches only (devicectl --environment-variables): a checks script
+       the game runs two seconds in. Removed otherwise, so players never get one. */
+    const char *route=getenv("STARSIEGE_ROUTE");
+    if(route)[[NSString stringWithUTF8String:route] writeToFile:@"config/TribesPadRoute.cs" atomically:YES encoding:NSUTF8StringEncoding error:nil];
+    else unlink("config/TribesPadRoute.cs");
     char *arguments[]={"StarsiegeEngine",paths[0],paths[1],paths[2],paths[3],NULL};
     /* Starsiege draws an 800x600 frame; the screen scales it up (content_area.m). */
     tb_content_fix_game_size(800,600);
