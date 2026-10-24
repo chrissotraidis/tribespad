@@ -523,8 +523,15 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
 -(void)controllerChanged:(NSNotification *)notification {
     (void)notification;if(!self.superview)return;
     if(tb_starsiege){
-        /* The engine reads the controller itself (starsiege_controller.m); only step aside for it. */
+        /* The engine reads the controller itself (starsiege_controller.m) and
+           steps aside for it; Menu opens the ··· menu, as in Tribes 2. */
         BOOL any=NO;for(GCController *c in GCController.controllers)if(c.extendedGamepad)any=YES;
+        __weak TBGameControls *weakSelf=self;
+        for(GCController *c in GCController.controllers)if(c.extendedGamepad)
+            c.extendedGamepad.buttonMenu.pressedChangedHandler=^(GCControllerButtonInput *button,float value,BOOL pressed){
+                (void)button;(void)value;TBGameControls *owner=weakSelf;
+                if(pressed&&UIApplication.sharedApplication.applicationState==UIApplicationStateActive)[owner openMenu];};
+        if(any!=self.controllerUsed)fprintf(stderr,"TribesPad controller %s (Starsiege)\n",any?"connected":"disconnected");
         self.controllerUsed=any;[self rebuildMenu];return;
     }
     if(self.controller&&[GCController.controllers containsObject:self.controller])return;
@@ -1177,7 +1184,8 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
     self.fps.frame=CGRectMake(CGRectGetMaxX(self.bounds)-fmax(safe.right,8)-168,fmax(safe.top,6),168,22);
     /* A connected mouse or trackpad points at the game itself (SDL), so the
        trackpad-cursor overlay must not take its clicks. */
-    self.trackpad.frame=self.bounds;self.trackpad.hidden=self.expanded||self.inMatch||!(TB_TRACKPAD||self.controllerUsed)||(self.mouseConnected&&!self.controllerUsed);
+    /* Starsiege moves the game's own cursor from the controller (starsiege_input.c). */
+    self.trackpad.frame=self.bounds;self.trackpad.hidden=self.expanded||self.inMatch||!(TB_TRACKPAD||(self.controllerUsed&&!tb_starsiege))||(self.mouseConnected&&!self.controllerUsed);
     // Movement stick bottom left; Pack and Inventory above it.
     CGFloat stick=170*k,small=58*k;
     CGRect stickFrame=CGRectMake(x+margin,y+h-margin-stick,stick,stick);

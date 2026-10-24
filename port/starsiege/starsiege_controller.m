@@ -9,7 +9,8 @@ int ss_controller_poll(SsPad *pad){
         GCController *controller=GCController.current;
         if(!controller)for(GCController *c in GCController.controllers)if(c.extendedGamepad){controller=c;break;}
         GCExtendedGamepad *p=controller.extendedGamepad;if(!p)return 0;
-        pad->lx=p.leftThumbstick.xAxis.value+p.dpad.xAxis.value;pad->ly=p.leftThumbstick.yAxis.value+p.dpad.yAxis.value;
+        pad->lx=p.leftThumbstick.xAxis.value;pad->ly=p.leftThumbstick.yAxis.value;
+        pad->up=p.dpad.up.pressed;pad->down=p.dpad.down.pressed;pad->left=p.dpad.left.pressed;pad->right=p.dpad.right.pressed;
         pad->rx=p.rightThumbstick.xAxis.value;pad->ry=p.rightThumbstick.yAxis.value;
         pad->lt=p.leftTrigger.value;pad->rt=p.rightTrigger.value;
         pad->a=p.buttonA.pressed;pad->b=p.buttonB.pressed;pad->x=p.buttonX.pressed;pad->y=p.buttonY.pressed;

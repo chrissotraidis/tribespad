@@ -10,11 +10,12 @@
  * Headless checks can script input: STARSIEGE_INPUT=file, one event per line,
  * "<frame> key <DIK> down|up", "<frame> move <dx> <dy>",
  * "<frame> button <0-7> down|up", "<frame> wheel <notches>", and a virtual
- * controller, "<frame> pad <lx|ly|rx|ry|lt|rt|a|b|x|y|lb|rb|ls|rs|menu|options> <value>". */
+ * controller, "<frame> pad <lx|ly|rx|ry|lt|rt|a|b|x|y|lb|rb|ls|rs|menu|options|up|down|left|right> <value>". */
 #include "../core/guest_dinput.c"
 #include <SDL3/SDL.h>
 #include <time.h>
 #include <math.h>
+#include <unistd.h>
 #include "starsiege_controller.h"
 
 extern uint32_t tribes_sdl_poll_event(_cpu *cpu,uint32_t address);
@@ -147,36 +148,104 @@ static void run_script(void){
  while(script_next<script_count&&script[script_next].frame<=frame){
   Scripted s=script[script_next++];
   if(s.what=='p'){scripted_pad_on=1;float *axes[]={&scripted_pad.lx,&scripted_pad.ly,&scripted_pad.rx,&scripted_pad.ry,&scripted_pad.lt,&scripted_pad.rt};
-   static const char *const axis[]={"lx","ly","rx","ry","lt","rt"},*const button[]={"a","b","x","y","lb","rb","ls","rs","menu","options"};
-   int *buttons_[]={&scripted_pad.a,&scripted_pad.b,&scripted_pad.x,&scripted_pad.y,&scripted_pad.lb,&scripted_pad.rb,&scripted_pad.ls,&scripted_pad.rs,&scripted_pad.menu,&scripted_pad.options};
-   for(unsigned i=0;i<6;i++)if(!strcmp(s.field,axis[i]))*axes[i]=s.value;for(unsigned i=0;i<10;i++)if(!strcmp(s.field,button[i]))*buttons_[i]=s.value!=0;continue;}
+   static const char *const axis[]={"lx","ly","rx","ry","lt","rt"},*const button[]={"a","b","x","y","lb","rb","ls","rs","menu","options","up","down","left","right"};
+   int *buttons_[]={&scripted_pad.a,&scripted_pad.b,&scripted_pad.x,&scripted_pad.y,&scripted_pad.lb,&scripted_pad.rb,&scripted_pad.ls,&scripted_pad.rs,&scripted_pad.menu,&scripted_pad.options,
+    &scripted_pad.up,&scripted_pad.down,&scripted_pad.left,&scripted_pad.right};
+   for(unsigned i=0;i<6;i++)if(!strcmp(s.field,axis[i]))*axes[i]=s.value;for(unsigned i=0;i<14;i++)if(!strcmp(s.field,button[i]))*buttons_[i]=s.value!=0;continue;}
   if(s.what=='k')key_change((unsigned)s.a,s.b);else if(s.what=='m')mouse_move(s.a,s.b,0);
   else if(s.what=='b')mouse_button((unsigned)s.a,s.b);else mouse_move(0,0,s.a*120);
  }
 }
 
-/* A game controller drives the game's own default controls (config.cs), the
-   same way a keyboard and mouse would: left stick or D-pad WASD, right stick
-   the mouse (look, and the menu cursor), right trigger the left button (fire,
-   click), left trigger the right button (jet), A Space (jump), B X (crouch),
-   X G (grenade), Y H (repair kit), RB Q (next weapon), LB E (zoom), left
-   stick click R (view), right stick click Z (zoom cycle), Menu Escape, View
-   Tab. Only changes are sent, so a keyboard used alongside keeps working. */
-enum {PAD_W,PAD_A,PAD_S,PAD_D,PAD_SPACE,PAD_X,PAD_G,PAD_H,PAD_Q,PAD_E,PAD_R,PAD_Z,PAD_ESC,PAD_TAB,PAD_KEYS};
-static const unsigned char pad_dik[PAD_KEYS]={0x11,0x1e,0x1f,0x20,0x39,0x2d,0x22,0x23,0x10,0x12,0x13,0x2c,0x01,0x0f};
-static int pad_held[PAD_KEYS],pad_button[2];static float look_x,look_y;static uint32_t pad_ms;
+/* A game controller, laid out like TribesPad's Tribes 2 controls and driving
+   Starsiege's own default keys (config/config.cs), as a keyboard and mouse
+   would. Which layout applies follows TribesPad's play state ("<playing>
+   <typing> <connected>" in temp/tribespad-state.cs, written by the game's
+   script four times a second): playing is in a match with the game's cursor
+   off; menus, the lobby, inventory and scores are not.
+   Playing: left stick moves (W A S D), right stick looks, right trigger fires
+   (left mouse), left trigger jets (right mouse), A jumps (Space), B crouches
+   (X), X uses the pack (P), Y throws a grenade (G), RB / LB next and previous
+   weapon (Q / F8, which TribesPad binds to prevWeapon in playMap.sae), right
+   stick click toggles zoom (E held), left stick click third person (R), D-pad
+   up repair kit (H), down inventory (I), left beacon (B), right quick chat
+   (V), View the scores page (Tab).
+   Menus: left stick or D-pad moves the cursor, A clicks (hold to drag), B goes
+   back (Escape), the right stick scrolls; the triggers do nothing, so nothing
+   is clicked by accident.
+   Menu opens TribesPad's ··· menu on iPhone and iPad (mobile_controls.m); on the
+   Mac, with no overlay, it is Escape. Only changes are sent, so a keyboard and
+   mouse used alongside keep working. Changes are logged (TribesPad.log). */
+#include <TargetConditionals.h>
+static char state_path[1024];
+void ss_input_set_game_folder(const char *game){snprintf(state_path,sizeof state_path,"%s/temp/tribespad-state.cs",game?game:"");}
+static int play_state(void){
+ static uint32_t checked;static int value;uint32_t now=now_ms();
+ if(checked&&now-checked<250)return value;checked=now;
+ FILE *f=state_path[0]?fopen(state_path,"r"):NULL;if(!f){value=0;return value;}
+ char text[128]={0};size_t n=fread(text,1,sizeof text-1,f);fclose(f);text[n]=0;
+ const char *q=strchr(text,'"');value=q&&q[1]=='1';return value;
+}
+enum {PAD_W,PAD_A,PAD_S,PAD_D,PAD_SPACE,PAD_X,PAD_P,PAD_G,PAD_Q,PAD_F8,PAD_R,PAD_H,PAD_I,PAD_B,PAD_V,PAD_TAB,PAD_ESC,PAD_KEYS};
+static const unsigned char pad_dik[PAD_KEYS]={0x11,0x1e,0x1f,0x20,0x39,0x2d,0x19,0x22,0x10,0x42,0x13,0x23,0x17,0x30,0x2f,0x0f,0x01};
+static const char *const pad_name[PAD_KEYS]={"W","A","S","D","Space (jump)","X (crouch)","P (pack)","G (grenade)","Q (next weapon)",
+ "F8 (previous weapon)","R (third person)","H (repair kit)","I (inventory)","B (beacon)","V (quick chat)","Tab (scores)","Escape"};
+static int pad_held[PAD_KEYS],pad_button[2],pad_mode=-1,pad_connected=-1,zoomed,zoom_was,b_was;
+static float look_x,look_y,cursor_x,cursor_y,scroll;static uint32_t pad_ms;
+static void pad_key(unsigned i,int down){if(down==pad_held[i])return;pad_held[i]=down;key_change(pad_dik[i],down);
+ fprintf(stderr,"TribesPad controller: %s %s\n",pad_name[i],down?"down":"up");}
+static void pad_mouse(unsigned i,int down){if(down==pad_button[i])return;pad_button[i]=down;mouse_button(i,down);
+ fprintf(stderr,"TribesPad controller: %s %s\n",i?"right mouse (jet)":"left mouse (fire / click)",down?"down":"up");}
+static void pad_release_all(void){for(unsigned i=0;i<PAD_KEYS;i++)pad_key(i,0);pad_mouse(0,0);pad_mouse(1,0);
+ if(zoomed){zoomed=0;key_change(0x12,0);}look_x=look_y=cursor_x=cursor_y=scroll=0;}
 static void controller(void){
  SsPad p;memset(&p,0,sizeof p);int connected=scripted_pad_on?(p=scripted_pad,1):ss_controller_poll(&p);
  uint32_t now=now_ms();float dt=pad_ms?(float)(now-pad_ms)/1000.0f:0;pad_ms=now;if(dt>.1f)dt=.1f;
- if(!connected){memset(&p,0,sizeof p);}
- int want[PAD_KEYS]={p.ly>.35f,p.lx<-.35f,p.ly<-.35f,p.lx>.35f,p.a,p.b,p.x,p.y,p.rb,p.lb,p.ls,p.rs,p.menu,p.options};
- for(unsigned i=0;i<PAD_KEYS;i++)if(want[i]!=pad_held[i]){pad_held[i]=want[i];key_change(pad_dik[i],want[i]);}
- int buttons_want[2]={p.rt>.4f,p.lt>.4f};
- for(unsigned i=0;i<2;i++)if(buttons_want[i]!=pad_button[i]){pad_button[i]=buttons_want[i];mouse_button(i,buttons_want[i]);}
- /* Right stick: up to 1100 pixels a second, squared for fine aim near the centre. */
- float rx=fabsf(p.rx)<.12f?0:p.rx,ry=fabsf(p.ry)<.12f?0:p.ry;
- look_x+=rx*fabsf(rx)*1100.0f*dt;look_y-=ry*fabsf(ry)*1100.0f*dt;
- int32_t dx=(int32_t)look_x,dy=(int32_t)look_y;look_x-=(float)dx;look_y-=(float)dy;if(dx||dy)mouse_move(dx,dy,0);
+ if(connected!=pad_connected){if(pad_connected>=0||connected)fprintf(stderr,"TribesPad controller: %s\n",connected?"connected":"disconnected");
+  pad_connected=connected;if(!connected)pad_release_all();}
+ if(!connected)return;
+ int playing=play_state();
+ if(playing!=pad_mode){if(pad_mode>=0)pad_release_all();pad_mode=playing;fprintf(stderr,"TribesPad controller: %s layout\n",playing?"play":"menu");}
+ if(playing){
+  int want[PAD_KEYS]={p.ly>.35f,p.lx<-.35f,p.ly<-.35f,p.lx>.35f,p.a,p.b,p.x,p.y,p.rb,p.lb,p.ls,p.up,p.down,p.left,p.right,p.options,0};
+#if !TARGET_OS_IPHONE
+  want[PAD_ESC]=p.menu;
+#endif
+  for(unsigned i=0;i<PAD_KEYS;i++)pad_key(i,want[i]);
+  pad_mouse(0,p.rt>.4f);pad_mouse(1,p.lt>.4f);
+  if(p.rs&&!zoom_was){zoomed=!zoomed;key_change(0x12,zoomed);fprintf(stderr,"TribesPad controller: zoom %s\n",zoomed?"on":"off");}zoom_was=p.rs;
+  /* Right stick: up to 1100 pixels a second, squared for fine aim near the centre. */
+  float rx=fabsf(p.rx)<.12f?0:p.rx,ry=fabsf(p.ry)<.12f?0:p.ry;
+  look_x+=rx*fabsf(rx)*1100.0f*dt;look_y-=ry*fabsf(ry)*1100.0f*dt;
+  int32_t dx=(int32_t)look_x,dy=(int32_t)look_y;look_x-=(float)dx;look_y-=(float)dy;if(dx||dy)mouse_move(dx,dy,0);
+  return;
+ }
+ /* Menus: the left stick or the D-pad moves the cursor, the same dead zone and curve as TribesPad's Tribes 2 cursor, up to
+    900 pixels a second. */
+ float mx=p.lx+(float)(p.right-p.left),my=p.ly+(float)(p.up-p.down),m=hypotf(mx,my);
+ if(m>.14f){if(m>1){mx/=m;my/=m;m=1;}float n=fminf(1,(m-.14f)/.86f),v=(120+780*n*n)*dt/m;cursor_x+=mx*v;cursor_y-=my*v;}
+ int32_t dx=(int32_t)cursor_x,dy=(int32_t)cursor_y;cursor_x-=(float)dx;cursor_y-=(float)dy;if(dx||dy)mouse_move(dx,dy,0);
+ pad_mouse(0,p.a);
+ if(p.b&&!b_was){key_change(0x01,1);key_change(0x01,0);fprintf(stderr,"TribesPad controller: Escape (back)\n");}b_was=p.b;
+#if !TARGET_OS_IPHONE
+ pad_key(PAD_ESC,p.menu);
+#endif
+ if(fabsf(p.ry)>.4f){scroll+=p.ry*dt*12;int steps=(int)scroll;if(steps){scroll-=(float)steps;mouse_move(0,0,steps*120);}}
+}
+
+/* Stall watchdog: logs (TribesPad.log) when no frame has been presented for
+   five seconds while the game should be drawing, and when frames resume, so a
+   freeze leaves a record of when it began. Backgrounding also stops frames;
+   the line says so only as a possibility. */
+static void *watchdog(void *unused){
+ (void)unused;uint64_t last=ss_frames();unsigned still=0,reported=0;
+ for(;;){
+  sleep(1);uint64_t now=ss_frames();
+  if(now!=last){if(reported)fprintf(stderr,"TribesPad watchdog: frames resumed after %u s (frame %llu)\n",still,(unsigned long long)now);last=now;still=0;reported=0;continue;}
+  if(++still==5&&now){reported=1;fprintf(stderr,"TribesPad watchdog: no frame for 5 s at frame %llu (stalled, or the app is in the background); controller layout %s\n",
+   (unsigned long long)now,pad_mode<0?"none":pad_mode?"play":"menu");}
+ }
+ return NULL;
 }
 
 /* Drain SDL's queue. The event buffer is guest stack scratch below ESP. */
@@ -184,6 +253,7 @@ static float carry_x,carry_y;
 void ss_input_pump(_cpu *cpu){
  static int pumping,introduced;if(pumping)return;pumping=1;pointer_base=cpu->_pointer_offset;
  if(!introduced&&ss_sdl_window()){introduced=1;windows_pointer(0,0);} /* the pointer starts over the new window */
+ {static int watching;if(!watching){watching=1;pthread_t t;if(!pthread_create(&t,NULL,watchdog,NULL))pthread_detach(t);}}
  run_script();controller();
  uint32_t saved=cpu->_esp;cpu->_esp=(saved-512)&~15u;uint32_t address=cpu->_esp+256;
  while(tribes_sdl_poll_event(cpu,address)){

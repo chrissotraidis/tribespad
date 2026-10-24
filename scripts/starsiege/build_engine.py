@@ -71,7 +71,8 @@ RUNTIME = [R / 'port/core' / (n + '.c') for n in [
     R / 'port/starsiege/starsiege_display.c', R / 'port/starsiege/starsiege_windows.c',
     R / 'port/starsiege/starsiege_winsock.c', R / 'port/starsiege/starsiege_registry.c',
     R / 'port/starsiege/starsiege_critical_section.c', R / 'port/starsiege/starsiege_fast_heap.c',
-    R / 'port/starsiege/starsiege_input.c', R / 'port/starsiege/starsiege_controller.m'] + [
+    R / 'port/starsiege/starsiege_input.c', R / 'port/starsiege/starsiege_controller.m',
+    R / 'port/starsiege/starsiege_sound.c'] + [
     R / 'port/llasm-support' / (n + '.c') for n in [
     'tribes_result', 'tribes_sse', 'tribes_quadword_conversion', 'tribes_shift', 'tribes_absolute_memory', 'tribes_atomic',
     'tribes_float80', 'tribes_mmx', 'tribes_scan', 'tribes_x87']] + [
@@ -192,6 +193,27 @@ def prepare(report, backend_bindings):
         assert count == 1, name
     wrappers.write_text(text)
     report['backend_entries_replaced'] = sorted(replaced)
+    # DirectSound: Starsiege's focus-dependent secondary buffers go through its
+    # wrapper (port/starsiege/starsiege_sound.c), which hands them to
+    # TribesPad's provider as the global-focus buffers it implements.
+    sound = OUT / 'backend/dsound-bindings.ll'
+    text = sound.read_text().replace('@tribes_ds_create_buffer(', '@ss_ds_create_buffer(')
+    assert text.count('@ss_ds_create_buffer(') == 2, 'DS_CreateSoundBuffer wrapper changed'
+    # DuplicateSoundBuffer(this, original, out) is a stop for Tribes 2; Starsiege
+    # plays sounds through duplicates (ss_ds_duplicate). Its wrapper is the
+    # CreateSoundBuffer wrapper (stdcall, four arguments) with three.
+    stop = re.compile(r'^define hidden fastcc void @tbimp_DS_DuplicateSoundBuffer\(ptr %cpu\) \{ call void @tribes_ds_stop\(ptr %cpu, i32 5\)\n unreachable\n\}\n', re.M)
+    if stop.search(text):
+        create = re.search(r'^define hidden fastcc void @tbimp_DS_CreateSoundBuffer\(ptr %cpu\) \{\n.*?^\}\n', text, re.M | re.S).group(0)
+        duplicate = create.replace('@tbimp_DS_CreateSoundBuffer', '@tbimp_DS_DuplicateSoundBuffer')
+        duplicate = re.sub(r' %argp3 = .*\n %arg3 = .*\n', '', duplicate)
+        duplicate = duplicate.replace('call i32 @ss_ds_create_buffer(i64 %base, i32 %arg0, i32 %arg1, i32 %arg2, i32 %arg3)',
+                                      'call i32 @ss_ds_duplicate(i64 %base, i32 %arg0, i32 %arg1, i32 %arg2)')
+        duplicate = duplicate.replace('add i32 %esp, 20', 'add i32 %esp, 16')
+        assert '@ss_ds_duplicate(' in duplicate and '%arg3' not in duplicate and 'add i32 %esp, 16' in duplicate
+        text = stop.sub(lambda _: duplicate + 'declare i32 @ss_ds_duplicate(i64, i32, i32, i32)\n', text)
+    assert '@ss_ds_duplicate(' in text, 'DS_DuplicateSoundBuffer wrapper missing'
+    sound.write_text(text)
     bound = {r['name']: 1 for r in imports if r['name'] in bindings or r['name'] in backend_bindings}
     # Every wrapper: the native export table (GetProcAddress) refers to all of them.
     host = {name: {'helper': helper, 'arguments': n, 'returns': True, 'guest_base': True, 'calling_convention': 'cdecl'}
@@ -339,6 +361,22 @@ def tribespad_defaults(game):
     # The console log (console.log) for diagnostics, and an optional checks
     # script: TribesPad writes config/TribesPadRoute.cs only for test launches.
     text = '$Console::LogMode = 1;\n' + text + '\nif(isFile("config/TribesPadRoute.cs")) schedule("exec(\\"TribesPadRoute.cs\\");", 2);\n'
+    # Master servers: the installer's prefs cache resolved addresses
+    # ($Server::XLMasterN*) of retired masters, and 1.41 re-resolves only from
+    # Options > Network. List the community masters that answer (tribes1.co)
+    # first, then resolve the selected list at startup the way that screen
+    # does (translateMasters, DNet::resolveMasters on its own thread); the
+    # server list picks the results up through checkMasterTranslation.
+    text += '''
+if($Server::MasterAddressN0 == "" || $Server::MasterAddressN0 == "t1m1.pu.net:28000") {
+   $Server::MasterAddressN0 = "t1m1.tribes1.co:28000 t1m2.tribes1.co:28000";
+   $Server::MasterName0 = "Tribes1.co community masters";
+   $Server::CurrentMaster = 0;
+}
+translateMasters();
+// TribesPad: F8 is previous weapon (the controller's LB; Q, RB, is next).
+editActionMap("playMap.sae"); bindCommand(keyboard0, make, "f8", TO, "prevWeapon();");
+'''
     # TribesPad's touch controls follow play: "<playing> <typing> <connected>"
     # in temp/tribespad-state.cs, four times a second. Playing is in a match with
     # the game's cursor off (menus, inventory and scores turn it on).

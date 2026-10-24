@@ -115,7 +115,9 @@ int main(int argc,char **argv){
  /* DirectInput keyboard0 and mouse0 (starsiege_input.c feeds them). */
  assert(tribes_dinput_configure(base));assert(tribes_dinput_set_devices(base,ss_input_devices,sizeof ss_input_devices/sizeof ss_input_devices[0]));
  assert(tribes_environment_configure(base,environment,sizeof environment));assert(tribes_command_line_configure(base,command_line,sizeof command_line));
- assert(tribes_filesystem_configure(base,argv[2],argv[3],argv[4]));assert(tribes_named_mutex_configure(argv[4]));
+ assert(tribes_filesystem_configure(base,argv[2],argv[3],argv[4]));
+ /* The controller layout follows TribesPad's play state in the game folder. */
+ extern void ss_input_set_game_folder(const char *);ss_input_set_game_folder(argv[3]);assert(tribes_named_mutex_configure(argv[4]));
  assert(tribes_temp_directory_configure(base,SS_WINDOWS_DIRECTORY));assert(tribes_profile_configure_file(base,SS_PROFILE_FILE));
  assert(tribes_command_line_configure_w(base,wide_command_line,sizeof wide_command_line));
  uint32_t handles[3];for(unsigned i=0;i<3;++i)handles[i]=tribes_get_std_handle(0xfffffff6-i);assert(tribes_startup_configure(base,1,handles));
@@ -128,6 +130,12 @@ int main(int argc,char **argv){
  state._pointer_offset=base;state.stack_bottom=(void *)(uintptr_t)(base+0x100000);state.stack_top=(void *)(uintptr_t)(base+0x300000);
  x87_fninit_void(&state);tb_sse_init(&state);
  state._esp=0x2fff00;state._eflags=0x202;
+ /* Guest threads (CreateThread) wait for the process to be ready before their
+    start routine runs. Tribes.exe has no DLL attach work, so it is ready now;
+    without this every thread the game starts stays parked: the Options
+    screen waits for one and froze, and the master-server resolver never ran. */
+ extern void tribes_threads_process_ready(uint64_t);
+ tribes_threads_process_ready(base);
  fprintf(stderr,"Entering Starsiege: Tribes at 0x%08x\n",SS_ENTRY);
  tribes_enter(&state,SS_ENTRY);
  printf("{\"diagnostic_stop\":false,\"returned\":true,\"eax\":%u}\n",state._eax);

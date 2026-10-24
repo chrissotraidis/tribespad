@@ -484,6 +484,12 @@
    "returns": true,
    "guest_base": true
   },
+  "gethostbyname": {
+   "helper": "ss_gethostbyname",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true
+  },
   "DID_SetCooperativeLevel": {
    "helper": "ss_dinput_cooperative",
    "arguments": 3,
