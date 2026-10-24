@@ -28,6 +28,7 @@
 #include "../core/guest_display.h"
 #include "../core/guest_graphics.h"
 #include "../core/guest_dinput.h"
+#include "../core/guest_dsound.h"
 #include "starsiege_engine.inc"
 
 extern void tribes_enter(_cpu *,uint32_t);
@@ -103,6 +104,8 @@ int main(int argc,char **argv){
  assert(tribes_sdl_set_memory_functions(base,sdl_allocator[0],sdl_allocator[1],sdl_allocator[2],sdl_allocator[3]));
  /* Community plugins and Windows-only libraries: a real "not present". */
  for(unsigned i=0;i<sizeof absent_modules/sizeof absent_modules[0];i++)assert(tribes_module_define_absent(base,absent_modules[i]));
+ /* DirectSound on an SDL/CoreAudio device (Tribes 2's provider). */
+ assert(tribes_dsound_configure(base));
  /* DirectInput keyboard0 and mouse0 (starsiege_input.c feeds them). */
  assert(tribes_dinput_configure(base));assert(tribes_dinput_set_devices(base,ss_input_devices,sizeof ss_input_devices/sizeof ss_input_devices[0]));
  assert(tribes_environment_configure(base,environment,sizeof environment));assert(tribes_command_line_configure(base,command_line,sizeof command_line));

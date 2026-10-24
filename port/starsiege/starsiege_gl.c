@@ -50,6 +50,9 @@ static int start_sdl(_cpu *cpu){
  if(sdl_started)return 1;
  if(headless())SDL_SetHint(SDL_HINT_MAC_BACKGROUND_APP,"1");
  if(!tribes_sdl_init(cpu,SDL_INIT_VIDEO)){fprintf(stderr,"TribesPad: SDL video failed: %s\n",SDL_GetError());return 0;}
+ /* DirectSound (guest_dsound.c) plays through SDL audio. Starsiege opens it
+    after its window, so audio starts with video. Silent if it fails. */
+ if(!tribes_sdl_init(cpu,SDL_INIT_AUDIO))fprintf(stderr,"TribesPad: SDL audio failed: %s\n",SDL_GetError());
  tribes_sdl_gl_set_attribute(cpu,SDL_GL_DOUBLEBUFFER,1);tribes_sdl_gl_set_attribute(cpu,SDL_GL_DEPTH_SIZE,24);tribes_sdl_gl_set_attribute(cpu,SDL_GL_STENCIL_SIZE,8);
  sdl_started=1;return 1;
 }

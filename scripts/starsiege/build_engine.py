@@ -22,12 +22,12 @@ IMAGE_BASE, IMPORT_BASE = 0x400000, 0xfffe0000
 HOST_BASE = 0xfffc0000  # below DirectInput's native tokens (0xfffd0000)
 HOST_ROUTES = [('StarsiegeGuestMalloc', 'ss_guest_malloc', 1), ('StarsiegeGuestCalloc', 'ss_guest_calloc', 2),
                ('StarsiegeGuestRealloc', 'ss_guest_realloc', 2), ('StarsiegeGuestFree', 'ss_guest_free', 1)]
-# Reported as not present: plugins and Windows-only helpers. DirectSound waits
-# for a native provider at G3 (sound), so the game runs silent until then.
-# DirectInput is present: the game reads keyboard0 and mouse0 through it.
+# Reported as not present: plugins and Windows-only helpers. DirectInput
+# (keyboard0, mouse0) and DirectSound are present, through TribesPad's native
+# providers.
 # Optimization for the translated game (STARSIEGE_OPT=-O0 for faster iteration).
 OPT = os.environ.get('STARSIEGE_OPT', '-O1')
-ABSENT = ['ScriptGL.dll', 'rmdgfx.dll', 'mscoree.dll', 'dbghelp.dll', 'dSound.dll']
+ABSENT = ['ScriptGL.dll', 'rmdgfx.dll', 'mscoree.dll', 'dbghelp.dll']
 
 def load(name, path):
     spec = importlib.util.spec_from_file_location(name, path)
