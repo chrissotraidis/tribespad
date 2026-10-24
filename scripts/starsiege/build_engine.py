@@ -39,8 +39,19 @@ va = load('va', R / 'scripts/prepare-va-model.py')
 census = load('census', R / 'scripts/starsiege/census.py')
 bindgen = load('bindgen', R / 'scripts/gen-win32-bindings.py')
 sha = lambda p: hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
+# --platform device|simulator compiles the same engine for iOS and links it into
+# one relocatable object for the TribesPad app (see embed()).
+PLATFORM = 'macos'
 SDK = subprocess.check_output(['xcrun', '--sdk', 'macosx', '--show-sdk-path'], text=True).strip()
 TARGET = ['-target', 'arm64-apple-macos12', '-isysroot', SDK]
+
+def set_platform(platform):
+    global PLATFORM, SDK, TARGET
+    PLATFORM = platform
+    sdk = dict(macos='macosx', device='iphoneos', simulator='iphonesimulator')[platform]
+    SDK = subprocess.check_output(['xcrun', '--sdk', sdk, '--show-sdk-path'], text=True).strip()
+    triple = dict(macos='arm64-apple-macos12', device='arm64-apple-ios16', simulator='arm64-apple-ios16-simulator')[platform]
+    TARGET = ['-target', triple, '-isysroot', SDK]
 
 RUNTIME = [R / 'port/core' / (n + '.c') for n in [
     'guest_adapters', 'guest_avi', 'guest_bcrypt', 'guest_console', 'guest_console_callback', 'guest_locale_identifiers',
@@ -241,10 +252,15 @@ def backend():
     folder = OUT / 'backend'
     folder.mkdir(parents=True, exist_ok=True)
     sources, flags, libraries, bindings, _ = sdl_prepare(folder)
+    if PLATFORM != 'macos':  # the wrappers are shared; headers come from this platform's SDL
+        from sdl_backend_inputs import inputs as sdl_inputs
+        mac_include = str(R / 'generated/sdl-backend/macos/install/include')
+        flags = [str(R / 'generated/sdl-backend' / PLATFORM / 'install/include') if x == mac_include else x for x in flags]
+        _, _, libraries = sdl_inputs(PLATFORM)
     libraries = [x for i, x in enumerate(libraries) if not (x == 'OpenGL' or (x == '-framework' and i + 1 < len(libraries) and libraries[i + 1] == 'OpenGL'))]
-    _, gl_flags, gl_libraries = gl4es_inputs('macos')
-    _, angle_flags, angle_libraries = angle_inputs('macos')
-    angle_dir = str(pathlib.Path(angle_libraries[0]).parent)
+    _, gl_flags, gl_libraries = gl4es_inputs(PLATFORM)
+    _, angle_flags, angle_libraries = angle_inputs(PLATFORM)
+    angle_dir = str(pathlib.Path(angle_libraries[0]).parent) if PLATFORM == 'macos' else ''
     # In an app, ANGLE comes from Contents/Frameworks (as for Tribes 2); a dev
     # build falls back to the pinned download.
     angle_libraries = [x for x in angle_libraries if not x.startswith('-Wl,-rpath')] + ['-Wl,-rpath,@executable_path/../Frameworks', '-Wl,-rpath,' + angle_dir]
@@ -255,16 +271,18 @@ def backend():
             'libraries': angle_libraries + gl_libraries + libraries, 'bindings': bindings}
 
 def compile_objects(report, graphics):
-    objects, cache_path = [], OUT / 'objects.json'
+    suffix = '' if PLATFORM == 'macos' else '-' + PLATFORM
+    objects, cache_path = [], OUT / ('objects%s.json' % suffix)
     cache = json.loads(cache_path.read_text()) if cache_path.exists() else {}
-    math = load('sse', R / 'scripts/sse_build_inputs.py').sse_inputs('macos')
+    math = load('sse', R / 'scripts/sse_build_inputs.py').sse_inputs(PLATFORM)
     flags = ['-O2', '-DPTROFS_64BIT', '-Wno-override-module', '-Wall', '-Wextra', '-Werror'] + math['compile_flags']
     for source in RUNTIME + graphics['sources'] + [OUT / 'dispatch.ll', OUT / 'bindings.ll', OUT / 'stops.ll', R / 'port/starsiege/starsiege_engine.c']:
-        obj = OUT / 'obj' / (source.stem + '.o')
+        obj = OUT / ('obj' + suffix) / (source.stem + '.o')
         obj.parent.mkdir(exist_ok=True)
-        key = sha(source) + (sha(OUT / 'starsiege_engine.inc') if source.name == 'starsiege_engine.c' else '') + ' '.join(graphics['flags'])
+        key = sha(source) + (sha(OUT / 'starsiege_engine.inc') if source.name == 'starsiege_engine.c' else '') + ' '.join(graphics['flags']) + PLATFORM
         if cache.get(str(source)) != key or not obj.exists():
-            cmd = ['clang'] + TARGET + flags + graphics['flags'] + ['-I', str(OUT), '-c', str(source), '-o', str(obj)]
+            embedded = ['-DSTARSIEGE_EMBEDDED'] if PLATFORM != 'macos' and source.name == 'starsiege_engine.c' else []
+            cmd = ['clang'] + TARGET + flags + embedded + graphics['flags'] + ['-I', str(OUT), '-c', str(source), '-o', str(obj)]
             if source.suffix == '.ll':
                 cmd = ['clang'] + TARGET + ['-O2', '-Wno-override-module', '-c', str(source), '-o', str(obj)]
             if source.suffix == '.m':
@@ -272,13 +290,19 @@ def compile_objects(report, graphics):
             subprocess.run(cmd, check=True)
             cache[str(source)] = key
         objects.append(str(obj))
-    module = OUT / 'obj/module.o'
-    if cache.get('module') != sha(OUT / 'module.ll') + OPT or not module.exists():
+    module = OUT / ('obj' + suffix) / 'module.o'
+    if cache.get('module') != sha(OUT / 'module.ll') + OPT + PLATFORM + ('' if PLATFORM == 'macos' else ' no-common') or not module.exists():
         say('compiling the translated game (a few minutes)')
         start = time.monotonic()
-        subprocess.run(['clang'] + TARGET + [OPT, '-Wno-override-module', '-c', str(OUT / 'module.ll'), '-o', str(module)], check=True)
+        source = OUT / 'module.ll'
+        if PLATFORM != 'macos':
+            # A common symbol would survive embed() as a shared tentative
+            # definition and merge with Tribes 2's; define it here instead.
+            source = OUT / 'module-embedded.ll'
+            source.write_text((OUT / 'module.ll').read_text().replace(' = common global ', ' = global '))
+        subprocess.run(['clang'] + TARGET + [OPT, '-Wno-override-module', '-c', str(source), '-o', str(module)], check=True)
         report['module_compile_seconds'] = round(time.monotonic() - start)
-        cache['module'] = sha(OUT / 'module.ll') + OPT
+        cache['module'] = sha(OUT / 'module.ll') + OPT + PLATFORM + ('' if PLATFORM == 'macos' else ' no-common')
     cache_path.write_text(json.dumps(cache, indent=1) + '\n')
     return objects + [str(module)] + math['libraries'] + graphics['libraries']
 
@@ -313,6 +337,25 @@ def tribespad_defaults(game):
     end = text.index('\n', at) + 1
     text = text[:end] + '   $pref::politeGui = false; // TribesPad: the game draws its own cursor\n' + text[end:]
     script.write_text(text)
+
+def embed(objects, report):
+    """iOS: one relocatable object for the TribesPad app. Everything inside,
+    including Starsiege's own copies of TribesPad's runtime and SDL backend,
+    becomes local except the entry point, so nothing collides with Tribes 2's
+    copies in the same binary. SDL, GL4ES, ANGLE and the math libraries stay
+    undefined and resolve against the app's, so the process has one of each."""
+    folder = R / 'generated/starsiege' / ('engine-' + PLATFORM)
+    folder.mkdir(parents=True, exist_ok=True)
+    out = folder / 'starsiege.o'
+    inputs = [o for o in objects if o.endswith('.o')]
+    subprocess.run(['xcrun', 'ld', '-r', '-arch', 'arm64', '-exported_symbol', '_starsiege_mobile_engine_main', *inputs, '-o', str(out)], check=True)
+    listing = subprocess.check_output(['nm', '-gU', str(out)], text=True).split()
+    defined = [s for s in listing if s.startswith('_')]
+    assert defined == ['_starsiege_mobile_engine_main'], defined[:20]
+    undefined = sorted(set(subprocess.check_output(['nm', '-u', str(out)], text=True).split()))
+    (folder / 'undefined.txt').write_text('\n'.join(undefined) + '\n')
+    report.update(embedded_object=str(out.relative_to(R)), embedded_sha256=sha(out), embedded_undefined=len(undefined), platform=PLATFORM)
+    return out
 
 def run(exe, timeout, report, route=None):
     work = OUT / 'run'
@@ -353,11 +396,18 @@ def main():
     ap.add_argument('--run', action='store_true')
     ap.add_argument('--timeout', type=int, default=60)
     ap.add_argument('--route', help='TorqueScript appended to the run copy of console.cs (headless checks)')
+    ap.add_argument('--platform', choices=['macos', 'device', 'simulator'], default='macos')
     a = ap.parse_args()
+    set_platform(a.platform)
     OUT.mkdir(parents=True, exist_ok=True)
     report = {'playable': False, 'headless': True, 'opt': OPT}
     graphics = backend()
     prepare(report, graphics['bindings'])
+    if PLATFORM != 'macos':
+        out = embed(compile_objects(report, graphics), report)
+        (out.parent / 'result.json').write_text(json.dumps(report, indent=1) + '\n')
+        print(json.dumps({k: v for k, v in report.items() if k != 'direct_targets_trapped'}, indent=1))
+        return 0
     exe = link(compile_objects(report, graphics), report)
     if exe and a.run:
         run(exe, a.timeout, report, a.route)

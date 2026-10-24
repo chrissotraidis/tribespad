@@ -75,7 +75,13 @@ static void load(const char *path,uint32_t address){
 }
 static void put(uint32_t address,uint32_t value){memcpy((void *)(uintptr_t)(base+address),&value,4);}
 
+#ifdef STARSIEGE_EMBEDDED
+/* In the TribesPad iOS app the picker calls this on the main thread, inside
+   SDL's UIKit application, with the same four paths. */
+int starsiege_mobile_engine_main(int argc,char **argv){
+#else
 int main(int argc,char **argv){
+#endif
  /* image.bin, volume root, game folder (C:\TribesPad\Game), temp folder */
  if(argc!=5){fprintf(stderr,"usage: %s image.bin volume game temp\n",argv[0]);return 2;}
  /* Desktop SDL runs on process main; the backend checks this before video. */
