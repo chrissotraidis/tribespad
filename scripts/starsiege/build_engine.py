@@ -299,8 +299,10 @@ def run(exe, timeout, report, route=None):
     script = game / 'console.cs'
     script.write_text('$Console::LogMode = 1;\n' + script.read_text(errors='replace'))
     if route:
-        # A scripted route for headless checks, appended to the run copy only.
-        script.write_text(script.read_text(errors='replace') + '\n' + route + '\n')
+        # A scripted route for headless checks, run copy only: its own script,
+        # executed two seconds in, after the game's configs have loaded.
+        (game / 'config/TribesPadRoute.cs').write_text(route + '\n')
+        script.write_text(script.read_text(errors='replace') + '\nschedule("exec(\\"TribesPadRoute.cs\\");", 2);\n')
     temp.mkdir(parents=True)
     say('running headless (no window)')
     capture = work / 'frames'
