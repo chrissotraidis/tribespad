@@ -40,6 +40,8 @@ static int enter_starsiege(void) {
     char *arguments[]={"StarsiegeEngine",paths[0],paths[1],paths[2],paths[3],NULL};
     /* Starsiege draws an 800x600 frame; the screen scales it up (content_area.m). */
     tb_content_fix_game_size(800,600);
+    extern void tb_mobile_controls_install_starsiege(void);
+    tb_mobile_controls_install_starsiege();
     fprintf(stderr,"TribesPad: entering Starsiege: Tribes\n");
     return starsiege_mobile_engine_main(5,arguments);
 }

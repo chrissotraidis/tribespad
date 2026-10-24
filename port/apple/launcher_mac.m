@@ -148,8 +148,8 @@ static TBChoice tb_choice;
     self.gear=[CALayer layer];self.gear.contents=tinted;self.gear.contentsGravity=kCAGravityCenter;[self.layer addSublayer:self.gear];
     NSImage *(^art)(NSString *)=^NSImage *(NSString *n){return [[NSImage alloc] initWithContentsOfFile:tb_data([@"Launcher" stringByAppendingPathComponent:n])];};
     TBCard *starsiege=[[TBCard alloc] initWithKicker:@"Starsiege: Tribes  \u00B7  1998" art:art(@"starsiege.png") fallback:emblem available:self.starsiege
-        badge:self.starsiege?@"DEV BUILD  \u25B8":@"IN DEVELOPMENT"];
-    starsiege.statusText=self.starsiege?@"Development build: menus and player setup work. Matches are next.":@"The original. Being translated to native code; it opens here once it plays.";
+        badge:self.starsiege?@"PLAY  \u25B8":@"IN DEVELOPMENT"];
+    starsiege.statusText=self.starsiege?@"Version 1.41, the one the community plays. Bots offline, PlayT1 servers online.":@"The original. Being translated to native code; it opens here once it plays.";
     TBCard *tribes2=[[TBCard alloc] initWithKicker:@"Tribes 2  \u00B7  2001  \u00B7  TribesNEXT online" art:art(@"tribes2.png") fallback:emblem available:YES badge:@"PLAY  \u25B8"];
     tribes2.statusText=@"Checking who is playing\u2026";
     self.cards=@[starsiege,tribes2];for(TBCard *c in self.cards)[self.layer addSublayer:c.root];

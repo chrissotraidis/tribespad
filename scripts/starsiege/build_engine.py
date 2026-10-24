@@ -339,6 +339,28 @@ def tribespad_defaults(game):
     # The console log (console.log) for diagnostics, and an optional checks
     # script: TribesPad writes config/TribesPadRoute.cs only for test launches.
     text = '$Console::LogMode = 1;\n' + text + '\nif(isFile("config/TribesPadRoute.cs")) schedule("exec(\\"TribesPadRoute.cs\\");", 2);\n'
+    # TribesPad's touch controls follow play: "<playing> <typing> <connected>"
+    # in temp/tribespad-state.cs, four times a second. Playing is in a match with
+    # the game's cursor off (menus, inventory and scores turn it on).
+    text += '''
+function TribesPad::connected() { $TribesPad::connected = 1; }
+function TribesPad::left() { $TribesPad::connected = 0; }
+function TribesPad::report() {
+   %playing = 0; if($TribesPad::connected && !isCursorOn(MainWindow)) %playing = 1;
+   %connected = 0; if($TribesPad::connected) %connected = 1;
+   $TribesPad::state = %playing @ " 0 " @ %connected;
+   if($TribesPad::state != $TribesPad::reported) { $TribesPad::reported = $TribesPad::state; export("TribesPad::state", "temp/tribespad-state.cs", false); }
+   schedule("TribesPad::report();", 0.25);
+}
+function TribesPad::startReports() {
+   Event::Attach(eventConnected, TribesPad::connected);
+   Event::Attach(eventConnectionLost, TribesPad::left); Event::Attach(eventConnectionTimeout, TribesPad::left);
+   Event::Attach(eventConnectionError, TribesPad::left); Event::Attach(eventDisconnected, TribesPad::left);
+   Event::Attach(eventConnectionRejected, TribesPad::left);
+   $TribesPad::reported = ""; TribesPad::report();
+}
+schedule("TribesPad::startReports();", 1);
+'''
     script.write_text(text)
 
 def embed(objects, report):

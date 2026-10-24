@@ -23,6 +23,13 @@ static NSString * const TBTribesPadDiscord=@"https://discord.gg/xwHfUD2bxW";
 static NSString * const TBTribesNextForum=@"https://www.tribesnext.com/forum/";
 
 /* Touch preferences (NSUserDefaults, TribesPad-owned keys). */
+/* Starsiege: Tribes runs these controls too (tb_mobile_controls_install_starsiege):
+   its own keys, play state and menu; its controller is read by the engine. */
+static BOOL tb_starsiege;
+static NSString *tb_state_path(void){
+    NSString *support=NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,NSUserDomainMask,YES).firstObject;
+    return [support stringByAppendingPathComponent:tb_starsiege?@"TribesPad/Starsiege/volume/TribesPad/Game/temp/tribespad-state.cs":@"TribesPad/Game/base/prefs/tribespad-state.txt"];
+}
 static double tb_setting(NSString *key,double fallback){id v=[NSUserDefaults.standardUserDefaults objectForKey:key];return v?[v doubleValue]:fallback;}
 /* Account names and passwords: no automatic capitals or corrections. */
 static void tb_start_typing(SDL_Window *window){
@@ -451,8 +458,7 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
     __weak TBGameControls *weakSelf=self;
     // A previous session may have ended in play; start from the menus. "-"
     // means the game has not reported yet: it reports once past the login.
-    [@"-" writeToFile:[NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,NSUserDomainMask,YES).firstObject
-        stringByAppendingPathComponent:@"TribesPad/Game/base/prefs/tribespad-state.txt"] atomically:YES encoding:NSUTF8StringEncoding error:nil];
+    [@"-" writeToFile:tb_state_path() atomically:YES encoding:NSUTF8StringEncoding error:nil];
     self.matchClock=[NSTimer scheduledTimerWithTimeInterval:.2 repeats:YES block:^(NSTimer *t){(void)t;[weakSelf followMatch];}];
     [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(releaseControls)
         name:UIApplicationWillResignActiveNotification object:nil];
@@ -516,6 +522,11 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
 }
 -(void)controllerChanged:(NSNotification *)notification {
     (void)notification;if(!self.superview)return;
+    if(tb_starsiege){
+        /* The engine reads the controller itself (starsiege_controller.m); only step aside for it. */
+        BOOL any=NO;for(GCController *c in GCController.controllers)if(c.extendedGamepad)any=YES;
+        self.controllerUsed=any;[self rebuildMenu];return;
+    }
     if(self.controller&&[GCController.controllers containsObject:self.controller])return;
     [self detachController];
     for(GCController *controller in GCController.controllers)if(controller.extendedGamepad){
@@ -667,9 +678,13 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
     // 0 in menus, the lobby, inventory and the score screen; typing is 1 while
     // a dialog made for typing (login, server password...) is open; connected
     // is 1 on a server (including one hosted here).
-    NSString *support=[NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,NSUserDomainMask,YES).firstObject
-        stringByAppendingPathComponent:@"TribesPad/Game/base/prefs/tribespad-state.txt"];
-    NSString *state=[NSString stringWithContentsOfFile:support encoding:NSUTF8StringEncoding error:nil];
+    NSString *state=[NSString stringWithContentsOfFile:tb_state_path() encoding:NSUTF8StringEncoding error:nil];
+    if(tb_starsiege&&state.length){
+        /* Starsiege's export: $TribesPad::state = "1 0 1"; */
+        NSRange q=[state rangeOfString:@"\""];if(q.location==NSNotFound)return;
+        NSRange e=[state rangeOfString:@"\"" options:0 range:NSMakeRange(q.location+1,state.length-q.location-1)];
+        if(e.location==NSNotFound)return;state=[state substringWithRange:NSMakeRange(q.location+1,e.location-q.location-1)];
+    }
     if(!state.length||[state hasPrefix:@"-"])return;
     if(!self.gameReported){
         // Past the login: a keyboard opened there closes with the next report.
@@ -677,8 +692,9 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
         self.typingDialog=window&&SDL_TextInputActive(window);
         [self rebuildMenu];
         // New players rarely know where the games are; point at Find a Game.
-        double shown=tb_setting(@"TribesPad.findHintsShown",0);
-        if(shown<3){tb_set(@"TribesPad.findHintsShown",shown+1);
+        double shown=tb_starsiege?3:tb_setting(@"TribesPad.findHintsShown",0);
+        if(tb_starsiege){}
+        else if(shown<3){tb_set(@"TribesPad.findHintsShown",shown+1);
             [self flashHint:@"Looking for a game?  ··· > Find a Game has the server list,\nwho is playing now, game nights and the community Discords"];}
         else [self performSelector:@selector(offerBalancedIfMaximum) withObject:nil afterDelay:3];
     }
@@ -850,6 +866,29 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
         options:self.connected?0:UIMenuOptionsDisplayInline children:find];
     // Game actions only do something on a server; the original menus have their own buttons.
     NSArray *groups=self.connected||self.inMatch?@[group(game),group(@[findMenu]),group(controls),group(@[help])]:@[findMenu,group(controls),group(@[help])];
+    if(tb_starsiege){
+        /* Starsiege's own keys (config/config.cs): T and Y chat, I inventory,
+           O objectives, C command, Tab scores, Ctrl+K kill. */
+        UIAction *kill=key(@"Suicide",@"xmark.octagon",SDL_SCANCODE_K,SDL_KMOD_LCTRL);kill.attributes=UIMenuElementAttributesDestructive;
+        NSArray *t1=@[item(@"Game Menu",@"list.bullet",^{[weak tapKey:SDL_SCANCODE_ESCAPE];}),
+            key(@"Scores",@"trophy",SDL_SCANCODE_TAB,SDL_KMOD_NONE),
+            [UIMenu menuWithTitle:@"Chat" image:icon(@"bubble.left.and.bubble.right") identifier:nil options:0 children:@[
+                item(@"All Chat",@"bubble.left.and.bubble.right",^{[weak openChat:SDL_SCANCODE_T];}),
+                item(@"Team Chat",@"bubble.left",^{[weak openChat:SDL_SCANCODE_Y];}),
+                item(@"Quick Chat Menu",@"text.bubble",^{[weak sendGameKey:SDL_SCANCODE_V mod:SDL_KMOD_NONE];})]],
+            [UIMenu menuWithTitle:@"Actions" image:icon(@"bolt") identifier:nil options:0 children:@[
+                group(@[key(@"Inventory",@"square.grid.2x2",SDL_SCANCODE_I,SDL_KMOD_NONE),key(@"Objectives",@"list.number",SDL_SCANCODE_O,SDL_KMOD_NONE),
+                    key(@"Command Map",@"map",SDL_SCANCODE_C,SDL_KMOD_NONE)]),
+                group(@[key(@"Use Repair Kit",@"cross.case",SDL_SCANCODE_H,SDL_KMOD_NONE),key(@"Place Beacon",@"dot.radiowaves.left.and.right",SDL_SCANCODE_B,SDL_KMOD_NONE),
+                    key(@"Drop Flag",@"flag",SDL_SCANCODE_F,SDL_KMOD_LCTRL)]),
+                group(@[key(@"Zoom",@"plus.magnifyingglass",SDL_SCANCODE_Z,SDL_KMOD_NONE),key(@"Third-Person View",@"person.crop.square",SDL_SCANCODE_R,SDL_KMOD_NONE)]),
+                group(@[kill])]]];
+        NSArray *t1controls=@[controls[0],controls[1],controls[2],controls[4]];
+        UIMenu *t1help=[UIMenu menuWithTitle:@"Help" image:icon(@"questionmark.circle") identifier:nil options:0 children:@[
+            group(@[item(@"Console",@"terminal",^{[weak tapKey:SDL_SCANCODE_GRAVE];}),
+                item(@"TribesPad on GitHub",@"safari",^{[UIApplication.sharedApplication openURL:[NSURL URLWithString:TBRepositoryURL] options:@{} completionHandler:nil];})])]];
+        groups=self.connected||self.inMatch?@[group(t1),group(t1controls),group(@[t1help])]:@[group(t1controls),group(@[t1help])];
+    }
     self.menu.menu=[UIMenu menuWithTitle:@"TribesPad" children:groups];
     // The column button shows whether the cursor is on.
     UIButtonConfiguration *c=self.cursor.configuration;
@@ -1169,6 +1208,13 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
         pad.caption.hidden=pad.kind==TBKindButton&&pad.bounds.size.width<52;[pad setNeedsLayout];}
 }
 @end
+void tb_mobile_controls_install_starsiege(void) {
+    /* Starsiege's config.cs: W S A D move, Space jets up (jump), G grenade,
+       Q next weapon, P pack, I inventory; fire and jet are the mouse buttons. */
+    static const SDL_Scancode keys[9]={SDL_SCANCODE_W,SDL_SCANCODE_S,SDL_SCANCODE_A,SDL_SCANCODE_D,SDL_SCANCODE_SPACE,
+        SDL_SCANCODE_G,SDL_SCANCODE_Q,SDL_SCANCODE_P,SDL_SCANCODE_I};
+    tb_starsiege=YES;tb_mobile_controls_keys(keys);tb_mobile_controls_install();
+}
 void tb_mobile_controls_install(void) {
     static TBMobileControls controls;
     static TBGameControls *overlay;

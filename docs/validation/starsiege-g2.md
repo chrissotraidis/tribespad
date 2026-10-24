@@ -42,22 +42,19 @@ The menus now take a mouse and keyboard. Headless and scripted, with no window s
 - **Sound.** `dSound.dll` now resolves to Tribes 2's DirectSound provider on an SDL/CoreAudio device. The game opens a 48 kHz stereo device and its primary buffer, and "error opening sound device" is gone. Playback itself is unchecked until a match runs.
 - Headless checks script input with `STARSIEGE_INPUT=file` (`<frame> key <DIK> down|up`, `<frame> move dx dy`, `<frame> button n down|up`, `<frame> wheel n`) and pick capture frames with `STARSIEGE_CAPTURE_FRAMES=a,b,c`. `STARSIEGE_TRACE_INPUT=1` logs device calls.
 
-## Local game: still dropped
+## Local games, bots and online play (same day, evening)
 
-With input and sound in place the local game behaves as before. The server accepts the player and the client shows the Loading screen, then the engine drops the connection without a reason ("Connection to server lost: Server went down") and the empty server cycles to its next mission. The scripts only react to the drop (`Server::onClientDisconnect`, then `Server::refreshData` and `Server::nextMission`). The translation was checked for silent gaps: its 192 untranslated sites are SSE and environment instructions that stop the engine loudly if reached, and none was reached. The cause sits inside 1.41's own connection checks, which this work does not take apart; how to proceed there is an owner decision.
+**The disconnect is fixed.** It was a translation bug, not the game's checks. SRW translated `movzx ax, ah` (the destination's own high byte) by clearing the destination before reading it, so the result was always 0. The player-update writer at 0x4838E1 uses that to decide whether to send one flag bit; the client sent version 0 and skipped the bit, the server read it anyway, every later field was one bit off, and the server dropped the client as "Invalid packet." `lift_preview.py` now reorders the three such sites so the byte is read first. The anti-cheat's two console commands (`remoteLH_CHMOD`, `remoteLH_CHMEM`), which the lift never reached because only a command table points at them, are now translated faithfully too (`lift-fixups.json` "pointers", and two jumps into the middle of an instruction that fault on Windows as well, recorded as loud traps).
 
-## In-game rendering from a recording (same day)
-
-The installer's own recordings play back through the game's `playDemo`, which needs no live server. Headless on this Mac, "Capper - Elixir - Hildebrand.rec" loaded Dangerous Crossing and the translated renderer drew the match for 3,000 frames: terrain, sky, the bridge, the HUD, chat and the minimap.
-
-![A recorded Starsiege match drawn by the translated renderer](starsiege-demo-ingame-headless-2026-10-24.png)
-
-Playback then stopped at `0x401690`, a function the lift never reached because only a pointer table refers to it. It is `remoteLH_CHMOD`, a server command of LastHope, the 1.41 anti-cheat, which the recording replays. That is outside this work, so it stays untranslated, and recordings that call it stop there.
+- **Local game:** `createServer("Raindance")` connects, joins Blood Eagle and stays. Scripted input spawns the player, walks, turns, jets and fires the blaster ([spawned](starsiege-local-play-spawned-2026-10-24.png), [jetting](starsiege-local-play-jet-2026-10-24.png)).
+- **Bots:** the 5_CTF training mission's own guards spawn and patrol (their positions change every few seconds, logged by a checks script).
+- **Online:** the client joined a live public server, "Starsiege: Tribes (no mods) 2" (67.187.240.184:28001): connection accepted, mission loaded, assigned to Blood Eagle, left cleanly after 45 s ([frame](starsiege-online-public-server-2026-10-24.png)).
+- **iPad Pro:** the same local game runs on the device; TribesPad's touch overlay (stick, look, fire, jet and the ··· menu) follows play through `temp/tribespad-state.cs`, sending Starsiege's own keys (WASD, Space, G, Q, P, I) and a Starsiege menu (chat, scores, inventory, objectives, repair kit, zoom, suicide) ([screenshot from the iPad](starsiege-ipad-local-game-touch-2026-10-24.png)).
 
 ## Still open for G2 and next
 
 - A visible Mac window, which needs the owner's go-ahead on this Mac.
-- An offline match with bots (G3), blocked on the drop above.
+- Hand-testing touch, controller and keyboard folio in a full match; a visible Mac run (owner's go-ahead).
 - Diagnostic logging (file opens, GL lookups, window calls) stays on during bring-up.
 
 Reproduce: `.venv/bin/python scripts/starsiege/lift_preview.py --no-compile`, then `.venv/bin/python scripts/starsiege/build_engine.py --run` (with `DEVELOPER_DIR` and `SDKROOT` set as in docs/HANDOFF.md).
