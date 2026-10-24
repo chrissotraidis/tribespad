@@ -46,6 +46,14 @@ The menus now take a mouse and keyboard. Headless and scripted, with no window s
 
 With input and sound in place the local game behaves as before. The server accepts the player and the client shows the Loading screen, then the engine drops the connection without a reason ("Connection to server lost: Server went down") and the empty server cycles to its next mission. The scripts only react to the drop (`Server::onClientDisconnect`, then `Server::refreshData` and `Server::nextMission`). The translation was checked for silent gaps: its 192 untranslated sites are SSE and environment instructions that stop the engine loudly if reached, and none was reached. The cause sits inside 1.41's own connection checks, which this work does not take apart; how to proceed there is an owner decision.
 
+## In-game rendering from a recording (same day)
+
+The installer's own recordings play back through the game's `playDemo`, which needs no live server. Headless on this Mac, "Capper - Elixir - Hildebrand.rec" loaded Dangerous Crossing and the translated renderer drew the match for 3,000 frames: terrain, sky, the bridge, the HUD, chat and the minimap.
+
+![A recorded Starsiege match drawn by the translated renderer](starsiege-demo-ingame-headless-2026-10-24.png)
+
+Playback then stopped at `0x401690`, a function the lift never reached because only a pointer table refers to it. It is `remoteLH_CHMOD`, a server command of LastHope, the 1.41 anti-cheat, which the recording replays. That is outside this work, so it stays untranslated, and recordings that call it stop there.
+
 ## Still open for G2 and next
 
 - A visible Mac window, which needs the owner's go-ahead on this Mac.
