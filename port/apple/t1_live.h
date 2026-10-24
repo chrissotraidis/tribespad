@@ -9,4 +9,10 @@ typedef struct {
 /* Blocking, up to timeout_ms (half for the masters, half for the servers).
    Call it off the main thread. 1 when at least one master answered. */
 int tb_t1_live(TBT1Live *out,int timeout_ms);
+/* One answering server: "a.b.c.d:port", its name, players (bots included, as
+   the game counts them), slots, and round trip in milliseconds. */
+typedef struct {char address[24],name[64];int players,max,ping;} TBT1Server;
+/* The answering servers, up to capacity, and the summary when wanted. Blocking
+   as tb_t1_live; off the main thread. -1 when no master answered. */
+int tb_t1_servers(TBT1Server *list,int capacity,int timeout_ms,TBT1Live *summary);
 #endif

@@ -69,3 +69,13 @@ Reproduce: `.venv/bin/python scripts/starsiege/lift_preview.py --no-compile`, th
 - **Controller laid out like Tribes 2** (port/starsiege/starsiege_input.c), switching with the play state. Playing: left stick moves, right stick looks, RT fires, LT jets, A jumps, B crouches, X pack, Y grenade, RB / LB next / previous weapon (Q / F8; TribesPad binds F8 to prevWeapon), R3 zoom toggle, L3 third person, D-pad repair kit / inventory / beacon / quick chat, View scores. Menus: left stick or D-pad moves the game's cursor, A clicks, B goes back, right stick scrolls, triggers do nothing. Menu opens the ··· menu on iPhone and iPad. Checked headless with a scripted controller: walked forward, fired, cycled Blaster, chaingun and back with RB and LB, and moved the menu cursor.
 - **Logging (TribesPad.log):** controller connect and disconnect, layout switches, every mapped press, and a watchdog line when no frame has been drawn for 5 s (and when frames resume).
 
+
+## Online play on the iPad, second pass (same night)
+
+- **Controller stuck in the menu layout online (fixed).** "Playing" came from `eventConnected`, which community scripts raise and mods change. Online it stopped after the first match, so the left stick moved a hidden menu cursor, A clicked, and the right stick scrolled the wheel, which changes weapons. Playing now comes from the screen: the match view (`playGui`) is up with the game's cursor off. On the iPad, an online join reports "1 0 1" from spawn on.
+- **HUD overlap (fixed).** The bundled CTF HUD's saved position put it inside the chat box at 800x600. It now starts just below the chat, unless the player has moved it.
+- **Typing dialogs** (new player, password, address, filter, demo name) set the typing flag, so the on-screen keyboard opens with them.
+- **Find a Game for Starsiege** in the ··· menu: Server List (the game's JOIN, through a request the game handles), Who's Playing Now (each server from the community masters, with players and ping; tap to join), and the PlayT1 and TribesPad Discords. The game runs only scripts that existed at its start, so the request file ships empty and is rewritten, with a flag file that `isFile` sees.
+- **Switch Game** in both games' ··· menus: TribesPad closes and the next launch starts the other game (TribesPad.nextGame).
+- **Modded servers:** servers running mods with their own models (for example the RPG servers) need those mods' client files; Starsiege servers can't send models. Standard and "no mods" servers need nothing extra.
+

@@ -293,11 +293,19 @@ static UIBezierPath *tb_chamfer(CGRect r,CGFloat c){
 @end
 
 TBGame tb_launcher_run(void) {
-    id show=[NSUserDefaults.standardUserDefaults objectForKey:@"TribesPad.showLauncher"];
-    if(show&&![show boolValue])return TBGameTribes2;
     /* TRIBESPAD_PICK (devicectl --environment-variables, tests) chooses without the picker. */
     const char *pick=getenv("TRIBESPAD_PICK");
     if(pick)return !strcmp(pick,"starsiege")&&tb_starsiege_here()?TBGameStarsiege:TBGameTribes2;
+    /* Switch Game (mobile_controls.m) chose the next game: start it once, without the picker. */
+    NSString *next=[NSUserDefaults.standardUserDefaults stringForKey:@"TribesPad.nextGame"];
+    if(next){
+        [NSUserDefaults.standardUserDefaults removeObjectForKey:@"TribesPad.nextGame"];
+        TBGame chosen=[next isEqualToString:@"starsiege"]&&tb_starsiege_here()?TBGameStarsiege:TBGameTribes2;
+        fprintf(stderr,"TribesPad launcher: Switch Game chose %s\n",chosen==TBGameStarsiege?"Starsiege: Tribes":"Tribes 2");
+        return chosen;
+    }
+    id show=[NSUserDefaults.standardUserDefaults objectForKey:@"TribesPad.showLauncher"];
+    if(show&&![show boolValue])return TBGameTribes2;
     // The window scene connects while the run loop turns.
     UIWindowScene *scene=nil;NSDate *give_up=[NSDate dateWithTimeIntervalSinceNow:5];
     while(!scene&&give_up.timeIntervalSinceNow>0){

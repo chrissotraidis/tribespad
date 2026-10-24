@@ -4,6 +4,7 @@
    over UDP, as the game's browser asks them. Players include bots, so people
    are players minus bots. Status bit 0x2 marks a password. Read-only. */
 #import "live_servers.h"
+#include "t1_live.h"
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <poll.h>
@@ -81,7 +82,34 @@ static NSArray<TBLiveServer *> *tb_query(NSArray<NSString *> *addresses){
 }
 -(void)done{[self dismissViewControllerAnimated:YES completion:nil];}
 -(void)openList{void (^list)(void)=self.serverList;[self dismissViewControllerAnimated:YES completion:^{if(list)list();}];}
+/* Starsiege: Tribes: the community masters and each server's own answer. */
+-(void)refreshStarsiege {
+    __weak TBLiveServersController *weak=self;
+    dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED,0),^{
+        TBT1Server *list=calloc(400,sizeof *list);TBT1Live summary;int n=list?tb_t1_servers(list,400,3000,&summary):-1;
+        NSMutableArray<TBLiveServer *> *servers=[NSMutableArray array];
+        for(int i=0;i<n;i++){TBLiveServer *s=[TBLiveServer new];s.address=@(list[i].address);
+            s.name=[[NSString alloc] initWithBytes:list[i].name length:strlen(list[i].name) encoding:NSWindowsCP1252StringEncoding]?:s.address;
+            s.people=list[i].players;s.slots=list[i].max;s.ping=list[i].ping;s.answered=YES;[servers addObject:s];}
+        free(list);
+        [servers sortUsingComparator:^NSComparisonResult(TBLiveServer *a,TBLiveServer *b){
+            if(a.people!=b.people)return a.people>b.people?NSOrderedAscending:NSOrderedDescending;
+            return [a.name localizedCaseInsensitiveCompare:b.name];}];
+        dispatch_async(dispatch_get_main_queue(),^{
+            TBLiveServersController *me=weak;if(!me)return;[me.refreshControl endRefreshing];
+            me.busy=[servers filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"people > 0"]];
+            me.quiet=[servers filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"people == 0"]];
+            NSInteger people=[[me.busy valueForKeyPath:@"@sum.people"] integerValue];
+            me.summary=n<0?@"No Starsiege: Tribes master server answered. Pull down to try again.":
+                people?[NSString stringWithFormat:@"%ld %@ on %lu %@ right now.",(long)people,people==1?@"player":@"players",
+                    (unsigned long)me.busy.count,me.busy.count==1?@"server":@"servers"]:
+                @"Nobody is on a server right now. The PlayT1 Discord is where games are arranged.";
+            [me.tableView reloadData];
+        });
+    });
+}
 -(void)refresh {
+    if(self.starsiege){[self refreshStarsiege];return;}
     NSMutableURLRequest *request=[NSMutableURLRequest requestWithURL:[NSURL URLWithString:TBMasterList]];
     [request setValue:@"TribesPad" forHTTPHeaderField:@"User-Agent"];request.timeoutInterval=10;
     __weak TBLiveServersController *weak=self;
@@ -107,10 +135,15 @@ static NSArray<TBLiveServer *> *tb_query(NSArray<NSString *> *addresses){
 -(NSInteger)numberOfSectionsInTableView:(UITableView *)tableView{(void)tableView;return 2;}
 -(NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{(void)tableView;return section?self.quiet.count:self.busy.count;}
 -(NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section {
-    (void)tableView;return section?(self.quiet.count?@"Bots only or empty":nil):(self.busy.count?@"People playing":nil);
+    (void)tableView;
+    if(self.starsiege)return section?(self.quiet.count?@"Empty":nil):(self.busy.count?@"Playing now":nil);
+    return section?(self.quiet.count?@"Bots only or empty":nil):(self.busy.count?@"People playing":nil);
 }
 -(NSString *)tableView:(UITableView *)tableView titleForFooterInSection:(NSInteger)section {
-    (void)tableView;return section?@"The same servers as Server List (PLAY GAME > JOIN), read from the TribesNEXT master server and asked directly, as the game asks them. "
+    (void)tableView;
+    if(self.starsiege)return section?@"The same servers as the game's JOIN list (PLAY GAME > JOIN), from the community master servers, each asked directly as the game asks. "
+        "Counts include bots on servers that run them. Tap a server to join it, or pull down to refresh.":self.summary;
+    return section?@"The same servers as Server List (PLAY GAME > JOIN), read from the TribesNEXT master server and asked directly, as the game asks them. "
         "The game's list counts bots as players: 40 (38) there means 2 people and 38 bots. Tap a server to join it, or pull down to refresh.":self.summary;
 }
 -(UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)path {
@@ -118,6 +151,12 @@ static NSArray<TBLiveServer *> *tb_query(NSArray<NSString *> *addresses){
     UITableViewCell *cell=[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:nil];
     cell.textLabel.text=s.name;cell.textLabel.textColor=path.section?UIColor.secondaryLabelColor:UIColor.labelColor;
     NSMutableArray *details=[NSMutableArray array];
+    if(self.starsiege){
+        [details addObject:[NSString stringWithFormat:@"%ld of %ld players",(long)s.people,(long)s.slots]];
+        if(s.ping>=0)[details addObject:[NSString stringWithFormat:@"%ld ms",(long)s.ping]];
+        cell.detailTextLabel.text=[details componentsJoinedByString:@"  ·  "];cell.detailTextLabel.textColor=UIColor.secondaryLabelColor;
+        return cell;
+    }
     if(s.people)[details addObject:[NSString stringWithFormat:@"%ld %@",(long)s.people,s.people==1?@"person":@"people"]];
     if(s.bots)[details addObject:[NSString stringWithFormat:@"%ld bots",(long)s.bots]];
     if(!s.people&&!s.bots)[details addObject:@"empty"];
@@ -134,7 +173,7 @@ static NSArray<TBLiveServer *> *tb_query(NSArray<NSString *> *addresses){
     [tableView deselectRowAtIndexPath:path animated:YES];TBLiveServer *s=(path.section?self.quiet:self.busy)[path.row];
     void (^join)(NSString *)=self.join;
     NSString *why=s.password?@"This server needs a password: pick it in the Server List to enter one.":
-        !join?@"Join from the Server List once you are signed in and off a server.":nil;
+        !join?(self.starsiege?@"Join from the Server List once you are off a server.":@"Join from the Server List once you are signed in and off a server."):nil;
     UIAlertController *sheet=[UIAlertController alertControllerWithTitle:s.name message:why preferredStyle:UIAlertControllerStyleActionSheet];
     if(!why)[sheet addAction:[UIAlertAction actionWithTitle:@"Join" style:UIAlertActionStyleDefault handler:^(UIAlertAction *a){(void)a;
         [self dismissViewControllerAnimated:YES completion:^{join(s.address);}];}]];

@@ -13,6 +13,7 @@
 #include <fcntl.h>
 #include <netdb.h>
 #include <poll.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
@@ -20,13 +21,14 @@
 #include <unistd.h>
 
 static const char *const masters[]={"t1m1.tribes1.co","t1m2.tribes1.co","t1m3.tribes1.co","t1m1.pu.net","t1m2.pu.net","t1m3.pu.net"};
-typedef struct {struct sockaddr_in address;int answered,players;char name[64];} Server;
+typedef struct {struct sockaddr_in address;int answered,players,max,ping;char name[64];} Server;
 
 static long now_ms(void){struct timespec t;clock_gettime(CLOCK_MONOTONIC,&t);return t.tv_sec*1000L+t.tv_nsec/1000000L;}
 static int same(const struct sockaddr_in *a,const struct sockaddr_in *b){return a->sin_addr.s_addr==b->sin_addr.s_addr&&a->sin_port==b->sin_port;}
 
-int tb_t1_live(TBT1Live *out,int timeout_ms){
-    memset(out,0,sizeof *out);
+/* Every listed server, asked once; fills servers (calloc, caller frees) and count. */
+static int query(TBT1Live *out,Server **found,int *found_count,int timeout_ms){
+    memset(out,0,sizeof *out);*found=NULL;*found_count=0;
     int fd=socket(AF_INET,SOCK_DGRAM,0);if(fd<0)return 0;
     fcntl(fd,F_SETFL,fcntl(fd,F_GETFL)|O_NONBLOCK);
     uint16_t key=(uint16_t)arc4random();
@@ -42,10 +44,11 @@ int tb_t1_live(TBT1Live *out,int timeout_ms){
         sendto(fd,query,sizeof query,0,(struct sockaddr *)&a,sizeof a);
     }
     Server *servers=calloc(1000,sizeof *servers);int count=0;if(!servers){close(fd);return 0;}
-    uint8_t d[65536];long master_end=now_ms()+timeout_ms/2,end=now_ms()+timeout_ms;int pinged=0;
+    uint8_t d[65536];long master_end=now_ms()+timeout_ms/2,end=now_ms()+timeout_ms,ping_sent=0;int pinged=0;
     while(now_ms()<end){
         /* Once the masters have had their time, ping every listed server once. */
         if(!pinged&&now_ms()>=master_end){pinged=1;
+            ping_sent=now_ms();
             for(int i=0;i<count;i++)sendto(fd,query,sizeof query,0,(struct sockaddr *)&servers[i].address,sizeof servers[i].address);
             if(!count)break;}
         struct pollfd p={fd,POLLIN,0};long left=(pinged?end:master_end)-now_ms();
@@ -65,7 +68,7 @@ int tb_t1_live(TBT1Live *out,int timeout_ms){
             }
         } else if(d[1]==0x04&&n>=10&&d[3]==0xf0){
             for(int i=0;i<count;i++)if(same(&from,&servers[i].address)&&!servers[i].answered){
-                servers[i].answered=1;servers[i].players=d[7];
+                servers[i].answered=1;servers[i].players=d[7];servers[i].max=d[6];servers[i].ping=(int)(now_ms()-ping_sent);
                 size_t len=0;while(10+len<(size_t)n&&d[10+len]&&len<sizeof servers[i].name-1)len++;
                 memcpy(servers[i].name,d+10,len);servers[i].name[len]=0;break;
             }
@@ -78,6 +81,19 @@ int tb_t1_live(TBT1Live *out,int timeout_ms){
         if(servers[i].players>0){out->people+=servers[i].players;out->busy_servers++;
             if(servers[i].players>out->top_players){out->top_players=servers[i].players;strlcpy(out->top_name,servers[i].name,sizeof out->top_name);}}
     }
-    free(servers);
+    *found=servers;*found_count=count;
     return out->masters_answered>0;
+}
+int tb_t1_live(TBT1Live *out,int timeout_ms){
+    Server *servers;int count;int ok=query(out,&servers,&count,timeout_ms);free(servers);return ok;
+}
+int tb_t1_servers(TBT1Server *list,int capacity,int timeout_ms,TBT1Live *summary){
+    TBT1Live ignored;Server *servers;int count,written=0;
+    if(!query(summary?summary:&ignored,&servers,&count,timeout_ms)){free(servers);return -1;}
+    for(int i=0;i<count&&written<capacity;i++)if(servers[i].answered){
+        TBT1Server *s=&list[written++];memset(s,0,sizeof *s);
+        snprintf(s->address,sizeof s->address,"%s:%u",inet_ntoa(servers[i].address.sin_addr),ntohs(servers[i].address.sin_port));
+        strlcpy(s->name,servers[i].name,sizeof s->name);s->players=servers[i].players;s->max=servers[i].max;s->ping=servers[i].ping;
+    }
+    free(servers);return written;
 }

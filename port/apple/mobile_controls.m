@@ -9,6 +9,7 @@
 #include <math.h>
 #include "mobile_controls.h"
 #import "live_servers.h"
+#include "starsiege_paths.h"
 
 typedef NS_ENUM(NSInteger, TBControlKind) { TBKindStick, TBKindLook, TBKindButton };
 extern uint64_t tribes_gl4es_presented_frames(void);
@@ -21,6 +22,7 @@ static NSString * const TBPlayT2Discord=@"https://discord.gg/EMMVhQJgf9";
 static NSString * const TBTheCutDiscord=@"https://discord.gg/yz3AhkJCxg";
 static NSString * const TBTribesPadDiscord=@"https://discord.gg/xwHfUD2bxW";
 static NSString * const TBTribesNextForum=@"https://www.tribesnext.com/forum/";
+static NSString * const TBPlayT1Discord=@"https://playt1.com/discord";
 
 /* Touch preferences (NSUserDefaults, TribesPad-owned keys). */
 /* Starsiege: Tribes runs these controls too (tb_mobile_controls_install_starsiege):
@@ -74,6 +76,7 @@ static void tb_set(NSString *key,double value){[NSUserDefaults.standardUserDefau
 @property(nonatomic) BOOL typingDialog;
 @property(nonatomic) BOOL zoomed;
 @property(nonatomic) BOOL gameReported;
+@property(nonatomic,copy) NSString *pendingRequest;
 @property(nonatomic) BOOL connected;
 @property(nonatomic) BOOL controllerUsed;
 @property(nonatomic) BOOL mouseConnected;
@@ -708,6 +711,13 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
     BOOL playing=[state hasPrefix:@"1"],typing=[state hasPrefix:@"0 1"];
     NSArray *words=[state componentsSeparatedByCharactersInSet:NSCharacterSet.whitespaceAndNewlineCharacterSet];
     BOOL connected=words.count>2&&[words[2] isEqualToString:@"1"];
+    /* Starsiege reports the last request it handled; then the flag goes. */
+    if(tb_starsiege&&self.pendingRequest&&words.count>3&&[words[3] isEqualToString:self.pendingRequest]){
+        NSString *game=[NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,NSUserDomainMask,YES).firstObject
+            stringByAppendingPathComponent:@"TribesPad/Starsiege/volume/TribesPad/Game"];
+        [NSFileManager.defaultManager removeItemAtPath:[game stringByAppendingPathComponent:@"temp/tribespad-request.flag"] error:nil];
+        self.pendingRequest=nil;
+    }
     if(connected!=self.connected){self.connected=connected;[self rebuildMenu];}
     if(typing!=self.typingDialog){
         // Open the keyboard with the dialog; close it when the dialog goes.
@@ -851,7 +861,9 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
         group(@[item(@"Console",@"terminal",^{[weak openConsole];}),
             item(@"TribesPad on GitHub",@"safari",^{
                 [UIApplication.sharedApplication openURL:[NSURL URLWithString:TBRepositoryURL] options:@{} completionHandler:nil];}),
-            item(@"About TribesPad",@"info.circle",^{[weak showAbout];})])]];
+            item(@"About TribesPad",@"info.circle",^{[weak showAbout];})]),
+        group(tb_starsiege_bundled([NSBundle.mainBundle.resourcePath stringByAppendingPathComponent:@"GameData"].fileSystemRepresentation)?
+            @[item(@"Switch to Starsiege: Tribes",@"arrow.left.arrow.right",^{[weak switchGame];})]:@[])]];
     /* Find a Game: what new players lack most. The original JOIN list, who is
        on now, when the community plays and where it organizes. It leads the
        menu off a server; on one, the match actions lead and it folds away. */
@@ -893,8 +905,20 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
         NSArray *t1controls=@[controls[0],controls[1],controls[2],controls[4]];
         UIMenu *t1help=[UIMenu menuWithTitle:@"Help" image:icon(@"questionmark.circle") identifier:nil options:0 children:@[
             group(@[item(@"Console",@"terminal",^{[weak tapKey:SDL_SCANCODE_GRAVE];}),
-                item(@"TribesPad on GitHub",@"safari",^{[UIApplication.sharedApplication openURL:[NSURL URLWithString:TBRepositoryURL] options:@{} completionHandler:nil];})])]];
-        groups=self.connected||self.inMatch?@[group(t1),group(t1controls),group(@[t1help])]:@[group(t1controls),group(@[t1help])];
+                item(@"TribesPad on GitHub",@"safari",^{[UIApplication.sharedApplication openURL:[NSURL URLWithString:TBRepositoryURL] options:@{} completionHandler:nil];})]),
+            group(@[item(@"Switch to Tribes 2",@"arrow.left.arrow.right",^{[weak switchGame];})])]];
+        /* Find a Game: the game's JOIN list, who is on each server now, and
+           where the community arranges games. */
+        UIAction *t1servers=item(@"Server List",@"server.rack",^{[weak openServerList];});
+        t1servers.subtitle=self.connected?@"Leaves this match first":@"PLAY GAME > JOIN";
+        UIAction *t1playing=item(@"Who's Playing Now",@"person.3",^{[weak showLiveServers];});
+        t1playing.subtitle=@"Players on each server, from the community masters";
+        UIMenu *t1find=[UIMenu menuWithTitle:@"Find a Game" image:icon(@"globe") identifier:nil options:self.connected?0:UIMenuOptionsDisplayInline children:@[
+            t1servers,t1playing,
+            [UIMenu menuWithTitle:@"Community" image:icon(@"bubble.left.and.text.bubble.right") identifier:nil options:0 children:@[
+                item(@"PlayT1 Discord",@"person.2",^{[weak openLink:TBPlayT1Discord];}),
+                item(@"TribesPad Discord",@"person.2",^{[weak openLink:TBTribesPadDiscord];})]]]];
+        groups=self.connected||self.inMatch?@[group(t1),group(@[t1find]),group(t1controls),group(@[t1help])]:@[t1find,group(t1controls),group(@[t1help])];
     }
     self.menu.menu=[UIMenu menuWithTitle:@"TribesPad" children:groups];
     // The column button shows whether the cursor is on.
@@ -960,7 +984,7 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
    "<number> <request>"; each new number is acted on once. Server List asks for
    the original JOIN pane. */
 -(void)openServerList {
-    if(!self.gameReported){
+    if(!self.gameReported&&!tb_starsiege){
         [self showMessage:@"Server List" text:@"Sign in to TribesNEXT first. Once you are past the login, this opens PLAY GAME > JOIN, the list of internet servers."];return;
     }
     if(!self.connected){[self sendRequest:@"servers"];return;}
@@ -977,6 +1001,19 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
     alert.overrideUserInterfaceStyle=UIUserInterfaceStyleDark;[[self presenter] presentViewController:alert animated:YES completion:nil];
 }
 -(void)sendRequest:(NSString *)request {
+    if(tb_starsiege){
+        /* Starsiege runs only scripts that existed at its start: rewrite the
+           shipped request file, then raise the flag its report loop checks. The
+           number stays below 2^24 so the game's float comparison is exact. */
+        static unsigned counter;NSString *number=[NSString stringWithFormat:@"%ld",
+            (long)((long long)NSDate.date.timeIntervalSince1970%1000000)*10+(long)(counter++%10)];
+        NSString *game=[NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,NSUserDomainMask,YES).firstObject
+            stringByAppendingPathComponent:@"TribesPad/Starsiege/volume/TribesPad/Game"];
+        NSString *text=[NSString stringWithFormat:@"$TribesPad::request = \"%@ %@\";\n",number,request];
+        [text writeToFile:[game stringByAppendingPathComponent:@"config/tribespad-request.cs"] atomically:NO encoding:NSUTF8StringEncoding error:nil];
+        [NSData.data writeToFile:[game stringByAppendingPathComponent:@"temp/tribespad-request.flag"] atomically:NO];
+        self.pendingRequest=number;fprintf(stderr,"TribesPad: request %s %s\n",number.UTF8String,request.UTF8String);return;
+    }
     NSString *path=[NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,NSUserDomainMask,YES).firstObject
         stringByAppendingPathComponent:@"TribesPad/Game/base/prefs/tribespad-request.txt"];
     [[NSString stringWithFormat:@"%.0f %@\n",NSDate.date.timeIntervalSince1970*1000,request] writeToFile:path atomically:YES encoding:NSUTF8StringEncoding error:nil];
@@ -1038,6 +1075,7 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
     TBLiveServersController *live=[[TBLiveServersController alloc] initWithStyle:UITableViewStyleInsetGrouped];
     if(self.gameReported&&!self.connected)live.join=^(NSString *address){[weak sendRequest:[@"join " stringByAppendingString:address]];};
     live.serverList=^{[weak openServerList];};
+    live.starsiege=tb_starsiege;
     UINavigationController *sheet=[[UINavigationController alloc] initWithRootViewController:live];
     sheet.modalPresentationStyle=UIModalPresentationFormSheet;sheet.overrideUserInterfaceStyle=UIUserInterfaceStyleDark;
     [[self presenter] presentViewController:sheet animated:YES completion:nil];
@@ -1135,6 +1173,22 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
         message:[NSString stringWithFormat:@"The original Tribes 2 with TribesNEXT/QoL, translated ahead of time to native ARM64.\n\nVersion %@\nGame data: %@",version,data]
         preferredStyle:UIAlertControllerStyleAlert];
     [alert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
+    alert.overrideUserInterfaceStyle=UIUserInterfaceStyleDark;[[self presenter] presentViewController:alert animated:YES completion:nil];
+}
+/* Switch Game (docs/LAUNCHER-PLAN.md): an engine can't be unloaded, so TribesPad
+   closes, as when it is swiped away, and the next launch starts the other game
+   (TribesPad.nextGame, consumed by the picker) without showing the picker. */
+-(void)switchGame {
+    BOOL toStarsiege=!tb_starsiege;NSString *other=toStarsiege?@"Starsiege: Tribes":@"Tribes 2";
+    UIAlertController *alert=[UIAlertController alertControllerWithTitle:[NSString stringWithFormat:@"Switch to %@?",other]
+        message:[NSString stringWithFormat:@"TribesPad closes this game. Open TribesPad again from the Home Screen and %@ starts.",other]
+        preferredStyle:UIAlertControllerStyleAlert];
+    [alert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
+    [alert addAction:[UIAlertAction actionWithTitle:@"Close and Switch" style:UIAlertActionStyleDefault handler:^(UIAlertAction *a){(void)a;
+        [NSUserDefaults.standardUserDefaults setObject:toStarsiege?@"starsiege":@"tribes2" forKey:@"TribesPad.nextGame"];
+        [NSUserDefaults.standardUserDefaults synchronize];
+        fprintf(stderr,"TribesPad: switching to %s at the next launch; closing\n",toStarsiege?"Starsiege: Tribes":"Tribes 2");
+        exit(0);}]];
     alert.overrideUserInterfaceStyle=UIUserInterfaceStyleDark;[[self presenter] presentViewController:alert animated:YES completion:nil];
 }
 -(void)openMenu {

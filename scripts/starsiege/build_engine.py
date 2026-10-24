@@ -376,17 +376,58 @@ if($Server::MasterAddressN0 == "" || $Server::MasterAddressN0 == "t1m1.pu.net:28
 translateMasters();
 // TribesPad: F8 is previous weapon (the controller's LB; Q, RB, is next).
 editActionMap("playMap.sae"); bindCommand(keyboard0, make, "f8", TO, "prevWeapon();");
+// TribesPad: the bundled CTF HUD's saved spot (8% down) sits inside the chat
+// box at 800x600; start it just below the chat. A spot the player chose stays.
+if($pref::hudPositionsCtfHUD::Container == "2 83||0.001146 0.079808 0")
+   $pref::hudPositionsCtfHUD::Container = "2 90||0.001146 0.15 0";
 '''
     # TribesPad's touch controls follow play: "<playing> <typing> <connected>"
     # in temp/tribespad-state.cs, four times a second. Playing is in a match with
-    # the game's cursor off (menus, inventory and scores turn it on).
+    # the game's cursor off (menus, inventory and scores turn it on). Typing is
+    # 1 while one of the game's dialogs made for typing is open (a new player's
+    # name, a server password, an address, a filter, a demo name), so the
+    # on-screen keyboard opens with it; each is deleted when it closes.
     text += '''
 function TribesPad::connected() { $TribesPad::connected = 1; }
 function TribesPad::left() { $TribesPad::connected = 0; }
+// Requests from TribesPad's ... menu (mobile_controls.m): the app writes
+// config/tribespad-request.cs, $TribesPad::request = "<number> <request> [address]",
+// then creates temp/tribespad-request.flag. The game runs only scripts that
+// existed when it started, so the request file ships empty and is rewritten;
+// the flag (isFile sees new files) says a request is waiting. Each number is
+// handled once and reported back in the state, and the app then removes the
+// flag. Requests: servers (PLAY GAME > JOIN), leave-servers, join.
+function TribesPad::request() {
+   exec("tribespad-request.cs");
+   %number = getWord($TribesPad::request, 0);
+   if(%number == -1 || %number == $TribesPad::handled) return;
+   $TribesPad::handled = %number;
+   %what = getWord($TribesPad::request, 1); %address = getWord($TribesPad::request, 2);
+   echo("TribesPad request " @ %number @ ": " @ %what @ " " @ %address);
+   if(%what == "servers") TribesPad::servers();
+   else if(%what == "leave-servers") { disconnect(); schedule("TribesPad::servers();", 1); }
+   else if(%what == "join" && %address != -1) {
+      $Server::Address = "IP:" @ %address;
+      if($PCFG::Name == "") OpenNewPlayerDialog(); else JoinGame();
+   }
+}
+function TribesPad::servers() {
+   if($PCFG::Name == "") OpenNewPlayerDialog(); else GuiLoadContentCtrl(MainWindow, "gui/JoinGame.gui");
+}
+function TribesPad::typing() {
+   if(isObject("NewPlayerGui") || isObject("PasswordGui") || isObject("NewServerGui") || isObject("NewMasterServerGui")
+      || isObject("NewFilterGui") || isObject("NewCondGui") || isObject("RenameDemoGui")) return 1;
+   return 0;
+}
 function TribesPad::report() {
-   %playing = 0; if($TribesPad::connected && !isCursorOn(MainWindow)) %playing = 1;
-   %connected = 0; if($TribesPad::connected) %connected = 1;
-   $TribesPad::state = %playing @ " 0 " @ %connected;
+   // Playing: the match view (playGui) is up with the game's cursor off. It is
+   // read from the screen itself; the connection events alone missed online
+   // matches (eventConnected comes from community scripts that mods change).
+   %inMatch = isObject("playGui");
+   %playing = 0; if(%inMatch && !isCursorOn(MainWindow)) %playing = 1;
+   %connected = 0; if($TribesPad::connected || %inMatch) %connected = 1;
+   if(isFile("temp/tribespad-request.flag")) TribesPad::request();
+   $TribesPad::state = %playing @ " " @ TribesPad::typing() @ " " @ %connected @ " " @ $TribesPad::handled;
    if($TribesPad::state != $TribesPad::reported) { $TribesPad::reported = $TribesPad::state; export("TribesPad::state", "temp/tribespad-state.cs", false); }
    schedule("TribesPad::report();", 0.25);
 }
@@ -400,6 +441,7 @@ function TribesPad::startReports() {
 schedule("TribesPad::startReports();", 1);
 '''
     script.write_text(text)
+    (game / 'config/tribespad-request.cs').write_text('$TribesPad::request = "";\n')
 
 def embed(objects, report):
     """iOS: one relocatable object for the TribesPad app. Everything inside,
