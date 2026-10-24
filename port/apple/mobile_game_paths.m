@@ -1,4 +1,5 @@
 #import <Foundation/Foundation.h>
+#include <TargetConditionals.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -8,6 +9,55 @@ static int storage_failed(NSError *error) {
     fprintf(stderr, "TribesPad: cannot prepare app storage: %s\n", error.localizedDescription.UTF8String);
     return 0;
 }
+
+#if TARGET_OS_IOS
+/* Skins: the Files app shows TribesPad's Documents folder (On My iPad >
+   TribesPad). Player skins (.png) and skin packs (.vl2) put in its Skins
+   folder are copied into the game each launch, before the game scans its
+   files. Nothing in the game is deleted; a copy is replaced only when the
+   player's file changed. A problem here never stops the game. */
+static void tb_copy_skins(NSString *profile) {
+    NSFileManager *fm = NSFileManager.defaultManager;
+    NSString *documents = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES).firstObject;
+    NSString *skins = [documents stringByAppendingPathComponent:@"Skins"];
+    if (!documents || ![fm createDirectoryAtPath:skins withIntermediateDirectories:YES attributes:nil error:nil]) return;
+    NSString *about = [skins stringByAppendingPathComponent:@"About Skins.txt"];
+    if (![fm fileExistsAtPath:about])
+        [@"Put Tribes 2 skins here, then reopen TribesPad.\n\n"
+          "Player skins are PNG files named like name.lmale.png, name.lfemale.png and name.lbioderm.png. "
+          "Skin packs are .vl2 files. TribesPad copies them into the game when it opens. Choose your skin under "
+          "PLAY GAME > WARRIOR SETUP > Custom Skins.\n\n"
+          "Other players see your skin only if they have the same file; everyone else sees a standard skin.\n"
+          writeToFile:about atomically:YES encoding:NSUTF8StringEncoding error:nil];
+    NSString *textures = [profile stringByAppendingPathComponent:@"base/textures/skins"];
+    NSUInteger copied = 0;
+    for (NSString *name in [fm contentsOfDirectoryAtPath:skins error:nil]) {
+        NSString *extension = name.pathExtension.lowercaseString;
+        NSString *folder = [extension isEqualToString:@"png"] ? textures :
+            [extension isEqualToString:@"vl2"] ? [profile stringByAppendingPathComponent:@"base"] : nil;
+        if (!folder || [name hasPrefix:@"."]) continue;
+        NSString *source = [skins stringByAppendingPathComponent:name], *target = [folder stringByAppendingPathComponent:name];
+        NSDictionary *from = [fm attributesOfItemAtPath:source error:nil], *to = [fm attributesOfItemAtPath:target error:nil];
+        if (![from.fileType isEqualToString:NSFileTypeRegular]) continue;
+        if (to && [to.fileModificationDate isEqualToDate:from.fileModificationDate] && to.fileSize == from.fileSize) continue;
+        NSError *error = nil;
+        NSString *partial = [target stringByAppendingString:@".copying"];
+        [fm createDirectoryAtPath:folder withIntermediateDirectories:YES attributes:nil error:nil];
+        [fm removeItemAtPath:partial error:nil];
+        BOOL ok = [fm copyItemAtPath:source toPath:partial error:&error] &&
+            [fm setAttributes:@{NSFileModificationDate: from.fileModificationDate} ofItemAtPath:partial error:&error];
+        if (ok) ok = to ? [fm replaceItemAtURL:[NSURL fileURLWithPath:target] withItemAtURL:[NSURL fileURLWithPath:partial]
+                              backupItemName:nil options:0 resultingItemURL:nil error:&error]
+                        : [fm moveItemAtPath:partial toPath:target error:&error];
+        if (ok) copied++;
+        else {
+            fprintf(stderr, "TribesPad: skin %s not copied: %s\n", name.UTF8String, error.localizedDescription.UTF8String);
+            [fm removeItemAtPath:partial error:nil];
+        }
+    }
+    if (copied) fprintf(stderr, "TribesPad: copied %lu skin file(s) from Files\n", (unsigned long)copied);
+}
+#endif
 
 int tb_mobile_prepare_paths(const char *resources, const char *storage, char *arguments[9]) {
     @autoreleasepool {
@@ -48,6 +98,9 @@ int tb_mobile_prepare_paths(const char *resources, const char *storage, char *ar
             if (!script || ![script writeToFile:[profile stringByAppendingPathComponent:owned] options:NSDataWritingAtomic error:&error]) return storage_failed(error);
             [fm removeItemAtPath:[[profile stringByAppendingPathComponent:owned] stringByAppendingString:@".dso"] error:nil];
         }
+#if TARGET_OS_IOS
+        tb_copy_skins(profile);
+#endif
         /* Refresh immutable loader inputs without deleting diagnostic captures
            or an existing user's profile. The app has only one engine instance. */
         NSString *loader = [inputs stringByAppendingPathComponent:@"Loader"];

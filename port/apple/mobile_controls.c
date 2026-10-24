@@ -6,11 +6,16 @@ static void send_event(SDL_Event *event) {
     event->common.timestamp=SDL_GetTicksNS();
     if(!SDL_PushEvent(event)) abort();
 }
+/* Forward, back, left, right, jump, grenade, next weapon, pack, inventory:
+   Tribes 2's controlDefaults.cs (ESDF), or another game's (tb_mobile_controls_keys). */
+static const SDL_Scancode tribes2_keys[9]={SDL_SCANCODE_E,SDL_SCANCODE_D,SDL_SCANCODE_S,
+    SDL_SCANCODE_F,SDL_SCANCODE_SPACE,SDL_SCANCODE_G,SDL_SCANCODE_W,
+    SDL_SCANCODE_R,SDL_SCANCODE_KP_ENTER};
+static const SDL_Scancode *game_keys=tribes2_keys;
+void tb_mobile_controls_keys(const SDL_Scancode keys[9]){game_keys=keys?keys:tribes2_keys;}
 void tb_mobile_controls_emit(TBMobileControls *controls) {
     TBInputFrame frame=tb_input_frame(&controls->input);
-    const SDL_Scancode keys[]={SDL_SCANCODE_E,SDL_SCANCODE_D,SDL_SCANCODE_S,
-        SDL_SCANCODE_F,SDL_SCANCODE_SPACE,SDL_SCANCODE_G,SDL_SCANCODE_W,
-        SDL_SCANCODE_R,SDL_SCANCODE_KP_ENTER};
+    const SDL_Scancode *keys=game_keys;
     uint32_t held=(frame.y>.22f)|((frame.y<-.22f)<<1)|((frame.x<-.22f)<<2)|
         ((frame.x>.22f)<<3)|((!!(frame.actions&TBJump))<<4)|
         ((!!(frame.actions&TBGrenade))<<5)|((!!(frame.actions&TBWeapon))<<6)|

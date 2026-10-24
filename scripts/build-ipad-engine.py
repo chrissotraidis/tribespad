@@ -4,7 +4,7 @@
 Run test-qol-native-bootstrap.py --enter-engine --probe-ntdll --prepare-only first.
 Device builds bundle assets and require Apple development signing before installation.
 """
-import zipfile,argparse,hashlib,importlib.util,json,os,pathlib,plistlib,re,shutil,subprocess
+import sys,zipfile,argparse,hashlib,importlib.util,json,os,pathlib,plistlib,re,shutil,subprocess
 from checked_support import compile_support
 from guard_checked_link import guard_link
 from checked_bochs_inputs import checked_bochs_inputs
@@ -14,6 +14,7 @@ from sse_build_inputs import sse_inputs
 R=pathlib.Path(__file__).resolve().parents[1]
 ap=argparse.ArgumentParser(description=__doc__)
 ap.add_argument('--platform',choices=['simulator','device','macos'],default='simulator')
+ap.add_argument('--starsiege-object',type=pathlib.Path,help='Starsiege: Tribes for iOS (scripts/starsiege/build_engine.py --platform ...); adds its card and data')
 ap.add_argument('--simulator-device')
 ap.add_argument('--angle',action='store_true',help='Use the pinned ANGLE Metal renderer')
 ap.add_argument('--cpu-host-checks',action='store_true',help='Validate native CPU spans and prove bounded native-object accesses; keep guest accesses checked')
@@ -224,7 +225,7 @@ function TribesPadTyping()
 }
 function TribesPadReportState()
 {
-   %state = TribesPadInPlay() SPC TribesPadTyping();
+   %state = TribesPadInPlay() SPC TribesPadTyping() SPC isObject( ServerConnection );
    if ( %state !$= $TribesPadLastState )
    {
       $TribesPadLastState = %state;
@@ -236,8 +237,119 @@ function TribesPadReportState()
       }
       %file.delete();
    }
+   TribesPadReadRequest();
    schedule( 200, 0, TribesPadReportState );
 }
+// TribesPad: requests from the app's ··· menu, one line "<number> <request>".
+// Writing the file here first registers it with the game's file index; the
+// app then rewrites it and each new number is acted on once.
+function TribesPadStartRequests()
+{
+   $TribesPadRequest = "0";
+   %file = new FileObject();
+   if ( %file.openForWrite( "prefs/tribespad-request.txt" ) )
+   {
+      %file.writeLine( "0" );
+      %file.close();
+   }
+   %file.delete();
+}
+function TribesPadReadRequest()
+{
+   %line = "";
+   %file = new FileObject();
+   if ( %file.openForRead( "prefs/tribespad-request.txt" ) )
+   {
+      %line = %file.readLine();
+      %file.close();
+   }
+   %file.delete();
+   %number = getWord( %line, 0 );
+   if ( %number $= "" || %number $= $TribesPadRequest )
+      return;
+   $TribesPadRequest = %number;
+   // ··· > Graphics: one of two detail presets, in a match or not.
+   if ( getWord( %line, 1 ) $= "graphics" )
+   {
+      TribesPadGraphics( getWord( %line, 2 ) );
+      return;
+   }
+   // Find a Game > Server List on a server: leave it (the lobby's own
+   // Disconnect, after the app asked), then show JOIN.
+   if ( getWord( %line, 1 ) $= "leave-servers" )
+   {
+      if ( isObject( ServerConnection ) )
+         Disconnect();
+      schedule( 500, 0, LaunchGame, "Join" );
+      return;
+   }
+   // Quick chat from the controller panel (mobile_controls.m): what the chat
+   // menu's own item does (issueChatCmd), without opening the menu.
+   if ( getWord( %line, 1 ) $= "chat" )
+   {
+      if ( isObject( ServerConnection ) )
+      {
+         %command = addTaggedString( getWord( %line, 2 ) );
+         processChatItemCallbacks( %command );
+         commandToServer( 'CannedChat', %command, false );
+      }
+      return;
+   }
+   // Find a Game: the original JOIN pane or a server, between matches only.
+   if ( isObject( ServerConnection ) )
+      return;
+   switch$ ( getWord( %line, 1 ) )
+   {
+      case "servers":
+         LaunchGame( "Join" );
+      // Find a Game > Who's Playing Now > Join: the JOIN GAME button's own path.
+      case "join":
+         $JoinGamePassword = "";
+         JoinGame( getWord( %line, 2 ) );
+   }
+}
+// TribesPad: graphics presets. No card profile in CardProfiles.cs matches an
+// Apple GPU, so the game never runs a detail profile and leaves these prefs
+// empty; Options then saves the most expensive values (terrain screenError 0,
+// texDetail 0). Shape detail and shape distance share one Options slider, and
+// QoL widened its range (TS::detailAdjust up to 2.0), so each preset uses a
+// pair that slider reproduces: Options keeps the values when it saves.
+//   balanced: Dynamix High terrain, building and sky detail; slider at 0.5.
+//   fast:     Dynamix Medium detail; slider near 0 (detail 0.68, as Medium).
+function TribesPadDetail( %preset )
+{
+   %fast = %preset $= "fast";
+   $pref::Terrain::screenError = %fast ? 20 : 8;
+   $pref::Terrain::texDetail = %fast ? 3 : 1;
+   $pref::TS::screenError = %fast ? 19 : 11;
+   $pref::TS::detailAdjust = %fast ? 0.677778 : 1.3;
+   $pref::Interior::detailAdjust = %fast ? 0.7 : 1.0;
+   $pref::SkyOn = true;
+   $pref::numCloudLayers = %fast ? 0 : 1;
+   $pref::decalsOn = !%fast;
+   $pref::environmentMaps = !%fast;
+   $pref::Interior::ShowEnvironmentMaps = !%fast;
+   $pref::Interior::DynamicLights = !%fast;
+   $pref::precipitationOn = false;
+   $pref::Shadows = %fast ? 0.1 : 0.25;
+}
+function TribesPadGraphics( %preset )
+{
+   if ( %preset !$= "fast" && %preset !$= "balanced" )
+      return;
+   TribesPadDetail( %preset );
+   setShadowDetailLevel( $pref::Shadows );
+   export( "$pref::*", "prefs/ClientPrefs.cs", False );
+   echo( "TribesPad: applied the" SPC %preset SPC "graphics preset" );
+}
+// A new profile starts at Balanced instead of the empty detail prefs. This
+// script runs twice at start-up, before and after the saved prefs load; the
+// first run decides, so existing players keep their settings.
+if ( $TribesPadFreshProfile $= "" )
+   $TribesPadFreshProfile = !isFile( "prefs/ClientPrefs.cs" );
+if ( $TribesPadFreshProfile )
+   TribesPadDetail( "balanced" );
+TribesPadStartRequests();
 schedule( 200, 0, TribesPadReportState );
 """
 if offline.exists():assert offline.read_text().startswith((earlier_text,'// TribesPad: offline mode','// TribesPad: TribesNEXT online mode')), 'Preserve custom autoexec.cs; select the launch mode there before building'
@@ -267,7 +379,9 @@ for name,origin in image_sources.items():
 app=out/'TribesPad.app';app.mkdir(exist_ok=True)
 # Mac bundles keep code in Contents/MacOS and data in Contents/Resources.
 contents=app/'Contents' if mac else app;resources=contents/'Resources' if mac else app
-exe=(contents/'MacOS' if mac else app)/'TribesPad';exe.parent.mkdir(parents=True,exist_ok=True);resources.mkdir(parents=True,exist_ok=True)
+# On the Mac the game picker (launcher_mac.m) is the app's executable and execs
+# the chosen engine; Tribes 2's engine is TribesPadEngine beside it.
+exe=(contents/'MacOS' if mac else app)/('TribesPadEngine' if mac else 'TribesPad');exe.parent.mkdir(parents=True,exist_ok=True);resources.mkdir(parents=True,exist_ok=True)
 if not a.angle:
  # Remove only this backend's owned files when switching back to EAGL.
  for name in ('libEGL.framework','libGLESv2.framework'):
@@ -279,6 +393,19 @@ shutil.copy2(R/'generated/gl4es'/a.platform/'LICENSE.gl4es',resources/'LICENSE.g
 args=[str(exe),str(source/'engine.bin'),str(source/'qol.bin'),str(volume),str(profile),str(temp),str(capture),'engine']
 if bundled:
  data=resources/'GameData';data.mkdir(exist_ok=True)
+ # The game picker's art: TribesPad's emblem and each game's own title screen,
+ # taken from the player's own downloads (scripts/launcher_art.py); nothing from
+ # the games is in the repository. Without a title screen, Tribes 2 falls back
+ # to a menu background from its own files and Starsiege to TribesPad's art.
+ launcher_art=data/'Launcher';launcher_art.mkdir(exist_ok=True)
+ for old in launcher_art.glob('*.png'):old.unlink()
+ shutil.copy2(R/'docs/images/tribespad-logo.png',launcher_art/'emblem.png')
+ from launcher_art import prepare as prepare_launcher_art
+ if 'tribes2' not in prepare_launcher_art(launcher_art):
+  with zipfile.ZipFile(profile/'base/textures.vl2') as archive:(launcher_art/'tribes2.png').write_bytes(archive.read('textures/gui/bg_Starwolf.png'))
+ # The quick chat tree for the controller panel (mobile_controls.m): the game's
+ # own voiceBinds.cs, from the player's scripts.vl2; the game ships it compiled.
+ with zipfile.ZipFile(profile/'base/scripts.vl2') as archive:(data/'voiceBinds.cs').write_bytes(archive.read('scripts/voiceBinds.cs'))
  # Incremental rsync avoids recopying hundreds of MB on native-code-only builds.
  # The isolated source profile is copied without following external symlinks.
  assert not any(p.is_symlink() for p in profile.rglob('*')), 'Bundled profile must not contain symlinks'
@@ -287,26 +414,36 @@ if bundled:
  for name in ['published-code.bin',*image_sources]:shutil.copy2(capture/name,loader/name)
  for name in ['engine.bin','qol.bin']:shutil.copy2(source/name,data/name)
  config='#define TB_BUNDLED_GAME_DATA 1\n'
+ if a.starsiege_object and not mac:
+  # Starsiege: Tribes, one object exporting only starsiege_mobile_engine_main.
+  sys.path.insert(0,str(R/'scripts/starsiege'))
+  from bundle_mac import add_game_data
+  add_game_data(data);config+='#define TB_STARSIEGE 1\n'
+ elif not mac and (data/'Starsiege').exists():shutil.rmtree(data/'Starsiege')
 else:
  config='#define TB_BUNDLED_GAME_DATA 0\nstatic const char *launch_workdir='+json.dumps(str(R))+';\nstatic char *launch_arguments[]={'+','.join(json.dumps(p) for p in args)+',NULL};\n'
 (out/'mobile-engine-launch-config.h').write_text(config)
 host=[R/'port/apple/mobile_engine_main.m',R/'port/apple/mobile_game_paths.m',R/'port/apple/sdl_main.c',R/'port/apple/gl4es_context.c',R/'port/core/input.c']
-host+=[R/'port/apple/desktop_controls.c'] if mac else [R/'port/apple/mobile_controls.m',R/'port/apple/mobile_controls.c',R/'port/apple/content_area.m']
+host+=[R/'port/apple/desktop_controls.c'] if mac else [R/'port/apple/mobile_controls.m',R/'port/apple/launcher.m',R/'port/apple/starsiege_paths.m',R/'port/apple/t1_live.c',R/'port/apple/mobile_controls.c',R/'port/apple/live_servers.m',R/'port/apple/content_area.m']
 if a.angle:host.append(R/'port/apple/angle_sdl.c')
-command=['clang','-target',target,'-isysroot',sdk,'-O2','-I',str(out),*sdl_flags,*gl_flags,'-DNOX11','-DNOEGL','-DNO_LOADER','-DDEFAULT_ES=2','-isystem',str(R/'ref/gl4es/src'),*map(str,host),*objects,*gl_libraries,*libraries,*math['libraries'],*[str(R/n) for n in http['libraries']],str(R/al['library']),str(zbuild/'libz-ng.a'),'-lz','-lc++','-framework','Foundation','-framework','GameController','-framework','AVFoundation','-framework','CoreGraphics','-framework','CoreText','-framework','CoreFoundation','-framework','SystemConfiguration','-framework','AudioToolbox','-framework','CoreAudio',*(['-framework','AppKit','-framework','Metal','-framework','QuartzCore'] if mac else []),'-o',str(exe)]
+command=['clang','-target',target,'-isysroot',sdk,'-O2','-I',str(out),*sdl_flags,*gl_flags,'-DNOX11','-DNOEGL','-DNO_LOADER','-DDEFAULT_ES=2','-isystem',str(R/'ref/gl4es/src'),*map(str,host),*objects,*([str(a.starsiege_object.resolve()),'-framework','ImageIO'] if a.starsiege_object and not mac else []),*gl_libraries,*libraries,*math['libraries'],*[str(R/n) for n in http['libraries']],str(R/al['library']),str(zbuild/'libz-ng.a'),'-lz','-lc++','-framework','Foundation','-framework','GameController','-framework','AVFoundation','-framework','CoreGraphics','-framework','CoreText','-framework','CoreFoundation','-framework','SystemConfiguration','-framework','AudioToolbox','-framework','CoreAudio',*(['-framework','AppKit','-framework','Metal','-framework','QuartzCore'] if mac else ['-framework','SafariServices']),'-o',str(exe)]
 command[1:1]=['-fobjc-arc']
 with (out/'link.log').open('w') as log:subprocess.run(command,stdout=log,stderr=log,check=True)
 identifier='com.tribespad.full-engine.ipad'
+if mac:
+ picker=contents/'MacOS'/'TribesPad'
+ subprocess.run(['clang','-target',target,'-isysroot',sdk,'-fobjc-arc','-O2','-Wall','-Wextra','-Werror',str(R/'port/apple/launcher_mac.m'),str(R/'port/apple/starsiege_paths.m'),str(R/'port/apple/t1_live.c'),'-framework','AppKit','-framework','QuartzCore','-framework','GameController','-o',str(picker)],check=True)
 from app_icon import compile_icon
 if mac:
  icon_keys=compile_icon(resources,'macos',minimum='12.0')
  (contents/'Info.plist').write_bytes(plistlib.dumps(dict(**icon_keys,CFBundleDisplayName='TribesPad',CFBundleIdentifier='com.tribespad.app',CFBundleExecutable='TribesPad',CFBundleName='TribesPad',CFBundlePackageType='APPL',CFBundleVersion='1',CFBundleShortVersionString='0.1',LSMinimumSystemVersion='12.0',NSHighResolutionCapable=True,LSApplicationCategoryType='public.app-category.action-games',NSLocalNetworkUsageDescription='Find and connect to local Tribes 2 games.')))
 else:
  icon_keys=compile_icon(app,a.platform,families=('iphone','ipad'))
- (app/'Info.plist').write_bytes(plistlib.dumps(dict(**icon_keys,CFBundleDisplayName='TribesPad',CFBundleIdentifier=identifier,CFBundleExecutable='TribesPad',CFBundleName='TribesPad',CFBundlePackageType='APPL',CFBundleSupportedPlatforms=['iPhoneOS' if a.platform=='device' else 'iPhoneSimulator'],CFBundleVersion='1',CFBundleShortVersionString='0.1',MinimumOSVersion='16.0',UIDeviceFamily=[1,2],UIRequiresFullScreen=True,LSRequiresIPhoneOS=True,UIRequiredDeviceCapabilities=['arm64'],NSLocalNetworkUsageDescription='Find and connect to local Tribes 2 games.',NSMicrophoneUsageDescription='Tribes 2 voice chat uses the microphone while you hold the voice key.',UIApplicationSupportsIndirectInputEvents=True,UIApplicationSceneManifest=dict(UIApplicationSupportsMultipleScenes=False,UISceneConfigurations=dict(UIWindowSceneSessionRoleApplication=[dict(UISceneConfigurationName='TribesPad',UISceneDelegateClassName='TBSceneDelegate')])),UILaunchScreen={},UISupportedInterfaceOrientations=['UIInterfaceOrientationLandscapeLeft','UIInterfaceOrientationLandscapeRight'])))
+ (app/'Info.plist').write_bytes(plistlib.dumps(dict(**icon_keys,CFBundleDisplayName='TribesPad',CFBundleIdentifier=identifier,CFBundleExecutable='TribesPad',CFBundleName='TribesPad',CFBundlePackageType='APPL',CFBundleSupportedPlatforms=['iPhoneOS' if a.platform=='device' else 'iPhoneSimulator'],CFBundleVersion='1',CFBundleShortVersionString='0.1',MinimumOSVersion='16.0',UIDeviceFamily=[1,2],UIRequiresFullScreen=True,LSRequiresIPhoneOS=True,UIRequiredDeviceCapabilities=['arm64'],NSLocalNetworkUsageDescription='Find and connect to local Tribes 2 games.',NSMicrophoneUsageDescription='Tribes 2 voice chat uses the microphone while you hold the voice key.',UIApplicationSupportsIndirectInputEvents=True,UIFileSharingEnabled=True,LSSupportsOpeningDocumentsInPlace=True,UIApplicationSceneManifest=dict(UIApplicationSupportsMultipleScenes=False,UISceneConfigurations=dict(UIWindowSceneSessionRoleApplication=[dict(UISceneConfigurationName='TribesPad',UISceneDelegateClassName='TBSceneDelegate')])),UILaunchScreen={},UISupportedInterfaceOrientations=['UIInterfaceOrientationLandscapeLeft','UIInterfaceOrientationLandscapeRight'])))
 signing=['--entitlements',str(R/'port/apple/TribesPad.entitlements')] if a.platform=='device' else []
 if a.angle:
  for framework in angle_bundle(app,a.platform):subprocess.run(['codesign','--force','--sign','-',str(framework)],check=True)
+if mac:subprocess.run(['codesign','--force','--sign','-',str(exe)],check=True)
 subprocess.run(['codesign','--force','--sign','-',*signing,str(app)],check=True)
 subprocess.run(['codesign','--verify','--deep','--strict',str(app)],check=True)
 (out/'result.json').write_text(json.dumps(dict(state='built',platform=a.platform,cpu_host_checks=a.cpu_host_checks,hardware_permissions=a.hardware_permissions,bundled_assets=bundled,entitlements_sha256=sha(R/'port/apple/TribesPad.entitlements') if a.platform=='device' else None,binary_sha256=sha(exe),prepared_sha256=sha(source/'prepared-inputs.json'),support_sha256=sha(out/'support/result.json'),guarded_sha256=sha(out/'guarded/result.json'),gl4es=gl4es,angle=angle,openal=al,arguments=None if bundled else args,mobile_hooks_sha256=sha(mobile_inputs/'mobile-hooks.json'),x87_stores_sha256=sha(mobile_inputs/'x87-stores.json'),mp3_stores_sha256=sha(mobile_inputs/'mp3-stores.json'),wav_io_test_sha256=sha(wave_proof_path),mobile_gpu_timing=dict(available=False,original_blocks=timing_blocks,test_sha256=sha(timing_proof),translated_sha256=sha(mobile_qol)),scope='Full checked engine linked for '+a.platform+'. Device builds need development signing. Build is not rendering or gameplay acceptance.'),indent=2)+'\n')

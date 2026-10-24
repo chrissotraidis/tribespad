@@ -9,3 +9,7 @@ void tb_mobile_controls_release(TBMobileControls *controls);
    the full-deflection turn rate in mouse units per second. */
 void tb_mobile_controls_gamepad_look(TBMobileControls *controls,float x,float y,double seconds,float speed);
 void tb_mobile_controls_install(void);
+/* The nine keys the touch buttons send (see mobile_controls.c); NULL for Tribes 2's. */
+void tb_mobile_controls_keys(const SDL_Scancode keys[9]);
+/* Touch controls for Starsiege: Tribes: its keys, menu and play state. */
+void tb_mobile_controls_install_starsiege(void);

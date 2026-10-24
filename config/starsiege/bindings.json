@@ -1,0 +1,699 @@
+{
+ "note": "Starsiege: Tribes services merged over port/llasm-runtime/win32-bindings.json by scripts/starsiege/build_engine.py. Implementations are in port/starsiege/ (starsiege_win32.c and its neighbours; DirectInput device methods in starsiege_input.c).",
+ "bindings": {
+  "InterlockedIncrement": {
+   "helper": "ss_interlocked_increment",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true
+  },
+  "InterlockedDecrement": {
+   "helper": "ss_interlocked_decrement",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true
+  },
+  "InterlockedExchange": {
+   "helper": "ss_interlocked_exchange",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true
+  },
+  "IsDebuggerPresent": {
+   "helper": "ss_is_debugger_present",
+   "arguments": 0,
+   "returns": true,
+   "guest_base": false
+  },
+  "HeapSize": {
+   "helper": "ss_heap_size_fast",
+   "arguments": 3,
+   "returns": true,
+   "guest_base": true
+  },
+  "HeapValidate": {
+   "helper": "ss_heap_validate",
+   "arguments": 3,
+   "returns": true,
+   "guest_base": true
+  },
+  "GetDeviceGammaRamp": {
+   "helper": "ss_device_gamma_ramp",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": false
+  },
+  "SetDeviceGammaRamp": {
+   "helper": "ss_device_gamma_ramp",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": false
+  },
+  "EnumDisplaySettingsA": {
+   "helper": "ss_enum_display_settings",
+   "arguments": 3,
+   "returns": true,
+   "guest_base": true
+  },
+  "ChangeDisplaySettingsA": {
+   "helper": "ss_change_display_settings",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true
+  },
+  "RegisterClassExA": {
+   "helper": "ss_register_class_ex_a",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true
+  },
+  "SendMessageA": {
+   "helper": "ss_send_message_a",
+   "arguments": 4,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "CallWindowProcA": {
+   "helper": "ss_call_window_proc_a",
+   "arguments": 5,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "SetWindowLongA": {
+   "helper": "ss_set_window_long_a",
+   "arguments": 3,
+   "returns": true,
+   "guest_base": true
+  },
+  "SetWindowsHookExA": {
+   "helper": "ss_set_windows_hook_ex_a",
+   "arguments": 4,
+   "returns": true,
+   "guest_base": true
+  },
+  "UnhookWindowsHookEx": {
+   "helper": "ss_unhook_windows_hook_ex",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false
+  },
+  "CallNextHookEx": {
+   "helper": "ss_call_next_hook_ex",
+   "arguments": 4,
+   "returns": true,
+   "guest_base": false
+  },
+  "ShowWindow": {
+   "helper": "ss_show_window",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "UpdateWindow": {
+   "helper": "ss_update_window",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "GetClientRect": {
+   "helper": "ss_get_client_rect",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true
+  },
+  "GetWindowRect": {
+   "helper": "ss_get_window_rect",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true
+  },
+  "AdjustWindowRect": {
+   "helper": "ss_adjust_window_rect",
+   "arguments": 3,
+   "returns": true,
+   "guest_base": true
+  },
+  "AdjustWindowRectEx": {
+   "helper": "ss_adjust_window_rect_ex",
+   "arguments": 4,
+   "returns": true,
+   "guest_base": true
+  },
+  "SetWindowPos": {
+   "helper": "ss_set_window_pos",
+   "arguments": 7,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "MoveWindow": {
+   "helper": "ss_move_window",
+   "arguments": 6,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "ClientToScreen": {
+   "helper": "ss_client_to_screen",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true
+  },
+  "ScreenToClient": {
+   "helper": "ss_screen_to_client",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true
+  },
+  "SetFocus": {
+   "helper": "ss_set_focus",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "SetForegroundWindow": {
+   "helper": "ss_set_foreground_window",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "GetForegroundWindow": {
+   "helper": "ss_get_foreground_window",
+   "arguments": 0,
+   "returns": true,
+   "guest_base": false
+  },
+  "GetFocus": {
+   "helper": "ss_get_focus",
+   "arguments": 0,
+   "returns": true,
+   "guest_base": false
+  },
+  "IsIconic": {
+   "helper": "ss_is_iconic",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false
+  },
+  "SetCapture": {
+   "helper": "ss_set_capture",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false
+  },
+  "ReleaseCapture": {
+   "helper": "ss_release_capture",
+   "arguments": 0,
+   "returns": true,
+   "guest_base": false
+  },
+  "GetParent": {
+   "helper": "ss_get_parent",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true
+  },
+  "SetWindowTextA": {
+   "helper": "ss_set_window_text_a",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "GetWindowTextA": {
+   "helper": "ss_get_window_text_a",
+   "arguments": 3,
+   "returns": true,
+   "guest_base": true
+  },
+  "GetWindowTextLengthA": {
+   "helper": "ss_get_window_text_length_a",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true
+  },
+  "InvalidateRect": {
+   "helper": "ss_invalidate_rect",
+   "arguments": 3,
+   "returns": true,
+   "guest_base": false
+  },
+  "ValidateRect": {
+   "helper": "ss_validate_rect",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": false
+  },
+  "EnableWindow": {
+   "helper": "ss_enable_window",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true
+  },
+  "SetRect": {
+   "helper": "ss_set_rect",
+   "arguments": 5,
+   "returns": true,
+   "guest_base": true
+  },
+  "GetCursorPos": {
+   "helper": "ss_get_cursor_pos",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true
+  },
+  "SetCursorPos": {
+   "helper": "ss_set_cursor_pos",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": false
+  },
+  "ShowCursor": {
+   "helper": "ss_show_cursor",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false
+  },
+  "GetDoubleClickTime": {
+   "helper": "ss_get_double_click_time",
+   "arguments": 0,
+   "returns": true,
+   "guest_base": false
+  },
+  "MessageBeep": {
+   "helper": "ss_message_beep",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false
+  },
+  "MessageBoxA": {
+   "helper": "ss_message_box_a",
+   "arguments": 4,
+   "returns": true,
+   "guest_base": true
+  },
+  "ChoosePixelFormat": {
+   "helper": "ss_choose_pixel_format",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true
+  },
+  "DescribePixelFormat": {
+   "helper": "ss_describe_pixel_format",
+   "arguments": 4,
+   "returns": true,
+   "guest_base": true
+  },
+  "SetPixelFormat": {
+   "helper": "ss_set_pixel_format",
+   "arguments": 3,
+   "returns": true,
+   "guest_base": false
+  },
+  "GetPixelFormat": {
+   "helper": "ss_get_pixel_format",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false
+  },
+  "wglCreateContext": {
+   "helper": "ss_wgl_create_context",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "wglMakeCurrent": {
+   "helper": "ss_wgl_make_current",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "wglDeleteContext": {
+   "helper": "ss_wgl_delete_context",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "SwapBuffers": {
+   "helper": "ss_swap_buffers",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "wglGetCurrentDC": {
+   "helper": "ss_wgl_get_current_dc",
+   "arguments": 0,
+   "returns": true,
+   "guest_base": false
+  },
+  "RegQueryValueExA": {
+   "helper": "ss_reg_query_value_ex_a",
+   "arguments": 6,
+   "returns": true,
+   "guest_base": true
+  },
+  "RegSetValueExA": {
+   "helper": "tribes_reg_set_value_ex_a",
+   "arguments": 6,
+   "returns": true,
+   "guest_base": true
+  },
+  "RegDeleteValueA": {
+   "helper": "tribes_reg_delete_value_a",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true
+  },
+  "glOrtho": {
+   "helper": "ss_gl_ortho",
+   "arguments": 12,
+   "returns": false,
+   "helper_returns": "void",
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "glScissor": {
+   "helper": "ss_gl_scissor",
+   "arguments": 4,
+   "returns": false,
+   "helper_returns": "void",
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "glVertex2fv": {
+   "helper": "ss_gl_vertex2fv",
+   "arguments": 1,
+   "returns": false,
+   "helper_returns": "void",
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "glNormal3fv": {
+   "helper": "ss_gl_normal3fv",
+   "arguments": 1,
+   "returns": false,
+   "helper_returns": "void",
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "glColorMaterial": {
+   "helper": "ss_gl_color_material",
+   "arguments": 2,
+   "returns": false,
+   "helper_returns": "void",
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "glColorMask": {
+   "helper": "ss_gl_color_mask",
+   "arguments": 4,
+   "returns": false,
+   "helper_returns": "void",
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "glStencilFunc": {
+   "helper": "ss_gl_stencil_func",
+   "arguments": 3,
+   "returns": false,
+   "helper_returns": "void",
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "glStencilMask": {
+   "helper": "ss_gl_stencil_mask",
+   "arguments": 1,
+   "returns": false,
+   "helper_returns": "void",
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "glStencilOp": {
+   "helper": "ss_gl_stencil_op",
+   "arguments": 3,
+   "returns": false,
+   "helper_returns": "void",
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "glReadBuffer": {
+   "helper": "ss_gl_read_buffer",
+   "arguments": 1,
+   "returns": false,
+   "helper_returns": "void",
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "glCopyTexSubImage2D": {
+   "helper": "ss_gl_copy_tex_sub_image_2d",
+   "arguments": 8,
+   "returns": false,
+   "helper_returns": "void",
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "glReadPixels": {
+   "helper": "ss_gl_read_pixels",
+   "arguments": 7,
+   "returns": false,
+   "helper_returns": "void",
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "glGetTexImage": {
+   "helper": "ss_gl_get_tex_image",
+   "arguments": 5,
+   "returns": false,
+   "helper_returns": "void",
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "inet_addr": {
+   "helper": "ss_inet_addr",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true
+  },
+  "gethostbyname": {
+   "helper": "ss_gethostbyname",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true
+  },
+  "DID_SetCooperativeLevel": {
+   "helper": "ss_dinput_cooperative",
+   "arguments": 3,
+   "returns": true,
+   "guest_base": true
+  },
+  "DID_Acquire": {
+   "helper": "ss_dinput_acquire",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true
+  },
+  "DID_Unacquire": {
+   "helper": "ss_dinput_unacquire",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true
+  },
+  "DID_GetDeviceState": {
+   "helper": "ss_dinput_state",
+   "arguments": 3,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "DID_GetDeviceData": {
+   "helper": "ss_dinput_data",
+   "arguments": 5,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "DID_SetEventNotification": {
+   "helper": "ss_dinput_event_notification",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true
+  },
+  "DID_Poll": {
+   "helper": "ss_dinput_poll",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "WindowFromPoint": {
+   "helper": "ss_window_from_point",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true
+  }
+ },
+ "overrides": {
+  "CreateSemaphoreA": {
+   "helper": "ss_create_semaphore",
+   "arguments": 4,
+   "returns": true,
+   "guest_base": true,
+   "why": "Starsiege creates a named semaphore; TribesPad's service only creates unnamed ones. The wrapper adds the single-process name case and then calls it."
+  },
+  "GetSystemMetrics": {
+   "helper": "ss_get_system_metrics",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true,
+   "why": "Starsiege sizes its own window frame; adds the standard frame, border and input metrics and passes the rest to TribesPad's service."
+  },
+  "CreateWindowExA": {
+   "helper": "ss_create_window_ex_a",
+   "arguments": 12,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true,
+   "why": "Starsiege draws into its own Win32 window (WGL); TribesPad windows were hidden helpers for Tribes 2. Calls about hidden windows still go to the original service."
+  },
+  "DefWindowProcA": {
+   "helper": "ss_def_window_proc_a",
+   "arguments": 4,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true,
+   "why": "Starsiege draws into its own Win32 window (WGL); TribesPad windows were hidden helpers for Tribes 2. Calls about hidden windows still go to the original service."
+  },
+  "DestroyWindow": {
+   "helper": "ss_destroy_window",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true,
+   "why": "Starsiege draws into its own Win32 window (WGL); TribesPad windows were hidden helpers for Tribes 2. Calls about hidden windows still go to the original service."
+  },
+  "DispatchMessageA": {
+   "helper": "ss_dispatch_message_a",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true,
+   "why": "Starsiege draws into its own Win32 window (WGL); TribesPad windows were hidden helpers for Tribes 2. Calls about hidden windows still go to the original service."
+  },
+  "GetWindowLongA": {
+   "helper": "ss_get_window_long_a",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true,
+   "why": "Starsiege draws into its own Win32 window (WGL); TribesPad windows were hidden helpers for Tribes 2. Calls about hidden windows still go to the original service."
+  },
+  "IsWindow": {
+   "helper": "ss_is_window",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true,
+   "why": "Starsiege draws into its own Win32 window (WGL); TribesPad windows were hidden helpers for Tribes 2. Calls about hidden windows still go to the original service."
+  },
+  "LoadIconA": {
+   "helper": "ss_load_icon_a",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true,
+   "why": "Starsiege loads its own named icon; icons are decorations the Apple host never shows, so each request gets a stable opaque handle."
+  },
+  "GetDC": {
+   "helper": "ss_get_dc",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false,
+   "why": "Device contexts of Starsiege windows carry a WGL drawable; other windows keep the original service.",
+   "cpu_argument": true
+  },
+  "ReleaseDC": {
+   "helper": "ss_release_dc",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true,
+   "why": "Device contexts of Starsiege windows carry a WGL drawable; other windows keep the original service."
+  },
+  "setsockopt": {
+   "helper": "ss_setsockopt",
+   "arguments": 5,
+   "returns": true,
+   "guest_base": true,
+   "why": "Starsiege sets socket buffer sizes; they apply to the real host socket and all other options go to TribesPad's service."
+  },
+  "CreateFileA": {
+   "helper": "ss_create_file_a",
+   "arguments": 7,
+   "returns": true,
+   "guest_base": true,
+   "why": "Logs the files Starsiege opens during bring-up, then calls TribesPad's file service unchanged."
+  },
+  "FormatMessageA": {
+   "helper": "ss_format_message_a",
+   "arguments": 7,
+   "returns": true,
+   "guest_base": true,
+   "why": "Adds Windows' text for ERROR_INVALID_PIXEL_FORMAT (2000), which Starsiege reports; all other IDs use TribesPad's catalog."
+  },
+  "GetProcAddress": {
+   "helper": "ss_get_proc_address",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true,
+   "why": "Logs Starsiege's OpenGL function-table lookups during bring-up; results come from TribesPad's loader unchanged."
+  },
+  "GetProcessHeap": {
+   "helper": "ss_get_process_heap",
+   "arguments": 0,
+   "returns": true,
+   "guest_base": true,
+   "why": "Starsiege's C runtime sends every malloc/free to the Win32 heap; port/starsiege/starsiege_fast_heap.c answers in constant time (TribesPad's list heap stalled start-up for 25 s). Blocks it did not allocate go to the original heap."
+  },
+  "HeapCreate": {
+   "helper": "ss_heap_create",
+   "arguments": 3,
+   "returns": true,
+   "guest_base": true,
+   "why": "Starsiege's C runtime sends every malloc/free to the Win32 heap; port/starsiege/starsiege_fast_heap.c answers in constant time (TribesPad's list heap stalled start-up for 25 s). Blocks it did not allocate go to the original heap."
+  },
+  "HeapDestroy": {
+   "helper": "ss_heap_destroy",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true,
+   "why": "Starsiege's C runtime sends every malloc/free to the Win32 heap; port/starsiege/starsiege_fast_heap.c answers in constant time (TribesPad's list heap stalled start-up for 25 s). Blocks it did not allocate go to the original heap."
+  },
+  "HeapAlloc": {
+   "helper": "ss_heap_alloc",
+   "arguments": 3,
+   "returns": true,
+   "guest_base": true,
+   "why": "Starsiege's C runtime sends every malloc/free to the Win32 heap; port/starsiege/starsiege_fast_heap.c answers in constant time (TribesPad's list heap stalled start-up for 25 s). Blocks it did not allocate go to the original heap."
+  },
+  "HeapFree": {
+   "helper": "ss_heap_free",
+   "arguments": 3,
+   "returns": true,
+   "guest_base": true,
+   "why": "Starsiege's C runtime sends every malloc/free to the Win32 heap; port/starsiege/starsiege_fast_heap.c answers in constant time (TribesPad's list heap stalled start-up for 25 s). Blocks it did not allocate go to the original heap."
+  },
+  "HeapReAlloc": {
+   "helper": "ss_heap_realloc",
+   "arguments": 4,
+   "returns": true,
+   "guest_base": true,
+   "why": "Starsiege's C runtime sends every malloc/free to the Win32 heap; port/starsiege/starsiege_fast_heap.c answers in constant time (TribesPad's list heap stalled start-up for 25 s). Blocks it did not allocate go to the original heap."
+  }
+ }
+}

@@ -5,15 +5,33 @@
    invisible look surface and round icon buttons for the utility actions. */
 #import <UIKit/UIKit.h>
 #import <GameController/GameController.h>
+#import <SafariServices/SafariServices.h>
 #include <math.h>
 #include "mobile_controls.h"
+#import "live_servers.h"
+#include "starsiege_paths.h"
 
 typedef NS_ENUM(NSInteger, TBControlKind) { TBKindStick, TBKindLook, TBKindButton };
 extern uint64_t tribes_gl4es_presented_frames(void);
 extern uint64_t tribes_gl4es_take_longest_frame_ns(void);
+extern void tribes_gl4es_resume_frame_stats(void);
+extern void tribes_set_keyboard_wasd(int on);
 static NSString * const TBRepositoryURL=@"https://github.com/chrissotraidis/tribespad";
+/* Find a Game: the community's own places, checked 22 October 2026. */
+static NSString * const TBPlayT2Discord=@"https://discord.gg/EMMVhQJgf9";
+static NSString * const TBTheCutDiscord=@"https://discord.gg/yz3AhkJCxg";
+static NSString * const TBTribesPadDiscord=@"https://discord.gg/xwHfUD2bxW";
+static NSString * const TBTribesNextForum=@"https://www.tribesnext.com/forum/";
+static NSString * const TBPlayT1Discord=@"https://playt1.com/discord";
 
 /* Touch preferences (NSUserDefaults, TribesPad-owned keys). */
+/* Starsiege: Tribes runs these controls too (tb_mobile_controls_install_starsiege):
+   its own keys, play state and menu; its controller is read by the engine. */
+static BOOL tb_starsiege;
+static NSString *tb_state_path(void){
+    NSString *support=NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,NSUserDomainMask,YES).firstObject;
+    return [support stringByAppendingPathComponent:tb_starsiege?@"TribesPad/Starsiege/volume/TribesPad/Game/temp/tribespad-state.cs":@"TribesPad/Game/base/prefs/tribespad-state.txt"];
+}
 static double tb_setting(NSString *key,double fallback){id v=[NSUserDefaults.standardUserDefaults objectForKey:key];return v?[v doubleValue]:fallback;}
 /* Account names and passwords: no automatic capitals or corrections. */
 static void tb_start_typing(SDL_Window *window){
@@ -33,6 +51,7 @@ static void tb_set(NSString *key,double value){[NSUserDefaults.standardUserDefau
 
 @class TBTrackpad;
 
+@class TBQuickChatView;
 @interface TBGameControls : UIView
 @property(nonatomic) TBMobileControls *controls;
 @property(nonatomic,strong) NSArray<UIView *> *pads;
@@ -57,9 +76,19 @@ static void tb_set(NSString *key,double value){[NSUserDefaults.standardUserDefau
 @property(nonatomic) BOOL matchSeen;
 @property(nonatomic) BOOL typingDialog;
 @property(nonatomic) BOOL zoomed;
+@property(nonatomic,strong) TBQuickChatView *quickChat;
+-(void)showQuickChat;
+-(void)sendChatKeys:(NSString *)keys;
+-(void)sendRequest:(NSString *)request;
+@property(nonatomic) BOOL holdJumpUntilRelease;
+@property(nonatomic,strong) UITouch *menuFinger;
 @property(nonatomic) BOOL gameReported;
+@property(nonatomic,copy) NSString *pendingRequest;
+@property(nonatomic) BOOL connected;
 @property(nonatomic) BOOL controllerUsed;
 @property(nonatomic) BOOL mouseConnected;
+@property(nonatomic) BOOL mouseUsed;
+-(void)realMouseUsed;
 @property(nonatomic,strong) NSTimer *matchClock;
 @property(nonatomic,strong) UILabel *hint;
 -(void)rebuildMenu;
@@ -210,7 +239,8 @@ typedef struct {int section;BOOL slider;const char *title,*key,*detail;double lo
 static const char *tb_sections[][2]={
     {"Touch Controls","Show the touch controls first to see size and opacity change as you drag."},
     {"Trackpad Cursor","With the touch controls hidden, drag anywhere to move the cursor and tap to click. Touch and hold, then drag, to hold the button (sliders, scroll bars). Drag with two fingers to scroll."},
-    {"Display",NULL},
+    {"Display","Render Scale draws the game with fewer pixels on iPad and lets the screen scale them up: 100% is the full resolution, 50% a quarter of the pixels. Lower is faster and softer. Applies the next time TribesPad opens. iPhone already draws at a reduced size."},
+    {"Keyboard and Trackpad","With a Magic Keyboard or keyboard folio: W A S D move, E zooms and Q picks the next weapon, as on a PC with the WASD layout. Off, the keyboard uses Tribes 2's own keys (E S D F move). The touch controls and controllers work either way. The trackpad moves the game's cursor in menus and aims in play."},
     {"Online","On, TribesPad opens to the TribesNEXT login: sign in or create a free account, then JOIN lists internet servers. Off, it opens offline with Training, LAN Game and the server list. Applies the next time TribesPad opens."}};
 static const TBSettingRow tb_rows[]={
     {0,YES,"Control Size","TribesPad.controlSize",NULL,.75,1.3,NO},
@@ -222,14 +252,17 @@ static const TBSettingRow tb_rows[]={
     {1,YES,"Cursor Speed","TribesPad.cursorSpeed",NULL,.5,2.5,YES},
     {2,NO,"Keep Clear of the Notch","TribesPad.avoidNotch","Keeps the game clear of the notch and rounded corners. Turn off to fill the screen. Applies the next time TribesPad opens.",0,0,NO},
     {2,NO,"Show FPS Counter","TribesPad.showFPS","Frames each second and the longest frame among them. Also in the menu.",0,0,NO},
-    {3,NO,"Online Play","TribesPad.onlinePlay","Sign in with TribesNEXT at launch.",0,0,NO}};
+    {2,YES,"Render Scale","TribesPad.renderScale",NULL,.5,1.0,NO},
+    {2,NO,"Game Picker at Launch","TribesPad.showLauncher","Choose between Starsiege: Tribes and Tribes 2 when TribesPad opens. Off, it opens Tribes 2 directly.",0,0,NO},
+    {3,NO,"WASD Movement","TribesPad.keyboardWASD","Keys from a hardware keyboard only.",0,0,NO},
+    {4,NO,"Online Play","TribesPad.onlinePlay","Sign in with TribesNEXT at launch.",0,0,NO}};
 enum {TBRowCount=sizeof tb_rows/sizeof tb_rows[0],TBSectionCount=sizeof tb_sections/sizeof tb_sections[0]};
 static void tb_register_defaults(void){
     static dispatch_once_t once;dispatch_once(&once,^{
         BOOL phone=UIDevice.currentDevice.userInterfaceIdiom==UIUserInterfaceIdiomPhone;
         [NSUserDefaults.standardUserDefaults registerDefaults:@{@"TribesPad.controlSize":@1.0,@"TribesPad.controlOpacity":@1.0,
             @"TribesPad.lookSensitivity":@1.0,@"TribesPad.leftHanded":@0,@"TribesPad.hideWithController":@1,
-            @"TribesPad.trackpad":@(phone?1:0),@"TribesPad.cursorSpeed":@1.2,@"TribesPad.avoidNotch":@1,@"TribesPad.showFPS":@0,
+            @"TribesPad.trackpad":@(phone?1:0),@"TribesPad.cursorSpeed":@1.2,@"TribesPad.avoidNotch":@1,@"TribesPad.showFPS":@0,@"TribesPad.renderScale":@1.0,@"TribesPad.keyboardWASD":@1,@"TribesPad.showLauncher":@1,
             @"TribesPad.onlinePlay":@1}];
     });
 }
@@ -390,6 +423,108 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
 }
 @end
 
+/* Quick chat for a controller. Tribes 2's chat menu (V) is a tree picked by
+   letter keys (voiceBinds.cs: startChatMenu / addChat / endChatMenu), which a
+   controller cannot type. This panel shows the same tree: the D-pad moves, A
+   (or D-pad right) opens or says, B (or D-pad left) goes back, and at the root
+   closes. Saying an item types V and the item's letters, so the game's own
+   menu sends it. The tree comes from the player's prefs/customVoiceBinds.cs
+   when present, else the copy of the game's voiceBinds.cs bundled at build
+   time (GameData/voiceBinds.cs). */
+@interface TBChatNode : NSObject
+@property(nonatomic,copy) NSString *key,*title,*command;
+@property(nonatomic,strong) NSMutableArray<TBChatNode *> *children;
+@property(nonatomic,weak) TBChatNode *parent;
+@end
+@implementation TBChatNode
+@end
+static TBChatNode *tb_chat_tree(void){
+    NSString *support=NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,NSUserDomainMask,YES).firstObject;
+    NSString *custom=[support stringByAppendingPathComponent:@"TribesPad/Game/base/prefs/customVoiceBinds.cs"];
+    NSString *text=[NSString stringWithContentsOfFile:custom encoding:NSISOLatin1StringEncoding error:nil];
+    if(!text)text=[NSString stringWithContentsOfFile:[NSBundle.mainBundle.resourcePath stringByAppendingPathComponent:@"GameData/voiceBinds.cs"]
+        encoding:NSISOLatin1StringEncoding error:nil];
+    if(!text)return nil;
+    NSRegularExpression *entry=[NSRegularExpression regularExpressionWithPattern:@"(startChatMenu|addChat)\\s*\\(\\s*\"(\\S+)\\s+([^\"]*)\"(?:\\s*,\\s*'([A-Za-z0-9_]+)')?" options:0 error:nil];
+    TBChatNode *root=[TBChatNode new];root.title=@"Quick Chat";root.children=[NSMutableArray array];TBChatNode *current=root;
+    for(NSString *raw in [text componentsSeparatedByCharactersInSet:NSCharacterSet.newlineCharacterSet]){
+        NSString *line=[raw stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceCharacterSet];
+        if([line hasPrefix:@"//"])continue;
+        if([line hasPrefix:@"endChatMenu"]){if(current.parent)current=current.parent;continue;}
+        NSTextCheckingResult *m=[entry firstMatchInString:line options:0 range:NSMakeRange(0,line.length)];if(!m)continue;
+        TBChatNode *node=[TBChatNode new];node.key=[[line substringWithRange:[m rangeAtIndex:2]] uppercaseString];
+        node.title=[line substringWithRange:[m rangeAtIndex:3]];node.parent=current;[current.children addObject:node];
+        if([m rangeAtIndex:4].location!=NSNotFound)node.command=[line substringWithRange:[m rangeAtIndex:4]];
+        if([[line substringWithRange:[m rangeAtIndex:1]] isEqualToString:@"startChatMenu"]){node.children=[NSMutableArray array];current=node;}
+    }
+    return root.children.count?root:nil;
+}
+@interface TBQuickChatView : UIView
+@property(nonatomic,weak) TBGameControls *owner;
+@property(nonatomic,strong) TBChatNode *menu;
+@property(nonatomic) NSUInteger selected;
+@property(nonatomic,strong) UILabel *title,*help;
+@property(nonatomic,strong) NSMutableArray<UILabel *> *rows;
+@end
+@implementation TBQuickChatView
+-(instancetype)initWithTree:(TBChatNode *)tree owner:(TBGameControls *)owner {
+    if(!(self=[super initWithFrame:CGRectZero]))return nil;
+    self.owner=owner;self.menu=tree;self.rows=[NSMutableArray array];
+    self.backgroundColor=[UIColor colorWithWhite:.04 alpha:.86];self.layer.cornerRadius=14;
+    self.layer.borderWidth=1;self.layer.borderColor=[UIColor colorWithRed:.18 green:.77 blue:.79 alpha:.7].CGColor;
+    self.title=[UILabel new];self.title.font=[UIFont boldSystemFontOfSize:17];self.title.textColor=[UIColor colorWithRed:.18 green:.77 blue:.79 alpha:1];
+    self.help=[UILabel new];self.help.font=[UIFont systemFontOfSize:12];self.help.textColor=[UIColor colorWithWhite:1 alpha:.6];self.help.numberOfLines=0;
+    self.help.text=@"D-pad: choose  ·  A: open or say  ·  B: back";
+    [self addSubview:self.title];[self addSubview:self.help];[self reload];
+    return self;
+}
+-(void)reload {
+    for(UILabel *row in self.rows)[row removeFromSuperview];[self.rows removeAllObjects];
+    NSMutableArray *path=[NSMutableArray array];for(TBChatNode *n=self.menu;n.parent;n=n.parent)[path insertObject:n.title atIndex:0];
+    self.title.text=path.count?[path componentsJoinedByString:@"  ›  "]:@"Quick Chat";
+    for(NSUInteger i=0;i<self.menu.children.count;i++){TBChatNode *n=self.menu.children[i];
+        UILabel *row=[UILabel new];row.font=[UIFont systemFontOfSize:16 weight:UIFontWeightMedium];row.layer.cornerRadius=6;row.clipsToBounds=YES;
+        row.text=[NSString stringWithFormat:@"  %@   %@%@",n.key,n.title,n.children?@"  ›":@""];row.userInteractionEnabled=YES;row.tag=(NSInteger)i;
+        [row addGestureRecognizer:[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapped:)]];
+        [self addSubview:row];[self.rows addObject:row];}
+    if(self.selected>=self.rows.count)self.selected=0;
+    [self highlight];[self setNeedsLayout];
+}
+-(void)highlight {
+    for(NSUInteger i=0;i<self.rows.count;i++){BOOL on=i==self.selected;
+        self.rows[i].backgroundColor=on?[UIColor colorWithRed:.18 green:.77 blue:.79 alpha:.35]:UIColor.clearColor;
+        self.rows[i].textColor=on?UIColor.whiteColor:[UIColor colorWithWhite:1 alpha:.82];}
+}
+-(CGSize)sizeThatFits:(CGSize)size {(void)size;return CGSizeMake(330,64+30.0*self.rows.count+28);}
+-(void)layoutSubviews {
+    [super layoutSubviews];CGFloat w=self.bounds.size.width;
+    self.title.frame=CGRectMake(16,12,w-32,24);
+    for(NSUInteger i=0;i<self.rows.count;i++)self.rows[i].frame=CGRectMake(10,44+30.0*i,w-20,28);
+    self.help.frame=CGRectMake(16,44+30.0*self.rows.count+6,w-32,20);
+}
+-(void)tapped:(UITapGestureRecognizer *)tap {self.selected=(NSUInteger)tap.view.tag;[self choose];}
+-(void)moveSelection:(int)step {
+    if(!self.rows.count)return;self.selected=(self.selected+self.rows.count+(NSUInteger)(step<0?self.rows.count-1:1))%self.rows.count;[self highlight];
+}
+-(void)choose {
+    if(self.selected>=self.menu.children.count)return;TBChatNode *n=self.menu.children[self.selected];
+    if(n.children){self.menu=n;self.selected=0;[self reload];[self.superview setNeedsLayout];return;}
+    NSMutableString *keys=[NSMutableString string];for(TBChatNode *k=n;k.parent;k=k.parent)[keys insertString:k.key atIndex:0];
+    TBGameControls *owner=self.owner;
+    /* The game's own canned-chat command through TribesPad's request bridge,
+       so the original menu never opens; typed keys only without one. */
+    if(n.command.length){fprintf(stderr,"TribesPad quick chat: %s (%s)\n",n.command.UTF8String,n.title.UTF8String);
+        [owner sendRequest:[@"chat " stringByAppendingString:n.command]];}
+    else {fprintf(stderr,"TribesPad quick chat: V%s (%s)\n",keys.UTF8String,n.title.UTF8String);[owner sendChatKeys:keys];}
+    [self close];
+}
+-(void)back {
+    if(self.menu.parent){TBChatNode *was=self.menu;self.menu=self.menu.parent;self.selected=[self.menu.children indexOfObject:was];[self reload];[self.superview setNeedsLayout];}
+    else [self close];
+}
+-(void)close {TBGameControls *owner=self.owner;owner.quickChat=nil;[self removeFromSuperview];}
+@end
+
 @implementation TBGameControls
 -(instancetype)initWithFrame:(CGRect)frame {
     if(!(self=[super initWithFrame:frame]))return nil;
@@ -426,7 +561,7 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
     }
     self.pads=pads;
     for(UIButton *button in @[self.keyboard,self.toggle,self.cursor,self.menu])[self addSubview:button];
-    [self addSubview:self.fps];[self rebuildMenu];[self applyFPSSetting];
+    [self addSubview:self.fps];[self rebuildMenu];[self applyFPSSetting];tribes_set_keyboard_wasd(tb_setting(@"TribesPad.keyboardWASD",1)!=0);
     self.hint=[UILabel new];self.hint.numberOfLines=0;self.hint.textAlignment=NSTextAlignmentCenter;
     self.hint.font=[UIFont systemFontOfSize:14 weight:UIFontWeightSemibold];self.hint.textColor=UIColor.whiteColor;
     self.hint.backgroundColor=[UIColor colorWithWhite:0 alpha:.65];self.hint.layer.cornerRadius=12;self.hint.layer.masksToBounds=YES;
@@ -437,11 +572,13 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
     __weak TBGameControls *weakSelf=self;
     // A previous session may have ended in play; start from the menus. "-"
     // means the game has not reported yet: it reports once past the login.
-    [@"-" writeToFile:[NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,NSUserDomainMask,YES).firstObject
-        stringByAppendingPathComponent:@"TribesPad/Game/base/prefs/tribespad-state.txt"] atomically:YES encoding:NSUTF8StringEncoding error:nil];
+    [@"-" writeToFile:tb_state_path() atomically:YES encoding:NSUTF8StringEncoding error:nil];
     self.matchClock=[NSTimer scheduledTimerWithTimeInterval:.2 repeats:YES block:^(NSTimer *t){(void)t;[weakSelf followMatch];}];
     [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(releaseControls)
         name:UIApplicationWillResignActiveNotification object:nil];
+    // Time spent in the background is not a slow frame.
+    [NSNotificationCenter.defaultCenter addObserverForName:UIApplicationDidBecomeActiveNotification object:nil
+        queue:NSOperationQueue.mainQueue usingBlock:^(NSNotification *n){(void)n;tribes_gl4es_resume_frame_stats();}];
     [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(keyboardFrameChanged:)
         name:UIKeyboardDidChangeFrameNotification object:nil];
     [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(keyboardHidden:)
@@ -454,6 +591,8 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
     [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(powerChanged:)
         name:NSProcessInfoPowerStateDidChangeNotification object:nil];
     [self powerChanged:nil];
+    [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(pointerLockChanged:)
+        name:UIPointerLockStateDidChangeNotification object:nil];
     [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(mouseChanged:)
         name:GCMouseDidConnectNotification object:nil];
     [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(mouseChanged:)
@@ -488,15 +627,71 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
    uses it directly through SDL, which locks the pointer in play for mouse
    look. The touch controls step aside, as they do for a controller, and come
    back from the controller button or when it disconnects. */
+/* A real mouse or trackpad moving or clicking (not touches, which SDL reports
+   with its touch mouse id, nor TribesPad's own pointer events, id 0). */
+static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
+    if((e->type==SDL_EVENT_MOUSE_MOTION||e->type==SDL_EVENT_MOUSE_BUTTON_DOWN)&&e->motion.which&&e->motion.which!=SDL_TOUCH_MOUSEID){
+        __weak TBGameControls *weak=(__bridge TBGameControls *)context;
+        dispatch_async(dispatch_get_main_queue(),^{[weak realMouseUsed];});}
+    return true;
+}
+/* With a mouse or trackpad attached, the touch controls stay until the mouse
+   is used in a match; touching the screen brings them back (hitTest). */
+/* A finger in menus with a mouse attached presses, drags and releases
+   TribesPad's own pointer where it touches (hitTest routes those touches here). */
+-(void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+    for(UITouch *t in touches)if(t.type==UITouchTypeDirect&&!self.menuFinger){
+        self.menuFinger=t;[self pointerButton:YES at:[t locationInView:self]];return;}
+    [super touchesBegan:touches withEvent:event];
+}
+-(void)touchesMoved:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+    if(self.menuFinger&&[touches containsObject:self.menuFinger]){
+        CGPoint now=[self.menuFinger locationInView:self],was=[self.menuFinger previousLocationInView:self];
+        [self pointerMoveTo:now delta:CGPointMake(now.x-was.x,now.y-was.y) held:YES];return;}
+    [super touchesMoved:touches withEvent:event];
+}
+-(void)touchesEnded:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+    if(self.menuFinger&&[touches containsObject:self.menuFinger]){
+        [self pointerButton:NO at:[self.menuFinger locationInView:self]];self.menuFinger=nil;return;}
+    [super touchesEnded:touches withEvent:event];
+}
+-(void)touchesCancelled:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+    if(self.menuFinger&&[touches containsObject:self.menuFinger]){
+        [self pointerButton:NO at:[self.menuFinger locationInView:self]];self.menuFinger=nil;return;}
+    [super touchesCancelled:touches withEvent:event];
+}
+-(void)realMouseUsed {
+    if(self.mouseUsed)return;self.mouseUsed=YES;
+    if(self.inMatch&&self.expanded&&!self.restoreControlsAfterKeyboard)[self toggleControls];
+    [self setNeedsLayout];
+}
 -(void)mouseChanged:(NSNotification *)notification {
     (void)notification;BOOL connected=GCMouse.mice.count>0;if(connected==self.mouseConnected)return;
+    /* TRIBESPAD_TOUCH_CONTROLS=1 (tests): keep the touch controls with a mouse or controller
+       attached, such as the Simulator's or a keyboard folio's trackpad. */
+    if(getenv("TRIBESPAD_TOUCH_CONTROLS"))connected=NO;
+    if(connected==self.mouseConnected)return;
     self.mouseConnected=connected;
-    if(connected&&self.expanded)[self toggleControls];
-    else if(!connected&&self.inMatch&&!self.expanded&&!(self.controllerUsed&&TB_HIDE_WITH_CONTROLLER))[self toggleControls];
+    static BOOL watching;if(connected&&!watching){watching=YES;SDL_AddEventWatch(tb_mouse_watch,(__bridge void *)self);}
+    if(!connected){BOOL wasUsed=self.mouseUsed;self.mouseUsed=NO;
+        if(wasUsed&&self.inMatch&&!self.expanded&&!(self.controllerUsed&&TB_HIDE_WITH_CONTROLLER))[self toggleControls];}
     [self setNeedsLayout];
 }
 -(void)controllerChanged:(NSNotification *)notification {
     (void)notification;if(!self.superview)return;
+    if(tb_starsiege){
+        /* The engine reads the controller itself (starsiege_controller.m) and
+           steps aside for it; Menu opens the ··· menu, as in Tribes 2. */
+        BOOL any=NO;for(GCController *c in GCController.controllers)if(c.extendedGamepad)any=YES;
+        if(getenv("TRIBESPAD_TOUCH_CONTROLS"))any=NO; /* tests: touch controls even with a controller */
+        __weak TBGameControls *weakSelf=self;
+        for(GCController *c in GCController.controllers)if(c.extendedGamepad)
+            c.extendedGamepad.buttonMenu.pressedChangedHandler=^(GCControllerButtonInput *button,float value,BOOL pressed){
+                (void)button;(void)value;TBGameControls *owner=weakSelf;
+                if(pressed&&UIApplication.sharedApplication.applicationState==UIApplicationStateActive)[owner openMenu];};
+        if(any!=self.controllerUsed)fprintf(stderr,"TribesPad controller %s (Starsiege)\n",any?"connected":"disconnected");
+        self.controllerUsed=any;[self rebuildMenu];return;
+    }
     if(self.controller&&[GCController.controllers containsObject:self.controller])return;
     [self detachController];
     for(GCController *controller in GCController.controllers)if(controller.extendedGamepad){
@@ -524,7 +719,9 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
         tb_input_move(&owner.controls->input,9,p.leftThumbstick.xAxis.value,p.leftThumbstick.yAxis.value,.15);
         const uint32_t actions[]={TBFire,TBJet,TBJump};
         NSArray<GCControllerButtonInput *> *held=@[p.rightTrigger,p.leftTrigger,p.buttonA];
-        for(unsigned i=0;i<held.count;i++)tb_input_action(&owner.controls->input,9,actions[i],held[i].pressed);
+        /* The A that picked in the quick chat panel does not jump: A waits for its release. */
+        if(owner.holdJumpUntilRelease&&!p.buttonA.pressed)owner.holdJumpUntilRelease=NO;
+        for(unsigned i=0;i<held.count;i++)tb_input_action(&owner.controls->input,9,actions[i],held[i].pressed&&!(i==2&&(owner.quickChat||owner.holdJumpUntilRelease)));
         tb_mobile_controls_emit(owner.controls);
     };
     // Buttons that hold an original key (controlDefaults.cs) while pressed.
@@ -532,12 +729,17 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
         if(!button)return;
         button.pressedChangedHandler=^(GCControllerButtonInput *b,float v,BOOL pressed){(void)b;(void)v;TBGameControls *owner=weakSelf;
             if(!owner.controls||UIApplication.sharedApplication.applicationState!=UIApplicationStateActive)return;
+            if(owner.quickChat){
+                if(pressed){GCExtendedGamepad *now=owner.controller.extendedGamepad;
+                    if(b==now.dpad.up)[owner.quickChat moveSelection:-1];else if(b==now.dpad.down)[owner.quickChat moveSelection:1];
+                    else if(b==now.dpad.left)[owner.quickChat back];}
+                return;}
             if(pressed&&!owner.inMatch)return;
             if(mod&SDL_KMOD_SHIFT)[owner pushKey:SDL_SCANCODE_LSHIFT down:pressed mod:pressed?mod:SDL_KMOD_NONE];
             [owner pushKey:code down:pressed mod:pressed?mod:SDL_KMOD_NONE];};
     };
     key(pad.rightShoulder,SDL_SCANCODE_W,SDL_KMOD_NONE);          // next weapon
-    key(pad.leftShoulder,SDL_SCANCODE_W,SDL_KMOD_LSHIFT);         // previous weapon
+    key(pad.leftShoulder,SDL_SCANCODE_L,SDL_KMOD_NONE);           // targeting laser (RB cycles weapons)
     key(pad.buttonX,SDL_SCANCODE_R,SDL_KMOD_NONE);                // use pack
     key(pad.buttonY,SDL_SCANCODE_G,SDL_KMOD_NONE);                // grenade
     // Zoom toggles: click once to zoom (holding the game's zoom key), again to
@@ -550,13 +752,19 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
     key(pad.dpad.up,SDL_SCANCODE_Q,SDL_KMOD_NONE);                // repair kit
     key(pad.dpad.down,SDL_SCANCODE_KP_ENTER,SDL_KMOD_NONE);       // inventory
     key(pad.dpad.left,SDL_SCANCODE_H,SDL_KMOD_NONE);              // beacon
-    key(pad.dpad.right,SDL_SCANCODE_V,SDL_KMOD_NONE);             // quick chat
+    // Quick chat: a panel the controller can drive (TBQuickChatView).
+    pad.dpad.right.pressedChangedHandler=^(GCControllerButtonInput *b,float v,BOOL pressed){(void)b;(void)v;TBGameControls *owner=weakSelf;
+        if(!pressed||!owner.controls||UIApplication.sharedApplication.applicationState!=UIApplicationStateActive)return;
+        if(owner.quickChat){[owner.quickChat choose];return;}
+        if(owner.inMatch)[owner showQuickChat];};
     key(pad.buttonOptions,SDL_SCANCODE_F2,SDL_KMOD_NONE);         // scores
     pad.buttonA.pressedChangedHandler=^(GCControllerButtonInput *b,float v,BOOL pressed){(void)b;(void)v;TBGameControls *owner=weakSelf;
+        if(owner.quickChat){if(pressed){owner.holdJumpUntilRelease=YES;[owner.quickChat choose];}return;}
         if(owner.inMatch||!owner.controls)return;
         [owner pointerButton:pressed at:owner.trackpad.cursor];};
     pad.buttonB.pressedChangedHandler=^(GCControllerButtonInput *b,float v,BOOL pressed){(void)b;(void)v;TBGameControls *owner=weakSelf;
         if(!pressed||!owner.controls)return;
+        if(owner.quickChat){[owner.quickChat back];return;}
         if(owner.inMatch)[owner pushKey:SDL_SCANCODE_B down:YES mod:SDL_KMOD_NONE],[owner pushKey:SDL_SCANCODE_B down:NO mod:SDL_KMOD_NONE];
         else [owner tapKey:SDL_SCANCODE_ESCAPE];};
     pad.buttonMenu.pressedChangedHandler=^(GCControllerButtonInput *button,float value,BOOL pressed){
@@ -581,7 +789,17 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
     if(fabs(r)>.4){self.scrollCarry+=r*dt*12;int steps=(int)self.scrollCarry;if(steps){self.scrollCarry-=steps;[self pointerWheel:steps at:self.trackpad.cursor];}}
 }
 -(UIView *)hitTest:(CGPoint)point withEvent:(UIEvent *)event {
-    UIView *hit=[super hitTest:point withEvent:event];return hit==self?nil:hit;
+    UIView *hit=[super hitTest:point withEvent:event];
+    /* A finger on the screen after the mouse hid the touch controls brings them back. */
+    if(self.mouseUsed&&self.inMatch&&!self.expanded&&event.type==UIEventTypeTouches){
+        BOOL finger=NO;for(UITouch *t in event.allTouches)if(t.type==UITouchTypeDirect)finger=YES;
+        if(finger){self.mouseUsed=NO;dispatch_async(dispatch_get_main_queue(),^{if(!self.expanded&&self.inMatch)[self toggleControls];});}
+    }
+    /* Menus with a mouse or trackpad attached: the game takes no touches then,
+       so a finger works TribesPad's own pointer (touchesBegan below). */
+    if(hit==self&&!self.inMatch&&self.mouseConnected&&event.type==UIEventTypeTouches)
+        for(UITouch *t in event.allTouches)if(t.type==UITouchTypeDirect)return self;
+    return hit==self?nil:hit;
 }
 -(void)releaseControls {
     self.stickAim=CGPointZero;self.lastAimTime=0;
@@ -628,9 +846,15 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
 }
 -(void)settingsChanged {
     self.laidOutArea=CGRectNull;[self applyFPSSetting];[self rebuildMenu];[self setNeedsLayout];
+    tribes_set_keyboard_wasd(tb_setting(@"TribesPad.keyboardWASD",1)!=0);
 }
 -(void)toggleTrackpad{tb_set(@"TribesPad.trackpad",!TB_TRACKPAD);[self settingsChanged];}
 -(void)toggleFPS{tb_set(@"TribesPad.showFPS",!TB_SHOW_FPS);[self settingsChanged];}
+/* Whether iPadOS granted pointer lock for mouse look (full screen only). */
+-(void)pointerLockChanged:(NSNotification *)notification {
+    (void)notification;UIPointerLockState *lock=self.window.windowScene.pointerLockState;
+    fprintf(stderr,"TribesPad pointer lock %s\n",lock.locked?"engaged":"released");
+}
 -(void)powerChanged:(NSNotification *)notification {
     (void)notification;NSProcessInfo *p=NSProcessInfo.processInfo;
     static const char *states[]={"nominal","fair","serious","critical"};NSInteger s=p.thermalState;
@@ -638,19 +862,41 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
 }
 -(void)followMatch {
     if(!self.controls||UIApplication.sharedApplication.applicationState!=UIApplicationStateActive)return;
-    // base/autoexec.cs reports "<playing> <typing>": playing is 1 in play and
+    // base/autoexec.cs reports "<playing> <typing> <connected>": playing is 1 in play and
     // 0 in menus, the lobby, inventory and the score screen; typing is 1 while
-    // a dialog made for typing (login, server password...) is open.
-    NSString *support=[NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,NSUserDomainMask,YES).firstObject
-        stringByAppendingPathComponent:@"TribesPad/Game/base/prefs/tribespad-state.txt"];
-    NSString *state=[NSString stringWithContentsOfFile:support encoding:NSUTF8StringEncoding error:nil];
+    // a dialog made for typing (login, server password...) is open; connected
+    // is 1 on a server (including one hosted here).
+    NSString *state=[NSString stringWithContentsOfFile:tb_state_path() encoding:NSUTF8StringEncoding error:nil];
+    if(tb_starsiege&&state.length){
+        /* Starsiege's export: $TribesPad::state = "1 0 1"; */
+        NSRange q=[state rangeOfString:@"\""];if(q.location==NSNotFound)return;
+        NSRange e=[state rangeOfString:@"\"" options:0 range:NSMakeRange(q.location+1,state.length-q.location-1)];
+        if(e.location==NSNotFound)return;state=[state substringWithRange:NSMakeRange(q.location+1,e.location-q.location-1)];
+    }
     if(!state.length||[state hasPrefix:@"-"])return;
     if(!self.gameReported){
         // Past the login: a keyboard opened there closes with the next report.
         self.gameReported=YES;SDL_Window *window=SDL_GetWindowFromID(self.controls->window);
         self.typingDialog=window&&SDL_TextInputActive(window);
+        [self rebuildMenu];
+        // New players rarely know where the games are; point at Find a Game.
+        double shown=tb_starsiege?3:tb_setting(@"TribesPad.findHintsShown",0);
+        if(tb_starsiege){}
+        else if(shown<3){tb_set(@"TribesPad.findHintsShown",shown+1);
+            [self flashHint:@"Looking for a game?  ··· > Find a Game has the server list,\nwho is playing now, game nights and the community Discords"];}
+        else [self performSelector:@selector(offerBalancedIfMaximum) withObject:nil afterDelay:3];
     }
     BOOL playing=[state hasPrefix:@"1"],typing=[state hasPrefix:@"0 1"];
+    NSArray *words=[state componentsSeparatedByCharactersInSet:NSCharacterSet.whitespaceAndNewlineCharacterSet];
+    BOOL connected=words.count>2&&[words[2] isEqualToString:@"1"];
+    /* Starsiege reports the last request it handled; then the flag goes. */
+    if(tb_starsiege&&self.pendingRequest&&words.count>3&&[words[3] isEqualToString:self.pendingRequest]){
+        NSString *game=[NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,NSUserDomainMask,YES).firstObject
+            stringByAppendingPathComponent:@"TribesPad/Starsiege/volume/TribesPad/Game"];
+        [NSFileManager.defaultManager removeItemAtPath:[game stringByAppendingPathComponent:@"temp/tribespad-request.flag"] error:nil];
+        self.pendingRequest=nil;
+    }
+    if(connected!=self.connected){self.connected=connected;[self rebuildMenu];}
     if(typing!=self.typingDialog){
         // Open the keyboard with the dialog; close it when the dialog goes.
         self.typingDialog=typing;SDL_Window *window=SDL_GetWindowFromID(self.controls->window);
@@ -661,7 +907,7 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
     if(self.zoomed){self.zoomed=NO;[self pushKey:SDL_SCANCODE_A down:NO mod:SDL_KMOD_NONE];}
     if(self.controls){tb_input_release(&self.controls->input,9);tb_mobile_controls_emit(self.controls);}
     if(playing){
-        if(!self.expanded&&!(self.controllerUsed&&TB_HIDE_WITH_CONTROLLER)&&!self.mouseConnected)[self toggleControls];
+        if(!self.expanded&&!(self.controllerUsed&&TB_HIDE_WITH_CONTROLLER)&&!self.mouseUsed)[self toggleControls];
         if(self.controllerUsed)[self showControllerHint];
         else if(self.expanded)[self showHint];
     } else if(self.expanded&&!self.restoreControlsAfterKeyboard)[self toggleControls];
@@ -670,17 +916,38 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
 /* The first few times the controls appear, say what the main buttons do. */
 -(void)showHint {
     double shown=tb_setting(@"TribesPad.hintsShown",0);if(shown>=3)return;tb_set(@"TribesPad.hintsShown",shown+1);
-    self.hint.text=@"Hold JET to fly  ·  Hold SKI / JUMP on slopes to keep speed\nDrag the right side to aim  ·  ··· has chat, scores and the game menu";
+    [self flashHint:@"Hold JET to fly  ·  Hold SKI / JUMP on slopes to keep speed\nDrag the right side to aim  ·  ··· has chat, scores and the game menu"];
+}
+-(void)flashHint:(NSString *)text {
+    self.hint.text=text;
     [self setNeedsLayout];[self layoutIfNeeded];
     [UIView animateWithDuration:.3 animations:^{self.hint.alpha=1;}];
     [UIView animateWithDuration:.6 delay:7 options:0 animations:^{self.hint.alpha=0;} completion:nil];
 }
 /* The first few times play starts with a controller, show its layout without
    blocking play. The full guide is in ··· > Help > Controller Guide. */
+-(void)showQuickChat {
+    if(self.quickChat)return;
+    static TBChatNode *tree;static BOOL loaded;if(!loaded){loaded=YES;tree=tb_chat_tree();}
+    if(!tree){[self sendGameKey:SDL_SCANCODE_V mod:SDL_KMOD_NONE];return;} /* no tree: the game's own menu */
+    self.quickChat=[[TBQuickChatView alloc] initWithTree:tree owner:self];
+    [self addSubview:self.quickChat];[self setNeedsLayout];[self layoutIfNeeded];
+}
+/* V opens the game's chat menu; each letter then picks, as typed. Spaced so
+   each key lands after the menu it opens. */
+-(void)sendChatKeys:(NSString *)keys {
+    [self releaseControls];NSMutableArray<NSNumber *> *codes=[NSMutableArray arrayWithObject:@(SDL_SCANCODE_V)];
+    for(NSUInteger i=0;i<keys.length;i++){unichar c=[keys characterAtIndex:i];
+        if(c>='A'&&c<='Z')[codes addObject:@(SDL_SCANCODE_A+(c-'A'))];
+        else if(c>='1'&&c<='9')[codes addObject:@(SDL_SCANCODE_1+(c-'1'))];else if(c=='0')[codes addObject:@(SDL_SCANCODE_0)];}
+    __weak TBGameControls *weak=self;
+    for(NSUInteger i=0;i<codes.count;i++)dispatch_after(dispatch_time(DISPATCH_TIME_NOW,(int64_t)(i*70*NSEC_PER_MSEC)),dispatch_get_main_queue(),^{
+        [weak tapKey:(SDL_Scancode)codes[i].intValue];});
+}
 -(void)showControllerHint {
     double shown=tb_setting(@"TribesPad.controllerHintsShown",0);if(shown>=3)return;tb_set(@"TribesPad.controllerHintsShown",shown+1);
-    self.hint.text=@"RT fire  ·  LT jet  ·  A ski / jump  ·  RB / LB next / previous weapon\n"
-        "Y grenade  ·  X use pack  ·  B mine  ·  D-pad: up repair kit, down inventory, left beacon, right quick chat\n"
+    self.hint.text=@"RT fire  ·  LT jet  ·  A ski / jump  ·  RB next weapon  ·  LB targeting laser\n"
+        "Y grenade  ·  X use pack  ·  B place mine  ·  D-pad: up repair kit, down inventory, left beacon, right quick chat\n"
         "Watching as an observer? Press RT to join a team  ·  Menu: game menu  ·  View: scores";
     [self.hint.layer removeAllAnimations];[self setNeedsLayout];[self layoutIfNeeded];
     [UIView animateWithDuration:.3 animations:^{self.hint.alpha=1;}];
@@ -763,10 +1030,25 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
     UIAction *trackpad=item(@"Trackpad Cursor",@"cursorarrow.rays",^{[weak toggleTrackpad];});
     trackpad.state=TB_TRACKPAD?UIMenuElementStateOn:UIMenuElementStateOff;
     UIAction *fps=item(@"FPS Counter",@"speedometer",^{[weak toggleFPS];});
+    fps.subtitle=@"Top right: frames per second and the slowest frame";
     fps.state=TB_SHOW_FPS?UIMenuElementStateOn:UIMenuElementStateOff;
+    /* Graphics Quality: what each choice does, and which one is in use. */
+    NSString *preset=[NSUserDefaults.standardUserDefaults stringForKey:@"TribesPad.graphicsPreset"];
+    UIAction *balanced=item(@"Balanced",@"gauge.with.dots.needle.50percent",^{[weak confirmGraphics:@"balanced"];});
+    balanced.subtitle=@"Smoother: the game's own High detail";
+    balanced.state=[preset isEqualToString:@"balanced"]?UIMenuElementStateOn:UIMenuElementStateOff;
+    UIAction *fast=item(@"Fast",@"hare",^{[weak confirmGraphics:@"fast"];});
+    fast.subtitle=@"Smoothest: less detail, no clouds";
+    fast.state=[preset isEqualToString:@"fast"]?UIMenuElementStateOn:UIMenuElementStateOff;
+    UIAction *scale=item(@"Render Scale…",@"square.resize.down",^{[weak showSettings];});
+    double rs=tb_setting(@"TribesPad.renderScale",1);
+    scale.subtitle=[NSString stringWithFormat:@"%.0f%% of the screen's pixels, in Settings",rs*100];
+    if(UIDevice.currentDevice.userInterfaceIdiom!=UIUserInterfaceIdiomPad)scale.attributes=UIMenuElementAttributesHidden;
     NSArray *controls=@[
         item(self.expanded?@"Hide Touch Controls":@"Show Touch Controls",self.expanded?@"xmark.circle":@"gamecontroller",^{[weak toggleControls];}),
         trackpad,fps,
+        [UIMenu menuWithTitle:@"Graphics Quality" image:icon(@"slider.horizontal.3") identifier:nil options:0 children:@[
+            group(@[balanced,fast]),group(@[scale])]],
         item(@"Settings…",@"gearshape",^{[weak showSettings];})];
     NSString *pad=self.controller.vendorName;
     UIMenu *help=[UIMenu menuWithTitle:@"Help" image:icon(@"questionmark.circle") identifier:nil options:0 children:@[
@@ -775,9 +1057,65 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
         group(@[item(@"Console",@"terminal",^{[weak openConsole];}),
             item(@"TribesPad on GitHub",@"safari",^{
                 [UIApplication.sharedApplication openURL:[NSURL URLWithString:TBRepositoryURL] options:@{} completionHandler:nil];}),
-            item(@"About TribesPad",@"info.circle",^{[weak showAbout];})])]];
-    // Game actions only do something in a match; the original menus have their own buttons.
-    NSArray *groups=self.inMatch||self.matchSeen?@[group(game),group(controls),group(@[help])]:@[group(controls),group(@[help])];
+            item(@"About TribesPad",@"info.circle",^{[weak showAbout];})]),
+        group(tb_starsiege_bundled([NSBundle.mainBundle.resourcePath stringByAppendingPathComponent:@"GameData"].fileSystemRepresentation)?
+            @[item(@"Switch to Starsiege: Tribes",@"arrow.left.arrow.right",^{[weak switchGame];})]:@[])]];
+    /* Find a Game: what new players lack most. The original JOIN list, who is
+       on now, when the community plays and where it organizes. It leads the
+       menu off a server; on one, the match actions lead and it folds away. */
+    NSMutableArray *find=[NSMutableArray array];
+    UIAction *servers=item(@"Server List",@"server.rack",^{[weak openServerList];});
+    servers.subtitle=self.connected?@"Leaves this match first":@"PLAY GAME > JOIN";
+    [find addObject:servers];
+    UIAction *playing=item(@"Who's Playing Now",@"person.3",^{[weak showLiveServers];});
+    playing.subtitle=@"People and bots on each server";
+    UIAction *nights=item(@"Game Nights",@"calendar",^{[weak showSchedule];});
+    nights.subtitle=[NSString stringWithFormat:@"Times in %@",[NSTimeZone.localTimeZone localizedName:NSTimeZoneNameStyleShortGeneric locale:NSLocale.currentLocale]?:NSTimeZone.localTimeZone.name];
+    [find addObjectsFromArray:@[playing,nights,
+        [UIMenu menuWithTitle:@"Community" image:icon(@"bubble.left.and.text.bubble.right") identifier:nil options:0 children:@[
+            group(@[item(@"PlayT2 Discord",@"person.2",^{[weak openLink:TBPlayT2Discord];}),
+                item(@"The Cut Discord",@"person.2",^{[weak openLink:TBTheCutDiscord];}),
+                item(@"TribesPad Discord",@"person.2",^{[weak openLink:TBTribesPadDiscord];})]),
+            group(@[item(@"TribesNEXT Forum",@"text.bubble",^{[weak openPage:TBTribesNextForum];})])]]]];
+    UIMenu *findMenu=[UIMenu menuWithTitle:@"Find a Game" image:icon(@"globe") identifier:nil
+        options:self.connected?0:UIMenuOptionsDisplayInline children:find];
+    // Game actions only do something on a server; the original menus have their own buttons.
+    NSArray *groups=self.connected||self.inMatch?@[group(game),group(@[findMenu]),group(controls),group(@[help])]:@[findMenu,group(controls),group(@[help])];
+    if(tb_starsiege){
+        /* Starsiege's own keys (config/config.cs): T and Y chat, I inventory,
+           O objectives, C command, Tab scores, Ctrl+K kill. */
+        UIAction *kill=key(@"Suicide",@"xmark.octagon",SDL_SCANCODE_K,SDL_KMOD_LCTRL);kill.attributes=UIMenuElementAttributesDestructive;
+        NSArray *t1=@[item(@"Game Menu",@"list.bullet",^{[weak tapKey:SDL_SCANCODE_ESCAPE];}),
+            key(@"Scores",@"trophy",SDL_SCANCODE_TAB,SDL_KMOD_NONE),
+            [UIMenu menuWithTitle:@"Chat" image:icon(@"bubble.left.and.bubble.right") identifier:nil options:0 children:@[
+                item(@"All Chat",@"bubble.left.and.bubble.right",^{[weak openChat:SDL_SCANCODE_T];}),
+                item(@"Team Chat",@"bubble.left",^{[weak openChat:SDL_SCANCODE_Y];}),
+                item(@"Quick Chat Menu",@"text.bubble",^{[weak sendGameKey:SDL_SCANCODE_V mod:SDL_KMOD_NONE];})]],
+            [UIMenu menuWithTitle:@"Actions" image:icon(@"bolt") identifier:nil options:0 children:@[
+                group(@[key(@"Inventory",@"square.grid.2x2",SDL_SCANCODE_I,SDL_KMOD_NONE),key(@"Objectives",@"list.number",SDL_SCANCODE_O,SDL_KMOD_NONE),
+                    key(@"Command Map",@"map",SDL_SCANCODE_C,SDL_KMOD_NONE)]),
+                group(@[key(@"Use Repair Kit",@"cross.case",SDL_SCANCODE_H,SDL_KMOD_NONE),key(@"Place Beacon",@"dot.radiowaves.left.and.right",SDL_SCANCODE_B,SDL_KMOD_NONE),
+                    key(@"Drop Flag",@"flag",SDL_SCANCODE_F,SDL_KMOD_LCTRL)]),
+                group(@[key(@"Zoom",@"plus.magnifyingglass",SDL_SCANCODE_Z,SDL_KMOD_NONE),key(@"Third-Person View",@"person.crop.square",SDL_SCANCODE_R,SDL_KMOD_NONE)]),
+                group(@[kill])]]];
+        NSArray *t1controls=@[controls[0],controls[1],controls[2],controls[4]];
+        UIMenu *t1help=[UIMenu menuWithTitle:@"Help" image:icon(@"questionmark.circle") identifier:nil options:0 children:@[
+            group(@[item(@"Console",@"terminal",^{[weak tapKey:SDL_SCANCODE_GRAVE];}),
+                item(@"TribesPad on GitHub",@"safari",^{[UIApplication.sharedApplication openURL:[NSURL URLWithString:TBRepositoryURL] options:@{} completionHandler:nil];})]),
+            group(@[item(@"Switch to Tribes 2",@"arrow.left.arrow.right",^{[weak switchGame];})])]];
+        /* Find a Game: the game's JOIN list, who is on each server now, and
+           where the community arranges games. */
+        UIAction *t1servers=item(@"Server List",@"server.rack",^{[weak openServerList];});
+        t1servers.subtitle=self.connected?@"Leaves this match first":@"PLAY GAME > JOIN";
+        UIAction *t1playing=item(@"Who's Playing Now",@"person.3",^{[weak showLiveServers];});
+        t1playing.subtitle=@"Players on each server, from the community masters";
+        UIMenu *t1find=[UIMenu menuWithTitle:@"Find a Game" image:icon(@"globe") identifier:nil options:self.connected?0:UIMenuOptionsDisplayInline children:@[
+            t1servers,t1playing,
+            [UIMenu menuWithTitle:@"Community" image:icon(@"bubble.left.and.text.bubble.right") identifier:nil options:0 children:@[
+                item(@"PlayT1 Discord",@"person.2",^{[weak openLink:TBPlayT1Discord];}),
+                item(@"TribesPad Discord",@"person.2",^{[weak openLink:TBTribesPadDiscord];})]]]];
+        groups=self.connected||self.inMatch?@[group(t1),group(@[t1find]),group(t1controls),group(@[t1help])]:@[t1find,group(t1controls),group(@[t1help])];
+    }
     self.menu.menu=[UIMenu menuWithTitle:@"TribesPad" children:groups];
     // The column button shows whether the cursor is on.
     UIButtonConfiguration *c=self.cursor.configuration;
@@ -794,7 +1132,7 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
         uint64_t frames=now-owner.fpsFrames;double longest=tribes_gl4es_take_longest_frame_ns()/1e6;owner.fpsFrames=now;
         // Frames per second, then the longest frame: a hitch hides in the average.
         BOOL hot=NSProcessInfo.processInfo.thermalState>=NSProcessInfoThermalStateSerious;
-        owner.fps.text=frames?[NSString stringWithFormat:@"%llu FPS · %.0f ms%@",(unsigned long long)frames,longest,hot?@" · Hot":@""]:@"0 FPS";
+        owner.fps.text=frames?[NSString stringWithFormat:@"%llu FPS · slowest %.0f ms%@",(unsigned long long)frames,longest,hot?@" · Hot":@""]:@"0 FPS";
         owner.fps.textColor=frames>=30&&longest<50&&!hot?UIColor.greenColor:UIColor.orangeColor;}];
 }
 -(void)tapKey:(SDL_Scancode)scancode {[self tapKey:scancode mod:SDL_KMOD_NONE];}
@@ -838,6 +1176,163 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
     [alert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
     alert.overrideUserInterfaceStyle=UIUserInterfaceStyleDark;[[self presenter] presentViewController:alert animated:YES completion:nil];
 }
+/* Requests to the game (base/autoexec.cs) go through prefs/tribespad-request.txt,
+   "<number> <request>"; each new number is acted on once. Server List asks for
+   the original JOIN pane. */
+-(void)openServerList {
+    if(!self.gameReported&&!tb_starsiege){
+        [self showMessage:@"Server List" text:@"Sign in to TribesNEXT first. Once you are past the login, this opens PLAY GAME > JOIN, the list of internet servers."];return;
+    }
+    if(!self.connected){[self sendRequest:@"servers"];return;}
+    // On a server the list is out of reach until you leave, as on a PC.
+    [self releaseControls];
+    UIAlertController *alert=[UIAlertController alertControllerWithTitle:@"Leave This Match?"
+        message:@"The server list opens once you leave the server you are on. Who's Playing Now shows the servers without leaving."
+        preferredStyle:UIAlertControllerStyleAlert];
+    __weak TBGameControls *weak=self;
+    [alert addAction:[UIAlertAction actionWithTitle:@"Who's Playing Now" style:UIAlertActionStyleDefault handler:^(UIAlertAction *a){(void)a;[weak showLiveServers];}]];
+    [alert addAction:[UIAlertAction actionWithTitle:@"Leave and Show Servers" style:UIAlertActionStyleDestructive handler:^(UIAlertAction *a){(void)a;
+        [weak sendRequest:@"leave-servers"];}]];
+    [alert addAction:[UIAlertAction actionWithTitle:@"Stay" style:UIAlertActionStyleCancel handler:nil]];
+    alert.overrideUserInterfaceStyle=UIUserInterfaceStyleDark;[[self presenter] presentViewController:alert animated:YES completion:nil];
+}
+-(void)sendRequest:(NSString *)request {
+    if(tb_starsiege){
+        /* Starsiege runs only scripts that existed at its start: rewrite the
+           shipped request file, then raise the flag its report loop checks. The
+           number stays below 2^24 so the game's float comparison is exact. */
+        static unsigned counter;NSString *number=[NSString stringWithFormat:@"%ld",
+            (long)((long long)NSDate.date.timeIntervalSince1970%1000000)*10+(long)(counter++%10)];
+        NSString *game=[NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,NSUserDomainMask,YES).firstObject
+            stringByAppendingPathComponent:@"TribesPad/Starsiege/volume/TribesPad/Game"];
+        NSString *text=[NSString stringWithFormat:@"$TribesPad::request = \"%@ %@\";\n",number,request];
+        [text writeToFile:[game stringByAppendingPathComponent:@"config/tribespad-request.cs"] atomically:NO encoding:NSUTF8StringEncoding error:nil];
+        [NSData.data writeToFile:[game stringByAppendingPathComponent:@"temp/tribespad-request.flag"] atomically:NO];
+        self.pendingRequest=number;fprintf(stderr,"TribesPad: request %s %s\n",number.UTF8String,request.UTF8String);return;
+    }
+    NSString *path=[NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,NSUserDomainMask,YES).firstObject
+        stringByAppendingPathComponent:@"TribesPad/Game/base/prefs/tribespad-request.txt"];
+    [[NSString stringWithFormat:@"%.0f %@\n",NSDate.date.timeIntervalSince1970*1000,request] writeToFile:path atomically:YES encoding:NSUTF8StringEncoding error:nil];
+}
+/* Graphics presets: the game's own detail settings, set in one step by
+   base/autoexec.cs (TribesPadGraphics). Balanced is Dynamix's High profile
+   for detail; Fast is its Medium profile. The game's Options still change
+   each setting afterwards. */
+-(void)confirmGraphics:(NSString *)preset {
+    if(!self.gameReported){
+        [self showMessage:@"Graphics" text:@"Sign in to TribesNEXT first; the presets apply once the game is past the login."];return;
+    }
+    [self releaseControls];
+    BOOL fast=[preset isEqualToString:@"fast"];
+    NSString *text=fast?
+        @"Coarser terrain and shapes, no clouds, decals, reflections or building lights, light shadows and no weather. The smoothest choice on busy maps.":
+        @"Terrain, buildings and sky at the game's own High detail, one cloud layer, light shadows and no weather. Much less work than the maximum detail sliders, with little visible difference.";
+    UIAlertController *alert=[UIAlertController alertControllerWithTitle:fast?@"Fast Graphics":@"Balanced Graphics"
+        message:[text stringByAppendingString:@"\n\nIt sets the detail sliders in the game's Options > Graphics, where you can still change each one. Turn on ··· > FPS Counter to see the difference."]
+        preferredStyle:UIAlertControllerStyleAlert];
+    __weak TBGameControls *weak=self;
+    [alert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
+    [alert addAction:[UIAlertAction actionWithTitle:@"Apply" style:UIAlertActionStyleDefault handler:^(UIAlertAction *a){(void)a;
+        [weak sendRequest:[@"graphics " stringByAppendingString:preset]];
+        [NSUserDefaults.standardUserDefaults setObject:preset forKey:@"TribesPad.graphicsPreset"];[weak rebuildMenu];}]];
+    alert.overrideUserInterfaceStyle=UIUserInterfaceStyleDark;[[self presenter] presentViewController:alert animated:YES completion:nil];
+}
+/* Profiles made before TribesPad set detail defaults (and every profile
+   whose Options were saved with empty detail prefs) sit at the most
+   expensive settings: terrain screenError 0, shape detail near 2. Offer
+   Balanced once, outside a match. */
+-(void)offerBalancedIfMaximum {
+    if(self.inMatch||tb_setting(@"TribesPad.detailOfferShown",0)||[NSUserDefaults.standardUserDefaults stringForKey:@"TribesPad.graphicsPreset"])return;
+    NSString *prefs=[NSString stringWithContentsOfFile:[[NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,NSUserDomainMask,YES).firstObject
+        stringByAppendingPathComponent:@"TribesPad/Game/base/prefs"] stringByAppendingPathComponent:@"ClientPrefs.cs"] encoding:NSUTF8StringEncoding error:nil];
+    double (^pref)(NSString *)=^double(NSString *name){
+        NSRange r=[prefs rangeOfString:[NSString stringWithFormat:@"$pref::%@ = \"",name]];
+        return r.location==NSNotFound?-1:[[prefs substringFromIndex:NSMaxRange(r)] doubleValue];};
+    double terrain=pref(@"Terrain::screenError"),shapes=pref(@"TS::detailAdjust");
+    if(!prefs||terrain<0||terrain>2||shapes<1.5)return;
+    tb_set(@"TribesPad.detailOfferShown",1);[self releaseControls];
+    UIAlertController *alert=[UIAlertController alertControllerWithTitle:@"Graphics at Maximum Detail"
+        message:@"Terrain and shape detail are set above the game's own High preset, which costs a lot of frames in busy matches. "
+            "Balanced keeps the game's High detail and plays much smoother. You can switch any time in ··· > Graphics Quality."
+        preferredStyle:UIAlertControllerStyleAlert];
+    __weak TBGameControls *weak=self;
+    [alert addAction:[UIAlertAction actionWithTitle:@"Keep Maximum" style:UIAlertActionStyleCancel handler:nil]];
+    [alert addAction:[UIAlertAction actionWithTitle:@"Use Balanced" style:UIAlertActionStyleDefault handler:^(UIAlertAction *a){(void)a;
+        [weak sendRequest:@"graphics balanced"];
+        [NSUserDefaults.standardUserDefaults setObject:@"balanced" forKey:@"TribesPad.graphicsPreset"];[weak rebuildMenu];}]];
+    alert.preferredAction=alert.actions.lastObject;
+    alert.overrideUserInterfaceStyle=UIUserInterfaceStyleDark;[[self presenter] presentViewController:alert animated:YES completion:nil];
+}
+/* Playing Now: people and bots per server, live; tap one to join it. */
+-(void)showLiveServers {
+    SDL_Window *window=SDL_GetWindowFromID(self.controls->window);if(window)SDL_StopTextInput(window);
+    [self releaseControls];
+    __weak TBGameControls *weak=self;
+    TBLiveServersController *live=[[TBLiveServersController alloc] initWithStyle:UITableViewStyleInsetGrouped];
+    if(self.gameReported&&!self.connected)live.join=^(NSString *address){[weak sendRequest:[@"join " stringByAppendingString:address]];};
+    live.serverList=^{[weak openServerList];};
+    live.starsiege=tb_starsiege;
+    UINavigationController *sheet=[[UINavigationController alloc] initWithRootViewController:live];
+    sheet.modalPresentationStyle=UIModalPresentationFormSheet;sheet.overrideUserInterfaceStyle=UIUserInterfaceStyleDark;
+    [[self presenter] presentViewController:sheet animated:YES completion:nil];
+}
+/* Web pages open in a sheet over the game, so a match keeps running. */
+-(void)openPage:(NSString *)url {
+    SDL_Window *window=SDL_GetWindowFromID(self.controls->window);if(window)SDL_StopTextInput(window);
+    [self releaseControls];
+    SFSafariViewController *page=[[SFSafariViewController alloc] initWithURL:[NSURL URLWithString:url]];
+    page.modalPresentationStyle=UIModalPresentationPageSheet;page.overrideUserInterfaceStyle=UIUserInterfaceStyleDark;
+    [[self presenter] presentViewController:page animated:YES completion:nil];
+}
+/* Discord links go to the Discord app (or Safari without it). */
+-(void)openLink:(NSString *)url {
+    [self releaseControls];
+    [UIApplication.sharedApplication openURL:[NSURL URLWithString:url] options:@{} completionHandler:nil];
+}
+/* The community's regular games (tribes2forever.com, 22 October 2026), in
+   the player's own time zone, soonest first. */
+-(void)showSchedule {
+    [self releaseControls];
+    NSCalendar *eastern=[[NSCalendar alloc] initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
+    eastern.timeZone=[NSTimeZone timeZoneWithName:@"America/New_York"];
+    NSDateFormatter *format=[NSDateFormatter new];[format setLocalizedDateFormatFromTemplate:@"EEEEjmm"];
+    format.timeZone=NSTimeZone.localTimeZone;
+    struct {NSInteger weekday,hour,minute;BOOL biweekly;NSString *what;} games[]={
+        {4,21,0,NO,@"Weekly pickup game"},{7,21,30,NO,@"Weekly pickup game, the big one"},{1,21,30,YES,@"CTF public game (every other Sunday)"}};
+    // The every-other-week CTF game ran on 24 May 2026 (tribes2forever.com).
+    NSDateComponents *anchorParts=[NSDateComponents new];anchorParts.year=2026;anchorParts.month=5;anchorParts.day=24;anchorParts.hour=21;anchorParts.minute=30;
+    NSDate *anchor=[eastern dateFromComponents:anchorParts];
+    NSMutableArray<NSArray *> *next=[NSMutableArray array];
+    for(unsigned i=0;i<sizeof games/sizeof games[0];i++){
+        NSDateComponents *when=[NSDateComponents new];when.weekday=games[i].weekday;when.hour=games[i].hour;when.minute=games[i].minute;
+        // Still on now if it started in the last two hours.
+        NSDate *date=[eastern nextDateAfterDate:[NSDate dateWithTimeIntervalSinceNow:-7200] matchingComponents:when options:NSCalendarMatchNextTime];
+        if(date&&games[i].biweekly&&anchor){
+            NSInteger days=[eastern components:NSCalendarUnitDay fromDate:anchor toDate:date options:0].day;
+            if((days/7)%2)date=[eastern dateByAddingUnit:NSCalendarUnitDay value:7 toDate:date options:0];
+        }
+        if(date)[next addObject:@[date,games[i].what]];
+    }
+    [next sortUsingComparator:^NSComparisonResult(NSArray *a,NSArray *b){return [a[0] compare:b[0]];}];
+    NSMutableString *text=[NSMutableString string];
+    NSDateComponentsFormatter *until=[NSDateComponentsFormatter new];until.unitsStyle=NSDateComponentsFormatterUnitsStyleAbbreviated;
+    until.allowedUnits=NSCalendarUnitDay|NSCalendarUnitHour|NSCalendarUnitMinute;until.maximumUnitCount=2;
+    for(NSArray *game in next){
+        NSTimeInterval wait=[game[0] timeIntervalSinceNow];
+        NSString *when=wait<=0?@"on now":[@"in " stringByAppendingString:[until stringFromTimeInterval:wait]?:@""];
+        [text appendFormat:@"%@ (%@)\n%@\n\n",[format stringFromDate:game[0]],when,game[1]];
+    }
+    NSTimeZone *zone=NSTimeZone.localTimeZone;
+    [text appendFormat:@"Shown in your time zone, %@. The community sets them in US Eastern time: 9:00 PM Wednesdays, 9:30 PM Saturdays and Sundays. "
+        "At other hours most public servers are empty or hold only bots. Sign-ups and pickups are posted on the PlayT2 and The Cut Discords; check there for changes.",
+        [zone localizedName:NSTimeZoneNameStyleGeneric locale:NSLocale.currentLocale]?:zone.name];
+    UIAlertController *alert=[UIAlertController alertControllerWithTitle:@"Game Nights" message:text preferredStyle:UIAlertControllerStyleAlert];
+    __weak TBGameControls *weak=self;
+    [alert addAction:[UIAlertAction actionWithTitle:@"PlayT2 Discord" style:UIAlertActionStyleDefault handler:^(UIAlertAction *a){(void)a;[weak openLink:TBPlayT2Discord];}]];
+    [alert addAction:[UIAlertAction actionWithTitle:@"Who's Playing Now" style:UIAlertActionStyleDefault handler:^(UIAlertAction *a){(void)a;[weak showLiveServers];}]];
+    [alert addAction:[UIAlertAction actionWithTitle:@"Done" style:UIAlertActionStyleCancel handler:nil]];
+    alert.overrideUserInterfaceStyle=UIUserInterfaceStyleDark;[[self presenter] presentViewController:alert animated:YES completion:nil];
+}
 -(void)showTouchGuide {
     [self showMessage:@"Touch and Trackpad" text:@"Menus: with the cursor button on, drag anywhere to move the cursor and tap to click. "
         "Touch and hold, then drag, to move sliders. Drag with two fingers to scroll. Turn the cursor off to tap menus directly.\n\n"
@@ -851,8 +1346,9 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
     NSString *name=self.controller.vendorName;
     [self showMessage:name.length?name:@"Controller Guide" text:[NSString stringWithFormat:@"%@\n\n"
         "PLAYING\nLeft stick: move · Right stick: aim\nRT: fire · LT: jet · A: ski / jump\n"
-        "RB / LB: next / previous weapon\nY: grenade · X: use pack · B: mine\n"
+        "RB: next weapon · LB: targeting laser\nY: grenade · X: use pack · B: place mine\n"
         "D-pad: up repair kit · down inventory · left beacon · right quick chat\n"
+        "Quick chat: D-pad to choose, A to open or say, B to go back\n"
         "Click right stick: zoom on / off · click left stick: third person\nMenu: game menu · View: scores\n"
         "Observing after you join? Press RT to join a team.\n"
         "Loadout: D-pad down opens inventory; pick armor and weapons there.\n\n"
@@ -874,6 +1370,22 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
         message:[NSString stringWithFormat:@"The original Tribes 2 with TribesNEXT/QoL, translated ahead of time to native ARM64.\n\nVersion %@\nGame data: %@",version,data]
         preferredStyle:UIAlertControllerStyleAlert];
     [alert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
+    alert.overrideUserInterfaceStyle=UIUserInterfaceStyleDark;[[self presenter] presentViewController:alert animated:YES completion:nil];
+}
+/* Switch Game (docs/LAUNCHER-PLAN.md): an engine can't be unloaded, so TribesPad
+   closes, as when it is swiped away, and the next launch starts the other game
+   (TribesPad.nextGame, consumed by the picker) without showing the picker. */
+-(void)switchGame {
+    BOOL toStarsiege=!tb_starsiege;NSString *other=toStarsiege?@"Starsiege: Tribes":@"Tribes 2";
+    UIAlertController *alert=[UIAlertController alertControllerWithTitle:[NSString stringWithFormat:@"Switch to %@?",other]
+        message:[NSString stringWithFormat:@"TribesPad closes this game. Open TribesPad again from the Home Screen and %@ starts.",other]
+        preferredStyle:UIAlertControllerStyleAlert];
+    [alert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
+    [alert addAction:[UIAlertAction actionWithTitle:@"Close and Switch" style:UIAlertActionStyleDefault handler:^(UIAlertAction *a){(void)a;
+        [NSUserDefaults.standardUserDefaults setObject:toStarsiege?@"starsiege":@"tribes2" forKey:@"TribesPad.nextGame"];
+        [NSUserDefaults.standardUserDefaults synchronize];
+        fprintf(stderr,"TribesPad: switching to %s at the next launch; closing\n",toStarsiege?"Starsiege: Tribes":"Tribes 2");
+        exit(0);}]];
     alert.overrideUserInterfaceStyle=UIUserInterfaceStyleDark;[[self presenter] presentViewController:alert animated:YES completion:nil];
 }
 -(void)openMenu {
@@ -918,10 +1430,15 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
     CGSize hintSize=[self.hint sizeThatFits:CGSizeMake(fmin(w-120,720),200)];
     self.hint.frame=CGRectMake(x+(w-hintSize.width-28)/2,y+h*.16,hintSize.width+28,hintSize.height+18);
     // Beside the menu button.
-    self.fps.frame=CGRectMake(right-160,top+(b-22)/2,152,22);
+    // Top right corner, inside the safe area.
+    UIEdgeInsets safe=self.window.safeAreaInsets;
+    self.fps.frame=CGRectMake(CGRectGetMaxX(self.bounds)-fmax(safe.right,8)-168,fmax(safe.top,6),168,22);
+    if(self.quickChat){CGSize q=[self.quickChat sizeThatFits:CGSizeZero];q.height=fmin(q.height,h-20);
+        self.quickChat.frame=CGRectMake(x+fmax(margin,24),y+(h-q.height)/2,q.width,q.height);[self bringSubviewToFront:self.quickChat];}
     /* A connected mouse or trackpad points at the game itself (SDL), so the
        trackpad-cursor overlay must not take its clicks. */
-    self.trackpad.frame=self.bounds;self.trackpad.hidden=self.expanded||self.inMatch||!(TB_TRACKPAD||self.controllerUsed)||(self.mouseConnected&&!self.controllerUsed);
+    /* Starsiege moves the game's own cursor from the controller (starsiege_input.c). */
+    self.trackpad.frame=self.bounds;self.trackpad.hidden=self.expanded||self.inMatch||!(TB_TRACKPAD||(self.controllerUsed&&!tb_starsiege))||(self.mouseConnected&&!self.controllerUsed);
     // Movement stick bottom left; Pack and Inventory above it.
     CGFloat stick=170*k,small=58*k;
     CGRect stickFrame=CGRectMake(x+margin,y+h-margin-stick,stick,stick);
@@ -952,6 +1469,13 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
         pad.caption.hidden=pad.kind==TBKindButton&&pad.bounds.size.width<52;[pad setNeedsLayout];}
 }
 @end
+void tb_mobile_controls_install_starsiege(void) {
+    /* Starsiege's config.cs: W S A D move, Space jets up (jump), G grenade,
+       Q next weapon, P pack, I inventory; fire and jet are the mouse buttons. */
+    static const SDL_Scancode keys[9]={SDL_SCANCODE_W,SDL_SCANCODE_S,SDL_SCANCODE_A,SDL_SCANCODE_D,SDL_SCANCODE_SPACE,
+        SDL_SCANCODE_G,SDL_SCANCODE_Q,SDL_SCANCODE_P,SDL_SCANCODE_I};
+    tb_starsiege=YES;tb_mobile_controls_keys(keys);tb_mobile_controls_install();
+}
 void tb_mobile_controls_install(void) {
     static TBMobileControls controls;
     static TBGameControls *overlay;

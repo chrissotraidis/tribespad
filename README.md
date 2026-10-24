@@ -81,8 +81,14 @@ Performance went from unplayable to steady in the Simulator:
 | + lighter GL checks, draw streaming, texture-upload ring, faster float paths | **~30 FPS** steady, worst frames 50–90 ms, ~70 s map load |
 
 The steady 30 FPS is the vertical-sync pacing: with VSync off the same match runs
-36–37 FPS. Physical-device numbers will differ. Details are in the
-[handoff](docs/HANDOFF.md) and [performance records](docs/validation/ipad-hardware-permissions.json).
+36–37 FPS. Details are in the [handoff](docs/HANDOFF.md) and
+[performance records](docs/validation/ipad-hardware-permissions.json).
+
+On a physical 12.9-inch iPad Pro (M2), online with maximum detail settings, menus run
+at 74–104 FPS and matches at about 22–31 FPS. To go faster, try **··· → Graphics →
+Balanced** (or **Fast**) and **Settings → Render Scale** below 100%. The
+[performance notes](docs/PERFORMANCE.md) explain the measurements and how to read the
+FPS counter and session log.
 
 ## Play an offline match
 
@@ -127,12 +133,15 @@ sends the game's own key, so the original screens open.
 
 | Item | What it does |
 |---|---|
+| Find a Game | **Who's Playing Now**: every TribesNEXT server with people and bots counted separately (the game's own list mixes them: "40/48 (38)" is two people); tap one to join. **Server List**: the original PLAY GAME → JOIN (on a server it offers to leave the match first). **Game Nights**: the regular pickup times in your time zone. **Community**: the PlayT2 and The Cut Discords, the TribesPad Discord and the TribesNEXT forum. First in the menu between matches; under the match items during one. |
 | Game Menu | The original Escape menu |
 | Scores | The original score screen (F2); choose it again to close |
 | Chat | All Chat, Team Chat (the keyboard opens and the controls return after sending) and the Quick Chat menu |
 | Actions | Repair kit, mine, beacon, targeting laser, throw flag, zoom, third-person view, command map, suicide |
 | Show / Hide Touch Controls, Trackpad Cursor | Same as the buttons on the right edge |
-| Settings… | Touch controls (size, opacity, look sensitivity, left-handed, hide with a controller), trackpad cursor and speed, keep clear of the notch, FPS counter; reset to defaults |
+| Graphics Quality | **Balanced** (the game's own High detail, one cloud layer, light shadows, no weather) or **Fast** (less detail, no clouds); **Render Scale** on iPad. New profiles start at Balanced. Asks first; the game's Options still change each setting |
+| FPS Counter | Top right: frames each second and the slowest frame among them (orange when a frame takes 50 ms or more; "Hot" when the device is throttling) |
+| Settings… | Touch controls (size, opacity, look sensitivity, left-handed, hide with a controller), trackpad cursor and speed, keep clear of the notch, FPS counter, render scale (iPad); reset to defaults |
 | Help | Touch and trackpad guide, controller guide, original console, TribesPad on GitHub, About |
 
 ![Touch Settings during a match](docs/images/tribespad-touch-settings.jpg)
@@ -172,10 +181,41 @@ join a team. Change armor and weapons at an inventory station or with **Inventor
 
 The Tribes 2 community mostly plays at set times in North American evenings: pickup
 games, The Cut and the 25th Anniversary draft league. At other hours most public
-servers are empty or hold only bots. The PlayT2 and The Cut Discord servers and
-TribalOutpost list where and when people play.
+servers are empty or hold only bots. **··· → Find a Game** shows who is playing now,
+the regular game nights in your time zone, and the PlayT2 and The Cut Discords, where
+pickups are organized.
 Missing maps and interiors download from the TribesNEXT asset depot (on by default
 in TribesPad).
+
+### Game picker
+
+TribesPad opens to a picker: **Tribes 2** (TribesNEXT, with how many people are playing
+now) and **Starsiege: Tribes**, which is marked in development until its translation plays
+([plan](docs/STARSIEGE-TRIBES-PLAN.md)). Tap Tribes 2, press Return or a controller's A to play.
+The gear at the top right has **Open Tribes 2 Directly**, which skips the picker; **Settings →
+Display → Game Picker at Launch** brings it back. Each card shows its game's own title screen,
+taken at build time from your own downloads: Tribes 2's installer, and Starsiege's 1.41 game files
+once `scripts/starsiege/prepare-inputs.py` has prepared them. Nothing from either game is in the repository.
+
+
+### Keyboard and trackpad
+
+With a Magic Keyboard or keyboard folio on iPad, **W A S D** move, **E** zooms and **Q** picks
+the next weapon, as with Tribes 2's WASD layout. TribesPad translates keys from the physical
+keyboard into the game's own E S D F binds, so the touch controls and controllers keep working
+and your saved binds don't change. Turn it off in **Settings → Keyboard and Trackpad** to use
+the original keys. The trackpad moves the game's cursor in menus; in play the game asks iPadOS
+to lock the pointer for mouse look (full screen only). Keyboards without an Esc key can use
+⌘-period, or map Caps Lock to Escape in iPadOS Settings → General → Keyboard → Hardware Keyboard.
+
+
+### Skins
+
+In the Files app, **On My iPad (or iPhone) → TribesPad → Skins** takes Tribes 2 player
+skins (`name.lmale.png`, `name.lfemale.png`, `name.lbioderm.png`) and skin packs
+(`.vl2`). TribesPad copies them into the game when it opens; choose yours under
+**PLAY GAME → WARRIOR SETUP → Custom Skins**. Other players see your skin only if they
+have the same file. TribesPad ships no community skins.
 
 **Settings → Online Play** off starts offline instead: Training, LAN Game, and
 the internet server list in JOIN without signing in.
