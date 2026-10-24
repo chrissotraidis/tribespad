@@ -30,3 +30,21 @@ void x87_fsincos_void(_cpu *cpu){
  write_st(cpu,0,s);push(cpu,c);
 }
 
+
+/* FXAM: classify ST0 into C3, C2, C0 (Intel SDM table), C1 = sign. Empty
+   registers report Empty. Unnormals (no explicit integer bit) report 0,0,0. */
+void x87_fxam_void(_cpu *cpu){
+ unsigned i=slot(cpu,0);TBExt80 v;memcpy(&v.significand,&cpu->_st[i],8);v.sign_exponent=cpu->_st_exp[i];
+ unsigned e=v.sign_exponent&0x7fff,c3=0,c2=0,c0=0;
+ if(((cpu->_st_tag>>(2*i))&3)==3){c3=1;c0=1;}
+ else if(e==0x7fff){ if(v.significand<<1){c0=1;} else {c2=1;c0=1;} }
+ else if(e==0){ if(!v.significand)c3=1; else {c3=1;c2=1;} }
+ else if(v.significand>>63)c2=1;
+ cpu->_st_sw_cond=(cpu->_st_sw_cond&~0x4700u)|(c3?0x4000u:0)|(c2?0x400u:0)|((v.sign_exponent&0x8000)?0x200u:0)|(c0?0x100u:0);
+}
+/* FLDL2E: push log2(e) rounded per the control word (nearest: ...F0BC). */
+void x87_fldl2e_void(_cpu *cpu){
+ unsigned rounding=(cpu->_st_cw>>10)&3;uint64_t significand=UINT64_C(0xB8AA3B295C17F0BC);
+ if(rounding==2)significand++; /* up: the exact value lies above */
+ push(cpu,(TBExt80){significand,0x3fff});
+}

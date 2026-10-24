@@ -3,6 +3,7 @@
  * the socket options Starsiege sets. The Starsiege build compiles this file in
  * place of native_winsock.c. */
 #include "../core/native_winsock.c"
+#include <arpa/inet.h>
 
 /* int setsockopt(SOCKET, int level, int option, const char *value, int length).
    SO_SNDBUF (0x1001) and SO_RCVBUF (0x1002) apply to the real host socket;
@@ -18,3 +19,12 @@ uint32_t ss_setsockopt(uint64_t base,uint32_t handle,uint32_t level,uint32_t opt
  return tribes_setsockopt(base,handle,level,option,value,length);
 }
 
+
+/* unsigned long inet_addr(const char *): the host's parser accepts the same
+   dotted forms as Windows and returns INADDR_NONE for invalid input; both
+   give network byte order in the same four bytes. */
+uint32_t ss_inet_addr(uint64_t base,uint32_t text){
+ const char *p=guest(base,text,1);if(!p)return UINT32_MAX;
+ char copy[64];size_t n=strnlen(p,sizeof copy);if(n==sizeof copy)return UINT32_MAX;memcpy(copy,p,n);copy[n]=0;
+ return (uint32_t)inet_addr(copy);
+}

@@ -26,7 +26,7 @@
    "guest_base": false
   },
   "HeapSize": {
-   "helper": "ss_heap_size",
+   "helper": "ss_heap_size_fast",
    "arguments": 3,
    "returns": true,
    "guest_base": true
@@ -477,6 +477,12 @@
    "helper_returns": "void",
    "guest_base": false,
    "cpu_argument": true
+  },
+  "inet_addr": {
+   "helper": "ss_inet_addr",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true
   }
  },
  "overrides": {
@@ -589,6 +595,48 @@
    "returns": true,
    "guest_base": true,
    "why": "Logs Starsiege's OpenGL function-table lookups during bring-up; results come from TribesPad's loader unchanged."
+  },
+  "GetProcessHeap": {
+   "helper": "ss_get_process_heap",
+   "arguments": 0,
+   "returns": true,
+   "guest_base": true,
+   "why": "Starsiege's C runtime sends every malloc/free to the Win32 heap; port/starsiege/starsiege_fast_heap.c answers in constant time (TribesPad's list heap stalled start-up for 25 s). Blocks it did not allocate go to the original heap."
+  },
+  "HeapCreate": {
+   "helper": "ss_heap_create",
+   "arguments": 3,
+   "returns": true,
+   "guest_base": true,
+   "why": "Starsiege's C runtime sends every malloc/free to the Win32 heap; port/starsiege/starsiege_fast_heap.c answers in constant time (TribesPad's list heap stalled start-up for 25 s). Blocks it did not allocate go to the original heap."
+  },
+  "HeapDestroy": {
+   "helper": "ss_heap_destroy",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true,
+   "why": "Starsiege's C runtime sends every malloc/free to the Win32 heap; port/starsiege/starsiege_fast_heap.c answers in constant time (TribesPad's list heap stalled start-up for 25 s). Blocks it did not allocate go to the original heap."
+  },
+  "HeapAlloc": {
+   "helper": "ss_heap_alloc",
+   "arguments": 3,
+   "returns": true,
+   "guest_base": true,
+   "why": "Starsiege's C runtime sends every malloc/free to the Win32 heap; port/starsiege/starsiege_fast_heap.c answers in constant time (TribesPad's list heap stalled start-up for 25 s). Blocks it did not allocate go to the original heap."
+  },
+  "HeapFree": {
+   "helper": "ss_heap_free",
+   "arguments": 3,
+   "returns": true,
+   "guest_base": true,
+   "why": "Starsiege's C runtime sends every malloc/free to the Win32 heap; port/starsiege/starsiege_fast_heap.c answers in constant time (TribesPad's list heap stalled start-up for 25 s). Blocks it did not allocate go to the original heap."
+  },
+  "HeapReAlloc": {
+   "helper": "ss_heap_realloc",
+   "arguments": 4,
+   "returns": true,
+   "guest_base": true,
+   "why": "Starsiege's C runtime sends every malloc/free to the Win32 heap; port/starsiege/starsiege_fast_heap.c answers in constant time (TribesPad's list heap stalled start-up for 25 s). Blocks it did not allocate go to the original heap."
   }
  }
 }

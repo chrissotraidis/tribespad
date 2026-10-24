@@ -25,6 +25,8 @@ HOST_ROUTES = [('StarsiegeGuestMalloc', 'ss_guest_malloc', 1), ('StarsiegeGuestC
 # Reported as not present. Plugins and Windows-only helpers; DirectInput is
 # optional in 1.40 (Win32 messages drive input when it is missing); DirectSound
 # waits for a native provider at G3 (sound), so the menu runs silent until then.
+# Optimization for the translated game (STARSIEGE_OPT=-O0 for faster iteration).
+OPT = os.environ.get('STARSIEGE_OPT', '-O1')
 ABSENT = ['ScriptGL.dll', 'rmdgfx.dll', 'mscoree.dll', 'dbghelp.dll', 'dInput.dll', 'dSound.dll']
 
 def load(name, path):
@@ -57,7 +59,7 @@ RUNTIME = [R / 'port/core' / (n + '.c') for n in [
     R / 'port/starsiege/starsiege_x87.c', R / 'port/starsiege/starsiege_win32.c', R / 'port/starsiege/starsiege_heap.c',
     R / 'port/starsiege/starsiege_display.c', R / 'port/starsiege/starsiege_windows.c',
     R / 'port/starsiege/starsiege_winsock.c', R / 'port/starsiege/starsiege_registry.c',
-    R / 'port/starsiege/starsiege_critical_section.c'] + [
+    R / 'port/starsiege/starsiege_critical_section.c', R / 'port/starsiege/starsiege_fast_heap.c'] + [
     R / 'port/llasm-support' / (n + '.c') for n in [
     'tribes_result', 'tribes_sse', 'tribes_quadword_conversion', 'tribes_shift', 'tribes_absolute_memory', 'tribes_atomic',
     'tribes_float80', 'tribes_mmx', 'tribes_scan', 'tribes_x87']] + [
@@ -258,12 +260,12 @@ def compile_objects(report, graphics):
             cache[str(source)] = key
         objects.append(str(obj))
     module = OUT / 'obj/module.o'
-    if cache.get('module') != sha(OUT / 'module.ll') or not module.exists():
+    if cache.get('module') != sha(OUT / 'module.ll') + OPT or not module.exists():
         say('compiling the translated game (a few minutes)')
         start = time.monotonic()
-        subprocess.run(['clang'] + TARGET + ['-O0', '-Wno-override-module', '-c', str(OUT / 'module.ll'), '-o', str(module)], check=True)
+        subprocess.run(['clang'] + TARGET + [OPT, '-Wno-override-module', '-c', str(OUT / 'module.ll'), '-o', str(module)], check=True)
         report['module_compile_seconds'] = round(time.monotonic() - start)
-        cache['module'] = sha(OUT / 'module.ll')
+        cache['module'] = sha(OUT / 'module.ll') + OPT
     cache_path.write_text(json.dumps(cache, indent=1) + '\n')
     return objects + [str(module)] + math['libraries'] + graphics['libraries']
 
@@ -284,15 +286,21 @@ def link(objects, report):
     report['engine_sha256'] = sha(exe)
     return exe
 
-def run(exe, timeout, report):
+def run(exe, timeout, report, route=None):
     work = OUT / 'run'
     if work.exists():
         shutil.rmtree(work)
     game, temp = work / 'volume/TribesPad/Game', work / 'volume/TribesPad/Temp'
     shutil.copytree(R / 'ref/starsiege/game', game)
+    # The installer carries its packager's stale server state; a fresh game has none.
+    for stale in (game / 'temp').glob('serverTempData*.cs'):
+        stale.unlink()
     # Diagnostics in the run copy only: the game's own console log (console.log).
     script = game / 'console.cs'
     script.write_text('$Console::LogMode = 1;\n' + script.read_text(errors='replace'))
+    if route:
+        # A scripted route for headless checks, appended to the run copy only.
+        script.write_text(script.read_text(errors='replace') + '\n' + route + '\n')
     temp.mkdir(parents=True)
     say('running headless (no window)')
     capture = work / 'frames'
@@ -313,6 +321,7 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__.split('\n')[0])
     ap.add_argument('--run', action='store_true')
     ap.add_argument('--timeout', type=int, default=60)
+    ap.add_argument('--route', help='TorqueScript appended to the run copy of console.cs (headless checks)')
     a = ap.parse_args()
     OUT.mkdir(parents=True, exist_ok=True)
     report = {'playable': False, 'headless': True}
@@ -320,7 +329,7 @@ def main():
     prepare(report, graphics['bindings'])
     exe = link(compile_objects(report, graphics), report)
     if exe and a.run:
-        run(exe, a.timeout, report)
+        run(exe, a.timeout, report, a.route)
     (OUT / 'result.json').write_text(json.dumps(report, indent=1) + '\n')
     print(json.dumps({k: v for k, v in report.items() if k != 'direct_targets_trapped'}, indent=1))
     return 0 if exe else 1

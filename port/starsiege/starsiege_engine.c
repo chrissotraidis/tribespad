@@ -59,8 +59,6 @@ void x86_rdtsc(_cpu *c){stop(c,"rdtsc",0);}
 void x86_repe_cmpsw_prep(_cpu *c){stop(c,"repe_cmpsw",0);}
 uint32_t X86_InterruptFlag=1;
 void x86_int(_cpu *c,uint32_t number){stop(c,"interrupt",number);}
-void x87_fldl2e_void(_cpu *c){stop(c,"fldl2e",0);}
-void x87_fxam_void(_cpu *c){stop(c,"fxam",0);}
 void x87_fnsave_void(_cpu *c,uint8_t *memory){(void)memory;stop(c,"fnsave",0);}
 void x87_frstor_void(_cpu *c,const uint8_t *memory){(void)memory;stop(c,"frstor",0);}
 
