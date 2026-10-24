@@ -37,6 +37,12 @@ struct TribesGL4ESContext {
 #endif
 };
 static int initialized;
+/* Time the game thread spends blocked on the GPU: QoL's frame-latency fence
+   (glClientWaitSync, port/core/guest_sdl_backend.c) and this file's stream
+   ring. ANGLE returns from SwapWindow at once on iOS, so swap time alone
+   does not show a GPU limit. */
+static _Atomic uint64_t gpu_wait_ns;
+void tribes_gl4es_note_gpu_wait(uint64_t ns) { atomic_fetch_add_explicit(&gpu_wait_ns,ns,memory_order_relaxed); }
 
 static void require_current(TribesGL4ESContext *context) {
     if (!pthread_main_np() || !context || SDL_GL_GetCurrentContext()!=context->native ||
@@ -130,7 +136,9 @@ static int ring_reserve(StreamRing *r,size_t bytes,size_t *offset){
     if(segment!=r->segment){
         if(!r->fences[r->segment])r->fences[r->segment]=real.fence(GL_SYNC_GPU_COMMANDS_COMPLETE,0);
         if(r->fences[segment]){
+            Uint64 wait_begin=SDL_GetTicksNS();
             while(real.client_wait(r->fences[segment],GL_SYNC_FLUSH_COMMANDS_BIT,UINT64_C(1000000000))==GL_TIMEOUT_EXPIRED){}
+            tribes_gl4es_note_gpu_wait(SDL_GetTicksNS()-wait_begin);
             real.delete_sync(r->fences[segment]);r->fences[segment]=NULL;
         }
         r->segment=segment;
@@ -445,8 +453,13 @@ uint64_t tribes_gl4es_presented_frames(void) { return atomic_load_explicit(&pres
 uint64_t tribes_gl4es_take_longest_frame_ns(void) { return atomic_exchange_explicit(&longest_frame_ns,0,memory_order_relaxed); }
 /* The app was in the background: no frames were due, so start measuring again. */
 void tribes_gl4es_resume_frame_stats(void) { atomic_store_explicit(&frame_stats_resumed,true,memory_order_relaxed); }
-static void note_present(void) {
-    static Uint64 last, start, frames, longest, hitches; static unsigned logged;
+/* present_ns is the time spent in flush and swap. Together with the fence
+   waits counted in gpu_wait_ns it is the time the game waited on the GPU; the
+   rest of a frame is the game's own work (translated code, terrain, scripts).
+   A slow stretch with little GPU wait is limited by the CPU. */
+static void note_present(Uint64 present_ns) {
+    static Uint64 last, start, frames, longest, hitches, presenting; static unsigned logged;
+    present_ns+=atomic_exchange_explicit(&gpu_wait_ns,0,memory_order_relaxed);
     Uint64 now=SDL_GetTicksNS();
     atomic_fetch_add_explicit(&presented_frames,1,memory_order_relaxed);
     if (atomic_exchange_explicit(&frame_stats_resumed,false,memory_order_relaxed)) {
@@ -456,15 +469,16 @@ static void note_present(void) {
         Uint64 gap=now-last;
         if (gap>atomic_load_explicit(&longest_frame_ns,memory_order_relaxed))
             atomic_store_explicit(&longest_frame_ns,gap,memory_order_relaxed);
-        frames++; if (gap>longest) longest=gap; if (gap>UINT64_C(50000000)) hitches++;
+        frames++; presenting+=present_ns; if (gap>longest) longest=gap; if (gap>UINT64_C(50000000)) hitches++;
         if (now-start>=UINT64_C(10000000000)) {
             double fps=frames*1e9/(now-start);
-            if ((fps<25 || longest>UINT64_C(250000000)) && logged<360) {
+            if ((fps<50 || longest>UINT64_C(250000000)) && logged<360) {
                 logged++;
-                fprintf(stderr,"TribesPad slow stretch: at %.0f s, %.1f FPS over %.0f s, longest frame %.0f ms, %llu frames over 50 ms\n",
-                    now/1e9,fps,(now-start)/1e9,longest/1e6,(unsigned long long)hitches);
+                fprintf(stderr,"TribesPad slow stretch: at %.0f s, %.1f FPS over %.0f s, longest frame %.0f ms, %llu frames over 50 ms, waiting for the GPU %.1f of %.1f ms per frame\n",
+                    now/1e9,fps,(now-start)/1e9,longest/1e6,(unsigned long long)hitches,
+                    frames?presenting/1e6/frames:0.0,frames?(now-start)/1e6/frames:0.0);
             }
-            start=now; frames=longest=hitches=0;
+            start=now; frames=longest=hitches=presenting=0;
         }
     } else start=now;
     last=now;
@@ -473,11 +487,11 @@ static void note_present(void) {
 bool tribes_gl4es_context_swap(TribesGL4ESContext *context) {
     require_current(context);
     if (glstate!=context->state) abort();
-    Uint64 begin=context->frame_timing?SDL_GetTicksNS():0;
+    Uint64 begin=SDL_GetTicksNS();
     gl4es_glFlush();
     bool result=SDL_GL_SwapWindow(context->window);
     tribes_gl4es_context_activate(context);
-    if (result) note_present();
+    if (result) note_present(SDL_GetTicksNS()-begin);
     if (context->frame_timing && result) {
         /* Opt-in native submission timing, independent of screen recording.
            Includes flush/swap/reactivation; it is not GPU completion timing. */

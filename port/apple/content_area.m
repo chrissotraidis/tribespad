@@ -22,8 +22,14 @@ static bool measure(void){
         /* Phones are under 480 points tall. The original UI needs 480 lines at
            its scale, and QoL only uses whole scales, so render the game 960
            pixels tall: scale 2 then draws the UI over exactly 480 lines, as
-           large as it can be. iPad and Mac keep the native resolution. */
-        density=s.height<480?(float)fmin(w.screen.scale,960.0/s.height):0;
+           large as it can be. iPad keeps the native resolution unless
+           Settings > Render Scale lowers it: the game then draws fewer pixels
+           and the system scales them up. The menus keep their size, because
+           the UI scale follows the pixel height (guest_sdl_backend.c). */
+        double scale=[NSUserDefaults.standardUserDefaults doubleForKey:@"TribesPad.renderScale"];
+        if(scale<=0||scale>1)scale=1;scale=fmax(scale,.5);
+        if(s.height<480)density=(float)fmin(w.screen.scale,960.0/s.height);
+        else density=scale<.99?(float)fmax(w.screen.scale*scale,480.0/s.height):0;
         NSLog(@"TribesPad content inset %.0f points on each side of %.0fx%.0f, %.3f pixels per point",inset,s.width,s.height,density);
         return true;
     }

@@ -14,10 +14,17 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include "mobile-engine-launch-config.h"
+#if TARGET_OS_IOS
+#include "launcher.h"
+#endif
 extern int tribes_mobile_engine_main(int,char **);
 extern void tb_mobile_controls_install(void);
 static int enter_engine(int argc,char **argv) {
     (void)argc;(void)argv;
+#if TARGET_OS_IOS
+    /* The game picker, before any engine or SDL window exists. */
+    tb_launcher_run();
+#endif
 #if TB_BUNDLED_GAME_DATA
     char *launch_arguments[9];
     NSURL *support = [NSFileManager.defaultManager URLForDirectory:NSApplicationSupportDirectory

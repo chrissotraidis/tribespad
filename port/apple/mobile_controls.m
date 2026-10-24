@@ -14,6 +14,7 @@ typedef NS_ENUM(NSInteger, TBControlKind) { TBKindStick, TBKindLook, TBKindButto
 extern uint64_t tribes_gl4es_presented_frames(void);
 extern uint64_t tribes_gl4es_take_longest_frame_ns(void);
 extern void tribes_gl4es_resume_frame_stats(void);
+extern void tribes_set_keyboard_wasd(int on);
 static NSString * const TBRepositoryURL=@"https://github.com/chrissotraidis/tribespad";
 /* Find a Game: the community's own places, checked 22 October 2026. */
 static NSString * const TBPlayT2Discord=@"https://discord.gg/EMMVhQJgf9";
@@ -219,7 +220,8 @@ typedef struct {int section;BOOL slider;const char *title,*key,*detail;double lo
 static const char *tb_sections[][2]={
     {"Touch Controls","Show the touch controls first to see size and opacity change as you drag."},
     {"Trackpad Cursor","With the touch controls hidden, drag anywhere to move the cursor and tap to click. Touch and hold, then drag, to hold the button (sliders, scroll bars). Drag with two fingers to scroll."},
-    {"Display",NULL},
+    {"Display","Render Scale draws the game with fewer pixels on iPad and lets the screen scale them up: 100% is the full resolution, 50% a quarter of the pixels. Lower is faster and softer. Applies the next time TribesPad opens. iPhone already draws at a reduced size."},
+    {"Keyboard and Trackpad","With a Magic Keyboard or keyboard folio: W A S D move, E zooms and Q picks the next weapon, as on a PC with the WASD layout. Off, the keyboard uses Tribes 2's own keys (E S D F move). The touch controls and controllers work either way. The trackpad moves the game's cursor in menus and aims in play."},
     {"Online","On, TribesPad opens to the TribesNEXT login: sign in or create a free account, then JOIN lists internet servers. Off, it opens offline with Training, LAN Game and the server list. Applies the next time TribesPad opens."}};
 static const TBSettingRow tb_rows[]={
     {0,YES,"Control Size","TribesPad.controlSize",NULL,.75,1.3,NO},
@@ -231,14 +233,17 @@ static const TBSettingRow tb_rows[]={
     {1,YES,"Cursor Speed","TribesPad.cursorSpeed",NULL,.5,2.5,YES},
     {2,NO,"Keep Clear of the Notch","TribesPad.avoidNotch","Keeps the game clear of the notch and rounded corners. Turn off to fill the screen. Applies the next time TribesPad opens.",0,0,NO},
     {2,NO,"Show FPS Counter","TribesPad.showFPS","Frames each second and the longest frame among them. Also in the menu.",0,0,NO},
-    {3,NO,"Online Play","TribesPad.onlinePlay","Sign in with TribesNEXT at launch.",0,0,NO}};
+    {2,YES,"Render Scale","TribesPad.renderScale",NULL,.5,1.0,NO},
+    {2,NO,"Game Picker at Launch","TribesPad.showLauncher","Choose between Starsiege: Tribes and Tribes 2 when TribesPad opens. Off, it opens Tribes 2 directly.",0,0,NO},
+    {3,NO,"WASD Movement","TribesPad.keyboardWASD","Keys from a hardware keyboard only.",0,0,NO},
+    {4,NO,"Online Play","TribesPad.onlinePlay","Sign in with TribesNEXT at launch.",0,0,NO}};
 enum {TBRowCount=sizeof tb_rows/sizeof tb_rows[0],TBSectionCount=sizeof tb_sections/sizeof tb_sections[0]};
 static void tb_register_defaults(void){
     static dispatch_once_t once;dispatch_once(&once,^{
         BOOL phone=UIDevice.currentDevice.userInterfaceIdiom==UIUserInterfaceIdiomPhone;
         [NSUserDefaults.standardUserDefaults registerDefaults:@{@"TribesPad.controlSize":@1.0,@"TribesPad.controlOpacity":@1.0,
             @"TribesPad.lookSensitivity":@1.0,@"TribesPad.leftHanded":@0,@"TribesPad.hideWithController":@1,
-            @"TribesPad.trackpad":@(phone?1:0),@"TribesPad.cursorSpeed":@1.2,@"TribesPad.avoidNotch":@1,@"TribesPad.showFPS":@0,
+            @"TribesPad.trackpad":@(phone?1:0),@"TribesPad.cursorSpeed":@1.2,@"TribesPad.avoidNotch":@1,@"TribesPad.showFPS":@0,@"TribesPad.renderScale":@1.0,@"TribesPad.keyboardWASD":@1,@"TribesPad.showLauncher":@1,
             @"TribesPad.onlinePlay":@1}];
     });
 }
@@ -435,7 +440,7 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
     }
     self.pads=pads;
     for(UIButton *button in @[self.keyboard,self.toggle,self.cursor,self.menu])[self addSubview:button];
-    [self addSubview:self.fps];[self rebuildMenu];[self applyFPSSetting];
+    [self addSubview:self.fps];[self rebuildMenu];[self applyFPSSetting];tribes_set_keyboard_wasd(tb_setting(@"TribesPad.keyboardWASD",1)!=0);
     self.hint=[UILabel new];self.hint.numberOfLines=0;self.hint.textAlignment=NSTextAlignmentCenter;
     self.hint.font=[UIFont systemFontOfSize:14 weight:UIFontWeightSemibold];self.hint.textColor=UIColor.whiteColor;
     self.hint.backgroundColor=[UIColor colorWithWhite:0 alpha:.65];self.hint.layer.cornerRadius=12;self.hint.layer.masksToBounds=YES;
@@ -466,6 +471,8 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
     [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(powerChanged:)
         name:NSProcessInfoPowerStateDidChangeNotification object:nil];
     [self powerChanged:nil];
+    [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(pointerLockChanged:)
+        name:UIPointerLockStateDidChangeNotification object:nil];
     [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(mouseChanged:)
         name:GCMouseDidConnectNotification object:nil];
     [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(mouseChanged:)
@@ -640,9 +647,15 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
 }
 -(void)settingsChanged {
     self.laidOutArea=CGRectNull;[self applyFPSSetting];[self rebuildMenu];[self setNeedsLayout];
+    tribes_set_keyboard_wasd(tb_setting(@"TribesPad.keyboardWASD",1)!=0);
 }
 -(void)toggleTrackpad{tb_set(@"TribesPad.trackpad",!TB_TRACKPAD);[self settingsChanged];}
 -(void)toggleFPS{tb_set(@"TribesPad.showFPS",!TB_SHOW_FPS);[self settingsChanged];}
+/* Whether iPadOS granted pointer lock for mouse look (full screen only). */
+-(void)pointerLockChanged:(NSNotification *)notification {
+    (void)notification;UIPointerLockState *lock=self.window.windowScene.pointerLockState;
+    fprintf(stderr,"TribesPad pointer lock %s\n",lock.locked?"engaged":"released");
+}
 -(void)powerChanged:(NSNotification *)notification {
     (void)notification;NSProcessInfo *p=NSProcessInfo.processInfo;
     static const char *states[]={"nominal","fair","serious","critical"};NSInteger s=p.thermalState;
@@ -667,6 +680,7 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
         double shown=tb_setting(@"TribesPad.findHintsShown",0);
         if(shown<3){tb_set(@"TribesPad.findHintsShown",shown+1);
             [self flashHint:@"Looking for a game?  ··· > Find a Game has the server list,\nwho is playing now, game nights and the community Discords"];}
+        else [self performSelector:@selector(offerBalancedIfMaximum) withObject:nil afterDelay:3];
     }
     BOOL playing=[state hasPrefix:@"1"],typing=[state hasPrefix:@"0 1"];
     NSArray *words=[state componentsSeparatedByCharactersInSet:NSCharacterSet.whitespaceAndNewlineCharacterSet];
@@ -787,10 +801,25 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
     UIAction *trackpad=item(@"Trackpad Cursor",@"cursorarrow.rays",^{[weak toggleTrackpad];});
     trackpad.state=TB_TRACKPAD?UIMenuElementStateOn:UIMenuElementStateOff;
     UIAction *fps=item(@"FPS Counter",@"speedometer",^{[weak toggleFPS];});
+    fps.subtitle=@"Top right: frames per second and the slowest frame";
     fps.state=TB_SHOW_FPS?UIMenuElementStateOn:UIMenuElementStateOff;
+    /* Graphics Quality: what each choice does, and which one is in use. */
+    NSString *preset=[NSUserDefaults.standardUserDefaults stringForKey:@"TribesPad.graphicsPreset"];
+    UIAction *balanced=item(@"Balanced",@"gauge.with.dots.needle.50percent",^{[weak confirmGraphics:@"balanced"];});
+    balanced.subtitle=@"Smoother: the game's own High detail";
+    balanced.state=[preset isEqualToString:@"balanced"]?UIMenuElementStateOn:UIMenuElementStateOff;
+    UIAction *fast=item(@"Fast",@"hare",^{[weak confirmGraphics:@"fast"];});
+    fast.subtitle=@"Smoothest: less detail, no clouds";
+    fast.state=[preset isEqualToString:@"fast"]?UIMenuElementStateOn:UIMenuElementStateOff;
+    UIAction *scale=item(@"Render Scale…",@"square.resize.down",^{[weak showSettings];});
+    double rs=tb_setting(@"TribesPad.renderScale",1);
+    scale.subtitle=[NSString stringWithFormat:@"%.0f%% of the screen's pixels, in Settings",rs*100];
+    if(UIDevice.currentDevice.userInterfaceIdiom!=UIUserInterfaceIdiomPad)scale.attributes=UIMenuElementAttributesHidden;
     NSArray *controls=@[
         item(self.expanded?@"Hide Touch Controls":@"Show Touch Controls",self.expanded?@"xmark.circle":@"gamecontroller",^{[weak toggleControls];}),
         trackpad,fps,
+        [UIMenu menuWithTitle:@"Graphics Quality" image:icon(@"slider.horizontal.3") identifier:nil options:0 children:@[
+            group(@[balanced,fast]),group(@[scale])]],
         item(@"Settings…",@"gearshape",^{[weak showSettings];})];
     NSString *pad=self.controller.vendorName;
     UIMenu *help=[UIMenu menuWithTitle:@"Help" image:icon(@"questionmark.circle") identifier:nil options:0 children:@[
@@ -804,9 +833,14 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
        on now, when the community plays and where it organizes. It leads the
        menu off a server; on one, the match actions lead and it folds away. */
     NSMutableArray *find=[NSMutableArray array];
-    if(!self.connected)[find addObject:item(@"Server List",@"server.rack",^{[weak openServerList];})];
-    [find addObjectsFromArray:@[item(@"Who's Playing Now",@"person.3",^{[weak showLiveServers];}),
-        item(@"Game Nights",@"calendar",^{[weak showSchedule];}),
+    UIAction *servers=item(@"Server List",@"server.rack",^{[weak openServerList];});
+    servers.subtitle=self.connected?@"Leaves this match first":@"PLAY GAME > JOIN";
+    [find addObject:servers];
+    UIAction *playing=item(@"Who's Playing Now",@"person.3",^{[weak showLiveServers];});
+    playing.subtitle=@"People and bots on each server";
+    UIAction *nights=item(@"Game Nights",@"calendar",^{[weak showSchedule];});
+    nights.subtitle=[NSString stringWithFormat:@"Times in %@",[NSTimeZone.localTimeZone localizedName:NSTimeZoneNameStyleShortGeneric locale:NSLocale.currentLocale]?:NSTimeZone.localTimeZone.name];
+    [find addObjectsFromArray:@[playing,nights,
         [UIMenu menuWithTitle:@"Community" image:icon(@"bubble.left.and.text.bubble.right") identifier:nil options:0 children:@[
             group(@[item(@"PlayT2 Discord",@"person.2",^{[weak openLink:TBPlayT2Discord];}),
                 item(@"The Cut Discord",@"person.2",^{[weak openLink:TBTheCutDiscord];}),
@@ -832,7 +866,7 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
         uint64_t frames=now-owner.fpsFrames;double longest=tribes_gl4es_take_longest_frame_ns()/1e6;owner.fpsFrames=now;
         // Frames per second, then the longest frame: a hitch hides in the average.
         BOOL hot=NSProcessInfo.processInfo.thermalState>=NSProcessInfoThermalStateSerious;
-        owner.fps.text=frames?[NSString stringWithFormat:@"%llu FPS · %.0f ms%@",(unsigned long long)frames,longest,hot?@" · Hot":@""]:@"0 FPS";
+        owner.fps.text=frames?[NSString stringWithFormat:@"%llu FPS · slowest %.0f ms%@",(unsigned long long)frames,longest,hot?@" · Hot":@""]:@"0 FPS";
         owner.fps.textColor=frames>=30&&longest<50&&!hot?UIColor.greenColor:UIColor.orangeColor;}];
 }
 -(void)tapKey:(SDL_Scancode)scancode {[self tapKey:scancode mod:SDL_KMOD_NONE];}
@@ -883,12 +917,72 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
     if(!self.gameReported){
         [self showMessage:@"Server List" text:@"Sign in to TribesNEXT first. Once you are past the login, this opens PLAY GAME > JOIN, the list of internet servers."];return;
     }
-    [self sendRequest:@"servers"];
+    if(!self.connected){[self sendRequest:@"servers"];return;}
+    // On a server the list is out of reach until you leave, as on a PC.
+    [self releaseControls];
+    UIAlertController *alert=[UIAlertController alertControllerWithTitle:@"Leave This Match?"
+        message:@"The server list opens once you leave the server you are on. Who's Playing Now shows the servers without leaving."
+        preferredStyle:UIAlertControllerStyleAlert];
+    __weak TBGameControls *weak=self;
+    [alert addAction:[UIAlertAction actionWithTitle:@"Who's Playing Now" style:UIAlertActionStyleDefault handler:^(UIAlertAction *a){(void)a;[weak showLiveServers];}]];
+    [alert addAction:[UIAlertAction actionWithTitle:@"Leave and Show Servers" style:UIAlertActionStyleDestructive handler:^(UIAlertAction *a){(void)a;
+        [weak sendRequest:@"leave-servers"];}]];
+    [alert addAction:[UIAlertAction actionWithTitle:@"Stay" style:UIAlertActionStyleCancel handler:nil]];
+    alert.overrideUserInterfaceStyle=UIUserInterfaceStyleDark;[[self presenter] presentViewController:alert animated:YES completion:nil];
 }
 -(void)sendRequest:(NSString *)request {
     NSString *path=[NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,NSUserDomainMask,YES).firstObject
         stringByAppendingPathComponent:@"TribesPad/Game/base/prefs/tribespad-request.txt"];
     [[NSString stringWithFormat:@"%.0f %@\n",NSDate.date.timeIntervalSince1970*1000,request] writeToFile:path atomically:YES encoding:NSUTF8StringEncoding error:nil];
+}
+/* Graphics presets: the game's own detail settings, set in one step by
+   base/autoexec.cs (TribesPadGraphics). Balanced is Dynamix's High profile
+   for detail; Fast is its Medium profile. The game's Options still change
+   each setting afterwards. */
+-(void)confirmGraphics:(NSString *)preset {
+    if(!self.gameReported){
+        [self showMessage:@"Graphics" text:@"Sign in to TribesNEXT first; the presets apply once the game is past the login."];return;
+    }
+    [self releaseControls];
+    BOOL fast=[preset isEqualToString:@"fast"];
+    NSString *text=fast?
+        @"Coarser terrain and shapes, no clouds, decals, reflections or building lights, light shadows and no weather. The smoothest choice on busy maps.":
+        @"Terrain, buildings and sky at the game's own High detail, one cloud layer, light shadows and no weather. Much less work than the maximum detail sliders, with little visible difference.";
+    UIAlertController *alert=[UIAlertController alertControllerWithTitle:fast?@"Fast Graphics":@"Balanced Graphics"
+        message:[text stringByAppendingString:@"\n\nIt sets the detail sliders in the game's Options > Graphics, where you can still change each one. Turn on ··· > FPS Counter to see the difference."]
+        preferredStyle:UIAlertControllerStyleAlert];
+    __weak TBGameControls *weak=self;
+    [alert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
+    [alert addAction:[UIAlertAction actionWithTitle:@"Apply" style:UIAlertActionStyleDefault handler:^(UIAlertAction *a){(void)a;
+        [weak sendRequest:[@"graphics " stringByAppendingString:preset]];
+        [NSUserDefaults.standardUserDefaults setObject:preset forKey:@"TribesPad.graphicsPreset"];[weak rebuildMenu];}]];
+    alert.overrideUserInterfaceStyle=UIUserInterfaceStyleDark;[[self presenter] presentViewController:alert animated:YES completion:nil];
+}
+/* Profiles made before TribesPad set detail defaults (and every profile
+   whose Options were saved with empty detail prefs) sit at the most
+   expensive settings: terrain screenError 0, shape detail near 2. Offer
+   Balanced once, outside a match. */
+-(void)offerBalancedIfMaximum {
+    if(self.inMatch||tb_setting(@"TribesPad.detailOfferShown",0)||[NSUserDefaults.standardUserDefaults stringForKey:@"TribesPad.graphicsPreset"])return;
+    NSString *prefs=[NSString stringWithContentsOfFile:[[NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,NSUserDomainMask,YES).firstObject
+        stringByAppendingPathComponent:@"TribesPad/Game/base/prefs"] stringByAppendingPathComponent:@"ClientPrefs.cs"] encoding:NSUTF8StringEncoding error:nil];
+    double (^pref)(NSString *)=^double(NSString *name){
+        NSRange r=[prefs rangeOfString:[NSString stringWithFormat:@"$pref::%@ = \"",name]];
+        return r.location==NSNotFound?-1:[[prefs substringFromIndex:NSMaxRange(r)] doubleValue];};
+    double terrain=pref(@"Terrain::screenError"),shapes=pref(@"TS::detailAdjust");
+    if(!prefs||terrain<0||terrain>2||shapes<1.5)return;
+    tb_set(@"TribesPad.detailOfferShown",1);[self releaseControls];
+    UIAlertController *alert=[UIAlertController alertControllerWithTitle:@"Graphics at Maximum Detail"
+        message:@"Terrain and shape detail are set above the game's own High preset, which costs a lot of frames in busy matches. "
+            "Balanced keeps the game's High detail and plays much smoother. You can switch any time in ··· > Graphics Quality."
+        preferredStyle:UIAlertControllerStyleAlert];
+    __weak TBGameControls *weak=self;
+    [alert addAction:[UIAlertAction actionWithTitle:@"Keep Maximum" style:UIAlertActionStyleCancel handler:nil]];
+    [alert addAction:[UIAlertAction actionWithTitle:@"Use Balanced" style:UIAlertActionStyleDefault handler:^(UIAlertAction *a){(void)a;
+        [weak sendRequest:@"graphics balanced"];
+        [NSUserDefaults.standardUserDefaults setObject:@"balanced" forKey:@"TribesPad.graphicsPreset"];[weak rebuildMenu];}]];
+    alert.preferredAction=alert.actions.lastObject;
+    alert.overrideUserInterfaceStyle=UIUserInterfaceStyleDark;[[self presenter] presentViewController:alert animated:YES completion:nil];
 }
 /* Playing Now: people and bots per server, live; tap one to join it. */
 -(void)showLiveServers {
@@ -922,19 +1016,36 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
     NSCalendar *eastern=[[NSCalendar alloc] initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
     eastern.timeZone=[NSTimeZone timeZoneWithName:@"America/New_York"];
     NSDateFormatter *format=[NSDateFormatter new];[format setLocalizedDateFormatFromTemplate:@"EEEEjmm"];
-    struct {NSInteger weekday,hour,minute;NSString *what;} games[]={
-        {4,21,0,@"Weekly pickup game"},{7,21,30,@"Weekly pickup game, the big one"},{1,21,30,@"CTF public game (every other week)"}};
+    format.timeZone=NSTimeZone.localTimeZone;
+    struct {NSInteger weekday,hour,minute;BOOL biweekly;NSString *what;} games[]={
+        {4,21,0,NO,@"Weekly pickup game"},{7,21,30,NO,@"Weekly pickup game, the big one"},{1,21,30,YES,@"CTF public game (every other Sunday)"}};
+    // The every-other-week CTF game ran on 24 May 2026 (tribes2forever.com).
+    NSDateComponents *anchorParts=[NSDateComponents new];anchorParts.year=2026;anchorParts.month=5;anchorParts.day=24;anchorParts.hour=21;anchorParts.minute=30;
+    NSDate *anchor=[eastern dateFromComponents:anchorParts];
     NSMutableArray<NSArray *> *next=[NSMutableArray array];
     for(unsigned i=0;i<sizeof games/sizeof games[0];i++){
         NSDateComponents *when=[NSDateComponents new];when.weekday=games[i].weekday;when.hour=games[i].hour;when.minute=games[i].minute;
-        NSDate *date=[eastern nextDateAfterDate:NSDate.date matchingComponents:when options:NSCalendarMatchNextTime];
+        // Still on now if it started in the last two hours.
+        NSDate *date=[eastern nextDateAfterDate:[NSDate dateWithTimeIntervalSinceNow:-7200] matchingComponents:when options:NSCalendarMatchNextTime];
+        if(date&&games[i].biweekly&&anchor){
+            NSInteger days=[eastern components:NSCalendarUnitDay fromDate:anchor toDate:date options:0].day;
+            if((days/7)%2)date=[eastern dateByAddingUnit:NSCalendarUnitDay value:7 toDate:date options:0];
+        }
         if(date)[next addObject:@[date,games[i].what]];
     }
     [next sortUsingComparator:^NSComparisonResult(NSArray *a,NSArray *b){return [a[0] compare:b[0]];}];
     NSMutableString *text=[NSMutableString string];
-    for(NSArray *game in next)[text appendFormat:@"%@\n%@\n\n",[format stringFromDate:game[0]],game[1]];
-    [text appendString:@"Times are in your time zone (9:00 and 9:30 PM US Eastern). At other hours most public servers are empty or hold only bots. "
-        "Sign-ups and pickup games are posted on the PlayT2 and The Cut Discords."];
+    NSDateComponentsFormatter *until=[NSDateComponentsFormatter new];until.unitsStyle=NSDateComponentsFormatterUnitsStyleAbbreviated;
+    until.allowedUnits=NSCalendarUnitDay|NSCalendarUnitHour|NSCalendarUnitMinute;until.maximumUnitCount=2;
+    for(NSArray *game in next){
+        NSTimeInterval wait=[game[0] timeIntervalSinceNow];
+        NSString *when=wait<=0?@"on now":[@"in " stringByAppendingString:[until stringFromTimeInterval:wait]?:@""];
+        [text appendFormat:@"%@ (%@)\n%@\n\n",[format stringFromDate:game[0]],when,game[1]];
+    }
+    NSTimeZone *zone=NSTimeZone.localTimeZone;
+    [text appendFormat:@"Shown in your time zone, %@. The community sets them in US Eastern time: 9:00 PM Wednesdays, 9:30 PM Saturdays and Sundays. "
+        "At other hours most public servers are empty or hold only bots. Sign-ups and pickups are posted on the PlayT2 and The Cut Discords; check there for changes.",
+        [zone localizedName:NSTimeZoneNameStyleGeneric locale:NSLocale.currentLocale]?:zone.name];
     UIAlertController *alert=[UIAlertController alertControllerWithTitle:@"Game Nights" message:text preferredStyle:UIAlertControllerStyleAlert];
     __weak TBGameControls *weak=self;
     [alert addAction:[UIAlertAction actionWithTitle:@"PlayT2 Discord" style:UIAlertActionStyleDefault handler:^(UIAlertAction *a){(void)a;[weak openLink:TBPlayT2Discord];}]];
@@ -1022,7 +1133,9 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
     CGSize hintSize=[self.hint sizeThatFits:CGSizeMake(fmin(w-120,720),200)];
     self.hint.frame=CGRectMake(x+(w-hintSize.width-28)/2,y+h*.16,hintSize.width+28,hintSize.height+18);
     // Beside the menu button.
-    self.fps.frame=CGRectMake(right-160,top+(b-22)/2,152,22);
+    // Top right corner, inside the safe area.
+    UIEdgeInsets safe=self.window.safeAreaInsets;
+    self.fps.frame=CGRectMake(CGRectGetMaxX(self.bounds)-fmax(safe.right,8)-168,fmax(safe.top,6),168,22);
     /* A connected mouse or trackpad points at the game itself (SDL), so the
        trackpad-cursor overlay must not take its clicks. */
     self.trackpad.frame=self.bounds;self.trackpad.hidden=self.expanded||self.inMatch||!(TB_TRACKPAD||self.controllerUsed)||(self.mouseConnected&&!self.controllerUsed);

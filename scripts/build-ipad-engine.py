@@ -267,6 +267,21 @@ function TribesPadReadRequest()
    if ( %number $= "" || %number $= $TribesPadRequest )
       return;
    $TribesPadRequest = %number;
+   // ··· > Graphics: one of two detail presets, in a match or not.
+   if ( getWord( %line, 1 ) $= "graphics" )
+   {
+      TribesPadGraphics( getWord( %line, 2 ) );
+      return;
+   }
+   // Find a Game > Server List on a server: leave it (the lobby's own
+   // Disconnect, after the app asked), then show JOIN.
+   if ( getWord( %line, 1 ) $= "leave-servers" )
+   {
+      if ( isObject( ServerConnection ) )
+         Disconnect();
+      schedule( 500, 0, LaunchGame, "Join" );
+      return;
+   }
    // Find a Game: the original JOIN pane or a server, between matches only.
    if ( isObject( ServerConnection ) )
       return;
@@ -280,6 +295,47 @@ function TribesPadReadRequest()
          JoinGame( getWord( %line, 2 ) );
    }
 }
+// TribesPad: graphics presets. No card profile in CardProfiles.cs matches an
+// Apple GPU, so the game never runs a detail profile and leaves these prefs
+// empty; Options then saves the most expensive values (terrain screenError 0,
+// texDetail 0). Shape detail and shape distance share one Options slider, and
+// QoL widened its range (TS::detailAdjust up to 2.0), so each preset uses a
+// pair that slider reproduces: Options keeps the values when it saves.
+//   balanced: Dynamix High terrain, building and sky detail; slider at 0.5.
+//   fast:     Dynamix Medium detail; slider near 0 (detail 0.68, as Medium).
+function TribesPadDetail( %preset )
+{
+   %fast = %preset $= "fast";
+   $pref::Terrain::screenError = %fast ? 20 : 8;
+   $pref::Terrain::texDetail = %fast ? 3 : 1;
+   $pref::TS::screenError = %fast ? 19 : 11;
+   $pref::TS::detailAdjust = %fast ? 0.677778 : 1.3;
+   $pref::Interior::detailAdjust = %fast ? 0.7 : 1.0;
+   $pref::SkyOn = true;
+   $pref::numCloudLayers = %fast ? 0 : 1;
+   $pref::decalsOn = !%fast;
+   $pref::environmentMaps = !%fast;
+   $pref::Interior::ShowEnvironmentMaps = !%fast;
+   $pref::Interior::DynamicLights = !%fast;
+   $pref::precipitationOn = false;
+   $pref::Shadows = %fast ? 0.1 : 0.25;
+}
+function TribesPadGraphics( %preset )
+{
+   if ( %preset !$= "fast" && %preset !$= "balanced" )
+      return;
+   TribesPadDetail( %preset );
+   setShadowDetailLevel( $pref::Shadows );
+   export( "$pref::*", "prefs/ClientPrefs.cs", False );
+   echo( "TribesPad: applied the" SPC %preset SPC "graphics preset" );
+}
+// A new profile starts at Balanced instead of the empty detail prefs. This
+// script runs twice at start-up, before and after the saved prefs load; the
+// first run decides, so existing players keep their settings.
+if ( $TribesPadFreshProfile $= "" )
+   $TribesPadFreshProfile = !isFile( "prefs/ClientPrefs.cs" );
+if ( $TribesPadFreshProfile )
+   TribesPadDetail( "balanced" );
 TribesPadStartRequests();
 schedule( 200, 0, TribesPadReportState );
 """
@@ -322,6 +378,16 @@ shutil.copy2(R/'generated/gl4es'/a.platform/'LICENSE.gl4es',resources/'LICENSE.g
 args=[str(exe),str(source/'engine.bin'),str(source/'qol.bin'),str(volume),str(profile),str(temp),str(capture),'engine']
 if bundled:
  data=resources/'GameData';data.mkdir(exist_ok=True)
+ # The game picker's art: TribesPad's emblem and each game's own title screen,
+ # taken from the player's own downloads (scripts/launcher_art.py); nothing from
+ # the games is in the repository. Without a title screen, Tribes 2 falls back
+ # to a menu background from its own files and Starsiege to TribesPad's art.
+ launcher_art=data/'Launcher';launcher_art.mkdir(exist_ok=True)
+ for old in launcher_art.glob('*.png'):old.unlink()
+ shutil.copy2(R/'docs/images/tribespad-logo.png',launcher_art/'emblem.png')
+ from launcher_art import prepare as prepare_launcher_art
+ if 'tribes2' not in prepare_launcher_art(launcher_art):
+  with zipfile.ZipFile(profile/'base/textures.vl2') as archive:(launcher_art/'tribes2.png').write_bytes(archive.read('textures/gui/bg_Starwolf.png'))
  # Incremental rsync avoids recopying hundreds of MB on native-code-only builds.
  # The isolated source profile is copied without following external symlinks.
  assert not any(p.is_symlink() for p in profile.rglob('*')), 'Bundled profile must not contain symlinks'
@@ -334,7 +400,7 @@ else:
  config='#define TB_BUNDLED_GAME_DATA 0\nstatic const char *launch_workdir='+json.dumps(str(R))+';\nstatic char *launch_arguments[]={'+','.join(json.dumps(p) for p in args)+',NULL};\n'
 (out/'mobile-engine-launch-config.h').write_text(config)
 host=[R/'port/apple/mobile_engine_main.m',R/'port/apple/mobile_game_paths.m',R/'port/apple/sdl_main.c',R/'port/apple/gl4es_context.c',R/'port/core/input.c']
-host+=[R/'port/apple/desktop_controls.c'] if mac else [R/'port/apple/mobile_controls.m',R/'port/apple/mobile_controls.c',R/'port/apple/live_servers.m',R/'port/apple/content_area.m']
+host+=[R/'port/apple/desktop_controls.c'] if mac else [R/'port/apple/mobile_controls.m',R/'port/apple/launcher.m',R/'port/apple/mobile_controls.c',R/'port/apple/live_servers.m',R/'port/apple/content_area.m']
 if a.angle:host.append(R/'port/apple/angle_sdl.c')
 command=['clang','-target',target,'-isysroot',sdk,'-O2','-I',str(out),*sdl_flags,*gl_flags,'-DNOX11','-DNOEGL','-DNO_LOADER','-DDEFAULT_ES=2','-isystem',str(R/'ref/gl4es/src'),*map(str,host),*objects,*gl_libraries,*libraries,*math['libraries'],*[str(R/n) for n in http['libraries']],str(R/al['library']),str(zbuild/'libz-ng.a'),'-lz','-lc++','-framework','Foundation','-framework','GameController','-framework','AVFoundation','-framework','CoreGraphics','-framework','CoreText','-framework','CoreFoundation','-framework','SystemConfiguration','-framework','AudioToolbox','-framework','CoreAudio',*(['-framework','AppKit','-framework','Metal','-framework','QuartzCore'] if mac else ['-framework','SafariServices']),'-o',str(exe)]
 command[1:1]=['-fobjc-arc']
