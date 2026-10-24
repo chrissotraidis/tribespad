@@ -366,7 +366,9 @@ for name,origin in image_sources.items():
 app=out/'TribesPad.app';app.mkdir(exist_ok=True)
 # Mac bundles keep code in Contents/MacOS and data in Contents/Resources.
 contents=app/'Contents' if mac else app;resources=contents/'Resources' if mac else app
-exe=(contents/'MacOS' if mac else app)/'TribesPad';exe.parent.mkdir(parents=True,exist_ok=True);resources.mkdir(parents=True,exist_ok=True)
+# On the Mac the game picker (launcher_mac.m) is the app's executable and execs
+# the chosen engine; Tribes 2's engine is TribesPadEngine beside it.
+exe=(contents/'MacOS' if mac else app)/('TribesPadEngine' if mac else 'TribesPad');exe.parent.mkdir(parents=True,exist_ok=True);resources.mkdir(parents=True,exist_ok=True)
 if not a.angle:
  # Remove only this backend's owned files when switching back to EAGL.
  for name in ('libEGL.framework','libGLESv2.framework'):
@@ -406,6 +408,9 @@ command=['clang','-target',target,'-isysroot',sdk,'-O2','-I',str(out),*sdl_flags
 command[1:1]=['-fobjc-arc']
 with (out/'link.log').open('w') as log:subprocess.run(command,stdout=log,stderr=log,check=True)
 identifier='com.tribespad.full-engine.ipad'
+if mac:
+ picker=contents/'MacOS'/'TribesPad'
+ subprocess.run(['clang','-target',target,'-isysroot',sdk,'-fobjc-arc','-O2','-Wall','-Wextra','-Werror',str(R/'port/apple/launcher_mac.m'),'-framework','AppKit','-framework','QuartzCore','-framework','GameController','-o',str(picker)],check=True)
 from app_icon import compile_icon
 if mac:
  icon_keys=compile_icon(resources,'macos',minimum='12.0')
@@ -416,6 +421,7 @@ else:
 signing=['--entitlements',str(R/'port/apple/TribesPad.entitlements')] if a.platform=='device' else []
 if a.angle:
  for framework in angle_bundle(app,a.platform):subprocess.run(['codesign','--force','--sign','-',str(framework)],check=True)
+if mac:subprocess.run(['codesign','--force','--sign','-',str(exe)],check=True)
 subprocess.run(['codesign','--force','--sign','-',*signing,str(app)],check=True)
 subprocess.run(['codesign','--verify','--deep','--strict',str(app)],check=True)
 (out/'result.json').write_text(json.dumps(dict(state='built',platform=a.platform,cpu_host_checks=a.cpu_host_checks,hardware_permissions=a.hardware_permissions,bundled_assets=bundled,entitlements_sha256=sha(R/'port/apple/TribesPad.entitlements') if a.platform=='device' else None,binary_sha256=sha(exe),prepared_sha256=sha(source/'prepared-inputs.json'),support_sha256=sha(out/'support/result.json'),guarded_sha256=sha(out/'guarded/result.json'),gl4es=gl4es,angle=angle,openal=al,arguments=None if bundled else args,mobile_hooks_sha256=sha(mobile_inputs/'mobile-hooks.json'),x87_stores_sha256=sha(mobile_inputs/'x87-stores.json'),mp3_stores_sha256=sha(mobile_inputs/'mp3-stores.json'),wav_io_test_sha256=sha(wave_proof_path),mobile_gpu_timing=dict(available=False,original_blocks=timing_blocks,test_sha256=sha(timing_proof),translated_sha256=sha(mobile_qol)),scope='Full checked engine linked for '+a.platform+'. Device builds need development signing. Build is not rendering or gameplay acceptance.'),indent=2)+'\n')

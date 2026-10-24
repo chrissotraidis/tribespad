@@ -245,7 +245,9 @@ def backend():
     _, gl_flags, gl_libraries = gl4es_inputs('macos')
     _, angle_flags, angle_libraries = angle_inputs('macos')
     angle_dir = str(pathlib.Path(angle_libraries[0]).parent)
-    angle_libraries = [x for x in angle_libraries if not x.startswith('-Wl,-rpath')] + ['-Wl,-rpath,' + angle_dir]
+    # In an app, ANGLE comes from Contents/Frameworks (as for Tribes 2); a dev
+    # build falls back to the pinned download.
+    angle_libraries = [x for x in angle_libraries if not x.startswith('-Wl,-rpath')] + ['-Wl,-rpath,@executable_path/../Frameworks', '-Wl,-rpath,' + angle_dir]
     host = [R / 'port/apple/gl4es_context.c', R / 'port/apple/angle_sdl.c', R / 'port/starsiege/starsiege_gl.c']
     flags = flags + gl_flags + angle_flags + ['-I', str(folder), '-isystem', str(R / 'ref/gl4es/src'),
                                               '-DNOX11', '-DNOEGL', '-DNO_LOADER', '-DDEFAULT_ES=2']
@@ -353,7 +355,7 @@ def main():
     ap.add_argument('--route', help='TorqueScript appended to the run copy of console.cs (headless checks)')
     a = ap.parse_args()
     OUT.mkdir(parents=True, exist_ok=True)
-    report = {'playable': False, 'headless': True}
+    report = {'playable': False, 'headless': True, 'opt': OPT}
     graphics = backend()
     prepare(report, graphics['bindings'])
     exe = link(compile_objects(report, graphics), report)

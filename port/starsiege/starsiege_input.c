@@ -150,6 +150,9 @@ void ss_input_pump(_cpu *cpu){
   else if(type==SDL_EVENT_MOUSE_MOTION){float rx,ry;memcpy(&rx,e+36,4);memcpy(&ry,e+40,4);carry_x+=rx;carry_y+=ry;int32_t dx=(int32_t)carry_x,dy=(int32_t)carry_y;carry_x-=dx;carry_y-=dy;if(dx||dy)mouse_move(dx,dy,0);}
   else if(type==SDL_EVENT_MOUSE_BUTTON_DOWN||type==SDL_EVENT_MOUSE_BUTTON_UP){static const unsigned map[]={0,0,2,1,3,4};unsigned b=e[24];if(b>=1&&b<=5)mouse_button(map[b],type==SDL_EVENT_MOUSE_BUTTON_DOWN);}
   else if(type==SDL_EVENT_MOUSE_WHEEL){float y;memcpy(&y,e+28,4);int32_t dz=(int32_t)(y*120.0f);if(dz)mouse_move(0,0,dz);}
+  else if(type==SDL_EVENT_QUIT||type==SDL_EVENT_WINDOW_CLOSE_REQUESTED){
+   /* Closing the Mac window or Quit: the game's own WM_CLOSE path quits it. */
+   int32_t x,y;uint32_t window=ss_pointer_to_client(0,0,&x,&y);if(window)(void)tribes_post_message(cpu->_pointer_offset,window,0x0010,0,0);}
   else if(type==SDL_EVENT_WINDOW_FOCUS_LOST){for(unsigned k=1;k<256;k++)if(keys[k])key_change(k,0);for(unsigned b=0;b<8;b++)if(buttons[b])mouse_button(b,0);}
  }
  /* The game draws its own cursor from relative motion: capture the pointer
