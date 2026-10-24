@@ -1,0 +1,30 @@
+{
+ "image": "Tribes.exe 1.41 (PlayT1 Retro config, retro_141_installerv2.exe)",
+ "image_sha256": "19cd6c9fcdea000f792fc4b024adadf5a82c9a1599a9616e5cbdf79937d2d947",
+ "note": "Recorded corrections between scripts/audit-code.py and SRW for Starsiege: Tribes 1.41. The image has no relocation table, so the audit's pointer guesses need these. Each entry gives its evidence.",
+ "text": ["0x401000", "0x60DA8E"],
+ "not_code": [
+  {
+   "address": "0x600030",
+   "why": "only reference is 0x631514, inside a table of 16-bit values; decoding there misaligns the unwind funclet at 0x60002A"
+  },
+  {
+   "address": "0x600800",
+   "why": "references at 0x674684, 0x674A84, 0x675044, 0x675444 are numeric table data; 0x600800 is the middle of a call"
+  }
+ ],
+ "code": [
+  {
+   "address": "0x60002A",
+   "why": "C++ unwind funclet (mov ecx,[ebp-0x10]; add ecx,0x4B0; jmp) referenced from the unwind table at 0x6AA430"
+  }
+ ],
+ "instruction_replacements": [
+  {
+   "address": "0x52BC4F",
+   "length": 2,
+   "why": "jnz to 0x52BC65 when DirectInputCreateA fails; the community 1.41 patch overwrote the target with other code, so the branch leads into the middle of an instruction even on Windows. Trap loudly if taken.",
+   "llasm": ";jnz loc_52BC65 (overwritten target)|and tmp1, eflags, ZF|ctcallz tmp1, hp_trap_52BC4F|tcall hp_loc_52BC51|endp|proc hp_trap_52BC4F|call halopad_trap_unimplemented 0x52bc4f|tcall hp_loc_52BC51|endp|proc hp_loc_52BC51"
+  }
+ ]
+}
