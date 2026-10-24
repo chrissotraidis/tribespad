@@ -23,6 +23,12 @@ Gate G2 in [STARSIEGE-TRIBES-PLAN.md](../STARSIEGE-TRIBES-PLAN.md): lift 1.41 an
 
 Reported as not present: `ScriptGL.dll`, `rmdgfx.dll`, `mscoree.dll`, `dbghelp.dll`, `dInput.dll` (1.40 falls back to window messages), `dSound.dll` (sound is G3 work), and named pipes such as `\\.\pipe\IAPlayer.1337.0`.
 
+## Toward G3: local game (same day)
+
+- A scripted route (\`build_engine.py --route\`, run copy only) creates a player profile and calls the game's own \`createServer("Raindance", false)\`. The server loads Raindance (CTF, Blood Eagle and Diamond Sword), the client connects over LOOPBACK and is accepted, then it drops right after the Loading screen. The server then moves to its next mission. The drop has no reason and no script kick, so it is in the engine's connection handling. It is the next thing to find.
+- Start-up took 25 s because TribesPad's list-based heap is O(n) per call and Starsiege's C runtime sends every malloc to it. \`starsiege_fast_heap.c\` (size classes and a hash table, with the original heap as fallback for runtime blocks) brings the longest start-up frame to 1.3 s.
+- The translated game now builds at \`-O1\` (about two minutes; \`STARSIEGE_OPT=-O0\` for quick iteration). \`fxam\` and \`fldl2e\` are implemented. The run copy drops the installer's stale \`temp/serverTempData*.cs\`.
+
 ## Still open for G2 and next
 
 - Input: keyboard and mouse as window messages from the host (the console shows `unknown device: keyboard0` until then).
