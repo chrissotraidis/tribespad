@@ -127,11 +127,13 @@ sends the game's own key, so the original screens open.
 
 | Item | What it does |
 |---|---|
+| Find a Game | **Who's Playing Now**: every TribesNEXT server with people and bots counted separately (the game's own list mixes them: "40/48 (38)" is two people); tap one to join. **Server List**: the original PLAY GAME → JOIN. **Game Nights**: the regular pickup times in your time zone. **Community**: the PlayT2 and The Cut Discords, the TribesPad Discord and the TribesNEXT forum. First in the menu between matches; under the match items during one. |
 | Game Menu | The original Escape menu |
 | Scores | The original score screen (F2); choose it again to close |
 | Chat | All Chat, Team Chat (the keyboard opens and the controls return after sending) and the Quick Chat menu |
 | Actions | Repair kit, mine, beacon, targeting laser, throw flag, zoom, third-person view, command map, suicide |
 | Show / Hide Touch Controls, Trackpad Cursor | Same as the buttons on the right edge |
+| FPS Counter | Frames each second and the slowest frame among them (orange when a frame takes 50 ms or more; "Hot" when the device is throttling) |
 | Settings… | Touch controls (size, opacity, look sensitivity, left-handed, hide with a controller), trackpad cursor and speed, keep clear of the notch, FPS counter; reset to defaults |
 | Help | Touch and trackpad guide, controller guide, original console, TribesPad on GitHub, About |
 
@@ -172,10 +174,19 @@ join a team. Change armor and weapons at an inventory station or with **Inventor
 
 The Tribes 2 community mostly plays at set times in North American evenings: pickup
 games, The Cut and the 25th Anniversary draft league. At other hours most public
-servers are empty or hold only bots. The PlayT2 and The Cut Discord servers and
-TribalOutpost list where and when people play.
+servers are empty or hold only bots. **··· → Find a Game** shows who is playing now,
+the regular game nights in your time zone, and the PlayT2 and The Cut Discords, where
+pickups are organized.
 Missing maps and interiors download from the TribesNEXT asset depot (on by default
 in TribesPad).
+
+### Skins
+
+In the Files app, **On My iPad (or iPhone) → TribesPad → Skins** takes Tribes 2 player
+skins (`name.lmale.png`, `name.lfemale.png`, `name.lbioderm.png`) and skin packs
+(`.vl2`). TribesPad copies them into the game when it opens; choose yours under
+**PLAY GAME → WARRIOR SETUP → Custom Skins**. Other players see your skin only if they
+have the same file. TribesPad ships no community skins.
 
 **Settings → Online Play** off starts offline instead: Training, LAN Game, and
 the internet server list in JOIN without signing in.

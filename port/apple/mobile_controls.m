@@ -5,13 +5,21 @@
    invisible look surface and round icon buttons for the utility actions. */
 #import <UIKit/UIKit.h>
 #import <GameController/GameController.h>
+#import <SafariServices/SafariServices.h>
 #include <math.h>
 #include "mobile_controls.h"
+#import "live_servers.h"
 
 typedef NS_ENUM(NSInteger, TBControlKind) { TBKindStick, TBKindLook, TBKindButton };
 extern uint64_t tribes_gl4es_presented_frames(void);
 extern uint64_t tribes_gl4es_take_longest_frame_ns(void);
+extern void tribes_gl4es_resume_frame_stats(void);
 static NSString * const TBRepositoryURL=@"https://github.com/chrissotraidis/tribespad";
+/* Find a Game: the community's own places, checked 22 October 2026. */
+static NSString * const TBPlayT2Discord=@"https://discord.gg/EMMVhQJgf9";
+static NSString * const TBTheCutDiscord=@"https://discord.gg/yz3AhkJCxg";
+static NSString * const TBTribesPadDiscord=@"https://discord.gg/xwHfUD2bxW";
+static NSString * const TBTribesNextForum=@"https://www.tribesnext.com/forum/";
 
 /* Touch preferences (NSUserDefaults, TribesPad-owned keys). */
 static double tb_setting(NSString *key,double fallback){id v=[NSUserDefaults.standardUserDefaults objectForKey:key];return v?[v doubleValue]:fallback;}
@@ -58,6 +66,7 @@ static void tb_set(NSString *key,double value){[NSUserDefaults.standardUserDefau
 @property(nonatomic) BOOL typingDialog;
 @property(nonatomic) BOOL zoomed;
 @property(nonatomic) BOOL gameReported;
+@property(nonatomic) BOOL connected;
 @property(nonatomic) BOOL controllerUsed;
 @property(nonatomic) BOOL mouseConnected;
 @property(nonatomic,strong) NSTimer *matchClock;
@@ -442,6 +451,9 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
     self.matchClock=[NSTimer scheduledTimerWithTimeInterval:.2 repeats:YES block:^(NSTimer *t){(void)t;[weakSelf followMatch];}];
     [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(releaseControls)
         name:UIApplicationWillResignActiveNotification object:nil];
+    // Time spent in the background is not a slow frame.
+    [NSNotificationCenter.defaultCenter addObserverForName:UIApplicationDidBecomeActiveNotification object:nil
+        queue:NSOperationQueue.mainQueue usingBlock:^(NSNotification *n){(void)n;tribes_gl4es_resume_frame_stats();}];
     [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(keyboardFrameChanged:)
         name:UIKeyboardDidChangeFrameNotification object:nil];
     [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(keyboardHidden:)
@@ -638,9 +650,10 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
 }
 -(void)followMatch {
     if(!self.controls||UIApplication.sharedApplication.applicationState!=UIApplicationStateActive)return;
-    // base/autoexec.cs reports "<playing> <typing>": playing is 1 in play and
+    // base/autoexec.cs reports "<playing> <typing> <connected>": playing is 1 in play and
     // 0 in menus, the lobby, inventory and the score screen; typing is 1 while
-    // a dialog made for typing (login, server password...) is open.
+    // a dialog made for typing (login, server password...) is open; connected
+    // is 1 on a server (including one hosted here).
     NSString *support=[NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,NSUserDomainMask,YES).firstObject
         stringByAppendingPathComponent:@"TribesPad/Game/base/prefs/tribespad-state.txt"];
     NSString *state=[NSString stringWithContentsOfFile:support encoding:NSUTF8StringEncoding error:nil];
@@ -649,8 +662,16 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
         // Past the login: a keyboard opened there closes with the next report.
         self.gameReported=YES;SDL_Window *window=SDL_GetWindowFromID(self.controls->window);
         self.typingDialog=window&&SDL_TextInputActive(window);
+        [self rebuildMenu];
+        // New players rarely know where the games are; point at Find a Game.
+        double shown=tb_setting(@"TribesPad.findHintsShown",0);
+        if(shown<3){tb_set(@"TribesPad.findHintsShown",shown+1);
+            [self flashHint:@"Looking for a game?  ··· > Find a Game has the server list,\nwho is playing now, game nights and the community Discords"];}
     }
     BOOL playing=[state hasPrefix:@"1"],typing=[state hasPrefix:@"0 1"];
+    NSArray *words=[state componentsSeparatedByCharactersInSet:NSCharacterSet.whitespaceAndNewlineCharacterSet];
+    BOOL connected=words.count>2&&[words[2] isEqualToString:@"1"];
+    if(connected!=self.connected){self.connected=connected;[self rebuildMenu];}
     if(typing!=self.typingDialog){
         // Open the keyboard with the dialog; close it when the dialog goes.
         self.typingDialog=typing;SDL_Window *window=SDL_GetWindowFromID(self.controls->window);
@@ -670,7 +691,10 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
 /* The first few times the controls appear, say what the main buttons do. */
 -(void)showHint {
     double shown=tb_setting(@"TribesPad.hintsShown",0);if(shown>=3)return;tb_set(@"TribesPad.hintsShown",shown+1);
-    self.hint.text=@"Hold JET to fly  ·  Hold SKI / JUMP on slopes to keep speed\nDrag the right side to aim  ·  ··· has chat, scores and the game menu";
+    [self flashHint:@"Hold JET to fly  ·  Hold SKI / JUMP on slopes to keep speed\nDrag the right side to aim  ·  ··· has chat, scores and the game menu"];
+}
+-(void)flashHint:(NSString *)text {
+    self.hint.text=text;
     [self setNeedsLayout];[self layoutIfNeeded];
     [UIView animateWithDuration:.3 animations:^{self.hint.alpha=1;}];
     [UIView animateWithDuration:.6 delay:7 options:0 animations:^{self.hint.alpha=0;} completion:nil];
@@ -776,8 +800,22 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
             item(@"TribesPad on GitHub",@"safari",^{
                 [UIApplication.sharedApplication openURL:[NSURL URLWithString:TBRepositoryURL] options:@{} completionHandler:nil];}),
             item(@"About TribesPad",@"info.circle",^{[weak showAbout];})])]];
-    // Game actions only do something in a match; the original menus have their own buttons.
-    NSArray *groups=self.inMatch||self.matchSeen?@[group(game),group(controls),group(@[help])]:@[group(controls),group(@[help])];
+    /* Find a Game: what new players lack most. The original JOIN list, who is
+       on now, when the community plays and where it organizes. It leads the
+       menu off a server; on one, the match actions lead and it folds away. */
+    NSMutableArray *find=[NSMutableArray array];
+    if(!self.connected)[find addObject:item(@"Server List",@"server.rack",^{[weak openServerList];})];
+    [find addObjectsFromArray:@[item(@"Who's Playing Now",@"person.3",^{[weak showLiveServers];}),
+        item(@"Game Nights",@"calendar",^{[weak showSchedule];}),
+        [UIMenu menuWithTitle:@"Community" image:icon(@"bubble.left.and.text.bubble.right") identifier:nil options:0 children:@[
+            group(@[item(@"PlayT2 Discord",@"person.2",^{[weak openLink:TBPlayT2Discord];}),
+                item(@"The Cut Discord",@"person.2",^{[weak openLink:TBTheCutDiscord];}),
+                item(@"TribesPad Discord",@"person.2",^{[weak openLink:TBTribesPadDiscord];})]),
+            group(@[item(@"TribesNEXT Forum",@"text.bubble",^{[weak openPage:TBTribesNextForum];})])]]]];
+    UIMenu *findMenu=[UIMenu menuWithTitle:@"Find a Game" image:icon(@"globe") identifier:nil
+        options:self.connected?0:UIMenuOptionsDisplayInline children:find];
+    // Game actions only do something on a server; the original menus have their own buttons.
+    NSArray *groups=self.connected||self.inMatch?@[group(game),group(@[findMenu]),group(controls),group(@[help])]:@[findMenu,group(controls),group(@[help])];
     self.menu.menu=[UIMenu menuWithTitle:@"TribesPad" children:groups];
     // The column button shows whether the cursor is on.
     UIButtonConfiguration *c=self.cursor.configuration;
@@ -836,6 +874,72 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
     [self releaseControls];
     UIAlertController *alert=[UIAlertController alertControllerWithTitle:title message:text preferredStyle:UIAlertControllerStyleAlert];
     [alert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
+    alert.overrideUserInterfaceStyle=UIUserInterfaceStyleDark;[[self presenter] presentViewController:alert animated:YES completion:nil];
+}
+/* Requests to the game (base/autoexec.cs) go through prefs/tribespad-request.txt,
+   "<number> <request>"; each new number is acted on once. Server List asks for
+   the original JOIN pane. */
+-(void)openServerList {
+    if(!self.gameReported){
+        [self showMessage:@"Server List" text:@"Sign in to TribesNEXT first. Once you are past the login, this opens PLAY GAME > JOIN, the list of internet servers."];return;
+    }
+    [self sendRequest:@"servers"];
+}
+-(void)sendRequest:(NSString *)request {
+    NSString *path=[NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,NSUserDomainMask,YES).firstObject
+        stringByAppendingPathComponent:@"TribesPad/Game/base/prefs/tribespad-request.txt"];
+    [[NSString stringWithFormat:@"%.0f %@\n",NSDate.date.timeIntervalSince1970*1000,request] writeToFile:path atomically:YES encoding:NSUTF8StringEncoding error:nil];
+}
+/* Playing Now: people and bots per server, live; tap one to join it. */
+-(void)showLiveServers {
+    SDL_Window *window=SDL_GetWindowFromID(self.controls->window);if(window)SDL_StopTextInput(window);
+    [self releaseControls];
+    __weak TBGameControls *weak=self;
+    TBLiveServersController *live=[[TBLiveServersController alloc] initWithStyle:UITableViewStyleInsetGrouped];
+    if(self.gameReported&&!self.connected)live.join=^(NSString *address){[weak sendRequest:[@"join " stringByAppendingString:address]];};
+    live.serverList=^{[weak openServerList];};
+    UINavigationController *sheet=[[UINavigationController alloc] initWithRootViewController:live];
+    sheet.modalPresentationStyle=UIModalPresentationFormSheet;sheet.overrideUserInterfaceStyle=UIUserInterfaceStyleDark;
+    [[self presenter] presentViewController:sheet animated:YES completion:nil];
+}
+/* Web pages open in a sheet over the game, so a match keeps running. */
+-(void)openPage:(NSString *)url {
+    SDL_Window *window=SDL_GetWindowFromID(self.controls->window);if(window)SDL_StopTextInput(window);
+    [self releaseControls];
+    SFSafariViewController *page=[[SFSafariViewController alloc] initWithURL:[NSURL URLWithString:url]];
+    page.modalPresentationStyle=UIModalPresentationPageSheet;page.overrideUserInterfaceStyle=UIUserInterfaceStyleDark;
+    [[self presenter] presentViewController:page animated:YES completion:nil];
+}
+/* Discord links go to the Discord app (or Safari without it). */
+-(void)openLink:(NSString *)url {
+    [self releaseControls];
+    [UIApplication.sharedApplication openURL:[NSURL URLWithString:url] options:@{} completionHandler:nil];
+}
+/* The community's regular games (tribes2forever.com, 22 October 2026), in
+   the player's own time zone, soonest first. */
+-(void)showSchedule {
+    [self releaseControls];
+    NSCalendar *eastern=[[NSCalendar alloc] initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
+    eastern.timeZone=[NSTimeZone timeZoneWithName:@"America/New_York"];
+    NSDateFormatter *format=[NSDateFormatter new];[format setLocalizedDateFormatFromTemplate:@"EEEEjmm"];
+    struct {NSInteger weekday,hour,minute;NSString *what;} games[]={
+        {4,21,0,@"Weekly pickup game"},{7,21,30,@"Weekly pickup game, the big one"},{1,21,30,@"CTF public game (every other week)"}};
+    NSMutableArray<NSArray *> *next=[NSMutableArray array];
+    for(unsigned i=0;i<sizeof games/sizeof games[0];i++){
+        NSDateComponents *when=[NSDateComponents new];when.weekday=games[i].weekday;when.hour=games[i].hour;when.minute=games[i].minute;
+        NSDate *date=[eastern nextDateAfterDate:NSDate.date matchingComponents:when options:NSCalendarMatchNextTime];
+        if(date)[next addObject:@[date,games[i].what]];
+    }
+    [next sortUsingComparator:^NSComparisonResult(NSArray *a,NSArray *b){return [a[0] compare:b[0]];}];
+    NSMutableString *text=[NSMutableString string];
+    for(NSArray *game in next)[text appendFormat:@"%@\n%@\n\n",[format stringFromDate:game[0]],game[1]];
+    [text appendString:@"Times are in your time zone (9:00 and 9:30 PM US Eastern). At other hours most public servers are empty or hold only bots. "
+        "Sign-ups and pickup games are posted on the PlayT2 and The Cut Discords."];
+    UIAlertController *alert=[UIAlertController alertControllerWithTitle:@"Game Nights" message:text preferredStyle:UIAlertControllerStyleAlert];
+    __weak TBGameControls *weak=self;
+    [alert addAction:[UIAlertAction actionWithTitle:@"PlayT2 Discord" style:UIAlertActionStyleDefault handler:^(UIAlertAction *a){(void)a;[weak openLink:TBPlayT2Discord];}]];
+    [alert addAction:[UIAlertAction actionWithTitle:@"Who's Playing Now" style:UIAlertActionStyleDefault handler:^(UIAlertAction *a){(void)a;[weak showLiveServers];}]];
+    [alert addAction:[UIAlertAction actionWithTitle:@"Done" style:UIAlertActionStyleCancel handler:nil]];
     alert.overrideUserInterfaceStyle=UIUserInterfaceStyleDark;[[self presenter] presentViewController:alert animated:YES completion:nil];
 }
 -(void)showTouchGuide {

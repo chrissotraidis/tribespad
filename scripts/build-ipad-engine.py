@@ -224,7 +224,7 @@ function TribesPadTyping()
 }
 function TribesPadReportState()
 {
-   %state = TribesPadInPlay() SPC TribesPadTyping();
+   %state = TribesPadInPlay() SPC TribesPadTyping() SPC isObject( ServerConnection );
    if ( %state !$= $TribesPadLastState )
    {
       $TribesPadLastState = %state;
@@ -236,8 +236,51 @@ function TribesPadReportState()
       }
       %file.delete();
    }
+   TribesPadReadRequest();
    schedule( 200, 0, TribesPadReportState );
 }
+// TribesPad: requests from the app's ··· menu, one line "<number> <request>".
+// Writing the file here first registers it with the game's file index; the
+// app then rewrites it and each new number is acted on once.
+function TribesPadStartRequests()
+{
+   $TribesPadRequest = "0";
+   %file = new FileObject();
+   if ( %file.openForWrite( "prefs/tribespad-request.txt" ) )
+   {
+      %file.writeLine( "0" );
+      %file.close();
+   }
+   %file.delete();
+}
+function TribesPadReadRequest()
+{
+   %line = "";
+   %file = new FileObject();
+   if ( %file.openForRead( "prefs/tribespad-request.txt" ) )
+   {
+      %line = %file.readLine();
+      %file.close();
+   }
+   %file.delete();
+   %number = getWord( %line, 0 );
+   if ( %number $= "" || %number $= $TribesPadRequest )
+      return;
+   $TribesPadRequest = %number;
+   // Find a Game: the original JOIN pane or a server, between matches only.
+   if ( isObject( ServerConnection ) )
+      return;
+   switch$ ( getWord( %line, 1 ) )
+   {
+      case "servers":
+         LaunchGame( "Join" );
+      // Find a Game > Who's Playing Now > Join: the JOIN GAME button's own path.
+      case "join":
+         $JoinGamePassword = "";
+         JoinGame( getWord( %line, 2 ) );
+   }
+}
+TribesPadStartRequests();
 schedule( 200, 0, TribesPadReportState );
 """
 if offline.exists():assert offline.read_text().startswith((earlier_text,'// TribesPad: offline mode','// TribesPad: TribesNEXT online mode')), 'Preserve custom autoexec.cs; select the launch mode there before building'
@@ -291,9 +334,9 @@ else:
  config='#define TB_BUNDLED_GAME_DATA 0\nstatic const char *launch_workdir='+json.dumps(str(R))+';\nstatic char *launch_arguments[]={'+','.join(json.dumps(p) for p in args)+',NULL};\n'
 (out/'mobile-engine-launch-config.h').write_text(config)
 host=[R/'port/apple/mobile_engine_main.m',R/'port/apple/mobile_game_paths.m',R/'port/apple/sdl_main.c',R/'port/apple/gl4es_context.c',R/'port/core/input.c']
-host+=[R/'port/apple/desktop_controls.c'] if mac else [R/'port/apple/mobile_controls.m',R/'port/apple/mobile_controls.c',R/'port/apple/content_area.m']
+host+=[R/'port/apple/desktop_controls.c'] if mac else [R/'port/apple/mobile_controls.m',R/'port/apple/mobile_controls.c',R/'port/apple/live_servers.m',R/'port/apple/content_area.m']
 if a.angle:host.append(R/'port/apple/angle_sdl.c')
-command=['clang','-target',target,'-isysroot',sdk,'-O2','-I',str(out),*sdl_flags,*gl_flags,'-DNOX11','-DNOEGL','-DNO_LOADER','-DDEFAULT_ES=2','-isystem',str(R/'ref/gl4es/src'),*map(str,host),*objects,*gl_libraries,*libraries,*math['libraries'],*[str(R/n) for n in http['libraries']],str(R/al['library']),str(zbuild/'libz-ng.a'),'-lz','-lc++','-framework','Foundation','-framework','GameController','-framework','AVFoundation','-framework','CoreGraphics','-framework','CoreText','-framework','CoreFoundation','-framework','SystemConfiguration','-framework','AudioToolbox','-framework','CoreAudio',*(['-framework','AppKit','-framework','Metal','-framework','QuartzCore'] if mac else []),'-o',str(exe)]
+command=['clang','-target',target,'-isysroot',sdk,'-O2','-I',str(out),*sdl_flags,*gl_flags,'-DNOX11','-DNOEGL','-DNO_LOADER','-DDEFAULT_ES=2','-isystem',str(R/'ref/gl4es/src'),*map(str,host),*objects,*gl_libraries,*libraries,*math['libraries'],*[str(R/n) for n in http['libraries']],str(R/al['library']),str(zbuild/'libz-ng.a'),'-lz','-lc++','-framework','Foundation','-framework','GameController','-framework','AVFoundation','-framework','CoreGraphics','-framework','CoreText','-framework','CoreFoundation','-framework','SystemConfiguration','-framework','AudioToolbox','-framework','CoreAudio',*(['-framework','AppKit','-framework','Metal','-framework','QuartzCore'] if mac else ['-framework','SafariServices']),'-o',str(exe)]
 command[1:1]=['-fobjc-arc']
 with (out/'link.log').open('w') as log:subprocess.run(command,stdout=log,stderr=log,check=True)
 identifier='com.tribespad.full-engine.ipad'
@@ -303,7 +346,7 @@ if mac:
  (contents/'Info.plist').write_bytes(plistlib.dumps(dict(**icon_keys,CFBundleDisplayName='TribesPad',CFBundleIdentifier='com.tribespad.app',CFBundleExecutable='TribesPad',CFBundleName='TribesPad',CFBundlePackageType='APPL',CFBundleVersion='1',CFBundleShortVersionString='0.1',LSMinimumSystemVersion='12.0',NSHighResolutionCapable=True,LSApplicationCategoryType='public.app-category.action-games',NSLocalNetworkUsageDescription='Find and connect to local Tribes 2 games.')))
 else:
  icon_keys=compile_icon(app,a.platform,families=('iphone','ipad'))
- (app/'Info.plist').write_bytes(plistlib.dumps(dict(**icon_keys,CFBundleDisplayName='TribesPad',CFBundleIdentifier=identifier,CFBundleExecutable='TribesPad',CFBundleName='TribesPad',CFBundlePackageType='APPL',CFBundleSupportedPlatforms=['iPhoneOS' if a.platform=='device' else 'iPhoneSimulator'],CFBundleVersion='1',CFBundleShortVersionString='0.1',MinimumOSVersion='16.0',UIDeviceFamily=[1,2],UIRequiresFullScreen=True,LSRequiresIPhoneOS=True,UIRequiredDeviceCapabilities=['arm64'],NSLocalNetworkUsageDescription='Find and connect to local Tribes 2 games.',NSMicrophoneUsageDescription='Tribes 2 voice chat uses the microphone while you hold the voice key.',UIApplicationSupportsIndirectInputEvents=True,UIApplicationSceneManifest=dict(UIApplicationSupportsMultipleScenes=False,UISceneConfigurations=dict(UIWindowSceneSessionRoleApplication=[dict(UISceneConfigurationName='TribesPad',UISceneDelegateClassName='TBSceneDelegate')])),UILaunchScreen={},UISupportedInterfaceOrientations=['UIInterfaceOrientationLandscapeLeft','UIInterfaceOrientationLandscapeRight'])))
+ (app/'Info.plist').write_bytes(plistlib.dumps(dict(**icon_keys,CFBundleDisplayName='TribesPad',CFBundleIdentifier=identifier,CFBundleExecutable='TribesPad',CFBundleName='TribesPad',CFBundlePackageType='APPL',CFBundleSupportedPlatforms=['iPhoneOS' if a.platform=='device' else 'iPhoneSimulator'],CFBundleVersion='1',CFBundleShortVersionString='0.1',MinimumOSVersion='16.0',UIDeviceFamily=[1,2],UIRequiresFullScreen=True,LSRequiresIPhoneOS=True,UIRequiredDeviceCapabilities=['arm64'],NSLocalNetworkUsageDescription='Find and connect to local Tribes 2 games.',NSMicrophoneUsageDescription='Tribes 2 voice chat uses the microphone while you hold the voice key.',UIApplicationSupportsIndirectInputEvents=True,UIFileSharingEnabled=True,LSSupportsOpeningDocumentsInPlace=True,UIApplicationSceneManifest=dict(UIApplicationSupportsMultipleScenes=False,UISceneConfigurations=dict(UIWindowSceneSessionRoleApplication=[dict(UISceneConfigurationName='TribesPad',UISceneDelegateClassName='TBSceneDelegate')])),UILaunchScreen={},UISupportedInterfaceOrientations=['UIInterfaceOrientationLandscapeLeft','UIInterfaceOrientationLandscapeRight'])))
 signing=['--entitlements',str(R/'port/apple/TribesPad.entitlements')] if a.platform=='device' else []
 if a.angle:
  for framework in angle_bundle(app,a.platform):subprocess.run(['codesign','--force','--sign','-',str(framework)],check=True)
