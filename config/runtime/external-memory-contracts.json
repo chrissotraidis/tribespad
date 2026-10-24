@@ -1,6 +1,11 @@
 {
   "scope": "Diagnostic native runtime. Host-only calls reject every direct guest pointer argument. Unknown calls and unregistered indirect targets stop before invocation. Buffer operations are allowed only with verified compiler-inserted brackets. Nested-buffer APIs such as recvmsg and zlib streams have no exemption.",
   "host_only": [
+    "SDL_GetTicksNS",
+    "SDL_GetWindowFromID",
+    "SDL_TextInputActive",
+    "SDL_GetKeyFromScancode",
+    "tribes_gl4es_note_gpu_wait",
     "tb_content_inset",
     "tb_content_density",
     "tb_audio_session_restore",

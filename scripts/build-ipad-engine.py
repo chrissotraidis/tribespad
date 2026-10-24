@@ -378,6 +378,11 @@ shutil.copy2(R/'generated/gl4es'/a.platform/'LICENSE.gl4es',resources/'LICENSE.g
 args=[str(exe),str(source/'engine.bin'),str(source/'qol.bin'),str(volume),str(profile),str(temp),str(capture),'engine']
 if bundled:
  data=resources/'GameData';data.mkdir(exist_ok=True)
+ # The game picker's art: TribesPad's emblem, and one background from the
+ # player's own Tribes 2 download (nothing from the game is in the repository).
+ launcher_art=data/'Launcher';launcher_art.mkdir(exist_ok=True)
+ shutil.copy2(R/'docs/images/tribespad-logo.png',launcher_art/'emblem.png')
+ with zipfile.ZipFile(profile/'base/textures.vl2') as archive:(launcher_art/'tribes2.png').write_bytes(archive.read('textures/gui/bg_Starwolf.png'))
  # Incremental rsync avoids recopying hundreds of MB on native-code-only builds.
  # The isolated source profile is copied without following external symlinks.
  assert not any(p.is_symlink() for p in profile.rglob('*')), 'Bundled profile must not contain symlinks'
@@ -390,7 +395,7 @@ else:
  config='#define TB_BUNDLED_GAME_DATA 0\nstatic const char *launch_workdir='+json.dumps(str(R))+';\nstatic char *launch_arguments[]={'+','.join(json.dumps(p) for p in args)+',NULL};\n'
 (out/'mobile-engine-launch-config.h').write_text(config)
 host=[R/'port/apple/mobile_engine_main.m',R/'port/apple/mobile_game_paths.m',R/'port/apple/sdl_main.c',R/'port/apple/gl4es_context.c',R/'port/core/input.c']
-host+=[R/'port/apple/desktop_controls.c'] if mac else [R/'port/apple/mobile_controls.m',R/'port/apple/mobile_controls.c',R/'port/apple/live_servers.m',R/'port/apple/content_area.m']
+host+=[R/'port/apple/desktop_controls.c'] if mac else [R/'port/apple/mobile_controls.m',R/'port/apple/launcher.m',R/'port/apple/mobile_controls.c',R/'port/apple/live_servers.m',R/'port/apple/content_area.m']
 if a.angle:host.append(R/'port/apple/angle_sdl.c')
 command=['clang','-target',target,'-isysroot',sdk,'-O2','-I',str(out),*sdl_flags,*gl_flags,'-DNOX11','-DNOEGL','-DNO_LOADER','-DDEFAULT_ES=2','-isystem',str(R/'ref/gl4es/src'),*map(str,host),*objects,*gl_libraries,*libraries,*math['libraries'],*[str(R/n) for n in http['libraries']],str(R/al['library']),str(zbuild/'libz-ng.a'),'-lz','-lc++','-framework','Foundation','-framework','GameController','-framework','AVFoundation','-framework','CoreGraphics','-framework','CoreText','-framework','CoreFoundation','-framework','SystemConfiguration','-framework','AudioToolbox','-framework','CoreAudio',*(['-framework','AppKit','-framework','Metal','-framework','QuartzCore'] if mac else ['-framework','SafariServices']),'-o',str(exe)]
 command[1:1]=['-fobjc-arc']

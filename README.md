@@ -187,6 +187,15 @@ pickups are organized.
 Missing maps and interiors download from the TribesNEXT asset depot (on by default
 in TribesPad).
 
+### Game picker
+
+TribesPad opens to a picker: **Tribes 2** (TribesNEXT, with how many people are playing
+now) and **Starsiege: Tribes**, which is marked in development until its translation plays
+([plan](docs/STARSIEGE-TRIBES-PLAN.md)). Tap Tribes 2, press Return or a controller's A to play.
+**Open Tribes 2 directly next time** skips it; **Settings → Display → Game Picker at Launch** brings
+it back. The picker uses TribesPad's own emblem and a background from your own Tribes 2 files.
+
+
 ### Keyboard and trackpad
 
 With a Magic Keyboard or keyboard folio on iPad, **W A S D** move, **E** zooms and **Q** picks

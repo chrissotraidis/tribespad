@@ -234,6 +234,7 @@ static const TBSettingRow tb_rows[]={
     {2,NO,"Keep Clear of the Notch","TribesPad.avoidNotch","Keeps the game clear of the notch and rounded corners. Turn off to fill the screen. Applies the next time TribesPad opens.",0,0,NO},
     {2,NO,"Show FPS Counter","TribesPad.showFPS","Frames each second and the longest frame among them. Also in the menu.",0,0,NO},
     {2,YES,"Render Scale","TribesPad.renderScale",NULL,.5,1.0,NO},
+    {2,NO,"Game Picker at Launch","TribesPad.showLauncher","Choose between Starsiege: Tribes and Tribes 2 when TribesPad opens. Off, it opens Tribes 2 directly.",0,0,NO},
     {3,NO,"WASD Movement","TribesPad.keyboardWASD","Keys from a hardware keyboard only.",0,0,NO},
     {4,NO,"Online Play","TribesPad.onlinePlay","Sign in with TribesNEXT at launch.",0,0,NO}};
 enum {TBRowCount=sizeof tb_rows/sizeof tb_rows[0],TBSectionCount=sizeof tb_sections/sizeof tb_sections[0]};
@@ -242,7 +243,7 @@ static void tb_register_defaults(void){
         BOOL phone=UIDevice.currentDevice.userInterfaceIdiom==UIUserInterfaceIdiomPhone;
         [NSUserDefaults.standardUserDefaults registerDefaults:@{@"TribesPad.controlSize":@1.0,@"TribesPad.controlOpacity":@1.0,
             @"TribesPad.lookSensitivity":@1.0,@"TribesPad.leftHanded":@0,@"TribesPad.hideWithController":@1,
-            @"TribesPad.trackpad":@(phone?1:0),@"TribesPad.cursorSpeed":@1.2,@"TribesPad.avoidNotch":@1,@"TribesPad.showFPS":@0,@"TribesPad.renderScale":@1.0,@"TribesPad.keyboardWASD":@1,
+            @"TribesPad.trackpad":@(phone?1:0),@"TribesPad.cursorSpeed":@1.2,@"TribesPad.avoidNotch":@1,@"TribesPad.showFPS":@0,@"TribesPad.renderScale":@1.0,@"TribesPad.keyboardWASD":@1,@"TribesPad.showLauncher":@1,
             @"TribesPad.onlinePlay":@1}];
     });
 }
