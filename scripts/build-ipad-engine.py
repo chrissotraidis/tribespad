@@ -273,6 +273,15 @@ function TribesPadReadRequest()
       TribesPadGraphics( getWord( %line, 2 ) );
       return;
    }
+   // Find a Game > Server List on a server: leave it (the lobby's own
+   // Disconnect, after the app asked), then show JOIN.
+   if ( getWord( %line, 1 ) $= "leave-servers" )
+   {
+      if ( isObject( ServerConnection ) )
+         Disconnect();
+      schedule( 500, 0, LaunchGame, "Join" );
+      return;
+   }
    // Find a Game: the original JOIN pane or a server, between matches only.
    if ( isObject( ServerConnection ) )
       return;
@@ -286,20 +295,21 @@ function TribesPadReadRequest()
          JoinGame( getWord( %line, 2 ) );
    }
 }
-// TribesPad: graphics presets from Dynamix's own profiles (HighProfile.cs and
-// MediumProfile.cs) for the detail that costs the most frames: terrain and
-// shape level of detail, terrain texture blending, clouds, decals, reflections,
-// building lights, shadows and weather. Applied the way OptionsDlg::saveSettings
-// applies them, then saved.
-function TribesPadGraphics( %preset )
+// TribesPad: graphics presets. No card profile in CardProfiles.cs matches an
+// Apple GPU, so the game never runs a detail profile and leaves these prefs
+// empty; Options then saves the most expensive values (terrain screenError 0,
+// texDetail 0). Shape detail and shape distance share one Options slider, and
+// QoL widened its range (TS::detailAdjust up to 2.0), so each preset uses a
+// pair that slider reproduces: Options keeps the values when it saves.
+//   balanced: Dynamix High terrain, building and sky detail; slider at 0.5.
+//   fast:     Dynamix Medium detail; slider near 0 (detail 0.68, as Medium).
+function TribesPadDetail( %preset )
 {
    %fast = %preset $= "fast";
-   if ( !%fast && %preset !$= "balanced" )
-      return;
    $pref::Terrain::screenError = %fast ? 20 : 8;
    $pref::Terrain::texDetail = %fast ? 3 : 1;
-   $pref::TS::screenError = %fast ? 8 : 5;
-   $pref::TS::detailAdjust = %fast ? 0.675439 : 0.833333;
+   $pref::TS::screenError = %fast ? 19 : 11;
+   $pref::TS::detailAdjust = %fast ? 0.677778 : 1.3;
    $pref::Interior::detailAdjust = %fast ? 0.7 : 1.0;
    $pref::SkyOn = true;
    $pref::numCloudLayers = %fast ? 0 : 1;
@@ -309,10 +319,23 @@ function TribesPadGraphics( %preset )
    $pref::Interior::DynamicLights = !%fast;
    $pref::precipitationOn = false;
    $pref::Shadows = %fast ? 0.1 : 0.25;
+}
+function TribesPadGraphics( %preset )
+{
+   if ( %preset !$= "fast" && %preset !$= "balanced" )
+      return;
+   TribesPadDetail( %preset );
    setShadowDetailLevel( $pref::Shadows );
    export( "$pref::*", "prefs/ClientPrefs.cs", False );
    echo( "TribesPad: applied the" SPC %preset SPC "graphics preset" );
 }
+// A new profile starts at Balanced instead of the empty detail prefs. This
+// script runs twice at start-up, before and after the saved prefs load; the
+// first run decides, so existing players keep their settings.
+if ( $TribesPadFreshProfile $= "" )
+   $TribesPadFreshProfile = !isFile( "prefs/ClientPrefs.cs" );
+if ( $TribesPadFreshProfile )
+   TribesPadDetail( "balanced" );
 TribesPadStartRequests();
 schedule( 200, 0, TribesPadReportState );
 """

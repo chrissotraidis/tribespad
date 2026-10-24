@@ -1,6 +1,6 @@
 # Performance on iPad and iPhone: evidence and plan
 
-Last updated 22 October 2026. This records what the device logs show, what changed because of them, how to measure the next session, and what is still worth trying. Numbers come from `Library/Logs/TribesPad.log` copied off the device with `xcrun devicectl device copy from`; nothing here was measured in the Simulator unless it says so.
+Last updated 24 October 2026. This records what the device logs show, what changed because of them, how to measure the next session, and what is still worth trying. Numbers come from `Library/Logs/TribesPad.log` copied off the device with `xcrun devicectl device copy from`; nothing here was measured in the Simulator unless it says so.
 
 ## What a real match looks like today
 
@@ -36,6 +36,15 @@ Earlier logs (21 October) showed two more costs, both already addressed: every t
 
 What the logs cannot say yet is whether the in-match slowdown is the CPU (the game's own work) or the GPU (drawing 5.6 million pixels through GL4ES and ANGLE). The next build measures that.
 
+## Why every profile started at maximum detail
+
+Found 24 October. Tribes 2 picks a graphics profile at first launch by matching the GPU's vendor and renderer strings against `CardProfiles.cs` (Voodoo, Rage, GeForce, Radeon and so on), and the matching profile file (for example `HighProfile.cs`) sets the detail prefs. No entry matches Apple's GPU through GL4ES and ANGLE, so no profile runs and the detail prefs stay empty. The Options screen then turns empty values into its most expensive settings when it saves: terrain `screenError` 0 (25 minus a full slider) and `texDetail` 0. A profile made by a fresh Mac test launch showed exactly the values on the iPad (terrain 0, texture detail 0, shape detail 1.77, building detail 1.64, three cloud layers), so every TribesPad player has started this way.
+
+A second quirk keeps settings high: shape detail and shape distance share one Options slider, and QoL widened the detail end of it to 2.0. Options recomputes `TS::detailAdjust` from the slider every time it saves, so closing Options with the High profile's shape distance gives shape detail 1.77. The first version of the presets (22 October) set Dynamix's pair and would have drifted back up the next time Options closed.
+
+Fixes in this branch: new profiles start at Balanced (`TribesPadDetail` in the generated `base/autoexec.cs`, applied only when no `prefs/ClientPrefs.cs` exists at start-up); both presets use a shape-detail and shape-distance pair the slider reproduces, so Options keeps them; and existing profiles at maximum detail get a one-time offer to switch to Balanced after login.
+
+
 ## What changed
 
 | Change | Where | Effect | Status |
@@ -46,7 +55,8 @@ What the logs cannot say yet is whether the in-match slowdown is the CPU (the ga
 | 16-bit textures stay 16-bit | `gl4es_context.c` | Removes a CPU format conversion per terrain upload | PR #22; terrain colours not yet checked on device |
 | **Render Scale** (Settings > Display, 50–100%) | `content_area.m`, `mobile_controls.m` | 75% draws 56% of the pixels, 50% a quarter. Menus keep their size because the UI scale follows the pixel height | This branch; applies at the next launch |
 | **··· > Graphics > Balanced / Fast** | `mobile_controls.m`, the generated `base/autoexec.cs` (`scripts/build-ipad-engine.py`) | Balanced is Dynamix High detail with one cloud layer, light shadows and no weather; Fast is Dynamix Medium. Applied live through the request file, as Options would, and saved | This branch |
-| **Presenting time in the slow-stretch line** | `gl4es_context.c` | Each line ends "presenting X of Y ms per frame": time in flush and swap against the whole frame | This branch |
+| **GPU wait in the slow-stretch line** | `gl4es_context.c`, `port/core/guest_sdl_backend.c` | Each line ends "waiting for the GPU X of Y ms per frame": swap plus QoL's frame-latency fence and the GL4ES stream-ring waits. Swap time alone read 0.0 ms on the iPad, because ANGLE returns from swap at once on iOS | This branch |
+| **Balanced defaults for new profiles; presets that survive Options; one-time offer** | generated `base/autoexec.cs`, `mobile_controls.m` | See the section above | This branch |
 
 Nothing changes a player's settings without them choosing it: Render Scale defaults to 100%, and the presets ask before applying.
 
@@ -57,12 +67,12 @@ Nothing changes a player's settings without them choosing it: Render Scale defau
 3. Set **Settings > Render Scale** to 75%, reopen TribesPad and play again.
 4. Copy the log off the device: `Library/Logs/TribesPad.log` in the app container (`xcrun devicectl device copy from`, or attach it to a GitHub issue).
 
-Reading a slow-stretch line: `25.0 FPS ... presenting 4.1 of 40.0 ms per frame` means the game spent about 36 ms of each 40 ms frame on its own work, so the CPU is the limit; lower detail settings help, Render Scale does not. `presenting 30.0 of 40.0 ms` means the frame waited on drawing; Render Scale helps. The line is written for every 10-second stretch under 50 FPS or with a frame over 250 ms.
+Reading a slow-stretch line: `25.0 FPS ... waiting for the GPU 4.1 of 40.0 ms per frame` means the game spent about 36 ms of each 40 ms frame on its own work, so the CPU is the limit; lower detail (Balanced or Fast) helps, Render Scale does not. `waiting for the GPU 30.0 of 40.0 ms` means the frame waited on drawing; Render Scale helps. The line is written for every 10-second stretch under 50 FPS or with a frame over 250 ms.
 
 ## Still worth trying, in order
 
 1. **Choose defaults from the measurements.** If Balanced or a lower Render Scale gives a clear gain, make it the first-run default for new profiles (existing players keep their settings). Decide only after a device session, since it changes how the game looks.
-2. **QoL's low-latency option.** `$pref::Video::LowLatency` is 1 on this iPad. In the Simulator about 14% of the game thread waited in QoL's `glClientWaitSync` frame fence (HANDOFF). Try it off and compare presenting time. Unverified that the option controls that fence.
+2. **QoL's low-latency option.** `$pref::Video::LowLatency` is 1 on this iPad. In the Simulator about 14% of the game thread waited in QoL's `glClientWaitSync` frame fence (HANDOFF). Try it off and compare the GPU wait in the log. Unverified that the option controls that fence.
 3. **A device CPU profile.** An Instruments Time Profiler capture of a match on the iPad would show whether terrain, the checked-memory paths, x87 SoftFloat (about 7% in the Simulator), the GL staging checks or the SDL bridge dominate. HANDOFF lists rejected experiments (inline grouped checks, sticky readers, GL4ES batching); start from the profile, not from those.
 4. **GL4ES mip uploads.** Count the `glTexSubImage2D` calls GL4ES sends ANGLE per terrain update; more than the game's 8 levels would mean GL4ES regenerates mips the game already supplies.
 5. **Start-up and map-load hitches** (2.7 s at start, 1.5 s on joining). Those are datablock and texture loading; a cache would help repeat joins.

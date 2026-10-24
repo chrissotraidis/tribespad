@@ -110,7 +110,8 @@ static NSArray<TBLiveServer *> *tb_query(NSArray<NSString *> *addresses){
     (void)tableView;return section?(self.quiet.count?@"Bots only or empty":nil):(self.busy.count?@"People playing":nil);
 }
 -(NSString *)tableView:(UITableView *)tableView titleForFooterInSection:(NSInteger)section {
-    (void)tableView;return section?@"Live from the TribesNEXT master server, as in PLAY GAME > JOIN. Tap a server to join it.":self.summary;
+    (void)tableView;return section?@"The same servers as Server List (PLAY GAME > JOIN), read from the TribesNEXT master server and asked directly, as the game asks them. "
+        "The game's list counts bots as players: 40 (38) there means 2 people and 38 bots. Tap a server to join it, or pull down to refresh.":self.summary;
 }
 -(UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)path {
     (void)tableView;TBLiveServer *s=(path.section?self.quiet:self.busy)[path.row];
@@ -123,6 +124,8 @@ static NSArray<TBLiveServer *> *tb_query(NSArray<NSString *> *addresses){
     if(s.mission.length)[details addObject:s.mission];
     if(s.type.length)[details addObject:s.type];
     if(s.ping>=0)[details addObject:[NSString stringWithFormat:@"%ld ms",(long)s.ping]];
+    // The game's Server List counts bots as players: "# Players (Bots)".
+    [details addObject:[NSString stringWithFormat:@"Server List: %ld (%ld)",(long)(s.people+s.bots),(long)s.bots]];
     cell.detailTextLabel.text=[details componentsJoinedByString:@"  ·  "];cell.detailTextLabel.textColor=UIColor.secondaryLabelColor;
     if(s.password)cell.accessoryView=[[UIImageView alloc] initWithImage:[UIImage systemImageNamed:@"lock.fill"]];
     return cell;

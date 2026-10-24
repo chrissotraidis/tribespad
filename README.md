@@ -133,14 +133,14 @@ sends the game's own key, so the original screens open.
 
 | Item | What it does |
 |---|---|
-| Find a Game | **Who's Playing Now**: every TribesNEXT server with people and bots counted separately (the game's own list mixes them: "40/48 (38)" is two people); tap one to join. **Server List**: the original PLAY GAME → JOIN. **Game Nights**: the regular pickup times in your time zone. **Community**: the PlayT2 and The Cut Discords, the TribesPad Discord and the TribesNEXT forum. First in the menu between matches; under the match items during one. |
+| Find a Game | **Who's Playing Now**: every TribesNEXT server with people and bots counted separately (the game's own list mixes them: "40/48 (38)" is two people); tap one to join. **Server List**: the original PLAY GAME → JOIN (on a server it offers to leave the match first). **Game Nights**: the regular pickup times in your time zone. **Community**: the PlayT2 and The Cut Discords, the TribesPad Discord and the TribesNEXT forum. First in the menu between matches; under the match items during one. |
 | Game Menu | The original Escape menu |
 | Scores | The original score screen (F2); choose it again to close |
 | Chat | All Chat, Team Chat (the keyboard opens and the controls return after sending) and the Quick Chat menu |
 | Actions | Repair kit, mine, beacon, targeting laser, throw flag, zoom, third-person view, command map, suicide |
 | Show / Hide Touch Controls, Trackpad Cursor | Same as the buttons on the right edge |
-| Graphics | **Balanced** (the game's own High detail, one cloud layer, light shadows, no weather) or **Fast** (its Medium detail). Asks first; the game's Options still change each setting |
-| FPS Counter | Frames each second and the slowest frame among them (orange when a frame takes 50 ms or more; "Hot" when the device is throttling) |
+| Graphics Quality | **Balanced** (the game's own High detail, one cloud layer, light shadows, no weather) or **Fast** (less detail, no clouds); **Render Scale** on iPad. New profiles start at Balanced. Asks first; the game's Options still change each setting |
+| FPS Counter | Top right: frames each second and the slowest frame among them (orange when a frame takes 50 ms or more; "Hot" when the device is throttling) |
 | Settings… | Touch controls (size, opacity, look sensitivity, left-handed, hide with a controller), trackpad cursor and speed, keep clear of the notch, FPS counter, render scale (iPad); reset to defaults |
 | Help | Touch and trackpad guide, controller guide, original console, TribesPad on GitHub, About |
 
@@ -186,6 +186,17 @@ the regular game nights in your time zone, and the PlayT2 and The Cut Discords, 
 pickups are organized.
 Missing maps and interiors download from the TribesNEXT asset depot (on by default
 in TribesPad).
+
+### Keyboard and trackpad
+
+With a Magic Keyboard or keyboard folio on iPad, **W A S D** move, **E** zooms and **Q** picks
+the next weapon, as with Tribes 2's WASD layout. TribesPad translates keys from the physical
+keyboard into the game's own E S D F binds, so the touch controls and controllers keep working
+and your saved binds don't change. Turn it off in **Settings → Keyboard and Trackpad** to use
+the original keys. The trackpad moves the game's cursor in menus; in play the game asks iPadOS
+to lock the pointer for mouse look (full screen only). Keyboards without an Esc key can use
+⌘-period, or map Caps Lock to Escape in iPadOS Settings → General → Keyboard → Hardware Keyboard.
+
 
 ### Skins
 
