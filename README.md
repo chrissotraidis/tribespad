@@ -194,8 +194,8 @@ now) and **Starsiege: Tribes**, which is marked in development until its transla
 ([plan](docs/STARSIEGE-TRIBES-PLAN.md)). Tap Tribes 2, press Return or a controller's A to play.
 The gear at the top right has **Open Tribes 2 Directly**, which skips the picker; **Settings →
 Display → Game Picker at Launch** brings it back. Each card shows its game's own title screen,
-taken at build time from your own downloads: Tribes 2's installer, and Starsiege's 2004 freeware
-installer when `ref/starsiege/tribes_gsi.exe` is present. Nothing from either game is in the repository.
+taken at build time from your own downloads: Tribes 2's installer, and Starsiege's 1.41 game files
+once `scripts/starsiege/prepare-inputs.py` has prepared them. Nothing from either game is in the repository.
 
 
 ### Keyboard and trackpad

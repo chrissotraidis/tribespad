@@ -3,18 +3,22 @@
 
 Nothing from either game is in the repository. Tribes 2: the title screen of
 its own installer (ref/downloads/tribes2gsi.exe, MAINDIR/Art/InstallScreen.
-Background.bmp). Starsiege: Tribes: its title screen (BrightLogo in Shell.vol)
-from the 2004 freeware installer, when ref/starsiege/tribes_gsi.exe exists
-and has the pinned SHA-256 (docs/STARSIEGE-TRIBES-PLAN.md). Results are cached
-in generated/launcher-art and refreshed when an installer changes.
+Background.bmp). Starsiege: Tribes: its title screen, BrightLogo.png from the
+1.41 game's base/Shell.zip (scripts/starsiege/prepare-inputs.py), or else
+BrightLogo.bmp in Shell.vol from the 2004 freeware installer when
+ref/starsiege/tribes_gsi.exe exists with the pinned SHA-256. Results are
+cached in generated/launcher-art and refreshed when a source changes.
 """
-import hashlib, json, pathlib, struct, subprocess, sys, tempfile, zlib
+import hashlib, json, pathlib, struct, subprocess, sys, tempfile, zipfile, zlib
 
 R = pathlib.Path(__file__).resolve().parents[1]
 CACHE = R / 'generated/launcher-art'
 TRIBES2 = R / 'ref/downloads/tribes2gsi.exe'
 STARSIEGE = R / 'ref/starsiege/tribes_gsi.exe'
 STARSIEGE_SHA256 = 'd91ac445d30154aa45cd468e839bd540feca27ad62b3019a73e6fc4224fbb4a4'
+# Starsiege 1.41, prepared by scripts/starsiege/prepare-inputs.py: the same
+# title screen, already a PNG.
+STARSIEGE_SHELL = R / 'ref/starsiege/game/base/Shell.zip'
 
 def sha256(path):
     h = hashlib.sha256()
@@ -101,6 +105,13 @@ def tribes2():
     return image
 
 def starsiege():
+    if STARSIEGE_SHELL.exists():
+        image, done = cached('starsiege', STARSIEGE_SHELL)
+        if done:
+            with zipfile.ZipFile(STARSIEGE_SHELL) as archive:
+                image.write_bytes(archive.read('BrightLogo.png'))
+            done()
+        return image
     if not STARSIEGE.exists() or not rewise() or sha256(STARSIEGE) != STARSIEGE_SHA256:
         return None
     image, done = cached('starsiege', STARSIEGE)
