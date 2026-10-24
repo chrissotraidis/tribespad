@@ -228,7 +228,7 @@ flowchart LR
 
 TribesPad never ships the game. You build your own copy: the build downloads the free
 official Tribes 2 and TribesNEXT files and turns them into an app on your Mac. It needs a
-Mac with Apple Silicon, about 40 minutes the first time and 15 GB of free space.
+Mac with Apple Silicon, about 40 minutes the first time and 40 GB of free space.
 
 ### Mac
 
@@ -238,7 +238,7 @@ Mac with Apple Silicon, about 40 minutes the first time and 15 GB of free space.
    brew install llvm@20 cmake ninja sevenzip zstd
    ```
 3. Build:
-   - **With [PadMint](https://github.com/chrissotraidis/padmint):** choose TribesPad and press **Build**.
+   - **With [PadMint](https://github.com/chrissotraidis/padmint) (0.5.13 or newer):** choose TribesPad and press **Build**.
    - **Or in Terminal:**
      ```sh
      git clone https://github.com/chrissotraidis/tribespad.git
@@ -255,10 +255,9 @@ No Apple account is needed for the Mac.
    ```sh
    scripts/build-tribespad.sh
    ```
-   No Mac? Fork this repository, open **Actions → Build TribesPad for iPhone and iPad →
-   Run workflow**, and download the IPA from the finished run.
-   On a public fork anyone signed in to GitHub can download that run's files, and the IPA
-   contains the game, so delete the artifact once you have it.
+   No Mac? Build it on GitHub's free Mac from Windows, Linux or any computer with a web
+   browser: follow [PadMint's steps](https://github.com/chrissotraidis/padmint#no-mac-build-on-githubs-mac).
+   The IPA contains the game, so keep it to yourself.
 2. Install `build/output/TribesPad.ipa` with [Sideloadly](https://sideloadly.io) or
    your usual signing tool.
 
