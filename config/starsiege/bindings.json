@@ -1,0 +1,87 @@
+{
+ "note": "Starsiege: Tribes services merged over port/llasm-runtime/win32-bindings.json by scripts/starsiege/build_engine.py. Implementations are in port/starsiege/starsiege_win32.c.",
+ "bindings": {
+  "InterlockedIncrement": {
+   "helper": "ss_interlocked_increment",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true
+  },
+  "InterlockedDecrement": {
+   "helper": "ss_interlocked_decrement",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true
+  },
+  "InterlockedExchange": {
+   "helper": "ss_interlocked_exchange",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true
+  },
+  "IsDebuggerPresent": {
+   "helper": "ss_is_debugger_present",
+   "arguments": 0,
+   "returns": true,
+   "guest_base": false
+  },
+  "HeapSize": {
+   "helper": "ss_heap_size",
+   "arguments": 3,
+   "returns": true,
+   "guest_base": true
+  },
+  "HeapValidate": {
+   "helper": "ss_heap_validate",
+   "arguments": 3,
+   "returns": true,
+   "guest_base": true
+  },
+  "GetDeviceGammaRamp": {
+   "helper": "ss_device_gamma_ramp",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": false
+  },
+  "SetDeviceGammaRamp": {
+   "helper": "ss_device_gamma_ramp",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": false
+  },
+  "EnumDisplaySettingsA": {
+   "helper": "ss_enum_display_settings",
+   "arguments": 3,
+   "returns": true,
+   "guest_base": true
+  },
+  "ChangeDisplaySettingsA": {
+   "helper": "ss_change_display_settings",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true
+  },
+  "RegisterClassExA": {
+   "helper": "ss_register_class_ex_a",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true
+  }
+ },
+ "overrides": {
+  "CreateSemaphoreA": {
+   "helper": "ss_create_semaphore",
+   "arguments": 4,
+   "returns": true,
+   "guest_base": true,
+   "why": "Starsiege creates a named semaphore; TribesPad's service only creates unnamed ones. The wrapper adds the single-process name case and then calls it."
+  },
+  "GetSystemMetrics": {
+   "helper": "ss_get_system_metrics",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true,
+   "why": "Starsiege sizes its own window frame; adds the standard frame, border and input metrics and passes the rest to TribesPad's service."
+  }
+ }
+}
