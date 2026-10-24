@@ -41,6 +41,7 @@ static pthread_mutex_t lock=PTHREAD_MUTEX_INITIALIZER;
 static int sdl_started;
 static uint32_t current_dc;
 static uint64_t swaps;
+static int has_context(void);
 
 static _Noreturn void unsupported(const char *what,uint32_t value){fprintf(stderr,"TribesPad: unsupported Starsiege GL operation: %s 0x%x\n",what,value);abort();}
 static int headless(void){const char *v=getenv("STARSIEGE_HEADLESS");return v&&!strcmp(v,"1");}
@@ -124,12 +125,22 @@ uint32_t ss_set_pixel_format(uint32_t dc,uint32_t format,uint32_t descriptor){
 }
 uint32_t ss_get_pixel_format(uint32_t dc){pthread_mutex_lock(&lock);DeviceContext *d=dc_of(dc);uint32_t f=d?d->format:0;pthread_mutex_unlock(&lock);if(!d)tribes_set_last_error(6);return f;}
 
+/* One native GL context per drawable. Starsiege deletes and recreates its
+   WGL context while starting (OpenGL probe, then each video mode change);
+   destroying and rebuilding GL4ES state that way hung GL4ES's render list on
+   the iPad once in three launches. A deleted context is parked instead, and
+   the next one created on the same drawable reuses it; the game sets its GL
+   state and reloads its textures for a new context either way. */
+static uint32_t parked_context,parked_window;
 /* HGLRC wglCreateContext(HDC). */
 uint32_t ss_wgl_create_context(_cpu *cpu,uint32_t dc){
  pthread_mutex_lock(&lock);DeviceContext *d=dc_of(dc);DeviceContext copy=d?*d:(DeviceContext){0};pthread_mutex_unlock(&lock);
  if(!copy.dc||!copy.format){tribes_set_last_error(copy.dc?2000:6);return 0;}
  if(!copy.sdl_window){tribes_set_last_error(2000);return 0;}
- uint32_t context=tribes_sdl_gl_create_context(cpu,copy.sdl_window);
+ uint32_t context=0;
+ pthread_mutex_lock(&lock);if(parked_context&&parked_window==copy.sdl_window){context=parked_context;parked_context=parked_window=0;}pthread_mutex_unlock(&lock);
+ if(context)fprintf(stderr,"TribesPad: WGL context 0x%x reused on DC 0x%x\n",context,dc);
+ if(!context)context=tribes_sdl_gl_create_context(cpu,copy.sdl_window);
  if(!context){fprintf(stderr,"TribesPad: GL context failed: %s\n",SDL_GetError());tribes_set_last_error(2000);return 0;}
  pthread_mutex_lock(&lock);unsigned i=0;while(i<8&&contexts[i].handle)i++;if(i==8){pthread_mutex_unlock(&lock);unsupported("context table",context);}
  contexts[i]=(Context){context,dc};pthread_mutex_unlock(&lock);
@@ -149,8 +160,16 @@ uint32_t ss_wgl_make_current(_cpu *cpu,uint32_t dc,uint32_t context){
 uint32_t ss_wgl_get_current_dc(void){pthread_mutex_lock(&lock);uint32_t dc=current_dc;pthread_mutex_unlock(&lock);return dc;}
 uint32_t ss_wgl_delete_context(_cpu *cpu,uint32_t context){
  fprintf(stderr,"TribesPad: wglDeleteContext 0x%x\n",context);
- pthread_mutex_lock(&lock);int known=0;for(unsigned i=0;i<8;i++)if(contexts[i].handle==context){contexts[i].handle=0;known=1;}pthread_mutex_unlock(&lock);
+ pthread_mutex_lock(&lock);int known=0;uint32_t window=0;
+ for(unsigned i=0;i<8;i++)if(contexts[i].handle==context){DeviceContext *d=dc_of(contexts[i].dc);window=d?d->sdl_window:0;contexts[i].handle=0;known=1;}
+ int park=known&&window;uint32_t older=0;if(park){older=parked_context;parked_context=context;parked_window=window;}pthread_mutex_unlock(&lock);
  if(!known){tribes_set_last_error(6);return 0;}
+ if(park){
+  if(older&&older!=context)(void)tribes_sdl_gl_destroy_context(cpu,older); /* only the newest is kept */
+  /* Windows makes a deleted current context not current. */
+  if(has_context()&&!tribes_sdl_gl_make_current(cpu,0,0))return 0;
+  pthread_mutex_lock(&lock);current_dc=0;pthread_mutex_unlock(&lock);return 1;
+ }
  return tribes_sdl_gl_destroy_context(cpu,context);
 }
 static void capture(int width,int height){
