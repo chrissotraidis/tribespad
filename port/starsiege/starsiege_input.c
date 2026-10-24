@@ -13,6 +13,7 @@
 #include "../core/guest_dinput.c"
 #include <SDL3/SDL.h>
 #include <time.h>
+#include <math.h>
 
 extern uint32_t tribes_sdl_poll_event(_cpu *cpu,uint32_t address);
 extern uint32_t tribes_sdl_set_window_relative_mouse_mode(_cpu *cpu,uint32_t token,uint32_t value);
@@ -72,7 +73,15 @@ static void windows_pointer(int32_t dx,int32_t dy){
  uint32_t posted=tribes_post_message(pointer_base,window,0x0200,held,((uint32_t)(uint16_t)y<<16)|(uint16_t)x);TRACE("WM_MOUSEMOVE %d,%d to 0x%x posted %u error %u\n",x,y,window,posted,tribes_get_last_error());
 }
 static int mouse_acquired_locked(void){for(Input *p=inputs;p;p=p->next)if(p->is_device&&p->acquired&&kind(p)==2)return 1;return 0;}
+/* Where the game's cursor is: it starts at the window centre (the introducing
+   WM_MOUSEMOVE) and follows DirectInput motion 1:1, inside the window. */
+static float game_x=-1,game_y=-1;
+static void game_size(float *w,float *h){int32_t cx,cy;uint32_t window=ss_pointer_to_client(0,0,&cx,&cy);int32_t ww=800,wh=600;
+ extern uint32_t ss_window_client_size(uint64_t,uint32_t,int32_t *,int32_t *);if(window&&pointer_base)(void)ss_window_client_size(pointer_base,window,&ww,&wh);*w=(float)ww;*h=(float)wh;}
+static void track(int32_t dx,int32_t dy){float w,h;game_size(&w,&h);if(game_x<0){game_x=w/2;game_y=h/2;}
+ game_x+=(float)dx;game_y+=(float)dy;if(game_x<0)game_x=0;if(game_y<0)game_y=0;if(game_x>w-1)game_x=w-1;if(game_y>h-1)game_y=h-1;}
 static void mouse_move(int32_t dx,int32_t dy,int32_t dz){
+ if(dx||dy)track(dx,dy);
  pthread_mutex_lock(&lock);
  if(!mouse_acquired_locked()){pthread_mutex_unlock(&lock);if(dx||dy)windows_pointer(dx,dy);return;}
  for(Input *p=inputs;p;p=p->next)if(p->is_device&&p->acquired&&kind(p)==2){DeviceState *s=state_of(p->object,1);if(s){s->dx+=dx;s->dy+=dy;s->dz+=dz;}}
@@ -147,6 +156,13 @@ void ss_input_pump(_cpu *cpu){
   unsigned char e[128];memcpy(e,(void *)(uintptr_t)(cpu->_pointer_offset+address),128);
   uint32_t type;memcpy(&type,e,4);
   if(type==SDL_EVENT_KEY_DOWN||type==SDL_EVENT_KEY_UP){uint32_t sc;memcpy(&sc,e+24,4);if(!(type==SDL_EVENT_KEY_DOWN&&e[37]))key_change(dik_of(sc),type==SDL_EVENT_KEY_DOWN);}
+  else if((type==SDL_EVENT_MOUSE_MOTION||type==SDL_EVENT_MOUSE_BUTTON_DOWN||type==SDL_EVENT_MOUSE_BUTTON_UP)&&!memcmp(e+20,"\xff\xff\xff\xff",4)){
+   /* Touch (SDL's touch mouse): the cursor goes to the finger, in game
+      pixels, then any button change follows. */
+   float x,y,w,h;memcpy(&x,e+28,4);memcpy(&y,e+32,4);game_size(&w,&h);if(game_x<0){game_x=w/2;game_y=h/2;}
+   if(x<0)x=0;if(y<0)y=0;if(x>w-1)x=w-1;if(y>h-1)y=h-1;
+   int32_t dx=(int32_t)lroundf(x-game_x),dy=(int32_t)lroundf(y-game_y);if(dx||dy)mouse_move(dx,dy,0);
+   if(type!=SDL_EVENT_MOUSE_MOTION)mouse_button(0,type==SDL_EVENT_MOUSE_BUTTON_DOWN);}
   else if(type==SDL_EVENT_MOUSE_MOTION){float rx,ry;memcpy(&rx,e+36,4);memcpy(&ry,e+40,4);carry_x+=rx;carry_y+=ry;int32_t dx=(int32_t)carry_x,dy=(int32_t)carry_y;carry_x-=dx;carry_y-=dy;if(dx||dy)mouse_move(dx,dy,0);}
   else if(type==SDL_EVENT_MOUSE_BUTTON_DOWN||type==SDL_EVENT_MOUSE_BUTTON_UP){static const unsigned map[]={0,0,2,1,3,4};unsigned b=e[24];if(b>=1&&b<=5)mouse_button(map[b],type==SDL_EVENT_MOUSE_BUTTON_DOWN);}
   else if(type==SDL_EVENT_MOUSE_WHEEL){float y;memcpy(&y,e+28,4);int32_t dz=(int32_t)(y*120.0f);if(dz)mouse_move(0,0,dz);}

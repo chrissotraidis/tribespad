@@ -15,6 +15,7 @@
 #import <GameController/GameController.h>
 #include <stdio.h>
 #include <unistd.h>
+#include "starsiege_paths.h"
 
 static NSString * const TBRepository=@"https://github.com/chrissotraidis/tribespad";
 static NSString * const TBStarsiegePlan=@"https://github.com/chrissotraidis/tribespad/blob/main/docs/STARSIEGE-TRIBES-PLAN.md";
@@ -45,9 +46,8 @@ static CGSize tb_fit(NSAttributedString *s,CGFloat width){
 /* Paths inside the app bundle and the player's storage. */
 static NSString *tb_macos(NSString *name){return [[NSBundle.mainBundle.executablePath stringByDeletingLastPathComponent] stringByAppendingPathComponent:name];}
 static NSString *tb_data(NSString *name){return [[NSBundle.mainBundle.resourcePath stringByAppendingPathComponent:@"GameData"] stringByAppendingPathComponent:name];}
-static BOOL tb_starsiege_bundled(void){
-    NSFileManager *fm=NSFileManager.defaultManager;
-    return [fm isExecutableFileAtPath:tb_macos(@"StarsiegeEngine")]&&[fm fileExistsAtPath:tb_data(@"Starsiege/image.bin")]&&[fm fileExistsAtPath:tb_data(@"Starsiege/Game/Tribes.exe")];
+static BOOL tb_starsiege_ready(void){
+    return [NSFileManager.defaultManager isExecutableFileAtPath:tb_macos(@"StarsiegeEngine")]&&tb_starsiege_bundled(tb_data(@"").fileSystemRepresentation);
 }
 
 @interface TBCard:NSObject
@@ -130,7 +130,7 @@ static TBChoice tb_choice;
 -(instancetype)initWithFrame:(NSRect)frame {
     if(!(self=[super initWithFrame:frame]))return nil;
     self.wantsLayer=YES;self.layer=[CALayer layer];self.layer.geometryFlipped=YES;self.layer.backgroundColor=NSColor.blackColor.CGColor;
-    self.starsiege=tb_starsiege_bundled();
+    self.starsiege=tb_starsiege_ready();
     self.backdrop=[CAGradientLayer layer];self.backdrop.startPoint=CGPointMake(.5,0);self.backdrop.endPoint=CGPointMake(.5,1);
     self.backdrop.colors=@[(__bridge id)tb_rgb(0x0A1A2C,1),(__bridge id)tb_rgb(0x03070D,1),(__bridge id)tb_rgb(0x061A20,1)];[self.layer addSublayer:self.backdrop];
     self.stars=[CALayer layer];[self.layer addSublayer:self.stars];
@@ -241,46 +241,19 @@ static TBChoice tb_choice;
 }
 @end
 
-/* Starsiege's game folder lives in Application Support, where it can write its
-   settings, recordings and logs. The bundle's copy is the source: files the
-   game writes (config, temp, recordings) are copied only when missing; the rest
-   follows the bundle whenever the app's copy changes. */
-static BOOL tb_prepare_starsiege(NSString **volume,NSString **game,NSString **temp){
-    NSFileManager *fm=NSFileManager.defaultManager;
-    NSURL *support=[fm URLForDirectory:NSApplicationSupportDirectory inDomain:NSUserDomainMask appropriateForURL:nil create:YES error:nil];
-    if(!support)return NO;
-    NSString *root=[support.path stringByAppendingPathComponent:@"TribesPad/Starsiege"];
-    *volume=[root stringByAppendingPathComponent:@"volume"];*game=[*volume stringByAppendingPathComponent:@"TribesPad/Game"];
-    *temp=[*volume stringByAppendingPathComponent:@"TribesPad/Temp"];
-    if(![fm createDirectoryAtPath:*game withIntermediateDirectories:YES attributes:nil error:nil]||
-       ![fm createDirectoryAtPath:*temp withIntermediateDirectories:YES attributes:nil error:nil])return NO;
-    NSString *stamp=[NSString stringWithContentsOfFile:tb_data(@"Starsiege/stamp.txt") encoding:NSUTF8StringEncoding error:nil]?:@"";
-    NSString *installed=[*game stringByAppendingPathComponent:@".tribespad-stamp"];
-    if([[NSString stringWithContentsOfFile:installed encoding:NSUTF8StringEncoding error:nil] isEqualToString:stamp]&&stamp.length)return YES;
-    NSString *source=tb_data(@"Starsiege/Game");NSDirectoryEnumerator *walk=[fm enumeratorAtPath:source];NSUInteger copied=0;
-    for(NSString *relative in walk){
-        NSString *from=[source stringByAppendingPathComponent:relative],*to=[*game stringByAppendingPathComponent:relative];BOOL dir=NO;
-        [fm fileExistsAtPath:from isDirectory:&dir];
-        if(dir){[fm createDirectoryAtPath:to withIntermediateDirectories:YES attributes:nil error:nil];continue;}
-        NSString *top=relative.pathComponents.firstObject.lowercaseString;
-        BOOL players=[top isEqualToString:@"config"]||[top isEqualToString:@"temp"]||[top isEqualToString:@"recordings"];
-        if([fm fileExistsAtPath:to]){if(players)continue;[fm removeItemAtPath:to error:nil];}
-        if(![fm copyItemAtPath:from toPath:to error:nil])return NO;copied++;
-    }
-    [stamp writeToFile:installed atomically:YES encoding:NSUTF8StringEncoding error:nil];
-    fprintf(stderr,"TribesPad: Starsiege game folder updated (%lu files)\n",(unsigned long)copied);return YES;
-}
 static int tb_exec(TBChoice choice){
     if(choice==TBStarsiege){
-        NSString *volume,*game,*temp;if(!tb_prepare_starsiege(&volume,&game,&temp)){fprintf(stderr,"TribesPad: Starsiege storage unavailable\n");return 125;}
+        NSURL *support=[NSFileManager.defaultManager URLForDirectory:NSApplicationSupportDirectory inDomain:NSUserDomainMask appropriateForURL:nil create:YES error:nil];
+        char *paths[5];
+        if(!support||!tb_starsiege_prepare_paths(tb_data(@"").fileSystemRepresentation,[support.path stringByAppendingPathComponent:@"TribesPad"].fileSystemRepresentation,paths)){
+            fprintf(stderr,"TribesPad: Starsiege storage unavailable\n");return 125;}
         NSString *logs=[NSSearchPathForDirectoriesInDomains(NSLibraryDirectory,NSUserDomainMask,YES).firstObject stringByAppendingPathComponent:@"Logs/TribesPad"];
         [NSFileManager.defaultManager createDirectoryAtPath:logs withIntermediateDirectories:YES attributes:nil error:nil];
         NSString *log=[logs stringByAppendingPathComponent:@"Starsiege.log"];
         if(!getenv("TRIBESPAD_KEEP_STDIO")&&(!freopen(log.fileSystemRepresentation,"w",stdout)||!freopen(log.fileSystemRepresentation,"a",stderr)))return 125;
-        if(chdir(game.fileSystemRepresentation))return 125;
+        if(chdir(paths[2]))return 125;
         char *engine=strdup(tb_macos(@"StarsiegeEngine").fileSystemRepresentation);
-        char *args[]={engine,strdup(tb_data(@"Starsiege/image.bin").fileSystemRepresentation),strdup(volume.fileSystemRepresentation),
-            strdup(game.fileSystemRepresentation),strdup(temp.fileSystemRepresentation),NULL};
+        char *args[]={engine,paths[0],paths[1],paths[2],paths[3],NULL};
         fflush(NULL);execv(engine,args);perror("TribesPad: StarsiegeEngine");return 126;
     }
     char *engine=strdup(tb_macos(@"TribesPadEngine").fileSystemRepresentation),*args[]={engine,NULL};
@@ -306,7 +279,7 @@ int main(int argc,char **argv){
         NSString *snapshot=getenv("TRIBESPAD_PICKER_SNAPSHOT")?@(getenv("TRIBESPAD_PICKER_SNAPSHOT")):nil;
         if(snapshot){[NSApplication sharedApplication];tb_snapshot(snapshot);return 0;}
         const char *pick=getenv("TRIBESPAD_PICK");
-        if(pick)return tb_exec(!strcmp(pick,"starsiege")&&tb_starsiege_bundled()?TBStarsiege:TBTribes2);
+        if(pick)return tb_exec(!strcmp(pick,"starsiege")&&tb_starsiege_ready()?TBStarsiege:TBTribes2);
         id show=[NSUserDefaults.standardUserDefaults objectForKey:@"TribesPad.showLauncher"];
         if(show&&![show boolValue])return tb_exec(TBTribes2);
         [NSApplication sharedApplication];[NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];[NSApp finishLaunching];

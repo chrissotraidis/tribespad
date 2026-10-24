@@ -9,10 +9,15 @@
 #import <UIKit/UIKit.h>
 #import <GameController/GameController.h>
 #include "launcher.h"
+#include <stdlib.h>
+#include <string.h>
+#include "starsiege_paths.h"
 
 static NSString * const TBLaunchStarsiegePlan=@"https://github.com/chrissotraidis/tribespad/blob/main/docs/STARSIEGE-TRIBES-PLAN.md";
 static NSString * const TBLaunchRepository=@"https://github.com/chrissotraidis/tribespad";
 static BOOL tb_launch_chosen;
+static TBGame tb_launch_game=TBGameTribes2;
+static BOOL tb_starsiege_here(void){return tb_starsiege_bundled([NSBundle.mainBundle.resourcePath stringByAppendingPathComponent:@"GameData"].fileSystemRepresentation);}
 
 static UIColor *tb_rgb(unsigned hex,CGFloat a){return [UIColor colorWithRed:((hex>>16)&255)/255.0 green:((hex>>8)&255)/255.0 blue:(hex&255)/255.0 alpha:a];}
 #define TB_CYAN 0x2EC4C9
@@ -60,7 +65,7 @@ static UIBezierPath *tb_chamfer(CGRect r,CGFloat c){
     self.status=label_([UIFont monospacedDigitSystemFontOfSize:15 weight:UIFontWeightMedium],[UIColor colorWithWhite:1 alpha:.9]);
     self.badge=label_([UIFont systemFontOfSize:14 weight:UIFontWeightBlack],tb_rgb(0x02060C,1));
     self.badge.textAlignment=NSTextAlignmentCenter;self.badge.backgroundColor=tb_rgb(available?TB_CYAN:TB_AMBER,1);
-    self.badge.attributedText=[[NSAttributedString alloc] initWithString:available?@"PLAY  \u25B8":@"IN DEVELOPMENT" attributes:@{NSKernAttributeName:@2}];
+    self.badge.attributedText=[[NSAttributedString alloc] initWithString:!available?@"IN DEVELOPMENT":[kicker hasPrefix:@"Starsiege"]?@"DEV BUILD  \u25B8":@"PLAY  \u25B8" attributes:@{NSKernAttributeName:@2}];
     CAShapeLayer *badgeMask=[CAShapeLayer layer];self.badge.layer.mask=badgeMask;
     self.mask=[CAShapeLayer layer];self.layer.mask=self.mask;
     self.frameLine=[CAShapeLayer layer];self.frameLine.fillColor=UIColor.clearColor.CGColor;self.frameLine.lineWidth=3;
@@ -147,9 +152,9 @@ static UIBezierPath *tb_chamfer(CGRect r,CGFloat c){
     self.settings.showsMenuAsPrimaryAction=YES;self.settings.pointerInteractionEnabled=YES;[self rebuildSettingsMenu];
     [self.view addSubview:self.settings];
     TBLauncherCard *starsiege=[[TBLauncherCard alloc] initWithKicker:@"Starsiege: Tribes  \u00B7  1998"
-        art:[UIImage imageWithContentsOfFile:[art stringByAppendingPathComponent:@"starsiege.png"]] fallback:emblem available:NO
-        label:@"Starsiege: Tribes, in development"];
-    starsiege.status.text=@"The original. Being translated to native code; it opens here once it plays.";
+        art:[UIImage imageWithContentsOfFile:[art stringByAppendingPathComponent:@"starsiege.png"]] fallback:emblem available:tb_starsiege_here()
+        label:tb_starsiege_here()?@"Starsiege: Tribes, development build":@"Starsiege: Tribes, in development"];
+    starsiege.status.text=tb_starsiege_here()?@"Development build: menus and player setup work. Matches are next.":@"The original. Being translated to native code; it opens here once it plays.";
     TBLauncherCard *tribes2=[[TBLauncherCard alloc] initWithKicker:@"Tribes 2  \u00B7  2001  \u00B7  TribesNEXT online"
         art:[UIImage imageWithContentsOfFile:[art stringByAppendingPathComponent:@"tribes2.png"]] fallback:emblem available:YES
         label:@"Tribes 2, play"];
@@ -236,8 +241,9 @@ static UIBezierPath *tb_chamfer(CGRect r,CGFloat c){
 -(void)starsiegeTapped {
     if(self.presentedViewController)return;
     self.focus=0;[self showFocus];
+    if(tb_starsiege_here()){[self launch:TBGameStarsiege];return;}
     UIAlertController *a=[UIAlertController alertControllerWithTitle:@"Starsiege: Tribes"
-        message:@"Not playable yet. The free 1.11 release already translates to native code; the Windows layer it runs on is next. It opens from here once it plays."
+        message:@"Not playable in this build yet. Its 1.41 translation reaches the main menu on the Mac; matches are next. It opens from here once it plays."
         preferredStyle:UIAlertControllerStyleAlert];
     [a addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleCancel handler:nil]];
     [a addAction:[UIAlertAction actionWithTitle:@"Read the Plan" style:UIAlertActionStyleDefault handler:^(UIAlertAction *x){(void)x;
@@ -245,10 +251,13 @@ static UIBezierPath *tb_chamfer(CGRect r,CGFloat c){
     a.overrideUserInterfaceStyle=UIUserInterfaceStyleDark;[self presentViewController:a animated:YES completion:nil];
 }
 -(void)play {
+    self.focus=1;[self showFocus];[self launch:TBGameTribes2];
+}
+-(void)launch:(TBGame)game {
     if(tb_launch_chosen||self.presentedViewController)return;
-    self.focus=1;[self showFocus];
-    [UIView animateWithDuration:.3 animations:^{self.view.alpha=0;self.cards[1].transform=CGAffineTransformMakeScale(1.04,1.04);}
-        completion:^(BOOL f){(void)f;tb_launch_chosen=YES;}];
+    TBLauncherCard *card=self.cards[game==TBGameStarsiege?0:1];
+    [UIView animateWithDuration:.3 animations:^{self.view.alpha=0;card.transform=CGAffineTransformMakeScale(1.04,1.04);}
+        completion:^(BOOL f){(void)f;tb_launch_game=game;tb_launch_chosen=YES;}];
 }
 /* People playing Tribes 2 now (players minus bots, TribesNEXT list.json). */
 -(void)loadPlayers {
@@ -269,23 +278,27 @@ static UIBezierPath *tb_chamfer(CGRect r,CGFloat c){
 }
 @end
 
-void tb_launcher_run(void) {
+TBGame tb_launcher_run(void) {
     id show=[NSUserDefaults.standardUserDefaults objectForKey:@"TribesPad.showLauncher"];
-    if(show&&![show boolValue])return;
+    if(show&&![show boolValue])return TBGameTribes2;
+    /* TRIBESPAD_PICK (devicectl --environment-variables, tests) chooses without the picker. */
+    const char *pick=getenv("TRIBESPAD_PICK");
+    if(pick)return !strcmp(pick,"starsiege")&&tb_starsiege_here()?TBGameStarsiege:TBGameTribes2;
     // The window scene connects while the run loop turns.
     UIWindowScene *scene=nil;NSDate *give_up=[NSDate dateWithTimeIntervalSinceNow:5];
     while(!scene&&give_up.timeIntervalSinceNow>0){
         for(UIScene *s in UIApplication.sharedApplication.connectedScenes)if([s isKindOfClass:UIWindowScene.class])scene=(UIWindowScene *)s;
         if(!scene)CFRunLoopRunInMode(kCFRunLoopDefaultMode,.05,true);
     }
-    if(!scene){fprintf(stderr,"TribesPad launcher: no window scene; starting Tribes 2\n");return;}
+    if(!scene){fprintf(stderr,"TribesPad launcher: no window scene; starting Tribes 2\n");return TBGameTribes2;}
     UIWindow *window=[[UIWindow alloc] initWithWindowScene:scene];
     window.windowLevel=UIWindowLevelNormal+1;window.backgroundColor=UIColor.blackColor;
     window.overrideUserInterfaceStyle=UIUserInterfaceStyleDark;
     window.rootViewController=[TBLauncherController new];[window makeKeyAndVisible];
     fprintf(stderr,"TribesPad launcher shown\n");
     while(!tb_launch_chosen)@autoreleasepool{CFRunLoopRunInMode(kCFRunLoopDefaultMode,.05,true);}
-    fprintf(stderr,"TribesPad launcher: starting Tribes 2\n");
+    fprintf(stderr,"TribesPad launcher: starting %s\n",tb_launch_game==TBGameStarsiege?"Starsiege: Tribes":"Tribes 2");
     window.hidden=YES;window.rootViewController=nil;
+    return tb_launch_game;
 }
 

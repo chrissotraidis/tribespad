@@ -36,6 +36,23 @@ def engine():
     assert report.get('opt') == '-O1' and report.get('engine_sha256') == sha(exe), 'Starsiege engine build failed'
     return exe
 
+def add_game_data(gamedata):
+    """GameData/Starsiege for any TribesPad app: the engine image, the game folder
+    with TribesPad's defaults and without the installer's stale server state,
+    and a stamp the app compares to decide when to refresh its copy."""
+    data = gamedata / 'Starsiege'
+    data.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(ENGINE / 'image.bin', data / 'image.bin')
+    subprocess.run(['rsync', '-a', '--delete', '--exclude', 'temp/serverTempData*.cs', str(GAME) + '/', str(data / 'Game') + '/'], check=True)
+    load('build_engine', R / 'scripts/starsiege/build_engine.py').tribespad_defaults(data / 'Game')
+    files = sorted(p for p in (data / 'Game').rglob('*') if p.is_file())
+    digest = hashlib.sha256()
+    for p in files:
+        digest.update(str(p.relative_to(data / 'Game')).encode() + b'\0' + str(p.stat().st_size).encode() + b'\0')
+    digest.update(sha(data / 'Game/console.cs').encode() + sha(data / 'image.bin').encode())
+    (data / 'stamp.txt').write_text(digest.hexdigest())
+    return data, files, digest.hexdigest()
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split('\n')[0])
     ap.add_argument('--app', required=True, type=pathlib.Path)
@@ -46,25 +63,13 @@ def main():
     assert (app / 'Contents/Frameworks/libGLESv2.dylib').exists(), 'the Mac app needs its ANGLE frameworks'
     assert (GAME / 'Tribes.exe').exists(), 'run scripts/starsiege/prepare-inputs.py first'
     exe = engine()
-    data = resources / 'GameData/Starsiege'
-    data.mkdir(parents=True, exist_ok=True)
     shutil.copy2(exe, macos / 'StarsiegeEngine')
-    shutil.copy2(ENGINE / 'image.bin', data / 'image.bin')
-    # The game folder, with TribesPad's defaults (build_engine.tribespad_defaults)
-    # and without the installer's stale server state.
-    subprocess.run(['rsync', '-a', '--delete', '--exclude', 'temp/serverTempData*.cs', str(GAME) + '/', str(data / 'Game') + '/'], check=True)
-    load('build_engine', R / 'scripts/starsiege/build_engine.py').tribespad_defaults(data / 'Game')
-    files = sorted(p for p in (data / 'Game').rglob('*') if p.is_file())
-    digest = hashlib.sha256()
-    for p in files:
-        digest.update(str(p.relative_to(data / 'Game')).encode() + b'\0' + str(p.stat().st_size).encode() + b'\0')
-    digest.update(sha(data / 'Game/console.cs').encode() + sha(data / 'image.bin').encode())
-    (data / 'stamp.txt').write_text(digest.hexdigest())
+    data, files, stamp = add_game_data(resources / 'GameData')
     subprocess.run(['codesign', '--force', '--sign', '-', str(macos / 'StarsiegeEngine')], check=True)
     subprocess.run(['codesign', '--force', '--sign', '-', str(app)], check=True)
     subprocess.run(['codesign', '--verify', '--deep', '--strict', str(app)], check=True)
     record = dict(app=str(app), engine_sha256=sha(macos / 'StarsiegeEngine'), image_sha256=sha(data / 'image.bin'),
-                  game_files=len(files), stamp=digest.hexdigest(),
+                  game_files=len(files), stamp=stamp,
                   scope='Starsiege dev build in the Mac app (launcher plan P2). Packaging is not gameplay acceptance.')
     (ENGINE / 'bundle-mac.json').write_text(json.dumps(record, indent=1) + '\n')
     print(json.dumps(record, indent=1))

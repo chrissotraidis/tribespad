@@ -8,6 +8,7 @@
  * Headless runs (STARSIEGE_HEADLESS=1) keep the SDL window hidden and SDL in
  * background mode, and can write frames to PNG (STARSIEGE_CAPTURE=folder). */
 #include <SDL3/SDL.h>
+#include <TargetConditionals.h>
 #include <ImageIO/ImageIO.h>
 #include <CoreGraphics/CoreGraphics.h>
 #include <CoreFoundation/CoreFoundation.h>
@@ -64,6 +65,13 @@ uint32_t ss_get_dc(_cpu *cpu,uint32_t window){
  if(!window||!ss_owns_window(base,window))return tribes_get_window_dc(base,window);
  pthread_mutex_lock(&lock);unsigned free_slot=16;
  for(unsigned i=0;i<16;i++){if(dcs[i].dc&&dcs[i].window==window){uint32_t dc=dcs[i].dc;pthread_mutex_unlock(&lock);return dc;}if(!dcs[i].dc&&free_slot==16)free_slot=i;}
+#if TARGET_OS_IPHONE
+ /* iOS has one window per display, so every game window draws into the same
+    SDL window: a later window takes over the existing drawable and its DC
+    (Starsiege probes OpenGL on a hidden window, then moves to its main one). */
+ for(unsigned i=0;i<16;i++)if(dcs[i].dc){dcs[i].window=window;uint32_t dc=dcs[i].dc;pthread_mutex_unlock(&lock);
+  fprintf(stderr,"TribesPad: window 0x%x takes over the drawable (DC 0x%x)\n",window,dc);return dc;}
+#endif
  pthread_mutex_unlock(&lock);
  if(free_slot==16)unsupported("device context table",window);
  if(!start_sdl(cpu)){tribes_set_last_error(2000);return 0;}

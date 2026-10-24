@@ -18,12 +18,38 @@
 #include "launcher.h"
 #endif
 extern int tribes_mobile_engine_main(int,char **);
+#if TB_STARSIEGE
+#include "starsiege_paths.h"
+#include "content_area.h"
+/* Starsiege: Tribes, linked in as one object (scripts/starsiege/build_engine.py
+   --platform device|simulator). Same process model as Tribes 2: one engine per
+   launch, on the main thread inside SDL's UIKit application. */
+extern int starsiege_mobile_engine_main(int,char **);
+static int enter_starsiege(void) {
+    NSURL *support=[NSFileManager.defaultManager URLForDirectory:NSApplicationSupportDirectory inDomain:NSUserDomainMask appropriateForURL:nil create:YES error:nil];
+    if(!support){fprintf(stderr,"TribesPad: no app support directory\n");return 125;}
+    NSString *gamedata=[NSBundle.mainBundle.resourcePath stringByAppendingPathComponent:@"GameData"];
+    char *paths[5];
+    if(!tb_starsiege_prepare_paths(gamedata.fileSystemRepresentation,[support.path stringByAppendingPathComponent:@"TribesPad"].fileSystemRepresentation,paths))return 125;
+    if(chdir(paths[2])){perror("TribesPad Starsiege folder");return 125;}
+    char *arguments[]={"StarsiegeEngine",paths[0],paths[1],paths[2],paths[3],NULL};
+    /* Starsiege draws an 800x600 frame; the screen scales it up (content_area.m). */
+    tb_content_fix_game_size(800,600);
+    fprintf(stderr,"TribesPad: entering Starsiege: Tribes\n");
+    return starsiege_mobile_engine_main(5,arguments);
+}
+#endif
 extern void tb_mobile_controls_install(void);
 static int enter_engine(int argc,char **argv) {
     (void)argc;(void)argv;
 #if TARGET_OS_IOS
     /* The game picker, before any engine or SDL window exists. */
-    tb_launcher_run();
+    TBGame game=tb_launcher_run();
+#if TB_STARSIEGE
+    if(game==TBGameStarsiege)return enter_starsiege();
+#else
+    (void)game;
+#endif
 #endif
 #if TB_BUNDLED_GAME_DATA
     char *launch_arguments[9];

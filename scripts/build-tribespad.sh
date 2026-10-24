@@ -8,8 +8,8 @@
 # --platform device (default): an unsigned TribesPad.ipa for iPhone and iPad;
 # sign it with your own Apple account (see README).
 # --platform macos: TribesPad-mac.zip with TribesPad.app for Apple Silicon Macs.
-# --games tribes2,starsiege (Mac, development): adds Starsiege: Tribes 1.41,
-# from the PlayT1 community installer, to the game picker.
+# --games tribes2,starsiege (development): adds Starsiege: Tribes 1.41, from
+# the PlayT1 community installer, to the game picker.
 # Needs Xcode and: brew install llvm@20 cmake ninja sevenzip zstd
 set -euo pipefail
 
@@ -35,9 +35,6 @@ case ",$games," in
   ,tribes2,starsiege,|,starsiege,tribes2,) starsiege=1 ;;
   *) echo "--games must be tribes2 or tribes2,starsiege" >&2; exit 2 ;;
 esac
-if [ "$starsiege" = 1 ] && [ "$platform" != macos ]; then
-  echo "Starsiege: Tribes is a Mac development build for now (docs/LAUNCHER-PLAN.md, stage P2)" >&2; exit 2
-fi
 
 repo="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$repo"
@@ -115,18 +112,26 @@ SDKROOT="$ios_sdk" $py scripts/build-checked-bochs.py --platform "$platform" --h
 step "Game profile"
 $py scripts/apple_game_profile.py
 
+starsiege_object=()
+if [ "$starsiege" = 1 ]; then
+  step "Starsiege: Tribes (development)"
+  [ -f ref/starsiege/game/Tribes.exe ] || $py scripts/starsiege/prepare-inputs.py
+  [ -f generated/starsiege/lift/result.json ] || $py scripts/starsiege/lift_preview.py --no-compile
+  if [ "$platform" != macos ]; then
+    STARSIEGE_OPT=-O1 $py scripts/starsiege/build_engine.py --platform "$platform" >/dev/null
+    starsiege_object=(--starsiege-object "generated/starsiege/engine-$platform/starsiege.o")
+  fi
+fi
+
 step "TribesPad app"
-SDKROOT="$ios_sdk" $py scripts/build-ipad-engine.py --platform "$platform" --angle --hardware-permissions --bundle-assets --build-only
+SDKROOT="$ios_sdk" $py scripts/build-ipad-engine.py --platform "$platform" --angle --hardware-permissions --bundle-assets --build-only ${starsiege_object[@]+"${starsiege_object[@]}"}
 case "$platform" in
   device) app="$repo/generated/ipad-engine-device-hw/TribesPad.app" ;;
   simulator) app="$repo/generated/ipad-engine-hw/TribesPad.app" ;;
   macos) app="$repo/generated/macos-engine-hw/TribesPad.app" ;;
 esac
 
-if [ "$starsiege" = 1 ]; then
-  step "Starsiege: Tribes (development)"
-  [ -f ref/starsiege/game/Tribes.exe ] || $py scripts/starsiege/prepare-inputs.py
-  [ -f generated/starsiege/lift/result.json ] || $py scripts/starsiege/lift_preview.py --no-compile
+if [ "$starsiege" = 1 ] && [ "$platform" = macos ]; then
   SDKROOT="$mac_sdk" $py scripts/starsiege/bundle_mac.py --app "$app"
 fi
 
