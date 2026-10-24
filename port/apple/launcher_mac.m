@@ -16,6 +16,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include "starsiege_paths.h"
+#include "t1_live.h"
 
 static NSString * const TBRepository=@"https://github.com/chrissotraidis/tribespad";
 static NSString * const TBStarsiegePlan=@"https://github.com/chrissotraidis/tribespad/blob/main/docs/STARSIEGE-TRIBES-PLAN.md";
@@ -226,8 +227,20 @@ static TBChoice tb_choice;
     pad.dpad.left.pressedChangedHandler=^(GCControllerButtonInput *b,float v,BOOL pressed){(void)b;(void)v;if(pressed)[weak moveFocus:-1];};
     pad.dpad.right.pressedChangedHandler=^(GCControllerButtonInput *b,float v,BOOL pressed){(void)b;(void)v;if(pressed)[weak moveFocus:1];};
 }
+/* People playing Starsiege: Tribes now, from the community masters (t1_live.c). */
+-(void)loadStarsiegePlayers{
+    __weak TBPickerView *weak=self;NSString *base=self.cards[0].statusText;
+    dispatch_async(dispatch_get_global_queue(QOS_CLASS_UTILITY,0),^{
+        TBT1Live live;int ok=tb_t1_live(&live,4000);
+        dispatch_async(dispatch_get_main_queue(),^{TBPickerView *me=weak;if(!me||!ok)return;
+            NSString *now=live.people?[NSString stringWithFormat:@"%d %@ playing now on %d %@",live.people,live.people==1?@"person":@"people",live.busy_servers,live.busy_servers==1?@"server":@"servers"]:
+                [NSString stringWithFormat:@"Nobody on the %d Tribes 1 servers right now",live.servers_answered];
+            me.cards[0].statusText=[NSString stringWithFormat:@"%@\n%@",now,base];});
+    });
+}
 /* People playing Tribes 2 now (players minus bots, TribesNEXT list.json). */
 -(void)loadPlayers{
+    [self loadStarsiegePlayers];
     NSMutableURLRequest *r=[NSMutableURLRequest requestWithURL:[NSURL URLWithString:@"https://www.tribesnext.com/list.json"]];
     [r setValue:@"TribesPad" forHTTPHeaderField:@"User-Agent"];r.timeoutInterval=8;__weak TBPickerView *weak=self;
     [[NSURLSession.sharedSession dataTaskWithRequest:r completionHandler:^(NSData *data,NSURLResponse *resp,NSError *error){
@@ -264,6 +277,8 @@ static void tb_snapshot(NSString *path){
     CGFloat w=1280,h=800;const char *size=getenv("TRIBESPAD_PICKER_SIZE");if(size){double a,b;if(sscanf(size,"%lfx%lf",&a,&b)==2){w=a;h=b;}}
     TBPickerView *view=[[TBPickerView alloc] initWithFrame:NSMakeRect(0,0,w,h)];[view layout];
     view.cards[1].statusText=@"Online play with TribesNEXT";
+    if(getenv("TRIBESPAD_PICKER_LIVE")){[view loadPlayers];NSDate *until=[NSDate dateWithTimeIntervalSinceNow:6];
+        while(until.timeIntervalSinceNow>0)[NSRunLoop.mainRunLoop runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:.1]];[view layout];}
     NSBitmapImageRep *rep=[[NSBitmapImageRep alloc] initWithBitmapDataPlanes:NULL pixelsWide:(NSInteger)(w*2) pixelsHigh:(NSInteger)(h*2) bitsPerSample:8 samplesPerPixel:4 hasAlpha:YES isPlanar:NO colorSpaceName:NSCalibratedRGBColorSpace bytesPerRow:0 bitsPerPixel:0];
     rep.size=NSMakeSize(w,h);NSGraphicsContext *g=[NSGraphicsContext graphicsContextWithBitmapImageRep:rep];
     CGContextRef cg=g.CGContext;CGContextTranslateCTM(cg,0,h);CGContextScaleCTM(cg,1,-1);

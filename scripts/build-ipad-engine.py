@@ -409,7 +409,7 @@ else:
  config='#define TB_BUNDLED_GAME_DATA 0\nstatic const char *launch_workdir='+json.dumps(str(R))+';\nstatic char *launch_arguments[]={'+','.join(json.dumps(p) for p in args)+',NULL};\n'
 (out/'mobile-engine-launch-config.h').write_text(config)
 host=[R/'port/apple/mobile_engine_main.m',R/'port/apple/mobile_game_paths.m',R/'port/apple/sdl_main.c',R/'port/apple/gl4es_context.c',R/'port/core/input.c']
-host+=[R/'port/apple/desktop_controls.c'] if mac else [R/'port/apple/mobile_controls.m',R/'port/apple/launcher.m',R/'port/apple/starsiege_paths.m',R/'port/apple/mobile_controls.c',R/'port/apple/live_servers.m',R/'port/apple/content_area.m']
+host+=[R/'port/apple/desktop_controls.c'] if mac else [R/'port/apple/mobile_controls.m',R/'port/apple/launcher.m',R/'port/apple/starsiege_paths.m',R/'port/apple/t1_live.c',R/'port/apple/mobile_controls.c',R/'port/apple/live_servers.m',R/'port/apple/content_area.m']
 if a.angle:host.append(R/'port/apple/angle_sdl.c')
 command=['clang','-target',target,'-isysroot',sdk,'-O2','-I',str(out),*sdl_flags,*gl_flags,'-DNOX11','-DNOEGL','-DNO_LOADER','-DDEFAULT_ES=2','-isystem',str(R/'ref/gl4es/src'),*map(str,host),*objects,*([str(a.starsiege_object.resolve()),'-framework','ImageIO'] if a.starsiege_object and not mac else []),*gl_libraries,*libraries,*math['libraries'],*[str(R/n) for n in http['libraries']],str(R/al['library']),str(zbuild/'libz-ng.a'),'-lz','-lc++','-framework','Foundation','-framework','GameController','-framework','AVFoundation','-framework','CoreGraphics','-framework','CoreText','-framework','CoreFoundation','-framework','SystemConfiguration','-framework','AudioToolbox','-framework','CoreAudio',*(['-framework','AppKit','-framework','Metal','-framework','QuartzCore'] if mac else ['-framework','SafariServices']),'-o',str(exe)]
 command[1:1]=['-fobjc-arc']
@@ -417,7 +417,7 @@ with (out/'link.log').open('w') as log:subprocess.run(command,stdout=log,stderr=
 identifier='com.tribespad.full-engine.ipad'
 if mac:
  picker=contents/'MacOS'/'TribesPad'
- subprocess.run(['clang','-target',target,'-isysroot',sdk,'-fobjc-arc','-O2','-Wall','-Wextra','-Werror',str(R/'port/apple/launcher_mac.m'),str(R/'port/apple/starsiege_paths.m'),'-framework','AppKit','-framework','QuartzCore','-framework','GameController','-o',str(picker)],check=True)
+ subprocess.run(['clang','-target',target,'-isysroot',sdk,'-fobjc-arc','-O2','-Wall','-Wextra','-Werror',str(R/'port/apple/launcher_mac.m'),str(R/'port/apple/starsiege_paths.m'),str(R/'port/apple/t1_live.c'),'-framework','AppKit','-framework','QuartzCore','-framework','GameController','-o',str(picker)],check=True)
 from app_icon import compile_icon
 if mac:
  icon_keys=compile_icon(resources,'macos',minimum='12.0')

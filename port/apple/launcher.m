@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "starsiege_paths.h"
+#include "t1_live.h"
 
 static NSString * const TBLaunchStarsiegePlan=@"https://github.com/chrissotraidis/tribespad/blob/main/docs/STARSIEGE-TRIBES-PLAN.md";
 static NSString * const TBLaunchRepository=@"https://github.com/chrissotraidis/tribespad";
@@ -259,8 +260,21 @@ static UIBezierPath *tb_chamfer(CGRect r,CGFloat c){
     [UIView animateWithDuration:.3 animations:^{self.view.alpha=0;card.transform=CGAffineTransformMakeScale(1.04,1.04);}
         completion:^(BOOL f){(void)f;tb_launch_game=game;tb_launch_chosen=YES;}];
 }
+/* People playing Starsiege: Tribes now, from the community masters (t1_live.c). */
+-(void)loadStarsiegePlayers {
+    __weak TBLauncherController *weak=self;NSString *base=self.cards[0].status.text;
+    dispatch_async(dispatch_get_global_queue(QOS_CLASS_UTILITY,0),^{
+        TBT1Live live;int ok=tb_t1_live(&live,4000);
+        dispatch_async(dispatch_get_main_queue(),^{
+            TBLauncherController *me=weak;if(!me||!ok)return;TBLauncherCard *card=me.cards[0];
+            NSString *now=live.people?[NSString stringWithFormat:@"%d %@ playing now on %d %@",live.people,live.people==1?@"person":@"people",live.busy_servers,live.busy_servers==1?@"server":@"servers"]:
+                [NSString stringWithFormat:@"Nobody on the %d Tribes 1 servers right now",live.servers_answered];
+            card.status.text=[NSString stringWithFormat:@"%@\n%@",now,base];[card setNeedsLayout];});
+    });
+}
 /* People playing Tribes 2 now (players minus bots, TribesNEXT list.json). */
 -(void)loadPlayers {
+    [self loadStarsiegePlayers];
     NSMutableURLRequest *r=[NSMutableURLRequest requestWithURL:[NSURL URLWithString:@"https://www.tribesnext.com/list.json"]];
     [r setValue:@"TribesPad" forHTTPHeaderField:@"User-Agent"];r.timeoutInterval=8;
     __weak TBLauncherController *weak=self;
