@@ -92,3 +92,12 @@ Reproduce: `.venv/bin/python scripts/starsiege/lift_preview.py --no-compile`, th
 - **Touch with a trackpad attached:** the touch controls stay until the mouse or trackpad is actually used in a match, and a finger on the screen brings them back.
 - **Picker:** the left stick moves between the cards too, and the picker logs each controller and press (TribesPad.log) to find why a controller did nothing there.
 - **Firing delay online:** from Tokyo the TribesNEXT servers are 110 to 175 ms away (ICMP), and Tribes 2 shows a shot once the server has it, so most of the delay is distance; the iPad ran online matches at 25 to 45 FPS, limited by the CPU (under 2 ms of GPU wait a frame), which adds a frame or two.
+
+## Starsiege feedback, second pass (25 October)
+
+- **Status bar:** Starsiege's window on iPhone and iPad is borderless, so SDL hides the status bar (clock, app name, battery) that sat over the HUD timer.
+- **Minimap:** starts 180 pixels wide instead of the bundled 280 at 800x600; Options > HUDs still sets it.
+- **Demos:** demo playback counts as a menu for the controller, so B (Escape) leaves it.
+- **Controller:** LB is previous weapon again in Starsiege (F8, bound to prevWeapon; few loadouts carry a targeting laser). In menus X double-clicks, for buying from the inventory lists. D-pad right in a match opens the quick chat panel built from the player's ChatMenu.cs; the entry's own command (say, messageAndAnimate, localMessage, remoteEval) runs through the request bridge, and the engine leaves the controller to the panel until its buttons are let go. Headless check: request 5151 sent `say(1, "Attack!~wattack")` and the game printed "TribesPad: Attack!".
+- **Mac one-command build:** `scripts/build-tribespad.sh --platform macos --games tribes2,starsiege` completes from the cleared `generated/` (17 minutes) and writes TribesPad-mac.zip.
+- **Not changed:** IRC Chat (the game has no server set up for it), modded servers that need their own model files (Starsiege servers cannot send them), and slow mission loading.

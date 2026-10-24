@@ -165,9 +165,10 @@ static void run_script(void){
    off; menus, the lobby, inventory and scores are not.
    Playing: left stick moves (W A S D), right stick looks, right trigger fires
    (left mouse), left trigger jets (right mouse), A jumps (Space), B crouches
-   (X), X uses the pack (P), Y throws a grenade (G), RB next weapon (Q), LB
-   the targeting laser (9), as in TribesPad's Tribes 2 layout, right stick
-   click toggles zoom (E held), left stick click third person (R), D-pad
+   (X), X uses the pack (P), Y throws a grenade (G), RB / LB next and previous
+   weapon (Q / F8, which TribesPad binds to prevWeapon in playMap.sae; few
+   Starsiege loadouts carry a targeting laser), right stick click toggles zoom
+   (E held), left stick click third person (R), D-pad
    up repair kit (H), down inventory (I), left beacon (B), right quick chat
    (V), View the scores page (Tab).
    Menus: left stick or D-pad moves the cursor, A clicks (hold to drag), B goes
@@ -186,10 +187,10 @@ static int play_state(void){
  char text[128]={0};size_t n=fread(text,1,sizeof text-1,f);fclose(f);text[n]=0;
  const char *q=strchr(text,'"');value=q&&q[1]=='1';return value;
 }
-enum {PAD_W,PAD_A,PAD_S,PAD_D,PAD_SPACE,PAD_X,PAD_P,PAD_G,PAD_Q,PAD_LASER,PAD_R,PAD_H,PAD_I,PAD_B,PAD_V,PAD_TAB,PAD_ESC,PAD_KEYS};
-static const unsigned char pad_dik[PAD_KEYS]={0x11,0x1e,0x1f,0x20,0x39,0x2d,0x19,0x22,0x10,0x0a,0x13,0x23,0x17,0x30,0x2f,0x0f,0x01};
+enum {PAD_W,PAD_A,PAD_S,PAD_D,PAD_SPACE,PAD_X,PAD_P,PAD_G,PAD_Q,PAD_F8,PAD_R,PAD_H,PAD_I,PAD_B,PAD_V,PAD_TAB,PAD_ESC,PAD_KEYS};
+static const unsigned char pad_dik[PAD_KEYS]={0x11,0x1e,0x1f,0x20,0x39,0x2d,0x19,0x22,0x10,0x42,0x13,0x23,0x17,0x30,0x2f,0x0f,0x01};
 static const char *const pad_name[PAD_KEYS]={"W","A","S","D","Space (jump)","X (crouch)","P (pack)","G (grenade)","Q (next weapon)",
- "9 (targeting laser)","R (third person)","H (repair kit)","I (inventory)","B (beacon)","V (quick chat)","Tab (scores)","Escape"};
+ "F8 (previous weapon)","R (third person)","H (repair kit)","I (inventory)","B (beacon)","V (quick chat)","Tab (scores)","Escape"};
 static int pad_held[PAD_KEYS],pad_button[2],pad_mode=-1,pad_connected=-1,zoomed,zoom_was,b_was;
 static float look_x,look_y,cursor_x,cursor_y,scroll;static uint32_t pad_ms;
 static void pad_key(unsigned i,int down){if(down==pad_held[i])return;pad_held[i]=down;key_change(pad_dik[i],down);
@@ -198,16 +199,30 @@ static void pad_mouse(unsigned i,int down){if(down==pad_button[i])return;pad_but
  fprintf(stderr,"TribesPad controller: %s %s\n",i?"right mouse (jet)":"left mouse (fire / click)",down?"down":"up");}
 static void pad_release_all(void){for(unsigned i=0;i<PAD_KEYS;i++)pad_key(i,0);pad_mouse(0,0);pad_mouse(1,0);
  if(zoomed){zoomed=0;key_change(0x12,0);}look_x=look_y=cursor_x=cursor_y=scroll=0;}
+#if TARGET_OS_IPHONE
+extern int tb_overlay_owns_controller(void); /* mobile_controls.m, in the app */
+#else
+static int tb_overlay_owns_controller(void){return 0;} /* the Mac has no overlay */
+#endif
 static void controller(void){
  SsPad p;memset(&p,0,sizeof p);int connected=scripted_pad_on?(p=scripted_pad,1):ss_controller_poll(&p);
  uint32_t now=now_ms();float dt=pad_ms?(float)(now-pad_ms)/1000.0f:0;pad_ms=now;if(dt>.1f)dt=.1f;
  if(connected!=pad_connected){if(pad_connected>=0||connected)fprintf(stderr,"TribesPad controller: %s\n",connected?"connected":"disconnected");
   pad_connected=connected;if(!connected)pad_release_all();}
  if(!connected)return;
+ /* iPhone and iPad: TribesPad's overlay (mobile_controls.m) takes the
+    controller while its quick chat panel is open, and until the buttons that
+    closed it are let go; the game sees nothing meanwhile. */
+ static int yielded;
+ if(tb_overlay_owns_controller()){if(!yielded){yielded=1;pad_release_all();fprintf(stderr,"TribesPad controller: overlay panel has the controller\n");}return;}
+ yielded=0;
  int playing=play_state();
  if(playing!=pad_mode){if(pad_mode>=0)pad_release_all();pad_mode=playing;fprintf(stderr,"TribesPad controller: %s layout\n",playing?"play":"menu");}
  if(playing){
   int want[PAD_KEYS]={p.ly>.35f,p.lx<-.35f,p.ly<-.35f,p.lx>.35f,p.a,p.b,p.x,p.y,p.rb,p.lb,p.ls,p.up,p.down,p.left,p.right,p.options,0};
+#if TARGET_OS_IPHONE
+  want[PAD_V]=0; /* D-pad right opens the overlay's quick chat panel instead */
+#endif
 #if !TARGET_OS_IPHONE
   want[PAD_ESC]=p.menu;
 #endif
@@ -226,6 +241,8 @@ static void controller(void){
  if(m>.14f){if(m>1){mx/=m;my/=m;m=1;}float n=fminf(1,(m-.14f)/.86f),v=(120+780*n*n)*dt/m;cursor_x+=mx*v;cursor_y-=my*v;}
  int32_t dx=(int32_t)cursor_x,dy=(int32_t)cursor_y;cursor_x-=(float)dx;cursor_y-=(float)dy;if(dx||dy)mouse_move(dx,dy,0);
  pad_mouse(0,p.a);
+ /* X double-clicks: buying from the inventory station's lists, for example. */
+ static int x_was;if(p.x&&!x_was){mouse_button(0,1);mouse_button(0,0);mouse_button(0,1);mouse_button(0,0);fprintf(stderr,"TribesPad controller: double-click (X)\n");}x_was=p.x;
  if(p.b&&!b_was){key_change(0x01,1);key_change(0x01,0);fprintf(stderr,"TribesPad controller: Escape (back)\n");}b_was=p.b;
 #if !TARGET_OS_IPHONE
  pad_key(PAD_ESC,p.menu);

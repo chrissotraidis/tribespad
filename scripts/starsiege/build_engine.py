@@ -374,6 +374,12 @@ if($Server::MasterAddressN0 == "" || $Server::MasterAddressN0 == "t1m1.pu.net:28
    $Server::CurrentMaster = 0;
 }
 translateMasters();
+// TribesPad: F8 is previous weapon (the controller's LB; Q, RB, is next).
+editActionMap("playMap.sae"); bindCommand(keyboard0, make, "f8", TO, "prevWeapon();");
+// TribesPad: the bundled minimap is 280 pixels wide, over a third of the
+// 800x600 screen; start it at 180. Options > HUDs sets it, and a size the
+// player chose stays.
+if($pref::miniMapWidth == 280) $pref::miniMapWidth = 180;
 // TribesPad: the bundled CTF HUD's saved spot (8% down) sits inside the chat
 // box at 800x600; start it just below the chat. A spot the player chose stays.
 if($pref::hudPositionsCtfHUD::Container == "2 83||0.001146 0.079808 0")
@@ -404,6 +410,9 @@ function TribesPad::request() {
    echo("TribesPad request " @ %number @ ": " @ %what @ " " @ %address);
    if(%what == "servers") TribesPad::servers();
    else if(%what == "leave-servers") { disconnect(); schedule("TribesPad::servers();", 1); }
+   // Quick chat from the controller panel: the chat menu entry's own command,
+   // which the app writes beside the request ($TribesPad::chat).
+   else if(%what == "chat") { if($TribesPad::chat != "") schedule($TribesPad::chat, 0); $TribesPad::chat = ""; }
    else if(%what == "join" && %address != -1) {
       $Server::Address = "IP:" @ %address;
       if($PCFG::Name == "") OpenNewPlayerDialog(); else JoinGame();
@@ -422,7 +431,9 @@ function TribesPad::report() {
    // read from the screen itself; the connection events alone missed online
    // matches (eventConnected comes from community scripts that mods change).
    %inMatch = isObject("playGui");
-   %playing = 0; if(%inMatch && !isCursorOn(MainWindow)) %playing = 1;
+   // A recorded demo plays in the match view too; it counts as a menu, so the
+   // controller's B (Escape) leaves it.
+   %playing = 0; if(%inMatch && !isCursorOn(MainWindow) && !$playingDemo) %playing = 1;
    %connected = 0; if($TribesPad::connected || %inMatch) %connected = 1;
    if(isFile("temp/tribespad-request.flag")) TribesPad::request();
    $TribesPad::state = %playing @ " " @ TribesPad::typing() @ " " @ %connected @ " " @ $TribesPad::handled;

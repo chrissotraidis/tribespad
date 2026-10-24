@@ -28,6 +28,18 @@ static NSString * const TBPlayT1Discord=@"https://playt1.com/discord";
 /* Starsiege: Tribes runs these controls too (tb_mobile_controls_install_starsiege):
    its own keys, play state and menu; its controller is read by the engine. */
 static BOOL tb_starsiege;
+/* Starsiege's engine reads the controller itself; while the quick chat panel
+   has it (1), or until the buttons that closed the panel are let go (2), the
+   engine steps aside (tb_overlay_owns_controller, called from its thread). */
+#include <stdatomic.h>
+static _Atomic int tb_panel_owns;
+int tb_overlay_owns_controller(void){
+    int owns=atomic_load(&tb_panel_owns);if(owns!=2)return owns;
+    GCExtendedGamepad *p=GCController.current.extendedGamepad;
+    if(!p)for(GCController *c in GCController.controllers)if(c.extendedGamepad){p=c.extendedGamepad;break;}
+    if(p&&(p.buttonA.pressed||p.buttonB.pressed||p.dpad.up.pressed||p.dpad.down.pressed||p.dpad.left.pressed||p.dpad.right.pressed))return 1;
+    atomic_store(&tb_panel_owns,0);return 0;
+}
 static NSString *tb_state_path(void){
     NSString *support=NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,NSUserDomainMask,YES).firstObject;
     return [support stringByAppendingPathComponent:tb_starsiege?@"TribesPad/Starsiege/volume/TribesPad/Game/temp/tribespad-state.cs":@"TribesPad/Game/base/prefs/tribespad-state.txt"];
@@ -80,6 +92,8 @@ static void tb_set(NSString *key,double value){[NSUserDefaults.standardUserDefau
 -(void)showQuickChat;
 -(void)sendChatKeys:(NSString *)keys;
 -(void)sendRequest:(NSString *)request;
+-(void)sendRequest:(NSString *)request extra:(NSString *)extra;
+-(void)sendStarsiegeChat:(NSString *)script;
 @property(nonatomic) BOOL holdJumpUntilRelease;
 @property(nonatomic,strong) UITouch *menuFinger;
 @property(nonatomic) BOOL gameReported;
@@ -432,7 +446,7 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
    when present, else the copy of the game's voiceBinds.cs bundled at build
    time (GameData/voiceBinds.cs). */
 @interface TBChatNode : NSObject
-@property(nonatomic,copy) NSString *key,*title,*command;
+@property(nonatomic,copy) NSString *key,*title,*command,*script;
 @property(nonatomic,strong) NSMutableArray<TBChatNode *> *children;
 @property(nonatomic,weak) TBChatNode *parent;
 @end
@@ -456,6 +470,57 @@ static TBChatNode *tb_chat_tree(void){
         node.title=[line substringWithRange:[m rangeAtIndex:3]];node.parent=current;[current.children addObject:node];
         if([m rangeAtIndex:4].location!=NSNotFound)node.command=[line substringWithRange:[m rangeAtIndex:4]];
         if([[line substringWithRange:[m rangeAtIndex:1]] isEqualToString:@"startChatMenu"]){node.children=[NSMutableArray array];current=node;}
+    }
+    return root.children.count?root:nil;
+}
+/* Starsiege's chat menu (config/Core/ChatMenu.cs in the player's game folder):
+   setPlayChatMenu("vOffense") opens a heading (nested with \\), then
+   addPlayTeamChat / addPlayChat / addPlayAnim / addLocal / addPlayCMDResponse
+   add entries whose first letter is the key. Each entry keeps the command the
+   menu itself would run (say, messageAndAnimate, localMessage, remoteEval);
+   the commander's menu, after it, is left out. */
+static NSArray<NSString *> *tb_script_args(NSString *text){
+    NSMutableArray *args=[NSMutableArray array];NSMutableString *now=[NSMutableString string];BOOL quoted=NO;
+    for(NSUInteger i=0;i<text.length;i++){unichar c=[text characterAtIndex:i];
+        if(c=='"'){quoted=!quoted;continue;}
+        if(c==','&&!quoted){[args addObject:[now stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceCharacterSet]];now=[NSMutableString string];continue;}
+        [now appendFormat:@"%C",c];}
+    [args addObject:[now stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceCharacterSet]];return args;
+}
+static NSString *tb_script_string(NSString *s){return [NSString stringWithFormat:@"\"%@\"",[[s stringByReplacingOccurrencesOfString:@"\\" withString:@"\\\\"]
+    stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""]];}
+static TBChatNode *tb_starsiege_chat_tree(void){
+    NSString *path=[NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,NSUserDomainMask,YES).firstObject
+        stringByAppendingPathComponent:@"TribesPad/Starsiege/volume/TribesPad/Game/config/Core/ChatMenu.cs"];
+    NSString *text=[NSString stringWithContentsOfFile:path encoding:NSISOLatin1StringEncoding error:nil];if(!text)return nil;
+    NSRegularExpression *heading=[NSRegularExpression regularExpressionWithPattern:@"^setPlayChatMenu\\(\\s*\"([^\"]*)\"\\s*\\)" options:0 error:nil];
+    NSRegularExpression *entry=[NSRegularExpression regularExpressionWithPattern:@"^(addPlayTeamChat|addPlayChat|addPlayAnim|addLocal|addPlayCMDResponse)\\s*\\((.*)\\)\\s*;" options:0 error:nil];
+    TBChatNode *root=[TBChatNode new];root.title=@"Quick Chat";root.children=[NSMutableArray array];TBChatNode *current=root;
+    for(NSString *raw in [text componentsSeparatedByCharactersInSet:NSCharacterSet.newlineCharacterSet]){
+        NSString *line=[raw stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceCharacterSet];
+        if([line hasPrefix:@"//"])continue;
+        if([line hasPrefix:@"setCommanderChatMenu"])break;
+        NSRange all=NSMakeRange(0,line.length);NSTextCheckingResult *m=[heading firstMatchInString:line options:0 range:all];
+        if(m){current=root;
+            for(NSString *part in [[line substringWithRange:[m rangeAtIndex:1]] componentsSeparatedByString:@"\\"]){if(part.length<2)continue;
+                NSString *key=[[part substringToIndex:1] uppercaseString],*title=[part substringFromIndex:1];TBChatNode *next=nil;
+                for(TBChatNode *n in current.children)if(n.children&&[n.key isEqualToString:key])next=n;
+                if(!next){next=[TBChatNode new];next.key=key;next.title=title;next.children=[NSMutableArray array];next.parent=current;[current.children addObject:next];}
+                current=next;}
+            continue;}
+        m=[entry firstMatchInString:line options:0 range:all];if(!m)continue;
+        NSString *kind=[line substringWithRange:[m rangeAtIndex:1]];NSArray<NSString *> *a=tb_script_args([line substringWithRange:[m rangeAtIndex:2]]);
+        if(!a.count||a[0].length<2)continue;
+        NSString *(^arg)(NSUInteger)=^NSString *(NSUInteger i){return i<a.count?a[i]:@"";};
+        NSString *(^withSound)(NSString *,NSString *)=^NSString *(NSString *msg,NSString *sound){return sound.length?[NSString stringWithFormat:@"%@~w%@",msg,sound]:msg;};
+        NSString *script=nil;
+        if([kind isEqualToString:@"addPlayTeamChat"])script=[NSString stringWithFormat:@"say(1, %@);",tb_script_string(withSound(arg(1),arg(2)))];
+        else if([kind isEqualToString:@"addPlayChat"])script=[NSString stringWithFormat:@"say(0, %@);",tb_script_string(withSound(arg(1),arg(2)))];
+        else if([kind isEqualToString:@"addPlayAnim"])script=[NSString stringWithFormat:@"messageAndAnimate(%@, %@);",tb_script_string(arg(1)),tb_script_string(arg(2))];
+        else if([kind isEqualToString:@"addLocal"])script=[NSString stringWithFormat:@"localMessage(%@);",tb_script_string(arg(1))];
+        else script=[NSString stringWithFormat:@"remoteEval(2048, \"CStatus\", %@, %@);",tb_script_string(arg(1)),tb_script_string(withSound(arg(2),arg(3)))];
+        TBChatNode *node=[TBChatNode new];node.key=[[a[0] substringToIndex:1] uppercaseString];node.title=[a[0] substringFromIndex:1];
+        node.script=script;node.parent=current;[current.children addObject:node];
     }
     return root.children.count?root:nil;
 }
@@ -513,7 +578,8 @@ static TBChatNode *tb_chat_tree(void){
     TBGameControls *owner=self.owner;
     /* The game's own canned-chat command through TribesPad's request bridge,
        so the original menu never opens; typed keys only without one. */
-    if(n.command.length){fprintf(stderr,"TribesPad quick chat: %s (%s)\n",n.command.UTF8String,n.title.UTF8String);
+    if(n.script.length){fprintf(stderr,"TribesPad quick chat: %s\n",n.script.UTF8String);[owner sendStarsiegeChat:n.script];}
+    else if(n.command.length){fprintf(stderr,"TribesPad quick chat: %s (%s)\n",n.command.UTF8String,n.title.UTF8String);
         [owner sendRequest:[@"chat " stringByAppendingString:n.command]];}
     else {fprintf(stderr,"TribesPad quick chat: V%s (%s)\n",keys.UTF8String,n.title.UTF8String);[owner sendChatKeys:keys];}
     [self close];
@@ -522,7 +588,8 @@ static TBChatNode *tb_chat_tree(void){
     if(self.menu.parent){TBChatNode *was=self.menu;self.menu=self.menu.parent;self.selected=[self.menu.children indexOfObject:was];[self reload];[self.superview setNeedsLayout];}
     else [self close];
 }
--(void)close {TBGameControls *owner=self.owner;owner.quickChat=nil;[self removeFromSuperview];}
+-(void)close {TBGameControls *owner=self.owner;owner.quickChat=nil;[self removeFromSuperview];
+    if(tb_starsiege)atomic_store(&tb_panel_owns,2);}
 @end
 
 @implementation TBGameControls
@@ -685,10 +752,22 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
         BOOL any=NO;for(GCController *c in GCController.controllers)if(c.extendedGamepad)any=YES;
         if(getenv("TRIBESPAD_TOUCH_CONTROLS"))any=NO; /* tests: touch controls even with a controller */
         __weak TBGameControls *weakSelf=self;
-        for(GCController *c in GCController.controllers)if(c.extendedGamepad)
+        for(GCController *c in GCController.controllers)if(c.extendedGamepad){
             c.extendedGamepad.buttonMenu.pressedChangedHandler=^(GCControllerButtonInput *button,float value,BOOL pressed){
                 (void)button;(void)value;TBGameControls *owner=weakSelf;
                 if(pressed&&UIApplication.sharedApplication.applicationState==UIApplicationStateActive)[owner openMenu];};
+            /* Quick chat: D-pad right in a match opens the panel; while it is
+               open the D-pad, A and B drive it and the engine steps aside
+               (tb_overlay_owns_controller). */
+            GCExtendedGamepad *pad=c.extendedGamepad;
+            void (^panel)(GCControllerButtonInput *,int)=^(GCControllerButtonInput *button,int what){
+                button.pressedChangedHandler=^(GCControllerButtonInput *b,float v,BOOL pressed){(void)b;(void)v;TBGameControls *owner=weakSelf;
+                    if(!pressed||UIApplication.sharedApplication.applicationState!=UIApplicationStateActive)return;
+                    if(!owner.quickChat){if(what==0&&owner.inMatch)[owner showQuickChat];return;}
+                    if(what==0||what==3)[owner.quickChat choose];else if(what==1)[owner.quickChat moveSelection:-1];
+                    else if(what==2)[owner.quickChat moveSelection:1];else [owner.quickChat back];};};
+            panel(pad.dpad.right,0);panel(pad.dpad.up,1);panel(pad.dpad.down,2);panel(pad.buttonA,3);panel(pad.dpad.left,4);panel(pad.buttonB,4);
+        }
         if(any!=self.controllerUsed)fprintf(stderr,"TribesPad controller %s (Starsiege)\n",any?"connected":"disconnected");
         self.controllerUsed=any;[self rebuildMenu];return;
     }
@@ -797,7 +876,7 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
     }
     /* Menus with a mouse or trackpad attached: the game takes no touches then,
        so a finger works TribesPad's own pointer (touchesBegan below). */
-    if(hit==self&&!self.inMatch&&self.mouseConnected&&event.type==UIEventTypeTouches)
+    if(hit==self&&!tb_starsiege&&!self.inMatch&&self.mouseConnected&&event.type==UIEventTypeTouches)
         for(UITouch *t in event.allTouches)if(t.type==UITouchTypeDirect)return self;
     return hit==self?nil:hit;
 }
@@ -928,10 +1007,16 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
    blocking play. The full guide is in ··· > Help > Controller Guide. */
 -(void)showQuickChat {
     if(self.quickChat)return;
-    static TBChatNode *tree;static BOOL loaded;if(!loaded){loaded=YES;tree=tb_chat_tree();}
+    static TBChatNode *tree;static BOOL loaded;if(!loaded){loaded=YES;tree=tb_starsiege?tb_starsiege_chat_tree():tb_chat_tree();}
     if(!tree){[self sendGameKey:SDL_SCANCODE_V mod:SDL_KMOD_NONE];return;} /* no tree: the game's own menu */
     self.quickChat=[[TBQuickChatView alloc] initWithTree:tree owner:self];
     [self addSubview:self.quickChat];[self setNeedsLayout];[self layoutIfNeeded];
+    if(tb_starsiege)atomic_store(&tb_panel_owns,1);
+}
+/* Starsiege: the request bridge (build_engine.py) runs the entry's command,
+   written beside the request as $TribesPad::chat. */
+-(void)sendStarsiegeChat:(NSString *)script {
+    [self sendRequest:@"chat" extra:[NSString stringWithFormat:@"$TribesPad::chat = %@;\n",tb_script_string(script)]];
 }
 /* V opens the game's chat menu; each letter then picks, as typed. Spaced so
    each key lands after the menu it opens. */
@@ -1196,7 +1281,8 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
     [alert addAction:[UIAlertAction actionWithTitle:@"Stay" style:UIAlertActionStyleCancel handler:nil]];
     alert.overrideUserInterfaceStyle=UIUserInterfaceStyleDark;[[self presenter] presentViewController:alert animated:YES completion:nil];
 }
--(void)sendRequest:(NSString *)request {
+-(void)sendRequest:(NSString *)request {[self sendRequest:request extra:nil];}
+-(void)sendRequest:(NSString *)request extra:(NSString *)extra {
     if(tb_starsiege){
         /* Starsiege runs only scripts that existed at its start: rewrite the
            shipped request file, then raise the flag its report loop checks. The
@@ -1205,7 +1291,7 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
             (long)((long long)NSDate.date.timeIntervalSince1970%1000000)*10+(long)(counter++%10)];
         NSString *game=[NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,NSUserDomainMask,YES).firstObject
             stringByAppendingPathComponent:@"TribesPad/Starsiege/volume/TribesPad/Game"];
-        NSString *text=[NSString stringWithFormat:@"$TribesPad::request = \"%@ %@\";\n",number,request];
+        NSString *text=[NSString stringWithFormat:@"%@$TribesPad::request = \"%@ %@\";\n",extra?:@"",number,request];
         [text writeToFile:[game stringByAppendingPathComponent:@"config/tribespad-request.cs"] atomically:NO encoding:NSUTF8StringEncoding error:nil];
         [NSData.data writeToFile:[game stringByAppendingPathComponent:@"temp/tribespad-request.flag"] atomically:NO];
         self.pendingRequest=number;fprintf(stderr,"TribesPad: request %s %s\n",number.UTF8String,request.UTF8String);return;

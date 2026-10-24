@@ -81,6 +81,11 @@ uint32_t ss_get_dc(_cpu *cpu,uint32_t window){
  static const char title[]="Starsiege: Tribes";uint32_t guest_title=cpu->_esp-1024,token=tribes_memory_access_begin((void *)(uintptr_t)(base+guest_title),sizeof title,2);
  memcpy((void *)(uintptr_t)(base+guest_title),title,sizeof title);tribes_memory_access_end(token);
  uint64_t flags=SDL_WINDOW_OPENGL|(headless()?SDL_WINDOW_HIDDEN:0);
+#if TARGET_OS_IPHONE
+ /* Borderless: SDL hides the status bar for it, so the clock and battery do
+    not sit over the game's HUD (Tribes 2's window is the same). */
+ flags|=SDL_WINDOW_BORDERLESS;
+#endif
  uint32_t sdl_window=tribes_sdl_create_window(cpu,guest_title,(uint32_t)width,(uint32_t)height,(uint32_t)flags,(uint32_t)(flags>>32));
  if(!sdl_window){fprintf(stderr,"TribesPad: SDL window failed: %s\n",SDL_GetError());tribes_set_last_error(2000);return 0;}
  fprintf(stderr,"TribesPad: GL drawable %dx%d for window 0x%x%s\n",(int)width,(int)height,window,headless()?" (hidden)":"");
