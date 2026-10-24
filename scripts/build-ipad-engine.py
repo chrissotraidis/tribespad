@@ -283,6 +283,18 @@ function TribesPadReadRequest()
       schedule( 500, 0, LaunchGame, "Join" );
       return;
    }
+   // Quick chat from the controller panel (mobile_controls.m): what the chat
+   // menu's own item does (issueChatCmd), without opening the menu.
+   if ( getWord( %line, 1 ) $= "chat" )
+   {
+      if ( isObject( ServerConnection ) )
+      {
+         %command = addTaggedString( getWord( %line, 2 ) );
+         processChatItemCallbacks( %command );
+         commandToServer( 'CannedChat', %command, false );
+      }
+      return;
+   }
    // Find a Game: the original JOIN pane or a server, between matches only.
    if ( isObject( ServerConnection ) )
       return;

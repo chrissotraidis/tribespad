@@ -79,6 +79,9 @@ static void tb_set(NSString *key,double value){[NSUserDefaults.standardUserDefau
 @property(nonatomic,strong) TBQuickChatView *quickChat;
 -(void)showQuickChat;
 -(void)sendChatKeys:(NSString *)keys;
+-(void)sendRequest:(NSString *)request;
+@property(nonatomic) BOOL holdJumpUntilRelease;
+@property(nonatomic,strong) UITouch *menuFinger;
 @property(nonatomic) BOOL gameReported;
 @property(nonatomic,copy) NSString *pendingRequest;
 @property(nonatomic) BOOL connected;
@@ -429,7 +432,7 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
    when present, else the copy of the game's voiceBinds.cs bundled at build
    time (GameData/voiceBinds.cs). */
 @interface TBChatNode : NSObject
-@property(nonatomic,copy) NSString *key,*title;
+@property(nonatomic,copy) NSString *key,*title,*command;
 @property(nonatomic,strong) NSMutableArray<TBChatNode *> *children;
 @property(nonatomic,weak) TBChatNode *parent;
 @end
@@ -442,7 +445,7 @@ static TBChatNode *tb_chat_tree(void){
     if(!text)text=[NSString stringWithContentsOfFile:[NSBundle.mainBundle.resourcePath stringByAppendingPathComponent:@"GameData/voiceBinds.cs"]
         encoding:NSISOLatin1StringEncoding error:nil];
     if(!text)return nil;
-    NSRegularExpression *entry=[NSRegularExpression regularExpressionWithPattern:@"(startChatMenu|addChat)\\s*\\(\\s*\"(\\S+)\\s+([^\"]*)\"" options:0 error:nil];
+    NSRegularExpression *entry=[NSRegularExpression regularExpressionWithPattern:@"(startChatMenu|addChat)\\s*\\(\\s*\"(\\S+)\\s+([^\"]*)\"(?:\\s*,\\s*'([A-Za-z0-9_]+)')?" options:0 error:nil];
     TBChatNode *root=[TBChatNode new];root.title=@"Quick Chat";root.children=[NSMutableArray array];TBChatNode *current=root;
     for(NSString *raw in [text componentsSeparatedByCharactersInSet:NSCharacterSet.newlineCharacterSet]){
         NSString *line=[raw stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceCharacterSet];
@@ -451,6 +454,7 @@ static TBChatNode *tb_chat_tree(void){
         NSTextCheckingResult *m=[entry firstMatchInString:line options:0 range:NSMakeRange(0,line.length)];if(!m)continue;
         TBChatNode *node=[TBChatNode new];node.key=[[line substringWithRange:[m rangeAtIndex:2]] uppercaseString];
         node.title=[line substringWithRange:[m rangeAtIndex:3]];node.parent=current;[current.children addObject:node];
+        if([m rangeAtIndex:4].location!=NSNotFound)node.command=[line substringWithRange:[m rangeAtIndex:4]];
         if([[line substringWithRange:[m rangeAtIndex:1]] isEqualToString:@"startChatMenu"]){node.children=[NSMutableArray array];current=node;}
     }
     return root.children.count?root:nil;
@@ -506,8 +510,13 @@ static TBChatNode *tb_chat_tree(void){
     if(self.selected>=self.menu.children.count)return;TBChatNode *n=self.menu.children[self.selected];
     if(n.children){self.menu=n;self.selected=0;[self reload];[self.superview setNeedsLayout];return;}
     NSMutableString *keys=[NSMutableString string];for(TBChatNode *k=n;k.parent;k=k.parent)[keys insertString:k.key atIndex:0];
-    fprintf(stderr,"TribesPad quick chat: V%s (%s)\n",keys.UTF8String,n.title.UTF8String);
-    TBGameControls *owner=self.owner;[owner sendChatKeys:keys];[self close];
+    TBGameControls *owner=self.owner;
+    /* The game's own canned-chat command through TribesPad's request bridge,
+       so the original menu never opens; typed keys only without one. */
+    if(n.command.length){fprintf(stderr,"TribesPad quick chat: %s (%s)\n",n.command.UTF8String,n.title.UTF8String);
+        [owner sendRequest:[@"chat " stringByAppendingString:n.command]];}
+    else {fprintf(stderr,"TribesPad quick chat: V%s (%s)\n",keys.UTF8String,n.title.UTF8String);[owner sendChatKeys:keys];}
+    [self close];
 }
 -(void)back {
     if(self.menu.parent){TBChatNode *was=self.menu;self.menu=self.menu.parent;self.selected=[self.menu.children indexOfObject:was];[self reload];[self.superview setNeedsLayout];}
@@ -628,6 +637,29 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
 }
 /* With a mouse or trackpad attached, the touch controls stay until the mouse
    is used in a match; touching the screen brings them back (hitTest). */
+/* A finger in menus with a mouse attached presses, drags and releases
+   TribesPad's own pointer where it touches (hitTest routes those touches here). */
+-(void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+    for(UITouch *t in touches)if(t.type==UITouchTypeDirect&&!self.menuFinger){
+        self.menuFinger=t;[self pointerButton:YES at:[t locationInView:self]];return;}
+    [super touchesBegan:touches withEvent:event];
+}
+-(void)touchesMoved:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+    if(self.menuFinger&&[touches containsObject:self.menuFinger]){
+        CGPoint now=[self.menuFinger locationInView:self],was=[self.menuFinger previousLocationInView:self];
+        [self pointerMoveTo:now delta:CGPointMake(now.x-was.x,now.y-was.y) held:YES];return;}
+    [super touchesMoved:touches withEvent:event];
+}
+-(void)touchesEnded:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+    if(self.menuFinger&&[touches containsObject:self.menuFinger]){
+        [self pointerButton:NO at:[self.menuFinger locationInView:self]];self.menuFinger=nil;return;}
+    [super touchesEnded:touches withEvent:event];
+}
+-(void)touchesCancelled:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+    if(self.menuFinger&&[touches containsObject:self.menuFinger]){
+        [self pointerButton:NO at:[self.menuFinger locationInView:self]];self.menuFinger=nil;return;}
+    [super touchesCancelled:touches withEvent:event];
+}
 -(void)realMouseUsed {
     if(self.mouseUsed)return;self.mouseUsed=YES;
     if(self.inMatch&&self.expanded&&!self.restoreControlsAfterKeyboard)[self toggleControls];
@@ -687,7 +719,9 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
         tb_input_move(&owner.controls->input,9,p.leftThumbstick.xAxis.value,p.leftThumbstick.yAxis.value,.15);
         const uint32_t actions[]={TBFire,TBJet,TBJump};
         NSArray<GCControllerButtonInput *> *held=@[p.rightTrigger,p.leftTrigger,p.buttonA];
-        for(unsigned i=0;i<held.count;i++)tb_input_action(&owner.controls->input,9,actions[i],held[i].pressed&&!(i==2&&owner.quickChat));
+        /* The A that picked in the quick chat panel does not jump: A waits for its release. */
+        if(owner.holdJumpUntilRelease&&!p.buttonA.pressed)owner.holdJumpUntilRelease=NO;
+        for(unsigned i=0;i<held.count;i++)tb_input_action(&owner.controls->input,9,actions[i],held[i].pressed&&!(i==2&&(owner.quickChat||owner.holdJumpUntilRelease)));
         tb_mobile_controls_emit(owner.controls);
     };
     // Buttons that hold an original key (controlDefaults.cs) while pressed.
@@ -725,7 +759,7 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
         if(owner.inMatch)[owner showQuickChat];};
     key(pad.buttonOptions,SDL_SCANCODE_F2,SDL_KMOD_NONE);         // scores
     pad.buttonA.pressedChangedHandler=^(GCControllerButtonInput *b,float v,BOOL pressed){(void)b;(void)v;TBGameControls *owner=weakSelf;
-        if(owner.quickChat){if(pressed)[owner.quickChat choose];return;}
+        if(owner.quickChat){if(pressed){owner.holdJumpUntilRelease=YES;[owner.quickChat choose];}return;}
         if(owner.inMatch||!owner.controls)return;
         [owner pointerButton:pressed at:owner.trackpad.cursor];};
     pad.buttonB.pressedChangedHandler=^(GCControllerButtonInput *b,float v,BOOL pressed){(void)b;(void)v;TBGameControls *owner=weakSelf;
@@ -761,6 +795,10 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
         BOOL finger=NO;for(UITouch *t in event.allTouches)if(t.type==UITouchTypeDirect)finger=YES;
         if(finger){self.mouseUsed=NO;dispatch_async(dispatch_get_main_queue(),^{if(!self.expanded&&self.inMatch)[self toggleControls];});}
     }
+    /* Menus with a mouse or trackpad attached: the game takes no touches then,
+       so a finger works TribesPad's own pointer (touchesBegan below). */
+    if(hit==self&&!self.inMatch&&self.mouseConnected&&event.type==UIEventTypeTouches)
+        for(UITouch *t in event.allTouches)if(t.type==UITouchTypeDirect)return self;
     return hit==self?nil:hit;
 }
 -(void)releaseControls {
