@@ -192,8 +192,10 @@ in TribesPad).
 TribesPad opens to a picker: **Tribes 2** (TribesNEXT, with how many people are playing
 now) and **Starsiege: Tribes**, which is marked in development until its translation plays
 ([plan](docs/STARSIEGE-TRIBES-PLAN.md)). Tap Tribes 2, press Return or a controller's A to play.
-**Open Tribes 2 directly next time** skips it; **Settings → Display → Game Picker at Launch** brings
-it back. The picker uses TribesPad's own emblem and a background from your own Tribes 2 files.
+The gear at the top right has **Open Tribes 2 Directly**, which skips the picker; **Settings →
+Display → Game Picker at Launch** brings it back. Each card shows its game's own title screen,
+taken at build time from your own downloads: Tribes 2's installer, and Starsiege's 2004 freeware
+installer when `ref/starsiege/tribes_gsi.exe` is present. Nothing from either game is in the repository.
 
 
 ### Keyboard and trackpad

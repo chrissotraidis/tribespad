@@ -378,11 +378,16 @@ shutil.copy2(R/'generated/gl4es'/a.platform/'LICENSE.gl4es',resources/'LICENSE.g
 args=[str(exe),str(source/'engine.bin'),str(source/'qol.bin'),str(volume),str(profile),str(temp),str(capture),'engine']
 if bundled:
  data=resources/'GameData';data.mkdir(exist_ok=True)
- # The game picker's art: TribesPad's emblem, and one background from the
- # player's own Tribes 2 download (nothing from the game is in the repository).
+ # The game picker's art: TribesPad's emblem and each game's own title screen,
+ # taken from the player's own downloads (scripts/launcher_art.py); nothing from
+ # the games is in the repository. Without a title screen, Tribes 2 falls back
+ # to a menu background from its own files and Starsiege to TribesPad's art.
  launcher_art=data/'Launcher';launcher_art.mkdir(exist_ok=True)
+ for old in launcher_art.glob('*.png'):old.unlink()
  shutil.copy2(R/'docs/images/tribespad-logo.png',launcher_art/'emblem.png')
- with zipfile.ZipFile(profile/'base/textures.vl2') as archive:(launcher_art/'tribes2.png').write_bytes(archive.read('textures/gui/bg_Starwolf.png'))
+ from launcher_art import prepare as prepare_launcher_art
+ if 'tribes2' not in prepare_launcher_art(launcher_art):
+  with zipfile.ZipFile(profile/'base/textures.vl2') as archive:(launcher_art/'tribes2.png').write_bytes(archive.read('textures/gui/bg_Starwolf.png'))
  # Incremental rsync avoids recopying hundreds of MB on native-code-only builds.
  # The isolated source profile is copied without following external symlinks.
  assert not any(p.is_symlink() for p in profile.rglob('*')), 'Bundled profile must not contain symlinks'
