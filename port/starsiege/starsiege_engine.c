@@ -26,6 +26,7 @@
 #include "../core/guest_filesystem.h"
 #include "../core/native_handles.h"
 #include "../core/guest_display.h"
+#include "../core/guest_graphics.h"
 #include "starsiege_engine.inc"
 
 extern void tribes_enter(_cpu *,uint32_t);
@@ -77,6 +78,9 @@ static void put(uint32_t address,uint32_t value){memcpy((void *)(uintptr_t)(base
 int main(int argc,char **argv){
  /* image.bin, volume root, game folder (C:\TribesPad\Game), temp folder */
  if(argc!=5){fprintf(stderr,"usage: %s image.bin volume game temp\n",argv[0]);return 2;}
+ /* Desktop SDL runs on process main; the backend checks this before video. */
+ extern void tribes_sdl_host_application_ready(void);
+ tribes_sdl_host_application_ready();
  void *memory=mmap(NULL,UINT64_C(0x100000000),PROT_NONE,MAP_PRIVATE|MAP_ANON,-1,0);assert(memory!=MAP_FAILED);
  base=(uintptr_t)memory;assert(tribes_absolute_memory_bind(base));
  assert(tribes_address_space_begin(base));load(argv[1],SS_IMAGE_BASE);
@@ -94,6 +98,10 @@ int main(int argc,char **argv){
  uint32_t display_width=1024,display_height=768;const char *display=getenv("STARSIEGE_DISPLAY");
  if(display&&sscanf(display,"%ux%u",&display_width,&display_height)!=2){fprintf(stderr,"STARSIEGE_DISPLAY must be WIDTHxHEIGHT\n");return 2;}
  assert(tribes_display_configure(base,display_width,display_height));
+ assert(tribes_graphics_configure(base));
+ /* SDL keeps its own allocations in guest memory (see starsiege_heap.c). */
+ extern uint32_t tribes_sdl_set_memory_functions(uint64_t,uint32_t,uint32_t,uint32_t,uint32_t);
+ assert(tribes_sdl_set_memory_functions(base,sdl_allocator[0],sdl_allocator[1],sdl_allocator[2],sdl_allocator[3]));
  /* Community plugins and Windows-only libraries: a real "not present". */
  for(unsigned i=0;i<sizeof absent_modules/sizeof absent_modules[0];i++)assert(tribes_module_define_absent(base,absent_modules[i]));
  assert(tribes_environment_configure(base,environment,sizeof environment));assert(tribes_command_line_configure(base,command_line,sizeof command_line));
@@ -116,3 +124,17 @@ int main(int argc,char **argv){
  return 0;
 }
 
+
+/* GL call counts per frame (STARSIEGE_TRACE_GL=1), reported by the swap. */
+static uint64_t gl_counts[sizeof gl_trace_names/sizeof gl_trace_names[0]];
+static int gl_tracing=-1;
+void ss_gl_trace(uint32_t index){
+ if(gl_tracing<0){const char *v=getenv("STARSIEGE_TRACE_GL");gl_tracing=v&&!strcmp(v,"1");}
+ if(gl_tracing&&index<sizeof gl_counts/sizeof gl_counts[0])gl_counts[index]++;
+}
+void ss_gl_trace_report(uint64_t frame){
+ if(gl_tracing!=1)return;
+ fprintf(stderr,"TribesPad: GL calls before frame %llu:",(unsigned long long)frame);
+ for(unsigned i=0;i<sizeof gl_counts/sizeof gl_counts[0];i++)if(gl_counts[i])fprintf(stderr," %s=%llu",gl_trace_names[i],(unsigned long long)gl_counts[i]);
+ fputc('\n',stderr);memset(gl_counts,0,sizeof gl_counts);
+}

@@ -80,3 +80,47 @@ uint32_t ss_create_semaphore(uint64_t base,uint32_t attributes,uint32_t initial,
 
 
 
+
+/* HANDLE CreateFileA(...): logs the first few hundred names the game opens
+   (diagnostics for the goal loop), then uses TribesPad's file service. */
+extern uint32_t tribes_create_file(uint64_t base,uint32_t name,uint32_t access,uint32_t share,uint32_t security,uint32_t creation,uint32_t flags,uint32_t template_file);
+uint32_t ss_create_file_a(uint64_t base,uint32_t name,uint32_t access,uint32_t share,uint32_t security,uint32_t creation,uint32_t flags,uint32_t template_file){
+ static unsigned logged;
+ if(name&&(logged<20||(access&0x40000000)||(flags&0x40000000))){logged++;const char *text=(const char *)(uintptr_t)(base+name);uint32_t token=tribes_memory_access_begin(text,1,1);tribes_memory_access_end(token);
+  fprintf(stderr,"TribesPad: CreateFileA %s access=0x%x creation=%u flags=0x%x\n",text,access,creation,flags);}
+ /* Named pipes connect to other local programs; none exist beside the guest,
+    so a client open finds no server, exactly as on Windows without one. */
+ if(name){const char *text=(const char *)(uintptr_t)(base+name);if(!strncmp(text,"\\\\.\\pipe\\",9)){tribes_set_last_error(2);return UINT32_MAX;}}
+ return tribes_create_file(base,name,access,share,security,creation,flags,template_file);
+}
+
+/* DWORD FormatMessageA: Windows' own text for the WGL error Starsiege reports
+   (2000, ERROR_INVALID_PIXEL_FORMAT); every other message comes from
+   TribesPad's system catalog. Same flag rules as that service. */
+extern uint32_t tribes_format_message_a(uint64_t,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t,uint32_t);
+extern uint32_t tribes_global_alloc(uint64_t base,uint32_t flags,uint32_t bytes);
+uint32_t ss_format_message_a(uint64_t base,uint32_t flags,uint32_t source,uint32_t id,uint32_t language,uint32_t output,uint32_t capacity,uint32_t arguments){
+ if((id&0xffff)!=2000||((id>>16)&&(id>>16)!=0x8007)||!(flags&0x1000))return tribes_format_message_a(base,flags,source,id,language,output,capacity,arguments);
+ static const char text[]="The pixel format is invalid.\r\n";size_t length=sizeof text-1;
+ if((flags&255)==255)length-=2;
+ uint32_t destination=output;
+ if(flags&0x100){uint32_t bytes=(uint32_t)length+1;if(bytes<capacity)bytes=capacity;destination=tribes_global_alloc(base,0,bytes);if(!destination)return 0;}
+ else if(capacity<=length){tribes_set_last_error(122);return 0;}
+ uint32_t token=tribes_memory_access_begin((void *)(uintptr_t)(base+destination),(uint32_t)length+1,2);
+ memcpy((void *)(uintptr_t)(base+destination),text,length);((char *)(uintptr_t)(base+destination))[length]=0;tribes_memory_access_end(token);
+ if(flags&0x100){token=tribes_memory_access_begin((void *)(uintptr_t)(base+output),4,2);memcpy((void *)(uintptr_t)(base+output),&destination,4);tribes_memory_access_end(token);}
+ return (uint32_t)length;
+}
+
+/* FARPROC GetProcAddress: logs OpenGL/GLU lookups (module handles 0x20040000
+   and 0x20050000) and their results during bring-up, then answers as
+   TribesPad's loader does. */
+extern uint32_t tribes_get_proc_address(uint64_t base,uint32_t image,uint32_t pointer);
+uint32_t ss_get_proc_address(uint64_t base,uint32_t image,uint32_t pointer){
+ uint32_t result=tribes_get_proc_address(base,image,pointer);
+ if((image==0x20040000u||image==0x20050000u)&&pointer>0xffff){
+  const char *name=(const char *)(uintptr_t)(base+pointer);
+  fprintf(stderr,"TribesPad: GetProcAddress(%s, %s) = 0x%x\n",image==0x20040000u?"opengl32":"glu32",name,result);
+ }
+ return result;
+}
