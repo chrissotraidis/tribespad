@@ -518,6 +518,10 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
    back from the controller button or when it disconnects. */
 -(void)mouseChanged:(NSNotification *)notification {
     (void)notification;BOOL connected=GCMouse.mice.count>0;if(connected==self.mouseConnected)return;
+    /* TRIBESPAD_TOUCH_CONTROLS=1 (tests): keep the touch controls with a mouse or controller
+       attached, such as the Simulator's or a keyboard folio's trackpad. */
+    if(getenv("TRIBESPAD_TOUCH_CONTROLS"))connected=NO;
+    if(connected==self.mouseConnected)return;
     self.mouseConnected=connected;
     if(connected&&self.expanded)[self toggleControls];
     else if(!connected&&self.inMatch&&!self.expanded&&!(self.controllerUsed&&TB_HIDE_WITH_CONTROLLER))[self toggleControls];
@@ -529,6 +533,7 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
         /* The engine reads the controller itself (starsiege_controller.m) and
            steps aside for it; Menu opens the ··· menu, as in Tribes 2. */
         BOOL any=NO;for(GCController *c in GCController.controllers)if(c.extendedGamepad)any=YES;
+        if(getenv("TRIBESPAD_TOUCH_CONTROLS"))any=NO; /* tests: touch controls even with a controller */
         __weak TBGameControls *weakSelf=self;
         for(GCController *c in GCController.controllers)if(c.extendedGamepad)
             c.extendedGamepad.buttonMenu.pressedChangedHandler=^(GCControllerButtonInput *button,float value,BOOL pressed){
