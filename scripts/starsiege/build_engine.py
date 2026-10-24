@@ -71,7 +71,7 @@ RUNTIME = [R / 'port/core' / (n + '.c') for n in [
     R / 'port/starsiege/starsiege_display.c', R / 'port/starsiege/starsiege_windows.c',
     R / 'port/starsiege/starsiege_winsock.c', R / 'port/starsiege/starsiege_registry.c',
     R / 'port/starsiege/starsiege_critical_section.c', R / 'port/starsiege/starsiege_fast_heap.c',
-    R / 'port/starsiege/starsiege_input.c'] + [
+    R / 'port/starsiege/starsiege_input.c', R / 'port/starsiege/starsiege_controller.m'] + [
     R / 'port/llasm-support' / (n + '.c') for n in [
     'tribes_result', 'tribes_sse', 'tribes_quadword_conversion', 'tribes_shift', 'tribes_absolute_memory', 'tribes_atomic',
     'tribes_float80', 'tribes_mmx', 'tribes_scan', 'tribes_x87']] + [

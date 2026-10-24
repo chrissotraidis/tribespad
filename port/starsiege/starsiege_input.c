@@ -9,11 +9,13 @@
  * per frame and whenever the game reads a device.
  * Headless checks can script input: STARSIEGE_INPUT=file, one event per line,
  * "<frame> key <DIK> down|up", "<frame> move <dx> <dy>",
- * "<frame> button <0-7> down|up", "<frame> wheel <notches>". */
+ * "<frame> button <0-7> down|up", "<frame> wheel <notches>", and a virtual
+ * controller, "<frame> pad <lx|ly|rx|ry|lt|rt|a|b|x|y|lb|rb|ls|rs|menu|options> <value>". */
 #include "../core/guest_dinput.c"
 #include <SDL3/SDL.h>
 #include <time.h>
 #include <math.h>
+#include "starsiege_controller.h"
 
 extern uint32_t tribes_sdl_poll_event(_cpu *cpu,uint32_t address);
 extern uint32_t tribes_sdl_set_window_relative_mouse_mode(_cpu *cpu,uint32_t token,uint32_t value);
@@ -121,17 +123,21 @@ static unsigned dik_of(unsigned sc){
 }
 
 /* Scripted input (headless checks). */
-typedef struct {uint64_t frame;char what;int32_t a,b;} Scripted;
+typedef struct {uint64_t frame;char what;int32_t a,b;char field[8];float value;} Scripted;
+static SsPad scripted_pad;static int scripted_pad_on;
 static Scripted *script;static unsigned script_count,script_next;static int script_loaded;
 static void load_script(void){
  script_loaded=1;const char *path=getenv("STARSIEGE_INPUT");if(!path)return;
  FILE *f=fopen(path,"r");if(!f){fprintf(stderr,"TribesPad: STARSIEGE_INPUT %s unreadable\n",path);abort();}
  char line[256];while(fgets(line,sizeof line,f)){
   unsigned long long frame;char word[16],extra[16]="";long a=0,b=0;
-  int n=sscanf(line,"%llu %15s %li %15s",&frame,word,&a,extra);if(n<3||line[0]=='#')continue;
-  Scripted s={frame,word[0],(int32_t)a,0};
+  int n=sscanf(line,"%llu %15s %li %15s",&frame,word,&a,extra);
+  if(line[0]=='#'||n<2||(n<3&&strcmp(word,"pad")))continue;
+  Scripted s={frame,word[0],(int32_t)a,0,"",0};
   if(!strcmp(word,"move"))b=strtol(extra,NULL,0);else b=!strcmp(extra,"down");s.b=(int32_t)b;
-  if(!strchr("kmbw",s.what)){fprintf(stderr,"TribesPad: STARSIEGE_INPUT bad line: %s",line);abort();}
+  if(!strcmp(word,"pad")){char field[8];float value;if(sscanf(line,"%*u %*s %7s %f",field,&value)!=2){fprintf(stderr,"TribesPad: STARSIEGE_INPUT bad pad line: %s",line);abort();}
+   strcpy(s.field,field);s.value=value;}
+  else if(!strchr("kmbw",s.what)){fprintf(stderr,"TribesPad: STARSIEGE_INPUT bad line: %s",line);abort();}
   Scripted *grown=realloc(script,(script_count+1)*sizeof *grown);if(!grown)abort();script=grown;script[script_count++]=s;
  }
  fclose(f);fprintf(stderr,"TribesPad: %u scripted input events\n",script_count);
@@ -140,9 +146,37 @@ static void run_script(void){
  if(!script_loaded)load_script();uint64_t frame=ss_frames();
  while(script_next<script_count&&script[script_next].frame<=frame){
   Scripted s=script[script_next++];
+  if(s.what=='p'){scripted_pad_on=1;float *axes[]={&scripted_pad.lx,&scripted_pad.ly,&scripted_pad.rx,&scripted_pad.ry,&scripted_pad.lt,&scripted_pad.rt};
+   static const char *const axis[]={"lx","ly","rx","ry","lt","rt"},*const button[]={"a","b","x","y","lb","rb","ls","rs","menu","options"};
+   int *buttons_[]={&scripted_pad.a,&scripted_pad.b,&scripted_pad.x,&scripted_pad.y,&scripted_pad.lb,&scripted_pad.rb,&scripted_pad.ls,&scripted_pad.rs,&scripted_pad.menu,&scripted_pad.options};
+   for(unsigned i=0;i<6;i++)if(!strcmp(s.field,axis[i]))*axes[i]=s.value;for(unsigned i=0;i<10;i++)if(!strcmp(s.field,button[i]))*buttons_[i]=s.value!=0;continue;}
   if(s.what=='k')key_change((unsigned)s.a,s.b);else if(s.what=='m')mouse_move(s.a,s.b,0);
   else if(s.what=='b')mouse_button((unsigned)s.a,s.b);else mouse_move(0,0,s.a*120);
  }
+}
+
+/* A game controller drives the game's own default controls (config.cs), the
+   same way a keyboard and mouse would: left stick or D-pad WASD, right stick
+   the mouse (look, and the menu cursor), right trigger the left button (fire,
+   click), left trigger the right button (jet), A Space (jump), B X (crouch),
+   X G (grenade), Y H (repair kit), RB Q (next weapon), LB E (zoom), left
+   stick click R (view), right stick click Z (zoom cycle), Menu Escape, View
+   Tab. Only changes are sent, so a keyboard used alongside keeps working. */
+enum {PAD_W,PAD_A,PAD_S,PAD_D,PAD_SPACE,PAD_X,PAD_G,PAD_H,PAD_Q,PAD_E,PAD_R,PAD_Z,PAD_ESC,PAD_TAB,PAD_KEYS};
+static const unsigned char pad_dik[PAD_KEYS]={0x11,0x1e,0x1f,0x20,0x39,0x2d,0x22,0x23,0x10,0x12,0x13,0x2c,0x01,0x0f};
+static int pad_held[PAD_KEYS],pad_button[2];static float look_x,look_y;static uint32_t pad_ms;
+static void controller(void){
+ SsPad p;memset(&p,0,sizeof p);int connected=scripted_pad_on?(p=scripted_pad,1):ss_controller_poll(&p);
+ uint32_t now=now_ms();float dt=pad_ms?(float)(now-pad_ms)/1000.0f:0;pad_ms=now;if(dt>.1f)dt=.1f;
+ if(!connected){memset(&p,0,sizeof p);}
+ int want[PAD_KEYS]={p.ly>.35f,p.lx<-.35f,p.ly<-.35f,p.lx>.35f,p.a,p.b,p.x,p.y,p.rb,p.lb,p.ls,p.rs,p.menu,p.options};
+ for(unsigned i=0;i<PAD_KEYS;i++)if(want[i]!=pad_held[i]){pad_held[i]=want[i];key_change(pad_dik[i],want[i]);}
+ int buttons_want[2]={p.rt>.4f,p.lt>.4f};
+ for(unsigned i=0;i<2;i++)if(buttons_want[i]!=pad_button[i]){pad_button[i]=buttons_want[i];mouse_button(i,buttons_want[i]);}
+ /* Right stick: up to 1100 pixels a second, squared for fine aim near the centre. */
+ float rx=fabsf(p.rx)<.12f?0:p.rx,ry=fabsf(p.ry)<.12f?0:p.ry;
+ look_x+=rx*fabsf(rx)*1100.0f*dt;look_y-=ry*fabsf(ry)*1100.0f*dt;
+ int32_t dx=(int32_t)look_x,dy=(int32_t)look_y;look_x-=(float)dx;look_y-=(float)dy;if(dx||dy)mouse_move(dx,dy,0);
 }
 
 /* Drain SDL's queue. The event buffer is guest stack scratch below ESP. */
@@ -150,7 +184,7 @@ static float carry_x,carry_y;
 void ss_input_pump(_cpu *cpu){
  static int pumping,introduced;if(pumping)return;pumping=1;pointer_base=cpu->_pointer_offset;
  if(!introduced&&ss_sdl_window()){introduced=1;windows_pointer(0,0);} /* the pointer starts over the new window */
- run_script();
+ run_script();controller();
  uint32_t saved=cpu->_esp;cpu->_esp=(saved-512)&~15u;uint32_t address=cpu->_esp+256;
  while(tribes_sdl_poll_event(cpu,address)){
   unsigned char e[128];memcpy(e,(void *)(uintptr_t)(cpu->_pointer_offset+address),128);
