@@ -155,7 +155,7 @@ static UIBezierPath *tb_chamfer(CGRect r,CGFloat c){
     TBLauncherCard *starsiege=[[TBLauncherCard alloc] initWithKicker:@"Starsiege: Tribes  \u00B7  1998"
         art:[UIImage imageWithContentsOfFile:[art stringByAppendingPathComponent:@"starsiege.png"]] fallback:emblem available:tb_starsiege_here()
         label:tb_starsiege_here()?@"Starsiege: Tribes, play":@"Starsiege: Tribes, in development"];
-    starsiege.status.text=tb_starsiege_here()?@"Version 1.41, the one the community plays. Bots offline, PlayT1 servers online.":@"The original. Being translated to native code; it opens here once it plays.";
+    starsiege.status.text=tb_starsiege_here()?@"Version 1.41, the one the community plays. Bot matches offline, community servers online.":@"The original. Being translated to native code; it opens here once it plays.";
     TBLauncherCard *tribes2=[[TBLauncherCard alloc] initWithKicker:@"Tribes 2  \u00B7  2001  \u00B7  TribesNEXT online"
         art:[UIImage imageWithContentsOfFile:[art stringByAppendingPathComponent:@"tribes2.png"]] fallback:emblem available:YES
         label:@"Tribes 2, play"];
