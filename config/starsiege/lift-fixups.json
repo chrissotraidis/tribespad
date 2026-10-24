@@ -2,7 +2,10 @@
  "image": "Tribes.exe 1.41 (PlayT1 Retro config, retro_141_installerv2.exe)",
  "image_sha256": "19cd6c9fcdea000f792fc4b024adadf5a82c9a1599a9616e5cbdf79937d2d947",
  "note": "Recorded corrections between scripts/audit-code.py and SRW for Starsiege: Tribes 1.41. The image has no relocation table, so the audit's pointer guesses need these. Each entry gives its evidence.",
- "text": ["0x401000", "0x60DA8E"],
+ "text": [
+  "0x401000",
+  "0x60DA8E"
+ ],
  "not_code": [
   {
    "address": "0x600030",
@@ -17,6 +20,14 @@
   {
    "address": "0x60002A",
    "why": "C++ unwind funclet (mov ecx,[ebp-0x10]; add ecx,0x4B0; jmp) referenced from the unwind table at 0x6AA430"
+  },
+  {
+   "address": "0x401690",
+   "why": "console command remoteLH_CHMOD, reached only through the command table entry at 0x6C3DD0 (name 0x62E3A0); recorded matches and 1.41 servers call it"
+  },
+  {
+   "address": "0x4012B0",
+   "why": "console command remoteLH_CHMEM, reached only through the command table entry at 0x6C3DE0"
   }
  ],
  "instruction_replacements": [
@@ -25,6 +36,30 @@
    "length": 2,
    "why": "jnz to 0x52BC65 when DirectInputCreateA fails; the community 1.41 patch overwrote the target with other code, so the branch leads into the middle of an instruction even on Windows. Trap loudly if taken.",
    "llasm": ";jnz loc_52BC65 (overwritten target)|and tmp1, eflags, ZF|ctcallz tmp1, hp_trap_52BC4F|tcall hp_loc_52BC51|endp|proc hp_trap_52BC4F|call halopad_trap_unimplemented 0x52bc4f|tcall hp_loc_52BC51|endp|proc hp_loc_52BC51"
+  },
+  {
+   "address": "0x401697",
+   "length": 2,
+   "why": "remoteLH_CHMOD: jl to 0x401708 lands inside 'mov eax, 0x62E394' (bytes 00 C3, add bl,al) and then on int3 at 0x40170A, so a call with fewer than five arguments faults on Windows too. SRW cannot translate overlapping code; trap loudly if taken.",
+   "llasm": ";jl 0x401708 (inside an instruction)|lshr tmp1, eflags, OF_SHIFT - SF_SHIFT|xor tmp1, tmp1, eflags|and tmp1, tmp1, SF|ctcallnz tmp1, hp_trap_401697|tcall hp_loc_401699|endp|proc hp_trap_401697|call halopad_trap_unimplemented 0x401697|tcall hp_loc_401699|endp|proc hp_loc_401699"
+  },
+  {
+   "address": "0x4012B5",
+   "length": 2,
+   "why": "remoteLH_CHMEM: jl to 0x401312 lands inside 'mov eax, 0x62E394' (00 C3) and then on int3 at 0x401314, a fault on Windows too. Trap loudly if taken.",
+   "llasm": ";jl 0x401312 (inside an instruction)|lshr tmp1, eflags, OF_SHIFT - SF_SHIFT|xor tmp1, tmp1, eflags|and tmp1, tmp1, SF|ctcallnz tmp1, hp_trap_4012B5|tcall hp_loc_4012B7|endp|proc hp_trap_4012B5|call halopad_trap_unimplemented 0x4012b5|tcall hp_loc_4012B7|endp|proc hp_loc_4012B7"
+  }
+ ],
+ "pointers": [
+  {
+   "from": "0x6C3DD0",
+   "to": "0x401690",
+   "why": "remoteLH_CHMOD in the console command table (name pointer at 0x6C3DCC); the audit did not record this table entry as a pointer"
+  },
+  {
+   "from": "0x6C3DE0",
+   "to": "0x4012B0",
+   "why": "remoteLH_CHMEM in the console command table (name pointer at 0x6C3DDC)"
   }
  ]
 }

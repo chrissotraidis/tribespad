@@ -100,6 +100,9 @@ def main():
     text = (int(FIXUPS['text'][0], 16), int(FIXUPS['text'][1], 16))
     false_pointers = sixteen_bit_data((analysis / 'image.bin').read_bytes(), 0x400000, text, pairs)
     kept = [l for l, (f, t) in zip(rows, pairs) if t not in not_code and f not in false_pointers]
+    # Recorded pointers the audit missed (lift-fixups.json "pointers").
+    kept += ['0x%x,0x%x,' % (int(x['from'], 16), int(x['to'], 16)) for x in FIXUPS.get('pointers', [])]
+    kept.sort(key=lambda l: int(l.split(',')[0], 16))  # SRW expects address order
     (OUT / 'relocations.csv').write_text('\n'.join(kept) + '\n')
     for f in (analysis / 'srw').glob('*'):
         shutil.copy2(f, OUT / f.name)
@@ -143,6 +146,23 @@ def main():
             path.write_text(result)
             rewritten += count
     report['corrections']['inner_data_pointers_as_bytes'] = rewritten
+    # SRW translates "movzx r16, r8h" of the same register (movzx ax, ah) by
+    # clearing the 16-bit destination first and then reading the high byte from
+    # it, so the result is always 0; x86 reads the source first. Reorder the four
+    # lines so the byte is read before the destination is cleared.
+    high = re.compile(r'^;movzx ([abcd])x, \1h\n'
+                      r'and (e[abcd]x), \2, 0xffff0000\n'
+                      r'lshr (tmp\d+), \2, 8\n'
+                      r'and \3, \3, 0xff\n', re.M)
+    fixed = 0
+    for path in sorted(OUT.glob('seg*_code.llinc')):
+        source = path.read_text()
+        result, count = high.subn(lambda m: ';movzx %sx, %sh (source read first)\nlshr %s, %s, 8\nand %s, %s, 0xff\nand %s, %s, 0xffff0000\n'
+                                  % (m[1], m[1], m[3], m[2], m[3], m[3], m[2], m[2]), source)
+        if count:
+            path.write_text(result)
+            fixed += count
+    report['corrections']['movzx_high_byte_same_register'] = fixed
     import pefile
     pe = pefile.PE(str(image))
     imports = sorted({i.name.decode() for d in pe.DIRECTORY_ENTRY_IMPORT for i in d.imports if i.name})
