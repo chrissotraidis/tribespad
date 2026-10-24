@@ -374,8 +374,6 @@ if($Server::MasterAddressN0 == "" || $Server::MasterAddressN0 == "t1m1.pu.net:28
    $Server::CurrentMaster = 0;
 }
 translateMasters();
-// TribesPad: F8 is previous weapon (the controller's LB; Q, RB, is next).
-editActionMap("playMap.sae"); bindCommand(keyboard0, make, "f8", TO, "prevWeapon();");
 // TribesPad: the bundled CTF HUD's saved spot (8% down) sits inside the chat
 // box at 800x600; start it just below the chat. A spot the player chose stays.
 if($pref::hudPositionsCtfHUD::Container == "2 83||0.001146 0.079808 0")

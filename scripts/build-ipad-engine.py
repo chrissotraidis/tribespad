@@ -391,6 +391,9 @@ if bundled:
  from launcher_art import prepare as prepare_launcher_art
  if 'tribes2' not in prepare_launcher_art(launcher_art):
   with zipfile.ZipFile(profile/'base/textures.vl2') as archive:(launcher_art/'tribes2.png').write_bytes(archive.read('textures/gui/bg_Starwolf.png'))
+ # The quick chat tree for the controller panel (mobile_controls.m): the game's
+ # own voiceBinds.cs, from the player's scripts.vl2; the game ships it compiled.
+ with zipfile.ZipFile(profile/'base/scripts.vl2') as archive:(data/'voiceBinds.cs').write_bytes(archive.read('scripts/voiceBinds.cs'))
  # Incremental rsync avoids recopying hundreds of MB on native-code-only builds.
  # The isolated source profile is copied without following external symlinks.
  assert not any(p.is_symlink() for p in profile.rglob('*')), 'Bundled profile must not contain symlinks'

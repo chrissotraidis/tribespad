@@ -118,6 +118,9 @@ if [ "$starsiege" = 1 ]; then
   [ -f ref/starsiege/game/Tribes.exe ] || $py scripts/starsiege/prepare-inputs.py
   [ -f generated/starsiege/lift/result.json ] || $py scripts/starsiege/lift_preview.py --no-compile
   if [ "$platform" != macos ]; then
+    # Starsiege's SDL wrappers are generated from the macOS backend's
+    # description (scripts/sdl_backend_inputs.py), whatever the target.
+    [ -f generated/sdl-backend/macos/result.json ] || SDKROOT="$mac_sdk" $py scripts/build-sdl-backend.py --platform macos
     STARSIEGE_OPT=-O1 $py scripts/starsiege/build_engine.py --platform "$platform" >/dev/null
     starsiege_object=(--starsiege-object "generated/starsiege/engine-$platform/starsiege.o")
   fi

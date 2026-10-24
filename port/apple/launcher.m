@@ -169,6 +169,7 @@ static UIBezierPath *tb_chamfer(CGRect r,CGFloat c){
     self.footer.text=@"Native ARM64 recompilations of the original games, built from your own copies. Starsiege: Tribes and Tribes 2 belong to their owners; TribesPad is MIT licensed.";
     [self.view addSubview:self.footer];
     [self loadPlayers];
+    fprintf(stderr,"TribesPad launcher: %lu controllers at start\n",(unsigned long)GCController.controllers.count);
     for(GCController *c in GCController.controllers)[self watch:c];
     [NSNotificationCenter.defaultCenter addObserverForName:GCControllerDidConnectNotification object:nil queue:NSOperationQueue.mainQueue
         usingBlock:^(NSNotification *n){[self watch:n.object];}];
@@ -188,9 +189,18 @@ static UIBezierPath *tb_chamfer(CGRect r,CGFloat c){
 }
 -(void)watch:(GCController *)controller {
     __weak TBLauncherController *weak=self;GCExtendedGamepad *pad=controller.extendedGamepad;
-    pad.buttonA.pressedChangedHandler=^(GCControllerButtonInput *b,float v,BOOL pressed){(void)b;(void)v;if(pressed)[weak activate];};
-    pad.dpad.left.pressedChangedHandler=^(GCControllerButtonInput *b,float v,BOOL pressed){(void)b;(void)v;if(pressed)[weak moveFocus:-1];};
-    pad.dpad.right.pressedChangedHandler=^(GCControllerButtonInput *b,float v,BOOL pressed){(void)b;(void)v;if(pressed)[weak moveFocus:1];};
+    fprintf(stderr,"TribesPad launcher: controller %s (%s)\n",controller.vendorName.UTF8String?:"unnamed",pad?"gamepad":"no extended gamepad");
+    if(!pad)return;controller.handlerQueue=dispatch_get_main_queue();
+    pad.buttonA.pressedChangedHandler=^(GCControllerButtonInput *b,float v,BOOL pressed){(void)b;(void)v;
+        if(pressed){fprintf(stderr,"TribesPad launcher: controller A\n");[weak activate];}};
+    pad.dpad.left.pressedChangedHandler=^(GCControllerButtonInput *b,float v,BOOL pressed){(void)b;(void)v;
+        if(pressed){fprintf(stderr,"TribesPad launcher: controller left\n");[weak moveFocus:-1];}};
+    pad.dpad.right.pressedChangedHandler=^(GCControllerButtonInput *b,float v,BOOL pressed){(void)b;(void)v;
+        if(pressed){fprintf(stderr,"TribesPad launcher: controller right\n");[weak moveFocus:1];}};
+    /* The left stick too: one step per push past half way. */
+    __block int stick=0;
+    pad.leftThumbstick.valueChangedHandler=^(GCControllerDirectionPad *d,float x,float y){(void)d;(void)y;
+        int now=x>.5f?1:x<-.5f?-1:0;if(now&&now!=stick)[weak moveFocus:now];stick=now;};
 }
 -(NSArray<UIKeyCommand *> *)keyCommands {
     return @[[UIKeyCommand keyCommandWithInput:@"\r" modifierFlags:0 action:@selector(activate)],

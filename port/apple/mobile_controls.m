@@ -51,6 +51,7 @@ static void tb_set(NSString *key,double value){[NSUserDefaults.standardUserDefau
 
 @class TBTrackpad;
 
+@class TBQuickChatView;
 @interface TBGameControls : UIView
 @property(nonatomic) TBMobileControls *controls;
 @property(nonatomic,strong) NSArray<UIView *> *pads;
@@ -75,11 +76,16 @@ static void tb_set(NSString *key,double value){[NSUserDefaults.standardUserDefau
 @property(nonatomic) BOOL matchSeen;
 @property(nonatomic) BOOL typingDialog;
 @property(nonatomic) BOOL zoomed;
+@property(nonatomic,strong) TBQuickChatView *quickChat;
+-(void)showQuickChat;
+-(void)sendChatKeys:(NSString *)keys;
 @property(nonatomic) BOOL gameReported;
 @property(nonatomic,copy) NSString *pendingRequest;
 @property(nonatomic) BOOL connected;
 @property(nonatomic) BOOL controllerUsed;
 @property(nonatomic) BOOL mouseConnected;
+@property(nonatomic) BOOL mouseUsed;
+-(void)realMouseUsed;
 @property(nonatomic,strong) NSTimer *matchClock;
 @property(nonatomic,strong) UILabel *hint;
 -(void)rebuildMenu;
@@ -414,6 +420,102 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
 }
 @end
 
+/* Quick chat for a controller. Tribes 2's chat menu (V) is a tree picked by
+   letter keys (voiceBinds.cs: startChatMenu / addChat / endChatMenu), which a
+   controller cannot type. This panel shows the same tree: the D-pad moves, A
+   (or D-pad right) opens or says, B (or D-pad left) goes back, and at the root
+   closes. Saying an item types V and the item's letters, so the game's own
+   menu sends it. The tree comes from the player's prefs/customVoiceBinds.cs
+   when present, else the copy of the game's voiceBinds.cs bundled at build
+   time (GameData/voiceBinds.cs). */
+@interface TBChatNode : NSObject
+@property(nonatomic,copy) NSString *key,*title;
+@property(nonatomic,strong) NSMutableArray<TBChatNode *> *children;
+@property(nonatomic,weak) TBChatNode *parent;
+@end
+@implementation TBChatNode
+@end
+static TBChatNode *tb_chat_tree(void){
+    NSString *support=NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,NSUserDomainMask,YES).firstObject;
+    NSString *custom=[support stringByAppendingPathComponent:@"TribesPad/Game/base/prefs/customVoiceBinds.cs"];
+    NSString *text=[NSString stringWithContentsOfFile:custom encoding:NSISOLatin1StringEncoding error:nil];
+    if(!text)text=[NSString stringWithContentsOfFile:[NSBundle.mainBundle.resourcePath stringByAppendingPathComponent:@"GameData/voiceBinds.cs"]
+        encoding:NSISOLatin1StringEncoding error:nil];
+    if(!text)return nil;
+    NSRegularExpression *entry=[NSRegularExpression regularExpressionWithPattern:@"(startChatMenu|addChat)\\s*\\(\\s*\"(\\S+)\\s+([^\"]*)\"" options:0 error:nil];
+    TBChatNode *root=[TBChatNode new];root.title=@"Quick Chat";root.children=[NSMutableArray array];TBChatNode *current=root;
+    for(NSString *raw in [text componentsSeparatedByCharactersInSet:NSCharacterSet.newlineCharacterSet]){
+        NSString *line=[raw stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceCharacterSet];
+        if([line hasPrefix:@"//"])continue;
+        if([line hasPrefix:@"endChatMenu"]){if(current.parent)current=current.parent;continue;}
+        NSTextCheckingResult *m=[entry firstMatchInString:line options:0 range:NSMakeRange(0,line.length)];if(!m)continue;
+        TBChatNode *node=[TBChatNode new];node.key=[[line substringWithRange:[m rangeAtIndex:2]] uppercaseString];
+        node.title=[line substringWithRange:[m rangeAtIndex:3]];node.parent=current;[current.children addObject:node];
+        if([[line substringWithRange:[m rangeAtIndex:1]] isEqualToString:@"startChatMenu"]){node.children=[NSMutableArray array];current=node;}
+    }
+    return root.children.count?root:nil;
+}
+@interface TBQuickChatView : UIView
+@property(nonatomic,weak) TBGameControls *owner;
+@property(nonatomic,strong) TBChatNode *menu;
+@property(nonatomic) NSUInteger selected;
+@property(nonatomic,strong) UILabel *title,*help;
+@property(nonatomic,strong) NSMutableArray<UILabel *> *rows;
+@end
+@implementation TBQuickChatView
+-(instancetype)initWithTree:(TBChatNode *)tree owner:(TBGameControls *)owner {
+    if(!(self=[super initWithFrame:CGRectZero]))return nil;
+    self.owner=owner;self.menu=tree;self.rows=[NSMutableArray array];
+    self.backgroundColor=[UIColor colorWithWhite:.04 alpha:.86];self.layer.cornerRadius=14;
+    self.layer.borderWidth=1;self.layer.borderColor=[UIColor colorWithRed:.18 green:.77 blue:.79 alpha:.7].CGColor;
+    self.title=[UILabel new];self.title.font=[UIFont boldSystemFontOfSize:17];self.title.textColor=[UIColor colorWithRed:.18 green:.77 blue:.79 alpha:1];
+    self.help=[UILabel new];self.help.font=[UIFont systemFontOfSize:12];self.help.textColor=[UIColor colorWithWhite:1 alpha:.6];self.help.numberOfLines=0;
+    self.help.text=@"D-pad: choose  ·  A: open or say  ·  B: back";
+    [self addSubview:self.title];[self addSubview:self.help];[self reload];
+    return self;
+}
+-(void)reload {
+    for(UILabel *row in self.rows)[row removeFromSuperview];[self.rows removeAllObjects];
+    NSMutableArray *path=[NSMutableArray array];for(TBChatNode *n=self.menu;n.parent;n=n.parent)[path insertObject:n.title atIndex:0];
+    self.title.text=path.count?[path componentsJoinedByString:@"  ›  "]:@"Quick Chat";
+    for(NSUInteger i=0;i<self.menu.children.count;i++){TBChatNode *n=self.menu.children[i];
+        UILabel *row=[UILabel new];row.font=[UIFont systemFontOfSize:16 weight:UIFontWeightMedium];row.layer.cornerRadius=6;row.clipsToBounds=YES;
+        row.text=[NSString stringWithFormat:@"  %@   %@%@",n.key,n.title,n.children?@"  ›":@""];row.userInteractionEnabled=YES;row.tag=(NSInteger)i;
+        [row addGestureRecognizer:[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapped:)]];
+        [self addSubview:row];[self.rows addObject:row];}
+    if(self.selected>=self.rows.count)self.selected=0;
+    [self highlight];[self setNeedsLayout];
+}
+-(void)highlight {
+    for(NSUInteger i=0;i<self.rows.count;i++){BOOL on=i==self.selected;
+        self.rows[i].backgroundColor=on?[UIColor colorWithRed:.18 green:.77 blue:.79 alpha:.35]:UIColor.clearColor;
+        self.rows[i].textColor=on?UIColor.whiteColor:[UIColor colorWithWhite:1 alpha:.82];}
+}
+-(CGSize)sizeThatFits:(CGSize)size {(void)size;return CGSizeMake(330,64+30.0*self.rows.count+28);}
+-(void)layoutSubviews {
+    [super layoutSubviews];CGFloat w=self.bounds.size.width;
+    self.title.frame=CGRectMake(16,12,w-32,24);
+    for(NSUInteger i=0;i<self.rows.count;i++)self.rows[i].frame=CGRectMake(10,44+30.0*i,w-20,28);
+    self.help.frame=CGRectMake(16,44+30.0*self.rows.count+6,w-32,20);
+}
+-(void)tapped:(UITapGestureRecognizer *)tap {self.selected=(NSUInteger)tap.view.tag;[self choose];}
+-(void)moveSelection:(int)step {
+    if(!self.rows.count)return;self.selected=(self.selected+self.rows.count+(NSUInteger)(step<0?self.rows.count-1:1))%self.rows.count;[self highlight];
+}
+-(void)choose {
+    if(self.selected>=self.menu.children.count)return;TBChatNode *n=self.menu.children[self.selected];
+    if(n.children){self.menu=n;self.selected=0;[self reload];[self.superview setNeedsLayout];return;}
+    NSMutableString *keys=[NSMutableString string];for(TBChatNode *k=n;k.parent;k=k.parent)[keys insertString:k.key atIndex:0];
+    fprintf(stderr,"TribesPad quick chat: V%s (%s)\n",keys.UTF8String,n.title.UTF8String);
+    TBGameControls *owner=self.owner;[owner sendChatKeys:keys];[self close];
+}
+-(void)back {
+    if(self.menu.parent){TBChatNode *was=self.menu;self.menu=self.menu.parent;self.selected=[self.menu.children indexOfObject:was];[self reload];[self.superview setNeedsLayout];}
+    else [self close];
+}
+-(void)close {TBGameControls *owner=self.owner;owner.quickChat=nil;[self removeFromSuperview];}
+@end
+
 @implementation TBGameControls
 -(instancetype)initWithFrame:(CGRect)frame {
     if(!(self=[super initWithFrame:frame]))return nil;
@@ -516,6 +618,21 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
    uses it directly through SDL, which locks the pointer in play for mouse
    look. The touch controls step aside, as they do for a controller, and come
    back from the controller button or when it disconnects. */
+/* A real mouse or trackpad moving or clicking (not touches, which SDL reports
+   with its touch mouse id, nor TribesPad's own pointer events, id 0). */
+static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
+    if((e->type==SDL_EVENT_MOUSE_MOTION||e->type==SDL_EVENT_MOUSE_BUTTON_DOWN)&&e->motion.which&&e->motion.which!=SDL_TOUCH_MOUSEID){
+        __weak TBGameControls *weak=(__bridge TBGameControls *)context;
+        dispatch_async(dispatch_get_main_queue(),^{[weak realMouseUsed];});}
+    return true;
+}
+/* With a mouse or trackpad attached, the touch controls stay until the mouse
+   is used in a match; touching the screen brings them back (hitTest). */
+-(void)realMouseUsed {
+    if(self.mouseUsed)return;self.mouseUsed=YES;
+    if(self.inMatch&&self.expanded&&!self.restoreControlsAfterKeyboard)[self toggleControls];
+    [self setNeedsLayout];
+}
 -(void)mouseChanged:(NSNotification *)notification {
     (void)notification;BOOL connected=GCMouse.mice.count>0;if(connected==self.mouseConnected)return;
     /* TRIBESPAD_TOUCH_CONTROLS=1 (tests): keep the touch controls with a mouse or controller
@@ -523,8 +640,9 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
     if(getenv("TRIBESPAD_TOUCH_CONTROLS"))connected=NO;
     if(connected==self.mouseConnected)return;
     self.mouseConnected=connected;
-    if(connected&&self.expanded)[self toggleControls];
-    else if(!connected&&self.inMatch&&!self.expanded&&!(self.controllerUsed&&TB_HIDE_WITH_CONTROLLER))[self toggleControls];
+    static BOOL watching;if(connected&&!watching){watching=YES;SDL_AddEventWatch(tb_mouse_watch,(__bridge void *)self);}
+    if(!connected){BOOL wasUsed=self.mouseUsed;self.mouseUsed=NO;
+        if(wasUsed&&self.inMatch&&!self.expanded&&!(self.controllerUsed&&TB_HIDE_WITH_CONTROLLER))[self toggleControls];}
     [self setNeedsLayout];
 }
 -(void)controllerChanged:(NSNotification *)notification {
@@ -569,7 +687,7 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
         tb_input_move(&owner.controls->input,9,p.leftThumbstick.xAxis.value,p.leftThumbstick.yAxis.value,.15);
         const uint32_t actions[]={TBFire,TBJet,TBJump};
         NSArray<GCControllerButtonInput *> *held=@[p.rightTrigger,p.leftTrigger,p.buttonA];
-        for(unsigned i=0;i<held.count;i++)tb_input_action(&owner.controls->input,9,actions[i],held[i].pressed);
+        for(unsigned i=0;i<held.count;i++)tb_input_action(&owner.controls->input,9,actions[i],held[i].pressed&&!(i==2&&owner.quickChat));
         tb_mobile_controls_emit(owner.controls);
     };
     // Buttons that hold an original key (controlDefaults.cs) while pressed.
@@ -577,12 +695,17 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
         if(!button)return;
         button.pressedChangedHandler=^(GCControllerButtonInput *b,float v,BOOL pressed){(void)b;(void)v;TBGameControls *owner=weakSelf;
             if(!owner.controls||UIApplication.sharedApplication.applicationState!=UIApplicationStateActive)return;
+            if(owner.quickChat){
+                if(pressed){GCExtendedGamepad *now=owner.controller.extendedGamepad;
+                    if(b==now.dpad.up)[owner.quickChat moveSelection:-1];else if(b==now.dpad.down)[owner.quickChat moveSelection:1];
+                    else if(b==now.dpad.left)[owner.quickChat back];}
+                return;}
             if(pressed&&!owner.inMatch)return;
             if(mod&SDL_KMOD_SHIFT)[owner pushKey:SDL_SCANCODE_LSHIFT down:pressed mod:pressed?mod:SDL_KMOD_NONE];
             [owner pushKey:code down:pressed mod:pressed?mod:SDL_KMOD_NONE];};
     };
     key(pad.rightShoulder,SDL_SCANCODE_W,SDL_KMOD_NONE);          // next weapon
-    key(pad.leftShoulder,SDL_SCANCODE_W,SDL_KMOD_LSHIFT);         // previous weapon
+    key(pad.leftShoulder,SDL_SCANCODE_L,SDL_KMOD_NONE);           // targeting laser (RB cycles weapons)
     key(pad.buttonX,SDL_SCANCODE_R,SDL_KMOD_NONE);                // use pack
     key(pad.buttonY,SDL_SCANCODE_G,SDL_KMOD_NONE);                // grenade
     // Zoom toggles: click once to zoom (holding the game's zoom key), again to
@@ -595,13 +718,19 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
     key(pad.dpad.up,SDL_SCANCODE_Q,SDL_KMOD_NONE);                // repair kit
     key(pad.dpad.down,SDL_SCANCODE_KP_ENTER,SDL_KMOD_NONE);       // inventory
     key(pad.dpad.left,SDL_SCANCODE_H,SDL_KMOD_NONE);              // beacon
-    key(pad.dpad.right,SDL_SCANCODE_V,SDL_KMOD_NONE);             // quick chat
+    // Quick chat: a panel the controller can drive (TBQuickChatView).
+    pad.dpad.right.pressedChangedHandler=^(GCControllerButtonInput *b,float v,BOOL pressed){(void)b;(void)v;TBGameControls *owner=weakSelf;
+        if(!pressed||!owner.controls||UIApplication.sharedApplication.applicationState!=UIApplicationStateActive)return;
+        if(owner.quickChat){[owner.quickChat choose];return;}
+        if(owner.inMatch)[owner showQuickChat];};
     key(pad.buttonOptions,SDL_SCANCODE_F2,SDL_KMOD_NONE);         // scores
     pad.buttonA.pressedChangedHandler=^(GCControllerButtonInput *b,float v,BOOL pressed){(void)b;(void)v;TBGameControls *owner=weakSelf;
+        if(owner.quickChat){if(pressed)[owner.quickChat choose];return;}
         if(owner.inMatch||!owner.controls)return;
         [owner pointerButton:pressed at:owner.trackpad.cursor];};
     pad.buttonB.pressedChangedHandler=^(GCControllerButtonInput *b,float v,BOOL pressed){(void)b;(void)v;TBGameControls *owner=weakSelf;
         if(!pressed||!owner.controls)return;
+        if(owner.quickChat){[owner.quickChat back];return;}
         if(owner.inMatch)[owner pushKey:SDL_SCANCODE_B down:YES mod:SDL_KMOD_NONE],[owner pushKey:SDL_SCANCODE_B down:NO mod:SDL_KMOD_NONE];
         else [owner tapKey:SDL_SCANCODE_ESCAPE];};
     pad.buttonMenu.pressedChangedHandler=^(GCControllerButtonInput *button,float value,BOOL pressed){
@@ -626,7 +755,13 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
     if(fabs(r)>.4){self.scrollCarry+=r*dt*12;int steps=(int)self.scrollCarry;if(steps){self.scrollCarry-=steps;[self pointerWheel:steps at:self.trackpad.cursor];}}
 }
 -(UIView *)hitTest:(CGPoint)point withEvent:(UIEvent *)event {
-    UIView *hit=[super hitTest:point withEvent:event];return hit==self?nil:hit;
+    UIView *hit=[super hitTest:point withEvent:event];
+    /* A finger on the screen after the mouse hid the touch controls brings them back. */
+    if(self.mouseUsed&&self.inMatch&&!self.expanded&&event.type==UIEventTypeTouches){
+        BOOL finger=NO;for(UITouch *t in event.allTouches)if(t.type==UITouchTypeDirect)finger=YES;
+        if(finger){self.mouseUsed=NO;dispatch_async(dispatch_get_main_queue(),^{if(!self.expanded&&self.inMatch)[self toggleControls];});}
+    }
+    return hit==self?nil:hit;
 }
 -(void)releaseControls {
     self.stickAim=CGPointZero;self.lastAimTime=0;
@@ -734,7 +869,7 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
     if(self.zoomed){self.zoomed=NO;[self pushKey:SDL_SCANCODE_A down:NO mod:SDL_KMOD_NONE];}
     if(self.controls){tb_input_release(&self.controls->input,9);tb_mobile_controls_emit(self.controls);}
     if(playing){
-        if(!self.expanded&&!(self.controllerUsed&&TB_HIDE_WITH_CONTROLLER)&&!self.mouseConnected)[self toggleControls];
+        if(!self.expanded&&!(self.controllerUsed&&TB_HIDE_WITH_CONTROLLER)&&!self.mouseUsed)[self toggleControls];
         if(self.controllerUsed)[self showControllerHint];
         else if(self.expanded)[self showHint];
     } else if(self.expanded&&!self.restoreControlsAfterKeyboard)[self toggleControls];
@@ -753,10 +888,28 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
 }
 /* The first few times play starts with a controller, show its layout without
    blocking play. The full guide is in ··· > Help > Controller Guide. */
+-(void)showQuickChat {
+    if(self.quickChat)return;
+    static TBChatNode *tree;static BOOL loaded;if(!loaded){loaded=YES;tree=tb_chat_tree();}
+    if(!tree){[self sendGameKey:SDL_SCANCODE_V mod:SDL_KMOD_NONE];return;} /* no tree: the game's own menu */
+    self.quickChat=[[TBQuickChatView alloc] initWithTree:tree owner:self];
+    [self addSubview:self.quickChat];[self setNeedsLayout];[self layoutIfNeeded];
+}
+/* V opens the game's chat menu; each letter then picks, as typed. Spaced so
+   each key lands after the menu it opens. */
+-(void)sendChatKeys:(NSString *)keys {
+    [self releaseControls];NSMutableArray<NSNumber *> *codes=[NSMutableArray arrayWithObject:@(SDL_SCANCODE_V)];
+    for(NSUInteger i=0;i<keys.length;i++){unichar c=[keys characterAtIndex:i];
+        if(c>='A'&&c<='Z')[codes addObject:@(SDL_SCANCODE_A+(c-'A'))];
+        else if(c>='1'&&c<='9')[codes addObject:@(SDL_SCANCODE_1+(c-'1'))];else if(c=='0')[codes addObject:@(SDL_SCANCODE_0)];}
+    __weak TBGameControls *weak=self;
+    for(NSUInteger i=0;i<codes.count;i++)dispatch_after(dispatch_time(DISPATCH_TIME_NOW,(int64_t)(i*70*NSEC_PER_MSEC)),dispatch_get_main_queue(),^{
+        [weak tapKey:(SDL_Scancode)codes[i].intValue];});
+}
 -(void)showControllerHint {
     double shown=tb_setting(@"TribesPad.controllerHintsShown",0);if(shown>=3)return;tb_set(@"TribesPad.controllerHintsShown",shown+1);
-    self.hint.text=@"RT fire  ·  LT jet  ·  A ski / jump  ·  RB / LB next / previous weapon\n"
-        "Y grenade  ·  X use pack  ·  B mine  ·  D-pad: up repair kit, down inventory, left beacon, right quick chat\n"
+    self.hint.text=@"RT fire  ·  LT jet  ·  A ski / jump  ·  RB next weapon  ·  LB targeting laser\n"
+        "Y grenade  ·  X use pack  ·  B place mine  ·  D-pad: up repair kit, down inventory, left beacon, right quick chat\n"
         "Watching as an observer? Press RT to join a team  ·  Menu: game menu  ·  View: scores";
     [self.hint.layer removeAllAnimations];[self setNeedsLayout];[self layoutIfNeeded];
     [UIView animateWithDuration:.3 animations:^{self.hint.alpha=1;}];
@@ -1155,8 +1308,9 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
     NSString *name=self.controller.vendorName;
     [self showMessage:name.length?name:@"Controller Guide" text:[NSString stringWithFormat:@"%@\n\n"
         "PLAYING\nLeft stick: move · Right stick: aim\nRT: fire · LT: jet · A: ski / jump\n"
-        "RB / LB: next / previous weapon\nY: grenade · X: use pack · B: mine\n"
+        "RB: next weapon · LB: targeting laser\nY: grenade · X: use pack · B: place mine\n"
         "D-pad: up repair kit · down inventory · left beacon · right quick chat\n"
+        "Quick chat: D-pad to choose, A to open or say, B to go back\n"
         "Click right stick: zoom on / off · click left stick: third person\nMenu: game menu · View: scores\n"
         "Observing after you join? Press RT to join a team.\n"
         "Loadout: D-pad down opens inventory; pick armor and weapons there.\n\n"
@@ -1241,6 +1395,8 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
     // Top right corner, inside the safe area.
     UIEdgeInsets safe=self.window.safeAreaInsets;
     self.fps.frame=CGRectMake(CGRectGetMaxX(self.bounds)-fmax(safe.right,8)-168,fmax(safe.top,6),168,22);
+    if(self.quickChat){CGSize q=[self.quickChat sizeThatFits:CGSizeZero];q.height=fmin(q.height,h-20);
+        self.quickChat.frame=CGRectMake(x+fmax(margin,24),y+(h-q.height)/2,q.width,q.height);[self bringSubviewToFront:self.quickChat];}
     /* A connected mouse or trackpad points at the game itself (SDL), so the
        trackpad-cursor overlay must not take its clicks. */
     /* Starsiege moves the game's own cursor from the controller (starsiege_input.c). */
