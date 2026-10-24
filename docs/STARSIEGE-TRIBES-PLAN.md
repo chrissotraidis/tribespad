@@ -16,6 +16,17 @@ Three findings change the draft's plan:
 
 The live population is small. On a US Wednesday evening (21:21 and 21:52 EDT), the masters listed 30 servers. Six and then four had players, 13 and then 9 people, and most were on RPG mods. The plain base game had 4 and then 2 (details in "Live population").
 
+## Status 24 October: 1.41 is the target
+
+The owner chose the community 1.41 client, the one online players use, over the 2004 freeware 1.11. G0 and G1 have passed; the record with every number is [validation/starsiege-g0-g1.md](validation/starsiege-g0-g1.md). In short:
+
+- **Input:** PlayT1's Retro 1.41 installer, pinned with every one of its 969 files in `config/starsiege/inputs.json` and prepared by `scripts/starsiege/prepare-inputs.py`. Each player's build downloads it; nothing from the game is in the repository.
+- **The 1.41 executable is a different binary from 1.8.** GarageGames rebuilt it in 2009 with Microsoft Visual C++ 2005. It imports OpenGL directly, loads DirectSound and DirectInput by name, and has no Glide, Smacker or `mem.dll`. Its data is in `.zip` archives. The Borland questions below apply only to 1.8 and 1.11, and the 1.8 → 1.11 SmartPatch decoder is no longer on the path.
+- **TribesPad already binds 205 of its 349 imports (59%).** Only 35 are new, and 24 of those serve the built-in editor. The real new work is the Win32 window with a GL pixel format.
+- **The whole executable translates** with the Tribes 2 toolchain to a 39.5 MB ARM64 object (`scripts/starsiege/lift_preview.py`, with corrections in `config/starsiege/lift-fixups.json`). Every runtime helper it needs already exists. The 202 untranslated sites are SSE code behind CPU checks that TribesPad's x87 and MMX guest answers "no", plus six x87 forms for G2.
+
+The sections below are the 22 October research on 1.8 and 1.11. They stay as written because they still describe the freeware release and the launcher, and the gates after G1 have been updated for 1.41.
+
 ## How to read this document
 
 **Verified** means a source loaded during this run says it, or a command run during this run measured it. **Estimate** means judgement from verified facts that nobody has tested yet. **Unknown** means nobody has checked it, and a gate below exists to settle it. A source that could not be loaded is listed as not loaded. Its claims are downgraded, even when they are probably true.
@@ -175,17 +186,25 @@ The touch layout maps cleanly onto this. Fire and Jet stay on their own buttons 
 
 Each gate ends with a short record under `docs/validation/` and passes only on its stated evidence. A build, an install or a process start is not gameplay.
 
-**G0: inputs, rights and population (desk work, no engine).**
+**G0: inputs, rights and population (desk work, no engine). Passed 24 October** for 1.41 ([record](validation/starsiege-g0-g1.md)).
 Pin `tribes_gsi.exe` (archive.org primary, FilePlanet path secondary, SHA-256 above). Choose the 1.11 route (decode the Wise patch, or apply it on a reference machine and record the output hashes). Record the 1.11 `Tribes.exe`, `scripts.vol` and `custom.vol` hashes. Ask the owner for a decision on the 1.40/1.41 client's provenance. Run `scripts/research/t1query.py --all-masters` on a weekend evening and on a weekday off-peak, and record the results.
 **Status 22 October:** the reproducible 1.11 step is done (decoder and hashes above). The 1.11 `Tribes.exe` has the same 11 DLLs and 284 imports as 1.8, links on 26 April 2000, and contains `requires version 1.11 or higher`. Remaining for G0: pin `tribes_gsi.exe` in the inputs manifest, the 1.41 decision, and two more population snapshots.
 *Continue* when the freeware input and a reproducible 1.11 executable exist. *Stop* if 1.11 can only come from an unverifiable third-party build. *Offline-only scope* if online stays limited to a handful of people and the 1.41 decision is negative.
 
-**G1: binary census of 1.11.**
+**G1: binary census. Passed 24 October** for the 1.41 executable: unpacked, MSVC-built, no Smacker or `mem.dll`, 349 imports, whole-image lift ([record](validation/starsiege-g0-g1.md)). The original 1.11 wording follows.
 Run the same PE inventory on the 1.11 executable. Decide how to handle `smackw32.dll` (lift or native). Find the `CoCreateInstance` CLSID and whether `mem.dll` is required. Rerun the coverage table.
 *Continue* if the image is unpacked and the import set is within about 10% of 1.8's. *Stop* if the code decrypts or generates itself at run time.
 
-**G2: lift and reach the main menu on Mac.**
-Lift `Tribes.exe` with the pinned toolchain, with the section-boundary label fix as a recorded preparation step and the 10 high-byte and `fist word` instructions replaced as in the QoL client. Add the Win32 window, GL pixel-format and WGL front end, and the remaining services, until the original menu renders through GL4ES/ANGLE. Glide must be refused and DirectSound 3D off.
+**G2: lift and reach the main menu (1.41).**
+Turn the lift preview into a linked Starsiege engine: give it its own symbol prefix and runtime tables beside Tribes 2's, and add the six x87 forms (`fprem1`, `fnstenv`, `fldenv`, one `shr`) to the translator as routes reach them. Then add the services, in this order:
+
+1. The Win32 window under GL: `RegisterClassExA`, `CreateWindowExA` and its window procedure, `SetWindowsHookExA`, `ChangeDisplaySettingsA` and `EnumDisplaySettingsA` mapped to the one fixed display mode, and `ChoosePixelFormat`, `SetPixelFormat`, `DescribePixelFormat`, `wglCreateContext` and `SwapBuffers` on TribesPad's GL4ES context.
+2. `DirectInputCreateA` (TribesPad's existing guest DirectInput) and `DirectSoundCreate` with 3D sound off.
+3. The game reads `.zip` archives itself, so file services need nothing new.
+
+`LoadLibrary` answers "not present" for `ScriptGL.dll`, `rmdgfx.dll`, `mscoree.dll` and `dbghelp`. Plugins stay out until a captured-revision design exists, as for the QoL client. The 1.11-only steps (section-boundary labels, high-byte replacements) do not apply to 1.41.
+
+**Where it runs:** never in a window on the maintainer's Mac. Iteration runs headless there, with SDL's offscreen video and frames written to PNG files. Anything that has to be seen runs on the iPad as a separate development app (its own bundle ID, so Tribes 2's data is untouched), installed with the usual backup and read-back.
 *Continue* when the menu is visible and the session log has no abort stops. *Stop and re-plan* if the import frontier is still growing after two weeks of focused work.
 
 **G3: offline match on Mac.**
@@ -201,9 +220,9 @@ Show the original server browser with the community masters. Joining a public se
 **G6: launcher and release.**
 Build the picker, the per-game folders and Switch Game. Measure binary size and memory with both engines linked. Run the one-command build from a clean clone, and PadMint's `scripts/player-check.sh` with Apple's Python and an empty PadMint folder, as AGENTS.md requires. Tribes 2 must show no regression: run its offline Katabatic route and a device launch with an existing profile preserved. Release and any announcement need separate approval.
 
-## First concrete milestone
+## Next concrete milestone
 
-Finish G0 and G1 without touching the engine. The reproducible 1.11 `Tribes.exe` is done, and its lift preview matches 1.8 (641,074 instructions, the same 10 untranslated instructions, a 36.6 MB ARM64 object). Still to do: pin `tribes_gsi.exe` in the inputs manifest; add the six decode seeds; write a one-page validation record with the 1.11 PE inventory, the Smacker and `mem.dll` decisions and two more population snapshots; and get the owner's answer on the 1.41 client. That settles the input and rights questions and sizes G2. The first engineering step after it is the Win32 window, pixel-format and WGL front end, because no Tribes 1 frame can appear without it.
+G2's first step: link the 1.41 lift into a headless Mac engine that starts, runs the C runtime's start-up, and reaches its first window call, with the session log listing each import stop in order. That shows the real import frontier in the order the game meets it, which sizes the Win32 window work. Before that, it checks that the SSE paths stay unused with TribesPad's CPU answers, which settles the 195 SSE sites.
 
 ## Reproducing this research
 
