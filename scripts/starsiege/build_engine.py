@@ -19,15 +19,15 @@ LIFT = R / 'generated/starsiege/lift'
 OUT = R / 'generated/starsiege/engine'
 IMAGE_BASE, IMPORT_BASE = 0x400000, 0xfffe0000
 # Host routes the guest can call (cdecl): SDL's allocator callbacks.
-HOST_BASE = 0xfffd0000
+HOST_BASE = 0xfffc0000  # below DirectInput's native tokens (0xfffd0000)
 HOST_ROUTES = [('StarsiegeGuestMalloc', 'ss_guest_malloc', 1), ('StarsiegeGuestCalloc', 'ss_guest_calloc', 2),
                ('StarsiegeGuestRealloc', 'ss_guest_realloc', 2), ('StarsiegeGuestFree', 'ss_guest_free', 1)]
-# Reported as not present. Plugins and Windows-only helpers; DirectInput is
-# optional in 1.40 (Win32 messages drive input when it is missing); DirectSound
-# waits for a native provider at G3 (sound), so the menu runs silent until then.
+# Reported as not present: plugins and Windows-only helpers. DirectSound waits
+# for a native provider at G3 (sound), so the game runs silent until then.
+# DirectInput is present: the game reads keyboard0 and mouse0 through it.
 # Optimization for the translated game (STARSIEGE_OPT=-O0 for faster iteration).
 OPT = os.environ.get('STARSIEGE_OPT', '-O1')
-ABSENT = ['ScriptGL.dll', 'rmdgfx.dll', 'mscoree.dll', 'dbghelp.dll', 'dInput.dll', 'dSound.dll']
+ABSENT = ['ScriptGL.dll', 'rmdgfx.dll', 'mscoree.dll', 'dbghelp.dll', 'dSound.dll']
 
 def load(name, path):
     spec = importlib.util.spec_from_file_location(name, path)
@@ -49,7 +49,7 @@ RUNTIME = [R / 'port/core' / (n + '.c') for n in [
     'guest_threads', 'guest_srw', 'guest_condition', 'guest_virtual_memory', 'guest_system', 'guest_system_query',
     'guest_scheduling', 'guest_slist', 'guest_encoding', 'native_fls', 'guest_fls',
     'guest_file', 'guest_find', 'guest_display', 'guest_cursors', 'guest_icons', 'keyboard_state', 'keyboard_translation',
-    'input_buffer', 'guest_dinput', 'native_exports', 'native_system_providers', 'guest_version', 'guest_cpu',
+    'input_buffer', 'native_exports', 'native_system_providers', 'guest_version', 'guest_cpu',
     'guest_processor_features', 'guest_heap', 'exception_filter', 'guest_raise_exception',
     'guest_strings', 'guest_messages', 'guest_user_messages', 'guest_ntstatus', 'native_handles', 'guest_profile',
     'process_environment', 'process_startup', 'guest_modules', 'guest_loader', 'gdi_memory', 'window_classes',
@@ -59,7 +59,8 @@ RUNTIME = [R / 'port/core' / (n + '.c') for n in [
     R / 'port/starsiege/starsiege_x87.c', R / 'port/starsiege/starsiege_win32.c', R / 'port/starsiege/starsiege_heap.c',
     R / 'port/starsiege/starsiege_display.c', R / 'port/starsiege/starsiege_windows.c',
     R / 'port/starsiege/starsiege_winsock.c', R / 'port/starsiege/starsiege_registry.c',
-    R / 'port/starsiege/starsiege_critical_section.c', R / 'port/starsiege/starsiege_fast_heap.c'] + [
+    R / 'port/starsiege/starsiege_critical_section.c', R / 'port/starsiege/starsiege_fast_heap.c',
+    R / 'port/starsiege/starsiege_input.c'] + [
     R / 'port/llasm-support' / (n + '.c') for n in [
     'tribes_result', 'tribes_sse', 'tribes_quadword_conversion', 'tribes_shift', 'tribes_absolute_memory', 'tribes_atomic',
     'tribes_float80', 'tribes_mmx', 'tribes_scan', 'tribes_x87']] + [
@@ -203,6 +204,16 @@ def prepare(report, backend_bindings):
            'static const uint32_t imports[][2]={%s};' % ','.join('{%du,%du}' % (r['slot'], r['guest_va']) for r in imports),
            'static const char *const import_names[]={%s};' % ','.join(json.dumps(r['dll'] + '!' + r['name']) for r in imports),
            'static const char *const absent_modules[]={%s};' % ','.join(json.dumps(n) for n in ABSENT)]
+    # DirectInput's keyboard and mouse: Tribes 2's device catalog, unchanged.
+    devices = json.loads((R / 'config/runtime/input-devices.json').read_text())['devices']
+    cbytes = lambda h: '{' + ','.join(map(str, bytes.fromhex(h))) + '}'
+    records = []
+    for i, d in enumerate(devices):
+        objects = ['{%s,%d,%d,%d,%s,0,0}' % (cbytes(o['guid_hex']), o['offset'], o['type'], o['flags'], json.dumps(o['name'])) for o in d['objects']]
+        inc.append('static const TribesInputObject ss_input_objects_%d[]={%s};' % (i, ','.join(objects)))
+        records.append('{%s,%s,%d,%s,%s,%d,%d,%d,%d,ss_input_objects_%d,%d}' % (cbytes(d['instance_guid_hex']), cbytes(d['product_guid_hex']), d['type'],
+                       json.dumps(d['instance_name']), json.dumps(d['product_name']), int(d['attached']), d['axes'], d['buttons'], d['povs'], i, len(objects)))
+    inc.append('static const TribesInputDevice ss_input_devices[]={%s};' % ','.join(records))
     inc.append('static const uint32_t sdl_allocator[4]={%s};' % ','.join('%du' % address for address, _, _, _ in routes))
     # Count GL calls (STARSIEGE_TRACE_GL=1) inside every GL wrapper, so direct and
     # pointer calls are both seen.

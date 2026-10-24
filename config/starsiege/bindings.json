@@ -1,5 +1,5 @@
 {
- "note": "Starsiege: Tribes services merged over port/llasm-runtime/win32-bindings.json by scripts/starsiege/build_engine.py. Implementations are in port/starsiege/starsiege_win32.c.",
+ "note": "Starsiege: Tribes services merged over port/llasm-runtime/win32-bindings.json by scripts/starsiege/build_engine.py. Implementations are in port/starsiege/ (starsiege_win32.c and its neighbours; DirectInput device methods in starsiege_input.c).",
  "bindings": {
   "InterlockedIncrement": {
    "helper": "ss_interlocked_increment",
@@ -481,6 +481,57 @@
   "inet_addr": {
    "helper": "ss_inet_addr",
    "arguments": 1,
+   "returns": true,
+   "guest_base": true
+  },
+  "DID_SetCooperativeLevel": {
+   "helper": "ss_dinput_cooperative",
+   "arguments": 3,
+   "returns": true,
+   "guest_base": true
+  },
+  "DID_Acquire": {
+   "helper": "ss_dinput_acquire",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true
+  },
+  "DID_Unacquire": {
+   "helper": "ss_dinput_unacquire",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true
+  },
+  "DID_GetDeviceState": {
+   "helper": "ss_dinput_state",
+   "arguments": 3,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "DID_GetDeviceData": {
+   "helper": "ss_dinput_data",
+   "arguments": 5,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "DID_SetEventNotification": {
+   "helper": "ss_dinput_event_notification",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true
+  },
+  "DID_Poll": {
+   "helper": "ss_dinput_poll",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "WindowFromPoint": {
+   "helper": "ss_window_from_point",
+   "arguments": 2,
    "returns": true,
    "guest_base": true
   }

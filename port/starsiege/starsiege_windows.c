@@ -359,10 +359,11 @@ uint32_t ss_set_rect(uint64_t base,uint32_t address,uint32_t l,uint32_t t,uint32
 static int32_t cursor_x,cursor_y,cursor_count;
 uint32_t ss_get_cursor_pos(uint64_t base,uint32_t output){
  uint32_t token;int32_t p[2];pthread_mutex_lock(&lock);p[0]=cursor_x;p[1]=cursor_y;pthread_mutex_unlock(&lock);
- memcpy(guest(base,output,8,2,&token),p,8);tribes_memory_access_end(token);return 1;
+ memcpy(guest(base,output,8,2,&token),p,8);tribes_memory_access_end(token);
+ {static int n;if(getenv("STARSIEGE_TRACE_INPUT")&&n<20){n++;fprintf(stderr,"TribesPad input: GetCursorPos %d,%d\n",p[0],p[1]);}}return 1;
 }
-uint32_t ss_set_cursor_pos(uint32_t x,uint32_t y){pthread_mutex_lock(&lock);cursor_x=(int32_t)x;cursor_y=(int32_t)y;pthread_mutex_unlock(&lock);return 1;}
-uint32_t ss_show_cursor(uint32_t show){pthread_mutex_lock(&lock);cursor_count+=show?1:-1;uint32_t r=(uint32_t)cursor_count;pthread_mutex_unlock(&lock);return r;}
+uint32_t ss_set_cursor_pos(uint32_t x,uint32_t y){if(getenv("STARSIEGE_TRACE_INPUT"))fprintf(stderr,"TribesPad input: SetCursorPos %d,%d\n",(int)x,(int)y);pthread_mutex_lock(&lock);cursor_x=(int32_t)x;cursor_y=(int32_t)y;pthread_mutex_unlock(&lock);return 1;}
+uint32_t ss_show_cursor(uint32_t show){if(getenv("STARSIEGE_TRACE_INPUT"))fprintf(stderr,"TribesPad input: ShowCursor %u\n",show);pthread_mutex_lock(&lock);cursor_count+=show?1:-1;uint32_t r=(uint32_t)cursor_count;pthread_mutex_unlock(&lock);return r;}
 uint32_t ss_get_double_click_time(void){return 500;}
 uint32_t ss_message_beep(uint32_t kind){(void)kind;return 1;}
 /* int MessageBoxA(HWND, LPCSTR text, LPCSTR caption, UINT). Logged; answers
@@ -375,6 +376,13 @@ uint32_t ss_message_box_a(uint64_t base,uint32_t window,uint32_t text,uint32_t c
 }
 void ss_host_pointer(int32_t x,int32_t y){pthread_mutex_lock(&lock);cursor_x=x;cursor_y=y;pthread_mutex_unlock(&lock);}
 
+/* HWND WindowFromPoint(POINT): the topmost visible game window under a
+   desktop point; the desktop itself otherwise. */
+uint32_t ss_window_from_point(uint64_t base,uint32_t x,uint32_t y){
+ int32_t px=(int32_t)x,py=(int32_t)y;uint32_t r=0;pthread_mutex_lock(&lock);
+ for(Window *w=windows;w;w=w->next)if(w->base==base&&w->visible&&!w->parent&&px>=w->x&&py>=w->y&&px<w->x+w->width&&py<w->y+w->height){r=w->handle;break;}
+ pthread_mutex_unlock(&lock);return r?r:tribes_get_desktop_window(base);
+}
 /* For the host: the visible game window, if any. */
 uint32_t ss_main_window(int32_t *width,int32_t *height){
  pthread_mutex_lock(&lock);uint32_t r=0;for(Window *w=windows;w;w=w->next)if(w->visible){r=w->handle;*width=w->width;*height=w->height;break;}pthread_mutex_unlock(&lock);return r;

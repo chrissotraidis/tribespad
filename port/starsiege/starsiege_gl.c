@@ -174,7 +174,9 @@ static void capture(int width,int height){
   glPopMatrix();glMatrixMode(GL_PROJECTION);glPopMatrix();glMatrixMode(GL_MODELVIEW);glEnable(GL_SCISSOR_TEST);
   fprintf(stderr,"TribesPad: test quad pixel %u,%u,%u,%u\n",probe[0],probe[1],probe[2],probe[3]);
  }
- if(!(swaps==1||swaps==30||swaps==120||swaps%300==0))return;
+ const char *chosen=getenv("STARSIEGE_CAPTURE_FRAMES"); /* "a,b,c": only these frames */
+ if(chosen){int hit=0;for(const char *s=chosen;*s;){char *end;unsigned long long f=strtoull(s,&end,10);if(end==s)break;if(f==swaps)hit=1;s=*end==','?end+1:end;}if(!hit)return;}
+ else if(!(swaps==1||swaps==30||swaps==120||swaps%300==0))return;
  size_t stride=(size_t)width*4;unsigned char *pixels=malloc(stride*(size_t)height),*flipped=malloc(stride*(size_t)height);if(!pixels||!flipped)abort();
  glReadPixels(0,0,width,height,GL_RGBA,GL_UNSIGNED_BYTE,pixels);
  for(int y=0;y<height;y++)memcpy(flipped+(size_t)y*stride,pixels+(size_t)(height-1-y)*stride,stride);
@@ -196,8 +198,13 @@ uint32_t ss_swap_buffers(_cpu *cpu,uint32_t dc){
  {extern void ss_gl_trace_report(uint64_t);if(swaps<=3||swaps==30||swaps==300||swaps==3000)ss_gl_trace_report(swaps);}
  int32_t width,height;if(ss_window_client_size(base,copy.window,&width,&height))capture(width,height);
  if(swaps==1||swaps%600==0)fprintf(stderr,"TribesPad: frames presented %llu\n",(unsigned long long)swaps);
- return tribes_sdl_gl_swap_window(cpu,copy.sdl_window);
+ uint32_t presented=tribes_sdl_gl_swap_window(cpu,copy.sdl_window);
+ {extern void ss_input_pump(_cpu *);ss_input_pump(cpu);}
+ return presented;
 }
+/* For input: frames presented so far, and the game's SDL window token. */
+uint64_t ss_frames(void){return swaps;}
+uint32_t ss_sdl_window(void){pthread_mutex_lock(&lock);uint32_t w=0;for(unsigned i=0;i<16;i++)if(dcs[i].dc){w=dcs[i].sdl_window;break;}pthread_mutex_unlock(&lock);return w;}
 
 
 /* OpenGL 1.1 entry points Starsiege uses that Tribes 2 never reached (they
