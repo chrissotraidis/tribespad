@@ -208,8 +208,10 @@ it against `config/starsiege/inputs.json`.
   who is playing, PlayT1's nightly pickup in your time zone, and the PlayT1 Discord.
 - **Controller:** RT fire, LT jet, A jump, RB/LB next/previous weapon, Y grenade, X pack, B crouch;
   the D-pad has repair kit, inventory, beacon and quick chat. In menus, X double-clicks to buy.
-- **Not yet:** modded servers need their own files, IRC chat, graphics presets
-  ([validation](docs/validation/starsiege-g2.md)).
+- **IRC Chat** in the game's menu does nothing: it connects to Dynamix's IRC server, which closed
+  long ago. Tribes 1 players talk in the PlayT1 Discord (**··· → Find a Game → Community**).
+- **Not yet:** modded servers (RPG and other mods) need their own files, which the game cannot
+  download; graphics presets ([validation](docs/validation/starsiege-g2.md)).
 
 
 ### Keyboard and trackpad
