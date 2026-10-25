@@ -8,7 +8,7 @@
 # --platform device (default): an unsigned TribesPad.ipa for iPhone and iPad;
 # sign it with your own Apple account (see README).
 # --platform macos: TribesPad-mac.zip with TribesPad.app for Apple Silicon Macs.
-# --games tribes2,starsiege (development): adds Starsiege: Tribes 1.41, from
+# --games tribes2,starsiege: adds Starsiege: Tribes 1.41, from
 # the PlayT1 community installer, to the game picker.
 # Needs Xcode and: brew install llvm@20 cmake ninja sevenzip zstd
 set -euo pipefail
@@ -113,17 +113,26 @@ step "Game profile"
 $py scripts/apple_game_profile.py
 
 starsiege_object=()
-if [ "$starsiege" = 1 ]; then
-  step "Starsiege: Tribes (development)"
-  [ -f ref/starsiege/game/Tribes.exe ] || $py scripts/starsiege/prepare-inputs.py
-  [ -f generated/starsiege/lift/result.json ] || $py scripts/starsiege/lift_preview.py --no-compile
+# A Starsiege failure (its installer unavailable, say) never costs the player
+# Tribes 2: the build warns and continues with Tribes 2 alone.
+build_starsiege() {
+  [ -f ref/starsiege/game/Tribes.exe ] || $py scripts/starsiege/prepare-inputs.py || return 1
+  [ -f generated/starsiege/lift/result.json ] || $py scripts/starsiege/lift_preview.py --no-compile || return 1
   if [ "$platform" != macos ]; then
     # Starsiege's SDL wrappers are generated from the macOS backend's
     # description (scripts/sdl_backend_inputs.py), whatever the target.
-    [ -f generated/sdl-backend/macos/result.json ] || SDKROOT="$mac_sdk" $py scripts/build-sdl-backend.py --platform macos
-    STARSIEGE_OPT=-O1 $py scripts/starsiege/build_engine.py --platform "$platform" >/dev/null
+    [ -f generated/sdl-backend/macos/result.json ] || SDKROOT="$mac_sdk" $py scripts/build-sdl-backend.py --platform macos || return 1
+    STARSIEGE_OPT=-O1 $py scripts/starsiege/build_engine.py --platform "$platform" >/dev/null || return 1
     starsiege_object=(--starsiege-object "generated/starsiege/engine-$platform/starsiege.o")
   fi
+}
+starsiege_skipped() {
+  printf '\nbuild-tribespad: Starsiege: Tribes could not be built (see above); continuing with Tribes 2 only.\n' >&2
+  starsiege=0
+}
+if [ "$starsiege" = 1 ]; then
+  step "Starsiege: Tribes"
+  build_starsiege || { starsiege_object=(); starsiege_skipped; }
 fi
 
 step "TribesPad app"
@@ -135,7 +144,7 @@ case "$platform" in
 esac
 
 if [ "$starsiege" = 1 ] && [ "$platform" = macos ]; then
-  SDKROOT="$mac_sdk" $py scripts/starsiege/bundle_mac.py --app "$app"
+  SDKROOT="$mac_sdk" $py scripts/starsiege/bundle_mac.py --app "$app" || starsiege_skipped
 fi
 
 step "Package"

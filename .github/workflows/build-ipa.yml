@@ -30,7 +30,7 @@ jobs:
           brew install llvm@20 cmake ninja sevenzip zstd
           df -h "$GITHUB_WORKSPACE"
       - name: Build TribesPad
-        run: scripts/build-tribespad.sh --platform device --output "$RUNNER_TEMP/out" --ipa "$RUNNER_TEMP/out/TribesPad-unsigned.ipa"
+        run: scripts/build-tribespad.sh --platform device --games tribes2,starsiege --output "$RUNNER_TEMP/out" --ipa "$RUNNER_TEMP/out/TribesPad-unsigned.ipa"
       - name: Checksum
         working-directory: ${{ runner.temp }}/out
         run: shasum -a 256 TribesPad-unsigned.ipa | tee SHA256SUMS

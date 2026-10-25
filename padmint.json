@@ -2,7 +2,7 @@
   "schema_version": 1,
   "id": "tribespad",
   "name": "TribesPad",
-  "game": "Tribes 2 (free official release) with the TribesNEXT client",
+  "game": "Tribes 2 (free official release) with the TribesNEXT client, and Starsiege: Tribes 1.41",
   "kind": "disc-translation",
   "status": "experimental",
   "inputs": [
@@ -10,7 +10,7 @@
       "type": "official-download",
       "formats": [],
       "when": "in-app",
-      "description": "Nothing to select. The build downloads the free official Tribes 2 installer and the TribesNEXT client and checks both by SHA-256; the game is included in your app."
+      "description": "Nothing to select. The build downloads the free official Tribes 2 installer, the TribesNEXT client and the PlayT1 Starsiege: Tribes installer, and checks each by SHA-256; both games are included in your app."
     }
   ],
   "targets": {
@@ -27,6 +27,8 @@
             "{repo}/scripts/build-tribespad.sh",
             "--platform",
             "device",
+            "--games",
+            "tribes2,starsiege",
             "--output",
             "{work}",
             "--ipa",
@@ -48,6 +50,8 @@
             "{repo}/scripts/build-tribespad.sh",
             "--platform",
             "macos",
+            "--games",
+            "tribes2,starsiege",
             "--output",
             "{work}",
             "--zip",
