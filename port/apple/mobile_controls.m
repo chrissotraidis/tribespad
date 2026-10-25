@@ -22,7 +22,13 @@ static NSString * const TBPlayT2Discord=@"https://discord.gg/EMMVhQJgf9";
 static NSString * const TBTheCutDiscord=@"https://discord.gg/yz3AhkJCxg";
 static NSString * const TBTribesPadDiscord=@"https://discord.gg/xwHfUD2bxW";
 static NSString * const TBTribesNextForum=@"https://www.tribesnext.com/forum/";
-static NSString * const TBPlayT1Discord=@"https://playt1.com/discord";
+/* Starsiege: Tribes: PlayT1 runs the daily pickups (its Discord invite is
+   permanent; checked 25 October 2026); tribes1.co lists the community masters'
+   servers; the JunkYard keeps 1.41 configs, plugins and mod files. */
+static NSString * const TBPlayT1Discord=@"https://discord.gg/bf4RHMq";
+static NSString * const TBPlayT1Site=@"https://playt1.com/";
+static NSString * const TBTribes1Servers=@"https://tribes1.co/";
+static NSString * const TBTribes1JunkYard=@"https://twdemos.iateyourbaby.com/";
 
 /* Touch preferences (NSUserDefaults, TribesPad-owned keys). */
 /* Starsiege: Tribes runs these controls too (tb_mobile_controls_install_starsiege):
@@ -1185,8 +1191,11 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
                 group(@[kill])]]];
         NSArray *t1controls=@[controls[0],controls[1],controls[2],controls[4]];
         UIMenu *t1help=[UIMenu menuWithTitle:@"Help" image:icon(@"questionmark.circle") identifier:nil options:0 children:@[
+            group(@[item(@"Touch and Trackpad Guide",@"hand.tap",^{[weak showTouchGuide];}),
+                item(@"Controller Guide",@"gamecontroller.fill",^{[weak showControllerGuide];})]),
             group(@[item(@"Console",@"terminal",^{[weak tapKey:SDL_SCANCODE_GRAVE];}),
-                item(@"TribesPad on GitHub",@"safari",^{[UIApplication.sharedApplication openURL:[NSURL URLWithString:TBRepositoryURL] options:@{} completionHandler:nil];})]),
+                item(@"TribesPad on GitHub",@"safari",^{[UIApplication.sharedApplication openURL:[NSURL URLWithString:TBRepositoryURL] options:@{} completionHandler:nil];}),
+                item(@"About TribesPad",@"info.circle",^{[weak showAbout];})]),
             group(@[item(@"Switch to Tribes 2",@"arrow.left.arrow.right",^{[weak switchGame];})])]];
         /* Find a Game: the game's JOIN list, who is on each server now, and
            where the community arranges games. */
@@ -1194,11 +1203,16 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
         t1servers.subtitle=self.connected?@"Leaves this match first":@"PLAY GAME > JOIN";
         UIAction *t1playing=item(@"Who's Playing Now",@"person.3",^{[weak showLiveServers];});
         t1playing.subtitle=@"Players on each server, from the community masters";
+        UIAction *t1nights=item(@"Game Nights",@"calendar",^{[weak showSchedule];});
+        t1nights.subtitle=nights.subtitle;
         UIMenu *t1find=[UIMenu menuWithTitle:@"Find a Game" image:icon(@"globe") identifier:nil options:self.connected?0:UIMenuOptionsDisplayInline children:@[
-            t1servers,t1playing,
+            t1servers,t1playing,t1nights,
             [UIMenu menuWithTitle:@"Community" image:icon(@"bubble.left.and.text.bubble.right") identifier:nil options:0 children:@[
-                item(@"PlayT1 Discord",@"person.2",^{[weak openLink:TBPlayT1Discord];}),
-                item(@"TribesPad Discord",@"person.2",^{[weak openLink:TBTribesPadDiscord];})]]]];
+                group(@[item(@"PlayT1 Discord",@"person.2",^{[weak openLink:TBPlayT1Discord];}),
+                    item(@"TribesPad Discord",@"person.2",^{[weak openLink:TBTribesPadDiscord];})]),
+                group(@[item(@"PlayT1",@"safari",^{[weak openPage:TBPlayT1Site];}),
+                    item(@"Server List on the Web (tribes1.co)",@"server.rack",^{[weak openPage:TBTribes1Servers];}),
+                    item(@"Tribes 1 JunkYard: configs, mods, demos",@"archivebox",^{[weak openPage:TBTribes1JunkYard];})])]]]];
         groups=self.connected||self.inMatch?@[group(t1),group(@[t1find]),group(t1controls),group(@[t1help])]:@[t1find,group(t1controls),group(@[t1help])];
     }
     self.menu.menu=[UIMenu menuWithTitle:@"TribesPad" children:groups];
@@ -1377,8 +1391,33 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
 }
 /* The community's regular games (tribes2forever.com, 22 October 2026), in
    the player's own time zone, soonest first. */
+/* Starsiege: Tribes: PlayT1 organizes a pickup game every day, on Rosco's
+   Mixtape from about 8:00 PM US Eastern (playt1.com, checked 25 October 2026). */
+-(void)showStarsiegeSchedule {
+    NSCalendar *eastern=[[NSCalendar alloc] initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
+    eastern.timeZone=[NSTimeZone timeZoneWithName:@"America/New_York"];
+    NSDateFormatter *format=[NSDateFormatter new];[format setLocalizedDateFormatFromTemplate:@"EEEEjmm"];format.timeZone=NSTimeZone.localTimeZone;
+    NSDateComponents *when=[NSDateComponents new];when.hour=20;when.minute=0;
+    NSDate *date=[eastern nextDateAfterDate:[NSDate dateWithTimeIntervalSinceNow:-7200] matchingComponents:when options:NSCalendarMatchNextTime];
+    NSDateComponentsFormatter *until=[NSDateComponentsFormatter new];until.unitsStyle=NSDateComponentsFormatterUnitsStyleAbbreviated;
+    until.allowedUnits=NSCalendarUnitDay|NSCalendarUnitHour|NSCalendarUnitMinute;until.maximumUnitCount=2;
+    NSMutableString *text=[NSMutableString string];
+    for(int i=0;i<3&&date;i++){NSTimeInterval wait=[date timeIntervalSinceNow];
+        [text appendFormat:@"%@ (%@)\nDaily pickup game\n\n",[format stringFromDate:date],wait<=0?@"on now":[@"in " stringByAppendingString:[until stringFromTimeInterval:wait]?:@""]];
+        date=[eastern dateByAddingUnit:NSCalendarUnitDay value:1 toDate:date options:0];}
+    NSTimeZone *zone=NSTimeZone.localTimeZone;
+    [text appendFormat:@"Shown in your time zone, %@. PlayT1 organizes a pickup every day, on Rosco's Mixtape from about 8:00 PM US Eastern. "
+        "Teams are picked in the PlayT1 Discord; check there for the day's game.",[zone localizedName:NSTimeZoneNameStyleGeneric locale:NSLocale.currentLocale]?:zone.name];
+    UIAlertController *alert=[UIAlertController alertControllerWithTitle:@"Game Nights" message:text preferredStyle:UIAlertControllerStyleAlert];
+    __weak TBGameControls *weak=self;
+    [alert addAction:[UIAlertAction actionWithTitle:@"PlayT1 Discord" style:UIAlertActionStyleDefault handler:^(UIAlertAction *a){(void)a;[weak openLink:TBPlayT1Discord];}]];
+    [alert addAction:[UIAlertAction actionWithTitle:@"Who's Playing Now" style:UIAlertActionStyleDefault handler:^(UIAlertAction *a){(void)a;[weak showLiveServers];}]];
+    [alert addAction:[UIAlertAction actionWithTitle:@"Done" style:UIAlertActionStyleCancel handler:nil]];
+    alert.overrideUserInterfaceStyle=UIUserInterfaceStyleDark;[[self presenter] presentViewController:alert animated:YES completion:nil];
+}
 -(void)showSchedule {
     [self releaseControls];
+    if(tb_starsiege){[self showStarsiegeSchedule];return;}
     NSCalendar *eastern=[[NSCalendar alloc] initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
     eastern.timeZone=[NSTimeZone timeZoneWithName:@"America/New_York"];
     NSDateFormatter *format=[NSDateFormatter new];[format setLocalizedDateFormatFromTemplate:@"EEEEjmm"];
@@ -1429,6 +1468,18 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
         "Chat, Scores and other keys are in the ··· menu."];
 }
 -(void)showControllerGuide {
+    if(tb_starsiege){
+        [self showMessage:@"Controller Guide" text:@"PLAYING\nLeft stick: move · Right stick: aim\nRT: fire · LT: jet · A: jump / ski\n"
+            "RB / LB: next / previous weapon\nY: grenade · X: use pack · B: crouch\n"
+            "D-pad: up repair kit · down inventory · left beacon · right quick chat\n"
+            "Quick chat: D-pad to choose, A to say or open, B to go back\n"
+            "Click right stick: zoom on / off · click left stick: third person\nMenu: TribesPad's ··· menu · View: scores\n"
+            "Spawning: press RT (fire).\n\n"
+            "MENUS AND INVENTORY\nLeft stick or D-pad: move the cursor · A: click\nX: double-click (buy from the inventory station's lists)\n"
+            "B: back · Right stick: scroll\n\n"
+            "Recorded demos play as a menu: B leaves them.\nWith a controller in use, the touch controls step aside."];
+        return;
+    }
     NSString *name=self.controller.vendorName;
     [self showMessage:name.length?name:@"Controller Guide" text:[NSString stringWithFormat:@"%@\n\n"
         "PLAYING\nLeft stick: move · Right stick: aim\nRT: fire · LT: jet · A: ski / jump\n"
@@ -1452,8 +1503,12 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
     NSDictionary *info=NSBundle.mainBundle.infoDictionary;
     NSString *version=[NSString stringWithFormat:@"%@ (%@)",info[@"CFBundleShortVersionString"]?:@"dev",info[@"CFBundleVersion"]?:@"0"];
     NSString *data=[NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,NSUserDomainMask,YES).firstObject stringByAppendingPathComponent:@"TribesPad/Game"];
+    if(tb_starsiege)data=[NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,NSUserDomainMask,YES).firstObject
+        stringByAppendingPathComponent:@"TribesPad/Starsiege/volume/TribesPad/Game"];
     UIAlertController *alert=[UIAlertController alertControllerWithTitle:@"TribesPad"
-        message:[NSString stringWithFormat:@"The original Tribes 2 with TribesNEXT/QoL, translated ahead of time to native ARM64.\n\nVersion %@\nGame data: %@",version,data]
+        message:[NSString stringWithFormat:@"%@\n\nVersion %@\nGame data: %@",tb_starsiege?
+            @"Starsiege: Tribes 1.41, the version the community plays, translated ahead of time to native ARM64. Online through the community master servers (tribes1.co).":
+            @"The original Tribes 2 with TribesNEXT/QoL, translated ahead of time to native ARM64.",version,data]
         preferredStyle:UIAlertControllerStyleAlert];
     [alert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
     alert.overrideUserInterfaceStyle=UIUserInterfaceStyleDark;[[self presenter] presentViewController:alert animated:YES completion:nil];

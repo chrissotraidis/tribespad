@@ -189,13 +189,27 @@ in TribesPad).
 
 ### Game picker
 
-TribesPad opens to a picker: **Tribes 2** (TribesNEXT, with how many people are playing
-now) and **Starsiege: Tribes**, which is marked in development until its translation plays
-([plan](docs/STARSIEGE-TRIBES-PLAN.md)). Tap Tribes 2, press Return or a controller's A to play.
-The gear at the top right has **Open Tribes 2 Directly**, which skips the picker; **Settings →
-Display → Game Picker at Launch** brings it back. Each card shows its game's own title screen,
-taken at build time from your own downloads: Tribes 2's installer, and Starsiege's 1.41 game files
-once `scripts/starsiege/prepare-inputs.py` has prepared them. Nothing from either game is in the repository.
+TribesPad opens to a picker: **Starsiege: Tribes** and **Tribes 2**, each with how many people
+are playing now. Tap a card, or choose with the D-pad, left stick or arrow keys and press A or
+Return. The gear at the top right has **Open Tribes 2 Directly**, which skips the picker;
+**Settings → Display → Game Picker at Launch** brings it back. In a game, **··· → Help → Switch to
+Tribes 2** (or Starsiege) changes games without leaving the app. Each card shows its game's own
+title screen, taken at build time from your own downloads. Nothing from either game is in the repository.
+
+### Starsiege: Tribes
+
+Starsiege: Tribes 1.41, the version the community plays online, runs natively on ARM64 on iPhone,
+iPad and Mac, recompiled the same way as Tribes 2. Build it in with
+`scripts/build-tribespad.sh --games tribes2,starsiege`, which downloads PlayT1's installer and checks
+it against `config/starsiege/inputs.json`.
+
+- **Offline:** TRAINING with bots, or HOST MULTIPLAYER.
+- **Online:** JOIN lists the community master servers (tribes1.co); **··· → Find a Game** shows
+  who is playing, PlayT1's nightly pickup in your time zone, and the PlayT1 Discord.
+- **Controller:** RT fire, LT jet, A jump, RB/LB next/previous weapon, Y grenade, X pack, B crouch;
+  the D-pad has repair kit, inventory, beacon and quick chat. In menus, X double-clicks to buy.
+- **Not yet:** modded servers need their own files, IRC chat, graphics presets
+  ([validation](docs/validation/starsiege-g2.md)).
 
 
 ### Keyboard and trackpad
@@ -351,8 +365,8 @@ How this works, stage by stage, is in [Reproducible build](docs/REPRODUCIBLE-BUI
 - Measure Mac performance
 - Compare with the QoL client on Windows and add jet, weapon and bot scenarios to the reference trace
 - Join TribesNEXT community servers
-- Starsiege: Tribes (Tribes 1) as a second game, picked from a launcher beside Tribes 2
-  ([plan](docs/STARSIEGE-TRIBES-PLAN.md))
+- Starsiege: mod packs, IRC chat, graphics presets and faster loading
+  ([plan](docs/STARSIEGE-TRIBES-PLAN.md), [validation](docs/validation/starsiege-g2.md))
 - A headless dedicated server on a Mac, then Linux on ARM
   ([plan](docs/DEDICATED-SERVER-PLAN.md))
 - Raspberry Pi 5 / Linux on ARM, then Android, as personal builds
