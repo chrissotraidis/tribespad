@@ -83,8 +83,10 @@ uint32_t ss_get_dc(_cpu *cpu,uint32_t window){
  uint64_t flags=SDL_WINDOW_OPENGL|(headless()?SDL_WINDOW_HIDDEN:0);
 #if TARGET_OS_IPHONE
  /* Borderless: SDL hides the status bar for it, so the clock and battery do
-    not sit over the game's HUD (Tribes 2's window is the same). */
- flags|=SDL_WINDOW_BORDERLESS;
+    not sit over the game's HUD (Tribes 2's window is the same). Full screen:
+    the first window is the 100x100 OpenGL probe, and a start before the scene
+    was fully on screen kept that size (a small picture at the left). */
+ flags|=SDL_WINDOW_BORDERLESS|SDL_WINDOW_FULLSCREEN;
 #endif
  uint32_t sdl_window=tribes_sdl_create_window(cpu,guest_title,(uint32_t)width,(uint32_t)height,(uint32_t)flags,(uint32_t)(flags>>32));
  if(!sdl_window){fprintf(stderr,"TribesPad: SDL window failed: %s\n",SDL_GetError());tribes_set_last_error(2000);return 0;}

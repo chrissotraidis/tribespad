@@ -91,6 +91,7 @@ static void tb_set(NSString *key,double value){[NSUserDefaults.standardUserDefau
 @property(nonatomic) uint64_t fpsFrames;
 @property(nonatomic) BOOL restoreControlsAfterKeyboard;
 @property(nonatomic) BOOL inMatch;
+@property(nonatomic) BOOL stationOpen;
 @property(nonatomic) BOOL matchSeen;
 @property(nonatomic) BOOL typingDialog;
 @property(nonatomic) BOOL zoomed;
@@ -670,6 +671,9 @@ static TBChatNode *tb_starsiege_chat_tree(void){
         name:GCMouseDidConnectNotification object:nil];
     [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(mouseChanged:)
         name:GCMouseDidDisconnectNotification object:nil];
+    /* A keyboard folio's trackpad attached before launch may never announce
+       itself; look now, so fingers in menus work beside it from the start. */
+    [self mouseChanged:nil];
     [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(controllerChanged:)
         name:GCControllerDidDisconnectNotification object:nil];
     return self;
@@ -745,6 +749,7 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
     if(getenv("TRIBESPAD_TOUCH_CONTROLS"))connected=NO;
     if(connected==self.mouseConnected)return;
     self.mouseConnected=connected;
+    fprintf(stderr,"TribesPad mouse or trackpad %s\n",connected?"attached":"detached");
     static BOOL watching;if(connected&&!watching){watching=YES;SDL_AddEventWatch(tb_mouse_watch,(__bridge void *)self);}
     if(!connected){BOOL wasUsed=self.mouseUsed;self.mouseUsed=NO;
         if(wasUsed&&self.inMatch&&!self.expanded&&!(self.controllerUsed&&TB_HIDE_WITH_CONTROLLER))[self toggleControls];}
@@ -968,10 +973,15 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
         double shown=tb_starsiege?3:tb_setting(@"TribesPad.findHintsShown",0);
         if(tb_starsiege){}
         else if(shown<3){tb_set(@"TribesPad.findHintsShown",shown+1);
-            [self flashHint:@"Looking for a game?  ··· > Find a Game has the server list,\nwho is playing now, game nights and the community Discords"];}
+            [self flashHint:@"Looking for a game?  ··· > Play Online has the server list,\nwho is playing now, game nights and the community Discords"];}
         else [self performSelector:@selector(offerBalancedIfMaximum) withObject:nil afterDelay:3];
     }
     BOOL playing=[state hasPrefix:@"1"],typing=[state hasPrefix:@"0 1"];
+    /* Starsiege reports 2 while a station's buy screen is open: say how to buy. */
+    BOOL station=tb_starsiege&&[state hasPrefix:@"2"];
+    if(station!=self.stationOpen){self.stationOpen=station;
+        if(station)[self flashHint:self.controllerUsed?@"Station: point at an item and press A to buy it\nB closes the station":
+            @"Station: double-tap an item to buy it\n··· > This Match > Game Menu closes the station"];}
     NSArray *words=[state componentsSeparatedByCharactersInSet:NSCharacterSet.whitespaceAndNewlineCharacterSet];
     BOOL connected=words.count>2&&[words[2] isEqualToString:@"1"];
     /* Starsiege reports the last request it handled; then the flag goes. */
@@ -1149,29 +1159,22 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
             item(@"TribesPad on GitHub",@"safari",^{
                 [UIApplication.sharedApplication openURL:[NSURL URLWithString:TBRepositoryURL] options:@{} completionHandler:nil];}),
             item(@"About TribesPad",@"info.circle",^{[weak showAbout];})]),
-        group(tb_starsiege_bundled([NSBundle.mainBundle.resourcePath stringByAppendingPathComponent:@"GameData"].fileSystemRepresentation)?
-            @[item(@"Switch to Starsiege: Tribes",@"arrow.left.arrow.right",^{[weak switchGame];})]:@[])]];
-    /* Find a Game: what new players lack most. The original JOIN list, who is
-       on now, when the community plays and where it organizes. It leads the
-       menu off a server; on one, the match actions lead and it folds away. */
-    NSMutableArray *find=[NSMutableArray array];
+        ]];
+    /* Play Online: what new players lack most. Who is on now, the original JOIN
+       list, when the community plays and where it organizes. It leads the menu
+       off a server; on one, This Match leads and it folds into a submenu. */
     UIAction *servers=item(@"Server List",@"server.rack",^{[weak openServerList];});
     servers.subtitle=self.connected?@"Leaves this match first":@"PLAY GAME > JOIN";
-    [find addObject:servers];
     UIAction *playing=item(@"Who's Playing Now",@"person.3",^{[weak showLiveServers];});
     playing.subtitle=@"People and bots on each server";
     UIAction *nights=item(@"Game Nights",@"calendar",^{[weak showSchedule];});
-    nights.subtitle=[NSString stringWithFormat:@"Times in %@",[NSTimeZone.localTimeZone localizedName:NSTimeZoneNameStyleShortGeneric locale:NSLocale.currentLocale]?:NSTimeZone.localTimeZone.name];
-    [find addObjectsFromArray:@[playing,nights,
-        [UIMenu menuWithTitle:@"Community" image:icon(@"bubble.left.and.text.bubble.right") identifier:nil options:0 children:@[
-            group(@[item(@"PlayT2 Discord",@"person.2",^{[weak openLink:TBPlayT2Discord];}),
-                item(@"The Cut Discord",@"person.2",^{[weak openLink:TBTheCutDiscord];}),
-                item(@"TribesPad Discord",@"person.2",^{[weak openLink:TBTribesPadDiscord];})]),
-            group(@[item(@"TribesNEXT Forum",@"text.bubble",^{[weak openPage:TBTribesNextForum];})])]]]];
-    UIMenu *findMenu=[UIMenu menuWithTitle:@"Find a Game" image:icon(@"globe") identifier:nil
-        options:self.connected?0:UIMenuOptionsDisplayInline children:find];
-    // Game actions only do something on a server; the original menus have their own buttons.
-    NSArray *groups=self.connected||self.inMatch?@[group(game),group(@[findMenu]),group(controls),group(@[help])]:@[findMenu,group(controls),group(@[help])];
+    nights.subtitle=@"Regular games, shown in your local time";
+    UIMenu *community=[UIMenu menuWithTitle:@"Community" image:icon(@"bubble.left.and.text.bubble.right") identifier:nil options:0 children:@[
+        group(@[item(@"PlayT2 Discord",@"person.2",^{[weak openLink:TBPlayT2Discord];}),
+            item(@"The Cut Discord",@"person.2",^{[weak openLink:TBTheCutDiscord];}),
+            item(@"TribesPad Discord",@"person.2",^{[weak openLink:TBTribesPadDiscord];})]),
+        group(@[item(@"TribesNEXT Forum",@"text.bubble",^{[weak openPage:TBTribesNextForum];})])]];
+    NSArray *matchItems=game,*onlineItems=@[playing,servers,nights,community],*optionItems=controls;
     if(tb_starsiege){
         /* Starsiege's own keys (config/config.cs): T and Y chat, I inventory,
            O objectives, C command, Tab scores, Ctrl+K kill. */
@@ -1189,31 +1192,41 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
                     key(@"Drop Flag",@"flag",SDL_SCANCODE_F,SDL_KMOD_LCTRL)]),
                 group(@[key(@"Zoom",@"plus.magnifyingglass",SDL_SCANCODE_Z,SDL_KMOD_NONE),key(@"Third-Person View",@"person.crop.square",SDL_SCANCODE_R,SDL_KMOD_NONE)]),
                 group(@[kill])]]];
-        NSArray *t1controls=@[controls[0],controls[1],controls[2],controls[4]];
-        UIMenu *t1help=[UIMenu menuWithTitle:@"Help" image:icon(@"questionmark.circle") identifier:nil options:0 children:@[
+        optionItems=@[controls[0],controls[1],controls[2],controls[4]];
+        help=[UIMenu menuWithTitle:@"Help" image:icon(@"questionmark.circle") identifier:nil options:0 children:@[
             group(@[item(@"Touch and Trackpad Guide",@"hand.tap",^{[weak showTouchGuide];}),
                 item(@"Controller Guide",@"gamecontroller.fill",^{[weak showControllerGuide];})]),
             group(@[item(@"Console",@"terminal",^{[weak tapKey:SDL_SCANCODE_GRAVE];}),
                 item(@"TribesPad on GitHub",@"safari",^{[UIApplication.sharedApplication openURL:[NSURL URLWithString:TBRepositoryURL] options:@{} completionHandler:nil];}),
-                item(@"About TribesPad",@"info.circle",^{[weak showAbout];})]),
-            group(@[item(@"Switch to Tribes 2",@"arrow.left.arrow.right",^{[weak switchGame];})])]];
-        /* Find a Game: the game's JOIN list, who is on each server now, and
-           where the community arranges games. */
+                item(@"About TribesPad",@"info.circle",^{[weak showAbout];})])]];
         UIAction *t1servers=item(@"Server List",@"server.rack",^{[weak openServerList];});
         t1servers.subtitle=self.connected?@"Leaves this match first":@"PLAY GAME > JOIN";
         UIAction *t1playing=item(@"Who's Playing Now",@"person.3",^{[weak showLiveServers];});
         t1playing.subtitle=@"Players on each server, from the community masters";
         UIAction *t1nights=item(@"Game Nights",@"calendar",^{[weak showSchedule];});
-        t1nights.subtitle=nights.subtitle;
-        UIMenu *t1find=[UIMenu menuWithTitle:@"Find a Game" image:icon(@"globe") identifier:nil options:self.connected?0:UIMenuOptionsDisplayInline children:@[
-            t1servers,t1playing,t1nights,
-            [UIMenu menuWithTitle:@"Community" image:icon(@"bubble.left.and.text.bubble.right") identifier:nil options:0 children:@[
-                group(@[item(@"PlayT1 Discord",@"person.2",^{[weak openLink:TBPlayT1Discord];}),
-                    item(@"TribesPad Discord",@"person.2",^{[weak openLink:TBTribesPadDiscord];})]),
-                group(@[item(@"PlayT1",@"safari",^{[weak openPage:TBPlayT1Site];}),
-                    item(@"Server List on the Web (tribes1.co)",@"server.rack",^{[weak openPage:TBTribes1Servers];}),
-                    item(@"Tribes 1 JunkYard: configs, mods, demos",@"archivebox",^{[weak openPage:TBTribes1JunkYard];})])]]]];
-        groups=self.connected||self.inMatch?@[group(t1),group(@[t1find]),group(t1controls),group(@[t1help])]:@[t1find,group(t1controls),group(@[t1help])];
+        t1nights.subtitle=@"PlayT1's daily pickup, in your local time";
+        UIMenu *t1community=[UIMenu menuWithTitle:@"Community" image:icon(@"bubble.left.and.text.bubble.right") identifier:nil options:0 children:@[
+            group(@[item(@"PlayT1 Discord",@"person.2",^{[weak openLink:TBPlayT1Discord];}),
+                item(@"TribesPad Discord",@"person.2",^{[weak openLink:TBTribesPadDiscord];})]),
+            group(@[item(@"PlayT1",@"safari",^{[weak openPage:TBPlayT1Site];}),
+                item(@"Server List on the Web (tribes1.co)",@"server.rack",^{[weak openPage:TBTribes1Servers];}),
+                item(@"Tribes 1 JunkYard: configs, mods, demos",@"archivebox",^{[weak openPage:TBTribes1JunkYard];})])]];
+        matchItems=t1;onlineItems=@[t1playing,t1servers,t1nights,t1community];
+    }
+    /* The same order in both games: This Match (on a server), Play Online,
+       Options, Help, then Choose Game. Off a server Play Online leads, open. */
+    BOOL onServer=self.connected||self.inMatch;
+    UIMenu *online=[UIMenu menuWithTitle:@"Play Online" image:icon(@"globe") identifier:nil
+        options:onServer?0:UIMenuOptionsDisplayInline children:onlineItems];
+    UIMenu *options=[UIMenu menuWithTitle:@"Options" image:icon(@"slider.horizontal.3") identifier:nil options:0 children:optionItems];
+    NSMutableArray *groups=[NSMutableArray array];
+    if(onServer)[groups addObject:[UIMenu menuWithTitle:@"This Match" image:nil identifier:nil options:UIMenuOptionsDisplayInline children:matchItems]];
+    [groups addObject:onServer?group(@[online]):online];
+    [groups addObject:group(@[options,help])];
+    if(tb_starsiege_bundled([NSBundle.mainBundle.resourcePath stringByAppendingPathComponent:@"GameData"].fileSystemRepresentation)){
+        UIAction *choose=item(@"Choose Game\u2026",@"square.grid.2x2",^{[weak chooseGame];});
+        choose.subtitle=tb_starsiege?@"Starsiege: Tribes or Tribes 2":@"Tribes 2 or Starsiege: Tribes";
+        [groups addObject:group(@[choose])];
     }
     self.menu.menu=[UIMenu menuWithTitle:@"TribesPad" children:groups];
     // The column button shows whether the cursor is on.
@@ -1513,19 +1526,20 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
     [alert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
     alert.overrideUserInterfaceStyle=UIUserInterfaceStyleDark;[[self presenter] presentViewController:alert animated:YES completion:nil];
 }
-/* Switch Game (docs/LAUNCHER-PLAN.md): an engine can't be unloaded, so TribesPad
-   closes, as when it is swiped away, and the next launch starts the other game
-   (TribesPad.nextGame, consumed by the picker) without showing the picker. */
--(void)switchGame {
-    BOOL toStarsiege=!tb_starsiege;NSString *other=toStarsiege?@"Starsiege: Tribes":@"Tribes 2";
-    UIAlertController *alert=[UIAlertController alertControllerWithTitle:[NSString stringWithFormat:@"Switch to %@?",other]
-        message:[NSString stringWithFormat:@"TribesPad closes this game. Open TribesPad again from the Home Screen and %@ starts.",other]
+/* Choose Game (docs/LAUNCHER-PLAN.md): a game engine can't be unloaded and iOS
+   doesn't let an app reopen itself, so TribesPad closes, as when it is swiped
+   away, and the next launch shows the game picker (TribesPad.nextGame "picker",
+   consumed by the picker), even when Open Tribes 2 Directly is on. */
+-(void)chooseGame {
+    [self releaseControls];
+    UIAlertController *alert=[UIAlertController alertControllerWithTitle:@"Choose Another Game?"
+        message:@"TribesPad closes, because iOS doesn't let an app restart itself. Tap TribesPad on the Home Screen and the game picker opens."
         preferredStyle:UIAlertControllerStyleAlert];
     [alert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
-    [alert addAction:[UIAlertAction actionWithTitle:@"Close and Switch" style:UIAlertActionStyleDefault handler:^(UIAlertAction *a){(void)a;
-        [NSUserDefaults.standardUserDefaults setObject:toStarsiege?@"starsiege":@"tribes2" forKey:@"TribesPad.nextGame"];
+    [alert addAction:[UIAlertAction actionWithTitle:@"Close TribesPad" style:UIAlertActionStyleDestructive handler:^(UIAlertAction *a){(void)a;
+        [NSUserDefaults.standardUserDefaults setObject:@"picker" forKey:@"TribesPad.nextGame"];
         [NSUserDefaults.standardUserDefaults synchronize];
-        fprintf(stderr,"TribesPad: switching to %s at the next launch; closing\n",toStarsiege?"Starsiege: Tribes":"Tribes 2");
+        fprintf(stderr,"TribesPad: Choose Game; the picker opens at the next launch; closing\n");
         exit(0);}]];
     alert.overrideUserInterfaceStyle=UIUserInterfaceStyleDark;[[self presenter] presentViewController:alert animated:YES completion:nil];
 }

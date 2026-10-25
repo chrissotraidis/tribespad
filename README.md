@@ -128,21 +128,16 @@ close the game, use **Launch → Quit** in the original menu.
 
 ### TribesPad menu
 
-The menu reaches the original game's keyboard-only features by touch. Each item
-sends the game's own key, so the original screens open.
+The ··· menu is the same in both games, in this order. Each game item sends the
+game's own key, so the original screens open.
 
-| Item | What it does |
+| Section | What it has |
 |---|---|
-| Find a Game | **Who's Playing Now**: every TribesNEXT server with people and bots counted separately (the game's own list mixes them: "40/48 (38)" is two people); tap one to join. **Server List**: the original PLAY GAME → JOIN (on a server it offers to leave the match first). **Game Nights**: the regular pickup times in your time zone. **Community**: the PlayT2 and The Cut Discords, the TribesPad Discord and the TribesNEXT forum. First in the menu between matches; under the match items during one. |
-| Game Menu | The original Escape menu |
-| Scores | The original score screen (F2); choose it again to close |
-| Chat | All Chat, Team Chat (the keyboard opens and the controls return after sending) and the Quick Chat menu |
-| Actions | Repair kit, mine, beacon, targeting laser, throw flag, zoom, third-person view, command map, suicide |
-| Show / Hide Touch Controls, Trackpad Cursor | Same as the buttons on the right edge |
-| Graphics Quality | **Balanced** (the game's own High detail, one cloud layer, light shadows, no weather) or **Fast** (less detail, no clouds); **Render Scale** on iPad. New profiles start at Balanced. Asks first; the game's Options still change each setting |
-| FPS Counter | Top right: frames each second and the slowest frame among them (orange when a frame takes 50 ms or more; "Hot" when the device is throttling) |
-| Settings… | Touch controls (size, opacity, look sensitivity, left-handed, hide with a controller), trackpad cursor and speed, keep clear of the notch, FPS counter, render scale (iPad); reset to defaults |
+| This Match (on a server) | **Game Menu** (the original Escape menu), **Scores**, **Chat** (all, team, quick chat), **Actions** (repair kit, mine or beacon, targeting laser, flag, zoom, third-person view, command map, suicide) |
+| Play Online | **Who's Playing Now**: every server with people (and, in Tribes 2, bots counted separately; the game's own list mixes them: "40/48 (38)" is two people); tap one to join. **Server List**: the original PLAY GAME → JOIN (on a server it offers to leave the match first). **Game Nights**: the regular pickup times, in your device's time zone. **Community**: the game's Discords and sites. Open at the top between matches; a submenu during one. |
+| Options | Show / Hide Touch Controls, Trackpad Cursor, FPS Counter (top right: frames each second and the slowest frame), Graphics Quality (Tribes 2: **Balanced** or **Fast**, and **Render Scale** on iPad), Settings… (touch size, opacity, look sensitivity, left-handed, hide with a controller, trackpad speed, notch, FPS counter, render scale) |
 | Help | Touch and trackpad guide, controller guide, original console, TribesPad on GitHub, About |
+| Choose Game… | Closes TribesPad (iOS doesn't let an app restart itself); the next time you open it, the game picker appears |
 
 ![Touch Settings during a match](docs/images/tribespad-touch-settings.jpg)
 
@@ -181,7 +176,7 @@ join a team. Change armor and weapons at an inventory station or with **Inventor
 
 The Tribes 2 community mostly plays at set times in North American evenings: pickup
 games, The Cut and the 25th Anniversary draft league. At other hours most public
-servers are empty or hold only bots. **··· → Find a Game** shows who is playing now,
+servers are empty or hold only bots. **··· → Play Online** shows who is playing now,
 the regular game nights in your time zone, and the PlayT2 and The Cut Discords, where
 pickups are organized.
 Missing maps and interiors download from the TribesNEXT asset depot (on by default
@@ -192,9 +187,10 @@ in TribesPad).
 TribesPad opens to a picker: **Starsiege: Tribes** and **Tribes 2**, each with how many people
 are playing now. Tap a card, or choose with the D-pad, left stick or arrow keys and press A or
 Return. The gear at the top right has **Open Tribes 2 Directly**, which skips the picker;
-**Settings → Display → Game Picker at Launch** brings it back. In a game, **··· → Help → Switch to
-Tribes 2** (or Starsiege) changes games without leaving the app. Each card shows its game's own
-title screen, taken at build time from your own downloads. Nothing from either game is in the repository.
+**Settings → Display → Game Picker at Launch** brings it back. In a game, **··· → Choose Game…**
+closes TribesPad, and the picker appears the next time you open it (iOS doesn't let an app restart
+itself). Each card shows its game's own title screen, taken at build time from your own downloads.
+Nothing from either game is in the repository.
 
 ### Starsiege: Tribes
 
@@ -204,12 +200,12 @@ iPad and Mac, recompiled the same way as Tribes 2. Build it in with
 it against `config/starsiege/inputs.json`.
 
 - **Offline:** TRAINING with bots, or HOST MULTIPLAYER.
-- **Online:** JOIN lists the community master servers (tribes1.co); **··· → Find a Game** shows
+- **Online:** JOIN lists the community master servers (tribes1.co); **··· → Play Online** shows
   who is playing, PlayT1's nightly pickup in your time zone, and the PlayT1 Discord.
 - **Controller:** RT fire, LT jet, A jump, RB/LB next/previous weapon, Y grenade, X pack, B crouch;
   the D-pad has repair kit, inventory, beacon and quick chat. In menus, X double-clicks to buy.
 - **IRC Chat** in the game's menu does nothing: it connects to Dynamix's IRC server, which closed
-  long ago. Tribes 1 players talk in the PlayT1 Discord (**··· → Find a Game → Community**).
+  long ago. Tribes 1 players talk in the PlayT1 Discord (**··· → Play Online → Community**).
 - **Not yet:** modded servers (RPG and other mods) need their own files, which the game cannot
   download; graphics presets ([validation](docs/validation/starsiege-g2.md)).
 

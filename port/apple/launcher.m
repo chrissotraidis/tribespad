@@ -314,25 +314,32 @@ static UIBezierPath *tb_chamfer(CGRect r,CGFloat c){
 @end
 
 TBGame tb_launcher_run(void) {
+    /* Every way in waits for the window scene to be on screen first. A start
+       without the picker (Switch Game) once began before the scene had its full
+       size, and Starsiege's 800x600 frame was measured against a small window. */
+    UIWindowScene *scene=nil;NSDate *give_up=[NSDate dateWithTimeIntervalSinceNow:5];
+    while(give_up.timeIntervalSinceNow>0){
+        for(UIScene *s in UIApplication.sharedApplication.connectedScenes)
+            if([s isKindOfClass:UIWindowScene.class]&&s.activationState==UISceneActivationStateForegroundActive)scene=(UIWindowScene *)s;
+        if(scene&&scene.coordinateSpace.bounds.size.width>0)break;
+        CFRunLoopRunInMode(kCFRunLoopDefaultMode,.05,true);
+    }
+    if(!scene)for(UIScene *s in UIApplication.sharedApplication.connectedScenes)if([s isKindOfClass:UIWindowScene.class])scene=(UIWindowScene *)s;
     /* TRIBESPAD_PICK (devicectl --environment-variables, tests) chooses without the picker. */
     const char *pick=getenv("TRIBESPAD_PICK");
     if(pick)return !strcmp(pick,"starsiege")&&tb_starsiege_here()?TBGameStarsiege:TBGameTribes2;
-    /* Switch Game (mobile_controls.m) chose the next game: start it once, without the picker. */
+    /* Choose Game (mobile_controls.m) asks for the picker at this launch; an older
+       build's Switch Game named a game, which starts once without it. */
     NSString *next=[NSUserDefaults.standardUserDefaults stringForKey:@"TribesPad.nextGame"];
-    if(next){
-        [NSUserDefaults.standardUserDefaults removeObjectForKey:@"TribesPad.nextGame"];
+    BOOL asked=[next isEqualToString:@"picker"];
+    if(next)[NSUserDefaults.standardUserDefaults removeObjectForKey:@"TribesPad.nextGame"];
+    if(next&&!asked){
         TBGame chosen=[next isEqualToString:@"starsiege"]&&tb_starsiege_here()?TBGameStarsiege:TBGameTribes2;
         fprintf(stderr,"TribesPad launcher: Switch Game chose %s\n",chosen==TBGameStarsiege?"Starsiege: Tribes":"Tribes 2");
         return chosen;
     }
     id show=[NSUserDefaults.standardUserDefaults objectForKey:@"TribesPad.showLauncher"];
-    if(show&&![show boolValue])return TBGameTribes2;
-    // The window scene connects while the run loop turns.
-    UIWindowScene *scene=nil;NSDate *give_up=[NSDate dateWithTimeIntervalSinceNow:5];
-    while(!scene&&give_up.timeIntervalSinceNow>0){
-        for(UIScene *s in UIApplication.sharedApplication.connectedScenes)if([s isKindOfClass:UIWindowScene.class])scene=(UIWindowScene *)s;
-        if(!scene)CFRunLoopRunInMode(kCFRunLoopDefaultMode,.05,true);
-    }
+    if(!asked&&show&&![show boolValue])return TBGameTribes2;
     if(!scene){fprintf(stderr,"TribesPad launcher: no window scene; starting Tribes 2\n");return TBGameTribes2;}
     UIWindow *window=[[UIWindow alloc] initWithWindowScene:scene];
     window.windowLevel=UIWindowLevelNormal+1;window.backgroundColor=UIColor.blackColor;

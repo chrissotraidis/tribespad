@@ -358,6 +358,18 @@ def tribespad_defaults(game):
     at = text.index(anchor)
     end = text.index('\n', at) + 1
     text = text[:end] + '   $pref::politeGui = false; // TribesPad: the game draws its own cursor\n' + text[end:]
+    # The 1.41 layout puts the match clock and the ping light at the top right,
+    # where at 800x600 the minimap covers them (Control::setPosition does not
+    # move these HUDs). Move them down, below the minimap.
+    layout = game / 'config/play.gui.cs'
+    if layout.exists():
+        gui = layout.read_text(errors='replace')
+        for name, old, new in [('clockHud', '1552 0', '1552 360'), ('sensorHUD', '1504 0', '1504 400')]:
+            before = 'instant FearGui::%s "%s" {\n\t\tposition = "%s";' % ('ClockHud' if name == 'clockHud' else 'FGHSensorPing', name, old)
+            after = before.replace('"%s";' % old, '"%s";' % new)
+            if before in gui:
+                gui = gui.replace(before, after, 1)
+        layout.write_text(gui)
     # The console log (console.log) for diagnostics, and an optional checks
     # script: TribesPad writes config/TribesPadRoute.cs only for test launches.
     text = '$Console::LogMode = 1;\n' + text + '\nif(isFile("config/TribesPadRoute.cs")) schedule("exec(\\"TribesPadRoute.cs\\");", 2);\n'
@@ -419,7 +431,12 @@ function TribesPad::request() {
    }
 }
 function TribesPad::servers() {
-   if($PCFG::Name == "") OpenNewPlayerDialog(); else GuiLoadContentCtrl(MainWindow, "gui/JoinGame.gui");
+   if($PCFG::Name == "") { OpenNewPlayerDialog(); return; }
+   // Already on JOIN: reopen it, which refreshes the list from the masters, so
+   // the menu item always visibly does something.
+   // (the report loop opens JOIN again a quarter second later).
+   if(isObject("JoinGameGui")) { GuiLoadContentCtrl(MainWindow, "gui/MainMenu.gui"); $TribesPad::reopenJoin = 1; return; }
+   else GuiLoadContentCtrl(MainWindow, "gui/JoinGame.gui");
 }
 function TribesPad::typing() {
    if(isObject("NewPlayerGui") || isObject("PasswordGui") || isObject("NewServerGui") || isObject("NewMasterServerGui")
@@ -434,7 +451,10 @@ function TribesPad::report() {
    // A recorded demo plays in the match view too; it counts as a menu, so the
    // controller's B (Escape) leaves it.
    %playing = 0; if(%inMatch && !isCursorOn(MainWindow) && !$playingDemo) %playing = 1;
+   // 2: an inventory or vehicle station is open, where the controller's A buys.
+   else if(isObject("CmdInventoryGui") || isObject("InventoryGui")) %playing = 2;
    %connected = 0; if($TribesPad::connected || %inMatch) %connected = 1;
+   if($TribesPad::reopenJoin) { $TribesPad::reopenJoin = 0; GuiLoadContentCtrl(MainWindow, "gui/JoinGame.gui"); }
    if(isFile("temp/tribespad-request.flag")) TribesPad::request();
    $TribesPad::state = %playing @ " " @ TribesPad::typing() @ " " @ %connected @ " " @ $TribesPad::handled;
    if($TribesPad::state != $TribesPad::reported) { $TribesPad::reported = $TribesPad::state; export("TribesPad::state", "temp/tribespad-state.cs", false); }
