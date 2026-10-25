@@ -126,7 +126,7 @@ Archived, unshipped experiments: [inline-grouped-guard-rejected.patch](archive/e
 
 ## Build and workspace handoff
 
-Players and fresh clones: `scripts/build-tribespad.sh [--platform device|macos|simulator] [--games tribes2,starsiege]` (PadMint and the GitHub workflow build both games). After changing translated inputs or receipts, or a file a receipt hashes (such as `config/runtime/external-memory-contracts.json`), re-record patches with `scripts/translation-patches.py make` (see Reproducible build) and commit them; a fresh clone otherwise stops at the app step.
+Players and fresh clones: `scripts/build-tribespad.sh [--platform device|macos|simulator] [--games tribes2]` (both games by default; `--games tribes2` leaves Starsiege out). After changing translated inputs or receipts, or a file a receipt hashes (such as `config/runtime/external-memory-contracts.json`), re-record patches with `scripts/translation-patches.py make` (see Reproducible build) and commit them; a fresh clone otherwise stops at the app step.
 
 Workspace: `~/GitHub/tribespad`. **Do not delete it after pulling GitHub.** At wrap-up, ignored `ref/` was about 3.7 GB and `generated/` about 250 GB. Git contains source, input manifests and selected validation evidence, not the game assets, complete translated inputs, native dependencies or all logs. A fresh clone builds with the one command above. Do not commit those ignored directories wholesale.
 

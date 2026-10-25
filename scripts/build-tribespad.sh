@@ -1,20 +1,21 @@
 #!/usr/bin/env bash
 # Build TribesPad on an Apple Silicon Mac from the official free downloads.
 #
-#   scripts/build-tribespad.sh [--platform device|macos|simulator] [--games tribes2[,starsiege]] [--output DIR] [--ipa FILE] [--zip FILE]
+#   scripts/build-tribespad.sh [--platform device|macos|simulator] [--games tribes2,starsiege|tribes2] [--output DIR] [--ipa FILE] [--zip FILE]
 #
 # Downloads Tribes 2 and the TribesNEXT client, the pinned open-source
 # dependencies and tools, translates the game on this Mac and builds the app.
 # --platform device (default): an unsigned TribesPad.ipa for iPhone and iPad;
 # sign it with your own Apple account (see README).
 # --platform macos: TribesPad-mac.zip with TribesPad.app for Apple Silicon Macs.
-# --games tribes2,starsiege: adds Starsiege: Tribes 1.41, from
-# the PlayT1 community installer, to the game picker.
+# --games tribes2,starsiege (the default) also builds Starsiege: Tribes 1.41,
+# from the PlayT1 community installer, for the game picker; --games tribes2
+# leaves it out.
 # Needs Xcode and: brew install llvm@20 cmake ninja sevenzip zstd
 set -euo pipefail
 
 platform=device
-games=tribes2
+games=tribes2,starsiege
 output=
 ipa=
 zip=

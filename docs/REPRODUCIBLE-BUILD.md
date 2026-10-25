@@ -9,10 +9,9 @@ scripts/build-tribespad.sh --platform macos   # Mac: build/output/TribesPad-mac.
 scripts/build-tribespad.sh --platform simulator
 ```
 
-PadMint and the GitHub workflow add `--games tribes2,starsiege`, which also downloads
-PlayT1's Starsiege: Tribes 1.41 installer (checked against `config/starsiege/inputs.json`)
-and puts both games in the picker. If Starsiege cannot be built, the build says so and
-finishes with Tribes 2 alone.
+Every build also downloads PlayT1's Starsiege: Tribes 1.41 installer (checked against
+`config/starsiege/inputs.json`) and puts both games in the picker; `--games tribes2` builds
+Tribes 2 alone. If Starsiege cannot be built, the build says so and finishes with Tribes 2.
 
 Prerequisites: Xcode with the iOS platform, and
 `brew install llvm@20 cmake ninja sevenzip zstd`. No game data or translated game
