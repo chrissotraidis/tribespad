@@ -1,0 +1,138 @@
+# Starsiege: Tribes G2 record (24 October 2026)
+
+Gate G2 in [STARSIEGE-TRIBES-PLAN.md](../STARSIEGE-TRIBES-PLAN.md): lift 1.41 and reach the main menu. **The original main menu renders** from the translated 1.41 `Tribes.exe` on this Mac, headless: no window was shown and nothing appeared on screen or in the Dock.
+
+![Starsiege: Tribes 1.41 main menu, rendered headless by TribesPad](starsiege-main-menu-headless-2026-10-24.png)
+
+## What runs
+
+- `scripts/starsiege/build_engine.py` puts the lift in TribesPad's original-address model, compiles it with TribesPad's native Windows services and the same SDL backend, GL helpers, GL4ES and ANGLE as Tribes 2's Mac app, and links `port/starsiege/starsiege_engine.c`. `--run` starts it on an isolated copy of the game with `STARSIEGE_HEADLESS=1` (hidden SDL window, SDL as a background app) and writes frames to PNG.
+- From the game's own `console.log`: MSVC start-up, the `TRIBES_LOCK` instance check, OpenGL set-up against GL4ES, CPU detection, all client scripts and modules, `gui/MainMenu.gui.cs`, `Client Initialized`, GGConnect and OpenSSL start-up. The menu then draws every frame: 93 textured quads under `glOrtho(0, 800, 600, 0)` with per-control scissoring. It ran 90 seconds without a stop (261,000 frames, uncapped because the drawable is hidden).
+
+## What was added (Starsiege only; Tribes 2's pinned sources and receipts are unchanged)
+
+| Area | Where |
+|---|---|
+| Engine entry: one image at 0x400000, TEB, threads, files, display, SDL allocator | `port/starsiege/starsiege_engine.c` |
+| Win32 windows: creation with WH_CBT hooks, subclassing, default procedure, geometry, focus | `port/starsiege/starsiege_windows.c` |
+| WGL and GDI pixel formats on the SDL backend's GL contexts; 13 GL 1.1 entry points Tribes 2 never used | `port/starsiege/starsiege_gl.c` |
+| Display modes (`EnumDisplaySettingsA`, `ChangeDisplaySettingsA`) and window metrics | `port/starsiege/starsiege_display.c` |
+| `HeapSize`/`HeapValidate`, socket buffer sizes, ANSI hardware registry, critical sections counting re-entry like Windows | `starsiege_heap.c`, `starsiege_winsock.c`, `starsiege_registry.c`, `starsiege_critical_section.c` (each includes or mirrors the unchanged TribesPad source) |
+| Interlocked calls, named semaphore, gamma ramp, `FormatMessageA` 2000, `fsincos` and more | `starsiege_win32.c`, `starsiege_x87.c` |
+| Bindings: new services and reasoned overrides | `config/starsiege/bindings.json` |
+
+Reported as not present: `ScriptGL.dll`, `rmdgfx.dll`, `mscoree.dll`, `dbghelp.dll`, and named pipes such as `\\.\pipe\IAPlayer.1337.0`. DirectInput and DirectSound became present later the same day (below).
+
+## Toward G3: local game (same day)
+
+- A scripted route (\`build_engine.py --route\`, run copy only) creates a player profile and calls the game's own \`createServer("Raindance", false)\`. The server loads Raindance (CTF, Blood Eagle and Diamond Sword), the client connects over LOOPBACK and is accepted, then it drops right after the Loading screen. The server then moves to its next mission. The drop has no reason and no script kick, so it is in the engine's connection handling. It is the next thing to find.
+- Start-up took 25 s because TribesPad's list-based heap is O(n) per call and Starsiege's C runtime sends every malloc to it. \`starsiege_fast_heap.c\` (size classes and a hash table, with the original heap as fallback for runtime blocks) brings the longest start-up frame to 1.3 s.
+- The translated game now builds at \`-O1\` (about two minutes; \`STARSIEGE_OPT=-O0\` for quick iteration). \`fxam\` and \`fldl2e\` are implemented. The run copy drops the installer's stale \`temp/serverTempData*.cs\`.
+
+## Input, cursor and sound (same day, later)
+
+The menus now take a mouse and keyboard. Headless and scripted, with no window shown: Play Game opens Player Setup, typing a name into the New Player box and pressing Return creates the player, and the armor preview renders.
+
+![Player Setup after a scripted click, typed name and Return](starsiege-player-setup-input-headless-2026-10-24.png)
+
+- **Input is DirectInput.** `console.cs` calls `inputActivate(keyboard0)` and `inputActivate(mouse0)`; window messages only drive the editors. Tribes 2's native DirectInput root (`guest_dinput.c`, unchanged) creates the devices from its own keyboard and mouse catalog. `port/starsiege/starsiege_input.c` includes it and adds the methods Tribes 2 never needed: `SetCooperativeLevel`, `Acquire`/`Unacquire`, `GetDeviceState`, `GetDeviceData`, `SetEventNotification` and `Poll`. Keys and mouse motion come from SDL events through the backend's `tribes_sdl_poll_event`, every frame and on each device read, with SDL scancodes mapped to DirectInput scan codes. The SDL allocator routes moved from `0xfffd0000` to `0xfffc0000`, because that address is the native token for `DirectInputCreateA`.
+- **The game's own cursor.** The 1.41 canvas draws its cursor only after a `WM_MOUSEMOVE` tells it the pointer is over the window; it then follows DirectInput motion. The host now sends that message when the window first shows, and again for motion while the game has released the mouse, kept inside the window because an Apple screen has nothing beside the game. 1.41 also turns `$pref::politeGui` on when it creates its window, which stops the canvas from ever taking the pointer and leaves the cursor to the Windows desktop. TribesPad turns it off right after the window exists (`tribespad_defaults` in `build_engine.py` adds one line after `newObject(MainWindow, ...)` in `console.cs`). That is a TribesPad default, like WASD for Tribes 2.
+
+  ![The game's hand cursor over Play Game](starsiege-menu-cursor-headless-2026-10-24.png)
+- **Sound.** `dSound.dll` now resolves to Tribes 2's DirectSound provider on an SDL/CoreAudio device. The game opens a 48 kHz stereo device and its primary buffer, and "error opening sound device" is gone. Playback itself is unchecked until a match runs.
+- Headless checks script input with `STARSIEGE_INPUT=file` (`<frame> key <DIK> down|up`, `<frame> move dx dy`, `<frame> button n down|up`, `<frame> wheel n`) and pick capture frames with `STARSIEGE_CAPTURE_FRAMES=a,b,c`. `STARSIEGE_TRACE_INPUT=1` logs device calls.
+
+## Local games, bots and online play (same day, evening)
+
+**The disconnect is fixed.** It was a translation bug, not the game's checks. SRW translated `movzx ax, ah` (the destination's own high byte) by clearing the destination before reading it, so the result was always 0. The player-update writer at 0x4838E1 uses that to decide whether to send one flag bit; the client sent version 0 and skipped the bit, the server read it anyway, every later field was one bit off, and the server dropped the client as "Invalid packet." `lift_preview.py` now reorders the three such sites so the byte is read first. The anti-cheat's two console commands (`remoteLH_CHMOD`, `remoteLH_CHMEM`), which the lift never reached because only a command table points at them, are now translated faithfully too (`lift-fixups.json` "pointers", and two jumps into the middle of an instruction that fault on Windows as well, recorded as loud traps).
+
+- **Local game:** `createServer("Raindance")` connects, joins Blood Eagle and stays. Scripted input spawns the player, walks, turns, jets and fires the blaster ([spawned](starsiege-local-play-spawned-2026-10-24.png), [jetting](starsiege-local-play-jet-2026-10-24.png)).
+- **Bots:** the 5_CTF training mission's own guards spawn and patrol (their positions change every few seconds, logged by a checks script).
+- **Online:** the client joined a live public server, "Starsiege: Tribes (no mods) 2" (67.187.240.184:28001): connection accepted, mission loaded, assigned to Blood Eagle, left cleanly after 45 s ([frame](starsiege-online-public-server-2026-10-24.png)).
+- **iPad Pro:** the same local game runs on the device; TribesPad's touch overlay (stick, look, fire, jet and the ··· menu) follows play through `temp/tribespad-state.cs`, sending Starsiege's own keys (WASD, Space, G, Q, P, I) and a Starsiege menu (chat, scores, inventory, objectives, repair kit, zoom, suicide) ([screenshot from the iPad](starsiege-ipad-local-game-touch-2026-10-24.png)).
+
+## Still open for G2 and next
+
+- A visible Mac window, which needs the owner's go-ahead on this Mac.
+- Hand-testing touch, controller and keyboard folio in a full match; a visible Mac run (owner's go-ahead).
+- Diagnostic logging (file opens, GL lookups, window calls) stays on during bring-up.
+
+Reproduce: `.venv/bin/python scripts/starsiege/lift_preview.py --no-compile`, then `.venv/bin/python scripts/starsiege/build_engine.py --run` (with `DEVELOPER_DIR` and `SDKROOT` set as in docs/HANDOFF.md).
+
+## On the iPad, the controller, Options and the server list (same day, night)
+
+- **On the iPad Pro (screenshots from the device):** the picker shows PLAY on both cards with live counts. A 5_CTF bot match runs, with both guards joining Diamond Sword and patrolling. A live public server (67.187.240.184:28001) accepted the iPad, assigned it to Blood Eagle and showed "Fire to spawn". The first attempt was dropped while loading, most likely during the server's map rotation; the retry joined.
+- **Map rotation:** a connected client stays connected through a server map change (`focusServer(); Server::loadMission("Blastside", true)` in a local game): it reloads, respawns and plays the next match. A test that calls `Server::loadMission` from the client's focus instead creates the mission's objects in the client's manager and stops in `_stricmp`; that was the test, not the game.
+- **Game threads never started (fixed).** The Starsiege host never told TribesPad's thread service the process was ready (`tribes_threads_process_ready`), so every `CreateThread` produced a thread that waited forever. Opening Options starts one and waits for it: the game froze there (reported on the iPad after a trigger press clicked Options). The master-server resolver is another. Both work now.
+- **Server list (fixed).** The installer's prefs cache a retired master (`$Server::XLMasterN0 = IP:74.117.210.42:28000`) and 1.41 re-resolves only from Options > Network. `gethostbyname` is implemented (port/starsiege/starsiege_winsock.c), and TribesPad's startup script lists the community masters that answer (t1m1 and t1m2.tribes1.co) and resolves them. Join Server now shows the live list with pings and player counts.
+- **Sound with threads running:** Starsiege's focus-dependent sound buffers play as global-focus ones, and `DuplicateSoundBuffer` copies a loaded sound (port/starsiege/starsiege_sound.c); TribesPad's shared DirectSound provider is unchanged.
+- **Controller laid out like Tribes 2** (port/starsiege/starsiege_input.c), switching with the play state. Playing: left stick moves, right stick looks, RT fires, LT jets, A jumps, B crouches, X pack, Y grenade, RB / LB next / previous weapon (Q / F8; TribesPad binds F8 to prevWeapon), R3 zoom toggle, L3 third person, D-pad repair kit / inventory / beacon / quick chat, View scores. Menus: left stick or D-pad moves the game's cursor, A clicks, B goes back, right stick scrolls, triggers do nothing. Menu opens the ··· menu on iPhone and iPad. Checked headless with a scripted controller: walked forward, fired, cycled Blaster, chaingun and back with RB and LB, and moved the menu cursor.
+- **Logging (TribesPad.log):** controller connect and disconnect, layout switches, every mapped press, and a watchdog line when no frame has been drawn for 5 s (and when frames resume).
+
+
+## Online play on the iPad, second pass (same night)
+
+- **Controller stuck in the menu layout online (fixed).** "Playing" came from `eventConnected`, which community scripts raise and mods change. Online it stopped after the first match, so the left stick moved a hidden menu cursor, A clicked, and the right stick scrolled the wheel, which changes weapons. Playing now comes from the screen: the match view (`playGui`) is up with the game's cursor off. On the iPad, an online join reports "1 0 1" from spawn on.
+- **HUD overlap (fixed).** The bundled CTF HUD's saved position put it inside the chat box at 800x600. It now starts just below the chat, unless the player has moved it.
+- **Typing dialogs** (new player, password, address, filter, demo name) set the typing flag, so the on-screen keyboard opens with them.
+- **Find a Game for Starsiege** in the ··· menu: Server List (the game's JOIN, through a request the game handles), Who's Playing Now (each server from the community masters, with players and ping; tap to join), and the PlayT1 and TribesPad Discords. The game runs only scripts that existed at its start, so the request file ships empty and is rewritten, with a flag file that `isFile` sees.
+- **Switch Game** in both games' ··· menus: TribesPad closes and the next launch starts the other game (TribesPad.nextGame).
+- **Modded servers:** servers running mods with their own models (for example the RPG servers) need those mods' client files; Starsiege servers can't send models. Standard and "no mods" servers need nothing extra.
+
+- **Quit (fixed).** With game threads running, quitting deleted a critical section a thread still held, and TribesPad stopped there. Windows lets that pass; Starsiege's critical sections now log it and keep the section until exit. `quit()` ends with "original process shutdown completed, code=0" after saving prefs.
+- **Mac app:** the picker renders offscreen with both cards on PLAY and live counts, and `TRIBESPAD_PICK=starsiege` with `STARSIEGE_HEADLESS=1` runs the bundled StarsiegeEngine from the app's Application Support folder to the main menu. Tribes 2 on the Mac has no headless mode; a visible run waits for the owner.
+- **Tribes 2 on the iPad** still starts with the existing profile (TribesNEXT login with the saved account) after these changes.
+- **Tribes 2 on the Mac (visible run, owner approved):** the Mac app with `TRIBESPAD_PICK=tribes2` started TribesPadEngine full screen to the TribesNEXT login; closed after the check. Mac data was copied aside first.
+- **iPhone 17 simulator:** Starsiege from the picker path runs a 5_CTF bot match (guards patrol, state "1 0 1"). With `TRIBESPAD_TOUCH_CONTROLS=1` (a test switch that keeps the touch controls with a mouse or controller attached, both of which the Simulator passes through from the Mac), the Starsiege touch layout shows in play: move stick, pack and inventory on the left; fire, jet, grenade, ski / jump and weapon on the right, mostly in the bars beside the 4:3 picture. The physical iPhone waits for the owner to unlock it.
+
+## Controller and build feedback (25 October)
+
+- **One-command build from a cleared `generated/`:** `scripts/build-tribespad.sh --platform device --games tribes2,starsiege` completes and writes TribesPad.ipa. It needed one fix: Starsiege's SDL wrappers are generated from the macOS SDL backend's description, which a device build never made (an old `generated/` had hidden that). Space: `generated/` about 9 GB after the build (11 GB with device backups), `ref/` 3.5 GB of game inputs, `build/` 1.2 GB including the IPA. The earlier 46 GB was an accumulated working folder, not what a build needs.
+- **Controller, Tribes 2:** D-pad right opens a quick chat panel the controller drives (D-pad to choose, A to open or say, B back), built from the game's own voiceBinds.cs (or the player's customVoiceBinds.cs); saying an item types V and its letters, so the game's menu sends it. LB now selects the targeting laser (RB still cycles weapons; previous weapon is the mouse wheel or keyboard). B places a mine and X uses the pack, as the guide and hint now say. Starsiege's LB selects its targeting laser too.
+- **Touch with a trackpad attached:** the touch controls stay until the mouse or trackpad is actually used in a match, and a finger on the screen brings them back.
+- **Picker:** the left stick moves between the cards too, and the picker logs each controller and press (TribesPad.log) to find why a controller did nothing there.
+- **Firing delay online:** from Tokyo the TribesNEXT servers are 110 to 175 ms away (ICMP), and Tribes 2 shows a shot once the server has it, so most of the delay is distance; the iPad ran online matches at 25 to 45 FPS, limited by the CPU (under 2 ms of GPU wait a frame), which adds a frame or two.
+
+## Starsiege feedback, second pass (25 October)
+
+- **Status bar:** Starsiege's window on iPhone and iPad is borderless, so SDL hides the status bar (clock, app name, battery) that sat over the HUD timer.
+- **Minimap:** starts 180 pixels wide instead of the bundled 280 at 800x600; Options > HUDs still sets it.
+- **Demos:** demo playback counts as a menu for the controller, so B (Escape) leaves it.
+- **Controller:** LB is previous weapon again in Starsiege (F8, bound to prevWeapon; few loadouts carry a targeting laser). In menus X double-clicks, for buying from the inventory lists. D-pad right in a match opens the quick chat panel built from the player's ChatMenu.cs; the entry's own command (say, messageAndAnimate, localMessage, remoteEval) runs through the request bridge, and the engine leaves the controller to the panel until its buttons are let go. Headless check: request 5151 sent `say(1, "Attack!~wattack")` and the game printed "TribesPad: Attack!".
+- **Mac one-command build:** `scripts/build-tribespad.sh --platform macos --games tribes2,starsiege` completes from the cleared `generated/` (17 minutes) and writes TribesPad-mac.zip.
+- **Not changed:** IRC Chat (the game has no server set up for it), modded servers that need their own model files (Starsiege servers cannot send them), and slow mission loading.
+
+## Release check (25 October)
+
+- **··· menu parity.** Starsiege's Help now has the Touch and Trackpad Guide, a Starsiege Controller Guide and About (Starsiege's version text and data folder), like Tribes 2's. Find a Game has Game Nights: PlayT1's daily pickup (Rosco's Mixtape, about 8:00 PM US Eastern) for the next three days in the player's time zone. Community has the PlayT1 and TribesPad Discords, then PlayT1, the web server list (tribes1.co) and the Tribes 1 JunkYard (configs, mods, demos). The PlayT1 link was `playt1.com/discord`; it is now the guild's permanent invite. Every link in both games' menus answered (8 pages HTTP 200; 4 Discord invites, none expiring).
+- **IRC Chat** in Starsiege's own menu points at Dynamix's IRC server, which is gone; the README sends players to the PlayT1 Discord instead.
+- **Player builds include Starsiege.** `padmint.json` and the GitHub workflow pass `--games tribes2,starsiege`. If Starsiege cannot be built (PlayT1's installer unavailable, say), `build-tribespad.sh` warns and finishes with Tribes 2 alone.
+- **Fresh-clone blocker (fixed).** The first player-check stopped at the app step: `build-ipad-engine.py` asserts that the guest-threads receipt hashes the current `config/runtime/external-memory-contracts.json`, which b6efaa4 changed without re-recording the receipt's translation patch. A working checkout had the regenerated receipt, so only a fresh clone failed. The two receipts (guest threads, mobile code revision) were re-recorded; both match the committed sources. `main` did not contain b6efaa4.
+- **PadMint player-check, iPhone and iPad:** passed from PadMint `main` (37c2c50) with Apple's Python 3.9.6 and an empty PadMint folder, building a fresh clone of 9ac428f in 20 minutes. The check folder peaked at 13 GB (generated 9 GB, game inputs 2.5 GB). `personal.ipa` is 732 MB with 1,032 Starsiege files and the Starsiege entry point.
+- **PadMint player-check, Mac:** passed the same way in 22 minutes (peak 12 GB). `personal.zip` is 731 MB with TribesPad (the picker), TribesPadEngine and StarsiegeEngine in Contents/MacOS, and the app passes `codesign --verify --deep --strict`.
+- **iPad Pro install:** 1,560 app-data files backed up with checksums, then installed; Application Support read back identical. The picker showed both cards with live counts (11 people on 3 Starsiege servers, 47 on 4 Tribes 2 servers) ([screenshot](release-check-picker-ipad-2026-10-25.png)); Starsiege reached its main menu, version 1.41.655 ([screenshot](release-check-starsiege-ipad-2026-10-25.png)); Tribes 2 opened to the TribesNEXT login with the saved account.
+- **Not checked by hand:** the new menu items on the iPad, the iPhone (locked), and visible Mac runs.
+
+## Bug pass (25 October, afternoon)
+
+- **Long freezes in Starsiege menus and loading (fixed).** The owner's 01:18 session logged three single frames of 12 to 14 seconds (Demos, loading). A headless Mac sample of a local Raindance game put the file lookups first after the game's own code: Windows names ignore case, so `resolve_path` opens and reads every folder on a path to match each name, and Starsiege searches about sixty folders. `port/starsiege/starsiege_filesystem.c` compiles the shared guest filesystem for Starsiege with a folder-listing cache, checked against each folder's modification time, and skips `realpath` for a known real folder plus a name that is not a link. Tribes 2 keeps the unchanged `port/core` file. Mac, start to the match view: 6.48 s before, 5.20 to 5.45 s after (three runs); `getdirentries`, `getattrlist` and `open` left the profile. iPad Pro, launching straight into a local Raindance game: before, a 7.8 s frame, two watchdog stalls and 0.3 FPS over the first 14 s; after (two launches), no stall, longest frame 1.5 s, about 45 FPS over the first 10 s, and the match loaded.
+- **`-O2` for the translated game:** no change to the load (5.18 to 5.30 s on the Mac), so it stays at `-O1`.
+- **The picker kept the controller (fixed).** Its A, D-pad and left-stick handlers stayed on the controller after a game started, so every A in a Starsiege match ran the picker's Play (logged as "launcher: controller A" through play); its connect observer held the picker, with its card art, for the whole session and would re-add the handlers when a controller reconnected. The picker now removes them and the observer when a game is chosen.
+- **Static analysis** (`clang --analyze`) of the menu, picker, server list, Tribes 1 live counts, controller, input, sound, network, GL and window code: two reports, both unreachable (a copy that runs only with a buffer; a debug capture path).
+- **The long Starsiege session in the 25 October log** (1.3 s hitches every 25 minutes) was a scripted training loop left running, not play.
+- **Install:** 1,551 app-data files backed up, Application Support read back identical; Tribes 2 still opens to the TribesNEXT login with the saved account.
+
+## Owner feedback (25 October, evening)
+
+From the owner's 18:56 to 19:02 sessions (TribesPad.log, TribesPad.previous.log and Starsiege's console.log, copied from the iPad before any other launch):
+
+- **··· menu:** one order in both games. On a server: This Match (game menu, scores, chat, actions), then Play Online as a submenu; off a server Play Online leads, open, with Who's Playing Now first, then Server List, Game Nights and Community. Options (touch controls, trackpad cursor, FPS counter, graphics, settings) and Help are submenus; **Choose Game…** is last.
+- **Switch Game closed TribesPad and the next game opened small at the left.** iOS does not let an app reopen itself, so the old "Close and Switch" could only close. **Choose Game…** now closes and says so; the next launch shows the picker (TribesPad.nextGame "picker", even with Open Tribes 2 Directly on). The small picture: a start without the picker began before the window scene was on screen, and Starsiege's first SDL window is its 100x100 OpenGL probe, which the main window later takes over. Every start now waits for the scene to be active, and Starsiege's window asks for full screen on iOS.
+- **Server List did nothing (fixed).** The log shows both requests handled ("servers -1"); the player was already on JOIN, so loading it again changed nothing on screen. On JOIN it now goes to the main menu and back to JOIN a quarter second later (checked headless: the list comes back).
+- **Minimap over the match clock (fixed).** At 800x600 the 1.41 layout's clock (606,0) and ping light sit inside the minimap (568,0, 196 square). `Control::setPosition` does not move these HUDs (`setExtent` does), so `tribespad_defaults` moves them in `config/play.gui.cs`: clock at 606,196 under the minimap, ping light at 611,218 (checked headless). A player's untouched 1.41 layout is replaced at the next update; a changed one stays.
+- **Stations:** "You couldn't buy HPC" is the server's own refusal when something is on the vehicle pad (`VehicleStation::checkBuying`). With a controller, A at a station now double-clicks, which buys the item under the cursor (the game reports 2 while `CmdInventoryGui` or `InventoryGui` is open), and a hint says how to buy and close.
+- **Mouse and touch together:** TribesPad routes a finger in Tribes 2's menus to its own pointer only once it knows a mouse is attached; it learned that only from a connect notification, which a folio trackpad attached before launch may not send. It now checks at start and logs "mouse or trackpad attached".
+- **Game Nights** says "in your local time"; the times follow the device's time zone (this iPad's is Japan).
+- **Health and energy bars overlapped (fixed; the owner spotted it in the screenshot above).** The game scales HUD positions to 800x600 (y by 600/1080) but not their sizes: the energy bar (y 34 in the 1920x1080 layout) was drawn at y 18, inside the 35-pixel health bar. `config/play.gui.cs` now puts it at 65, drawn at 35. Scripted HUDs sit at their fraction of (600 minus their height), so the item HUD (repair kit) moves to 0.125 (y 72) and the CTF HUD to 0.172 (y 96): health 0-35, energy 35-70, items 72-93, CTF 96-136, all measured headless. A play.gui.cs with the 1.41 energy or clock position is replaced at the next update; on the iPad the stack draws apart ([screenshot](starsiege-hud-stack-ipad-2026-10-25.png)).
+- **Not changed:** RPG and other modded servers need their mods' files ("Unable to model rpg-male-human.dts"); Starsiege servers cannot send them.
+- **On the iPad Pro** (1,556 app-data files backed up, Application Support read back identical): launching into a local Raindance game updated the game folder (886 files, including the untouched layout), drew full screen with the clock under the minimap ([screenshot](starsiege-clock-below-minimap-ipad-2026-10-25.png)), and logged "mouse or trackpad attached" at start, which the earlier build never did with the folio attached. Tribes 2 still opens to the TribesNEXT login. Not checked by hand: the new ··· menu, Choose Game, A at a station, fingers beside the trackpad.

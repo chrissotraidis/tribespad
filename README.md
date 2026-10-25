@@ -5,7 +5,7 @@
 <h1 align="center">TribesPad</h1>
 
 <p align="center">
-  <strong>The original Tribes 2, native on iPad, iPhone and Mac.</strong><br>
+  <strong>The original Tribes 2 and Starsiege: Tribes, native on iPad, iPhone and Mac.</strong><br>
   Jetpacks, skiing and capture the flag, translated ahead of time from x86 to native ARM64 and rendered through Metal, with touch controls and gamepad support.
 </p>
 
@@ -26,8 +26,8 @@
 
 > [!IMPORTANT]
 > **TribesPad is an early release.** One command (or PadMint's **Build** button) downloads
-> the free official Tribes 2 and TribesNEXT files and builds your own copy for iPhone,
-> iPad and Mac. On a real iPad and iPhone it signs in to TribesNEXT and joins online
+> the free official Tribes 2 and TribesNEXT files and the community's Starsiege: Tribes 1.41
+> installer, and builds your own copy for iPhone, iPad and Mac. Pick either game when it opens. On a real iPad and iPhone it signs in to TribesNEXT and joins online
 > matches with touch or a controller. Expect rough edges: some crashes are still being
 > found in online play, and every fix so far came from a session log. See
 > [Get TribesPad](#get-tribespad) and [Known issues](#known-issues).
@@ -43,6 +43,10 @@ on Apple devices. It does not run a CPU emulator and is not a remake: the
 game's x86 code is translated ahead of time into native ARM64, and TribesPad supplies
 the Windows, OpenGL, audio, input and networking services the game expects. The
 original menus, maps, weapons, physics, bots and scripts are all the game's own.
+
+It also runs **Starsiege: Tribes** (1998), version 1.41, the one the community plays
+online, translated the same way. TribesPad opens to a picker with both games and how
+many people are playing each right now.
 
 On iPhone and iPad it adds an analog touch layout, gamepad mapping and a small
 TribesPad menu for settings. On Mac it runs as a
@@ -68,6 +72,7 @@ normal app with mouse and keyboard, on the same Metal renderer.
 | Does it match the original game? | In the one scenario measured so far, yes: a [reference trace](docs/validation/reference-trace-katabatic.json) of the same Katabatic flight is bit-identical to the original Windows game in the air and differs by about 1 cm after landing, where the QoL collision patch applies (the Windows reference ran without QoL). |
 | Online play? | **Yes.** TribesPad opens to the TribesNEXT login, remembers your password if you ask it to, and joins community servers. Most servers are empty outside North American evenings; see [Online servers](#online-servers). |
 | Controllers? | One Xbox, PlayStation or MFi extended gamepad maps to the original bindings, played on iPad with an Xbox controller. |
+| Starsiege: Tribes? | **Yes.** Version 1.41 from the game picker: bot matches offline and community servers online, with the same touch, controller and ··· menu as Tribes 2. Played on iPad; Mac and the iPhone Simulator reach the menus and matches. See [Starsiege: Tribes](#starsiege-tribes). |
 | Is the game included? | **No.** Your build downloads the free official Tribes 2 installer and the TribesNEXT client and checks them by SHA-256. See [Game data](#game-data). |
 
 ### Performance
@@ -81,8 +86,14 @@ Performance went from unplayable to steady in the Simulator:
 | + lighter GL checks, draw streaming, texture-upload ring, faster float paths | **~30 FPS** steady, worst frames 50–90 ms, ~70 s map load |
 
 The steady 30 FPS is the vertical-sync pacing: with VSync off the same match runs
-36–37 FPS. Physical-device numbers will differ. Details are in the
-[handoff](docs/HANDOFF.md) and [performance records](docs/validation/ipad-hardware-permissions.json).
+36–37 FPS. Details are in the [handoff](docs/HANDOFF.md) and
+[performance records](docs/validation/ipad-hardware-permissions.json).
+
+On a physical 12.9-inch iPad Pro (M2), online with maximum detail settings, menus run
+at 74–104 FPS and matches at about 22–31 FPS. To go faster, try **··· → Graphics →
+Balanced** (or **Fast**) and **Settings → Render Scale** below 100%. The
+[performance notes](docs/PERFORMANCE.md) explain the measurements and how to read the
+FPS counter and session log.
 
 ## Play an offline match
 
@@ -122,18 +133,16 @@ close the game, use **Launch → Quit** in the original menu.
 
 ### TribesPad menu
 
-The menu reaches the original game's keyboard-only features by touch. Each item
-sends the game's own key, so the original screens open.
+The ··· menu is the same in both games, in this order. Each game item sends the
+game's own key, so the original screens open.
 
-| Item | What it does |
+| Section | What it has |
 |---|---|
-| Game Menu | The original Escape menu |
-| Scores | The original score screen (F2); choose it again to close |
-| Chat | All Chat, Team Chat (the keyboard opens and the controls return after sending) and the Quick Chat menu |
-| Actions | Repair kit, mine, beacon, targeting laser, throw flag, zoom, third-person view, command map, suicide |
-| Show / Hide Touch Controls, Trackpad Cursor | Same as the buttons on the right edge |
-| Settings… | Touch controls (size, opacity, look sensitivity, left-handed, hide with a controller), trackpad cursor and speed, keep clear of the notch, FPS counter; reset to defaults |
+| This Match (on a server) | **Game Menu** (the original Escape menu), **Scores**, **Chat** (all, team, quick chat), **Actions** (repair kit, mine or beacon, targeting laser, flag, zoom, third-person view, command map, suicide) |
+| Play Online | **Who's Playing Now**: every server with people (and, in Tribes 2, bots counted separately; the game's own list mixes them: "40/48 (38)" is two people); tap one to join. **Server List**: the original PLAY GAME → JOIN (on a server it offers to leave the match first). **Game Nights**: the regular pickup times, in your device's time zone. **Community**: the game's Discords and sites. Open at the top between matches; a submenu during one. |
+| Options | Show / Hide Touch Controls, Trackpad Cursor, FPS Counter (top right: frames each second and the slowest frame), Graphics Quality (Tribes 2: **Balanced** or **Fast**, and **Render Scale** on iPad), Settings… (touch size, opacity, look sensitivity, left-handed, hide with a controller, trackpad speed, notch, FPS counter, render scale) |
 | Help | Touch and trackpad guide, controller guide, original console, TribesPad on GitHub, About |
+| Choose Game… | Closes TribesPad (iOS doesn't let an app restart itself); the next time you open it, the game picker appears |
 
 ![Touch Settings during a match](docs/images/tribespad-touch-settings.jpg)
 
@@ -172,10 +181,58 @@ join a team. Change armor and weapons at an inventory station or with **Inventor
 
 The Tribes 2 community mostly plays at set times in North American evenings: pickup
 games, The Cut and the 25th Anniversary draft league. At other hours most public
-servers are empty or hold only bots. The PlayT2 and The Cut Discord servers and
-TribalOutpost list where and when people play.
+servers are empty or hold only bots. **··· → Play Online** shows who is playing now,
+the regular game nights in your time zone, and the PlayT2 and The Cut Discords, where
+pickups are organized.
 Missing maps and interiors download from the TribesNEXT asset depot (on by default
 in TribesPad).
+
+### Game picker
+
+TribesPad opens to a picker: **Starsiege: Tribes** and **Tribes 2**, each with how many people
+are playing now. Tap a card, or choose with the D-pad, left stick or arrow keys and press A or
+Return. The gear at the top right has **Open Tribes 2 Directly**, which skips the picker;
+**Settings → Display → Game Picker at Launch** brings it back. In a game, **··· → Choose Game…**
+closes TribesPad, and the picker appears the next time you open it (iOS doesn't let an app restart
+itself). Each card shows its game's own title screen, taken at build time from your own downloads.
+Nothing from either game is in the repository.
+
+### Starsiege: Tribes
+
+Starsiege: Tribes 1.41, the version the community plays online, runs natively on ARM64 on iPhone,
+iPad and Mac, recompiled the same way as Tribes 2. Every build includes it: the build downloads
+PlayT1's installer and checks it against `config/starsiege/inputs.json` (`--games tribes2` leaves
+it out).
+
+- **Offline:** TRAINING with bots, or HOST MULTIPLAYER.
+- **Online:** JOIN lists the community master servers (tribes1.co); **··· → Play Online** shows
+  who is playing, PlayT1's nightly pickup in your time zone, and the PlayT1 Discord.
+- **Controller:** RT fire, LT jet, A jump, RB/LB next/previous weapon, Y grenade, X pack, B crouch;
+  the D-pad has repair kit, inventory, beacon and quick chat. In menus, X double-clicks to buy.
+- **IRC Chat** in the game's menu does nothing: it connects to Dynamix's IRC server, which closed
+  long ago. Tribes 1 players talk in the PlayT1 Discord (**··· → Play Online → Community**).
+- **Not yet:** modded servers (RPG and other mods) need their own files, which the game cannot
+  download; graphics presets ([validation](docs/validation/starsiege-g2.md)).
+
+
+### Keyboard and trackpad
+
+With a Magic Keyboard or keyboard folio on iPad, **W A S D** move, **E** zooms and **Q** picks
+the next weapon, as with Tribes 2's WASD layout. TribesPad translates keys from the physical
+keyboard into the game's own E S D F binds, so the touch controls and controllers keep working
+and your saved binds don't change. Turn it off in **Settings → Keyboard and Trackpad** to use
+the original keys. The trackpad moves the game's cursor in menus; in play the game asks iPadOS
+to lock the pointer for mouse look (full screen only). Keyboards without an Esc key can use
+⌘-period, or map Caps Lock to Escape in iPadOS Settings → General → Keyboard → Hardware Keyboard.
+
+
+### Skins
+
+In the Files app, **On My iPad (or iPhone) → TribesPad → Skins** takes Tribes 2 player
+skins (`name.lmale.png`, `name.lfemale.png`, `name.lbioderm.png`) and skin packs
+(`.vl2`). TribesPad copies them into the game when it opens; choose yours under
+**PLAY GAME → WARRIOR SETUP → Custom Skins**. Other players see your skin only if they
+have the same file. TribesPad ships no community skins.
 
 **Settings → Online Play** off starts offline instead: Training, LAN Game, and
 the internet server list in JOIN without signing in.
@@ -226,8 +283,9 @@ flowchart LR
 
 ## Get TribesPad
 
-TribesPad never ships the game. You build your own copy: the build downloads the free
-official Tribes 2 and TribesNEXT files and turns them into an app on your Mac. It needs a
+TribesPad never ships the games. You build your own copy: the build downloads the free
+official Tribes 2 and TribesNEXT files and PlayT1's Starsiege: Tribes installer, and turns
+them into one app on your Mac (add `--games tribes2` to build Tribes 2 alone). It needs a
 Mac with Apple Silicon, about 40 minutes the first time and 40 GB of free space.
 
 ### Mac
@@ -273,10 +331,11 @@ match against bots. On iPhone and iPad, tap the controller button to show touch 
 
 ## Game data
 
-No Tribes 2 or TribesNEXT files are stored in this repository or published by it. The
+No Tribes 2, TribesNEXT or Starsiege: Tribes files are stored in this repository or published by it. The
 build keeps the downloads in the ignored `ref/` folder and its own work in `generated/`.
 The accepted files are listed by SHA-256 in [inputs-manifest.json](inputs-manifest.json)
-and [config/game-inputs.json](config/game-inputs.json). That a game is free to
+and [config/game-inputs.json](config/game-inputs.json), and Starsiege's in
+[config/starsiege/inputs.json](config/starsiege/inputs.json). That a game is free to
 download does not grant the right to redistribute it.
 
 To recreate the exact translated code the engine was tested with, the build lifts your
@@ -300,6 +359,13 @@ How this works, stage by stage, is in [Reproducible build](docs/REPRODUCIBLE-BUI
 - **Not implemented:** clipboard paste with a hardware keyboard, joining by host name
   (the IP dialog), and deleting recorded demos stop the game.
 - **Night maps are dark**, as in the original.
+- **Starsiege: Tribes:** servers running mods (RPG and others) need the mods' own files,
+  which the game cannot download; the game's IRC Chat points at Dynamix's closed server
+  (the PlayT1 Discord is where players talk); a mission takes a few seconds to load.
+- **Starsiege's download is slow from some places.** Its installer comes from PlayT1's host
+  in New York; if it does not finish, the build completes with Tribes 2 alone and the picker
+  says Starsiege is not in this build. Save `retro_141_installerv2.exe` from playt1.com
+  into `ref/downloads` in the `tribespad` folder and build again; its SHA-256 is checked.
 
 ## Roadmap
 
@@ -310,8 +376,8 @@ How this works, stage by stage, is in [Reproducible build](docs/REPRODUCIBLE-BUI
 - Measure Mac performance
 - Compare with the QoL client on Windows and add jet, weapon and bot scenarios to the reference trace
 - Join TribesNEXT community servers
-- Starsiege: Tribes (Tribes 1) as a second game, picked from a launcher beside Tribes 2
-  ([plan](docs/STARSIEGE-TRIBES-PLAN.md))
+- Starsiege: mod packs, IRC chat, graphics presets and faster loading
+  ([plan](docs/STARSIEGE-TRIBES-PLAN.md), [validation](docs/validation/starsiege-g2.md))
 - A headless dedicated server on a Mac, then Linux on ARM
   ([plan](docs/DEDICATED-SERVER-PLAN.md))
 - Raspberry Pi 5 / Linux on ARM, then Android, as personal builds

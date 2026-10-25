@@ -497,7 +497,28 @@ static void event_point_to_pixels(unsigned char out[128],unsigned offset,uint32_
         memcpy(out+offset,point,sizeof point);return;
     }
 }
+/* WASD on a hardware keyboard (iPad Magic Keyboard, folio): Tribes 2's own
+   binds move with E S D F, and TribesPad's touch controls and controller send
+   those keys, so the binds stay. Keys from a physical keyboard (a nonzero
+   keyboard ID; TribesPad's own events use 0) are translated instead: W A S D
+   move, E zooms and Q picks the next weapon, as in Dynamix's WASDConfig.cs.
+   Never while text entry is active. The app turns it on (mobile_controls.m). */
+static int keyboard_wasd;
+void tribes_set_keyboard_wasd(int on){keyboard_wasd=on;}
+static const SDL_Event *keyboard_layout(const SDL_Event *e,SDL_Event *copy){
+    if(!keyboard_wasd||(e->type!=SDL_EVENT_KEY_DOWN&&e->type!=SDL_EVENT_KEY_UP)||!e->key.which)return e;
+    SDL_Window *window=SDL_GetWindowFromID(e->key.windowID);
+    if(window&&SDL_TextInputActive(window))return e;
+    SDL_Scancode to;
+    switch(e->key.scancode){
+    case SDL_SCANCODE_W:to=SDL_SCANCODE_E;break;case SDL_SCANCODE_A:to=SDL_SCANCODE_S;break;
+    case SDL_SCANCODE_S:to=SDL_SCANCODE_D;break;case SDL_SCANCODE_D:to=SDL_SCANCODE_F;break;
+    case SDL_SCANCODE_E:to=SDL_SCANCODE_A;break;case SDL_SCANCODE_Q:to=SDL_SCANCODE_W;break;
+    default:return e;}
+    *copy=*e;copy->key.scancode=to;copy->key.key=SDL_GetKeyFromScancode(to,e->key.mod,false);return copy;
+}
 static void event_to_guest(unsigned char out[128],const SDL_Event *e){
+    SDL_Event layout;e=keyboard_layout(e,&layout);
     memset(out,0,128);
 #define EF(offset,member) memcpy(out+(offset),&e->member,sizeof e->member)
 #define EP(offset,value) do{uint32_t p=(value);memcpy(out+(offset),&p,4);}while(0)
@@ -1202,7 +1223,12 @@ uint32_t tribes_sdl_sync_window(_cpu *cpu,uint32_t token){WINDOW_ENTER();WINDOW_
 uint32_t tribes_sdl_set_window_fullscreen(_cpu *cpu,uint32_t token,uint32_t value){WINDOW_ENTER();WINDOW_RETURN(SDL_SetWindowFullscreen(native_window(token),(value&0xffu)!=0));}
 uint32_t tribes_sdl_set_window_size(_cpu *cpu,uint32_t token,uint32_t width,uint32_t height){WINDOW_ENTER();WINDOW_RETURN(SDL_SetWindowSize(native_window(token),(int32_t)width,(int32_t)height));}
 uint32_t tribes_sdl_set_window_bordered(_cpu *cpu,uint32_t token,uint32_t value){WINDOW_ENTER();WINDOW_RETURN(SDL_SetWindowBordered(native_window(token),(value&0xffu)!=0));}
-uint32_t tribes_sdl_set_window_relative_mouse_mode(_cpu *cpu,uint32_t token,uint32_t value){WINDOW_ENTER();WINDOW_RETURN(SDL_SetWindowRelativeMouseMode(native_window(token),(value&0xffu)!=0));}
+uint32_t tribes_sdl_set_window_relative_mouse_mode(_cpu *cpu,uint32_t token,uint32_t value){
+    WINDOW_ENTER();bool on=(value&0xffu)!=0,result=SDL_SetWindowRelativeMouseMode(native_window(token),on);
+    /* Mouse look: on iPad this asks for pointer lock (mobile_controls.m logs whether it engaged). */
+    static int last=-1;if(on!=last){last=on;fprintf(stderr,"TribesPad mouse look %s%s\n",on?"on":"off",result?"":" (refused)");}
+    WINDOW_RETURN(result);
+}
 uint32_t tribes_sdl_set_window_position(_cpu *cpu,uint32_t token,uint32_t x,uint32_t y){WINDOW_ENTER();WINDOW_RETURN(SDL_SetWindowPosition(native_window(token),(int32_t)x,(int32_t)y));}
 uint32_t tribes_sdl_set_window_fullscreen_mode(_cpu *cpu,uint32_t token,uint32_t mode){
     WINDOW_ENTER();const SDL_DisplayMode *native=NULL;
@@ -1448,7 +1474,13 @@ uint32_t tribes_gl_client_wait_sync(_cpu *cpu,uint32_t token,uint32_t flags,uint
 #else
     GLContext *c=current_context();if(!c)stop();SyncObject *s=*sync_slot(c,token);
     if(!s){c->errors|=1u<<(GL_INVALID_VALUE-0x500);WINDOW_RETURN(GL_WAIT_FAILED);}
+#ifdef TB_GL4ES
+    Uint64 wait_begin=SDL_GetTicksNS();
+#endif
     GLenum result=glClientWaitSync(s->native,flags,((uint64_t)high<<32)|low);
+#ifdef TB_GL4ES
+    tribes_gl4es_note_gpu_wait(SDL_GetTicksNS()-wait_begin);
+#endif
     DRAW_OBSERVE();WINDOW_RETURN(result);
 #endif
 }

@@ -1,31 +1,41 @@
 #!/usr/bin/env bash
 # Build TribesPad on an Apple Silicon Mac from the official free downloads.
 #
-#   scripts/build-tribespad.sh [--platform device|macos|simulator] [--output DIR] [--ipa FILE] [--zip FILE]
+#   scripts/build-tribespad.sh [--platform device|macos|simulator] [--games tribes2,starsiege|tribes2] [--output DIR] [--ipa FILE] [--zip FILE]
 #
 # Downloads Tribes 2 and the TribesNEXT client, the pinned open-source
 # dependencies and tools, translates the game on this Mac and builds the app.
 # --platform device (default): an unsigned TribesPad.ipa for iPhone and iPad;
 # sign it with your own Apple account (see README).
 # --platform macos: TribesPad-mac.zip with TribesPad.app for Apple Silicon Macs.
+# --games tribes2,starsiege (the default) also builds Starsiege: Tribes 1.41,
+# from the PlayT1 community installer, for the game picker; --games tribes2
+# leaves it out.
 # Needs Xcode and: brew install llvm@20 cmake ninja sevenzip zstd
 set -euo pipefail
 
 platform=device
+games=tribes2,starsiege
 output=
 ipa=
 zip=
 while [ $# -gt 0 ]; do
   case "$1" in
     --platform) platform="$2"; shift 2 ;;
+    --games) games="$2"; shift 2 ;;
     --output) output="$2"; shift 2 ;;
     --ipa) ipa="$2"; shift 2 ;;
     --zip) zip="$2"; shift 2 ;;
-    -h|--help) sed -n '2,10p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,13p' "$0"; exit 0 ;;
     *) echo "unknown option: $1" >&2; exit 2 ;;
   esac
 done
 case "$platform" in device|simulator|macos) ;; *) echo "--platform must be device, macos or simulator" >&2; exit 2 ;; esac
+case ",$games," in
+  ,tribes2,) starsiege=0 ;;
+  ,tribes2,starsiege,|,starsiege,tribes2,) starsiege=1 ;;
+  *) echo "--games must be tribes2 or tribes2,starsiege" >&2; exit 2 ;;
+esac
 
 repo="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$repo"
@@ -103,13 +113,40 @@ SDKROOT="$ios_sdk" $py scripts/build-checked-bochs.py --platform "$platform" --h
 step "Game profile"
 $py scripts/apple_game_profile.py
 
+starsiege_object=()
+# A Starsiege failure (its installer unavailable, say) never costs the player
+# Tribes 2: the build warns and continues with Tribes 2 alone.
+build_starsiege() {
+  [ -f ref/starsiege/game/Tribes.exe ] || $py scripts/starsiege/prepare-inputs.py || return 1
+  [ -f generated/starsiege/lift/result.json ] || $py scripts/starsiege/lift_preview.py --no-compile || return 1
+  if [ "$platform" != macos ]; then
+    # Starsiege's SDL wrappers are generated from the macOS backend's
+    # description (scripts/sdl_backend_inputs.py), whatever the target.
+    [ -f generated/sdl-backend/macos/result.json ] || SDKROOT="$mac_sdk" $py scripts/build-sdl-backend.py --platform macos || return 1
+    STARSIEGE_OPT=-O1 $py scripts/starsiege/build_engine.py --platform "$platform" >/dev/null || return 1
+    starsiege_object=(--starsiege-object "generated/starsiege/engine-$platform/starsiege.o")
+  fi
+}
+starsiege_skipped() {
+  printf '\nbuild-tribespad: Starsiege: Tribes could not be built (see above); continuing with Tribes 2 only.\n' >&2
+  starsiege=0
+}
+if [ "$starsiege" = 1 ]; then
+  step "Starsiege: Tribes"
+  build_starsiege || { starsiege_object=(); starsiege_skipped; }
+fi
+
 step "TribesPad app"
-SDKROOT="$ios_sdk" $py scripts/build-ipad-engine.py --platform "$platform" --angle --hardware-permissions --bundle-assets --build-only
+SDKROOT="$ios_sdk" $py scripts/build-ipad-engine.py --platform "$platform" --angle --hardware-permissions --bundle-assets --build-only ${starsiege_object[@]+"${starsiege_object[@]}"}
 case "$platform" in
   device) app="$repo/generated/ipad-engine-device-hw/TribesPad.app" ;;
   simulator) app="$repo/generated/ipad-engine-hw/TribesPad.app" ;;
   macos) app="$repo/generated/macos-engine-hw/TribesPad.app" ;;
 esac
+
+if [ "$starsiege" = 1 ] && [ "$platform" = macos ]; then
+  SDKROOT="$mac_sdk" $py scripts/starsiege/bundle_mac.py --app "$app" || starsiege_skipped
+fi
 
 step "Package"
 if [ "$platform" = device ]; then

@@ -9,4 +9,6 @@ void tribes_gl4es_context_destroy(TribesGL4ESContext *);
 bool tribes_gl4es_context_swap(TribesGL4ESContext *);
 uint64_t tribes_gl4es_presented_frames(void);
 uint64_t tribes_gl4es_take_longest_frame_ns(void);
+void tribes_gl4es_resume_frame_stats(void);
+void tribes_gl4es_note_gpu_wait(uint64_t ns);
 #endif

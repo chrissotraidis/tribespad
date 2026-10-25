@@ -9,7 +9,7 @@ digests. Nothing from the game is stored in this repository. Tribes 2's inputs
 
 Usage: scripts/starsiege/prepare-inputs.py [--out ref/starsiege/game] [--cache ref/downloads]
 """
-import argparse, hashlib, json, pathlib, shutil, subprocess, sys, tempfile
+import argparse, hashlib, json, pathlib, shutil, subprocess, sys, tempfile, time
 
 R = pathlib.Path(__file__).resolve().parents[2]
 INPUTS = json.loads((R / 'config/starsiege/inputs.json').read_text())
@@ -32,8 +32,19 @@ def download(cache):
         return target
     say('downloading ' + entry['url'])
     partial = target.with_suffix('.part')
-    subprocess.run(['curl', '--fail', '--location', '--retry', '3', '--continue-at', '-',
-                    '--output', str(partial), entry['url']], check=True)
+    # 160 MB from PlayT1's host: on a slow or dropping connection, resume the
+    # partial file up to five times; a stall under 1 KB/s for a minute restarts.
+    for attempt in range(1, 6):
+        result = subprocess.run(['curl', '--fail', '--location', '--retry', '3', '--retry-all-errors', '--connect-timeout', '30',
+                                 '--speed-limit', '1024', '--speed-time', '60', '--continue-at', '-',
+                                 '--output', str(partial), entry['url']])
+        if result.returncode == 0:
+            break
+        say('download attempt %d failed (curl %d)%s' % (attempt, result.returncode, '; resuming' if attempt < 5 else ''))
+        time.sleep(5)
+    else:
+        sys.exit('could not download %s from %s. Download it yourself (playt1.com links it), put it in %s and build again; '
+                 'its SHA-256 is checked.' % (entry['name'], entry['url'], cache))
     digest = sha256(partial)
     if digest != entry['sha256']:
         partial.unlink()
