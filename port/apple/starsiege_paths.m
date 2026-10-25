@@ -30,13 +30,15 @@ int tb_starsiege_prepare_paths(const char *gamedata,const char *storage,char *ar
                 if(dir){[fm createDirectoryAtPath:to withIntermediateDirectories:YES attributes:nil error:nil];continue;}
                 NSString *top=relative.pathComponents.firstObject.lowercaseString;
                 BOOL players=[top isEqualToString:@"config"]||[top isEqualToString:@"temp"]||[top isEqualToString:@"recordings"];
-                /* TribesPad's match layout (the clock and ping light below the
-                   minimap) replaces an untouched 1.41 config/play.gui.cs; a
-                   layout the player changed stays. */
+                /* TribesPad's match layout (energy below health, the clock and
+                   ping light below the minimap) replaces a config/play.gui.cs
+                   with the 1.41 energy or clock position; a layout the player
+                   arranged differently stays. */
                 if(players&&[relative.lowercaseString isEqualToString:@"config/play.gui.cs"]&&[fm fileExistsAtPath:to]){
                     NSString *mine=[[NSString stringWithContentsOfFile:to encoding:NSISOLatin1StringEncoding error:nil]
                         stringByReplacingOccurrencesOfString:@"\r" withString:@""];
-                    if([mine containsString:@"\"clockHud\" {\n\t\tposition = \"1552 0\";"])players=NO;
+                    if([mine containsString:@"\"clockHud\" {\n\t\tposition = \"1552 0\";"]||
+                       [mine containsString:@"\"jetPackHud\" {\n\t\tposition = \"0 34\";"])players=NO;
                 }
                 if([fm fileExistsAtPath:to]){if(players)continue;[fm removeItemAtPath:to error:nil];}
                 if(![fm copyItemAtPath:from toPath:to error:nil]){fprintf(stderr,"TribesPad: could not copy Starsiege file %s\n",relative.UTF8String);return 0;}

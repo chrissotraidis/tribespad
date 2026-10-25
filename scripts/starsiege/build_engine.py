@@ -358,17 +358,20 @@ def tribespad_defaults(game):
     at = text.index(anchor)
     end = text.index('\n', at) + 1
     text = text[:end] + '   $pref::politeGui = false; // TribesPad: the game draws its own cursor\n' + text[end:]
-    # The 1.41 layout puts the match clock and the ping light at the top right,
-    # where at 800x600 the minimap covers them (Control::setPosition does not
-    # move these HUDs). Move them down, below the minimap.
+    # The 1.41 layout is drawn for 1920x1080. At 800x600 the game scales HUD
+    # positions (y by 600/1080) but not their sizes, so the energy bar (y 34)
+    # lands at 18, inside the 35-pixel health bar, and the match clock and ping
+    # light end up under the minimap. Control::setPosition does not move these
+    # HUDs, so move them here: energy just below health (65 -> 36), the clock
+    # and ping light below the minimap.
     layout = game / 'config/play.gui.cs'
     if layout.exists():
         gui = layout.read_text(errors='replace')
-        for name, old, new in [('clockHud', '1552 0', '1552 360'), ('sensorHUD', '1504 0', '1504 400')]:
-            before = 'instant FearGui::%s "%s" {\n\t\tposition = "%s";' % ('ClockHud' if name == 'clockHud' else 'FGHSensorPing', name, old)
-            after = before.replace('"%s";' % old, '"%s";' % new)
+        for kind, name, old, new in [('ClockHud', 'clockHud', '1552 0', '1552 360'), ('FGHSensorPing', 'sensorHUD', '1504 0', '1504 400'),
+                                     ('JetPackHud', 'jetPackHud', '0 34', '0 65')]:
+            before = 'instant FearGui::%s "%s" {\n\t\tposition = "%s";' % (kind, name, old)
             if before in gui:
-                gui = gui.replace(before, after, 1)
+                gui = gui.replace(before, before.replace('"%s";' % old, '"%s";' % new), 1)
         layout.write_text(gui)
     # The console log (console.log) for diagnostics, and an optional checks
     # script: TribesPad writes config/TribesPadRoute.cs only for test launches.
@@ -392,10 +395,15 @@ editActionMap("playMap.sae"); bindCommand(keyboard0, make, "f8", TO, "prevWeapon
 // 800x600 screen; start it at 180. Options > HUDs sets it, and a size the
 // player chose stays.
 if($pref::miniMapWidth == 280) $pref::miniMapWidth = 180;
-// TribesPad: the bundled CTF HUD's saved spot (8% down) sits inside the chat
-// box at 800x600; start it just below the chat. A spot the player chose stays.
-if($pref::hudPositionsCtfHUD::Container == "2 83||0.001146 0.079808 0")
-   $pref::hudPositionsCtfHUD::Container = "2 90||0.001146 0.15 0";
+// TribesPad: at 800x600 the bundled CTF HUD's saved spot (8% down) sits inside
+// the chat box, and the item HUD (repair kit) touches the energy bar, which
+// TribesPad moves below the health bar (config/play.gui.cs). Stack them:
+// health 0-35, energy 35-70, items from 72, CTF from 96. Spots the player
+// chose stay; TribesPad's own earlier CTF spot (15%) moves too.
+if($pref::hudPositionsCtfHUD::Container == "2 83||0.001146 0.079808 0" || $pref::hudPositionsCtfHUD::Container == "2 90||0.001146 0.15 0")
+   $pref::hudPositionsCtfHUD::Container = "2 96||0.001146 0.172 0";
+if($pref::hudPositionsItemHUD::Container == "7 122||0.003933 0.114232 0")
+   $pref::hudPositionsItemHUD::Container = "7 72||0.003933 0.125 0";
 '''
     # TribesPad's touch controls follow play: "<playing> <typing> <connected>"
     # in temp/tribespad-state.cs, four times a second. Playing is in a match with
