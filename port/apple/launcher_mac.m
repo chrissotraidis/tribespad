@@ -5,8 +5,8 @@
  * starts in a fresh process exactly as it would on its own; a loaded engine
  * can't be unloaded, and the two can't share one process.
  * Starsiege is offered when the app was built with it
- * (build-tribespad.sh --games tribes2,starsiege); otherwise its card stays
- * "In development". "Open Tribes 2 Directly" skips the picker.
+ * (the default; its download can fail); otherwise its card says "Not in this
+ * build" and how to add it. "Open Tribes 2 Directly" skips the picker.
  * TRIBESPAD_PICKER_SNAPSHOT=file.png renders the picker offscreen to a PNG and
  * exits (TRIBESPAD_PICKER_SIZE=WxH), so it can be checked without a window.
  * TRIBESPAD_PICK=tribes2|starsiege chooses without showing it. */
@@ -19,7 +19,7 @@
 #include "t1_live.h"
 
 static NSString * const TBRepository=@"https://github.com/chrissotraidis/tribespad";
-static NSString * const TBStarsiegePlan=@"https://github.com/chrissotraidis/tribespad/blob/main/docs/STARSIEGE-TRIBES-PLAN.md";
+static NSString * const TBStarsiegePlan=@"https://github.com/chrissotraidis/tribespad#get-tribespad";
 #define TB_CYAN 0x2EC4C9
 #define TB_AMBER 0xE8A23A
 static CGColorRef tb_rgb(unsigned hex,CGFloat a){return [NSColor colorWithSRGBRed:((hex>>16)&255)/255.0 green:((hex>>8)&255)/255.0 blue:(hex&255)/255.0 alpha:a].CGColor;}
@@ -148,7 +148,7 @@ static TBChoice tb_choice;
     self.gear=[CALayer layer];self.gear.contents=tinted;self.gear.contentsGravity=kCAGravityCenter;[self.layer addSublayer:self.gear];
     NSImage *(^art)(NSString *)=^NSImage *(NSString *n){return [[NSImage alloc] initWithContentsOfFile:tb_data([@"Launcher" stringByAppendingPathComponent:n])];};
     TBCard *starsiege=[[TBCard alloc] initWithKicker:@"Starsiege: Tribes  \u00B7  1998" art:art(@"starsiege.png") fallback:emblem available:self.starsiege
-        badge:self.starsiege?@"PLAY  \u25B8":@"IN DEVELOPMENT"];
+        badge:self.starsiege?@"PLAY  \u25B8":@"NOT IN THIS BUILD"];
     starsiege.statusText=self.starsiege?@"Version 1.41, the one the community plays. Bot matches offline, community servers online.":@"The original. Being translated to native code; it opens here once it plays.";
     TBCard *tribes2=[[TBCard alloc] initWithKicker:@"Tribes 2  \u00B7  2001  \u00B7  TribesNEXT online" art:art(@"tribes2.png") fallback:emblem available:YES badge:@"PLAY  \u25B8"];
     tribes2.statusText=@"Checking who is playing\u2026";
@@ -207,8 +207,8 @@ static TBChoice tb_choice;
     if(self.focus==1){tb_choice=TBTribes2;return;}
     if(self.starsiege){tb_choice=TBStarsiege;return;}
     NSAlert *a=[NSAlert new];a.messageText=@"Starsiege: Tribes";
-    a.informativeText=@"Not playable in this build yet. Its translation reaches the main menu; matches are next. It opens from here once it plays.";
-    [a addButtonWithTitle:@"OK"];[a addButtonWithTitle:@"Read the Plan"];
+    a.informativeText=@"Starsiege: Tribes is not in this copy of TribesPad. Its download from PlayT1 did not finish when TribesPad was built, or it was built with --games tribes2. Build TribesPad again to add it.";
+    [a addButtonWithTitle:@"OK"];[a addButtonWithTitle:@"How to Build"];
     if([a runModal]==NSAlertSecondButtonReturn)[NSWorkspace.sharedWorkspace openURL:[NSURL URLWithString:TBStarsiegePlan]];
 }
 -(void)showSettingsAt:(NSPoint)p{

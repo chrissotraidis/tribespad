@@ -362,6 +362,10 @@ How this works, stage by stage, is in [Reproducible build](docs/REPRODUCIBLE-BUI
 - **Starsiege: Tribes:** servers running mods (RPG and others) need the mods' own files,
   which the game cannot download; the game's IRC Chat points at Dynamix's closed server
   (the PlayT1 Discord is where players talk); a mission takes a few seconds to load.
+- **Starsiege's download is slow from some places.** Its installer comes from PlayT1's host
+  in New York; if it does not finish, the build completes with Tribes 2 alone and the picker
+  says Starsiege is not in this build. Save `retro_141_installerv2.exe` from playt1.com
+  into `ref/downloads` in the `tribespad` folder and build again; its SHA-256 is checked.
 
 ## Roadmap
 

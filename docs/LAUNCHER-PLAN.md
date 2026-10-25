@@ -8,6 +8,7 @@ Design research, 24 October 2026. Line numbers refer to `main` at fa8f674. Statu
 3. A per-game profile table replaces the Tribes 2 keys hard-coded in mobile_controls.m and mobile_controls.c.
 4. TribesPad stays one app, and Starsiege is an optional component of the build. The picker exists only when two engines are bundled.
 5. **Revised 24 October:** the picker ships now, at Chris's request, with Starsiege shown as "In development". The card opens this plan instead of a game, and the gear menu's **Open Tribes 2 Directly** removes the extra tap for players who only want Tribes 2. Starsiege then moves through the card states in section 5 as each gate passes. The earlier advice, to ship nothing visible before G6, is superseded.
+6. **Shipped 25 October:** merged to main. Every build includes Starsiege: Tribes by default; its card reads "Not in this build" only when its download failed or the build used `--games tribes2`, and then says how to add it. Choose Game in the ··· menu replaces Switch Game.
 
 ## 1. iOS lifecycle (Verified unless marked)
 - main() at mobile_engine_main.m:145-153 calls tribes_sdl_run_application (sdl_main.c:25-29), which calls SDL_RunApp. SDL calls application_main (sdl_main.c:10-24) on the main thread, and that calls enter_engine (mobile_engine_main.m:19-37) → tb_mobile_prepare_paths (:29) → tb_mobile_controls_install (:35) → tribes_mobile_engine_main (:36).

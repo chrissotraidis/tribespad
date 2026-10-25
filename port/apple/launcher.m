@@ -1,8 +1,8 @@
 /* TribesPad's game picker. A loaded engine can't be unloaded, so the picker
    runs natively before either game starts (docs/LAUNCHER-PLAN.md) and waits
    on the main run loop until a game is chosen. Tribes 2 (TribesNEXT) starts;
-   Starsiege: Tribes is shown, marked in development, until its translation
-   plays (docs/STARSIEGE-TRIBES-PLAN.md). Each card shows its game's own title
+   Starsiege: Tribes plays when the build included it; otherwise its card says
+   so and how to add it. Each card shows its game's own title
    screen, taken at build time from the player's own downloads
    (scripts/launcher_art.py) into GameData/Launcher; nothing from the games
    is in the repository. */
@@ -14,7 +14,7 @@
 #include "starsiege_paths.h"
 #include "t1_live.h"
 
-static NSString * const TBLaunchStarsiegePlan=@"https://github.com/chrissotraidis/tribespad/blob/main/docs/STARSIEGE-TRIBES-PLAN.md";
+static NSString * const TBLaunchStarsiegePlan=@"https://github.com/chrissotraidis/tribespad#get-tribespad";
 static NSString * const TBLaunchRepository=@"https://github.com/chrissotraidis/tribespad";
 static BOOL tb_launch_chosen;
 static TBGame tb_launch_game=TBGameTribes2;
@@ -66,7 +66,7 @@ static UIBezierPath *tb_chamfer(CGRect r,CGFloat c){
     self.status=label_([UIFont monospacedDigitSystemFontOfSize:15 weight:UIFontWeightMedium],[UIColor colorWithWhite:1 alpha:.9]);
     self.badge=label_([UIFont systemFontOfSize:14 weight:UIFontWeightBlack],tb_rgb(0x02060C,1));
     self.badge.textAlignment=NSTextAlignmentCenter;self.badge.backgroundColor=tb_rgb(available?TB_CYAN:TB_AMBER,1);
-    self.badge.attributedText=[[NSAttributedString alloc] initWithString:!available?@"IN DEVELOPMENT":@"PLAY  \u25B8" attributes:@{NSKernAttributeName:@2}];
+    self.badge.attributedText=[[NSAttributedString alloc] initWithString:!available?@"NOT IN THIS BUILD":@"PLAY  \u25B8" attributes:@{NSKernAttributeName:@2}];
     CAShapeLayer *badgeMask=[CAShapeLayer layer];self.badge.layer.mask=badgeMask;
     self.mask=[CAShapeLayer layer];self.layer.mask=self.mask;
     self.frameLine=[CAShapeLayer layer];self.frameLine.fillColor=UIColor.clearColor.CGColor;self.frameLine.lineWidth=3;
@@ -155,7 +155,7 @@ static UIBezierPath *tb_chamfer(CGRect r,CGFloat c){
     [self.view addSubview:self.settings];
     TBLauncherCard *starsiege=[[TBLauncherCard alloc] initWithKicker:@"Starsiege: Tribes  \u00B7  1998"
         art:[UIImage imageWithContentsOfFile:[art stringByAppendingPathComponent:@"starsiege.png"]] fallback:emblem available:tb_starsiege_here()
-        label:tb_starsiege_here()?@"Starsiege: Tribes, play":@"Starsiege: Tribes, in development"];
+        label:tb_starsiege_here()?@"Starsiege: Tribes, play":@"Starsiege: Tribes, not in this build"];
     starsiege.status.text=tb_starsiege_here()?@"Version 1.41, the one the community plays. Bot matches offline, community servers online.":@"The original. Being translated to native code; it opens here once it plays.";
     TBLauncherCard *tribes2=[[TBLauncherCard alloc] initWithKicker:@"Tribes 2  \u00B7  2001  \u00B7  TribesNEXT online"
         art:[UIImage imageWithContentsOfFile:[art stringByAppendingPathComponent:@"tribes2.png"]] fallback:emblem available:YES
@@ -265,10 +265,10 @@ static UIBezierPath *tb_chamfer(CGRect r,CGFloat c){
     self.focus=0;[self showFocus];
     if(tb_starsiege_here()){[self launch:TBGameStarsiege];return;}
     UIAlertController *a=[UIAlertController alertControllerWithTitle:@"Starsiege: Tribes"
-        message:@"Not playable in this build yet. Its 1.41 translation reaches the main menu on the Mac; matches are next. It opens from here once it plays."
+        message:@"Starsiege: Tribes is not in this copy of TribesPad. Its download from PlayT1 did not finish when TribesPad was built, or it was built with --games tribes2. Build TribesPad again to add it."
         preferredStyle:UIAlertControllerStyleAlert];
     [a addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleCancel handler:nil]];
-    [a addAction:[UIAlertAction actionWithTitle:@"Read the Plan" style:UIAlertActionStyleDefault handler:^(UIAlertAction *x){(void)x;
+    [a addAction:[UIAlertAction actionWithTitle:@"How to Build" style:UIAlertActionStyleDefault handler:^(UIAlertAction *x){(void)x;
         [UIApplication.sharedApplication openURL:[NSURL URLWithString:TBLaunchStarsiegePlan] options:@{} completionHandler:nil];}]];
     a.overrideUserInterfaceStyle=UIUserInterfaceStyleDark;[self presentViewController:a animated:YES completion:nil];
 }
