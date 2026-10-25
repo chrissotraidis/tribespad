@@ -65,14 +65,14 @@ RUNTIME = [R / 'port/core' / (n + '.c') for n in [
     'guest_strings', 'guest_messages', 'guest_user_messages', 'guest_ntstatus', 'native_handles', 'guest_profile',
     'process_environment', 'process_startup', 'guest_modules', 'guest_loader', 'gdi_memory', 'window_classes',
     'guest_callback', 'hidden_windows', 'guest_window_catalog', 'guest_tls', 'performance_clock',
-    'multimedia_timer', 'guest_filesystem', 'guest_dispatch', 'quadword_conversion', 'sse_arithmetic', 'shift',
+    'multimedia_timer', 'guest_dispatch', 'quadword_conversion', 'sse_arithmetic', 'shift',
     'ext80', 'mmx', 'x87_status', 'guest_memory_checks']] + [R / 'port/apple/display.m', R / 'port/apple/font.m',
     R / 'port/starsiege/starsiege_x87.c', R / 'port/starsiege/starsiege_win32.c', R / 'port/starsiege/starsiege_heap.c',
     R / 'port/starsiege/starsiege_display.c', R / 'port/starsiege/starsiege_windows.c',
     R / 'port/starsiege/starsiege_winsock.c', R / 'port/starsiege/starsiege_registry.c',
     R / 'port/starsiege/starsiege_critical_section.c', R / 'port/starsiege/starsiege_fast_heap.c',
     R / 'port/starsiege/starsiege_input.c', R / 'port/starsiege/starsiege_controller.m',
-    R / 'port/starsiege/starsiege_sound.c'] + [
+    R / 'port/starsiege/starsiege_sound.c', R / 'port/starsiege/starsiege_filesystem.c'] + [
     R / 'port/llasm-support' / (n + '.c') for n in [
     'tribes_result', 'tribes_sse', 'tribes_quadword_conversion', 'tribes_shift', 'tribes_absolute_memory', 'tribes_atomic',
     'tribes_float80', 'tribes_mmx', 'tribes_scan', 'tribes_x87']] + [

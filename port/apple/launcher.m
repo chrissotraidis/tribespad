@@ -124,6 +124,7 @@ static UIBezierPath *tb_chamfer(CGRect r,CGFloat c){
 @property(nonatomic,strong) UIButton *settings;
 @property(nonatomic,strong) NSArray<TBLauncherCard *> *cards;
 @property(nonatomic) NSUInteger focus;
+@property(nonatomic,strong) id connectObserver;
 @end
 @implementation TBLauncherController
 -(void)viewDidLoad {
@@ -171,8 +172,18 @@ static UIBezierPath *tb_chamfer(CGRect r,CGFloat c){
     [self loadPlayers];
     fprintf(stderr,"TribesPad launcher: %lu controllers at start\n",(unsigned long)GCController.controllers.count);
     for(GCController *c in GCController.controllers)[self watch:c];
-    [NSNotificationCenter.defaultCenter addObserverForName:GCControllerDidConnectNotification object:nil queue:NSOperationQueue.mainQueue
-        usingBlock:^(NSNotification *n){[self watch:n.object];}];
+    __weak TBLauncherController *weak=self;
+    self.connectObserver=[NSNotificationCenter.defaultCenter addObserverForName:GCControllerDidConnectNotification object:nil
+        queue:NSOperationQueue.mainQueue usingBlock:^(NSNotification *n){[weak watch:n.object];}];
+}
+/* Once a game is chosen the picker lets go of the controllers: its handlers
+   stayed on A and the D-pad through play (Starsiege reads the pad directly,
+   so nothing replaced them), and a reconnect in a match re-added them. */
+-(void)stopWatching {
+    if(self.connectObserver)[NSNotificationCenter.defaultCenter removeObserver:self.connectObserver];self.connectObserver=nil;
+    for(GCController *c in GCController.controllers){GCExtendedGamepad *pad=c.extendedGamepad;if(!pad)continue;
+        pad.buttonA.pressedChangedHandler=nil;pad.dpad.left.pressedChangedHandler=nil;pad.dpad.right.pressedChangedHandler=nil;
+        pad.leftThumbstick.valueChangedHandler=nil;}
 }
 -(void)rebuildSettingsMenu {
     __weak TBLauncherController *weak=self;
@@ -330,6 +341,7 @@ TBGame tb_launcher_run(void) {
     fprintf(stderr,"TribesPad launcher shown\n");
     while(!tb_launch_chosen)@autoreleasepool{CFRunLoopRunInMode(kCFRunLoopDefaultMode,.05,true);}
     fprintf(stderr,"TribesPad launcher: starting %s\n",tb_launch_game==TBGameStarsiege?"Starsiege: Tribes":"Tribes 2");
+    [(TBLauncherController *)window.rootViewController stopWatching];
     window.hidden=YES;window.rootViewController=nil;
     return tb_launch_game;
 }
