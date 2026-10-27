@@ -286,7 +286,12 @@ flowchart LR
 TribesPad never ships the games. You build your own copy: the build downloads the free
 official Tribes 2 and TribesNEXT files and PlayT1's Starsiege: Tribes installer, and turns
 them into one app on your Mac (add `--games tribes2` to build Tribes 2 alone). It needs a
-Mac with Apple Silicon, about 40 minutes the first time and 40 GB of free space.
+Mac with Apple Silicon and about 40 minutes the first time. After installing Xcode and
+the tools below, allow **20 GiB (about 22 GB) of free build space** for one target with
+both games. This includes downloads, generated code, build files and packaging, with
+headroom above the [measured clean builds](docs/validation/build-disk-space.md).
+Xcode and the build tools need their own space; keep more free if you retain builds
+for multiple targets or versions.
 
 ### Mac
 
