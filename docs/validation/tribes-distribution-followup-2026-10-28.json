@@ -1,0 +1,203 @@
+{
+  "date": "2026-10-28",
+  "scope": "Read-only source/license review, two public master queries and one UDP details query per three advertised game servers. No game execution, account use, roster query or gameplay join.",
+  "publisher_free_download": {
+    "snapshot": "https://web.archive.org/web/20160112180455/http://www.tribesuniverse.com/",
+    "retrieved_source": "https://web.archive.org/web/20160112180455id_/http://www.tribesuniverse.com/",
+    "vengeance_link": "http://lwcdn.hi-rezgame.net/media/iso/TribesVengeance.zip",
+    "t2_patch_links_present": true,
+    "ascend_target": "http://www.hirezstudios.com/tribesascend/home",
+    "rights_footer_present": true,
+    "live_page_and_old_download_host": "DNS resolution failed during this pass",
+    "publisher_zip_equals_current_community_zip": "Not established"
+  },
+  "license_documents": {
+    "vengeance": "Actual game EULA, not only editor/devkit terms: sections 1, 3A/3C, 12.",
+    "tribes2": "Actual installed game EULA: sections 1, 3A/3C, 10.",
+    "ascend_packaged": "TribesGame/tribes_eula.txt; last updated September 4, 2015; extracted using ZIP ranges/CRC.",
+    "ascend_publisher": "https://webcdn.hirezstudios.com/hirez-studios/legal/EULA-Tribes.pdf; November 10, 2015; successfully retrieved and text inspected.",
+    "conclusion": "Publisher free-download history established for Vengeance. No general redistribution/native-port license established; personal adaptation and exact patch distribution require their own assessment."
+  },
+  "tribesnext_author_explanations": [
+    {
+      "url": "https://www.tribesnext.com/forum/discussion/comment/28991",
+      "author": "Krash",
+      "date": "September 2017",
+      "topic": "Freeware availability versus publishing on another distribution platform."
+    },
+    {
+      "url": "https://www.tribesnext.com/forum/discussion/comment/29021",
+      "author": "Thyth",
+      "date": "September 2017",
+      "topic": "Separate original freeware installer and interoperability patch; TribesNEXT has its own copyright."
+    }
+  ],
+  "source_hashes": {
+    "vengeance_game_eula": {
+      "bytes": 14228,
+      "sha256": "a570d4b8901754cb6fb0836df624577b5a6cee586ebcedbc696abc052f6f2c20"
+    },
+    "vengeance_community_readme": {
+      "bytes": 2204,
+      "sha256": "cf09987b456d29cc81770ee42489dbeabbe1e73e85e26071aa6ccf630a054044"
+    },
+    "vengeance_community_engine": {
+      "bytes": 4800512,
+      "sha256": "e85ca1a1f5795caf3506b150e00d7969deaa894fdab54cd4221f9e9762267590"
+    },
+    "tribes2_game_eula": {
+      "bytes": 12486,
+      "sha256": "a0621a06f96fe948448a8b5f4ead287dcaa63b13fbf7add7799e123a798180a6"
+    },
+    "ascend_packaged_eula": {
+      "bytes": 30057,
+      "sha256": "41b9d9f4ebd5006533ae0ebb218906efc3838523e4610167e0dda2469874357e"
+    },
+    "ascend_publisher_eula_pdf": {
+      "bytes": 342496,
+      "sha256": "1f5e0de1891b386821e376644d594f58ec7d69354060f55e8b4bed400d4cdbcc"
+    },
+    "publisher_archive_html": {
+      "bytes": 20632,
+      "sha256": "08092bf2741f8cbc3dd4931da69d1091b0b074c7e925f8134693dacccf59f8e2"
+    },
+    "openspy_web_client": {
+      "bytes": 317184,
+      "sha256": "adfccd4fb3fc9a7e8ea8f9688cda6a290676aefb100fec89acb8a5e6ca22aaf0"
+    },
+    "openspy_tribesv_feed": {
+      "bytes": 510,
+      "sha256": "42cfb665917dd1f6076c60532e5e1871a58b5acf33e658a4dfcfb51d42a1bcb4"
+    },
+    "master_query_source": {
+      "bytes": 7681,
+      "sha256": "faeccded92b7b99c887d3fbb3b640c5e4be564e0bfc285c5a4042269114cbe9a"
+    },
+    "game_query_protocol_reference": {
+      "bytes": 6906,
+      "sha256": "cd4831d2253109c7f784498bba9137069e5c158272376ed3ab21a3057b56c58d"
+    }
+  },
+  "openspy_feed": {
+    "url": "https://openspy-website.nyc3.digitaloceanspaces.com/servers/tribesv.json",
+    "retrieval": {
+      "name": "openspy-tribesv.json",
+      "status": 200,
+      "retrieved_at": "2026-10-28T06:32:36.448511+00:00",
+      "date": "Wed, 28 Oct 2026 06:32:36 GMT",
+      "last_modified": "Wed, 28 Oct 2026 06:32:15 GMT",
+      "bytes": 510
+    },
+    "servers": [
+      {
+        "backend_id": "tribesv:1602210:",
+        "hostname": "=Team FoxTare= Europa",
+        "numplayers": 0,
+        "maxplayers": 16,
+        "gamemode": "openplaying",
+        "country": "DE",
+        "mapname": "Arid"
+      },
+      {
+        "backend_id": "tribesv:1410443:",
+        "hostname": "Tribes Vengeance SDL-BLADE Dedicated",
+        "numplayers": 0,
+        "maxplayers": 32,
+        "gamemode": "openplaying",
+        "country": "US",
+        "mapname": "Cavern"
+      },
+      {
+        "backend_id": "tribesv:1549173:",
+        "hostname": "webehostin.com kansas v2 [NEW CONFiG]",
+        "numplayers": 0,
+        "maxplayers": 16,
+        "gamemode": "openplaying",
+        "country": "US",
+        "mapname": "Spiridian"
+      }
+    ],
+    "listed_players": 0,
+    "supported_games_listing_contains_tribes": false
+  },
+  "dns_observation": {
+    "date": "2026-10-28",
+    "hosts": [
+      "tribesv.master.tribesv.org",
+      "tribesv.ms0.tribesv.org",
+      "tribesv.available.tribesv.org",
+      "gpcm.tribesv.org",
+      "master.openspy.net"
+    ],
+    "result": "All resolved to the same IPv4 address during the pass; not a production pin."
+  },
+  "master_queries": [
+    {
+      "host": "master.openspy.net",
+      "retrieved_at": "2026-10-28T06:36:05.201418+00:00",
+      "returncode": 0,
+      "count": "3",
+      "error": ""
+    },
+    {
+      "host": "tribesv.ms0.tribesv.org",
+      "retrieved_at": "2026-10-28T06:36:05.180742+00:00",
+      "returncode": 0,
+      "count": "3",
+      "error": ""
+    }
+  ],
+  "master_address_sets_equal": true,
+  "master_query_source": "https://github.com/dgibbs64/Master-Server-List/blob/0cd03bdf223a8124986416b6d7075cf8be07312d/scripts/enctypex.c",
+  "direct_details_protocol_reference": "https://github.com/Austinb/GameQ/blob/master/src/GameQ/Protocols/Gamespy2.php",
+  "direct_game_queries": [
+    {
+      "queried_at": "2026-10-28T06:37:06.739992+00:00",
+      "status": "error",
+      "error": "timed out"
+    },
+    {
+      "queried_at": "2026-10-28T06:37:06.740471+00:00",
+      "rtt_ms": 153.0,
+      "bytes": 375,
+      "status": "reply",
+      "fields": {
+        "mapname": "Spiridian",
+        "numplayers": "0",
+        "maxplayers": "16",
+        "hostname": "webehostin.com kansas v2 [NEW CONFiG]",
+        "hostport": "8888",
+        "gametype": "CTF",
+        "gamever": "63446",
+        "password": "0",
+        "gamename": "tribesv",
+        "gamemode": "openplaying"
+      }
+    },
+    {
+      "queried_at": "2026-10-28T06:37:06.740563+00:00",
+      "rtt_ms": 284.4,
+      "bytes": 371,
+      "status": "reply",
+      "fields": {
+        "mapname": "Arid",
+        "numplayers": "0",
+        "maxplayers": "16",
+        "hostname": "=Team FoxTare= Europa",
+        "hostport": "7777",
+        "gametype": "Arena",
+        "gamever": "63446",
+        "password": "0",
+        "gamename": "tribesv",
+        "gamemode": "openplaying"
+      }
+    }
+  ],
+  "limits": [
+    "No successful gameplay join or fresh Windows install established.",
+    "One timeout does not establish a server is down.",
+    "Empty servers at one early-morning observation do not establish typical population.",
+    "Historical freeware page does not certify community-repack contents or grant native-port redistribution.",
+    "No copyright license text, game executable bytes, player names or generated game code included in this evidence artifact."
+  ]
+}

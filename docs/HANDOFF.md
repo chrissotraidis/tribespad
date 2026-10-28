@@ -1,4 +1,20 @@
-# TribesPad handoff — 21 October 2026
+# TribesPad handoff — 28 October 2026
+
+## Vengeance and Ascend implementation handoff (28 October)
+
+The owner requested planning for both games as optional engines in the same
+TribesPad app, with community ZIPs as candidate inputs. Start with
+[VENGEANCE-ASCEND-PLAN.md](VENGEANCE-ASCEND-PLAN.md): it maps the actual Mac/iOS
+engine selection and packaging seams, input hashes, shared runtime work and
+per-game milestones. The first implementation task is repeatable acquisition and
+inventory for both games, followed by Vengeance UCC/Core execution and Ascend
+client/mod hook bring-up. Neither new game is implemented or playable here yet.
+
+[Research](TRIBES-EXPANSION-RESEARCH.md) and compact audit JSON are committed with
+the plan. Large binaries, extracted sources and translation experiments are
+ignored local conveniences; a different bot/machine must recreate them from the
+recorded inputs. This update changes documentation only, not the T1/T2 build,
+release version, PadMint recipe or gameplay validation status.
 
 ## Latest: physical devices and online play (18–21 October)
 

@@ -1,0 +1,2321 @@
+{
+  "date": "2026-10-28",
+  "tribespad_commit": "1c046b431bd085c394e612f462fb075ec91caa30",
+  "method": "PE import/export/section parsing with pefile; no executable was run",
+  "source_url": "https://downloads.tribesrevengeance.net/TribesVengeance.zip",
+  "archive": {
+    "bytes": 3093197450,
+    "sha256": "22180a8162caccc059c81aac86ad7c3e26b854e01f080534eb774b0ce088fc52"
+  },
+  "scope": "Program/Bin and Content/System extraction; all discovered PE files includes non-runtime tools; no Windows code executed",
+  "modules": [
+    {
+      "file": "app/Tribes Vengeance/Program/Bin/AICommon.dll",
+      "sha256": "9be6ec2b49a0c9dc9026dde00a3c30e097faa4d924177db71549dc0aa1379b57",
+      "bytes": 49152,
+      "machine": "0x14c",
+      "image_base": "0x10000000",
+      "image_size": 53248,
+      "entry_rva": "0x3976",
+      "sections": [
+        {
+          "name": ".text",
+          "virtual_size": 13179,
+          "raw_size": 16384,
+          "executable": true
+        },
+        {
+          "name": ".rdata",
+          "virtual_size": 19618,
+          "raw_size": 20480,
+          "executable": false
+        },
+        {
+          "name": ".data",
+          "virtual_size": 7332,
+          "raw_size": 4096,
+          "executable": false
+        },
+        {
+          "name": ".reloc",
+          "virtual_size": 3032,
+          "raw_size": 4096,
+          "executable": false
+        }
+      ],
+      "exports_count": 87,
+      "tls_present": false,
+      "relocation_entries": 1061
+    },
+    {
+      "file": "app/Tribes Vengeance/Program/Bin/ALAudio.dll",
+      "sha256": "409a8fc42558922d8ba9f44104bb8ed80f44bf969890c78afe1379a540d9f698",
+      "bytes": 81920,
+      "machine": "0x14c",
+      "image_base": "0x10000000",
+      "image_size": 81920,
+      "entry_rva": "0x877c",
+      "sections": [
+        {
+          "name": ".text",
+          "virtual_size": 32395,
+          "raw_size": 32768,
+          "executable": true
+        },
+        {
+          "name": ".rdata",
+          "virtual_size": 31357,
+          "raw_size": 32768,
+          "executable": false
+        },
+        {
+          "name": ".data",
+          "virtual_size": 1816,
+          "raw_size": 4096,
+          "executable": false
+        },
+        {
+          "name": ".reloc",
+          "virtual_size": 5366,
+          "raw_size": 8192,
+          "executable": false
+        }
+      ],
+      "exports_count": 72,
+      "tls_present": false,
+      "relocation_entries": 2248
+    },
+    {
+      "file": "app/Tribes Vengeance/Program/Bin/Core.dll",
+      "sha256": "dad4691fb0b724ffdcd66f4553e4bbb7076bb331718f9cdd43aba8ed8286f934",
+      "bytes": 815104,
+      "machine": "0x14c",
+      "image_base": "0x10100000",
+      "image_size": 3301376,
+      "entry_rva": "0x13550",
+      "sections": [
+        {
+          "name": ".text",
+          "virtual_size": 455946,
+          "raw_size": 458752,
+          "executable": true
+        },
+        {
+          "name": ".rdata",
+          "virtual_size": 273468,
+          "raw_size": 274432,
+          "executable": false
+        },
+        {
+          "name": ".data",
+          "virtual_size": 2500612,
+          "raw_size": 16384,
+          "executable": false
+        },
+        {
+          "name": ".reloc",
+          "virtual_size": 58634,
+          "raw_size": 61440,
+          "executable": false
+        }
+      ],
+      "exports_count": 2680,
+      "tls_present": false,
+      "relocation_entries": 22173
+    },
+    {
+      "file": "app/Tribes Vengeance/Program/Bin/D3DDrv.dll",
+      "sha256": "b042c78b130bd7e164a07d1ad453dc8407af75911acce245caf5e38d5fafe26f",
+      "bytes": 540672,
+      "machine": "0x14c",
+      "image_base": "0x10000000",
+      "image_size": 552960,
+      "entry_rva": "0x4daac",
+      "sections": [
+        {
+          "name": ".text",
+          "virtual_size": 319738,
+          "raw_size": 323584,
+          "executable": true
+        },
+        {
+          "name": ".rdata",
+          "virtual_size": 137087,
+          "raw_size": 139264,
+          "executable": false
+        },
+        {
+          "name": ".data",
+          "virtual_size": 50932,
+          "raw_size": 40960,
+          "executable": false
+        },
+        {
+          "name": ".reloc",
+          "virtual_size": 32450,
+          "raw_size": 32768,
+          "executable": false
+        }
+      ],
+      "exports_count": 59,
+      "tls_present": false,
+      "relocation_entries": 9360
+    },
+    {
+      "file": "app/Tribes Vengeance/Program/Bin/DebugInterface.dll",
+      "sha256": "abc832013ac314d867f6bd352cb8063f415c7834520cdd684b8c523926413bbb",
+      "bytes": 16896,
+      "machine": "0x14c",
+      "image_base": "0x10000000",
+      "image_size": 40960,
+      "entry_rva": "0x22a6",
+      "sections": [
+        {
+          "name": ".text",
+          "virtual_size": 6366,
+          "raw_size": 6656,
+          "executable": true
+        },
+        {
+          "name": ".rdata",
+          "virtual_size": 4809,
+          "raw_size": 5120,
+          "executable": false
+        },
+        {
+          "name": ".data",
+          "virtual_size": 8792,
+          "raw_size": 512,
+          "executable": false
+        },
+        {
+          "name": ".rsrc",
+          "virtual_size": 1648,
+          "raw_size": 2048,
+          "executable": false
+        },
+        {
+          "name": ".reloc",
+          "virtual_size": 1488,
+          "raw_size": 1536,
+          "executable": false
+        }
+      ],
+      "exports_count": 1,
+      "tls_present": false,
+      "relocation_entries": 544
+    },
+    {
+      "file": "app/Tribes Vengeance/Program/Bin/Editor.dll",
+      "sha256": "a98099221c67e36a01c5441d55645a8fd6e15b7796ce10f8adf26845d3b53f9a",
+      "bytes": 733184,
+      "machine": "0x14c",
+      "image_base": "0x10200000",
+      "image_size": 950272,
+      "entry_rva": "0x5cadd",
+      "sections": [
+        {
+          "name": ".text",
+          "virtual_size": 404635,
+          "raw_size": 405504,
+          "executable": true
+        },
+        {
+          "name": ".rdata",
+          "virtual_size": 257808,
+          "raw_size": 258048,
+          "executable": false
+        },
+        {
+          "name": ".data",
+          "virtual_size": 218796,
+          "raw_size": 4096,
+          "executable": false
+        },
+        {
+          "name": ".reloc",
+          "virtual_size": 58686,
+          "raw_size": 61440,
+          "executable": false
+        }
+      ],
+      "exports_count": 735,
+      "tls_present": false,
+      "relocation_entries": 24525
+    },
+    {
+      "file": "app/Tribes Vengeance/Program/Bin/Engine.dll",
+      "sha256": "e85ca1a1f5795caf3506b150e00d7969deaa894fdab54cd4221f9e9762267590",
+      "bytes": 4800512,
+      "machine": "0x14c",
+      "image_base": "0x10300000",
+      "image_size": 9576448,
+      "entry_rva": "0x2224ce",
+      "sections": [
+        {
+          "name": ".text",
+          "virtual_size": 3206331,
+          "raw_size": 3207168,
+          "executable": true
+        },
+        {
+          "name": ".rdata",
+          "virtual_size": 1215314,
+          "raw_size": 1216512,
+          "executable": false
+        },
+        {
+          "name": ".data",
+          "virtual_size": 4803152,
+          "raw_size": 28672,
+          "executable": false
+        },
+        {
+          "name": ".reloc",
+          "virtual_size": 340268,
+          "raw_size": 344064,
+          "executable": false
+        }
+      ],
+      "exports_count": 7592,
+      "tls_present": false,
+      "relocation_entries": 134012
+    },
+    {
+      "file": "app/Tribes Vengeance/Program/Bin/GUI.dll",
+      "sha256": "5e8813b9405e8fc046d2b1dea014cd2d57f50e5e847a66bb47ab94b675fc5d42",
+      "bytes": 307200,
+      "machine": "0x14c",
+      "image_base": "0x10000000",
+      "image_size": 376832,
+      "entry_rva": "0x23ed8",
+      "sections": [
+        {
+          "name": ".text",
+          "virtual_size": 161883,
+          "raw_size": 163840,
+          "executable": true
+        },
+        {
+          "name": ".rdata",
+          "virtual_size": 110113,
+          "raw_size": 110592,
+          "executable": false
+        },
+        {
+          "name": ".data",
+          "virtual_size": 73248,
+          "raw_size": 4096,
+          "executable": false
+        },
+        {
+          "name": ".reloc",
+          "virtual_size": 22746,
+          "raw_size": 24576,
+          "executable": false
+        }
+      ],
+      "exports_count": 992,
+      "tls_present": false,
+      "relocation_entries": 9194
+    },
+    {
+      "file": "app/Tribes Vengeance/Program/Bin/GameAISupport.dll",
+      "sha256": "cd095294ef5e33939e3a401c0ed30db5d861cfcfd95517cc7f7e9b21727a0507",
+      "bytes": 77824,
+      "machine": "0x14c",
+      "image_base": "0x10000000",
+      "image_size": 86016,
+      "entry_rva": "0x58a8",
+      "sections": [
+        {
+          "name": ".text",
+          "virtual_size": 44545,
+          "raw_size": 45056,
+          "executable": true
+        },
+        {
+          "name": ".rdata",
+          "virtual_size": 13042,
+          "raw_size": 16384,
+          "executable": false
+        },
+        {
+          "name": ".data",
+          "virtual_size": 10044,
+          "raw_size": 4096,
+          "executable": false
+        },
+        {
+          "name": ".reloc",
+          "virtual_size": 5322,
+          "raw_size": 8192,
+          "executable": false
+        }
+      ],
+      "exports_count": 3,
+      "tls_present": false,
+      "relocation_entries": 1285
+    },
+    {
+      "file": "app/Tribes Vengeance/Program/Bin/Gameplay.dll",
+      "sha256": "91f25522a6fd554e5dd37827d420c9c3757eb6a0b5ade1e87df9fcce6b2916cb",
+      "bytes": 851968,
+      "machine": "0x14c",
+      "image_base": "0x10000000",
+      "image_size": 966656,
+      "entry_rva": "0x7b780",
+      "sections": [
+        {
+          "name": ".text",
+          "virtual_size": 550555,
+          "raw_size": 552960,
+          "executable": true
+        },
+        {
+          "name": ".rdata",
+          "virtual_size": 213820,
+          "raw_size": 217088,
+          "executable": false
+        },
+        {
+          "name": ".data",
+          "virtual_size": 118552,
+          "raw_size": 4096,
+          "executable": false
+        },
+        {
+          "name": ".reloc",
+          "virtual_size": 70396,
+          "raw_size": 73728,
+          "executable": false
+        }
+      ],
+      "exports_count": 1559,
+      "tls_present": false,
+      "relocation_entries": 24995
+    },
+    {
+      "file": "app/Tribes Vengeance/Program/Bin/IFC23.dll",
+      "sha256": "25927b0415e856237859c9cb54bc3ac6c19637382741f2234d3cbeae1a06ac70",
+      "bytes": 237568,
+      "machine": "0x14c",
+      "image_base": "0x10000000",
+      "image_size": 245760,
+      "entry_rva": "0x1f1bc",
+      "sections": [
+        {
+          "name": ".text",
+          "virtual_size": 157077,
+          "raw_size": 159744,
+          "executable": true
+        },
+        {
+          "name": ".rdata",
+          "virtual_size": 46116,
+          "raw_size": 49152,
+          "executable": false
+        },
+        {
+          "name": ".data",
+          "virtual_size": 14480,
+          "raw_size": 8192,
+          "executable": false
+        },
+        {
+          "name": ".rsrc",
+          "virtual_size": 904,
+          "raw_size": 4096,
+          "executable": false
+        },
+        {
+          "name": ".reloc",
+          "virtual_size": 9168,
+          "raw_size": 12288,
+          "executable": false
+        }
+      ],
+      "exports_count": 719,
+      "tls_present": false,
+      "relocation_entries": 3481
+    },
+    {
+      "file": "app/Tribes Vengeance/Program/Bin/IGEffectsConfigurator.exe",
+      "sha256": "8dea84dd13281783172e0b24db33cd4293be909cd11bc48f03f15b62fb6494b1",
+      "bytes": 245760,
+      "machine": "0x14c",
+      "image_base": "0x400000",
+      "image_size": 262144,
+      "entry_rva": "0x3aaee",
+      "sections": [
+        {
+          "name": ".text",
+          "virtual_size": 232180,
+          "raw_size": 233472,
+          "executable": true
+        },
+        {
+          "name": ".rsrc",
+          "virtual_size": 2192,
+          "raw_size": 4096,
+          "executable": false
+        },
+        {
+          "name": ".reloc",
+          "virtual_size": 12,
+          "raw_size": 4096,
+          "executable": false
+        }
+      ],
+      "exports_count": 0,
+      "tls_present": false,
+      "relocation_entries": 1
+    },
+    {
+      "file": "app/Tribes Vengeance/Program/Bin/IGEffectsSystem.dll",
+      "sha256": "ffd80582698c380db836e8f10692a4ff0f09c8e77f0c251bee8239387425e15e",
+      "bytes": 57344,
+      "machine": "0x14c",
+      "image_base": "0x10000000",
+      "image_size": 61440,
+      "entry_rva": "0x4cbb",
+      "sections": [
+        {
+          "name": ".text",
+          "virtual_size": 18523,
+          "raw_size": 20480,
+          "executable": true
+        },
+        {
+          "name": ".rdata",
+          "virtual_size": 23256,
+          "raw_size": 24576,
+          "executable": false
+        },
+        {
+          "name": ".data",
+          "virtual_size": 7360,
+          "raw_size": 4096,
+          "executable": false
+        },
+        {
+          "name": ".reloc",
+          "virtual_size": 3862,
+          "raw_size": 4096,
+          "executable": false
+        }
+      ],
+      "exports_count": 84,
+      "tls_present": false,
+      "relocation_entries": 1274
+    },
+    {
+      "file": "app/Tribes Vengeance/Program/Bin/IGSoundEffectsSubsystem.dll",
+      "sha256": "a76430b609a3352eeabe073ded6df001180f5da9c103213de13d8a79458225cf",
+      "bytes": 106496,
+      "machine": "0x14c",
+      "image_base": "0x10000000",
+      "image_size": 118784,
+      "entry_rva": "0x8a85",
+      "sections": [
+        {
+          "name": ".text",
+          "virtual_size": 37467,
+          "raw_size": 40960,
+          "executable": true
+        },
+        {
+          "name": ".rdata",
+          "virtual_size": 45530,
+          "raw_size": 49152,
+          "executable": false
+        },
+        {
+          "name": ".data",
+          "virtual_size": 16232,
+          "raw_size": 4096,
+          "executable": false
+        },
+        {
+          "name": ".reloc",
+          "virtual_size": 7454,
+          "raw_size": 8192,
+          "executable": false
+        }
+      ],
+      "exports_count": 270,
+      "tls_present": false,
+      "relocation_entries": 3060
+    },
+    {
+      "file": "app/Tribes Vengeance/Program/Bin/IGVisualEffectsSubsystem.dll",
+      "sha256": "2264af0d20b5a126b5c6f48c28b05bc4b474624f0ff11a6332dde09f703bf5e0",
+      "bytes": 15872,
+      "machine": "0x14c",
+      "image_base": "0x10000000",
+      "image_size": 28672,
+      "entry_rva": "0x18f4",
+      "sections": [
+        {
+          "name": ".text",
+          "virtual_size": 3083,
+          "raw_size": 3584,
+          "executable": true
+        },
+        {
+          "name": ".rdata",
+          "virtual_size": 9484,
+          "raw_size": 9728,
+          "executable": false
+        },
+        {
+          "name": ".data",
+          "virtual_size": 1536,
+          "raw_size": 512,
+          "executable": false
+        },
+        {
+          "name": ".reloc",
+          "virtual_size": 896,
+          "raw_size": 1024,
+          "executable": false
+        }
+      ],
+      "exports_count": 13,
+      "tls_present": false,
+      "relocation_entries": 372
+    },
+    {
+      "file": "app/Tribes Vengeance/Program/Bin/ImpersonatorLib_rd.dll",
+      "sha256": "9482f2cfa778b8f6b944eb419ec61a64c9a75b83a3b27d61604ec49c698ae7b5",
+      "bytes": 266240,
+      "machine": "0x14c",
+      "image_base": "0x10000000",
+      "image_size": 270336,
+      "entry_rva": "0x300cb",
+      "sections": [
+        {
+          "name": ".text",
+          "virtual_size": 199282,
+          "raw_size": 200704,
+          "executable": true
+        },
+        {
+          "name": ".rdata",
+          "virtual_size": 30561,
+          "raw_size": 32768,
+          "executable": false
+        },
+        {
+          "name": ".data",
+          "virtual_size": 9172,
+          "raw_size": 8192,
+          "executable": false
+        },
+        {
+          "name": ".data1",
+          "virtual_size": 64,
+          "raw_size": 4096,
+          "executable": false
+        },
+        {
+          "name": ".rsrc",
+          "virtual_size": 1264,
+          "raw_size": 4096,
+          "executable": false
+        },
+        {
+          "name": ".reloc",
+          "virtual_size": 10856,
+          "raw_size": 12288,
+          "executable": false
+        }
+      ],
+      "exports_count": 15,
+      "tls_present": false,
+      "relocation_entries": 3331
+    },
+    {
+      "file": "app/Tribes Vengeance/Program/Bin/IpDrv.dll",
+      "sha256": "ed48f8b357c57e7306a47392649dc5c2affd77b1fde3b4384fd8bc7684e0ddde",
+      "bytes": 200704,
+      "machine": "0x14c",
+      "image_base": "0x10700000",
+      "image_size": 217088,
+      "entry_rva": "0x1423b",
+      "sections": [
+        {
+          "name": ".text",
+          "virtual_size": 88971,
+          "raw_size": 90112,
+          "executable": true
+        },
+        {
+          "name": ".rdata",
+          "virtual_size": 82105,
+          "raw_size": 86016,
+          "executable": false
+        },
+        {
+          "name": ".data",
+          "virtual_size": 19136,
+          "raw_size": 4096,
+          "executable": false
+        },
+        {
+          "name": ".reloc",
+          "virtual_size": 15756,
+          "raw_size": 16384,
+          "executable": false
+        }
+      ],
+      "exports_count": 366,
+      "tls_present": false,
+      "relocation_entries": 6659
+    },
+    {
+      "file": "app/Tribes Vengeance/Program/Bin/MFC71u.dll",
+      "sha256": "0c58f682e1b3af064963dd616e80609006e9317f2fcb0f3a51ed32fef13b1081",
+      "bytes": 1047552,
+      "machine": "0x14c",
+      "image_base": "0x7c250000",
+      "image_size": 1056768,
+      "entry_rva": "0xdc3f",
+      "sections": [
+        {
+          "name": ".text",
+          "virtual_size": 891751,
+          "raw_size": 891904,
+          "executable": true
+        },
+        {
+          "name": ".data",
+          "virtual_size": 44004,
+          "raw_size": 44032,
+          "executable": false
+        },
+        {
+          "name": ".rsrc",
+          "virtual_size": 46208,
+          "raw_size": 46592,
+          "executable": false
+        },
+        {
+          "name": ".reloc",
+          "virtual_size": 63660,
+          "raw_size": 64000,
+          "executable": false
+        }
+      ],
+      "exports_count": 6439,
+      "tls_present": false,
+      "relocation_entries": 30865
+    },
+    {
+      "file": "app/Tribes Vengeance/Program/Bin/Mojo.exe",
+      "sha256": "961652967cba9010658feca49dd294fe26da43109c0c115873051b0c6cadd697",
+      "bytes": 495616,
+      "machine": "0x14c",
+      "image_base": "0x400000",
+      "image_size": 503808,
+      "entry_rva": "0x32f70",
+      "sections": [
+        {
+          "name": ".text",
+          "virtual_size": 219925,
+          "raw_size": 221184,
+          "executable": true
+        },
+        {
+          "name": ".rdata",
+          "virtual_size": 99098,
+          "raw_size": 102400,
+          "executable": false
+        },
+        {
+          "name": ".data",
+          "virtual_size": 145484,
+          "raw_size": 139264,
+          "executable": false
+        },
+        {
+          "name": ".rsrc",
+          "virtual_size": 26416,
+          "raw_size": 28672,
+          "executable": false
+        }
+      ],
+      "exports_count": 3,
+      "tls_present": false,
+      "relocation_entries": 0
+    },
+    {
+      "file": "app/Tribes Vengeance/Program/Bin/MojoActions.dll",
+      "sha256": "b87a48b4dfcd733600be5e941d308ed9ed5f0cd46afe1c54c2057ddcb168bc76",
+      "bytes": 53248,
+      "machine": "0x14c",
+      "image_base": "0x10000000",
+      "image_size": 61440,
+      "entry_rva": "0x6032",
+      "sections": [
+        {
+          "name": ".text",
+          "virtual_size": 23707,
+          "raw_size": 24576,
+          "executable": true
+        },
+        {
+          "name": ".rdata",
+          "virtual_size": 15229,
+          "raw_size": 16384,
+          "executable": false
+        },
+        {
+          "name": ".data",
+          "virtual_size": 11660,
+          "raw_size": 4096,
+          "executable": false
+        },
+        {
+          "name": ".reloc",
+          "virtual_size": 2930,
+          "raw_size": 4096,
+          "executable": false
+        }
+      ],
+      "exports_count": 126,
+      "tls_present": false,
+      "relocation_entries": 1075
+    },
+    {
+      "file": "app/Tribes Vengeance/Program/Bin/MojoCore.dll",
+      "sha256": "e0176e74c07b24ec5ad9e9539d9560f57b71c723a9ebfc52d78a1d4021d943ea",
+      "bytes": 86016,
+      "machine": "0x14c",
+      "image_base": "0x10000000",
+      "image_size": 94208,
+      "entry_rva": "0x7cdc",
+      "sections": [
+        {
+          "name": ".text",
+          "virtual_size": 31819,
+          "raw_size": 32768,
+          "executable": true
+        },
+        {
+          "name": ".rdata",
+          "virtual_size": 36650,
+          "raw_size": 36864,
+          "executable": false
+        },
+        {
+          "name": ".data",
+          "virtual_size": 10292,
+          "raw_size": 4096,
+          "executable": false
+        },
+        {
+          "name": ".reloc",
+          "virtual_size": 5282,
+          "raw_size": 8192,
+          "executable": false
+        }
+      ],
+      "exports_count": 290,
+      "tls_present": false,
+      "relocation_entries": 1959
+    },
+    {
+      "file": "app/Tribes Vengeance/Program/Bin/Movement.dll",
+      "sha256": "480abe571da62152c47564f48af4c02a042fac12eb96af4cabcc7a9b7819e762",
+      "bytes": 290816,
+      "machine": "0x14c",
+      "image_base": "0x10000000",
+      "image_size": 299008,
+      "entry_rva": "0x31d62",
+      "sections": [
+        {
+          "name": ".text",
+          "virtual_size": 206763,
+          "raw_size": 208896,
+          "executable": true
+        },
+        {
+          "name": ".rdata",
+          "virtual_size": 46860,
+          "raw_size": 49152,
+          "executable": false
+        },
+        {
+          "name": ".data",
+          "virtual_size": 9172,
+          "raw_size": 4096,
+          "executable": false
+        },
+        {
+          "name": ".reloc",
+          "virtual_size": 22976,
+          "raw_size": 24576,
+          "executable": false
+        }
+      ],
+      "exports_count": 120,
+      "tls_present": false,
+      "relocation_entries": 5090
+    },
+    {
+      "file": "app/Tribes Vengeance/Program/Bin/OpenAL32.dll",
+      "sha256": "ea082c313447e31f291425e7ec3e24a14bee72b3396d59b5d7ede259893a2d49",
+      "bytes": 159744,
+      "machine": "0x14c",
+      "image_base": "0x10000000",
+      "image_size": 929792,
+      "entry_rva": "0x16134",
+      "sections": [
+        {
+          "name": ".text",
+          "virtual_size": 114686,
+          "raw_size": 114688,
+          "executable": true
+        },
+        {
+          "name": ".rdata",
+          "virtual_size": 5560,
+          "raw_size": 8192,
+          "executable": false
+        },
+        {
+          "name": ".data",
+          "virtual_size": 786976,
+          "raw_size": 20480,
+          "executable": false
+        },
+        {
+          "name": ".rsrc",
+          "virtual_size": 1176,
+          "raw_size": 4096,
+          "executable": false
+        },
+        {
+          "name": ".reloc",
+          "virtual_size": 6300,
+          "raw_size": 8192,
+          "executable": false
+        }
+      ],
+      "exports_count": 72,
+      "tls_present": false,
+      "relocation_entries": 1856
+    },
+    {
+      "file": "app/Tribes Vengeance/Program/Bin/Pathfinding.dll",
+      "sha256": "6a457418f53c28147fb93c5e7522e9fb40a12bb85b490b71f5f67bb6a48f6b93",
+      "bytes": 196608,
+      "machine": "0x14c",
+      "image_base": "0x10000000",
+      "image_size": 204800,
+      "entry_rva": "0x1c587",
+      "sections": [
+        {
+          "name": ".text",
+          "virtual_size": 120299,
+          "raw_size": 122880,
+          "executable": true
+        },
+        {
+          "name": ".rdata",
+          "virtual_size": 52100,
+          "raw_size": 53248,
+          "executable": false
+        },
+        {
+          "name": ".data",
+          "virtual_size": 10404,
+          "raw_size": 4096,
+          "executable": false
+        },
+        {
+          "name": ".reloc",
+          "virtual_size": 11040,
+          "raw_size": 12288,
+          "executable": false
+        }
+      ],
+      "exports_count": 298,
+      "tls_present": false,
+      "relocation_entries": 3912
+    },
+    {
+      "file": "app/Tribes Vengeance/Program/Bin/PerforceWrapper.dll",
+      "sha256": "e43165dd32df27935c183e5e6c60ac3d3a741e8b606d8e60da733b09da8d9abd",
+      "bytes": 389120,
+      "machine": "0x14c",
+      "image_base": "0x10000000",
+      "image_size": 401408,
+      "entry_rva": "0x1c35f",
+      "sections": [
+        {
+          "name": ".text",
+          "virtual_size": 162929,
+          "raw_size": 163840,
+          "executable": true
+        },
+        {
+          "name": ".rdata",
+          "virtual_size": 19734,
+          "raw_size": 20480,
+          "executable": false
+        },
+        {
+          "name": ".data",
+          "virtual_size": 197676,
+          "raw_size": 188416,
+          "executable": false
+        },
+        {
+          "name": ".reloc",
+          "virtual_size": 11202,
+          "raw_size": 12288,
+          "executable": false
+        }
+      ],
+      "exports_count": 16,
+      "tls_present": false,
+      "relocation_entries": 3994
+    },
+    {
+      "file": "app/Tribes Vengeance/Program/Bin/RTCShader.dll",
+      "sha256": "a2a35987fb0be96ec918fb731a8102c776f85f9895390b689e9b104b3402f9fb",
+      "bytes": 258048,
+      "machine": "0x14c",
+      "image_base": "0x10000000",
+      "image_size": 274432,
+      "entry_rva": "0x11689",
+      "sections": [
+        {
+          "name": ".text",
+          "virtual_size": 133233,
+          "raw_size": 135168,
+          "executable": true
+        },
+        {
+          "name": ".rdata",
+          "virtual_size": 70239,
+          "raw_size": 73728,
+          "executable": false
+        },
+        {
+          "name": ".data",
+          "virtual_size": 44076,
+          "raw_size": 28672,
+          "executable": false
+        },
+        {
+          "name": ".reloc",
+          "virtual_size": 14982,
+          "raw_size": 16384,
+          "executable": false
+        }
+      ],
+      "exports_count": 22,
+      "tls_present": false,
+      "relocation_entries": 4067
+    },
+    {
+      "file": "app/Tribes Vengeance/Program/Bin/RenderUtilities.dll",
+      "sha256": "d88fbb854066cb6875e373f0828fcd2a5fdd626b080eada92b103e21b5e5ef9d",
+      "bytes": 94208,
+      "machine": "0x14c",
+      "image_base": "0x10000000",
+      "image_size": 114688,
+      "entry_rva": "0x11f7e",
+      "sections": [
+        {
+          "name": ".text",
+          "virtual_size": 72448,
+          "raw_size": 73728,
+          "executable": true
+        },
+        {
+          "name": ".rdata",
+          "virtual_size": 3288,
+          "raw_size": 4096,
+          "executable": false
+        },
+        {
+          "name": ".data",
+          "virtual_size": 20512,
+          "raw_size": 4096,
+          "executable": false
+        },
+        {
+          "name": ".reloc",
+          "virtual_size": 4520,
+          "raw_size": 8192,
+          "executable": false
+        }
+      ],
+      "exports_count": 1,
+      "tls_present": false,
+      "relocation_entries": 1881
+    },
+    {
+      "file": "app/Tribes Vengeance/Program/Bin/ScriptCompiler.dll",
+      "sha256": "90ac2697fdff8979750b82e67eccea4c2c74055c6c3411d99d9aea293f6a7565",
+      "bytes": 249856,
+      "machine": "0x14c",
+      "image_base": "0x10200000",
+      "image_size": 253952,
+      "entry_rva": "0x1e7dd",
+      "sections": [
+        {
+          "name": ".text",
+          "virtual_size": 125419,
+          "raw_size": 126976,
+          "executable": true
+        },
+        {
+          "name": ".rdata",
+          "virtual_size": 92909,
+          "raw_size": 94208,
+          "executable": false
+        },
+        {
+          "name": ".data",
+          "virtual_size": 7052,
+          "raw_size": 4096,
+          "executable": false
+        },
+        {
+          "name": ".reloc",
+          "virtual_size": 16626,
+          "raw_size": 20480,
+          "executable": false
+        }
+      ],
+      "exports_count": 56,
+      "tls_present": false,
+      "relocation_entries": 7082
+    },
+    {
+      "file": "app/Tribes Vengeance/Program/Bin/Scripting.dll",
+      "sha256": "d6fdd9b9ac5a92098a332a31e0545efb522f10eca5dd941da6d74157e1ab61f7",
+      "bytes": 69632,
+      "machine": "0x14c",
+      "image_base": "0x10000000",
+      "image_size": 81920,
+      "entry_rva": "0x58ea",
+      "sections": [
+        {
+          "name": ".text",
+          "virtual_size": 23131,
+          "raw_size": 24576,
+          "executable": true
+        },
+        {
+          "name": ".rdata",
+          "virtual_size": 27983,
+          "raw_size": 28672,
+          "executable": false
+        },
+        {
+          "name": ".data",
+          "virtual_size": 15836,
+          "raw_size": 4096,
+          "executable": false
+        },
+        {
+          "name": ".reloc",
+          "virtual_size": 5150,
+          "raw_size": 8192,
+          "executable": false
+        }
+      ],
+      "exports_count": 178,
+      "tls_present": false,
+      "relocation_entries": 1851
+    },
+    {
+      "file": "app/Tribes Vengeance/Program/Bin/TV Key Generator.exe",
+      "sha256": "1db86f56d25639d6d1cab959df825a8490e9a53fcfa746ff1a5e2fa06bbedc95",
+      "bytes": 1292288,
+      "machine": "0x14c",
+      "image_base": "0x400000",
+      "image_size": 1318912,
+      "entry_rva": "0x13846e",
+      "sections": [
+        {
+          "name": ".text",
+          "virtual_size": 1270900,
+          "raw_size": 1271296,
+          "executable": true
+        },
+        {
+          "name": ".rsrc",
+          "virtual_size": 19520,
+          "raw_size": 19968,
+          "executable": false
+        },
+        {
+          "name": ".reloc",
+          "virtual_size": 12,
+          "raw_size": 512,
+          "executable": false
+        }
+      ],
+      "exports_count": 0,
+      "tls_present": false,
+      "relocation_entries": 1
+    },
+    {
+      "file": "app/Tribes Vengeance/Program/Bin/TV Resolution Fixer.exe",
+      "sha256": "bcdc11564067869a19b09a657283116ef4cd7ce3dc1bcbc4aae07b36528ff397",
+      "bytes": 24576,
+      "machine": "0x14c",
+      "image_base": "0x400000",
+      "image_size": 49152,
+      "entry_rva": "0x2efe",
+      "sections": [
+        {
+          "name": ".text",
+          "virtual_size": 3844,
+          "raw_size": 4096,
+          "executable": true
+        },
+        {
+          "name": ".rsrc",
+          "virtual_size": 19248,
+          "raw_size": 19456,
+          "executable": false
+        },
+        {
+          "name": ".reloc",
+          "virtual_size": 12,
+          "raw_size": 512,
+          "executable": false
+        }
+      ],
+      "exports_count": 0,
+      "tls_present": false,
+      "relocation_entries": 1
+    },
+    {
+      "file": "app/Tribes Vengeance/Program/Bin/TVEd.exe",
+      "sha256": "1e3703889c6df0ba5842c1afaa55546bf0595fe94d94c8b23b15d0e1646856c0",
+      "bytes": 2154496,
+      "machine": "0x14c",
+      "image_base": "0x10e00000",
+      "image_size": 2732032,
+      "entry_rva": "0xc6807",
+      "sections": [
+        {
+          "name": ".text",
+          "virtual_size": 874970,
+          "raw_size": 876544,
+          "executable": true
+        },
+        {
+          "name": ".rdata",
+          "virtual_size": 466078,
+          "raw_size": 466944,
+          "executable": false
+        },
+        {
+          "name": ".data",
+          "virtual_size": 769284,
+          "raw_size": 192512,
+          "executable": false
+        },
+        {
+          "name": ".rsrc",
+          "virtual_size": 610728,
+          "raw_size": 614400,
+          "executable": false
+        }
+      ],
+      "exports_count": 316,
+      "tls_present": false,
+      "relocation_entries": 0
+    },
+    {
+      "file": "app/Tribes Vengeance/Program/Bin/TV_CD_DVD.exe",
+      "sha256": "fe398d0e7f0427d3ed765bb6b220e46502ff53d17b8239ee4b02b19754a983c2",
+      "bytes": 2142208,
+      "machine": "0x14c",
+      "image_base": "0x10900000",
+      "image_size": 2289664,
+      "entry_rva": "0x16b0c",
+      "sections": [
+        {
+          "name": ".text",
+          "virtual_size": 98304,
+          "raw_size": 98304,
+          "executable": true
+        },
+        {
+          "name": ".rdata",
+          "virtual_size": 61440,
+          "raw_size": 61440,
+          "executable": false
+        },
+        {
+          "name": ".data",
+          "virtual_size": 152912,
+          "raw_size": 8192,
+          "executable": false
+        },
+        {
+          "name": ".kpjaig",
+          "virtual_size": 827392,
+          "raw_size": 827392,
+          "executable": true
+        },
+        {
+          "name": ".bokuht",
+          "virtual_size": 1052672,
+          "raw_size": 1052672,
+          "executable": false
+        },
+        {
+          "name": ".idata",
+          "virtual_size": 24576,
+          "raw_size": 24576,
+          "executable": false
+        },
+        {
+          "name": ".rsrc",
+          "virtual_size": 16384,
+          "raw_size": 16384,
+          "executable": false
+        },
+        {
+          "name": ".reloc",
+          "virtual_size": 49152,
+          "raw_size": 49152,
+          "executable": false
+        }
+      ],
+      "exports_count": 1,
+      "tls_present": false,
+      "relocation_entries": 22010
+    },
+    {
+      "file": "app/Tribes Vengeance/Program/Bin/TribesGui.dll",
+      "sha256": "d0c1d872b73eb8b20340c20d22d8c51a9e3ad7ffb415710ce0bc4cf2bcc3a700",
+      "bytes": 131072,
+      "machine": "0x14c",
+      "image_base": "0x10000000",
+      "image_size": 159744,
+      "entry_rva": "0xe0e3",
+      "sections": [
+        {
+          "name": ".text",
+          "virtual_size": 63611,
+          "raw_size": 65536,
+          "executable": true
+        },
+        {
+          "name": ".rdata",
+          "virtual_size": 42910,
+          "raw_size": 45056,
+          "executable": false
+        },
+        {
+          "name": ".data",
+          "virtual_size": 31752,
+          "raw_size": 4096,
+          "executable": false
+        },
+        {
+          "name": ".reloc",
+          "virtual_size": 10036,
+          "raw_size": 12288,
+          "executable": false
+        }
+      ],
+      "exports_count": 359,
+      "tls_present": false,
+      "relocation_entries": 3887
+    },
+    {
+      "file": "app/Tribes Vengeance/Program/Bin/TribesTV.dll",
+      "sha256": "8c5491d66e1d55b94ee3c8f05c9467e8ae02837006c96569ca02bd66ba0e885f",
+      "bytes": 176128,
+      "machine": "0x14c",
+      "image_base": "0x10500000",
+      "image_size": 188416,
+      "entry_rva": "0x14051",
+      "sections": [
+        {
+          "name": ".text",
+          "virtual_size": 85979,
+          "raw_size": 86016,
+          "executable": true
+        },
+        {
+          "name": ".rdata",
+          "virtual_size": 64499,
+          "raw_size": 65536,
+          "executable": false
+        },
+        {
+          "name": ".data",
+          "virtual_size": 15716,
+          "raw_size": 4096,
+          "executable": false
+        },
+        {
+          "name": ".reloc",
+          "virtual_size": 13366,
+          "raw_size": 16384,
+          "executable": false
+        }
+      ],
+      "exports_count": 74,
+      "tls_present": false,
+      "relocation_entries": 5443
+    },
+    {
+      "file": "app/Tribes Vengeance/Program/Bin/Tyrion.dll",
+      "sha256": "9892d852be00203a1c6eb194dce2886d2c0d272277f1857700601b2a19f60e4e",
+      "bytes": 167936,
+      "machine": "0x14c",
+      "image_base": "0x10000000",
+      "image_size": 192512,
+      "entry_rva": "0x12ab6",
+      "sections": [
+        {
+          "name": ".text",
+          "virtual_size": 80923,
+          "raw_size": 81920,
+          "executable": true
+        },
+        {
+          "name": ".rdata",
+          "virtual_size": 61700,
+          "raw_size": 65536,
+          "executable": false
+        },
+        {
+          "name": ".data",
+          "virtual_size": 27820,
+          "raw_size": 4096,
+          "executable": false
+        },
+        {
+          "name": ".reloc",
+          "virtual_size": 10826,
+          "raw_size": 12288,
+          "executable": false
+        }
+      ],
+      "exports_count": 386,
+      "tls_present": false,
+      "relocation_entries": 4291
+    },
+    {
+      "file": "app/Tribes Vengeance/Program/Bin/UCC.exe",
+      "sha256": "4bfa0e2c872fc86e70027a237feed443671951a9136e968875db68ca1f7ee341",
+      "bytes": 102400,
+      "machine": "0x14c",
+      "image_base": "0x400000",
+      "image_size": 102400,
+      "entry_rva": "0xecd5",
+      "sections": [
+        {
+          "name": ".text",
+          "virtual_size": 60266,
+          "raw_size": 61440,
+          "executable": true
+        },
+        {
+          "name": ".rdata",
+          "virtual_size": 26355,
+          "raw_size": 28672,
+          "executable": false
+        },
+        {
+          "name": ".data",
+          "virtual_size": 7768,
+          "raw_size": 8192,
+          "executable": false
+        }
+      ],
+      "exports_count": 1,
+      "tls_present": false,
+      "relocation_entries": 0
+    },
+    {
+      "file": "app/Tribes Vengeance/Program/Bin/UWeb.dll",
+      "sha256": "c37ca4fb2d4ff4278f3c3be217390219fdc31587039c0dea81218a22b71423b1",
+      "bytes": 33792,
+      "machine": "0x14c",
+      "image_base": "0x10700000",
+      "image_size": 45056,
+      "entry_rva": "0x441a",
+      "sections": [
+        {
+          "name": ".text",
+          "virtual_size": 16378,
+          "raw_size": 16384,
+          "executable": true
+        },
+        {
+          "name": ".rdata",
+          "virtual_size": 12442,
+          "raw_size": 12800,
+          "executable": false
+        },
+        {
+          "name": ".data",
+          "virtual_size": 3200,
+          "raw_size": 512,
+          "executable": false
+        },
+        {
+          "name": ".reloc",
+          "virtual_size": 2724,
+          "raw_size": 3072,
+          "executable": false
+        }
+      ],
+      "exports_count": 51,
+      "tls_present": false,
+      "relocation_entries": 1123
+    },
+    {
+      "file": "app/Tribes Vengeance/Program/Bin/WinDrv.dll",
+      "sha256": "a3f16fc7c181ad419944eef4a43518afec681ac6bbb09f28f44f2da326154c36",
+      "bytes": 159744,
+      "machine": "0x14c",
+      "image_base": "0x11100000",
+      "image_size": 159744,
+      "entry_rva": "0xc525",
+      "sections": [
+        {
+          "name": ".text",
+          "virtual_size": 48251,
+          "raw_size": 49152,
+          "executable": true
+        },
+        {
+          "name": ".rdata",
+          "virtual_size": 64718,
+          "raw_size": 65536,
+          "executable": false
+        },
+        {
+          "name": ".data",
+          "virtual_size": 3028,
+          "raw_size": 4096,
+          "executable": false
+        },
+        {
+          "name": ".rsrc",
+          "virtual_size": 16528,
+          "raw_size": 20480,
+          "executable": false
+        },
+        {
+          "name": ".reloc",
+          "virtual_size": 13612,
+          "raw_size": 16384,
+          "executable": false
+        }
+      ],
+      "exports_count": 90,
+      "tls_present": false,
+      "relocation_entries": 3346
+    },
+    {
+      "file": "app/Tribes Vengeance/Program/Bin/Window.dll",
+      "sha256": "374750cc233e7cb2558066c8c5a1475050c9845946b580ab547a50a1adb68809",
+      "bytes": 495616,
+      "machine": "0x14c",
+      "image_base": "0x11000000",
+      "image_size": 503808,
+      "entry_rva": "0x3249e",
+      "sections": [
+        {
+          "name": ".text",
+          "virtual_size": 214410,
+          "raw_size": 217088,
+          "executable": true
+        },
+        {
+          "name": ".rdata",
+          "virtual_size": 172078,
+          "raw_size": 176128,
+          "executable": false
+        },
+        {
+          "name": ".data",
+          "virtual_size": 11764,
+          "raw_size": 4096,
+          "executable": false
+        },
+        {
+          "name": ".rsrc",
+          "virtual_size": 51392,
+          "raw_size": 53248,
+          "executable": false
+        },
+        {
+          "name": ".reloc",
+          "virtual_size": 37120,
+          "raw_size": 40960,
+          "executable": false
+        }
+      ],
+      "exports_count": 1323,
+      "tls_present": false,
+      "relocation_entries": 15178
+    },
+    {
+      "file": "app/Tribes Vengeance/Program/Bin/csiroJP.dll",
+      "sha256": "aa5b9c8f05fe87d364c0f79e92b3cac6a6a541664f6dce1be76ef9cc7afe3010",
+      "bytes": 905295,
+      "machine": "0x14c",
+      "image_base": "0x10000000",
+      "image_size": 921600,
+      "entry_rva": "0x32f0",
+      "sections": [
+        {
+          "name": ".text",
+          "virtual_size": 223024,
+          "raw_size": 225280,
+          "executable": true
+        },
+        {
+          "name": ".rdata",
+          "virtual_size": 647100,
+          "raw_size": 647168,
+          "executable": false
+        },
+        {
+          "name": ".data",
+          "virtual_size": 26224,
+          "raw_size": 12288,
+          "executable": false
+        },
+        {
+          "name": ".idata",
+          "virtual_size": 3492,
+          "raw_size": 4096,
+          "executable": false
+        },
+        {
+          "name": ".reloc",
+          "virtual_size": 9144,
+          "raw_size": 12288,
+          "executable": false
+        }
+      ],
+      "exports_count": 17,
+      "tls_present": false,
+      "relocation_entries": 3199
+    },
+    {
+      "file": "app/Tribes Vengeance/Program/Bin/dinterface.dll",
+      "sha256": "51d0008dea3b2fd1193842a16c08c40a91897d2f6460c57e154f6da909cf5861",
+      "bytes": 1378816,
+      "machine": "0x14c",
+      "image_base": "0x400000",
+      "image_size": 1400832,
+      "entry_rva": "0x116928",
+      "sections": [
+        {
+          "name": "CODE",
+          "virtual_size": 1137060,
+          "raw_size": 1137152,
+          "executable": true
+        },
+        {
+          "name": "DATA",
+          "virtual_size": 12540,
+          "raw_size": 12800,
+          "executable": false
+        },
+        {
+          "name": "BSS",
+          "virtual_size": 3825,
+          "raw_size": 0,
+          "executable": false
+        },
+        {
+          "name": ".idata",
+          "virtual_size": 10782,
+          "raw_size": 11264,
+          "executable": false
+        },
+        {
+          "name": ".edata",
+          "virtual_size": 587,
+          "raw_size": 1024,
+          "executable": false
+        },
+        {
+          "name": ".reloc",
+          "virtual_size": 66944,
+          "raw_size": 67072,
+          "executable": false
+        },
+        {
+          "name": ".rsrc",
+          "virtual_size": 148480,
+          "raw_size": 148480,
+          "executable": false
+        }
+      ],
+      "exports_count": 22,
+      "tls_present": false,
+      "relocation_entries": 32221
+    },
+    {
+      "file": "app/Tribes Vengeance/Program/Bin/msvcp60.dll",
+      "sha256": "17cd3cf219a6fcee30e00055657fcb2b862d2c1405bb6dacdad6627d8a820519",
+      "bytes": 401462,
+      "machine": "0x14c",
+      "image_base": "0x55900000",
+      "image_size": 397312,
+      "entry_rva": "0x1000",
+      "sections": [
+        {
+          "name": ".text",
+          "virtual_size": 170940,
+          "raw_size": 172032,
+          "executable": true
+        },
+        {
+          "name": ".rdata",
+          "virtual_size": 192560,
+          "raw_size": 196608,
+          "executable": false
+        },
+        {
+          "name": ".data",
+          "virtual_size": 6024,
+          "raw_size": 8192,
+          "executable": false
+        },
+        {
+          "name": ".rsrc",
+          "virtual_size": 936,
+          "raw_size": 4096,
+          "executable": false
+        },
+        {
+          "name": ".reloc",
+          "virtual_size": 11504,
+          "raw_size": 12288,
+          "executable": false
+        }
+      ],
+      "exports_count": 2104,
+      "tls_present": false,
+      "relocation_entries": 5513
+    },
+    {
+      "file": "app/Tribes Vengeance/Program/Bin/msvcp71.dll",
+      "sha256": "df96156f6a548fd6fe5672918de5ae4509d3c810a57bffd2a91de45a3ed5b23b",
+      "bytes": 499712,
+      "machine": "0x14c",
+      "image_base": "0x7c3a0000",
+      "image_size": 503808,
+      "entry_rva": "0x2db0",
+      "sections": [
+        {
+          "name": ".text",
+          "virtual_size": 191640,
+          "raw_size": 192512,
+          "executable": true
+        },
+        {
+          "name": ".rdata",
+          "virtual_size": 272946,
+          "raw_size": 274432,
+          "executable": false
+        },
+        {
+          "name": ".data",
+          "virtual_size": 8552,
+          "raw_size": 8192,
+          "executable": false
+        },
+        {
+          "name": ".rsrc",
+          "virtual_size": 960,
+          "raw_size": 4096,
+          "executable": false
+        },
+        {
+          "name": ".reloc",
+          "virtual_size": 12484,
+          "raw_size": 16384,
+          "executable": false
+        }
+      ],
+      "exports_count": 2903,
+      "tls_present": false,
+      "relocation_entries": 5971
+    },
+    {
+      "file": "app/Tribes Vengeance/Program/Bin/msvcr71.dll",
+      "sha256": "8094af5ee310714caebccaeee7769ffb08048503ba478b879edfef5f1a24fefe",
+      "bytes": 348160,
+      "machine": "0x14c",
+      "image_base": "0x7c340000",
+      "image_size": 352256,
+      "entry_rva": "0x229f",
+      "sections": [
+        {
+          "name": ".text",
+          "virtual_size": 232360,
+          "raw_size": 233472,
+          "executable": true
+        },
+        {
+          "name": ".rdata",
+          "virtual_size": 65600,
+          "raw_size": 69632,
+          "executable": false
+        },
+        {
+          "name": ".data",
+          "virtual_size": 26656,
+          "raw_size": 24576,
+          "executable": false
+        },
+        {
+          "name": ".rsrc",
+          "virtual_size": 952,
+          "raw_size": 4096,
+          "executable": false
+        },
+        {
+          "name": ".reloc",
+          "virtual_size": 11108,
+          "raw_size": 12288,
+          "executable": false
+        }
+      ],
+      "exports_count": 837,
+      "tls_present": false,
+      "relocation_entries": 5243
+    },
+    {
+      "file": "app/Tribes Vengeance/Program/Bin/msvcrt.dll",
+      "sha256": "64dfca1e64fb1827465b1e4759605699e72aecf4011ddaa0a65f3c3fac3991cd",
+      "bytes": 323072,
+      "machine": "0x14c",
+      "image_base": "0x77c10000",
+      "image_size": 339968,
+      "entry_rva": "0xe94f",
+      "sections": [
+        {
+          "name": ".text",
+          "virtual_size": 290347,
+          "raw_size": 290816,
+          "executable": true
+        },
+        {
+          "name": ".data",
+          "virtual_size": 26472,
+          "raw_size": 18432,
+          "executable": false
+        },
+        {
+          "name": ".rsrc",
+          "virtual_size": 992,
+          "raw_size": 1024,
+          "executable": false
+        },
+        {
+          "name": ".reloc",
+          "virtual_size": 11306,
+          "raw_size": 11776,
+          "executable": false
+        }
+      ],
+      "exports_count": 829,
+      "tls_present": false,
+      "relocation_entries": 5014
+    },
+    {
+      "file": "app/Tribes Vengeance/Program/Bin/ogg.dll",
+      "sha256": "82a4dde1eebdda18be8ef99538193d73b097f16ce30a20b08f667a94854c0c83",
+      "bytes": 11264,
+      "machine": "0x14c",
+      "image_base": "0x10000000",
+      "image_size": 24576,
+      "entry_rva": "0x24df",
+      "sections": [
+        {
+          "name": ".text",
+          "virtual_size": 5896,
+          "raw_size": 6144,
+          "executable": true
+        },
+        {
+          "name": ".rdata",
+          "virtual_size": 1717,
+          "raw_size": 2048,
+          "executable": false
+        },
+        {
+          "name": ".data",
+          "virtual_size": 1208,
+          "raw_size": 1536,
+          "executable": false
+        },
+        {
+          "name": ".reloc",
+          "virtual_size": 206,
+          "raw_size": 512,
+          "executable": false
+        }
+      ],
+      "exports_count": 43,
+      "tls_present": false,
+      "relocation_entries": 75
+    },
+    {
+      "file": "app/Tribes Vengeance/Program/Bin/vorbis.dll",
+      "sha256": "b199c31559b233dbe62a864a1eed3812fd83f076eee09e15fc04a820ab706724",
+      "bytes": 126976,
+      "machine": "0x14c",
+      "image_base": "0x10000000",
+      "image_size": 126976,
+      "entry_rva": "0x19c70",
+      "sections": [
+        {
+          "name": ".text",
+          "virtual_size": 102040,
+          "raw_size": 102400,
+          "executable": true
+        },
+        {
+          "name": ".rdata",
+          "virtual_size": 3733,
+          "raw_size": 4096,
+          "executable": false
+        },
+        {
+          "name": ".data",
+          "virtual_size": 8720,
+          "raw_size": 12288,
+          "executable": false
+        },
+        {
+          "name": ".reloc",
+          "virtual_size": 2330,
+          "raw_size": 4096,
+          "executable": false
+        }
+      ],
+      "exports_count": 35,
+      "tls_present": false,
+      "relocation_entries": 851
+    },
+    {
+      "file": "app/Tribes Vengeance/Program/Bin/vorbisfile.dll",
+      "sha256": "8295974654db11f3143e801f377854ffa5f01b09e9645ab03f75bfa7c603a61f",
+      "bytes": 17408,
+      "machine": "0x14c",
+      "image_base": "0x10000000",
+      "image_size": 32768,
+      "entry_rva": "0x3e92",
+      "sections": [
+        {
+          "name": ".text",
+          "virtual_size": 12476,
+          "raw_size": 12800,
+          "executable": true
+        },
+        {
+          "name": ".rdata",
+          "virtual_size": 2288,
+          "raw_size": 2560,
+          "executable": false
+        },
+        {
+          "name": ".data",
+          "virtual_size": 40,
+          "raw_size": 512,
+          "executable": false
+        },
+        {
+          "name": ".reloc",
+          "virtual_size": 338,
+          "raw_size": 512,
+          "executable": false
+        }
+      ],
+      "exports_count": 25,
+      "tls_present": false,
+      "relocation_entries": 126
+    }
+  ],
+  "dependency_closures": [
+    {
+      "roots": [
+        "tv_cd_dvd.exe"
+      ],
+      "packaged_modules": [
+        "aicommon.dll",
+        "core.dll",
+        "engine.dll",
+        "gameaisupport.dll",
+        "gameplay.dll",
+        "gui.dll",
+        "ifc23.dll",
+        "mojoactions.dll",
+        "mojocore.dll",
+        "movement.dll",
+        "msvcp71.dll",
+        "msvcr71.dll",
+        "ogg.dll",
+        "pathfinding.dll",
+        "renderutilities.dll",
+        "scripting.dll",
+        "tv_cd_dvd.exe",
+        "vorbis.dll",
+        "vorbisfile.dll",
+        "window.dll"
+      ],
+      "module_count": 20,
+      "file_bytes": 11571200,
+      "external_import_counts": {
+        "advapi32.dll": 8,
+        "comctl32.dll": 2,
+        "comdlg32.dll": 1,
+        "ddraw.dll": 1,
+        "gdi32.dll": 29,
+        "kernel32.dll": 201,
+        "msimg32.dll": 1,
+        "ole32.dll": 9,
+        "oleaut32.dll": 4,
+        "shell32.dll": 6,
+        "user32.dll": 129,
+        "version.dll": 3,
+        "winmm.dll": 3,
+        "wsock32.dll": 28
+      }
+    },
+    {
+      "roots": [
+        "tv_cd_dvd.exe",
+        "d3ddrv.dll",
+        "alaudio.dll",
+        "windrv.dll",
+        "ipdrv.dll",
+        "tribesgui.dll"
+      ],
+      "packaged_modules": [
+        "aicommon.dll",
+        "alaudio.dll",
+        "core.dll",
+        "d3ddrv.dll",
+        "engine.dll",
+        "gameaisupport.dll",
+        "gameplay.dll",
+        "gui.dll",
+        "ifc23.dll",
+        "ipdrv.dll",
+        "mojoactions.dll",
+        "mojocore.dll",
+        "movement.dll",
+        "msvcp71.dll",
+        "msvcr71.dll",
+        "ogg.dll",
+        "pathfinding.dll",
+        "renderutilities.dll",
+        "rtcshader.dll",
+        "scripting.dll",
+        "tribesgui.dll",
+        "tv_cd_dvd.exe",
+        "vorbis.dll",
+        "vorbisfile.dll",
+        "window.dll",
+        "windrv.dll"
+      ],
+      "module_count": 26,
+      "file_bytes": 12943360,
+      "external_import_counts": {
+        "advapi32.dll": 9,
+        "comctl32.dll": 2,
+        "comdlg32.dll": 1,
+        "d3d9.dll": 1,
+        "ddraw.dll": 1,
+        "dinput8.dll": 1,
+        "gdi32.dll": 30,
+        "imm32.dll": 6,
+        "kernel32.dll": 210,
+        "msimg32.dll": 1,
+        "ole32.dll": 9,
+        "oleaut32.dll": 4,
+        "shell32.dll": 6,
+        "user32.dll": 149,
+        "version.dll": 3,
+        "winmm.dll": 3,
+        "wsock32.dll": 28
+      }
+    }
+  ],
+  "probes": [
+    {
+      "source": "ref/vengeance-research/extracted/app/Tribes Vengeance/Program/Bin/Core.dll",
+      "sha256": "dad4691fb0b724ffdcd66f4553e4bbb7076bb331718f9cdd43aba8ed8286f934",
+      "srw_sha256": "652c2ae584e517ae2b38d8ce04d97457f322982ad04844c5956ff5423ab28e61",
+      "playable": false,
+      "purpose": "unmodified-tool baseline, diagnostic translation only; no manual fixups, linking, or execution",
+      "audit_exit": 0,
+      "audit_seconds": 3.5,
+      "audit": {
+        "instructions": 136056,
+        "functions": 5324,
+        "text_size": 455946,
+        "code_bytes": 425378,
+        "unclassified_bytes": 208,
+        "relocations_certain": 21882,
+        "relocations_uncertain": 292,
+        "instruction_families": {
+          "fs_segment": 2127,
+          "sse": 3,
+          "mmx": 49,
+          "rep_string": 188,
+          "x87": 7727,
+          "special:rdtsc": 16,
+          "special:cpuid": 1
+        },
+        "bad_decode_count": 0,
+        "overlap_count": 0,
+        "relocation_error_count": 0
+      },
+      "srw_exit": 0,
+      "srw_seconds": 0.9,
+      "diagnostic_counts": {
+        "unknown-flags": 18,
+        "unknown-instruction": 18
+      },
+      "unsupported_instruction_mnemonics": {
+        "prefetchnta": 2,
+        "movntq": 16
+      },
+      "unsupported_instruction_unique_addresses": 18
+    },
+    {
+      "source": "ref/vengeance-research/extracted/app/Tribes Vengeance/Program/Bin/D3DDrv.dll",
+      "sha256": "b042c78b130bd7e164a07d1ad453dc8407af75911acce245caf5e38d5fafe26f",
+      "srw_sha256": "652c2ae584e517ae2b38d8ce04d97457f322982ad04844c5956ff5423ab28e61",
+      "playable": false,
+      "purpose": "unmodified-tool baseline, diagnostic translation only; no manual fixups, linking, or execution",
+      "audit_exit": 0,
+      "audit_seconds": 2.7,
+      "audit": {
+        "instructions": 96852,
+        "functions": 1834,
+        "text_size": 319738,
+        "code_bytes": 312256,
+        "unclassified_bytes": 422,
+        "relocations_certain": 9346,
+        "relocations_uncertain": 20,
+        "instruction_families": {
+          "fs_segment": 570,
+          "rep_string": 473,
+          "sse": 3767,
+          "mmx": 2664,
+          "x87": 11067,
+          "special:rdtsc": 46,
+          "special:cpuid": 8,
+          "3dnow": 1862
+        },
+        "bad_decode_count": 0,
+        "overlap_count": 0,
+        "relocation_error_count": 0
+      },
+      "srw_exit": 0,
+      "srw_seconds": 0.3,
+      "diagnostic_counts": {
+        "unknown-flags": 2533,
+        "unknown-instruction": 2533,
+        "lowering-error": 34
+      },
+      "unsupported_instruction_mnemonics": {
+        "prefetchnta": 2,
+        "movntq": 16,
+        "movhps": 193,
+        "movlps": 222,
+        "rsqrtss": 12,
+        "rcpss": 3,
+        "rcpps": 12,
+        "unpcklps": 47,
+        "unpckhps": 32,
+        "cvtpi2ps": 4,
+        "punpckhwd": 12,
+        "pmaxsw": 3,
+        "pandn": 10,
+        "femms": 127,
+        "pfacc": 95,
+        "pfsub": 129,
+        "pfadd": 344,
+        "pfmul": 785,
+        "punpckhdq": 257,
+        "pfrcpit2": 41,
+        "pfrsqit1": 19,
+        "pfcmpgt": 13,
+        "pfrsqrt": 19,
+        "packsswb": 2,
+        "pfcmpge": 21,
+        "pfsubr": 19,
+        "pfrcpit1": 22,
+        "pfrcp": 24,
+        "pswapd": 13,
+        "pfpnacc": 3,
+        "pfnacc": 7,
+        "pfcmpeq": 3,
+        "pi2fd": 8,
+        "pcmpeqd": 2,
+        "psubd": 3,
+        "cmpps": 2,
+        "pfmin": 1,
+        "pfmax": 1,
+        "pcmpgtd": 3,
+        "pf2id": 2
+      },
+      "unsupported_instruction_unique_addresses": 2533
+    },
+    {
+      "source": "ref/vengeance-research/extracted/app/Tribes Vengeance/Program/Bin/Engine.dll",
+      "sha256": "e85ca1a1f5795caf3506b150e00d7969deaa894fdab54cd4221f9e9762267590",
+      "srw_sha256": "652c2ae584e517ae2b38d8ce04d97457f322982ad04844c5956ff5423ab28e61",
+      "playable": false,
+      "purpose": "unmodified-tool baseline, diagnostic translation only; no manual fixups, linking, or execution",
+      "audit_exit": 0,
+      "audit_seconds": 23.1,
+      "audit": {
+        "instructions": 949301,
+        "functions": 25120,
+        "text_size": 3206331,
+        "code_bytes": 3070401,
+        "unclassified_bytes": 1740,
+        "relocations_certain": 133967,
+        "relocations_uncertain": 50,
+        "instruction_families": {
+          "fs_segment": 10408,
+          "sse": 154,
+          "mmx": 49,
+          "rep_string": 1170,
+          "x87": 119404,
+          "special:rdtsc": 547
+        },
+        "bad_decode_count": 0,
+        "overlap_count": 0,
+        "relocation_error_count": 0
+      },
+      "srw_exit": 0,
+      "srw_seconds": 3.7,
+      "diagnostic_counts": {
+        "unknown-flags": 43,
+        "unknown-instruction": 43
+      },
+      "unsupported_instruction_mnemonics": {
+        "prefetchnta": 3,
+        "movntq": 16,
+        "movmskps": 4,
+        "cmpps": 4,
+        "movhps": 8,
+        "movlps": 8
+      },
+      "unsupported_instruction_unique_addresses": 43
+    },
+    {
+      "source": "ref/vengeance-research/extracted/app/Tribes Vengeance/Program/Bin/TV_CD_DVD.exe",
+      "sha256": "fe398d0e7f0427d3ed765bb6b220e46502ff53d17b8239ee4b02b19754a983c2",
+      "srw_sha256": "652c2ae584e517ae2b38d8ce04d97457f322982ad04844c5956ff5423ab28e61",
+      "playable": false,
+      "purpose": "unmodified-tool baseline, diagnostic translation only; no manual fixups, linking, or execution",
+      "audit_exit": 0,
+      "audit_seconds": 1.5,
+      "audit": {
+        "instructions": 28227,
+        "functions": 1001,
+        "text_size": 98304,
+        "code_bytes": 89563,
+        "unclassified_bytes": 4654,
+        "relocations_certain": 5677,
+        "relocations_uncertain": 16333,
+        "instruction_families": {
+          "fs_segment": 412,
+          "rep_string": 45,
+          "x87": 234,
+          "special:rdtsc": 3,
+          "sse": 3,
+          "mmx": 49
+        },
+        "bad_decode_count": 0,
+        "overlap_count": 0,
+        "relocation_error_count": 0
+      },
+      "srw_exit": 6,
+      "srw_seconds": 0.3,
+      "diagnostic_counts": {},
+      "unsupported_instruction_mnemonics": {},
+      "unsupported_instruction_unique_addresses": 0,
+      "failure": "Invalid instruction at 0x109be6d8 in executable section .kpjaig"
+    },
+    {
+      "source": "ref/vengeance-research/extracted/app/Tribes Vengeance/Program/Bin/UCC.exe",
+      "sha256": "4bfa0e2c872fc86e70027a237feed443671951a9136e968875db68ca1f7ee341",
+      "srw_sha256": "652c2ae584e517ae2b38d8ce04d97457f322982ad04844c5956ff5423ab28e61",
+      "playable": false,
+      "purpose": "unmodified-tool baseline, diagnostic translation only; no manual fixups, linking, or execution",
+      "audit_exit": 0,
+      "audit_seconds": 0.6,
+      "audit": {
+        "instructions": 18748,
+        "functions": 597,
+        "text_size": 60266,
+        "code_bytes": 57453,
+        "unclassified_bytes": 0,
+        "relocations_certain": 2408,
+        "relocations_uncertain": 29,
+        "instruction_families": {
+          "fs_segment": 313,
+          "rep_string": 32,
+          "x87": 13,
+          "sse": 3,
+          "mmx": 49
+        },
+        "bad_decode_count": 0,
+        "overlap_count": 0,
+        "relocation_error_count": 0
+      },
+      "srw_exit": 0,
+      "srw_seconds": 0.1,
+      "diagnostic_counts": {
+        "unknown-flags": 18,
+        "unknown-instruction": 18
+      },
+      "unsupported_instruction_mnemonics": {
+        "prefetchnta": 2,
+        "movntq": 16
+      },
+      "unsupported_instruction_unique_addresses": 18
+    }
+  ],
+  "probe_environment": {
+    "HALOPAD_SRW_DIAG": "1",
+    "TRIBES_SRW_FULL_FLAGS": "1"
+  },
+  "limitations": [
+    "Import presence does not prove runtime reachability.",
+    "Name matches do not establish ABI or semantic compatibility.",
+    "A DLL string is a lead, not a confirmed dynamic dependency.",
+    "No game launch, graphics, gameplay, or online validation.",
+    "Dependency closure excludes unobserved dynamic loads and script-selected native packages.",
+    "Instruction auditor counts concern .text, not all executable client sections.",
+    "Diagnostic SRW output is not clean translation, linked ARM64 code, or playability.",
+    "Availability and hashes do not establish license permission."
+  ]
+}

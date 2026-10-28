@@ -1,0 +1,72 @@
+{
+  "date": "2026-10-28",
+  "ascend_snapshots": [
+    {
+      "name": "ta-community",
+      "url": "http://ta.kfk4ever.com:9080/detailed_status",
+      "time_utc": "2026-10-28T03:16:44.656527+00:00",
+      "logged_in": 3,
+      "in_matches": 0,
+      "occupied_servers": 0,
+      "server_records": 7,
+      "named_server_records": 4,
+      "body_sha256": "bf7022714758326392af571f08f535a31b7772956f38d7abfc2cf5f939fef7d3"
+    },
+    {
+      "name": "ta-pug",
+      "url": "http://ta.dodgesdomain.com:9080/detailed_status",
+      "time_utc": "2026-10-28T03:16:44.657007+00:00",
+      "logged_in": 1,
+      "in_matches": 0,
+      "occupied_servers": 0,
+      "server_records": 362,
+      "named_server_records": 15,
+      "body_sha256": "8bc610cf8b8a4cf6b49bea84e2aad919a7b0f255bef94786ccdf0aa17ecd346b"
+    },
+    {
+      "name": "ta-community",
+      "url": "http://ta.kfk4ever.com:9080/detailed_status",
+      "time_utc": "2026-10-28T03:24:53.335786+00:00",
+      "status": 200,
+      "bytes": 1500,
+      "logged_in": 2,
+      "in_matches": 0,
+      "occupied_servers": 0,
+      "server_records": 7,
+      "named_server_records": 4,
+      "body_sha256": "187bf1a660a688c60f2c1792fa3613b77386552608557efa023ec38932f4116f"
+    },
+    {
+      "name": "ta-pug",
+      "url": "http://ta.dodgesdomain.com:9080/detailed_status",
+      "time_utc": "2026-10-28T03:24:53.336262+00:00",
+      "status": 200,
+      "bytes": 68799,
+      "logged_in": 1,
+      "in_matches": 0,
+      "occupied_servers": 0,
+      "server_records": 362,
+      "named_server_records": 15,
+      "body_sha256": "8bc610cf8b8a4cf6b49bea84e2aad919a7b0f255bef94786ccdf0aa17ecd346b"
+    }
+  ],
+  "interpretation": [
+    "Login-server connections are distinct from clients currently in matches.",
+    "No player names retained in this report.",
+    "Two observations about eight minutes apart cannot establish peak, weekly audience, or a population ranking.",
+    "Services may overlap or omit other communities; counts should not be treated as unique people.",
+    "Named records are not confirmed reachable game servers; null-name records are not counted as usable servers."
+  ],
+  "sources_inspected": {
+    "launcher_v2": "https://github.com/Dylan-B-D/ta-launcher/tree/ebc4f39",
+    "login_server": "https://github.com/Griffon26/taserver/tree/1d44670",
+    "tamods": "https://github.com/mcoot/tamods/tree/9b2aac346e469aafdf9734dbe3a19f458ff67520",
+    "installer": "https://github.com/wilderzone/ta-installer/tree/f134661",
+    "wilderzone_site": "https://github.com/wilderzone/wilderzone-org/tree/dc99394"
+  },
+  "vengeance_population": {
+    "status": "unverified",
+    "historical_stats": "https://stats.tribesrevengeance.net/servers",
+    "problem": "Newest server record says last seen four years ago; 349 historical server records are not current active servers."
+  }
+}
