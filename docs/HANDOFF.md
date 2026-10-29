@@ -1,4 +1,17 @@
-# TribesPad handoff — 28 October 2026
+# TribesPad handoff — 29 October 2026
+
+## Vengeance focused implementation plan (29 October)
+
+For the owner's next Vengeance work, start with
+[VENGEANCE-IMPLEMENTATION-PLAN.md](VENGEANCE-IMPLEMENTATION-PLAN.md). It specifies
+the seven-module UCC dependency closure, a checked but unimplemented 27-module
+address-layout candidate, client entry investigation, opening campaign route,
+Vengeance-specific touch/controller bindings and the same-app integration order.
+[New static evidence](validation/vengeance-planning-audit-2026-10-29.json) records
+rechecked archive/module hashes and the relevant configuration identities.
+Begin with reproducible inputs/layout and investigate the client entry alongside
+UCC startup. No Vengeance runtime or gameplay milestone has passed. Ascend remains
+in scope under the combined plan below; it is not a dependency of this work.
 
 ## Vengeance and Ascend implementation handoff (28 October)
 

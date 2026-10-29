@@ -5,6 +5,10 @@ Implementation handoff, 28 October 2026. Source inspection baseline:
 game currently builds or plays in TribesPad.** Recheck the implementation before
 starting; existing plans and validation records describe different checkpoints.
 
+For the 29 October Vengeance-specific implementation sequence, controls and
+campaign target, start with [Vengeance implementation plan](VENGEANCE-IMPLEMENTATION-PLAN.md).
+Its static checks refine the Vengeance work below without claiming a working port.
+
 ## Product decision and scope
 
 Add **Tribes: Vengeance** and **Tribes: Ascend** as optional engines and game-data

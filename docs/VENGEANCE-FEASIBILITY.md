@@ -3,6 +3,11 @@
 Investigated 2026-10-28 against TribesPad commit
 `1c046b431bd085c394e612f462fb075ec91caa30`.
 
+The [29 October implementation plan](VENGEANCE-IMPLEMENTATION-PLAN.md) turns these
+findings into the next Vengeance work sequence, including actual input bindings,
+campaign targets and a candidate module layout. This document retains the
+28 October audit baseline.
+
 ## Recommendation
 
 For the subsequent player/community comparison and Ascend binary investigation,
@@ -10,9 +15,9 @@ see [Tribes expansion research](TRIBES-EXPANSION-RESEARCH.md). Both games remain
 explicit candidates; the small Vengeance bootstrap is an engineering experiment,
 not a requirement to finish Vengeance before investigating Ascend.
 
-Vengeance is a worthwhile **separate port project**, but is not ready to become
-another builder option. Its campaign gives it value independent of multiplayer
-population. TribesPad supplies a substantial host runtime and translation
+Vengeance is a worthwhile **additional engine port within TribesPad**, but is not
+ready to become another builder option. Its campaign gives it value independent
+of multiplayer population. TribesPad supplies a substantial host runtime and translation
 toolchain; it does not yet supply Vengeance's renderer, complete DLL address
 layout, C++ exception behavior, or instruction coverage.
 
