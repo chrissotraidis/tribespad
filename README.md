@@ -399,6 +399,7 @@ How this works, stage by stage, is in [Reproducible build](docs/REPRODUCIBLE-BUI
 - [Product target](docs/Tribes2-Online-HD-Target.md): the intended experience
 - [Starsiege: Tribes plan](docs/STARSIEGE-TRIBES-PLAN.md): evidence, a lift preview and gated steps for a second game
 - [Vengeance and Ascend plan](docs/VENGEANCE-ASCEND-PLAN.md): optional engines in the same app, community inputs, milestones and the next implementation handoff
+- [Vengeance implementation plan](docs/VENGEANCE-IMPLEMENTATION-PLAN.md): concrete translation/bootstrap sequence, campaign target, touch/controller bindings and third-engine integration
 - [Expansion research](docs/TRIBES-EXPANSION-RESEARCH.md): community services, binary audits, reusable runtime code and distribution evidence
 - [Launcher plan](docs/LAUNCHER-PLAN.md): the game picker, Switch Game, per-game controls and folders, and when it ships
 - [Android and Linux plan](docs/ANDROID-LINUX-PLAN.md): what carries over from the Apple build, and gated steps for Raspberry Pi and Android

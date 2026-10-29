@@ -1,0 +1,391 @@
+{
+  "date": "2026-10-29",
+  "tribespad_commit": "3f284ee525d6140dce1114b061e2cbffa4a6c0da",
+  "method": "Read and hash cached community installer inputs; parse INI and PE metadata; derive static import closure and check a proposed address layout. No PE files changed, translation rerun, game execution or device test.",
+  "archive": {
+    "url": "https://downloads.tribesrevengeance.net/TribesVengeance.zip",
+    "bytes": 3093197450,
+    "sha256": "22180a8162caccc059c81aac86ad7c3e26b854e01f080534eb774b0ce088fc52",
+    "whole_archive_rehashed_this_pass": true
+  },
+  "configs": {
+    "Program/Bin/DefUser.ini": {
+      "sha256": "3bf7270562b8b5d2e3bdd1dbf6226eab4d442c813f7873fed3d9eaa1dfdce1a7",
+      "bytes": 10621,
+      "selected_engine_input_bindings": {
+        "W": "MoveForward",
+        "A": "StrafeLeft",
+        "D": "StrafeRight",
+        "S": "MoveBackward",
+        "LeftMouse": "Fire | PathfindDebugMark | markNavigationPoint",
+        "RightMouse": "Jetpack | Jump",
+        "Space": "Ski | PathfindNextStep",
+        "1": "SwitchWeapon 1 | SwitchVehiclePosition 1",
+        "2": "SwitchWeapon 2 | SwitchVehiclePosition 2",
+        "3": "SwitchWeapon 3 | SwitchVehiclePosition 3",
+        "Q": "activatePack",
+        "E": "altFire | onRelease releaseAltFire",
+        "Shift": "Button bQuickChat | Button bLoadoutSelection",
+        "Ctrl": "Button bZoom",
+        "MouseWheelDown": "NextWeapon",
+        "MouseWheelUp": "PrevWeapon",
+        "R": "cycleZoomLevel",
+        "F": "Use",
+        "C": "Button bObjectives",
+        "F5": "QuickSave",
+        "F8": "Quickload",
+        "Escape": "ShowEscapeMenu",
+        "Tab": "Type"
+      }
+    },
+    "Program/Bin/User.ini": {
+      "sha256": "7158bbf53681076f3549e63dfd3dde2fcdcf4a64694fe2b93e9d6c1b985916ba",
+      "bytes": 10859,
+      "selected_engine_input_bindings": {
+        "W": "MoveForward",
+        "A": "StrafeLeft",
+        "D": "StrafeRight",
+        "S": "MoveBackward",
+        "LeftMouse": "Fire | PathfindDebugMark | markNavigationPoint",
+        "RightMouse": "Jetpack | Jump",
+        "Space": "Ski | PathfindNextStep",
+        "1": "SwitchWeapon 1 | SwitchVehiclePosition 1",
+        "2": "SwitchWeapon 2 | SwitchVehiclePosition 2",
+        "3": "SwitchWeapon 3 | SwitchVehiclePosition 3",
+        "Q": "activatePack",
+        "E": "altFire | onRelease releaseAltFire",
+        "Shift": "Button bQuickChat | Button bLoadoutSelection",
+        "Ctrl": "Button bZoom",
+        "MouseWheelDown": "NextWeapon",
+        "MouseWheelUp": "PrevWeapon",
+        "R": "cycleZoomLevel",
+        "F": "Use",
+        "C": "Button bObjectives",
+        "F5": "QuickSave",
+        "F8": "Quickload",
+        "Escape": "ShowEscapeMenu",
+        "Tab": "Type"
+      }
+    },
+    "Program/Bin/Default.ini": {
+      "sha256": "7d18647586d0f982397a43f47d9bb81f3f38b927b78656b61da6805fa183b0d2",
+      "bytes": 11448
+    },
+    "Program/Bin/Startup.ini": {
+      "sha256": "4451aac748702844366264fce4e4923c223be9af6ba3d16f58cddf7746971f8d",
+      "bytes": 102
+    },
+    "Program/Bin/StartupUCC.ini": {
+      "sha256": "4dd6c2ee8f9643ae2fa3fd9baeb834347287e7e27ed7301c33421d09a2aaf0cd",
+      "bytes": 168
+    },
+    "Content/System/Campaign.ini": {
+      "sha256": "ea01a897c8d41215aba9784a8dd965bfddd1d880f9c3ad6107f590746566fc0d",
+      "bytes": 4676
+    },
+    "Content/System/Profiles/Default.ini": {
+      "sha256": "d20494e75b76e3a3ab1c46ec9a95c9e54ae6e0d20ecdf99f8e1345e25894479e",
+      "bytes": 20025
+    }
+  },
+  "campaign": {
+    "chapter_comments": 16,
+    "active_mission_entries": 33,
+    "first_gameplay_map": "SP-Spaceship",
+    "first_cutscene_map": "CS-00SPAstart",
+    "first_end_cutscene_map": "CS-01SPAend_02CAPstart",
+    "first_slice_installer_paths_present": [
+      "Content/Maps/Entry.tvm",
+      "Content/Maps/SP-Spaceship.tvm",
+      "Content/Cutscenes/CS-00SPAstart.tvm",
+      "Content/Cutscenes/CS-01SPAend_02CAPstart.tvm"
+    ],
+    "map_bytes_or_asset_closure_validated": false
+  },
+  "ucc_packaged_static_import_closure": [
+    "core.dll",
+    "msvcp71.dll",
+    "msvcr71.dll",
+    "ogg.dll",
+    "ucc.exe",
+    "vorbis.dll",
+    "vorbisfile.dll"
+  ],
+  "client_entry": {
+    "address": "0x10916b0c",
+    "section": ".text",
+    "previous_diagnostic_stop": "0x109be6d8",
+    "previous_diagnostic_section": ".kpjaig",
+    "runtime_reachability_of_diagnostic_stop": "unknown"
+  },
+  "candidate_layout": {
+    "status": "PROPOSAL ONLY; not rebased, lifted, registered or executed",
+    "rule": "Keep UCC and client preferred bases; assign the known DLL set in sorted-name order from 0x11000000, rounded up to 64 KiB. Freeze a manifest version before lifting; append later dynamic dependencies without moving established entries.",
+    "known_module_count": 27,
+    "dll_window_end_exclusive": "0x12260000",
+    "checked": [
+      "All candidate bases 64 KiB aligned",
+      "Known image ranges disjoint",
+      "All candidate ranges below 0x20000000",
+      "Every moved image has relocation entries",
+      "Module hashes match October 28 audit"
+    ],
+    "still_required": [
+      "Reject conflicts against final provider/thunk/stack/TEB/PEB/heap/scratch manifest",
+      "Audit relocation kinds and absolute references",
+      "Resolve import ordinals, export forwarders and callbacks",
+      "Discover dynamic Unreal/native package loads",
+      "Run staged DLL initialization with correct CRT ownership"
+    ],
+    "modules": [
+      {
+        "module": "aicommon.dll",
+        "sha256": "9be6ec2b49a0c9dc9026dde00a3c30e097faa4d924177db71549dc0aa1379b57",
+        "preferred_base": "0x10000000",
+        "candidate_base": "0x11000000",
+        "image_size": 53248,
+        "candidate_end_exclusive": "0x1100d000",
+        "relocation_entries": 1061
+      },
+      {
+        "module": "alaudio.dll",
+        "sha256": "409a8fc42558922d8ba9f44104bb8ed80f44bf969890c78afe1379a540d9f698",
+        "preferred_base": "0x10000000",
+        "candidate_base": "0x11010000",
+        "image_size": 81920,
+        "candidate_end_exclusive": "0x11024000",
+        "relocation_entries": 2248
+      },
+      {
+        "module": "core.dll",
+        "sha256": "dad4691fb0b724ffdcd66f4553e4bbb7076bb331718f9cdd43aba8ed8286f934",
+        "preferred_base": "0x10100000",
+        "candidate_base": "0x11030000",
+        "image_size": 3301376,
+        "candidate_end_exclusive": "0x11356000",
+        "relocation_entries": 22173
+      },
+      {
+        "module": "d3ddrv.dll",
+        "sha256": "b042c78b130bd7e164a07d1ad453dc8407af75911acce245caf5e38d5fafe26f",
+        "preferred_base": "0x10000000",
+        "candidate_base": "0x11360000",
+        "image_size": 552960,
+        "candidate_end_exclusive": "0x113e7000",
+        "relocation_entries": 9360
+      },
+      {
+        "module": "engine.dll",
+        "sha256": "e85ca1a1f5795caf3506b150e00d7969deaa894fdab54cd4221f9e9762267590",
+        "preferred_base": "0x10300000",
+        "candidate_base": "0x113f0000",
+        "image_size": 9576448,
+        "candidate_end_exclusive": "0x11d12000",
+        "relocation_entries": 134012
+      },
+      {
+        "module": "gameaisupport.dll",
+        "sha256": "cd095294ef5e33939e3a401c0ed30db5d861cfcfd95517cc7f7e9b21727a0507",
+        "preferred_base": "0x10000000",
+        "candidate_base": "0x11d20000",
+        "image_size": 86016,
+        "candidate_end_exclusive": "0x11d35000",
+        "relocation_entries": 1285
+      },
+      {
+        "module": "gameplay.dll",
+        "sha256": "91f25522a6fd554e5dd37827d420c9c3757eb6a0b5ade1e87df9fcce6b2916cb",
+        "preferred_base": "0x10000000",
+        "candidate_base": "0x11d40000",
+        "image_size": 966656,
+        "candidate_end_exclusive": "0x11e2c000",
+        "relocation_entries": 24995
+      },
+      {
+        "module": "gui.dll",
+        "sha256": "5e8813b9405e8fc046d2b1dea014cd2d57f50e5e847a66bb47ab94b675fc5d42",
+        "preferred_base": "0x10000000",
+        "candidate_base": "0x11e30000",
+        "image_size": 376832,
+        "candidate_end_exclusive": "0x11e8c000",
+        "relocation_entries": 9194
+      },
+      {
+        "module": "ifc23.dll",
+        "sha256": "25927b0415e856237859c9cb54bc3ac6c19637382741f2234d3cbeae1a06ac70",
+        "preferred_base": "0x10000000",
+        "candidate_base": "0x11e90000",
+        "image_size": 245760,
+        "candidate_end_exclusive": "0x11ecc000",
+        "relocation_entries": 3481
+      },
+      {
+        "module": "ipdrv.dll",
+        "sha256": "ed48f8b357c57e7306a47392649dc5c2affd77b1fde3b4384fd8bc7684e0ddde",
+        "preferred_base": "0x10700000",
+        "candidate_base": "0x11ed0000",
+        "image_size": 217088,
+        "candidate_end_exclusive": "0x11f05000",
+        "relocation_entries": 6659
+      },
+      {
+        "module": "mojoactions.dll",
+        "sha256": "b87a48b4dfcd733600be5e941d308ed9ed5f0cd46afe1c54c2057ddcb168bc76",
+        "preferred_base": "0x10000000",
+        "candidate_base": "0x11f10000",
+        "image_size": 61440,
+        "candidate_end_exclusive": "0x11f1f000",
+        "relocation_entries": 1075
+      },
+      {
+        "module": "mojocore.dll",
+        "sha256": "e0176e74c07b24ec5ad9e9539d9560f57b71c723a9ebfc52d78a1d4021d943ea",
+        "preferred_base": "0x10000000",
+        "candidate_base": "0x11f20000",
+        "image_size": 94208,
+        "candidate_end_exclusive": "0x11f37000",
+        "relocation_entries": 1959
+      },
+      {
+        "module": "movement.dll",
+        "sha256": "480abe571da62152c47564f48af4c02a042fac12eb96af4cabcc7a9b7819e762",
+        "preferred_base": "0x10000000",
+        "candidate_base": "0x11f40000",
+        "image_size": 299008,
+        "candidate_end_exclusive": "0x11f89000",
+        "relocation_entries": 5090
+      },
+      {
+        "module": "msvcp71.dll",
+        "sha256": "df96156f6a548fd6fe5672918de5ae4509d3c810a57bffd2a91de45a3ed5b23b",
+        "preferred_base": "0x7c3a0000",
+        "candidate_base": "0x11f90000",
+        "image_size": 503808,
+        "candidate_end_exclusive": "0x1200b000",
+        "relocation_entries": 5971
+      },
+      {
+        "module": "msvcr71.dll",
+        "sha256": "8094af5ee310714caebccaeee7769ffb08048503ba478b879edfef5f1a24fefe",
+        "preferred_base": "0x7c340000",
+        "candidate_base": "0x12010000",
+        "image_size": 352256,
+        "candidate_end_exclusive": "0x12066000",
+        "relocation_entries": 5243
+      },
+      {
+        "module": "ogg.dll",
+        "sha256": "82a4dde1eebdda18be8ef99538193d73b097f16ce30a20b08f667a94854c0c83",
+        "preferred_base": "0x10000000",
+        "candidate_base": "0x12070000",
+        "image_size": 24576,
+        "candidate_end_exclusive": "0x12076000",
+        "relocation_entries": 75
+      },
+      {
+        "module": "pathfinding.dll",
+        "sha256": "6a457418f53c28147fb93c5e7522e9fb40a12bb85b490b71f5f67bb6a48f6b93",
+        "preferred_base": "0x10000000",
+        "candidate_base": "0x12080000",
+        "image_size": 204800,
+        "candidate_end_exclusive": "0x120b2000",
+        "relocation_entries": 3912
+      },
+      {
+        "module": "renderutilities.dll",
+        "sha256": "d88fbb854066cb6875e373f0828fcd2a5fdd626b080eada92b103e21b5e5ef9d",
+        "preferred_base": "0x10000000",
+        "candidate_base": "0x120c0000",
+        "image_size": 114688,
+        "candidate_end_exclusive": "0x120dc000",
+        "relocation_entries": 1881
+      },
+      {
+        "module": "rtcshader.dll",
+        "sha256": "a2a35987fb0be96ec918fb731a8102c776f85f9895390b689e9b104b3402f9fb",
+        "preferred_base": "0x10000000",
+        "candidate_base": "0x120e0000",
+        "image_size": 274432,
+        "candidate_end_exclusive": "0x12123000",
+        "relocation_entries": 4067
+      },
+      {
+        "module": "scripting.dll",
+        "sha256": "d6fdd9b9ac5a92098a332a31e0545efb522f10eca5dd941da6d74157e1ab61f7",
+        "preferred_base": "0x10000000",
+        "candidate_base": "0x12130000",
+        "image_size": 81920,
+        "candidate_end_exclusive": "0x12144000",
+        "relocation_entries": 1851
+      },
+      {
+        "module": "tribesgui.dll",
+        "sha256": "d0c1d872b73eb8b20340c20d22d8c51a9e3ad7ffb415710ce0bc4cf2bcc3a700",
+        "preferred_base": "0x10000000",
+        "candidate_base": "0x12150000",
+        "image_size": 159744,
+        "candidate_end_exclusive": "0x12177000",
+        "relocation_entries": 3887
+      },
+      {
+        "module": "tv_cd_dvd.exe",
+        "sha256": "fe398d0e7f0427d3ed765bb6b220e46502ff53d17b8239ee4b02b19754a983c2",
+        "preferred_base": "0x10900000",
+        "candidate_base": "0x10900000",
+        "image_size": 2289664,
+        "candidate_end_exclusive": "0x10b2f000",
+        "relocation_entries": 22010
+      },
+      {
+        "module": "ucc.exe",
+        "sha256": "4bfa0e2c872fc86e70027a237feed443671951a9136e968875db68ca1f7ee341",
+        "preferred_base": "0x400000",
+        "candidate_base": "0x400000",
+        "image_size": 102400,
+        "candidate_end_exclusive": "0x419000",
+        "relocation_entries": 0
+      },
+      {
+        "module": "vorbis.dll",
+        "sha256": "b199c31559b233dbe62a864a1eed3812fd83f076eee09e15fc04a820ab706724",
+        "preferred_base": "0x10000000",
+        "candidate_base": "0x12180000",
+        "image_size": 126976,
+        "candidate_end_exclusive": "0x1219f000",
+        "relocation_entries": 851
+      },
+      {
+        "module": "vorbisfile.dll",
+        "sha256": "8295974654db11f3143e801f377854ffa5f01b09e9645ab03f75bfa7c603a61f",
+        "preferred_base": "0x10000000",
+        "candidate_base": "0x121a0000",
+        "image_size": 32768,
+        "candidate_end_exclusive": "0x121a8000",
+        "relocation_entries": 126
+      },
+      {
+        "module": "window.dll",
+        "sha256": "374750cc233e7cb2558066c8c5a1475050c9845946b580ab547a50a1adb68809",
+        "preferred_base": "0x11000000",
+        "candidate_base": "0x121b0000",
+        "image_size": 503808,
+        "candidate_end_exclusive": "0x1222b000",
+        "relocation_entries": 15178
+      },
+      {
+        "module": "windrv.dll",
+        "sha256": "a3f16fc7c181ad419944eef4a43518afec681ac6bbb09f28f44f2da326154c36",
+        "preferred_base": "0x11100000",
+        "candidate_base": "0x12230000",
+        "image_size": 159744,
+        "candidate_end_exclusive": "0x12257000",
+        "relocation_entries": 3346
+      }
+    ]
+  },
+  "limitations": [
+    "INI bindings are static defaults, not verified effective runtime bindings after profile selection.",
+    "Campaign INI and installer entries establish named content, not playable assets or a complete campaign.",
+    "No instruction-support, startup, rendering, save-load, multiplayer or gameplay acceptance is claimed."
+  ]
+}
