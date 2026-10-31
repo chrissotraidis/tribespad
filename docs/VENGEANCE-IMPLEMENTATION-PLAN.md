@@ -464,17 +464,65 @@ PadMint game release, run its current-main `scripts/player-check.sh` from
 then without it after publishing, using Apple's Python 3.9 and an empty PadMint
 folder. That release check does not replace device acceptance.
 
-## Next bot start here
+## Progress
 
-Begin with **V0 and V1**, using the new evidence JSON as a candidate, not a loader
-already implemented. Verify the seven-module UCC closure and resolve the complete
-address reservations before generating translated output. Start the bounded
-client entry investigation in the same work session. Leave a small implementation
-PR with reproducible commands, the first reached failure and the next experiment.
-Do not repeat the broad game-selection research or build a picker-only prototype
-and call Vengeance integrated.
+**V0 done (31 October).** `scripts/vengeance/prepare.py` downloads the ZIP
+(resuming, up to five attempts) or imports a local copy with `--archive`,
+checks its SHA-256, extracts the three installer files by name with 7-Zip (the
+ZIP uses Deflate64, which Python cannot read), lists the Inno installer and
+rejects absolute or `..` paths, extracts it with innoextract 1.9 and checks all
+7,752 kept files (10.09 GiB) against `config/vengeance/inputs.json`. The TV
+Cache Manager and TV Server Browser utilities are left out; nothing runs. The
+game lands in `ref/vengeance/game` (Program, Content, readme). A truncated
+archive is rejected; a second run returns at once; a full rerun matched every
+digest (4.4 minutes). A fresh 3 GB download has not been repeated; the import
+path used the ZIP already verified on 28 October.
 
-V0 also settles the content split from [Size](#size). The per-game overlay table
-can be done separately at any point; it changes nothing for Tribes 2 or
-Starsiege and is checked on both current games. The picker already has its
-third card ([VP0](#built-the-in-development-card-31-october)).
+**V1 done (31 October).** `scripts/vengeance/layout.py` froze
+`config/vengeance/layout.json` (version 1) and wrote
+[the layout check](validation/vengeance-layout-2026-10-31.json). The 27 modules
+match the audit; bases equal the candidate map (UCC `0x400000`, client
+`0x10900000`, DLLs `0x11000000`–`0x12260000`); nothing overlaps another image,
+the null page, the main stack and process structures below `0x400000` (the
+Starsiege harness pattern), or the window at `0x2f000000`. Every moved DLL has
+relocations of only ABSOLUTE/HIGHLOW type; every import between game modules
+resolves; no export forwarders; **no module uses static TLS**. Stack reserves:
+UCC 1 MiB, client 2 MiB.
+
+What V1 found for V2:
+
+- **The UCC closure imports 87 Windows functions TribesPad does not provide**
+  (kernel32 76, user32 6, advapi32 2, shell32 2, ole32 1). Unreal's Core is a
+  Unicode build, so many are the W forms (`FindFirstFileW`,
+  `GetFullPathNameW`, `MoveFileW`, ...) of calls TribesPad implements only as A
+  forms; most others are MSVCR71 console and locale paths that may never run.
+  Bind every one as an explicit stop and implement each when it is reached. The
+  client set adds about 270 more (user32 95, kernel32 95, gdi32 20, wsock32 9,
+  plus `Direct3DCreate9`, `DirectInput8Create` and a ddraw entry).
+- **TribesPad has no DLL loader.** Its module layer
+  ([guest_modules.h](../port/core/guest_modules.h)) registers images the host
+  already mapped; it does not relocate, initialize DLLs or resolve exports,
+  because Tribes 2 and Starsiege are single executables. V2 therefore starts
+  with a multi-module build step: rebase each DLL copy to its layout base before
+  lifting, lift all seven UCC modules into one dispatch table, fill each import
+  slot with the exporting module's translated address, register every image,
+  and call each `DllMain` (process attach) in dependency order: MSVCR71,
+  MSVCP71, ogg, vorbis, vorbisfile, Core, then UCC's entry point.
+
+## Next step: V2
+
+1. Extend Starsiege's `build_engine.py` pattern into
+   `scripts/vengeance/build_engine.py` for several modules: rebased copies,
+   lift, shared dispatch, cross-module import slots, generated stops for the 87.
+2. A small host (`port/vengeance/vengeance_engine.c`, from
+   `starsiege_engine.c`) maps the layout, registers images, runs DLL attaches
+   and enters UCC with a command such as `ucc help`.
+3. Record the first reached stop, implement it, repeat. Done when UCC prints a
+   meaningful response and exits cleanly; then the bounded package-load
+   experiment.
+4. In the same session, trace the client's entry (`0x10916b0c`) and every
+   reference into `.kpjaig` before choosing how to handle that section.
+
+Do not repeat the game-selection research or call Vengeance integrated because
+of the picker card. The campaign-only question from [Size](#size) matters at V5
+packaging, not before.
