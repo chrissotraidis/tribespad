@@ -1,12 +1,12 @@
 {
  "date": "2026-10-31",
  "layout": "config/vengeance/layout.json",
- "layout_sha256": "9d12502ce3a923d8be841fd54fb7dc27ebe62cf0f9bcc3e4fb2ba890971c925d",
+ "layout_sha256": "ab945069eab7b603d875c3cf60d914a462bad44cf3c6d904adfff007c098187b",
  "method": "pefile headers, relocations, imports and exports of the prepared modules; nothing executed or translated",
- "modules": 27,
+ "modules": 33,
  "dll_window": [
   "0x11000000",
-  "0x12260000"
+  "0x12310000"
  ],
  "checks_passed": [
   "hashes match the October audit",

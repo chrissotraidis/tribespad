@@ -12,8 +12,13 @@
  * guest carries on inside this host frame. When the guest later returns to
  * its top-level host entry (vg_enter), the native frames left behind are
  * discarded with longjmp back to that entry, the CPU state intact.
- * Nested exceptions during dispatch, collided unwinds, handlers that move the
- * context and unhandled exceptions stop with the exception code. */
+ * Like Windows' ExecuteHandler2, each handler runs under a registration of the
+ * dispatcher's own (0xfffff020, vengeance_nested_handler): a nested exception
+ * raised inside a handler (a C++ rethrow from a catch block) reports
+ * ExceptionNestedException through it, an unwind that crosses a running unwind
+ * reports ExceptionCollidedUnwind, and MSVC's _UnwindNestedFrames relinks the
+ * chain through it. Handlers that move the context and unhandled exceptions
+ * stop with the exception code. */
 #include <setjmp.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -25,10 +30,12 @@
 extern void tribes_enter(_cpu *,uint32_t);
 extern void (*tribes_lookup(uint32_t address))(_cpu *);
 #define HANDLER_RETURN 0xfffff010u
+#define NESTED_HANDLER 0xfffff020u
 #define END_OF_CHAIN 0xffffffffu
 #define NONCONTINUABLE 1u
 #define UNWINDING 2u
 #define EXIT_UNWIND 4u
+#define NESTED_CALL 0x10u
 #define STATUS_UNWIND 0xc0000027u
 #define REC_SIZE 0x50u
 #define CTX_SIZE 0x2ccu
@@ -58,9 +65,9 @@ uint32_t vg_enter(_cpu *cpu,uint32_t va,uint32_t count,const uint32_t *arguments
  return cpu->_eax;
 }
 
-typedef struct {uint32_t rec,ctx,dispatch,handler_esp;} Area;
+typedef struct {uint32_t rec,ctx,dispatch,handler_esp,guard;} Area;
 static Area area_below(_cpu *c,uint32_t sp){
- Area a;a.dispatch=(sp-0x40-16)&~15u;a.ctx=(a.dispatch-CTX_SIZE)&~15u;a.rec=(a.ctx-REC_SIZE)&~15u;a.handler_esp=a.rec-0x20;
+ Area a;a.dispatch=(sp-0x40-16)&~15u;a.ctx=(a.dispatch-CTX_SIZE)&~15u;a.rec=(a.ctx-REC_SIZE)&~15u;a.guard=a.rec-0x10;a.handler_esp=a.rec-0x20;
  memset(G(c,a.ctx),0,CTX_SIZE);memset(G(c,a.rec),0,REC_SIZE);wr32(c,a.dispatch,0);return a;
 }
 /* CONTEXT_FULL at the service's return: registers as the raiser left them,
@@ -78,8 +85,20 @@ static int frame_valid(uint32_t frame){
  uint32_t top=x86_read_fs_dword(4),limit=x86_read_fs_dword(8);
  return !(frame&3)&&frame>=limit&&frame+8<=top;
 }
-static uint32_t call_handler(_cpu *c,const Area *a,uint32_t frame){
+/* The dispatcher's registration (guard): next, handler, the frame whose
+   handler runs, and whether an unwind (1) or a dispatch (0) is running. */
+uint32_t vg_nested_handler(_cpu *c){
+ uint32_t ret=rd32(c,c->_esp),rec=rd32(c,c->_esp+4),frame=rd32(c,c->_esp+8),dispatch=rd32(c,c->_esp+16);
+ int unwinding=(rd32(c,rec+4)&UNWINDING)!=0,unwind_guard=rd32(c,frame+12)!=0;
+ uint32_t d=1; /* ExceptionContinueSearch */
+ if(unwinding==unwind_guard){wr32(c,dispatch,rd32(c,frame+8));d=unwind_guard?3:2;} /* Collided / Nested */
+ if(tracing())fprintf(stderr,"vengeance SEH: dispatcher frame 0x%08x answers %u\n",frame,d);
+ c->_eax=d;c->_esp+=4;return ret;
+}
+static uint32_t call_handler(_cpu *c,const Area *a,uint32_t frame,int unwinding){
  uint32_t handler=rd32(c,frame+4),sp=a->handler_esp-16;
+ wr32(c,a->guard,x86_read_fs_dword(0));wr32(c,a->guard+4,NESTED_HANDLER);wr32(c,a->guard+8,frame);wr32(c,a->guard+12,(uint32_t)unwinding);
+ x86_write_fs_dword(0,a->guard);
  uint32_t args[4]={a->rec,frame,a->ctx,a->dispatch};memcpy(G(c,sp),args,16);
  sp-=4;wr32(c,sp,HANDLER_RETURN);c->_esp=sp;
  if(tracing())fprintf(stderr,"vengeance SEH: code 0x%08x flags 0x%x: handler 0x%08x of frame 0x%08x\n",rd32(c,a->rec),rd32(c,a->rec+4),handler,frame);
@@ -93,6 +112,9 @@ static uint32_t call_handler(_cpu *c,const Area *a,uint32_t frame){
   longjmp(*outer,1);
  }
  handler_returned=0;
+ /* As ExecuteHandler2 (mov esp,fs:[0]; pop fs:[0]): drop the registration at
+    the head, the dispatcher's own unless the handler unwound the chain. */
+ x86_write_fs_dword(0,rd32(c,x86_read_fs_dword(0)));
  uint32_t d=c->_eax;
  if(tracing())fprintf(stderr,"vengeance SEH:   handler 0x%08x returned %u\n",handler,d);
  return d;
@@ -121,16 +143,23 @@ void vg_raise_exception(_cpu *c,uint32_t code,uint32_t flags,uint32_t nargs,uint
  capture(c,a.ctx,4);
  uint32_t eip0=rd32(c,a.ctx+CTX_EIP),esp0=rd32(c,a.ctx+CTX_ESP);
  if(tracing()){char type[96];cxx_type(c,a.rec,type,sizeof type);fprintf(stderr,"vengeance SEH: raise 0x%08x %s\n",code,type);}
+ uint32_t nested=0;
  for(uint32_t frame=x86_read_fs_dword(0);frame!=END_OF_CHAIN;frame=rd32(c,frame)){
   if(!frame_valid(frame))unsupported("RaiseException","registration outside the stack",code);
-  uint32_t d=call_handler(c,&a,frame);restore(c,s);
+  uint32_t d=call_handler(c,&a,frame,0);restore(c,s);
+  if(nested==frame){wr32(c,a.rec+4,rd32(c,a.rec+4)&~NESTED_CALL);nested=0;}
   if(d==1)continue; /* ExceptionContinueSearch */
+  if(d==2){ /* ExceptionNestedException: from the dispatcher frame of an outer dispatch */
+   wr32(c,a.rec+4,rd32(c,a.rec+4)|NESTED_CALL);
+   if(rd32(c,a.dispatch)>nested)nested=rd32(c,a.dispatch);
+   continue;
+  }
   if(d==0){ /* ExceptionContinueExecution */
    if(flags&NONCONTINUABLE)unsupported("RaiseException","continuing a non-continuable exception",code);
    if(rd32(c,a.ctx+CTX_EIP)!=eip0||rd32(c,a.ctx+CTX_ESP)!=esp0)unsupported("RaiseException","a handler that moves the context",code);
    return;
   }
-  unsupported("RaiseException","nested or collided dispatch",code);
+  unsupported("RaiseException","handler disposition",d);
  }
  char type[96];cxx_type(c,a.rec,type,sizeof type);
  printf("{\"diagnostic_stop\":true,\"kind\":\"unhandled_exception\",\"index\":%u,\"name\":\"%s\",\"return_pc\":%u}\n",code,type,eip0);
@@ -149,8 +178,9 @@ uint32_t vg_rtl_unwind(_cpu *c,uint32_t target,uint32_t ip,uint32_t record,uint3
  while(frame!=END_OF_CHAIN&&frame!=target){
   if(target&&target<frame)unsupported("RtlUnwind","target frame below a registration",target);
   if(!frame_valid(frame))unsupported("RtlUnwind","registration outside the stack",frame);
-  uint32_t d=call_handler(c,&a,frame);restore(c,s);
-  if(d!=1)unsupported("RtlUnwind","handler disposition while unwinding",d);
+  uint32_t d=call_handler(c,&a,frame,1);restore(c,s);
+  if(d==3)frame=rd32(c,a.dispatch); /* ExceptionCollidedUnwind: carry on past the other unwind's frame */
+  else if(d!=1)unsupported("RtlUnwind","handler disposition while unwinding",d);
   uint32_t next=rd32(c,frame);x86_write_fs_dword(0,next);frame=next;
  }
  if(frame==END_OF_CHAIN&&target&&target!=END_OF_CHAIN)unsupported("RtlUnwind","target frame not on the chain",target);

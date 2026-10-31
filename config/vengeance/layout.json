@@ -78,6 +78,24 @@
    "base": 300482560,
    "image_size": 245760
   },
+  "igeffectssystem.dll": {
+   "file": "Program/Bin/IGEffectsSystem.dll",
+   "sha256": "ffd80582698c380db836e8f10692a4ff0f09c8e77f0c251bee8239387425e15e",
+   "base": 304480256,
+   "image_size": 61440
+  },
+  "igsoundeffectssubsystem.dll": {
+   "file": "Program/Bin/IGSoundEffectsSubsystem.dll",
+   "sha256": "a76430b609a3352eeabe073ded6df001180f5da9c103213de13d8a79458225cf",
+   "base": 304545792,
+   "image_size": 118784
+  },
+  "igvisualeffectssubsystem.dll": {
+   "file": "Program/Bin/IGVisualEffectsSubsystem.dll",
+   "sha256": "2264af0d20b5a126b5c6f48c28b05bc4b474624f0ff11a6332dde09f703bf5e0",
+   "base": 304676864,
+   "image_size": 28672
+  },
   "ipdrv.dll": {
    "file": "Program/Bin/IpDrv.dll",
    "sha256": "ed48f8b357c57e7306a47392649dc5c2affd77b1fde3b4384fd8bc7684e0ddde",
@@ -150,17 +168,35 @@
    "base": 303366144,
    "image_size": 159744
   },
+  "tribestv.dll": {
+   "file": "Program/Bin/TribesTV.dll",
+   "sha256": "8c5491d66e1d55b94ee3c8f05c9467e8ae02837006c96569ca02bd66ba0e885f",
+   "base": 304742400,
+   "image_size": 188416
+  },
   "tv_cd_dvd.exe": {
    "file": "Program/Bin/TV_CD_DVD.exe",
    "sha256": "fe398d0e7f0427d3ed765bb6b220e46502ff53d17b8239ee4b02b19754a983c2",
    "base": 277872640,
    "image_size": 2289664
   },
+  "tyrion.dll": {
+   "file": "Program/Bin/Tyrion.dll",
+   "sha256": "9892d852be00203a1c6eb194dce2886d2c0d272277f1857700601b2a19f60e4e",
+   "base": 304939008,
+   "image_size": 192512
+  },
   "ucc.exe": {
    "file": "Program/Bin/UCC.exe",
    "sha256": "4bfa0e2c872fc86e70027a237feed443671951a9136e968875db68ca1f7ee341",
    "base": 4194304,
    "image_size": 102400
+  },
+  "uweb.dll": {
+   "file": "Program/Bin/UWeb.dll",
+   "sha256": "c37ca4fb2d4ff4278f3c3be217390219fdc31587039c0dea81218a22b71423b1",
+   "base": 305135616,
+   "image_size": 45056
   },
   "vorbis.dll": {
    "file": "Program/Bin/vorbis.dll",

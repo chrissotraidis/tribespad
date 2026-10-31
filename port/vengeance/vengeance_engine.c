@@ -29,10 +29,15 @@
 #include "../core/process_startup.h"
 #include "../core/guest_filesystem.h"
 #include "../core/native_handles.h"
+#include "../core/guest_display.h"
+#include "../core/guest_graphics.h"
+#include "../core/guest_dinput.h"
 #include "vengeance_engine.inc"
 
 extern uint32_t vg_enter(_cpu *cpu,uint32_t va,uint32_t count,const uint32_t *arguments);
 extern void x87_fninit_void(_cpu *);
+extern const uint32_t vengeance_com_count;
+extern const char *const vengeance_com_names[];
 extern void tb_sse_init(_cpu *);
 static _cpu state;
 static uint64_t base;
@@ -47,7 +52,8 @@ static _cpu *diagnostic_cpu(void){_cpu *c=tribes_guest_callback_context();return
 static _Noreturn void stop(_cpu *c,const char *kind,uint32_t index){
  assert(!pthread_mutex_lock(&diagnostic_lock));
  uint32_t ret=0;if(stack_readable(c,4))memcpy(&ret,(void *)(uintptr_t)(base+c->_esp),4);
- const char *name=!strcmp(kind,"import")&&index<sizeof import_names/sizeof import_names[0]?import_names[index]:"";
+ const char *name=!strcmp(kind,"import")&&index<sizeof import_names/sizeof import_names[0]?import_names[index]:
+                  !strcmp(kind,"com")&&index<vengeance_com_count?vengeance_com_names[index]:"";
  printf("{\"diagnostic_stop\":true,\"kind\":\"%s\",\"index\":%u,\"name\":\"%s\",\"return_pc\":%u,\"esp\":%u,\"stack_arguments\":[",kind,index,name,ret,c->_esp);
  for(unsigned i=0;i<8;i++){uint32_t arg=0;if(stack_readable(c,4*(i+2)))memcpy(&arg,(void *)(uintptr_t)(base+c->_esp+4*(i+1)),4);printf("%s%u",i?",":"",arg);}
  printf("],\"registers\":{\"eax\":%u,\"ecx\":%u,\"edx\":%u,\"ebx\":%u,\"esp\":%u,\"ebp\":%u,\"esi\":%u,\"edi\":%u}}\n",c->_eax,c->_ecx,c->_edx,c->_ebx,c->_esp,c->_ebp,c->_esi,c->_edi);
@@ -67,6 +73,16 @@ static _Noreturn void stop(_cpu *c,const char *kind,uint32_t index){
  fflush(stdout);_Exit(71);
 }
 _Noreturn void vengeance_missing_import(_cpu *c,uint32_t index){stop(c,"import",index);}
+_Noreturn void vengeance_missing_com(_cpu *c,uint32_t index){stop(c,"com",index);}
+/* Direct3D (port/vengeance/d3d9): the guest base, and the stop after a reported trap. */
+uint64_t vengeance_guest_base(void){return base;}
+uint32_t vengeance_control_proc(void){return VG_CONTROL_PROC;}
+/* The guest address of a Windows import ("user32.dll!DefWindowProcW"), 0 if the game imports no such function. */
+uint32_t vengeance_import_address(const char *name){
+ for(unsigned i=0;i<sizeof import_names/sizeof import_names[0];i++)if(!strcmp(import_names[i],name))return 0xfffe0000u+16u*i;
+ return 0;
+}
+_Noreturn void vengeance_d3d9_stop(_cpu *c){stop(c?c:diagnostic_cpu(),"d3d9",0);}
 _Noreturn void halopad_trap_unimplemented(uint32_t pc){stop(diagnostic_cpu(),"instruction",pc);}
 _Noreturn void tribes_unimplemented_dinput(void *c,uint32_t method){stop(c,"dinput",method);}
 _Noreturn void tribes_missing_helper(uint32_t identifier){stop(diagnostic_cpu(),"helper",identifier);}
@@ -121,6 +137,9 @@ uint32_t vg_get_proc_address(uint64_t guest,uint32_t image,uint32_t pointer){
 int main(int argc,char **argv){
  if(argc<5){fprintf(stderr,"usage: %s images volume game temp [arguments]\n",argv[0]);return 2;}
  const unsigned count=sizeof vg_modules/sizeof vg_modules[0];
+ /* Desktop SDL runs on process main; the backend checks this before video. */
+ extern void tribes_sdl_host_application_ready(void);
+ tribes_sdl_host_application_ready();
  void *memory=mmap(NULL,UINT64_C(0x100000000),PROT_NONE,MAP_PRIVATE|MAP_ANON,-1,0);assert(memory!=MAP_FAILED);
  base=(uintptr_t)memory;assert(tribes_absolute_memory_bind(base));
  assert(tribes_address_space_begin(base));
@@ -143,6 +162,17 @@ int main(int argc,char **argv){
  assert(exe);
  assert(tribes_threads_configure(base,(uint32_t)getpid(),(uint32_t)tid,VG_STACK_RESERVE,thread_modules,count));
  assert(tribes_system_providers_configure(base));
+ /* The guest desktop: VENGEANCE_DISPLAY (WIDTHxHEIGHT), or 1024x768 when headless. */
+ uint32_t display_width=1024,display_height=768;const char *display=getenv("VENGEANCE_DISPLAY");
+ if(display&&sscanf(display,"%ux%u",&display_width,&display_height)!=2){fprintf(stderr,"VENGEANCE_DISPLAY must be WIDTHxHEIGHT\n");return 2;}
+ assert(tribes_display_configure(base,display_width,display_height));
+ assert(tribes_graphics_configure(base));
+ /* SDL keeps its own allocations in guest memory (port/starsiege/starsiege_heap.c). */
+ extern uint32_t tribes_sdl_set_memory_functions(uint64_t,uint32_t,uint32_t,uint32_t,uint32_t);
+ assert(tribes_sdl_set_memory_functions(base,sdl_allocator[0],sdl_allocator[1],sdl_allocator[2],sdl_allocator[3]));
+ /* DirectInput keyboard0 and mouse0 (port/starsiege/starsiege_input.c feeds them;
+    WinDrv reaches them through DirectInput 8, port/vengeance/vengeance_dinput.c). */
+ assert(tribes_dinput_configure(base));assert(tribes_dinput_set_devices(base,vg_input_devices,sizeof vg_input_devices/sizeof vg_input_devices[0]));
  assert(tribes_environment_configure(base,environment,sizeof environment));
  /* Command line: the program's full path, quoted, then the given arguments. */
  static char line[8192];int used=snprintf(line,sizeof line,"\"%s%s\"",VG_GUEST_BIN,VG_EXE_NAME);

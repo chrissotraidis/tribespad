@@ -16,5 +16,15 @@
     "llasm": ";cmp edi, [__imp_?PrivateStaticClass@UVariable@@0VUClass@@A]|mov tmp1, ?PrivateStaticClass@UVariable@@0VUClass@@A|and eflags, eflags, ~(CF+ZF+SF+OF+PF+AF)|xor tmp4, edi, tmp1|cmovult edi, tmp1, tmp3, CF, 0|or eflags, eflags, tmp3|sub tmp2, edi, tmp1|xor tmp3, tmp2, edi|and tmp3, tmp3, tmp4|and tmp3, tmp3, 0x80000000|lshr tmp3, tmp3, 31 - OF_SHIFT|or eflags, eflags, tmp3|xor tmp0, tmp4, tmp2|and tmp0, tmp0, AF|or eflags, eflags, tmp0|cmovz tmp2, tmp0, ZF, 0|or eflags, eflags, tmp0|and tmp0, tmp2, 0x80000000|cmovz tmp0, tmp0, 0, SF|or eflags, eflags, tmp0|lshr tmp0, tmp2, 4|xor tmp0, tmp2, tmp0|and tmp0, tmp0, 0xf|mov tmp4, 0x9669 << PF_SHIFT|lshr tmp0, tmp4, tmp0|and tmp0, tmp0, PF|or eflags, eflags, tmp0"
    }
   ]
+ },
+ "igeffectssystem.dll": {
+  "instruction_replacements": [
+   {
+    "address": "0x1226340C",
+    "length": 6,
+    "why": "cmp ecx, [IAT slot of Core.dll ?PrivateStaticClass@UObject@@0VUClass@@A]: the same import-as-cmp-operand form as in Window.dll; the same replacement with ecx.",
+    "llasm": ";cmp ecx, [__imp_?PrivateStaticClass@UObject@@0VUClass@@A]|mov tmp1, ?PrivateStaticClass@UObject@@0VUClass@@A|and eflags, eflags, ~(CF+ZF+SF+OF+PF+AF)|xor tmp4, ecx, tmp1|cmovult ecx, tmp1, tmp3, CF, 0|or eflags, eflags, tmp3|sub tmp2, ecx, tmp1|xor tmp3, tmp2, ecx|and tmp3, tmp3, tmp4|and tmp3, tmp3, 0x80000000|lshr tmp3, tmp3, 31 - OF_SHIFT|or eflags, eflags, tmp3|xor tmp0, tmp4, tmp2|and tmp0, tmp0, AF|or eflags, eflags, tmp0|cmovz tmp2, tmp0, ZF, 0|or eflags, eflags, tmp0|and tmp0, tmp2, 0x80000000|cmovz tmp0, tmp0, 0, SF|or eflags, eflags, tmp0|lshr tmp0, tmp2, 4|xor tmp0, tmp2, tmp0|and tmp0, tmp0, 0xf|mov tmp4, 0x9669 << PF_SHIFT|lshr tmp0, tmp4, tmp0|and tmp0, tmp0, PF|or eflags, eflags, tmp0"
+   }
+  ]
  }
 }

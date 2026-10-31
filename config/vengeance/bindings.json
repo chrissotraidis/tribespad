@@ -558,6 +558,260 @@
    "arguments": 1,
    "returns": true,
    "guest_base": false
+  },
+  "Direct3DCreate9": {
+   "helper": "Direct3DCreate9_c",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false
+  },
+  "CreateSolidBrush": {
+   "helper": "vg_create_solid_brush",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false
+  },
+  "CreatePen": {
+   "helper": "vg_create_pen",
+   "arguments": 3,
+   "returns": true,
+   "guest_base": false
+  },
+  "CreateFontW": {
+   "helper": "vg_create_font_w",
+   "arguments": 14,
+   "returns": true,
+   "guest_base": false
+  },
+  "SetBkMode": {
+   "helper": "vg_set_bk_mode",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": false
+  },
+  "SetROP2": {
+   "helper": "vg_set_rop2",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": false
+  },
+  "GetSysColor": {
+   "helper": "vg_get_sys_color",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false
+  },
+  "GetSysColorBrush": {
+   "helper": "vg_get_sys_color_brush",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false
+  },
+  "SystemParametersInfoA": {
+   "helper": "vg_system_parameters_info_a",
+   "arguments": 4,
+   "returns": true,
+   "guest_base": true
+  },
+  "SystemParametersInfoW": {
+   "helper": "vg_system_parameters_info_w",
+   "arguments": 4,
+   "returns": true,
+   "guest_base": true
+  },
+  "BeginPaint": {
+   "helper": "vg_begin_paint",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true
+  },
+  "EndPaint": {
+   "helper": "vg_end_paint",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true
+  },
+  "FillRect": {
+   "helper": "vg_fill_rect",
+   "arguments": 3,
+   "returns": true,
+   "guest_base": false
+  },
+  "GetUpdateRect": {
+   "helper": "vg_get_update_rect",
+   "arguments": 3,
+   "returns": true,
+   "guest_base": true
+  },
+  "IsZoomed": {
+   "helper": "vg_is_zoomed",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true
+  },
+  "IsWindowEnabled": {
+   "helper": "vg_is_window_enabled",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true
+  },
+  "SetActiveWindow": {
+   "helper": "vg_set_active_window",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "BringWindowToTop": {
+   "helper": "vg_bring_window_to_top",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false
+  },
+  "ClipCursor": {
+   "helper": "vg_clip_cursor",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false
+  },
+  "_TrackMouseEvent": {
+   "helper": "vg_track_mouse_event",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false
+  },
+  "MapWindowPoints": {
+   "helper": "vg_map_window_points",
+   "arguments": 4,
+   "returns": true,
+   "guest_base": true
+  },
+  "GetMessageTime": {
+   "helper": "vg_get_message_time",
+   "arguments": 0,
+   "returns": true,
+   "guest_base": false
+  },
+  "GetCursor": {
+   "helper": "vg_get_cursor",
+   "arguments": 0,
+   "returns": true,
+   "guest_base": false
+  },
+  "MulDiv": {
+   "helper": "vg_mul_div",
+   "arguments": 3,
+   "returns": true,
+   "guest_base": false
+  },
+  "lstrcmpiA": {
+   "helper": "vg_lstrcmpi_a",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true
+  },
+  "lstrcmpiW": {
+   "helper": "vg_lstrcmpi_w",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true
+  },
+  "GetSystemTime": {
+   "helper": "vg_get_system_time",
+   "arguments": 1,
+   "returns": false,
+   "guest_base": true,
+   "helper_returns": "void"
+  },
+  "GetSystemDefaultLangID": {
+   "helper": "vg_get_system_default_lang_id",
+   "arguments": 0,
+   "returns": true,
+   "guest_base": false
+  },
+  "InterlockedCompareExchange": {
+   "helper": "vg_interlocked_compare_exchange",
+   "arguments": 3,
+   "returns": true,
+   "guest_base": true
+  },
+  "OutputDebugStringA": {
+   "helper": "vg_output_debug_string_a",
+   "arguments": 1,
+   "returns": false,
+   "guest_base": true,
+   "helper_returns": "void"
+  },
+  "CreateDIBitmap": {
+   "helper": "vg_create_di_bitmap",
+   "arguments": 6,
+   "returns": true,
+   "guest_base": true
+  },
+  "GetObjectA": {
+   "helper": "vg_get_object_a",
+   "arguments": 3,
+   "returns": true,
+   "guest_base": true
+  },
+  "CreateDialogParamW": {
+   "helper": "vg_create_dialog_param_w",
+   "arguments": 5,
+   "returns": true,
+   "guest_base": false
+  },
+  "CreateDialogParamA": {
+   "helper": "vg_create_dialog_param_a",
+   "arguments": 5,
+   "returns": true,
+   "guest_base": false
+  },
+  "DirectInput8Create": {
+   "helper": "vg_direct_input8_create",
+   "arguments": 5,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "CreateMutexW": {
+   "helper": "vg_create_mutex_w",
+   "arguments": 3,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "CreateEventW": {
+   "helper": "vg_create_event_w",
+   "arguments": 4,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "GetSystemDirectoryW": {
+   "helper": "vg_get_system_directory_w",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "GetWindowsDirectoryW": {
+   "helper": "vg_get_windows_directory_w",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "GlobalLock": {
+   "helper": "vg_global_lock",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false
+  },
+  "GlobalUnlock": {
+   "helper": "vg_global_unlock",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false
   }
  },
  "overrides": {
@@ -590,6 +844,42 @@
    "returns": true,
    "guest_base": true,
    "why": "MSVC's runtime commits 4-8 KiB pieces; TribesPad backs memory per 16 KiB host page, so commits are rounded out to whole host pages inside the same reservation (port/vengeance/vengeance_win32.c)."
+  },
+  "FreeLibrary": {
+   "helper": "vg_free_library",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true,
+   "why": "The game frees some of its own DLLs after probing them (RTCShader at start-up); TribesPad cannot unmap a translated image, so the last FreeLibrary of one pins it instead of stopping (port/vengeance/vengeance_win32.c). Other modules go to TribesPad's service unchanged."
+  },
+  "DeleteObject": {
+   "helper": "vg_delete_object",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true,
+   "why": "Brushes, pens and fonts Vengeance's windowing creates live in port/vengeance/vengeance_gdi.c; other handles go to TribesPad's GDI unchanged."
+  },
+  "SelectObject": {
+   "helper": "vg_select_object",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true,
+   "why": "Selecting a brush, pen or font from port/vengeance/vengeance_gdi.c is tracked there; other objects go to TribesPad's GDI unchanged."
+  },
+  "GetDeviceCaps": {
+   "helper": "vg_get_device_caps",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true,
+   "why": "Window.dll asks for the screen's DPI (LOGPIXELSY), refresh and palette; port/vengeance/vengeance_gdi.c answers those for a 96 DPI, 60 Hz, 32-bit display and passes sizes and depth to TribesPad's service."
+  },
+  "GetStockObject": {
+   "helper": "vg_get_stock_object",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true,
+   "why": "Window.dll selects stock pens and fonts; port/vengeance/vengeance_gdi.c gives them permanent handles and passes the stock brushes to TribesPad's service."
   }
  }
 }

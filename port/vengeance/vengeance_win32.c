@@ -19,6 +19,7 @@
 #include "../core/guest_filesystem.h"
 
 extern uint32_t tribes_set_last_error(uint32_t value);
+extern uint32_t tribes_get_last_error(void);
 extern uint32_t tribes_get_file_attributes(uint64_t base,uint32_t name);
 extern uint32_t tribes_find_first(uint64_t base,uint32_t pattern,uint32_t output);
 extern uint32_t tribes_find_next(uint64_t base,uint32_t handle,uint32_t output);
@@ -66,6 +67,42 @@ uint32_t vg_set_current_directory_w(_cpu *c,uint32_t name){
  uint32_t at=scratch(c,0);if(!narrow_to_scratch(c,name,at))return 0;
  return tribes_set_current_directory(c->_pointer_offset,at);
 }
+
+/* Named kernel objects, W forms: TribesPad's A services with the name narrowed. */
+extern uint32_t tribes_create_mutex(uint64_t base,uint32_t attributes,uint32_t owned,uint32_t name);
+extern uint32_t tribes_create_event(uint64_t base,uint32_t attributes,uint32_t manual,uint32_t initial,uint32_t name);
+uint32_t vg_create_mutex_w(_cpu *c,uint32_t attributes,uint32_t owned,uint32_t name){
+ /* One guest process: a named mutex is a process-local one, unless the name
+    was already used (a second open of the same object is not modeled). Security
+    attributes have no meaning here. */
+ (void)attributes;
+ if(name){
+  static char names[16][128];static unsigned count;char text[128];
+  if(!read_ascii(c->_pointer_offset,name,1,text,sizeof text))return 0;
+  for(unsigned i=0;i<count;i++)if(!strcmp(names[i],text)){fprintf(stderr,"TribesPad: unsupported second CreateMutexW \"%s\"\n",text);abort();}
+  if(count<16)strcpy(names[count++],text);
+  fprintf(stderr,"vengeance: mutex \"%s\" (process-local)\n",text);
+ }
+ uint32_t h=tribes_create_mutex(c->_pointer_offset,0,owned,0);if(h)tribes_set_last_error(0);return h;
+}
+uint32_t vg_create_event_w(_cpu *c,uint32_t attributes,uint32_t manual,uint32_t initial,uint32_t name){
+ uint32_t at=scratch(c,0);if(name&&!narrow_to_scratch(c,name,at))return 0;
+ return tribes_create_event(c->_pointer_offset,attributes,manual,initial,name?at:0);
+}
+/* GetSystemDirectoryW / GetWindowsDirectoryW: the A answers, widened. */
+extern uint32_t tribes_get_system_directory_a(uint64_t base,uint32_t output,uint32_t capacity);
+extern uint32_t tribes_get_windows_directory_a(uint64_t base,uint32_t output,uint32_t capacity);
+static uint32_t directory_w(_cpu *c,uint32_t output,uint32_t capacity,uint32_t (*a)(uint64_t,uint32_t,uint32_t)){
+ uint64_t base=c->_pointer_offset;uint32_t at=scratch(c,0),n=a(base,at,PATH_MAX);if(!n||n>=PATH_MAX)return n;
+ char text[PATH_MAX];memcpy(text,GUEST(base,at),n+1);
+ if(capacity<=n)return n+1;if(!in_guest(base,output,2*(n+1))){tribes_set_last_error(87);return 0;}
+ widen(base,output,text,n+1);return n;
+}
+uint32_t vg_get_system_directory_w(_cpu *c,uint32_t output,uint32_t capacity){return directory_w(c,output,capacity,tribes_get_system_directory_a);}
+uint32_t vg_get_windows_directory_w(_cpu *c,uint32_t output,uint32_t capacity){return directory_w(c,output,capacity,tribes_get_windows_directory_a);}
+/* GlobalLock / GlobalUnlock: TribesPad's GlobalAlloc memory is fixed, so the handle is the address. */
+uint32_t vg_global_lock(uint32_t handle){if(!handle)tribes_set_last_error(6);return handle;}
+uint32_t vg_global_unlock(uint32_t handle){(void)handle;tribes_set_last_error(0);return 0;}
 
 /* GetFullPathName: the current directory joined with a relative name, "." and
    ".." resolved, "/" read as "\". Nothing is checked on disk, as on Windows.
@@ -240,6 +277,23 @@ uint32_t vg_load_library_w(_cpu *c,uint32_t name){
  struct stat st;
  if(!tribes_filesystem_resolve(base,path,host,sizeof host)||stat(host,&st)){tribes_set_last_error(126);return 0;}
  return tribes_load_library_ex_w_cpu(c,name,0,0);
+}
+
+/* BOOL FreeLibrary(HMODULE). The game loads and frees some of its own DLLs
+   (RTCShader probes Direct3D at start-up, then is freed). TribesPad maps every
+   translated image once and cannot unmap one, so a translated DLL is pinned
+   instead (GetModuleHandleEx PIN): it stays attached and a later LoadLibrary
+   finds it as it was, as when another reference keeps a DLL loaded on Windows. */
+extern uint32_t tribes_get_module_handle_ex_w(uint64_t base,uint32_t flags,uint32_t name,uint32_t output);
+extern uint32_t tribes_free_library_cpu(_cpu *cpu,uint32_t image);
+uint32_t vg_free_library(_cpu *c,uint32_t image){
+ if(image>=0x10000000u&&image<0x20000000u){   /* the translated modules (config/vengeance/layout.json) */
+  uint32_t error=tribes_get_last_error();
+  int pinned=tribes_get_module_handle_ex_w(c->_pointer_offset,5,image,scratch(c,0));   /* PIN | FROM_ADDRESS */
+  fprintf(stderr,"vengeance: FreeLibrary 0x%08x: %s\n",image,pinned?"pinned, stays attached":"not a mapped image");
+  tribes_set_last_error(error);
+ }
+ return tribes_free_library_cpu(c,image);
 }
 
 /* int MessageBoxW(HWND, LPCWSTR text, LPCWSTR caption, UINT type): TribesPad

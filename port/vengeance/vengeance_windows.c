@@ -18,6 +18,7 @@
 #include "../core/window_classes.h"
 
 extern uint32_t tribes_set_last_error(uint32_t value);
+extern uint32_t tribes_get_last_error(void);
 extern uint32_t ss_create_window_ex_a(_cpu *cpu,uint32_t exstyle,uint32_t class_name,uint32_t title,uint32_t style,uint32_t x,uint32_t y,uint32_t width,uint32_t height,uint32_t parent,uint32_t menu,uint32_t instance,uint32_t parameter);
 extern uint32_t ss_set_window_text_a(_cpu *cpu,uint32_t handle,uint32_t text);
 extern uint32_t tribes_load_cursor(uint64_t base,uint32_t instance,uint32_t name);
@@ -64,7 +65,9 @@ static uint32_t register_class(uint64_t base,uint32_t descriptor,int ex){
  uint32_t p=page(base),name=0;
  if(!narrow(base,w[9],p+64,256,&name)){release(base,p);return 0;}
  uint32_t a[10];memcpy(a,w,40);a[9]=name;memcpy(GUEST(base,p),a,40);
- uint32_t atom=tribes_register_class(base,p);release(base,p);return atom;
+ uint32_t atom=tribes_register_class(base,p);
+ if(!atom)fprintf(stderr,"vengeance: RegisterClass%sW \"%s\" (style 0x%x, instance 0x%x, menu 0x%x) failed: %u\n",ex?"Ex":"",(const char *)GUEST(base,name),a[0],a[4],a[8],tribes_get_last_error());
+ release(base,p);return atom;
 }
 uint32_t vg_register_class_ex_w(uint64_t base,uint32_t descriptor){return register_class(base,descriptor,1);}
 uint32_t vg_register_class_w(uint64_t base,uint32_t descriptor){return register_class(base,descriptor,0);}
@@ -72,11 +75,45 @@ uint32_t vg_unregister_class_w(uint64_t base,uint32_t name,uint32_t instance){
  uint32_t p=page(base),n=0;if(!narrow(base,name,p,256,&n)){release(base,p);return 0;}
  uint32_t ok=tribes_unregister_class(base,n,instance);release(base,p);return ok;
 }
-/* BOOL GetClassInfoEx(HINSTANCE, name, LPWNDCLASSEX): from TribesPad's registry. */
+/* BOOL GetClassInfoEx(HINSTANCE, name, LPWNDCLASSEX): from TribesPad's registry.
+   A NULL instance also finds the program's own classes, as on Windows, where
+   user32 looks a NULL instance up as the executable's module.
+   Unreal's Window.dll superclasses the system controls (WControl::
+   RegisterWindowClass asks for "BUTTON", "EDIT"...). TribesPad has no system
+   controls and the game draws its interface itself, so a system class answers
+   with vg_control_proc as its procedure: such windows are plain windows that
+   keep their title and ignore control messages (the log window's edit box). */
+extern uint32_t tribes_get_module_handle(uint64_t base,uint32_t pointer);
+extern uint32_t vengeance_control_proc(void);
+extern uint32_t ss_def_window_proc_a(_cpu *cpu,uint32_t handle,uint32_t message,uint32_t wp,uint32_t lp);
+uint32_t vg_control_proc(_cpu *cpu,uint32_t handle,uint32_t message,uint32_t wp,uint32_t lp){
+ switch(message){
+ case 0x0081:case 0x000C:case 0x0010:case 0x0014:case 0x0084:case 0x0086:case 0x0021:case 0x0047:case 0x0112:
+  return ss_def_window_proc_a(cpu,handle,message,wp,lp);
+ }
+ return 0;
+}
+static const char *const system_classes[]={"Button","Edit","Static","ListBox","ComboBox","ScrollBar","ComboLBox","MDIClient",
+ "RichEdit","RICHEDIT20A","RICHEDIT20W","msctls_trackbar32","msctls_progress32","msctls_updown32","SysListView32","SysTreeView32",
+ "SysTabControl32","SysHeader32","tooltips_class32","ToolbarWindow32","msctls_statusbar32","ReBarWindow32"};
+static uint32_t system_class(uint64_t base,uint32_t name,uint32_t output){
+ if(name<=0xffff)return 0;
+ for(unsigned i=0;i<sizeof system_classes/sizeof system_classes[0];i++)if(!strcasecmp((const char *)GUEST(base,name),system_classes[i])){
+  uint32_t record[12]={48,0x8,vengeance_control_proc(),0,0,0,0,0,0,0,0,0}; /* CS_DBLCLKS */
+  memcpy(GUEST(base,output),record,48);fprintf(stderr,"vengeance: system class %s as a plain window\n",system_classes[i]);
+  return 0xc000u-1-i;
+ }
+ return 0;
+}
 static uint32_t class_info(uint64_t base,uint32_t instance,uint32_t name,uint32_t output,int wide){
  if(!in_guest(base,output,48)){tribes_set_last_error(87);return 0;}
  uint32_t p=page(base),n=name;if(wide&&!narrow(base,name,p,256,&n)){release(base,p);return 0;}
  uint32_t fields[10];uint32_t atom=tribes_class_acquire(base,n,instance,fields);release(base,p);
+ if(!atom&&!instance){uint32_t exe=tribes_get_module_handle(base,0);if(exe){p=page(base);n=name;
+  if(!wide||narrow(base,name,p,256,&n))atom=tribes_class_acquire(base,n,exe,fields);release(base,p);}}
+ if(!atom&&!instance){p=page(base);n=name;
+  uint32_t s=(!wide||narrow(base,name,p,256,&n))?system_class(base,n,output):0;release(base,p);
+  if(s){uint32_t record[12];memcpy(record,GUEST(base,output),48);record[10]=name;memcpy(GUEST(base,output),record,48);return s;}}
  if(!atom){tribes_set_last_error(1411);return 0;}
  tribes_class_release(base,atom);
  uint32_t record[12]={48,fields[0],fields[1],fields[2],fields[3],fields[4],fields[5],fields[6],fields[7],0,name,0};
@@ -168,5 +205,6 @@ uint32_t vg_register_window_message_w(uint64_t base,uint32_t text){return regist
 uint32_t vg_get_async_key_state(uint64_t base,uint32_t key){return tribes_get_key_state(base,key)&0x8000u;}
 static uint32_t current_cursor;
 uint32_t vg_set_cursor(uint32_t cursor){pthread_mutex_lock(&lock);uint32_t old=current_cursor;current_cursor=cursor;pthread_mutex_unlock(&lock);return old;}
+uint32_t vg_get_cursor(void){pthread_mutex_lock(&lock);uint32_t c=current_cursor;pthread_mutex_unlock(&lock);return c;}
 extern uint32_t ss_set_capture(uint32_t handle);
 uint32_t vg_get_capture(void){uint32_t current=ss_set_capture(0);ss_set_capture(current);return current;}

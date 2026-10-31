@@ -32,6 +32,11 @@ RESERVED = [(0x0, 0x10000, 'null page'), (0x100000, 0x300000, 'main thread stack
             (0x3a0000, 0x3f0000, 'process parameters, PEB, TEB'), (CAPTURE, 0x30000000, 'patch capture window')]
 UCC_CLOSURE = ['ucc.exe', 'core.dll', 'msvcr71.dll', 'msvcp71.dll', 'ogg.dll', 'vorbis.dll', 'vorbisfile.dll']
 CLIENT = 'tv_cd_dvd.exe'
+# Native halves of UnrealScript packages that the client loads by name at run
+# time (found at M4: IGEffectsSystem.dll after the client's start-up). Not in the
+# October audit; their files are checked by prepare.py's inputs.json.
+RUNTIME_LOADED = ['igeffectssystem.dll', 'igsoundeffectssubsystem.dll', 'igvisualeffectssubsystem.dll', 'tyrion.dll',
+                  'tribestv.dll', 'uweb.dll']
 
 def up(value, step): return (value + step - 1) // step * step
 
@@ -42,10 +47,10 @@ def main():
     if missing:
         sys.exit('missing modules (run scripts/vengeance/prepare.py): %s' % missing)
     pes, info = {}, {}
-    for name in sorted(audit):
+    for name in sorted(set(audit) | set(RUNTIME_LOADED)):
         raw = files[name].read_bytes()
         digest = hashlib.sha256(raw).hexdigest()
-        if digest != audit[name]['sha256']:
+        if name in audit and digest != audit[name]['sha256']:
             sys.exit('%s differs from the audit' % name)
         pe = pefile.PE(data=raw)
         pes[name] = pe
@@ -58,7 +63,7 @@ def main():
     # The plan's rule, unless a frozen layout already exists: then keep its bases.
     frozen = json.loads(LAYOUT.read_text())['modules'] if LAYOUT.exists() else {}
     cursor = max([DLL_START] + [m['base'] + m['image_size'] for m in frozen.values()]) if frozen else DLL_START
-    for name in sorted(info):
+    for name in sorted(info, key=lambda n: (n not in frozen, n in RUNTIME_LOADED, n)):
         m = info[name]
         if name in frozen:
             if frozen[name]['sha256'] != m['sha256']:
@@ -120,7 +125,7 @@ def main():
     if problems or internal_missing:
         print(json.dumps({'problems': problems, 'internal_imports_missing': internal_missing[:20]}, indent=1))
         sys.exit('layout check failed')
-    if not frozen:
+    if not frozen or set(info) - set(frozen):
         LAYOUT.write_text(json.dumps({'version': 1, 'note': 'Frozen guest layout for Tribes: Vengeance (scripts/vengeance/layout.py). '
             'Append new modules after the last one; never move an existing entry.', 'reserved': [[hex(a), hex(b), w] for a, b, w in RESERVED],
             'modules': {n: {'file': m['file'], 'sha256': m['sha256'], 'base': m['base'], 'image_size': m['image_size']} for n, m in sorted(info.items())}},

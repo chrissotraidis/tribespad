@@ -95,7 +95,9 @@ static void activate(_cpu *cpu,uint32_t handle){
 uint32_t ss_create_window_ex_a(_cpu *cpu,uint32_t exstyle,uint32_t class_name,uint32_t title,uint32_t style,uint32_t x,uint32_t y,uint32_t width,uint32_t height,uint32_t parent,uint32_t menu,uint32_t instance,uint32_t parameter){
  uint64_t base=cpu->_pointer_offset;
  if(!exstyle&&!style&&!x&&!y&&!width&&!height&&!parent&&!menu)return tribes_create_hidden_window(cpu,exstyle,class_name,title,style,x,y,width,height,parent,menu,instance,parameter);
- if(style&WS_CHILD)unsupported("child window style",style);
+ /* Child windows (Tribes: Vengeance's log window and its controls) live in
+    their parent: no activation of their own and never the main window. */
+ if(style&WS_CHILD){pthread_mutex_lock(&lock);int known=find(base,parent)!=NULL;pthread_mutex_unlock(&lock);if(!known)unsupported("child window without a parent window",style);}
  if(exstyle&~(uint32_t)(0x1|0x8|0x40000|0x100|0x200))unsupported("extended window style",exstyle);
  uint32_t fields[10];uint32_t atom=tribes_class_acquire(base,class_name,instance,fields);
  if(!atom){tribes_set_last_error(1407);return 0;}
@@ -124,7 +126,7 @@ uint32_t ss_create_window_ex_a(_cpu *cpu,uint32_t exstyle,uint32_t class_name,ui
  if(style&WS_VISIBLE){
   pthread_mutex_lock(&lock);w=find(base,handle);if(w){w->style|=WS_VISIBLE;w->visible=1;}Window snapshot=w?*w:(Window){0};pthread_mutex_unlock(&lock);
   if(!snapshot.handle)return 0;
-  send(cpu,handle,0x0018,1,0);move_messages(cpu,&snapshot);activate(cpu,handle);
+  send(cpu,handle,0x0018,1,0);move_messages(cpu,&snapshot);if(!(style&WS_CHILD))activate(cpu,handle);
  }
  return handle;
 failed:
@@ -167,6 +169,9 @@ uint32_t ss_destroy_window(_cpu *cpu,uint32_t handle){
  uint64_t base=cpu->_pointer_offset;
  pthread_mutex_lock(&lock);Window *w=find(base,handle);int ours=w!=NULL;if(w&&w->destroying){pthread_mutex_unlock(&lock);return 0;}if(w)w->destroying=1;pthread_mutex_unlock(&lock);
  if(!ours)return tribes_destroy_hidden_window(cpu,handle);
+ /* Children go first, as on Windows. */
+ for(;;){uint32_t child=0;pthread_mutex_lock(&lock);for(Window *c=windows;c;c=c->next)if(c->base==base&&c->parent==handle&&(c->style&WS_CHILD)&&!c->destroying){child=c->handle;break;}pthread_mutex_unlock(&lock);
+  if(!child)break;ss_destroy_window(cpu,child);}
  send(cpu,handle,0x0002,0,0);send(cpu,handle,0x0082,0,0);
  pthread_mutex_lock(&lock);Window **p=&windows;while(*p&&((*p)->base!=base||(*p)->handle!=handle))p=&(*p)->next;
  if(*p){w=*p;*p=w->next;tribes_class_release(base,w->atom);free(w->extra);free(w);}
@@ -242,7 +247,7 @@ uint32_t ss_show_window(_cpu *cpu,uint32_t handle,uint32_t command){
  pthread_mutex_lock(&lock);Window *w=find(base,handle);if(!w){pthread_mutex_unlock(&lock);unsupported("ShowWindow on a hidden window",handle);}
  int was=w->visible,show=command!=0;fprintf(stderr,"TribesPad: ShowWindow 0x%x command %u\n",handle,command);if(command==2||command==6||command==7||command==11)unsupported("ShowWindow minimize",command);
  w->visible=show;if(show)w->style|=WS_VISIBLE;else w->style&=~WS_VISIBLE;Window snapshot=*w;pthread_mutex_unlock(&lock);
- if(was!=show){send(cpu,handle,0x0018,(uint32_t)show,0);if(show){move_messages(cpu,&snapshot);activate(cpu,handle);}}
+ if(was!=show){send(cpu,handle,0x0018,(uint32_t)show,0);if(show){move_messages(cpu,&snapshot);if(!(snapshot.style&WS_CHILD))activate(cpu,handle);}}
  return (uint32_t)was;
 }
 uint32_t ss_update_window(_cpu *cpu,uint32_t handle){
@@ -398,5 +403,5 @@ uint32_t ss_pointer_to_client(int32_t dx,int32_t dy,int32_t *cx,int32_t *cy){
 }
 /* For the host: the visible game window, if any. */
 uint32_t ss_main_window(int32_t *width,int32_t *height){
- pthread_mutex_lock(&lock);uint32_t r=0;for(Window *w=windows;w;w=w->next)if(w->visible){r=w->handle;*width=w->width;*height=w->height;break;}pthread_mutex_unlock(&lock);return r;
+ pthread_mutex_lock(&lock);uint32_t r=0;for(Window *w=windows;w;w=w->next)if(w->visible&&!(w->style&WS_CHILD)){r=w->handle;*width=w->width;*height=w->height;break;}pthread_mutex_unlock(&lock);return r;
 }
