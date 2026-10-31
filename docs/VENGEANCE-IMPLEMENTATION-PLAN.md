@@ -1,6 +1,7 @@
 # Vengeance implementation plan
 
-29 October 2026, inspected against TribesPad `3f284ee`.
+29 October 2026, inspected against TribesPad `3f284ee`. App integration (picker,
+··· menu, size, this Mac) reviewed 31 October against `e828817`.
 
 Build **our native Vengeance engine inside the existing TribesPad app**, selectable
 beside Starsiege: Tribes and Tribes 2. Reuse the app, touch overlay, controller
@@ -249,14 +250,167 @@ exporting only `vengeance_mobile_engine_main`; select it in
 Audit Objective-C/global/TLS callbacks and shared SDL/Metal/audio ownership as
 well as C symbols. Only allocate the chosen engine's guest state.
 
-Extend [launcher.h](../port/apple/launcher.h), both picker implementations,
-[build-tribespad.sh](../scripts/build-tribespad.sh) and the app packager only after
-the standalone engine slice works. The future selection is
-`--games tribes2,starsiege,vengeance`; **it is not supported today**. Retain current
-defaults, use stable IDs instead of two-card indexes, and require both a compiled
-engine and validated data. A requested Vengeance build failure must be explicit,
-with previous working outputs preserved. A ZIP downloaded onto a signed phone
-cannot add a missing compiled engine.
+The future selection is `--games tribes2,starsiege,vengeance`; **it is not
+supported today**. Retain current defaults and require both a compiled engine
+and validated data. A requested Vengeance build failure must be explicit, with
+previous working outputs preserved. A ZIP downloaded onto a signed phone cannot
+add a missing compiled engine. The picker and menu work is below.
+
+## Three games in the picker
+
+The picker becomes three cards in release order: Starsiege: Tribes (1998),
+Tribes 2 (2001), Tribes: Vengeance (2004). One engine still runs per launch, and
+Choose Game still closes the app so the next launch shows the picker. Nothing
+about that process model changes for a third game.
+
+Both pickers are written for exactly two cards today, so this is a small
+rewrite rather than an added card:
+
+- [launcher.h](../port/apple/launcher.h) has `TBGameTribes2` and
+  `TBGameStarsiege`. Add `TBGameVengeance` and stable string IDs (`tribes2`,
+  `starsiege`, `vengeance`) for `TribesPad.nextGame`, a new
+  `TribesPad.lastGame` and `TRIBESPAD_PICK`.
+- [launcher.m](../port/apple/launcher.m) and its AppKit twin
+  [launcher_mac.m](../port/apple/launcher_mac.m) address cards as `cards[0]`
+  (Starsiege) and `cards[1]` (Tribes 2): two hard-coded frames, `focus=1`,
+  `focus==0` meaning Starsiege in `activate`, keys 1 and 2, and live counts
+  written to fixed indexes. Replace this with one table of cards (ID, kicker,
+  art, availability, status loader, launch) laid out in N equal columns. On an
+  iPhone in landscape each card is about 250 points wide, enough for the art,
+  title and one status line; check it in the iPhone 17e Simulator.
+- Default focus becomes the last game played, falling back to Tribes 2.
+- The gear menu's **Open Tribes 2 Directly** and Settings' **Game Picker at
+  Launch** ("Off, it opens Tribes 2 directly") name one game. Proposed: "Open
+  the Last Game Directly". Players who turned the picker off have been playing
+  Tribes 2, so their launch does not change.
+- Card art: `Content/Art/StartupLogo.bmp` (600x428) is the game's own splash.
+  Its top band holds the logo and character; the lower two thirds is legal text,
+  so [launcher_art.py](../scripts/launcher_art.py) should crop about the top 165
+  rows. It is a plain BMP; no Unreal texture reader is needed.
+- Live count: OpenSpy publishes
+  [tribesv.json](https://openspy-website.nyc3.digitaloceanspaces.com/servers/tribesv.json)
+  over HTTPS (7 servers listed on 31 October, with `numplayers` and
+  `maxplayers`), the same shape of source as Tribes 2's list. Its entries carry
+  no address field, so joining stays in the game's own browser or uses the
+  master query from the research notes.
+
+Card states follow the Starsiege precedent: **Not in this build** (default
+builds), **Dev build** (V3, opt-in builds), **Play campaign** (V4–V5), **Play ·
+N playing now** (V6), then **Play** (V7). Whether the card appears before V3 as
+**In development**, as Starsiege's did at P0, is the owner's choice; the table
+refactor can land earlier with the card hidden, since it changes nothing for
+the two current games.
+
+## Vengeance's ··· menu
+
+Same sections, order and handlers as the other two games
+([menu audit](validation/menu-audit-2026-10-31.md)): This Match, Play Online,
+Options, Help, Choose Game. Keys come from `DefUser.ini`; effective bindings
+need the runtime check noted above.
+
+| Section | Item | Vengeance key or source |
+| --- | --- | --- |
+| This Match | Game Menu / Back to Game | Escape (`ShowEscapeMenu`) |
+| | Scores | F2 (`ShowGameStats`); F3 is the player's own stats |
+| | Chat: All, Team, Quick Chat Menu | T (`TribesTalk`), Y (`TribesTeamTalk`), V (`ToggleQuickChat`), keyboard opens |
+| | Actions | Objectives C and loadout Shift (both **held** buttons), use F, third person Z, zoom level R, drop weapon Alt, respawn B |
+| | Campaign | Quick Save F5, Quick Load F8; shown only in single player |
+| Play Online | Who's Playing Now | OpenSpy `tribesv.json` |
+| | Server List | The game's own browser; no request bridge exists yet |
+| | Community | tribesrevengeance.net and its Discord (invite to verify), TribesPad Discord |
+| Options | Touch controls, trackpad, FPS, Settings | FPS needs the active-renderer adapter; Graphics Quality only if presets are defined |
+| Help | Touch Guide, Controller Guide, Console, GitHub, About | Console is **Tab** (`ConsoleKey=9`), not grave |
+
+Two things the T1/T2 menus get from game scripts have no Vengeance equivalent
+yet, and the plan needs both before the menu is complete:
+
+- **Play state.** Both current games export "playing, typing, connected" from
+  script; the overlay uses it for This Match, showing the touch controls in play
+  and opening the keyboard for dialogs. For Vengeance, first try a host-side
+  signal: whether the game is using relative mouse (play) or a visible cursor
+  (menus), seen in the DirectInput and cursor calls TribesPad already provides.
+  Add an UnrealScript hook only if that is not enough.
+- **Requests** (open the server list, join a server). Unreal's console accepts
+  `open <address>`; typing it into the Tab console through key events would
+  join without script changes. Verify that Vengeance permits it.
+
+Held items need a press-and-release item type: a tap on C or Shift would flash
+objectives or loadout for one frame.
+
+Before adding Vengeance, move the game-specific parts of
+[mobile_controls.m](../port/apple/mobile_controls.m) (menu sections, hint and
+guide text, Settings rows, state and request paths, controller handling) from
+the single `tb_starsiege` flag into a per-game table, as section 3 of
+[LAUNCHER-PLAN.md](LAUNCHER-PLAN.md#3-shared-controls-per-game-profile) proposed.
+The Settings sheet already hides rows that do not apply to a game; Vengeance
+would hide Render Scale and Keep Clear of the Notch until its renderer honors
+them, and WASD Movement and Online Play.
+
+## Size
+
+The installer unpacks to **10.1 GiB** (7,830 files). Today's two-game app is
+about 1 GB.
+
+| Content | Size |
+| --- | --- |
+| Multiplayer maps (`MP-*`, 203 files) | 5.5 GiB |
+| Campaign maps (`SP-*`, 52 files) | 1.2 GiB |
+| `Art` | 1.37 GiB |
+| `HavokData` | 0.74 GiB |
+| Cutscenes | 0.48 GiB |
+| `Sounds`, `System`, `Music`, `Program/Bin`, map packages, other | 0.8 GiB |
+
+Campaign content without the multiplayer maps is about 4.6 GiB, before checking
+which packages multiplayer maps share with the campaign. Decide at V0 whether a
+Vengeance build bundles campaign content only (multiplayer maps as a later,
+separate choice) and measure free space on the iPad and iPhone before the first
+device install. Map files are the bulk; check whether they compress in the IPA.
+
+## This Mac
+
+Ready for V0–V3 now:
+
+- Apple-silicon Mac, macOS 26.6.2, 128 GB memory, Xcode 27.2, Apple Python
+  3.9.6, about 600 GiB free.
+- The community ZIP (hash-verified) and its Inno installer
+  (`setup.exe`, `setup-1.bin`, `setup-2.bin`) under the ignored
+  `ref/vengeance-research/`; binaries and `Content/System` extracted (248 MB).
+  innoextract 1.9 lists all 7,830 files and extracts single files.
+- SRW, SRW-tribes, llasm and the memory passes built in `generated/tools`;
+  pefile in `.venv`; `llvm-objdump` through `xcrun`.
+- HaloPad at `c4aad68` in `ref/halopad` with the D3D9, shader, SEH and
+  DirectInput sources the plan adapts.
+- The iPad Pro 12.9-inch (6th generation) and iPhone 14 are paired and available;
+  Simulators include iPhone 17e and several iPads.
+
+Missing or to fix:
+
+- Full content extraction (10.1 GiB) and the V0 `prepare.py` that does it.
+- Simulator SDL: only the device and macOS SDL backends are built in this
+  checkout, so Simulator runs need `scripts/build-sdl-backend.py --platform simulator` first.
+- `scripts/test-mobile-controls.py` fails at its C test on `main`
+  (`tb_mobile_controls_gamepad_look` gained an argument); fix it before V5 input work.
+- A reference run of the original game. Parallels Desktop and Homebrew Wine are
+  installed. Watching the Windows game run would settle bindings, menu flow,
+  file opens and save paths faster than static reading. This runs the
+  downloaded game, so it needs the owner's go-ahead.
+- A game controller for V5 checks, if none is at hand.
+
+## Files
+
+New: `config/vengeance/inputs.json`, `scripts/vengeance/prepare.py`,
+`scripts/vengeance/build_engine.py` (Mac executable and iOS relocatable object,
+as Starsiege's), `scripts/vengeance/bundle_mac.py`, `port/vengeance/` (engine
+host: module registry, Win32/CRT, SEH, D3D9→Metal, DirectInput, OpenAL, file
+paths, controller), `port/apple/vengeance_paths.{h,m}`, and the layout and
+audit evidence under `docs/validation/`.
+
+Changed: `launcher.h`, `launcher.m`, `launcher_mac.m`,
+`mobile_engine_main.m` (`TB_VENGEANCE`, `enter_vengeance`),
+`mobile_controls.m` (per-game table, Vengeance menu, hints and guides),
+`live_servers.m` (OpenSpy source), `launcher_art.py`, `build-tribespad.sh`,
+`build-ipad-engine.py` (`--vengeance-object`), `tests/` for input,
+and README/build docs. PadMint stays untouched until the owner approves.
 
 ## Implementation order and evidence
 
@@ -303,3 +457,7 @@ client entry investigation in the same work session. Leave a small implementatio
 PR with reproducible commands, the first reached failure and the next experiment.
 Do not repeat the broad game-selection research or build a picker-only prototype
 and call Vengeance integrated.
+
+V0 also settles the content split from [Size](#size). The per-game overlay table
+and N-card picker can be done separately at any point; they change nothing for
+Tribes 2 or Starsiege and are checked on both current games.
