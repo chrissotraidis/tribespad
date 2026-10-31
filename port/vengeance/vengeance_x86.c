@@ -118,3 +118,14 @@ EXTERNC void CCALL vg_fldenv_esp(CPU)
     cpu->_st_sw_cond = words[1] & 0xffff & ~0x3800u;
     cpu->_st_tag = words[2] & 0xffff;
 }
+
+/* The UGUIController constructor (lift fixup in gui.dll): mov esi, ecx, and
+   the newest GUI controller recorded (after the class default, the viewport's). Its
+   Interaction flags say whether a menu is up (vengeance_input.c). */
+static uint32_t gui_controller;
+EXTERNC void CCALL vg_gui_controller(CPU)
+{
+    esi = ecx;
+    gui_controller = ecx;
+}
+uint32_t vengeance_gui_controller(void) { return gui_controller; }

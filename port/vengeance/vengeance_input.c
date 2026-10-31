@@ -19,6 +19,7 @@
 extern void (*ss_key_hook)(unsigned dik,int down);
 extern void ss_input_pump(_cpu *cpu);
 extern void ss_count_frame(void);
+extern uint64_t ss_frames(void);
 extern uint32_t ss_get_focus(void);
 extern uint32_t ss_get_foreground_window(void);
 extern uint32_t tribes_post_message(uint64_t base,uint32_t window,uint32_t message,uint32_t wp,uint32_t lp);
@@ -66,12 +67,22 @@ static void button(unsigned b,int down){
  tribes_post_message(vengeance_guest_base(),window,msg[b]+(down?0:1),held,point(x,y));
 }
 extern void ss_input_use_vengeance_pad(void);
-extern int ss_input_playing(void);
-__attribute__((constructor)) static void install(void){ss_key_hook=key;ss_pointer_hook=pointer;ss_button_hook=button;ss_input_use_vengeance_pad();}
+/* Playing or in a menu: the game's GUI controller (recorded by a lift fixup,
+   port/vengeance/vengeance_x86.c) is an Interaction whose bVisible flag (bit 1 of
+   the flags after UObject's 0x28 bytes) is set while a menu or loading screen is
+   up: the main menu, the Escape menu, briefings. Checked on the Mac: 0xf in
+   menus, 0x9 in play. Drives the controller layout and TribesPad's overlay. */
+extern uint32_t vengeance_gui_controller(void);
+extern int (*ss_play_state_hook)(void);
+static int playing(void){
+ uint32_t g=vengeance_gui_controller();if(!g)return 0;
+ uint32_t flags;memcpy(&flags,GUEST(vengeance_guest_base(),g+0x28),4);return !(flags&2);
+}
+__attribute__((constructor)) static void install(void){ss_key_hook=key;ss_pointer_hook=pointer;ss_button_hook=button;ss_input_use_vengeance_pad();ss_play_state_hook=playing;}
 
 #if TARGET_OS_IPHONE
 /* TribesPad's overlay in the app (port/apple/mobile_controls.m): frames for its
-   FPS counter, and whether the game is in play (it holds the mouse for aiming). */
+   FPS counter, and whether the game is in play (no menu up). */
 extern void tb_app_note_frame(void);
 extern void tb_vengeance_report_state(int playing);
 #endif
@@ -80,7 +91,8 @@ void vengeance_input_frame(_cpu *cpu){
  ss_count_frame();ss_input_pump(cpu);
 #if TARGET_OS_IPHONE
  tb_app_note_frame();
- static int reported=-1;int playing=ss_input_playing();if(playing!=reported){reported=playing;tb_vengeance_report_state(playing);}
+ static int reported=-1;int now=playing();
+ if(now!=reported){reported=now;tb_vengeance_report_state(now);fprintf(stderr,"TribesPad: Vengeance %s (frame %llu)\n",now?"in play":"in menus",(unsigned long long)ss_frames());}
 #endif
 }
 

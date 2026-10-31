@@ -15,6 +15,12 @@
 #include <unistd.h>
 uint32_t tribes_virtual_memory_low=0x60030000;
 #define LOW tribes_virtual_memory_low
+/* Next fit (Tribes: Vengeance sets it): an address search starts where the last
+   allocation ended and wraps around once, instead of rescanning from LOW past
+   every live region. Unreal reserves and releases large blocks every frame, and
+   first fit cost a fifth of a frame on iPad with thousands of regions. */
+int tribes_virtual_memory_next_fit=0;
+static uint64_t next_fit_hint;
 #define END UINT32_C(0x7fff0000)
 typedef struct Region { uint64_t base;uint32_t address,size,backing,page,allocation_protect;unsigned char *state;struct Region *next; } Region;
 static Region *regions;
@@ -121,9 +127,13 @@ static uint32_t allocate_region(uint64_t base,uint32_t process,uint32_t address,
         }
         pthread_mutex_unlock(&lock);return address;
     }
-    uint64_t candidate=address?address:up(lowest>LOW?lowest:LOW,alignment);
+    uint64_t first=lowest>LOW?lowest:LOW;int wrapped=0;
+    if(!address&&!count&&tribes_virtual_memory_next_fit&&next_fit_hint>first)first=next_fit_hint;else wrapped=1;
+    uint64_t candidate=address?address:up(first,alignment);
     for(;;) {
-        if(candidate<LOW||candidate+backing>END||candidate+size-1>highest){pthread_mutex_unlock(&lock);return failure(address?487:8);}
+        if(candidate<LOW||candidate+backing>END||candidate+size-1>highest){
+            if(!address&&!wrapped){wrapped=1;candidate=up(lowest>LOW?lowest:LOW,alignment);continue;}
+            pthread_mutex_unlock(&lock);return failure(address?487:8);}
         Region *collision=NULL;
         for(Region *r=regions;r;r=r->next)if(r->base==base&&candidate<(uint64_t)r->address+r->backing&&candidate+backing>r->address){collision=r;break;}
         if(!collision)break;
@@ -147,6 +157,7 @@ static uint32_t allocate_region(uint64_t base,uint32_t process,uint32_t address,
     }
     }
     r->next=regions;regions=r;
+    if(tribes_virtual_memory_next_fit)next_fit_hint=(uint64_t)r->address+r->backing;
     uint32_t result=r->address;pthread_mutex_unlock(&lock);return result;
 }
 uint32_t tribes_virtual_alloc2_from_app(uint64_t base,uint32_t process,uint32_t address,uint32_t size,uint32_t type,uint32_t protection,uint32_t parameters,uint32_t count) {

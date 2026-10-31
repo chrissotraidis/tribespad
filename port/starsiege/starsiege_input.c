@@ -193,11 +193,12 @@ static void run_script(void){
    mouse used alongside keep working. Changes are logged (TribesPad.log). */
 #include <TargetConditionals.h>
 static char state_path[1024];
-int ss_vengeance_pad=0; /* Tribes: Vengeance's layout and play state (ss_input_use_vengeance_pad, below) */
+int ss_vengeance_pad=0; /* Tribes: Vengeance's layout (ss_input_use_vengeance_pad, below) */
+int (*ss_play_state_hook)(void)=0;
 void ss_input_set_game_folder(const char *game){snprintf(state_path,sizeof state_path,"%s/temp/tribespad-state.cs",game?game:"");}
 static int play_state(void){
- /* Tribes: Vengeance: playing while the game holds the mouse for aiming. */
- if(ss_vengeance_pad)return relative_mode;
+ /* Tribes: Vengeance reports play itself (port/vengeance/vengeance_input.c). */
+ if(ss_play_state_hook)return ss_play_state_hook();
  static uint32_t checked;static int value;uint32_t now=now_ms();
  if(checked&&now-checked<250)return value;checked=now;
  FILE *f=state_path[0]?fopen(state_path,"r"):NULL;if(!f){value=0;return value;}
@@ -220,8 +221,6 @@ static const unsigned char vg_pad_dik[PAD_KEYS]={0x11,0x1e,0x1f,0x20,0x39,0x21,0
 static const char *const vg_pad_name[PAD_KEYS]={"W","A","S","D","Space (ski)","F (use)","Q (pack)","E (grenade)","wheel down (next weapon)",
  "LB (ski)","Z (third person)","R (zoom level)","C (objectives)","wheel up (previous weapon)","Shift (loadout)","F2 (scores)","Escape"};
 void ss_input_use_vengeance_pad(void){ss_vengeance_pad=1;}
-/* Playing (the game holds the mouse for aiming), for TribesPad's overlay. */
-int ss_input_playing(void){return relative_mode;}
 #define pad_dik (ss_vengeance_pad?vg_pad_dik:ss_pad_dik)
 #define pad_name (ss_vengeance_pad?vg_pad_name:ss_pad_name)
 #define zoom_dik (ss_vengeance_pad?0x1du:0x12u)

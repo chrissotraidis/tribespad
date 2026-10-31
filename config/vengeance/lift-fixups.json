@@ -424,5 +424,15 @@
     "llasm": ";not bh|call vg_not_bh $"
    }
   ]
+ },
+ "gui.dll": {
+  "instruction_replacements": [
+   {
+    "address": "0x11E3EE77",
+    "length": 2,
+    "why": "UGUIController constructor keeps this in esi: record the newest GUI controller for play state (port/vengeance/vengeance_x86.c)",
+    "llasm": ";mov esi, ecx|call vg_gui_controller $"
+   }
+  ]
  }
 }

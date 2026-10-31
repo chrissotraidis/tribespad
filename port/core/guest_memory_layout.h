@@ -8,4 +8,5 @@
    more VirtualAlloc room (Tribes: Vengeance) sets all three, contiguous in that
    order, before the guest's first allocation. */
 extern uint32_t tribes_global_heap_span,tribes_process_heap_low,tribes_virtual_memory_low;
+extern int tribes_virtual_memory_next_fit;   /* guest_virtual_memory.c: next-fit address search */
 #endif

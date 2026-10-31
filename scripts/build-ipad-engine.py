@@ -425,7 +425,8 @@ if bundled:
  if a.vengeance_object and not mac:
   # Tribes: Vengeance, one object exporting only vengeance_mobile_engine_main,
   # with its module images and the game folder from the player's own download
-  # (scripts/vengeance/prepare.py). The campaign only: multiplayer maps stay out.
+  # (scripts/vengeance/prepare.py). The campaign only: multiplayer maps and their
+  # Havok data stay out (about 6 GB).
   vengeance=data/'Vengeance';vengeance.mkdir(exist_ok=True)
   subprocess.run(['rsync','-a','--delete',str(a.vengeance_object.resolve().parent/'images')+'/',str(vengeance/'images')+'/'],check=True)
   game=R/'ref/vengeance/game';assert (game/'Program/Bin/TV_CD_DVD.exe').exists(),'Tribes: Vengeance is not prepared (scripts/vengeance/prepare.py)'
@@ -433,10 +434,10 @@ if bundled:
    if (vengeance/'Game').exists():shutil.rmtree(vengeance/'Game')
    listed=game
   else:
-   subprocess.run(['rsync','-a','--delete','--exclude','/Content/Maps/MP-*',str(game)+'/',str(vengeance/'Game')+'/'],check=True)
+   subprocess.run(['rsync','-a','--delete','--exclude','/Content/Maps/MP-*','--exclude','/Content/HavokData/[Mm][Pp]-*',str(game)+'/',str(vengeance/'Game')+'/'],check=True)
    listed=vengeance/'Game'
   # The app copies the game folder into its storage when this changes (port/apple/vengeance_paths.m).
-  listing=''.join('%s %d\n'%(f.relative_to(listed),f.stat().st_size) for f in sorted(listed.rglob('*')) if f.is_file() and not str(f.relative_to(listed)).startswith('Content/Maps/MP-'))
+  listing=''.join('%s %d\n'%(f.relative_to(listed),f.stat().st_size) for f in sorted(listed.rglob('*')) if f.is_file() and not str(f.relative_to(listed)).startswith('Content/Maps/MP-') and not str(f.relative_to(listed)).lower().startswith('content/havokdata/mp-'))
   (vengeance/'stamp.txt').write_text(hashlib.sha256(listing.encode()).hexdigest()[:16]+'\n')
   config+='#define TB_VENGEANCE 1\n'
  elif not mac and (data/'Vengeance').exists():shutil.rmtree(data/'Vengeance')

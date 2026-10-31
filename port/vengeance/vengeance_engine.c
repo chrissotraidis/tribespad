@@ -162,6 +162,7 @@ int main(int argc,char **argv){
     its menus): GlobalAlloc 64 MiB from 0x30000000, the process heap at 0x34000000,
     VirtualAlloc from 0x44030000 to 0x7fff0000 (about 950 MiB). */
  tribes_global_heap_span=0x04000000u;tribes_process_heap_low=0x34000000u;tribes_virtual_memory_low=0x44030000u;
+ tribes_virtual_memory_next_fit=1;
  /* Desktop SDL runs on process main; the backend checks this before video. */
  extern void tribes_sdl_host_application_ready(void);
  tribes_sdl_host_application_ready();

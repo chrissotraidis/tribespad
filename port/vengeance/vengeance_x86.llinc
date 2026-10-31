@@ -6,3 +6,4 @@ funcv vg_not_bh $
 funcv vg_xor_byte_eax1_bh $
 funcv vg_fnstenv_esp $
 funcv vg_fldenv_esp $
+funcv vg_gui_controller $

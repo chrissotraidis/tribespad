@@ -51,7 +51,7 @@ int tb_overlay_owns_controller(void){
 }
 /* Tribes: Vengeance runs these controls too (tb_mobile_controls_install_vengeance):
    its own keys and menu. Its engine reads the controller as Starsiege's does,
-   reports play (the game holding the mouse for aiming) through
+   reports play (no game menu up) through
    tb_vengeance_report_state, and presents with Metal, so it counts its frames
    here for the FPS counter (tb_app_note_frame). Both are called from the engine. */
 static BOOL tb_vengeance;
@@ -1052,6 +1052,7 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
     }
     if(playing==self.inMatch)return;
     self.inMatch=playing;if(playing)self.matchSeen=YES;
+    fprintf(stderr,"TribesPad overlay: %s\n",playing?"play (touch controls)":"menus");
     [self releaseHeldKeys];
     if(self.zoomed){self.zoomed=NO;[self pushKey:SDL_SCANCODE_A down:NO mod:SDL_KMOD_NONE];}
     if(self.controls){tb_input_release(&self.controls->input,9);tb_mobile_controls_emit(self.controls);}

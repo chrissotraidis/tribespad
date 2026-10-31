@@ -55,7 +55,8 @@ PLATFORM = 'macos'
 # cached case-insensitive file lookups, x87 helpers, windows, registry, sockets,
 # sound and input). Its own host program (starsiege_engine.c) is not used.
 ss = load('starsiege_build', R / 'scripts/starsiege/build_engine.py')
-RUNTIME = list(ss.RUNTIME)
+# x87: port/vengeance/vengeance_float80.c compiles tribes_float80.c with fast paths.
+RUNTIME = [p for p in ss.RUNTIME if p.name != 'tribes_float80.c']
 
 def set_platform(platform):
     global PLATFORM, SDK, TARGET

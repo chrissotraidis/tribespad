@@ -72,7 +72,7 @@ def rebase(name, entry, work):
 def lift(name):
     entry = LAYOUT[name]
     work = OUT / pathlib.Path(name).stem
-    srw = R / 'generated/tools/SRW-tribes/SRW.exe'
+    srw = R / 'generated/tools/SRW-vengeance/SRW.exe'  # SRW-tribes plus the string-compare fix (scripts/build-tribes-lifter.py)
     key = {'version': VERSION, 'module_sha256': entry['sha256'], 'base': entry['base'], 'srw_sha256': sha(srw),
            'audit_sha256': sha(R / 'scripts/audit-code.py'), 'fixups': FIXUPS.get(name)}
     done = work / 'result.json'
