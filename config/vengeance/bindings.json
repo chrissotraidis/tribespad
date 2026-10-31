@@ -1,0 +1,280 @@
+{
+ "note": "Tribes: Vengeance additions to TribesPad native services (scripts/vengeance/build_engine.py). New services go in bindings; replacements of existing ones in overrides, each with a why.",
+ "bindings": {
+  "GetCurrentDirectoryW": {
+   "helper": "vg_get_current_directory_w",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "SetCurrentDirectoryW": {
+   "helper": "vg_set_current_directory_w",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "GetFullPathNameA": {
+   "helper": "vg_get_full_path_name_a",
+   "arguments": 4,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "GetFullPathNameW": {
+   "helper": "vg_get_full_path_name_w",
+   "arguments": 4,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "FindFirstFileW": {
+   "helper": "vg_find_first_w",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "FindNextFileW": {
+   "helper": "vg_find_next_w",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "GetFileAttributesExA": {
+   "helper": "vg_get_file_attributes_ex_a",
+   "arguments": 3,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "GetFileAttributesExW": {
+   "helper": "vg_get_file_attributes_ex_w",
+   "arguments": 3,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "DeleteFileA": {
+   "helper": "vg_delete_file_a",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true
+  },
+  "DeleteFileW": {
+   "helper": "vg_delete_file_w",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true
+  },
+  "RemoveDirectoryA": {
+   "helper": "vg_remove_directory_a",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true
+  },
+  "RemoveDirectoryW": {
+   "helper": "vg_remove_directory_w",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true
+  },
+  "MoveFileA": {
+   "helper": "vg_move_file_a",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "MoveFileW": {
+   "helper": "vg_move_file_w",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true
+  },
+  "SetFileAttributesA": {
+   "helper": "vg_set_file_attributes_a",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true
+  },
+  "SetFileAttributesW": {
+   "helper": "vg_set_file_attributes_w",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true
+  },
+  "GetDriveTypeW": {
+   "helper": "vg_get_drive_type_w",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "GetDiskFreeSpaceExA": {
+   "helper": "vg_get_disk_free_space_ex_a",
+   "arguments": 4,
+   "returns": true,
+   "guest_base": true
+  },
+  "FlushFileBuffers": {
+   "helper": "tribes_flush_file_buffers",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true
+  },
+  "SetEndOfFile": {
+   "helper": "tribes_set_end_of_file",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true
+  },
+  "GetFileInformationByHandle": {
+   "helper": "tribes_get_file_information_by_handle",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true
+  },
+  "RtlUnwind": {
+   "helper": "vg_rtl_unwind",
+   "arguments": 4,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "IsBadReadPtr": {
+   "helper": "vg_is_bad_read_ptr",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "IsBadWritePtr": {
+   "helper": "vg_is_bad_write_ptr",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "IsBadCodePtr": {
+   "helper": "vg_is_bad_code_ptr",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "LoadLibraryW": {
+   "helper": "vg_load_library_w",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "MessageBoxW": {
+   "helper": "vg_message_box_w",
+   "arguments": 4,
+   "returns": true,
+   "guest_base": true
+  },
+  "GetComputerNameA": {
+   "helper": "vg_get_computer_name_a",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true
+  },
+  "GetComputerNameW": {
+   "helper": "vg_get_computer_name_w",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true
+  },
+  "GetUserNameA": {
+   "helper": "vg_get_user_name_a",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true
+  },
+  "GetUserNameW": {
+   "helper": "vg_get_user_name_w",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true
+  },
+  "GetVersionExW": {
+   "helper": "vg_get_version_ex_w",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true
+  },
+  "GlobalMemoryStatus": {
+   "helper": "vg_global_memory_status",
+   "arguments": 1,
+   "returns": false,
+   "guest_base": true,
+   "helper_returns": "void"
+  },
+  "GetUserDefaultLCID": {
+   "helper": "vg_get_user_default_lcid",
+   "arguments": 0,
+   "returns": true,
+   "guest_base": false
+  },
+  "IsValidLocale": {
+   "helper": "vg_is_valid_locale",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": false
+  },
+  "CompareStringW": {
+   "helper": "vg_compare_string_w",
+   "arguments": 6,
+   "returns": true,
+   "guest_base": true
+  },
+  "GetLocaleInfoW": {
+   "helper": "vg_get_locale_info_w",
+   "arguments": 4,
+   "returns": true,
+   "guest_base": true
+  },
+  "GetTimeZoneInformation": {
+   "helper": "vg_get_time_zone_information",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true
+  },
+  "GetProcessWorkingSetSize": {
+   "helper": "vg_get_process_working_set_size",
+   "arguments": 3,
+   "returns": true,
+   "guest_base": true
+  }
+ },
+ "overrides": {
+  "RaiseException": {
+   "helper": "vg_raise_exception",
+   "arguments": 4,
+   "returns": false,
+   "guest_base": false,
+   "cpu_argument": true,
+   "helper_returns": "void",
+   "why": "Tribes 2's RaiseException admits only the thread-name notification; Vengeance throws C++ exceptions (0xE06D7363) and uses __try/__except, so it gets full SEH dispatch (port/vengeance/vengeance_seh.c)."
+  },
+  "CreateFileW": {
+   "helper": "vg_create_file_w",
+   "arguments": 7,
+   "returns": true,
+   "guest_base": true,
+   "why": "Unreal tests write permission by opening its own folder for GENERIC_WRITE with FILE_FLAG_BACKUP_SEMANTICS; TribesPad's CreateFileW opens directories read-only, so that case checks the host folder's write permission (port/vengeance/vengeance_win32.c). Every other call goes to TribesPad's service unchanged."
+  },
+  "GetProcAddress": {
+   "helper": "vg_get_proc_address",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true,
+   "why": "Vengeance's translated modules answer from their own PE export tables (Unreal looks up native functions by name); other modules go to TribesPad's loader (port/vengeance/vengeance_engine.c)."
+  }
+ }
+}
