@@ -157,7 +157,7 @@ uint32_t halopad_d3d9_create_device(uint32_t d3d, uint32_t adapter, uint32_t typ
     d->target = halopad_metal_target_create(halopad_window_host(window, d->pp[0], d->pp[1]), d->pp[0], d->pp[1], d->pp[9] != 0);
     /* Without D3DCREATE_FPU_PRESERVE, Direct3D 9 sets the x87 unit to single precision and
        round-to-nearest for the calling thread. */
-    if (!(behavior & 0x2) && halopad_cpu) halopad_cpu->_st_cw &= ~0x0F00u;
+    if (!(behavior & 0x2) && halopad_cpu && !getenv("VENGEANCE_FPU_PRESERVE")) halopad_cpu->_st_cw &= ~0x0F00u;
     d->guest = halopad_com_new("IDirect3DDevice9", 4, d, destroy);
     halopad_d3d9_create_targets(d);
     halopad_com_addref(d3d);

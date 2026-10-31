@@ -12,6 +12,7 @@
 #import <ImageIO/ImageIO.h>
 #include <SDL3/SDL.h>
 #include <stdio.h>
+#include <time.h>
 #include <stdlib.h>
 #include <string.h>
 #include "../llasm-support/llasm_cpu.h"
@@ -120,6 +121,20 @@ extern void vengeance_input_frame(_cpu *cpu);
 static void capture(uint32_t g)
 {
     if (halopad_cpu) vengeance_input_frame(halopad_cpu);
+    {   /* Presentation interval: a device that asks for vertical sync (any interval but
+           D3DPRESENT_INTERVAL_IMMEDIATE) presents at most 60 times a second, as on a
+           60 Hz display; hidden windows have no display to wait for. The game's
+           character physics steps at 60 Hz and moves nothing at much higher rates. */
+        device *d = halopad_com_state("IDirect3DDevice9", g);
+        static double next;
+        if (d->pp[13] != 0x80000000u) {
+            struct timespec now;
+            clock_gettime(CLOCK_MONOTONIC, &now);
+            double t = now.tv_sec + now.tv_nsec / 1e9;
+            if (next > t && next - t < 0.1) { double w = next - t; struct timespec s = {(time_t)w, (long)((w - (time_t)w) * 1e9)}; nanosleep(&s, NULL); t = next; }
+            next = (next > t - 0.1 ? next : t) + 1.0 / 60.0;
+        }
+    }
     static int first = -1, every = 60;
     static const char *folder;
     if (first < 0) {

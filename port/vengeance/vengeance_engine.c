@@ -11,6 +11,7 @@
  * GAME is mounted as C:\TribesPad\Game and holds the game's Program and
  * Content folders; the program runs from C:\TribesPad\Game\Program\Bin. */
 #include <assert.h>
+#include <math.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -233,6 +234,31 @@ int main(int argc,char **argv){
  }
  extern void tribes_threads_process_ready(uint64_t);
  tribes_threads_process_ready(base);
+ /* VENGEANCE_SELFTEST_POW=1: the C runtime's pow (msvcr71 _CIpow, x87) on known values, then exit. */
+ if(getenv("VENGEANCE_SELFTEST_POW")){
+  extern void x87_fld_double(_cpu *,uint32_t,uint32_t);
+  uint32_t pow_va=0;for(size_t i=0;i<sizeof vg_exports/sizeof vg_exports[0];i++)if(!strcmp(vg_exports[i].name,"_CIpow")&&vg_exports[i].image==0x12010000u)pow_va=vg_exports[i].address;
+  static const double cases[][2]={{2,0.5},{10,2},{0.999,60},{2.718281828459045,-1.5},{0.001,0.0166667},{0.5,3.3},{100,0.25}};
+  for(unsigned i=0;pow_va&&i<sizeof cases/sizeof cases[0];i++){
+   uint64_t a,b;memcpy(&a,&cases[i][0],8);memcpy(&b,&cases[i][1],8);
+   x87_fld_double(&state,(uint32_t)a,(uint32_t)(a>>32));x87_fld_double(&state,(uint32_t)b,(uint32_t)(b>>32));
+   state._esp=STACK_HIGH-0x100;vg_enter(&state,pow_va,0,NULL);
+   double r;uint64_t bits=0;extern uint32_t x87_fstp_double(_cpu *);(void)x87_fstp_double(&state);memcpy(&bits,&state._st_result,8);memcpy(&r,&bits,8);
+   printf("pow(%g, %g) = %.17g (host %.17g)\n",cases[i][0],cases[i][1],r,pow(cases[i][0],cases[i][1]));
+  }
+  /* atof on the movement configs' numbers (cdecl, string on the stack, result in ST0). */
+  uint32_t atof_va=0;for(size_t i=0;i<sizeof vg_exports/sizeof vg_exports[0];i++)if(!strcmp(vg_exports[i].name,"atof")&&vg_exports[i].image==0x12010000u)atof_va=vg_exports[i].address;
+  static const char *const texts[]={"7000","18.25","0.001","1250","  5000","-1.5e3","0.75"};
+  for(unsigned i=0;atof_va&&i<sizeof texts/sizeof texts[0];i++){
+   uint32_t s=PARAMETERS+0xa000;memcpy((void *)(uintptr_t)(base+s),texts[i],strlen(texts[i])+1);
+   state._esp=STACK_HIGH-0x100;uint32_t arg=s;
+   /* cdecl: the callee leaves the argument; vg_enter pushes it and the caller would pop it. */
+   vg_enter(&state,atof_va,1,&arg);
+   double r;extern uint32_t x87_fstp_double(_cpu *);(void)x87_fstp_double(&state);memcpy(&r,&state._st_result,8);
+   printf("atof(\"%s\") = %.17g\n",texts[i],r);
+  }
+  fflush(stdout);return 0;
+ }
  fprintf(stderr,"vengeance: entering %s at 0x%08x (%s)\n",VG_EXE_NAME,exe->entry,line);
  state._esp=STACK_HIGH-0x100;
  vg_enter(&state,exe->entry,0,NULL);

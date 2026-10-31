@@ -258,7 +258,18 @@ uint32_t vg_register_window_message_w(uint64_t base,uint32_t text){return regist
    "pressed since the last call" bit is not tracked (Windows documents it as
    unreliable). HWND GetCapture: the window SetCapture recorded. HCURSOR
    SetCursor: TribesPad draws no system cursor; the previous cursor is returned. */
-uint32_t vg_get_async_key_state(uint64_t base,uint32_t key){return tribes_get_key_state(base,key)&0x8000u;}
+uint32_t vg_get_async_key_state(uint64_t base,uint32_t key){
+ uint32_t v=tribes_get_key_state(base,key)&0x8000u;
+ static int trace=-1;if(trace<0)trace=getenv("VENGEANCE_TRACE_KEYS")!=NULL;
+ if(trace&&v){static unsigned n;if(n++<40)fprintf(stderr,"vengeance key: GetAsyncKeyState(0x%x) down\n",key);}
+ return v;
+}
+uint32_t vg_get_key_state(uint64_t base,uint32_t key){
+ uint32_t v=tribes_get_key_state(base,key);
+ static int trace=-1;if(trace<0)trace=getenv("VENGEANCE_TRACE_KEYS")!=NULL;
+ if(trace&&(v&0x8000u)){static unsigned n;if(n++<40)fprintf(stderr,"vengeance key: GetKeyState(0x%x) = 0x%x thread %p\n",key,v,(void *)pthread_self());}
+ return v;
+}
 static uint32_t current_cursor;
 uint32_t vg_set_cursor(uint32_t cursor){pthread_mutex_lock(&lock);uint32_t old=current_cursor;current_cursor=cursor;pthread_mutex_unlock(&lock);return old;}
 uint32_t vg_get_cursor(void){pthread_mutex_lock(&lock);uint32_t c=current_cursor;pthread_mutex_unlock(&lock);return c;}

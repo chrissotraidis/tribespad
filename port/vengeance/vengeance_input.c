@@ -7,9 +7,11 @@
  * layout, TribesPad's keyboard tables). The layer is pumped once per presented
  * frame (port/vengeance/vengeance_d3d9_host.m), which also counts frames for
  * scripted input (STARSIEGE_INPUT). */
+#include <pthread.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include "../llasm-support/llasm_cpu.h"
 #include "../core/keyboard_state.h"
 
@@ -40,7 +42,9 @@ static void key(unsigned dik,int down){
  uint32_t window=ss_get_focus();if(!window)window=ss_get_foreground_window();if(!window)return;
  uint32_t lp=1u|(scan<<16)|(extended<<24)|(down?0u:0xc0000000u);
  uint32_t message=(alt_down||vk==0x12)?(down?WM_SYSKEYDOWN:WM_SYSKEYUP):(down?WM_KEYDOWN:WM_KEYUP);
- tribes_post_message(base,window,message,vk,lp);
+ uint32_t posted=tribes_post_message(base,window,message,vk,lp);
+ static int trace=-1;if(trace<0)trace=getenv("VENGEANCE_TRACE_KEYS")!=NULL;
+ if(trace)fprintf(stderr,"vengeance key: dik 0x%x vk 0x%x %s to 0x%x (posted %u, state 0x%x) thread %p\n",dik,vk,down?"down":"up",window,posted,tribes_get_key_state(base,vk),(void *)pthread_self());
 }
 /* The mouse, while WinDrv holds it without exclusivity (menus): the Windows
    pointer moves with it and the window gets mouse messages, as on Windows. */
@@ -73,7 +77,9 @@ uint32_t vg_translate_message(uint64_t base,uint32_t msg){
  if(m[1]==WM_SYSKEYDOWN)return 1;                       /* Alt combinations type nothing here */
  static uint32_t out;if(!out){uint32_t e=tribes_get_last_error();out=tribes_global_alloc(base,0x40,4);tribes_set_last_error(e);}
  if(out&&tribes_to_ascii(base,m[2],(m[3]>>16)&0xff,0,out,0)==1){
-  uint16_t c;memcpy(&c,GUEST(base,out),2);tribes_post_message(base,m[0],WM_CHAR,c,m[3]);
+  uint16_t c;memcpy(&c,GUEST(base,out),2);uint32_t posted=tribes_post_message(base,m[0],WM_CHAR,c,m[3]);
+  static int trace=-1;if(trace<0)trace=getenv("VENGEANCE_TRACE_KEYS")!=NULL;
+  if(trace)fprintf(stderr,"vengeance key: WM_CHAR 0x%x to 0x%x (posted %u)\n",c,m[0],posted);
  }
  return 1;
 }

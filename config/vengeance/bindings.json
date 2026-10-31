@@ -1015,6 +1015,13 @@
    "returns": true,
    "guest_base": true,
    "why": "Releases the screen DCs GetDC hands out (port/vengeance/vengeance_gdi.c)."
+  },
+  "GetKeyState": {
+   "helper": "vg_get_key_state",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true,
+   "why": "TribesPad's GetKeyState, with VENGEANCE_TRACE_KEYS diagnostics (port/vengeance/vengeance_windows.c)."
   }
  }
 }
