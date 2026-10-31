@@ -1022,6 +1022,13 @@
    "returns": true,
    "guest_base": true,
    "why": "TribesPad's GetKeyState, with VENGEANCE_TRACE_KEYS diagnostics (port/vengeance/vengeance_windows.c)."
+  },
+  "GetActiveWindow": {
+   "helper": "vg_get_active_window",
+   "arguments": 0,
+   "returns": true,
+   "guest_base": false,
+   "why": "The game's foreground window from Starsiege's window list; TribesPad's catalog knows only SDL windows (port/vengeance/vengeance_windows.c)."
   }
  }
 }

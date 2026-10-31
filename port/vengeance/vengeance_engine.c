@@ -271,6 +271,14 @@ int main(int argc,char **argv){
    double r;extern uint32_t x87_fstp_double(_cpu *);(void)x87_fstp_double(&state);memcpy(&r,&state._st_result,8);
    printf("atof(\"%s\") = %.17g\n",texts[i],r);
   }
+  /* memcmp on equal-length strings (the movement configs compare each value with "true"). */
+  uint32_t memcmp_va=0;for(size_t i=0;i<sizeof vg_exports/sizeof vg_exports[0];i++)if(!strcmp(vg_exports[i].name,"memcmp")&&vg_exports[i].image==0x12010000u)memcmp_va=vg_exports[i].address;
+  static const char *const pairs[][2]={{"7000","true"},{"true","true"},{"1250","5000"},{"10000","false"},{"abcdefgh","abcdefgi"}};
+  for(unsigned i=0;memcmp_va&&i<sizeof pairs/sizeof pairs[0];i++){
+   uint32_t s=PARAMETERS+0xa000,t=PARAMETERS+0xa040;memcpy((void *)(uintptr_t)(base+s),pairs[i][0],strlen(pairs[i][0])+1);memcpy((void *)(uintptr_t)(base+t),pairs[i][1],strlen(pairs[i][1])+1);
+   uint32_t args[3]={s,t,(uint32_t)strlen(pairs[i][0])};state._esp=STACK_HIGH-0x100;uint32_t r=vg_enter(&state,memcmp_va,3,args);
+   printf("memcmp(\"%s\", \"%s\") = %d (host %d)\n",pairs[i][0],pairs[i][1],(int)r,memcmp(pairs[i][0],pairs[i][1],strlen(pairs[i][0])));
+  }
   fflush(stdout);return 0;
  }
  fprintf(stderr,"vengeance: entering %s at 0x%08x (%s)\n",VG_EXE_NAME,exe->entry,line);

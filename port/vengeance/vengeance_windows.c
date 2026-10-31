@@ -275,3 +275,14 @@ uint32_t vg_set_cursor(uint32_t cursor){pthread_mutex_lock(&lock);uint32_t old=c
 uint32_t vg_get_cursor(void){pthread_mutex_lock(&lock);uint32_t c=current_cursor;pthread_mutex_unlock(&lock);return c;}
 extern uint32_t ss_set_capture(uint32_t handle);
 uint32_t vg_get_capture(void){uint32_t current=ss_set_capture(0);ss_set_capture(current);return current;}
+/* HWND GetActiveWindow: the game's foreground window (Starsiege's window list, which
+   holds the game's windows). TribesPad's catalog only knows SDL's own windows, whose
+   focus iOS and a hidden Mac window report differently; WinDrv drops held keys
+   while its window is not the active one. */
+extern uint32_t ss_get_foreground_window(void);
+uint32_t vg_get_active_window(void){
+ uint32_t r=ss_get_foreground_window();
+ static int trace=-1;if(trace<0)trace=getenv("STARSIEGE_TRACE_WINDOWS")!=NULL;
+ if(trace){static unsigned n;if(n++<10)fprintf(stderr,"TribesPad windows: GetActiveWindow -> 0x%x\n",r);}
+ return r;
+}

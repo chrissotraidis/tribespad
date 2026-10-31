@@ -182,6 +182,7 @@ uint32_t ss_dispatch_message_a(_cpu *cpu,uint32_t address){
  extern uint32_t tribes_dispatch_message(_cpu *cpu,uint32_t address);
  uint64_t base=cpu->_pointer_offset;uint32_t token,m[7];memcpy(m,guest(base,address,28,1,&token),28);tribes_memory_access_end(token);
  pthread_mutex_lock(&lock);Window *w=m[1]!=0x0113?find(base,m[0]):NULL;uint32_t proc=w?w->proc:0;pthread_mutex_unlock(&lock);
+ {static int on=-1;if(on<0)on=getenv("STARSIEGE_TRACE_WINDOWS")!=NULL;if(on&&m[1]>=0x100&&m[1]<=0x105)fprintf(stderr,"TribesPad windows: DispatchMessage 0x%x wp 0x%x to 0x%x proc 0x%x\n",m[1],m[2],m[0],proc);}
  if(!proc)return tribes_dispatch_message(cpu,address);
  return call_proc(cpu,proc,m[0],m[1],m[2],m[3],cpu->_esp-64);
 }
@@ -258,10 +259,12 @@ uint32_t ss_update_window(_cpu *cpu,uint32_t handle){
 static void write_rect(uint64_t base,uint32_t address,int32_t l,int32_t t,int32_t r,int32_t b){
  uint32_t token;int32_t v[4]={l,t,r,b};memcpy(guest(base,address,16,2,&token),v,16);tribes_memory_access_end(token);
 }
+static void trace_window_query(const char *what,uint32_t r);
 uint32_t ss_get_client_rect(uint64_t base,uint32_t handle,uint32_t output){
  pthread_mutex_lock(&lock);Window *w=find(base,handle);Window s=w?*w:(Window){0};pthread_mutex_unlock(&lock);
  if(!s.handle){if(tribes_is_desktop_window(base,handle)){write_rect(base,output,0,0,(int32_t)tribes_get_system_metrics(base,0),(int32_t)tribes_get_system_metrics(base,1));return 1;}tribes_set_last_error(1400);return 0;}
- int32_t dx,dy,cap;frame(s.style,s.exstyle,&dx,&dy,&cap);write_rect(base,output,0,0,s.width-2*dx,s.height-2*dy-cap);return 1;
+ int32_t dx,dy,cap;frame(s.style,s.exstyle,&dx,&dy,&cap);write_rect(base,output,0,0,s.width-2*dx,s.height-2*dy-cap);
+ {char what[64];snprintf(what,sizeof what,"GetClientRect 0x%x %dx%d",handle,s.width-2*dx,s.height-2*dy-cap);trace_window_query(what,1);}return 1;
 }
 uint32_t ss_get_window_rect(uint64_t base,uint32_t handle,uint32_t output){
  pthread_mutex_lock(&lock);Window *w=find(base,handle);Window s=w?*w:(Window){0};pthread_mutex_unlock(&lock);
@@ -314,8 +317,9 @@ uint32_t ss_set_foreground_window(_cpu *cpu,uint32_t handle){
  pthread_mutex_lock(&lock);int ours=find(cpu->_pointer_offset,handle)!=NULL;pthread_mutex_unlock(&lock);
  if(!ours)return 0;activate(cpu,handle);return 1;
 }
-uint32_t ss_get_foreground_window(void){pthread_mutex_lock(&lock);uint32_t r=foreground;pthread_mutex_unlock(&lock);return r;}
-uint32_t ss_get_focus(void){pthread_mutex_lock(&lock);uint32_t r=focus;pthread_mutex_unlock(&lock);return r;}
+static void trace_window_query(const char *what,uint32_t r){static int on=-1;static unsigned n;if(on<0)on=getenv("STARSIEGE_TRACE_WINDOWS")!=NULL;if(on&&(n<40||n%2000==0))fprintf(stderr,"TribesPad windows: %s -> 0x%x (call %u)\n",what,r,n);n++;}
+uint32_t ss_get_foreground_window(void){pthread_mutex_lock(&lock);uint32_t r=foreground;pthread_mutex_unlock(&lock);trace_window_query("GetForegroundWindow",r);return r;}
+uint32_t ss_get_focus(void){pthread_mutex_lock(&lock);uint32_t r=focus;pthread_mutex_unlock(&lock);trace_window_query("GetFocus",r);return r;}
 uint32_t ss_is_iconic(uint32_t handle){(void)handle;return 0;}
 uint32_t ss_set_capture(uint32_t handle){pthread_mutex_lock(&lock);uint32_t old=capture;capture=handle;pthread_mutex_unlock(&lock);return old;}
 uint32_t ss_release_capture(void){pthread_mutex_lock(&lock);capture=0;pthread_mutex_unlock(&lock);return 1;}
