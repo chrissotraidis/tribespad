@@ -6,6 +6,7 @@
 #import <UIKit/UIKit.h>
 #import <GameController/GameController.h>
 #import <SafariServices/SafariServices.h>
+#import <objc/message.h>
 #include <math.h>
 #include "mobile_controls.h"
 #import "live_servers.h"
@@ -1336,12 +1337,48 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
         [groups addObject:group(@[choose])];
     }
     self.menu.menu=[UIMenu menuWithTitle:@"TribesPad" children:groups];
+    [self menuTestHooks];
     // The column button shows whether the cursor is on.
     UIButtonConfiguration *c=self.cursor.configuration;
     c.baseBackgroundColor=TB_TRACKPAD?[UIColor colorWithRed:.12 green:.32 blue:.43 alpha:.85]:[UIColor colorWithWhite:.06 alpha:.72];
     self.cursor.configuration=c;self.cursor.accessibilityValue=TB_TRACKPAD?@"On":@"Off";
 }
+/* Test launches only (devicectl/simctl environment): TRIBESPAD_MENU_DUMP=1 logs the
+   ··· menu each time it changes; TRIBESPAD_MENU_PERFORM="Section/Item" (titles,
+   for example "Campaign/Quick Save") runs that item once, the first time the
+   game is in play. Players never set either. */
+static void tb_menu_dump(UIMenuElement *e,NSString *path,NSMutableString *out){
+    if([e isKindOfClass:UIMenu.class]){UIMenu *m=(UIMenu *)e;NSString *p=m.title.length?(path.length?[path stringByAppendingFormat:@"/%@",m.title]:m.title):path;
+        for(UIMenuElement *c in m.children)tb_menu_dump(c,p,out);return;}
+    UIAction *a=(UIAction *)e;
+    [out appendFormat:@"  %@%@%@%@\n",path.length?[path stringByAppendingString:@"/"]:@"",a.title,a.subtitle.length?[NSString stringWithFormat:@" (%@)",a.subtitle]:@"",
+        a.state==UIMenuElementStateOn?@" [on]":@""];
+}
+static UIAction *tb_menu_find(UIMenuElement *e,NSString *path,NSString *want){
+    if([e isKindOfClass:UIMenu.class]){UIMenu *m=(UIMenu *)e;NSString *p=m.title.length&&![m.title isEqualToString:@"TribesPad"]?(path.length?[path stringByAppendingFormat:@"/%@",m.title]:m.title):path;
+        for(UIMenuElement *c in m.children){UIAction *f=tb_menu_find(c,p,want);if(f)return f;}return nil;}
+    UIAction *a=(UIAction *)e;NSString *full=path.length?[path stringByAppendingFormat:@"/%@",a.title]:a.title;
+    return [full isEqualToString:want]||[full hasSuffix:[@"/" stringByAppendingString:want]]?a:nil;
+}
+-(void)menuTestHooks {
+    static NSString *last;
+    if(getenv("TRIBESPAD_MENU_DUMP")){NSMutableString *out=[NSMutableString string];tb_menu_dump(self.menu.menu,@"",out);
+        if(![out isEqualToString:last]){last=[out copy];fprintf(stderr,"TribesPad menu (%s):\n%s",self.inMatch?"in play":"menus",out.UTF8String);}}
+    static BOOL started;const char *wanted=getenv("TRIBESPAD_MENU_PERFORM");
+    if(wanted&&!started&&self.inMatch){started=YES;
+        /* "A;B;C": one item every 12 seconds, 20 seconds after play starts. */
+        NSArray<NSString *> *items=[@(wanted) componentsSeparatedByString:@";"];__weak TBGameControls *weak=self;
+        for(NSUInteger i=0;i<items.count;i++)dispatch_after(dispatch_time(DISPATCH_TIME_NOW,(int64_t)((20+12*i)*NSEC_PER_SEC)),dispatch_get_main_queue(),^{
+            TBGameControls *me=weak;if(!me)return;
+            [me.presenter dismissViewControllerAnimated:NO completion:nil];
+            UIAction *a=tb_menu_find(me.menu.menu,@"",items[i]);
+            fprintf(stderr,"TribesPad menu: performing %s%s\n",items[i].UTF8String,a?"":" (not in the menu)");
+            SEL perform=NSSelectorFromString(@"performWithSender:target:");
+            if(a&&[a respondsToSelector:perform])((void(*)(id,SEL,id,id))objc_msgSend)(a,perform,nil,nil);});
+    }
+}
 -(void)applyFPSSetting {
+
     [self.fpsClock invalidate];self.fpsClock=nil;self.fps.hidden=!TB_SHOW_FPS;
     if(!TB_SHOW_FPS)return;
     self.fpsFrames=tb_frames();tb_take_longest_ns();self.fps.text=@"– FPS";
