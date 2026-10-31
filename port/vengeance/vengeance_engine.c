@@ -18,6 +18,7 @@
 #include <string.h>
 #include <strings.h>
 #include <sys/mman.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #include <pthread.h>
 #include "../core/guest_threads.h"
@@ -207,6 +208,9 @@ int main(int argc,char **argv){
  assert(tribes_command_line_configure(base,line,(uint32_t)used+1));
  assert(tribes_command_line_configure_w(base,wide,2u*((uint32_t)used+1)));
  assert(tribes_filesystem_configure(base,argv[2],argv[3],argv[4]));assert(tribes_named_mutex_configure(argv[4]));
+ /* The game saves to Program\Saves (Default.ini SavePath=../Saves) and reports
+    a full drive when the folder is missing; the download does not include it. */
+ {char saves[4096];if(snprintf(saves,sizeof saves,"%s/Program/Saves",argv[3])<(int)sizeof saves)mkdir(saves,0755);}
  /* Unreal programs run from their Program\Bin folder (startup.ini, the INIs
     and ..\Content paths are relative to it), as the game's shortcuts start them. */
  {static const char bin[]=VG_GUEST_BIN;char folder[sizeof bin];memcpy(folder,bin,sizeof bin);folder[sizeof bin-2]=0;

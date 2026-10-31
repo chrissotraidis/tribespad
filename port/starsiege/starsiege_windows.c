@@ -244,7 +244,8 @@ uint32_t ss_call_next_hook_ex(uint32_t hook,uint32_t code,uint32_t wp,uint32_t l
 /* Geometry and visibility. Screen coordinates are the guest desktop's. */
 uint32_t ss_show_window(_cpu *cpu,uint32_t handle,uint32_t command){
  uint64_t base=cpu->_pointer_offset;
- pthread_mutex_lock(&lock);Window *w=find(base,handle);if(!w){pthread_mutex_unlock(&lock);unsupported("ShowWindow on a hidden window",handle);}
+ /* Not one of ours (Vengeance's quick save passes 0): fails, as on Windows. */
+ pthread_mutex_lock(&lock);Window *w=find(base,handle);if(!w){pthread_mutex_unlock(&lock);tribes_set_last_error(1400);return 0;}
  int was=w->visible,show=command!=0;fprintf(stderr,"TribesPad: ShowWindow 0x%x command %u\n",handle,command);if(command==2||command==6||command==7||command==11)unsupported("ShowWindow minimize",command);
  w->visible=show;if(show)w->style|=WS_VISIBLE;else w->style&=~WS_VISIBLE;Window snapshot=*w;pthread_mutex_unlock(&lock);
  if(was!=show){send(cpu,handle,0x0018,(uint32_t)show,0);if(show){move_messages(cpu,&snapshot);if(!(snapshot.style&WS_CHILD))activate(cpu,handle);}}
