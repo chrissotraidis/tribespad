@@ -241,6 +241,8 @@ uint32_t ss_swap_buffers(_cpu *cpu,uint32_t dc){
 }
 /* For input: frames presented so far, and the game's SDL window token. */
 uint64_t ss_frames(void){return swaps;}
+/* A host presenting without SwapBuffers (Tribes: Vengeance's Metal device) counts its frames here. */
+void ss_count_frame(void){swaps++;}
 uint32_t ss_sdl_window(void){pthread_mutex_lock(&lock);uint32_t w=0;for(unsigned i=0;i<16;i++)if(dcs[i].dc){w=dcs[i].sdl_window;break;}pthread_mutex_unlock(&lock);return w;}
 
 

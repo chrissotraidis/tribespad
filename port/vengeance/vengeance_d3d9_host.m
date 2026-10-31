@@ -114,9 +114,12 @@ void *halopad_window_host(uint32_t hwnd, uint32_t width, uint32_t height)
     return w;
 }
 
-/* VENGEANCE_CAPTURE: completed frames to PNG, before they are presented. */
+/* Each completed frame: input for the next one (port/vengeance/vengeance_input.c), then
+   VENGEANCE_CAPTURE: the frame to PNG, before it is presented. */
+extern void vengeance_input_frame(_cpu *cpu);
 static void capture(uint32_t g)
 {
+    if (halopad_cpu) vengeance_input_frame(halopad_cpu);
     static int first = -1, every = 60;
     static const char *folder;
     if (first < 0) {

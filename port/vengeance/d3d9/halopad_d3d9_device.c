@@ -26,6 +26,7 @@ void *halopad_window_host(uint32_t hwnd, uint32_t width, uint32_t height);
 void halopad_metal_target_gamma(void *target, const uint16_t ramp[768]);
 void halopad_metal_target_destroy(void *t);
 void halopad_metal_clear(void *t, int color, int depth, int stencil, const float rgba[4], float z, uint32_t s);
+void halopad_metal_clear_area(void *t, const uint32_t rect[4], int color, int depth, int stencil, const float rgba[4], float z, uint32_t s);
 int halopad_metal_present(void *t);
 extern _Thread_local _cpu *halopad_cpu;
 
@@ -282,21 +283,33 @@ uint32_t hpcom_IDirect3DDevice9_Clear_c(uint32_t g, uint32_t count, uint32_t rec
 {
     device *d = dev(g);
     if (halopad_d3d9_tracing()) fprintf(stderr, "HALOPAD DRAW f%u clear flags %x color %08x z %08x stencil %u rt %08x\n", halopad_d3d9_frame, flags, color, z, stencil, d->rt);
-    if (count || rects) hp_unsupported("IDirect3DDevice9::Clear", "%u rectangles", count);
     if (flags & ~0x7u) return D3DERR_INVALIDCALL;
     hp_bound b = halopad_d3d9_bind_targets(d);
     if ((flags & 0x6) && !b.depth) return D3DERR_INVALIDCALL;        /* no depth/stencil surface */
     uint32_t v[6];
     memcpy(v, d->viewport, sizeof v);
-    if (v[0] || v[1] || v[2] != b.width || v[3] != b.height)
-        hp_unsupported("IDirect3DDevice9::Clear", "a clear limited to viewport %ux%u at %u,%u", v[2], v[3], v[0], v[1]);
-    if ((flags & 0x6) && (b.width != d->pp[0] || b.height != d->pp[1]))
-        hp_unsupported("IDirect3DDevice9::Clear", "depth/stencil clear with a %ux%u render target on the larger depth buffer", b.width, b.height);
     float rgba[4] = {((color >> 16) & 0xFF) / 255.0f, ((color >> 8) & 0xFF) / 255.0f, (color & 0xFF) / 255.0f, (color >> 24) / 255.0f};
     if (b.format == 22) rgba[3] = 1.0f;                              /* X8R8G8B8 keeps alpha 1 */
     float zf;
     memcpy(&zf, &z, 4);
-    halopad_metal_clear(d->target, flags & 1, (flags >> 1) & 1, (flags >> 2) & 1, rgba, zf, stencil);
+    /* Direct3D clears the viewport, or the rectangles inside it. The whole target with a
+       depth buffer of its size clears through the render pass; anything smaller draws. */
+    uint32_t x0 = v[0], y0 = v[1], x1 = v[0] + v[2], y1 = v[1] + v[3];
+    if (x1 > b.width) x1 = b.width;
+    if (y1 > b.height) y1 = b.height;
+    int whole = !x0 && !y0 && x1 == b.width && y1 == b.height && !count && !((flags & 0x6) && (b.width != d->pp[0] || b.height != d->pp[1]));
+    if (whole) { halopad_metal_clear(d->target, flags & 1, (flags >> 1) & 1, (flags >> 2) & 1, rgba, zf, stencil); return D3D_OK; }
+    for (uint32_t i = 0; i < (count ? count : 1); i++) {
+        int32_t r[4] = {(int32_t)x0, (int32_t)y0, (int32_t)x1, (int32_t)y1};
+        if (count) {
+            if (!rects) return D3DERR_INVALIDCALL;
+            int32_t c[4]; memcpy(c, G(rects + 16 * i), 16);
+            if (c[0] > r[0]) r[0] = c[0]; if (c[1] > r[1]) r[1] = c[1]; if (c[2] < r[2]) r[2] = c[2]; if (c[3] < r[3]) r[3] = c[3];
+        }
+        if (r[2] <= r[0] || r[3] <= r[1]) continue;
+        uint32_t area[4] = {(uint32_t)r[0], (uint32_t)r[1], (uint32_t)(r[2] - r[0]), (uint32_t)(r[3] - r[1])};
+        halopad_metal_clear_area(d->target, area, flags & 1, (flags >> 1) & 1, (flags >> 2) & 1, rgba, zf, stencil);
+    }
     return D3D_OK;
 }
 /* Test support: called with each device just before it presents (the frame is complete). */

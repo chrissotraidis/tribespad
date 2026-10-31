@@ -58,10 +58,14 @@ static void queue(unsigned device_kind,uint32_t offset,uint32_t data){
   }
  }
 }
+/* A host that also wants each key change (Tribes: Vengeance turns them into
+   window messages, port/vengeance/vengeance_input.c) sets this; Starsiege does not. */
+void (*ss_key_hook)(unsigned dik,int down);
 static void key_change(unsigned dik,int down){
- if(!dik||dik>255)return;pthread_mutex_lock(&lock);
- if(!!keys[dik]!=!!down){keys[dik]=down?0x80:0;queue(3,dik,keys[dik]);}
+ if(!dik||dik>255)return;pthread_mutex_lock(&lock);int changed=!!keys[dik]!=!!down;
+ if(changed){keys[dik]=down?0x80:0;queue(3,dik,keys[dik]);}
  pthread_mutex_unlock(&lock);
+ if(changed&&ss_key_hook)ss_key_hook(dik,down);
 }
 /* The game's canvas draws its own cursor only after a WM_MOUSEMOVE tells it
    the pointer is over the window; it then acquires mouse0 and follows
@@ -76,6 +80,14 @@ static void windows_pointer(int32_t dx,int32_t dy){
  uint32_t posted=tribes_post_message(pointer_base,window,0x0200,held,((uint32_t)(uint16_t)y<<16)|(uint16_t)x);TRACE("WM_MOUSEMOVE %d,%d to 0x%x posted %u error %u\n",x,y,window,posted,tribes_get_last_error());
 }
 static int mouse_acquired_locked(void){for(Input *p=inputs;p;p=p->next)if(p->is_device&&p->acquired&&kind(p)==2)return 1;return 0;}
+/* Whether an acquired mouse holds the device exclusively (Windows then sends no mouse messages). */
+static int mouse_exclusive_locked(void){for(Input *p=inputs;p;p=p->next)if(p->is_device&&p->acquired&&kind(p)==2){DeviceState *s=state_of(p->object,0);if(s&&(s->cooperative&1))return 1;}return 0;}
+/* A host whose game also reads the Windows pointer while the mouse is acquired
+   without exclusivity (Tribes: Vengeance's menus, port/vengeance/vengeance_input.c)
+   sets these; on Windows a non-exclusive mouse moves the pointer and sends
+   button messages too. Starsiege sets neither. */
+void (*ss_pointer_hook)(int32_t dx,int32_t dy,int32_t dz);
+void (*ss_button_hook)(unsigned button,int down);
 /* Where the game's cursor is: it starts at the window centre (the introducing
    WM_MOUSEMOVE) and follows DirectInput motion 1:1, inside the window. */
 static float game_x=-1,game_y=-1;
@@ -89,12 +101,14 @@ static void mouse_move(int32_t dx,int32_t dy,int32_t dz){
  if(!mouse_acquired_locked()){pthread_mutex_unlock(&lock);if(dx||dy)windows_pointer(dx,dy);return;}
  for(Input *p=inputs;p;p=p->next)if(p->is_device&&p->acquired&&kind(p)==2){DeviceState *s=state_of(p->object,1);if(s){s->dx+=dx;s->dy+=dy;s->dz+=dz;}}
  if(dx)queue(2,0,(uint32_t)dx);if(dy)queue(2,4,(uint32_t)dy);if(dz)queue(2,8,(uint32_t)dz);
- pthread_mutex_unlock(&lock);
+ int shared=!mouse_exclusive_locked();pthread_mutex_unlock(&lock);
+ if(shared&&ss_pointer_hook)ss_pointer_hook(dx,dy,dz);
 }
 static void mouse_button(unsigned button,int down){
- if(button>7)return;pthread_mutex_lock(&lock);
- if(!!buttons[button]!=!!down){buttons[button]=down?0x80:0;queue(2,12+button,buttons[button]);}
- pthread_mutex_unlock(&lock);
+ if(button>7)return;pthread_mutex_lock(&lock);int changed=!!buttons[button]!=!!down;
+ if(changed){buttons[button]=down?0x80:0;queue(2,12+button,buttons[button]);}
+ int shared=!mouse_exclusive_locked();pthread_mutex_unlock(&lock);
+ if(changed&&shared&&ss_button_hook)ss_button_hook(button,down);
 }
 
 /* SDL scancodes (USB usage IDs) to DirectInput scan codes. */

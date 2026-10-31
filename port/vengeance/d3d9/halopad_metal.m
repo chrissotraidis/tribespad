@@ -741,3 +741,78 @@ uint64_t halopad_metal_visibility_read(void *p, uint32_t first, uint32_t last, u
 }
 
 id<MTLDevice> halopad_metal_gpu(void) { ensure_app(); return gpu; }
+
+
+/* Tribes: Vengeance: a clear of part of the targets (Direct3D's viewport or rectangles, or a
+   depth clear when the depth buffer is larger than the colour target): a triangle over the
+   rectangle that writes the chosen planes, in the current pass, which then ends so the next
+   draw starts with its own state. rect: x, y, w, h. */
+static NSMutableDictionary *clear_pipes;
+static id<MTLDepthStencilState> clear_depth[4];
+void halopad_metal_clear_area(void *p, const uint32_t rect[4], int color, int depth, int stencil, const float rgba[4], float z, uint32_t s)
+{
+    hp_target *t = p;
+    @autoreleasepool {
+        if (!clear_pipes) clear_pipes = [NSMutableDictionary new];
+        NSString *key = [NSString stringWithFormat:@"%lu/%d/%d", (unsigned long)t->color.pixelFormat, t->zs != nil, color];
+        id<MTLRenderPipelineState> pipe = clear_pipes[key];
+        if (!pipe) {
+            static id<MTLLibrary> lib;
+            NSError *err = nil;
+            if (!lib) lib = [gpu newLibraryWithSource:@"#include <metal_stdlib>\nusing namespace metal;\nstruct V { float4 p [[position]]; };\n"
+                                                      "vertex V hp_clear_vs(uint i [[vertex_id]], constant float &z [[buffer(0)]]) {\n"
+                                                      "  float2 k = float2((i << 1) & 2, i & 2); V o; o.p = float4(k * 2 - 1, z, 1); return o; }\n"
+                                                      "fragment float4 hp_clear_ps(V i [[stage_in]], constant float4 &c [[buffer(0)]]) { return c; }\n"
+                                              options:nil error:&err];
+            MTLRenderPipelineDescriptor *pd = [MTLRenderPipelineDescriptor new];
+            pd.vertexFunction = [lib newFunctionWithName:@"hp_clear_vs"];
+            pd.fragmentFunction = [lib newFunctionWithName:@"hp_clear_ps"];
+            pd.colorAttachments[0].pixelFormat = t->color.pixelFormat;
+            pd.colorAttachments[0].writeMask = color ? MTLColorWriteMaskAll : MTLColorWriteMaskNone;
+            if (t->zs) { pd.depthAttachmentPixelFormat = t->zs.pixelFormat; pd.stencilAttachmentPixelFormat = t->zs.pixelFormat; }
+            pipe = [gpu newRenderPipelineStateWithDescriptor:pd error:&err];
+            if (!pipe) { fprintf(stderr, "HALOPAD TRAP: clear pipeline: %s\n", err.localizedDescription.UTF8String); abort(); }
+            clear_pipes[key] = pipe;
+        }
+        int which = (depth ? 1 : 0) | (stencil ? 2 : 0);
+        if (!clear_depth[which]) {
+            MTLDepthStencilDescriptor *dd = [MTLDepthStencilDescriptor new];
+            dd.depthCompareFunction = MTLCompareFunctionAlways;
+            dd.depthWriteEnabled = depth != 0;
+            if (stencil) {
+                MTLStencilDescriptor *sd = [MTLStencilDescriptor new];
+                sd.stencilCompareFunction = MTLCompareFunctionAlways;
+                sd.depthStencilPassOperation = MTLStencilOperationReplace;
+                sd.readMask = 0xFF; sd.writeMask = 0xFF;
+                dd.frontFaceStencil = sd; dd.backFaceStencil = sd;
+            }
+            clear_depth[which] = [gpu newDepthStencilStateWithDescriptor:dd];
+        }
+        if (!t->enc) {
+            MTLRenderPassDescriptor *rp = [MTLRenderPassDescriptor renderPassDescriptor];
+            rp.colorAttachments[0].texture = t->color;
+            rp.colorAttachments[0].level = t->level;
+            rp.colorAttachments[0].loadAction = MTLLoadActionLoad;
+            rp.colorAttachments[0].storeAction = MTLStoreActionStore;
+            if (t->zs) {
+                rp.depthAttachment.texture = t->zs; rp.depthAttachment.loadAction = MTLLoadActionLoad;
+                rp.depthAttachment.storeAction = MTLStoreActionStore;
+                rp.stencilAttachment.texture = t->zs; rp.stencilAttachment.loadAction = MTLLoadActionLoad;
+                rp.stencilAttachment.storeAction = MTLStoreActionStore;
+            }
+            t->enc = [frame(t) renderCommandEncoderWithDescriptor:rp];
+        }
+        id<MTLRenderCommandEncoder> e = t->enc;
+        [e setRenderPipelineState:pipe];
+        [e setDepthStencilState:clear_depth[which]];
+        [e setCullMode:MTLCullModeNone];
+        [e setTriangleFillMode:MTLTriangleFillModeFill];
+        [e setStencilReferenceValue:s & 0xFF];
+        [e setViewport:(MTLViewport){rect[0], rect[1], rect[2], rect[3], 0.0, 1.0}];
+        [e setScissorRect:(MTLScissorRect){rect[0], rect[1], rect[2], rect[3]}];
+        [e setVertexBytes:&z length:sizeof z atIndex:0];
+        [e setFragmentBytes:rgba length:16 atIndex:0];
+        [e drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:3];
+        end_encoder(t);
+    }
+}

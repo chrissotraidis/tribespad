@@ -185,6 +185,8 @@ int main(int argc,char **argv){
  /* DirectInput keyboard0 and mouse0 (port/starsiege/starsiege_input.c feeds them;
     WinDrv reaches them through DirectInput 8, port/vengeance/vengeance_dinput.c). */
  assert(tribes_dinput_configure(base));assert(tribes_dinput_set_devices(base,vg_input_devices,sizeof vg_input_devices/sizeof vg_input_devices[0]));
+ /* Key state (GetKeyState, GetAsyncKeyState): every key up at start (port/vengeance/vengeance_input.c applies changes). */
+ {static const unsigned char keys_up[256];extern int tribes_keyboard_configure(uint64_t,const unsigned char[256]);assert(tribes_keyboard_configure(base,keys_up));}
  /* d3d9.dll by name (the renderer looks it up with LoadLibrary/GetProcAddress too):
     a native module whose Direct3DCreate9 is the import the game already binds. */
  {uint32_t create=vengeance_import_address("d3d9.dll!Direct3DCreate9");

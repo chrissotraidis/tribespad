@@ -994,6 +994,13 @@
    "returns": true,
    "guest_base": false,
    "why": "D3DDrv also asks for 3DNow! (7); port/vengeance/vengeance_win32.c answers it and the FPU errata/emulation features as absent and passes the rest to TribesPad's CPUID-based service."
+  },
+  "TranslateMessage": {
+   "helper": "vg_translate_message",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true,
+   "why": "WinDrv reads typed characters as WM_CHAR from TranslateMessage; port/vengeance/vengeance_input.c posts them for key-down messages (US layout). TribesPad's service stops on keyboard messages."
   }
  }
 }
