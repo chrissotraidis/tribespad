@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <sys/mman.h>
 #include <unistd.h>
 #include <pthread.h>
@@ -77,6 +78,17 @@ _Noreturn void vengeance_missing_com(_cpu *c,uint32_t index){stop(c,"com",index)
 /* Direct3D (port/vengeance/d3d9): the guest base, and the stop after a reported trap. */
 uint64_t vengeance_guest_base(void){return base;}
 uint32_t vengeance_control_proc(void){return VG_CONTROL_PROC;}
+/* Before a translated DLL loads by name, the translated DLLs it imports from
+   that also load on demand (attach order, from vg_dependencies). */
+extern uint32_t tribes_load_library_cpu(_cpu *cpu,uint32_t pointer);
+void vengeance_load_dependencies(_cpu *c,const char *leaf,uint32_t scratch){
+ for(unsigned i=0;i<sizeof vg_dependencies/sizeof vg_dependencies[0];i++){
+  if(!vg_dependencies[i].module[0]||strcasecmp(vg_dependencies[i].module,leaf))continue;
+  char path[512];snprintf(path,sizeof path,"%s%s",VG_GUEST_BIN,vg_dependencies[i].dependency);
+  memcpy((void *)(uintptr_t)(base+scratch),path,strlen(path)+1);
+  if(!tribes_load_library_cpu(c,scratch))fprintf(stderr,"vengeance: %s needs %s, which did not load\n",leaf,vg_dependencies[i].dependency);
+ }
+}
 /* The guest address of a Windows import ("user32.dll!DefWindowProcW"), 0 if the game imports no such function. */
 uint32_t vengeance_import_address(const char *name){
  for(unsigned i=0;i<sizeof import_names/sizeof import_names[0];i++)if(!strcmp(import_names[i],name))return 0xfffe0000u+16u*i;
@@ -173,6 +185,11 @@ int main(int argc,char **argv){
  /* DirectInput keyboard0 and mouse0 (port/starsiege/starsiege_input.c feeds them;
     WinDrv reaches them through DirectInput 8, port/vengeance/vengeance_dinput.c). */
  assert(tribes_dinput_configure(base));assert(tribes_dinput_set_devices(base,vg_input_devices,sizeof vg_input_devices/sizeof vg_input_devices[0]));
+ /* d3d9.dll by name (the renderer looks it up with LoadLibrary/GetProcAddress too):
+    a native module whose Direct3DCreate9 is the import the game already binds. */
+ {uint32_t create=vengeance_import_address("d3d9.dll!Direct3DCreate9");
+  if(create){const TribesNativeExport exports[]={{"Direct3DCreate9",0,create}};
+   assert(tribes_module_define_native(base,0x60100000u,"C:\\Windows\\System32\\d3d9.dll",exports,1));}}
  assert(tribes_environment_configure(base,environment,sizeof environment));
  /* Command line: the program's full path, quoted, then the given arguments. */
  static char line[8192];int used=snprintf(line,sizeof line,"\"%s%s\"",VG_GUEST_BIN,VG_EXE_NAME);

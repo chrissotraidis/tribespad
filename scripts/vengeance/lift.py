@@ -121,8 +121,9 @@ def lift(name):
     report['srw_errors'] = errors[:10]
     if report['srw_exit'] == 0:
         body = (work / llasm).read_text()
+        helpers = ['vengeance_x86.llinc'] if any('call vg_' in x['llasm'] for x in replacements) else []
         includes = ''.join('include %s\n' % n for n in ['tribes_mmx.llinc', 'tribes_sse.llinc', 'tribes_scan.llinc',
-                                                       'tribes_x87.llinc', 'tribes_shift.llinc', 'tribes_atomic.llinc'])
+                                                       'tribes_x87.llinc', 'tribes_shift.llinc', 'tribes_atomic.llinc'] + helpers)
         (work / llasm).write_text(includes + body)
         # SRW reads "movzx ax, ah" after clearing ax (see scripts/starsiege/lift_preview.py).
         high = re.compile(r'^;movzx ([abcd])x, \1h\n'

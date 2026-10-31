@@ -386,7 +386,7 @@
    "guest_base": false
   },
   "DefWindowProcW": {
-   "helper": "ss_def_window_proc_a",
+   "helper": "vg_def_window_proc_w",
    "arguments": 4,
    "returns": true,
    "guest_base": false,
@@ -812,6 +812,99 @@
    "arguments": 1,
    "returns": true,
    "guest_base": false
+  },
+  "GlobalAddAtomW": {
+   "helper": "vg_global_add_atom_w",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "GlobalDeleteAtom": {
+   "helper": "vg_global_delete_atom",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false
+  },
+  "RegisterHotKey": {
+   "helper": "vg_register_hot_key",
+   "arguments": 4,
+   "returns": true,
+   "guest_base": false
+  },
+  "UnregisterHotKey": {
+   "helper": "vg_unregister_hot_key",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": false
+  },
+  "SetKeyboardState": {
+   "helper": "vg_set_keyboard_state",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false
+  },
+  "AttachThreadInput": {
+   "helper": "vg_attach_thread_input",
+   "arguments": 3,
+   "returns": true,
+   "guest_base": false
+  },
+  "GetKeyNameTextW": {
+   "helper": "vg_get_key_name_text_w",
+   "arguments": 3,
+   "returns": true,
+   "guest_base": true
+  },
+  "GetMenu": {
+   "helper": "vg_get_menu",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false
+  },
+  "SetMenu": {
+   "helper": "vg_set_menu",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": false
+  },
+  "DestroyMenu": {
+   "helper": "vg_destroy_menu",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false
+  },
+  "RegOpenKeyA": {
+   "helper": "vg_reg_open_key_a",
+   "arguments": 3,
+   "returns": true,
+   "guest_base": true
+  },
+  "SysAllocString": {
+   "helper": "vg_sys_alloc_string",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true
+  },
+  "SysFreeString": {
+   "helper": "vg_sys_free_string",
+   "arguments": 1,
+   "returns": false,
+   "guest_base": true,
+   "helper_returns": "void"
+  },
+  "VariantInit": {
+   "helper": "vg_variant_init",
+   "arguments": 1,
+   "returns": false,
+   "guest_base": true,
+   "helper_returns": "void"
+  },
+  "VariantClear": {
+   "helper": "vg_variant_clear",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true
   }
  },
  "overrides": {
@@ -880,6 +973,27 @@
    "returns": true,
    "guest_base": true,
    "why": "Window.dll selects stock pens and fonts; port/vengeance/vengeance_gdi.c gives them permanent handles and passes the stock brushes to TribesPad's service."
+  },
+  "LoadCursorA": {
+   "helper": "vg_load_cursor_a",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true,
+   "why": "WinDrv loads system cursor shapes besides the arrow; they are the arrow here (port/vengeance/vengeance_windows.c), since the game draws its own cursor. An ordinal name is the same in both forms; named cursors stay TribesPad's."
+  },
+  "RegOpenKeyExA": {
+   "helper": "vg_reg_open_key_ex_a",
+   "arguments": 5,
+   "returns": true,
+   "guest_base": true,
+   "why": "Vengeance looks for keys under Software (Direct3D switches, installer records) that TribesPad's registry does not model; they are reported absent (port/vengeance/vengeance_win32.c). Other keys go to TribesPad's registry unchanged."
+  },
+  "IsProcessorFeaturePresent": {
+   "helper": "vg_processor_feature_present",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false,
+   "why": "D3DDrv also asks for 3DNow! (7); port/vengeance/vengeance_win32.c answers it and the FPU errata/emulation features as absent and passes the rest to TribesPad's CPUID-based service."
   }
  }
 }

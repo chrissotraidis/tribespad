@@ -592,6 +592,16 @@ void *halopad_metal_render_texture(uint32_t format, uint32_t w, uint32_t h, uint
     return (__bridge_retained void *)[gpu newTextureWithDescriptor:td];
 }
 
+/* A depth/stencil texture of its own (IDirect3DDevice9::CreateDepthStencilSurface), as the target's. */
+void *halopad_metal_depth_texture(uint32_t w, uint32_t h)
+{
+    ensure_app();
+    MTLTextureDescriptor *td = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatDepth32Float_Stencil8 width:w height:h mipmapped:NO];
+    td.usage = MTLTextureUsageRenderTarget;
+    td.storageMode = MTLStorageModePrivate;
+    return (__bridge_retained void *)[gpu newTextureWithDescriptor:td];
+}
+
 void *halopad_metal_texture_view(void *tex, const uint8_t sw[4])
 {
     id<MTLTexture> t = (__bridge id<MTLTexture>)tex;

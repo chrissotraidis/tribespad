@@ -36,7 +36,7 @@ CLIENT = 'tv_cd_dvd.exe'
 # time (found at M4: IGEffectsSystem.dll after the client's start-up). Not in the
 # October audit; their files are checked by prepare.py's inputs.json.
 RUNTIME_LOADED = ['igeffectssystem.dll', 'igsoundeffectssubsystem.dll', 'igvisualeffectssubsystem.dll', 'tyrion.dll',
-                  'tribestv.dll', 'uweb.dll']
+                  'tribestv.dll', 'uweb.dll', 'editor.dll', 'scriptcompiler.dll', 'perforcewrapper.dll']
 
 def up(value, step): return (value + step - 1) // step * step
 

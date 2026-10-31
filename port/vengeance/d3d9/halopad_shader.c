@@ -380,7 +380,7 @@ static int decode(ctx *c, const uint32_t *t, uint32_t n, uint32_t i, insn *in)
 static const char *prelude =
     "#include <metal_stdlib>\n"
     "using namespace metal;\n"
-    "struct hp_vs_constants { float4 c[256]; int4 i[16]; uint b[16]; float4 fixup; };\n"
+    "struct hp_vs_constants { float4 c[256]; int4 i[16]; uint b[16]; float4 fixup; float4 tfog; };\n"
     "struct hp_ps_constants { float4 c[224]; int4 i[16]; uint b[16]; float4 fog_color; uint alpha_func; float alpha_ref; uint fog; uint pad; };\n"
     "struct hp_vs_out { float4 position [[position]]; float4 color0 [[user(c0)]]; float4 color1 [[user(c1)]];\n"
     "  float4 tex0 [[user(t0)]]; float4 tex1 [[user(t1)]]; float4 tex2 [[user(t2)]]; float4 tex3 [[user(t3)]];\n"
@@ -502,6 +502,11 @@ char *halopad_shader_to_msl(const uint32_t *t, uint32_t n, const hp_shader_key *
         for (int r = 0; r < 32; r++) emit(&o, "    float4 r%d = float4(0.0f);\n", r);
         emit(&o, "%s%s", defs, body.s ? body.s : "");
         emit(&o, "    o.fog = fogv; o.psize = psizev;\n");
+        /* Table (per-pixel) fog replaces the shader's fog from the eye depth (clip w):
+           tfog = mode (D3DFOG_EXP 1, EXP2 2, LINEAR 3; 0 off), start, end, density. */
+        emit(&o, "    if (k.tfog.x == 3.0f) o.fog = saturate((k.tfog.z - o.position.w) / (k.tfog.z - k.tfog.y));\n"
+                 "    else if (k.tfog.x == 1.0f) o.fog = saturate(exp(-k.tfog.w * o.position.w));\n"
+                 "    else if (k.tfog.x == 2.0f) { float e = k.tfog.w * o.position.w; o.fog = saturate(exp(-e * e)); }\n");
         emit(&o, "    o.position.xy += k.fixup.xy * o.position.w;   /* Direct3D 9 pixel centres */\n");
         emit(&o, "    o.position.z += k.fixup.z * o.position.w;     /* DEPTHBIAS (window-depth units) */\n");
         if (test) {

@@ -20,6 +20,11 @@ for family in ['Effect','Filter','AuxiliaryEffectSlot']:
  add('alGen'+family+'s alDelete'+family+'s',2)
  add('alIs'+family,1,True)
  add(' '.join('al'+family+x for x in ['i','iv','f','fv'])+' '+' '.join('alGet'+family+x for x in ['i','iv','f','fv']),3)
+# Tribes: Vengeance's ALAudio checks for these before it starts.
+add('alDopplerVelocity alcProcessContext alcSuspendContext',1)
+add('alGetListenerf alGetListeneri alListeneri alSourcePausev alSourceRewindv',2)
+add('alGetSourcef alGetSourcei',3)
+add('alGetListener3f',4)
 assert len({x[0] for x in EXPORTS})==len(EXPORTS)
 def inputs():
  meta=json.loads((R/'generated/openal-soft/macos/result.json').read_text());lib=R/meta['library']

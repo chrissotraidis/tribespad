@@ -93,6 +93,30 @@ uint32_t vg_control_proc(_cpu *cpu,uint32_t handle,uint32_t message,uint32_t wp,
  }
  return 0;
 }
+/* LRESULT DefWindowProcW: Starsiege's DefWindowProcA, plus the documented
+   defaults of messages Unreal's windows pass on that Starsiege never sent. */
+extern uint32_t ss_get_window_text_a(uint64_t base,uint32_t handle,uint32_t output,uint32_t capacity);
+extern uint32_t ss_get_window_text_length_a(uint64_t base,uint32_t handle);
+uint32_t vg_def_window_proc_w(_cpu *cpu,uint32_t handle,uint32_t message,uint32_t wp,uint32_t lp){
+ uint64_t base=cpu->_pointer_offset;
+ switch(message){
+ case 0x000D:{ /* WM_GETTEXT: the title, widened */
+  if(!wp||!lp)return 0;uint32_t p=page(base),n=ss_get_window_text_a(base,handle,p,wp<4000?wp:4000);
+  for(uint32_t i=0;i<=n;i++){uint16_t v=i<n?*(unsigned char *)GUEST(base,p+i):0;memcpy(GUEST(base,lp+2*i),&v,2);}release(base,p);return n;}
+ case 0x000E:return ss_get_window_text_length_a(base,handle);  /* WM_GETTEXTLENGTH */
+ case 0x000B: /* WM_SETREDRAW */
+ case 0x001A:case 0x007E: /* WM_SETTINGCHANGE, WM_DISPLAYCHANGE */
+ case 0x0022:case 0x0215:case 0x02A3: /* WM_CHILDACTIVATE, WM_CAPTURECHANGED, WM_MOUSELEAVE */
+ case 0x0030:case 0x0031:case 0x007F:case 0x0080: /* WM_SETFONT, WM_GETFONT, WM_GETICON, WM_SETICON */
+ case 0x0085:case 0x0111:case 0x0116:case 0x0117: /* WM_NCPAINT, WM_COMMAND, WM_INITMENU(POPUP) */
+ case 0x0127:case 0x0128:case 0x0129: /* UI state */
+ case 0x0231:case 0x0232:case 0x0281:case 0x0282: /* WM_ENTER/EXITSIZEMOVE, IME set context and notify */
+ case 0x00A0:case 0x00A1:case 0x00A2:case 0x00A3:case 0x00A4:case 0x00A5:case 0x00A6: /* non-client mouse */
+  return 0;
+ case 0x0214:case 0x0216:return 1; /* WM_SIZING, WM_MOVING: processed */
+ }
+ return ss_def_window_proc_a(cpu,handle,message,wp,lp);
+}
 static const char *const system_classes[]={"Button","Edit","Static","ListBox","ComboBox","ScrollBar","ComboLBox","MDIClient",
  "RichEdit","RICHEDIT20A","RICHEDIT20W","msctls_trackbar32","msctls_progress32","msctls_updown32","SysListView32","SysTreeView32",
  "SysTabControl32","SysHeader32","tooltips_class32","ToolbarWindow32","msctls_statusbar32","ReBarWindow32"};
@@ -127,8 +151,40 @@ uint32_t vg_set_window_text_w(_cpu *cpu,uint32_t handle,uint32_t text){
 }
 /* LoadCursorW / LoadIconW: resource ordinals are the same as the A forms. */
 uint32_t vg_load_cursor_w(uint64_t base,uint32_t instance,uint32_t name){
+ /* System cursors other than the arrow (WinDrv loads the resize, hand and wait
+    shapes for its windows) are the arrow: the game draws its own cursor. */
+ static const uint32_t shapes[]={32513,32514,32515,32516,32640,32641,32642,32643,32644,32645,32646,32648,32649,32650,32651};
+ if(!instance&&name<=0xffff)for(unsigned i=0;i<sizeof shapes/sizeof shapes[0];i++)if(name==shapes[i])return tribes_load_cursor(base,0,32512);
  if(name<=0xffff)return tribes_load_cursor(base,instance,name);
  uint32_t p=page(base),n=0;if(!narrow(base,name,p,256,&n)){release(base,p);return 0;}uint32_t r=tribes_load_cursor(base,instance,n);release(base,p);return r;
+}
+uint32_t vg_load_cursor_a(uint64_t base,uint32_t instance,uint32_t name){
+ if(name<=0xffff)return vg_load_cursor_w(base,instance,name);
+ return tribes_load_cursor(base,instance,name);
+}
+/* BOOL AttachThreadInput(from, to, attach): one input queue serves the game's
+   threads here, so attaching succeeds; a thread cannot attach to itself. */
+uint32_t vg_attach_thread_input(uint32_t from,uint32_t to,uint32_t attach){(void)attach;if(from==to){tribes_set_last_error(87);return 0;}return 1;}
+/* Menus: the game's windows have none (WinDrv removes the menu bar for full screen). */
+uint32_t vg_get_menu(uint32_t window){(void)window;return 0;}
+uint32_t vg_set_menu(uint32_t window,uint32_t menu){(void)window;if(menu)unsupported("SetMenu with a menu",menu);return 1;}
+uint32_t vg_destroy_menu(uint32_t menu){if(menu)unsupported("DestroyMenu",menu);tribes_set_last_error(1401);return 0;}
+/* int GetKeyNameTextW(lParam, buffer, size): the key's name from its scan code
+   (bits 16-23) and extended flag (bit 24), as a US keyboard names it. */
+uint32_t vg_get_key_name_text_w(uint64_t base,uint32_t lparam,uint32_t output,uint32_t capacity){
+ static const char *const keys[128]={0,"Esc","1","2","3","4","5","6","7","8","9","0","-","=","Backspace","Tab","Q","W","E","R","T","Y","U","I","O","P","[","]","Enter","Ctrl",
+  "A","S","D","F","G","H","J","K","L",";","'","`","Shift","\\","Z","X","C","V","B","N","M",",",".","/","Right Shift","Num *","Alt","Space","Caps Lock",
+  "F1","F2","F3","F4","F5","F6","F7","F8","F9","F10","Pause","Scroll Lock","Num 7","Num 8","Num 9","Num -","Num 4","Num 5","Num 6","Num +","Num 1","Num 2","Num 3","Num 0","Num Del",
+  0,0,0,"F11","F12"};
+ uint32_t scan=(lparam>>16)&0x7f;int ext=(lparam>>24)&1;const char *name=scan<128?keys[scan]:NULL;
+ if(ext)switch(scan){case 0x1c:name="Num Enter";break;case 0x1d:name="Right Ctrl";break;case 0x35:name="Num /";break;case 0x38:name="Right Alt";break;
+  case 0x47:name="Home";break;case 0x48:name="Up";break;case 0x49:name="Page Up";break;case 0x4b:name="Left";break;case 0x4d:name="Right";break;
+  case 0x4f:name="End";break;case 0x50:name="Down";break;case 0x51:name="Page Down";break;case 0x52:name="Insert";break;case 0x53:name="Delete";break;
+  case 0x45:name="Num Lock";break;}
+ if(!name||!capacity||!in_guest(base,output,2*capacity))return 0;
+ uint32_t n=(uint32_t)strlen(name);if(n>=capacity)n=capacity-1;
+ for(uint32_t i=0;i<n;i++){uint16_t v=(unsigned char)name[i];memcpy(GUEST(base,output+2*i),&v,2);}
+ uint16_t zero=0;memcpy(GUEST(base,output+2*n),&zero,2);return n;
 }
 uint32_t vg_load_icon_w(uint64_t base,uint32_t instance,uint32_t name){
  if(name<=0xffff)return ss_load_icon_a(base,instance,name);

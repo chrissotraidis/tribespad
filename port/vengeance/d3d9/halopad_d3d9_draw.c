@@ -362,12 +362,11 @@ static void check_states(device *d)
     const uint32_t *rs = d->rs;
     if (rs[8] != 3 && rs[8] != 2) hp_unsupported("draw", "FILLMODE %u", rs[8]);
     if (rs[152]) hp_unsupported("draw", "user clip planes (0x%x)", rs[152]);
-    if (rs[28] && rs[35]) hp_unsupported("draw", "table (per-pixel) fog mode %u", rs[35]);
+    if (rs[28] && rs[35] > 3) hp_unsupported("draw", "table (per-pixel) fog mode %u", rs[35]);
     if (rs[194]) hp_unsupported("draw", "sRGB writes");
     if (rs[161] != 1 && rs[161] != 0) hp_unsupported("draw", "MULTISAMPLEANTIALIAS %u", rs[161]);
     /* POINTSPRITEENABLE/POINTSCALEENABLE affect only point lists (refused in draw);
        Halo's state reset turns sprites on for every draw (0x519bf9). */
-    if (rs[174]) hp_unsupported("draw", "scissor test");
     if (rs[167] || rs[151]) hp_unsupported("draw", "vertex blending in fixed function");
 }
 
@@ -542,14 +541,27 @@ static uint32_t draw(device *d, uint32_t type, uint32_t prims, uint32_t start, i
     float minz = f32(vp[4]), maxz = f32(vp[5]);
     dd.viewport[0] = vp[0]; dd.viewport[1] = vp[1]; dd.viewport[2] = vp[2]; dd.viewport[3] = vp[3];
     dd.viewport[4] = minz; dd.viewport[5] = maxz;
+    if (rs[174]) {                                                  /* SCISSORTESTENABLE: the rectangle, inside the target */
+        const uint32_t *sr = d->scissor;
+        uint32_t x0 = sr[0], y0 = sr[1], x1 = sr[2], y1 = sr[3];
+        if (!(x0 | y0 | x1 | y1)) { x1 = bound.width; y1 = bound.height; }
+        if (x1 > bound.width) x1 = bound.width;
+        if (y1 > bound.height) y1 = bound.height;
+        if (x0 >= x1) x0 = x1 ? x1 - 1 : 0;
+        if (y0 >= y1) y0 = y1 ? y1 - 1 : 0;
+        dd.scissor = 1;
+        dd.scissor_rect[0] = x0; dd.scissor_rect[1] = y0; dd.scissor_rect[2] = x1 - x0 ? x1 - x0 : 1; dd.scissor_rect[3] = y1 - y0 ? y1 - y0 : 1;
+    }
 
     /* constants: shaders get c/i/b plus the fixup (pixel centre, depth bias) and fog/alpha
        test; fixed function gets its transforms, material, lights and stage constants */
-    static uint8_t vsc[4432], psc[3936], ffv[1760], ffp[176];
+    static uint8_t vsc[4448], psc[3936], ffv[1760], ffp[176];
     float fix[4] = {1.0f / (float)vp[2], -1.0f / (float)vp[3], maxz > minz ? f32(rs[195]) / (maxz - minz) : 0.0f, 0.0f};
     if (vs) {
         memcpy(vsc, d->vsf, 4096); memcpy(vsc + 4096, d->vsi, 256); memcpy(vsc + 4352, d->vsb, 64);
         memcpy(vsc + 4416, fix, 16);
+        float tfog[4] = {rs[28] ? (float)rs[35] : 0.0f, f32(rs[36]), f32(rs[37]), f32(rs[38])};   /* table fog: mode, start, end, density */
+        memcpy(vsc + 4432, tfog, 16);
         dd.vs_consts = vsc; dd.vs_len = sizeof vsc;
     } else {
         halopad_ff_vs_constants(d, ffv, fix);

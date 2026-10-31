@@ -336,6 +336,9 @@ void halopad_ff_vs_key(device *d, const uint8_t (*el)[3], int ne, hp_ff_vs_key *
         *dst[i] = (uint8_t)((s == 1 && k->has_color[0]) || (s == 2 && k->has_color[1]) ? s : 0);
     }
     if (rs[28] && !rs[35]) { k->fog_mode = (uint8_t)rs[140]; k->range_fog = rs[48] != 0; }
+    /* Table (per-pixel) fog: the same factor from the view depth, per vertex and interpolated
+       (exact for linear fog, which is what Unreal uses). */
+    else if (rs[28]) { k->fog_mode = (uint8_t)rs[35]; k->range_fog = 0; }
     if (k->fog_mode > 3) hp_unsupported("draw", "fog vertex mode %u", k->fog_mode);
     for (int s = 0; s < 8; s++) {
         uint32_t tci = d->tss[s][11], ttf = d->tss[s][24];

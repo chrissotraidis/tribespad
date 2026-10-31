@@ -288,7 +288,7 @@ def prepare(modules, out, report, backend_bindings):
             say('%s: llasm' % m)
             with (work / 'llasm.log').open('w') as log:
                 subprocess.run([str(R / 'generated/tools/llasm/llasm'), '-m64', '-ptrofs', '-O2', '-I', str(work), '-I', str(R / 'port/llasm-support'),
-                                '-I', str(R / 'ref/halopad/port/llasm-support'), '-o', str(work / 'raw.ll'), str(work / 'module.llasm')],
+                                '-I', str(R / 'ref/halopad/port/llasm-support'), '-I', str(R / 'port/vengeance'), '-o', str(work / 'raw.ll'), str(work / 'module.llasm')],
                                cwd=work, stdout=log, stderr=log, check=True)
             procs, _ = va.postprocess(work / 'raw.ll', work / 'module.ll')
             (work / 'raw.ll').unlink()
@@ -382,6 +382,21 @@ def prepare(modules, out, report, backend_bindings):
            'static const VgOrdinal vg_ordinals[]={%s};' % ','.join('{%du,%du,%du}' % (LAYOUT[m]['base'], int(n[1:]), a)
                for m in modules for n, (a, _) in sorted(exports[m].items()) if n.startswith('#'))]
     # DirectInput's keyboard and mouse: TribesPad's device catalog, as Starsiege uses it.
+    # Translated DLLs a dynamically loaded DLL imports from and that are themselves
+    # loaded on demand: LoadLibrary attaches them first, in attach order (Editor.dll
+    # needs ScriptCompiler.dll and PerforceWrapper.dll).
+    dynamic = set(modules) - static
+    imports_of = {m: {d.dll.decode().lower() for d in getattr(pes[m], 'DIRECTORY_ENTRY_IMPORT', [])} & set(modules) for m in modules}
+    def closure(m):
+        seen, todo = set(), list(imports_of[m])
+        while todo:
+            d = todo.pop()
+            if d not in seen:
+                seen.add(d); todo += imports_of[d]
+        return [x for x in init if x in seen and x in dynamic]
+    pairs = [(files[m], files[d]) for m in init if m in dynamic for d in closure(m)]
+    inc.append('static const struct {const char *module,*dependency;} vg_dependencies[]={%s};' %
+               ','.join('{%s,%s}' % (json.dumps(a), json.dumps(b)) for a, b in pairs or [('', '')]))
     devices = json.loads((R / 'config/runtime/input-devices.json').read_text())['devices']
     cbytes = lambda h: '{' + ','.join(map(str, bytes.fromhex(h))) + '}'
     records = []

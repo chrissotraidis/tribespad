@@ -187,3 +187,34 @@ uint32_t hpcom_IDirect3DDevice9_StretchRect_c(uint32_t g, uint32_t src, uint32_t
     halopad_metal_stretch(d->target, a.tex, a.level, ra, b.tex, b.level, rb, filter == 2, opaque);
     return D3D_OK;
 }
+
+/* ColorFill(surface, rect, colour): a whole render-target surface, through a Metal clear
+   of that surface (Tribes: Vengeance fills its render-target textures before first use). */
+void halopad_metal_clear(void *t, int color, int depth, int stencil, const float rgba[4], float z, uint32_t s);
+uint32_t hpcom_IDirect3DDevice9_ColorFill_c(uint32_t g, uint32_t sg, uint32_t r, uint32_t color)
+{
+    device *d = dev(g);
+    if (!is_surface(sg)) return D3DERR_INVALIDCALL;
+    res *s = S(sg);
+    if (s->pool != 0 || (s->usage & 0x2)) return D3DERR_INVALIDCALL;     /* default pool, not depth/stencil */
+    surf c = surface(s);
+    uint32_t area[4];
+    if (!rect(r, c.w, c.h, area)) return D3DERR_INVALIDCALL;
+    if (area[0] || area[1] || area[2] != c.w || area[3] != c.h) hp_unsupported("IDirect3DDevice9::ColorFill", "part of a surface");
+    if (!c.rt) {                                                   /* a texture level or plain surface: its contents, uploaded on use */
+        res *m = s->parent ? halopad_com_state(halopad_com_interface(s->parent), s->parent) : s;
+        uint32_t level = s->parent ? s->level : 0;
+        if (s->parent && m->ttype != 2) hp_unsupported("IDirect3DDevice9::ColorFill", "a cube or volume texture");
+        if (!m->mem[level] || (c.format != 21 && c.format != 22)) hp_unsupported("IDirect3DDevice9::ColorFill", "format %u without contents here", c.format);
+        for (uint32_t y = 0; y < c.h; y++)
+            for (uint32_t x = 0; x < c.w; x++) wr32(m->mem[level] + y * m->pitch[level] + 4 * x, color);
+        m->dirty[level] = 1;
+        return D3D_OK;
+    }
+    float rgba[4] = {((color >> 16) & 0xFF) / 255.0f, ((color >> 8) & 0xFF) / 255.0f, (color & 0xFF) / 255.0f, (color >> 24) / 255.0f};
+    if (c.format == 22) rgba[3] = 1.0f;
+    halopad_metal_set_attachments(d->target, c.tex, c.level, NULL);
+    halopad_metal_clear(d->target, 1, 0, 0, rgba, 0.0f, 0);
+    halopad_d3d9_bind_targets(d);
+    return D3D_OK;
+}

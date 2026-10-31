@@ -1,12 +1,12 @@
 {
  "date": "2026-10-31",
  "layout": "config/vengeance/layout.json",
- "layout_sha256": "ab945069eab7b603d875c3cf60d914a462bad44cf3c6d904adfff007c098187b",
+ "layout_sha256": "ac1121865f82171cb8cbbe9e97074e13eb4a7409c94253cb80b72eb8f4990862",
  "method": "pefile headers, relocations, imports and exports of the prepared modules; nothing executed or translated",
- "modules": 33,
+ "modules": 36,
  "dll_window": [
   "0x11000000",
-  "0x12310000"
+  "0x124b0000"
  ],
  "checks_passed": [
   "hashes match the October audit",
@@ -30,7 +30,7 @@
  },
  "tls_modules": [],
  "forwarders": [],
- "windows_imports_total": 464,
+ "windows_imports_total": 475,
  "unprovided_for_ucc_closure": {
   "kernel32.dll": [
    "Beep",
@@ -138,16 +138,16 @@
   "d3d9.dll": 1,
   "ddraw.dll": 1,
   "dinput8.dll": 1,
-  "gdi32.dll": 20,
+  "gdi32.dll": 22,
   "imm32.dll": 6,
-  "kernel32.dll": 95,
+  "kernel32.dll": 97,
   "msimg32.dll": 1,
   "ole32.dll": 9,
   "oleaut32.dll": 4,
   "shell32.dll": 6,
   "user32.dll": 95,
   "version.dll": 3,
-  "wsock32.dll": 9
+  "wsock32.dll": 12
  },
  "still_open": [
   "Dynamic LoadLibrary/GetProcAddress targets and Unreal package-native pairs (traced at V2)",

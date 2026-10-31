@@ -48,6 +48,12 @@
    "base": 288751616,
    "image_size": 552960
   },
+  "editor.dll": {
+   "file": "Program/Bin/Editor.dll",
+   "sha256": "a98099221c67e36a01c5441d55645a8fd6e15b7796ce10f8adf26845d3b53f9a",
+   "base": 305201152,
+   "image_size": 950272
+  },
   "engine.dll": {
    "file": "Program/Bin/Engine.dll",
    "sha256": "e85ca1a1f5795caf3506b150e00d7969deaa894fdab54cd4221f9e9762267590",
@@ -144,6 +150,12 @@
    "base": 302514176,
    "image_size": 204800
   },
+  "perforcewrapper.dll": {
+   "file": "Program/Bin/PerforceWrapper.dll",
+   "sha256": "e43165dd32df27935c183e5e6c60ac3d3a741e8b606d8e60da733b09da8d9abd",
+   "base": 306184192,
+   "image_size": 401408
+  },
   "renderutilities.dll": {
    "file": "Program/Bin/RenderUtilities.dll",
    "sha256": "d88fbb854066cb6875e373f0828fcd2a5fdd626b080eada92b103e21b5e5ef9d",
@@ -155,6 +167,12 @@
    "sha256": "a2a35987fb0be96ec918fb731a8102c776f85f9895390b689e9b104b3402f9fb",
    "base": 302907392,
    "image_size": 274432
+  },
+  "scriptcompiler.dll": {
+   "file": "Program/Bin/ScriptCompiler.dll",
+   "sha256": "90ac2697fdff8979750b82e67eccea4c2c74055c6c3411d99d9aea293f6a7565",
+   "base": 306642944,
+   "image_size": 253952
   },
   "scripting.dll": {
    "file": "Program/Bin/Scripting.dll",

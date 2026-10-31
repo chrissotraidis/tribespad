@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <sys/stat.h>
 #include <sys/statvfs.h>
 #include <unistd.h>
@@ -103,6 +104,49 @@ uint32_t vg_get_windows_directory_w(_cpu *c,uint32_t output,uint32_t capacity){r
 /* GlobalLock / GlobalUnlock: TribesPad's GlobalAlloc memory is fixed, so the handle is the address. */
 uint32_t vg_global_lock(uint32_t handle){if(!handle)tribes_set_last_error(6);return handle;}
 uint32_t vg_global_unlock(uint32_t handle){(void)handle;tribes_set_last_error(0);return 0;}
+
+/* Registry: TribesPad models the hardware keys and Tribes 2's own settings.
+   The keys Vengeance looks for under Software (Direct3D tuning switches, its
+   installer's records) do not exist on this system: opening them reports
+   ERROR_FILE_NOT_FOUND, as on a machine where nothing set them. */
+extern uint32_t tribes_reg_open_key_ex_a(uint64_t base,uint32_t key,uint32_t subkey,uint32_t options,uint32_t access,uint32_t output);
+static int software_key(uint64_t base,uint32_t key,uint32_t subkey){
+ if((key!=0x80000002u&&key!=0x80000001u)||!subkey)return 0;  /* HKLM, HKCU */
+ char text[16];for(int i=0;i<9;i++){text[i]=*(const char *)GUEST(base,subkey+(uint32_t)i);if(!text[i])return 0;}text[9]=0;
+ if(strncasecmp(text,"Software\\",9))return 0;
+ fprintf(stderr,"vengeance: registry key %s\\%.200s is not present\n",key==0x80000002u?"HKLM":"HKCU",(const char *)GUEST(base,subkey));return 1;
+}
+uint32_t vg_reg_open_key_ex_a(uint64_t base,uint32_t key,uint32_t subkey,uint32_t options,uint32_t access,uint32_t output){
+ if(software_key(base,key,subkey)){if(output)memset(GUEST(base,output),0,4);return 2;}
+ return tribes_reg_open_key_ex_a(base,key,subkey,options,access,output);
+}
+uint32_t vg_reg_open_key_a(uint64_t base,uint32_t key,uint32_t subkey,uint32_t output){return vg_reg_open_key_ex_a(base,key,subkey,0,0x20019,output);}
+
+/* IsProcessorFeaturePresent: the Direct3D renderer also asks for 3DNow! (7),
+   which the guest CPU (an MMX Pentium Pro, TribesPad's CPUID) lacks; the FPU
+   has neither the Pentium division erratum (0) nor emulation (1). */
+extern uint32_t tribes_processor_feature_present(uint32_t feature);
+uint32_t vg_processor_feature_present(uint32_t feature){
+ if(feature==0||feature==1||feature==7)return 0;
+ return tribes_processor_feature_present(feature);
+}
+
+/* Global atoms (WinDrv names its Alt+Esc hot key "UnrealAltEsc"): one process,
+   so a counted table of names; integer atoms are themselves. */
+static struct {char name[256];uint32_t refs;} atoms[64];
+uint32_t vg_global_add_atom_w(_cpu *c,uint32_t name){
+ if(name<0xc000u)return name;char text[256];if(!read_ascii(c->_pointer_offset,name,1,text,sizeof text))return 0;
+ int empty=-1;for(int i=0;i<64;i++){if(atoms[i].refs&&!strcasecmp(atoms[i].name,text)){atoms[i].refs++;return 0xc100u+(uint32_t)i;}if(!atoms[i].refs&&empty<0)empty=i;}
+ if(empty<0){tribes_set_last_error(8);return 0;}strcpy(atoms[empty].name,text);atoms[empty].refs=1;return 0xc100u+(uint32_t)empty;
+}
+uint32_t vg_global_delete_atom(uint32_t atom){
+ if(atom>=0xc100u&&atom<0xc100u+64&&atoms[atom-0xc100u].refs)atoms[atom-0xc100u].refs--;tribes_set_last_error(0);return 0;
+}
+/* Hot keys: TribesPad has no system-wide shortcuts to reserve; registration succeeds and never fires. */
+uint32_t vg_register_hot_key(uint32_t window,uint32_t id,uint32_t modifiers,uint32_t key){(void)window;(void)id;(void)modifiers;(void)key;return 1;}
+uint32_t vg_unregister_hot_key(uint32_t window,uint32_t id){(void)window;(void)id;return 1;}
+/* SetKeyboardState: WinDrv clears its keys when it loses focus; TribesPad's key state follows the host keyboard. */
+uint32_t vg_set_keyboard_state(uint32_t state){(void)state;return 1;}
 
 /* GetFullPathName: the current directory joined with a relative name, "." and
    ".." resolved, "/" read as "\". Nothing is checked on disk, as on Windows.
@@ -273,9 +317,19 @@ uint32_t vg_load_library_w(_cpu *c,uint32_t name){
  uint64_t base=c->_pointer_offset;char guest[PATH_MAX],path[PATH_MAX+8],host[PATH_MAX];
  if(!read_ascii(base,name,1,guest,sizeof guest))return 0;
  const char *leaf=strrchr(guest,'\\');leaf=leaf?leaf+1:guest;
+ /* ALAudio's OpenAL32.dll is TribesPad's native OpenAL (OpenAL Soft), as for Tribes 2. */
+ if(!strcasecmp(leaf,"OpenAL32.dll")||!strcasecmp(leaf,"OpenAL32")){
+  extern uint32_t tribes_openal_load(uint64_t base,const char *name);
+  extern int tribes_module_retain_native(uint64_t base,uint32_t module);
+  uint32_t module=tribes_openal_load(base,"openal32.dll");
+  if(module&&tribes_module_retain_native(base,module))return module;
+  tribes_set_last_error(126);return 0;
+ }
  snprintf(path,sizeof path,"%s%s%s",strchr(guest,'\\')?"":"C:\\TribesPad\\Game\\Program\\Bin\\",guest,strchr(leaf,'.')?"":".dll");
  struct stat st;
  if(!tribes_filesystem_resolve(base,path,host,sizeof host)||stat(host,&st)){tribes_set_last_error(126);return 0;}
+ extern void vengeance_load_dependencies(_cpu *c,const char *leaf,uint32_t scratch);
+ const char *file=strrchr(path,'\\');vengeance_load_dependencies(c,file?file+1:path,scratch(c,0));
  return tribes_load_library_ex_w_cpu(c,name,0,0);
 }
 
@@ -453,3 +507,22 @@ uint32_t vg_imm_release_context(uint32_t window,uint32_t context){(void)window;(
 uint32_t vg_imm_associate_context(uint32_t window,uint32_t context){(void)window;(void)context;return 0;}
 uint32_t vg_imm_create_context(void){return 0;}
 uint32_t vg_imm_destroy_context(uint32_t context){(void)context;return 0;}
+
+/* OLE automation strings and variants, for the client's WMI clean-up at exit
+   (its WMI query itself finds no class: CoCreateInstance reports it unregistered).
+   A BSTR is a length-prefixed wide string; the pointer is to its characters. */
+extern uint32_t tribes_global_alloc(uint64_t base,uint32_t flags,uint32_t bytes);
+extern uint32_t tribes_global_free(uint64_t base,uint32_t address);
+uint32_t vg_sys_alloc_string(uint64_t base,uint32_t text){
+ if(!text)return 0;uint32_t n=0;uint16_t v;do{memcpy(&v,GUEST(base,text+2*n),2);n++;}while(v&&n<0x100000);n--;
+ uint32_t error=tribes_get_last_error(),block=tribes_global_alloc(base,0,4+2*n+2);tribes_set_last_error(error);if(!block)return 0;
+ uint32_t bytes=2*n;memcpy(GUEST(base,block),&bytes,4);memcpy(GUEST(base,block+4),GUEST(base,text),2*n+2);return block+4;
+}
+void vg_sys_free_string(uint64_t base,uint32_t bstr){if(bstr){uint32_t error=tribes_get_last_error();tribes_global_free(base,bstr-4);tribes_set_last_error(error);}}
+void vg_variant_init(uint64_t base,uint32_t variant){if(variant)memset(GUEST(base,variant),0,2);}
+uint32_t vg_variant_clear(uint64_t base,uint32_t variant){
+ if(!variant)return 0x80070057;uint16_t vt;memcpy(&vt,GUEST(base,variant),2);
+ if(vt==8){uint32_t bstr;memcpy(&bstr,GUEST(base,variant+8),4);vg_sys_free_string(base,bstr);}
+ else if(vt==9||vt==13||(vt&0x6000)){fprintf(stderr,"TribesPad: unsupported VariantClear of type 0x%x\n",vt);abort();}
+ memset(GUEST(base,variant),0,2);return 0;
+}

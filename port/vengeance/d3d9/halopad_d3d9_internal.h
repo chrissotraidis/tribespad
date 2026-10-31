@@ -55,6 +55,10 @@ typedef struct {
     uint32_t nlight;
     /* render target and depth/stencil surface (bound), and the implicit ones (referenced) */
     uint32_t rt, ds, backbuffer, autods;
+    /* Tribes: Vengeance: scissor rectangle (left, top, right, bottom; all 0 = the
+       whole target) and user clip planes (port/vengeance/vengeance_d3d9_extra.c) */
+    uint32_t scissor[4];
+    float clip[6][4];
     struct stateblock *rec;                     /* BeginStateBlock..EndStateBlock: setters record here */
 } device;
 
