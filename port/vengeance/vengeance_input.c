@@ -7,6 +7,7 @@
  * layout, TribesPad's keyboard tables). The layer is pumped once per presented
  * frame (port/vengeance/vengeance_d3d9_host.m), which also counts frames for
  * scripted input (STARSIEGE_INPUT). */
+#include <TargetConditionals.h>
 #include <pthread.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -64,10 +65,24 @@ static void button(unsigned b,int down){
  if(down)held|=flag[b];else held&=~flag[b];
  tribes_post_message(vengeance_guest_base(),window,msg[b]+(down?0:1),held,point(x,y));
 }
-__attribute__((constructor)) static void install(void){ss_key_hook=key;ss_pointer_hook=pointer;ss_button_hook=button;}
+extern void ss_input_use_vengeance_pad(void);
+extern int ss_input_playing(void);
+__attribute__((constructor)) static void install(void){ss_key_hook=key;ss_pointer_hook=pointer;ss_button_hook=button;ss_input_use_vengeance_pad();}
 
+#if TARGET_OS_IPHONE
+/* TribesPad's overlay in the app (port/apple/mobile_controls.m): frames for its
+   FPS counter, and whether the game is in play (it holds the mouse for aiming). */
+extern void tb_app_note_frame(void);
+extern void tb_vengeance_report_state(int playing);
+#endif
 /* Once per presented frame, on the game's thread. */
-void vengeance_input_frame(_cpu *cpu){ss_count_frame();ss_input_pump(cpu);}
+void vengeance_input_frame(_cpu *cpu){
+ ss_count_frame();ss_input_pump(cpu);
+#if TARGET_OS_IPHONE
+ tb_app_note_frame();
+ static int reported=-1;int playing=ss_input_playing();if(playing!=reported){reported=playing;tb_vengeance_report_state(playing);}
+#endif
+}
 
 /* BOOL TranslateMessage(const MSG *): a key down also posts its character, as a
    US keyboard types it with the current key state. */

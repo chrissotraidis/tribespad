@@ -60,7 +60,7 @@ static void queue(unsigned device_kind,uint32_t offset,uint32_t data){
 }
 /* A host that also wants each key change (Tribes: Vengeance turns them into
    window messages, port/vengeance/vengeance_input.c) sets this; Starsiege does not. */
-void (*ss_key_hook)(unsigned dik,int down);
+void (*ss_key_hook)(unsigned dik,int down)=0;
 static void key_change(unsigned dik,int down){
  if(!dik||dik>255)return;pthread_mutex_lock(&lock);int changed=!!keys[dik]!=!!down;
  if(changed){keys[dik]=down?0x80:0;queue(3,dik,keys[dik]);}
@@ -86,8 +86,8 @@ static int mouse_exclusive_locked(void){for(Input *p=inputs;p;p=p->next)if(p->is
    without exclusivity (Tribes: Vengeance's menus, port/vengeance/vengeance_input.c)
    sets these; on Windows a non-exclusive mouse moves the pointer and sends
    button messages too. Starsiege sets neither. */
-void (*ss_pointer_hook)(int32_t dx,int32_t dy,int32_t dz);
-void (*ss_button_hook)(unsigned button,int down);
+void (*ss_pointer_hook)(int32_t dx,int32_t dy,int32_t dz)=0;
+void (*ss_button_hook)(unsigned button,int down)=0;
 /* Where the game's cursor is: it starts at the window centre (the introducing
    WM_MOUSEMOVE) and follows DirectInput motion 1:1, inside the window. */
 static float game_x=-1,game_y=-1;
@@ -193,8 +193,11 @@ static void run_script(void){
    mouse used alongside keep working. Changes are logged (TribesPad.log). */
 #include <TargetConditionals.h>
 static char state_path[1024];
+int ss_vengeance_pad=0; /* Tribes: Vengeance's layout and play state (ss_input_use_vengeance_pad, below) */
 void ss_input_set_game_folder(const char *game){snprintf(state_path,sizeof state_path,"%s/temp/tribespad-state.cs",game?game:"");}
 static int play_state(void){
+ /* Tribes: Vengeance: playing while the game holds the mouse for aiming. */
+ if(ss_vengeance_pad)return relative_mode;
  static uint32_t checked;static int value;uint32_t now=now_ms();
  if(checked&&now-checked<250)return value;checked=now;
  FILE *f=state_path[0]?fopen(state_path,"r"):NULL;if(!f){value=0;return value;}
@@ -203,18 +206,36 @@ static int play_state(void){
  const char *q=strchr(text,'"');value=q&&q[1]=='1'?1:q&&q[1]=='2'?2:0;return value;
 }
 enum {PAD_W,PAD_A,PAD_S,PAD_D,PAD_SPACE,PAD_X,PAD_P,PAD_G,PAD_Q,PAD_F8,PAD_R,PAD_H,PAD_I,PAD_B,PAD_V,PAD_TAB,PAD_ESC,PAD_KEYS};
-static const unsigned char pad_dik[PAD_KEYS]={0x11,0x1e,0x1f,0x20,0x39,0x2d,0x19,0x22,0x10,0x42,0x13,0x23,0x17,0x30,0x2f,0x0f,0x01};
-static const char *const pad_name[PAD_KEYS]={"W","A","S","D","Space (jump)","X (crouch)","P (pack)","G (grenade)","Q (next weapon)",
+static const unsigned char ss_pad_dik[PAD_KEYS]={0x11,0x1e,0x1f,0x20,0x39,0x2d,0x19,0x22,0x10,0x42,0x13,0x23,0x17,0x30,0x2f,0x0f,0x01};
+static const char *const ss_pad_name[PAD_KEYS]={"W","A","S","D","Space (jump)","X (crouch)","P (pack)","G (grenade)","Q (next weapon)",
  "F8 (previous weapon)","R (third person)","H (repair kit)","I (inventory)","B (beacon)","V (quick chat)","Tab (scores)","Escape"};
+/* Tribes: Vengeance (DefUser.ini) in the same places: A and LB ski (Space, held
+   while either is), B use (F), X pack (Q), Y grenade (E), RB and D-pad left the
+   next and previous weapon (one mouse wheel step), left stick click third person
+   (Z), D-pad up zoom level (R), down objectives (C), right loadout (Shift),
+   View scores (F2); right stick click holds zoom (Ctrl). Its jet and jump are
+   the right mouse button (LT). port/vengeance/vengeance_input.c selects it. */
+enum {PAD_WHEEL_DOWN=0xf1,PAD_WHEEL_UP=0xf2};
+static const unsigned char vg_pad_dik[PAD_KEYS]={0x11,0x1e,0x1f,0x20,0x39,0x21,0x10,0x12,PAD_WHEEL_DOWN,0,0x2c,0x13,0x2e,PAD_WHEEL_UP,0x2a,0x3c,0x01};
+static const char *const vg_pad_name[PAD_KEYS]={"W","A","S","D","Space (ski)","F (use)","Q (pack)","E (grenade)","wheel down (next weapon)",
+ "LB (ski)","Z (third person)","R (zoom level)","C (objectives)","wheel up (previous weapon)","Shift (loadout)","F2 (scores)","Escape"};
+void ss_input_use_vengeance_pad(void){ss_vengeance_pad=1;}
+/* Playing (the game holds the mouse for aiming), for TribesPad's overlay. */
+int ss_input_playing(void){return relative_mode;}
+#define pad_dik (ss_vengeance_pad?vg_pad_dik:ss_pad_dik)
+#define pad_name (ss_vengeance_pad?vg_pad_name:ss_pad_name)
+#define zoom_dik (ss_vengeance_pad?0x1du:0x12u)
 static int pad_held[PAD_KEYS],pad_button[2],pad_mode=-1,pad_connected=-1,zoomed,zoom_was,b_was;
 static int a_was;
 static float look_x,look_y,cursor_x,cursor_y,scroll;static uint32_t pad_ms;
-static void pad_key(unsigned i,int down){if(down==pad_held[i])return;pad_held[i]=down;key_change(pad_dik[i],down);
+static void pad_key(unsigned i,int down){if(down==pad_held[i])return;pad_held[i]=down;
+ unsigned dik=pad_dik[i];if(!dik)return;
+ if(dik==PAD_WHEEL_DOWN||dik==PAD_WHEEL_UP){if(down)mouse_move(0,0,dik==PAD_WHEEL_DOWN?-120:120);}else key_change(dik,down);
  fprintf(stderr,"TribesPad controller: %s %s\n",pad_name[i],down?"down":"up");}
 static void pad_mouse(unsigned i,int down){if(down==pad_button[i])return;pad_button[i]=down;mouse_button(i,down);
  fprintf(stderr,"TribesPad controller: %s %s\n",i?"right mouse (jet)":"left mouse (fire / click)",down?"down":"up");}
 static void pad_release_all(void){for(unsigned i=0;i<PAD_KEYS;i++)pad_key(i,0);pad_mouse(0,0);pad_mouse(1,0);
- if(zoomed){zoomed=0;key_change(0x12,0);}look_x=look_y=cursor_x=cursor_y=scroll=0;}
+ if(zoomed){zoomed=0;key_change(zoom_dik,0);}look_x=look_y=cursor_x=cursor_y=scroll=0;}
 #if TARGET_OS_IPHONE
 extern int tb_overlay_owns_controller(void); /* mobile_controls.m, in the app */
 #else
@@ -236,15 +257,16 @@ static void controller(void){
  if(playing!=pad_mode){if(pad_mode>=0)pad_release_all();pad_mode=playing;fprintf(stderr,"TribesPad controller: %s layout\n",playing?"play":"menu");}
  if(playing){
   int want[PAD_KEYS]={p.ly>.35f,p.lx<-.35f,p.ly<-.35f,p.lx>.35f,p.a,p.b,p.x,p.y,p.rb,p.lb,p.ls,p.up,p.down,p.left,p.right,p.options,0};
+  if(ss_vengeance_pad){want[PAD_SPACE]=p.a||p.lb;want[PAD_F8]=0;}
 #if TARGET_OS_IPHONE
-  want[PAD_V]=0; /* D-pad right opens the overlay's quick chat panel instead */
+  if(!ss_vengeance_pad)want[PAD_V]=0; /* D-pad right opens the overlay's quick chat panel instead */
 #endif
 #if !TARGET_OS_IPHONE
   want[PAD_ESC]=p.menu;
 #endif
   for(unsigned i=0;i<PAD_KEYS;i++)pad_key(i,want[i]);
   pad_mouse(0,p.rt>.4f);pad_mouse(1,p.lt>.4f);
-  if(p.rs&&!zoom_was){zoomed=!zoomed;key_change(0x12,zoomed);fprintf(stderr,"TribesPad controller: zoom %s\n",zoomed?"on":"off");}zoom_was=p.rs;
+  if(p.rs&&!zoom_was){zoomed=!zoomed;key_change(zoom_dik,zoomed);fprintf(stderr,"TribesPad controller: zoom %s\n",zoomed?"on":"off");}zoom_was=p.rs;
   /* Right stick: up to 1100 pixels a second, squared for fine aim near the centre. */
   float rx=fabsf(p.rx)<.12f?0:p.rx,ry=fabsf(p.ry)<.12f?0:p.ry;
   look_x+=rx*fabsf(rx)*1100.0f*dt;look_y-=ry*fabsf(ry)*1100.0f*dt;

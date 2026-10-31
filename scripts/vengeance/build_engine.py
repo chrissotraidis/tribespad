@@ -46,6 +46,9 @@ bindgen = load('bindgen', R / 'scripts/gen-win32-bindings.py')
 sha = lambda p: hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
 SDK = subprocess.check_output(['xcrun', '--sdk', 'macosx', '--show-sdk-path'], text=True).strip()
 TARGET = ['-target', 'arm64-apple-macos12', '-isysroot', SDK]
+# --platform device|simulator compiles the same engine for iOS and links it into
+# one relocatable object for the TribesPad app, as Starsiege's build does (embed()).
+PLATFORM = 'macos'
 
 # Starsiege's runtime, unchanged: TribesPad's core services plus the ones
 # Starsiege added for an MSVC-era game (fast heaps, counted critical sections,
@@ -53,6 +56,12 @@ TARGET = ['-target', 'arm64-apple-macos12', '-isysroot', SDK]
 # sound and input). Its own host program (starsiege_engine.c) is not used.
 ss = load('starsiege_build', R / 'scripts/starsiege/build_engine.py')
 RUNTIME = list(ss.RUNTIME)
+
+def set_platform(platform):
+    global PLATFORM, SDK, TARGET
+    PLATFORM = platform
+    ss.set_platform(platform)
+    SDK, TARGET = ss.SDK, ss.TARGET
 # The host: port/vengeance (C and Objective-C), with its Direct3D 9 on Metal in d3d9/.
 HOST = sorted((R / 'port/vengeance').glob('**/*.c')) + sorted((R / 'port/vengeance').glob('**/*.m'))
 D3D9 = R / 'port/vengeance/d3d9'
@@ -413,8 +422,10 @@ def prepare(modules, out, report, backend_bindings):
     return modules
 
 def compile_and_link(modules, out, report, graphics):
-    math = load('sse', R / 'scripts/sse_build_inputs.py').sse_inputs('macos')
+    math = load('sse', R / 'scripts/sse_build_inputs.py').sse_inputs(PLATFORM)
     flags = ['-O2', '-DPTROFS_64BIT', '-Wno-override-module', '-Wall', '-Wextra', '-Werror'] + math['compile_flags'] + graphics['flags']
+    if PLATFORM != 'macos':
+        flags.append('-DVENGEANCE_EMBEDDED')  # vengeance_engine.c: vengeance_mobile_engine_main instead of main
     cache_path = out / 'objects.json'
     cache = json.loads(cache_path.read_text()) if cache_path.exists() else {}
     objects = []
@@ -441,15 +452,25 @@ def compile_and_link(modules, out, report, graphics):
     for m in modules:
         ll = out / pathlib.Path(m).stem / 'module.ll'
         obj = out / 'obj' / ('module_' + pathlib.Path(m).stem + '.o')
-        key = sha(ll) + OPT
+        key = sha(ll) + OPT + PLATFORM + ('' if PLATFORM == 'macos' else ' weak-common')
         if cache.get(str(ll)) != key or not obj.exists():
             say('%s: compiling translated code (%s)' % (m, OPT))
             start = time.monotonic()
-            subprocess.run(['clang'] + TARGET + [OPT, '-Wno-override-module', '-c', str(ll), '-o', str(obj)], check=True)
+            source = ll
+            if PLATFORM != 'macos':
+                # The modules share common symbols (ptr_initialize_pointers...). A
+                # common one would survive embed() as a tentative definition and merge
+                # with another engine's; weak definitions coalesce inside the object
+                # and become local to it.
+                source = ll.with_name('module-embedded.ll')
+                source.write_text(ll.read_text(encoding=ENC).replace(' = common global ', ' = weak global '), encoding=ENC)
+            subprocess.run(['clang'] + TARGET + [OPT, '-Wno-override-module', '-c', str(source), '-o', str(obj)], check=True)
             report.setdefault('compile_seconds', {})[m] = round(time.monotonic() - start)
             cache[str(ll)] = key
         objects.append(str(obj))
     cache_path.write_text(json.dumps(cache, indent=1) + '\n')
+    if PLATFORM != 'macos':
+        return embed(objects, out, report)
     exe = out / 'vengeance-engine'
     with (out / 'link.log').open('w') as log:
         result = subprocess.run(['clang'] + TARGET + objects + math['libraries'] + graphics['libraries'] +
@@ -463,6 +484,22 @@ def compile_and_link(modules, out, report, graphics):
         return None
     report['engine_sha256'] = sha(exe)
     return exe
+
+def embed(objects, out, report):
+    """iOS: one relocatable object for the TribesPad app (Starsiege's embed()).
+    Everything inside, including Vengeance's own copies of TribesPad's runtime
+    and SDL backend, becomes local except the entry point, so nothing collides
+    with the other engines in the same binary. SDL and the math libraries stay
+    undefined and resolve against the app's, so the process has one of each."""
+    target = out / 'vengeance.o'
+    inputs = [o for o in objects if o.endswith('.o')]
+    subprocess.run(['xcrun', 'ld', '-r', '-arch', 'arm64', '-exported_symbol', '_vengeance_mobile_engine_main', *inputs, '-o', str(target)], check=True)
+    defined = [s for s in subprocess.check_output(['nm', '-gU', str(target)], text=True).split() if s.startswith('_')]
+    assert defined == ['_vengeance_mobile_engine_main'], defined[:20]
+    undefined = sorted(set(subprocess.check_output(['nm', '-u', str(target)], text=True).split()))
+    (out / 'undefined.txt').write_text('\n'.join(undefined) + '\n')
+    report.update(embedded_object=str(target.relative_to(R)), embedded_sha256=sha(target), embedded_undefined=len(undefined), platform=PLATFORM)
+    return target
 
 def run(exe, out, args, timeout, report, show_script_log=False):
     work = out / 'run'
@@ -497,16 +534,18 @@ def main():
     ap.add_argument('--run', action='store_true')
     ap.add_argument('--timeout', type=int, default=120)
     ap.add_argument('--show-script-log', action='store_true', help='unsuppress ScriptLog in the run copy')
+    ap.add_argument('--platform', choices=['macos', 'device', 'simulator'], default='macos')
     ap.add_argument('args', nargs='*', default=['help'])
     a = ap.parse_args()
-    out = R / 'generated/vengeance' / ('engine-' + a.target)
+    set_platform(a.platform)
+    out = R / 'generated/vengeance' / ('engine-' + a.target + ('' if PLATFORM == 'macos' else '-' + PLATFORM))
     out.mkdir(parents=True, exist_ok=True)
     report = {'target': a.target, 'playable': False, 'opt': OPT}
     ss.OUT = out  # the SDL backend's generated wrappers go in this build's folder
     graphics = ss.backend()
     modules = prepare(TARGETS[a.target], out, report, graphics['bindings'])
     exe = compile_and_link(modules, out, report, graphics)
-    if exe and a.run:
+    if exe and a.run and PLATFORM == 'macos':
         run(exe, out, a.args, a.timeout, report, a.show_script_log)
     (out / 'result.json').write_text(json.dumps(report, indent=1) + '\n')
     print(json.dumps({k: v for k, v in report.items() if k not in ('modules',)}, indent=1))

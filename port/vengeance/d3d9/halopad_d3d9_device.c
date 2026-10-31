@@ -313,7 +313,7 @@ uint32_t hpcom_IDirect3DDevice9_Clear_c(uint32_t g, uint32_t count, uint32_t rec
     return D3D_OK;
 }
 /* Test support: called with each device just before it presents (the frame is complete). */
-void (*halopad_d3d9_present_hook)(uint32_t device);
+void (*halopad_d3d9_present_hook)(uint32_t device) = 0;   /* initialized: an embedded build keeps it local (scripts/vengeance/build_engine.py embed) */
 
 /* Diagnostics: HALOPAD_TRACE_DRAWS=first:last prints every draw, clear and render-target change
    in those frames (counted by Present, from 1), with the guest return addresses on the stack. */

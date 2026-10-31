@@ -487,20 +487,7 @@
                  }
  
                  if (hp_rep)
-@@ -3079,8 +3255,10 @@
-                 }
-                 if (flags_to_write)
-                 {
--                    if (hp_w) SR_llasm_helper_add_16(UD_Icmp, LR_TMP3, LR_TMP1, LR_TMP2, 0);
--                    else SR_llasm_helper_add_32(UD_Icmp, LR_TMP3, LR_TMP1, LR_TMP2, 0);
-+                    /* Tribes: the difference goes to tmp2. The flag helpers use tmp3 as
-+                       scratch, which would overwrite it before ZF, SF and PF are set. */
-+                    if (hp_w) SR_llasm_helper_add_16(UD_Icmp, LR_TMP2, LR_TMP1, LR_TMP2, 0);
-+                    else SR_llasm_helper_add_32(UD_Icmp, LR_TMP2, LR_TMP1, LR_TMP2, 0);
-                 }
-                 if (hp_rep)
-                 {
-@@ -3742,7 +3920,7 @@
+@@ -3742,7 +3918,7 @@
                  last_instruction = 1;
  
                  optimize_cond = 0;
@@ -509,7 +496,7 @@
                  {
                      output_data *prev_output;
  
-@@ -4272,6 +4450,7 @@
+@@ -4272,6 +4448,7 @@
                  }
              }
              break;
@@ -517,7 +504,7 @@
          case UD_Ijecxz:
              {
                  /* HaloPad: jump if ecx is zero; no flags affected (same structure as loop) */
-@@ -4287,7 +4466,10 @@
+@@ -4287,7 +4464,10 @@
                  if (extrnadr != NULL) strcpy(cAddress, extrnadr->proc);
                  else SR_get_label(cAddress, address);
  
@@ -529,7 +516,7 @@
  
                  SR_add_label(Entry, cur_ofs + decoded_length);
              }
-@@ -4360,6 +4542,1369 @@
+@@ -4360,6 +4540,1369 @@
                  }
  
                  SR_add_label(Entry, cur_ofs + decoded_length);
@@ -1899,7 +1886,7 @@
              }
              break;
          case UD_Imov:
-@@ -4838,6 +6383,13 @@
+@@ -4838,6 +6381,13 @@
              break;
          case UD_Imovsd:
              {
@@ -1913,7 +1900,7 @@
                  /* no flags affected */
  
                  if (ud_obj.pfx_rep || ud_obj.pfx_repe || ud_obj.pfx_repne)
-@@ -6057,7 +7609,7 @@
+@@ -6057,7 +7607,7 @@
                          {
                              if (flags_to_write)
                              {
@@ -1922,7 +1909,7 @@
                              }
  
                              OUTPUT_STRING("and tmp1, ecx, 0x1f\n");
-@@ -6203,7 +7755,7 @@
+@@ -6203,7 +7753,7 @@
                          {
                              if (flags_to_write)
                              {
@@ -1931,7 +1918,7 @@
                              }
  
                              OUTPUT_STRING("and tmp2, ecx, 0x1f\n");
-@@ -6249,7 +7801,7 @@
+@@ -6249,7 +7799,7 @@
                          {
                              if (flags_to_write)
                              {
@@ -1940,7 +1927,7 @@
                              }
  
                              OUTPUT_STRING("and tmp2, ecx, 0x1f\n");
-@@ -6301,7 +7853,7 @@
+@@ -6301,7 +7851,7 @@
                          {
                              if (flags_to_write)
                              {
@@ -1949,7 +1936,7 @@
                              }
  
                              OUTPUT_STRING("and tmp2, ecx, 0x1f\n");
-@@ -6353,7 +7905,7 @@
+@@ -6353,7 +7903,7 @@
                          {
                              if (flags_to_write)
                              {
@@ -1958,7 +1945,7 @@
                              }
  
                              OUTPUT_STRING("and tmp2, ecx, 0x1f\n");
-@@ -6408,7 +7960,7 @@
+@@ -6408,7 +7958,7 @@
                          {
                              if (flags_to_write)
                              {
@@ -1967,7 +1954,7 @@
                              }
  
                              SR_disassemble_get_madr(cOutput, &(ud_obj.operand[0]), fixup[0], extrn[0], UD_NONE, MADR_RW, ZERO_EXTEND, &memadr);
-@@ -6501,7 +8053,7 @@
+@@ -6501,7 +8051,7 @@
                          {
                              if (flags_to_write)
                              {
@@ -1976,7 +1963,7 @@
                              }
  
                              if (ud_obj.mnemonic == UD_Isar)
-@@ -6566,6 +8118,11 @@
+@@ -6566,6 +8116,11 @@
                  }
  
              }
@@ -1988,7 +1975,7 @@
              break;
          case UD_Iscasb:
              {
-@@ -6613,6 +8170,7 @@
+@@ -6613,6 +8168,7 @@
              }
              break;
          case UD_Iseta:
@@ -1996,7 +1983,7 @@
          case UD_Isetb:
          case UD_Isetbe:
          //case UD_Isetnb:
-@@ -6642,7 +8200,7 @@
+@@ -6642,7 +8198,7 @@
                      OUTPUT_STRING("and tmp1, eflags, SF\n");
                      setifzero = (ud_obj.mnemonic == UD_Isets)?0:1;
                  }
@@ -2005,7 +1992,7 @@
                          )
                  {
                      OUTPUT_STRING("and tmp1, eflags, CF\n");
-@@ -6733,7 +8291,7 @@
+@@ -6733,7 +8289,7 @@
                          {
                              if (flags_to_write)
                              {
@@ -2014,7 +2001,7 @@
                              }
  
                              OUTPUT_STRING("and tmp1, ecx, 0x1f\n");
-@@ -6765,7 +8323,7 @@
+@@ -6765,7 +8321,7 @@
  
                              if (flags_to_write)
                              {
@@ -2023,7 +2010,7 @@
                              }
  
                              if (value == 0)
-@@ -7111,6 +8669,33 @@
+@@ -7111,6 +8667,33 @@
                  SR_disassemble_change_flags(cOutput, 0, FL_ZERO, 0);
              }
              break;
@@ -2057,7 +2044,7 @@
          case UD_Ixchg:
              {
                  /* no flags affected */
-@@ -7237,7 +8822,7 @@
+@@ -7237,7 +8820,7 @@
  
                  //if (flags_to_write)
                  //{
@@ -2066,7 +2053,7 @@
                  //}
  
                  if (ud_obj.mnemonic == UD_Ifadd) instr = "FADD";
-@@ -7311,7 +8896,7 @@
+@@ -7311,7 +8894,7 @@
  
                  //if (flags_to_write)
                  //{
@@ -2075,7 +2062,7 @@
                  //}
  
                  if (ud_obj.mnemonic == UD_Ifaddp) instr = "FADDP";
-@@ -7381,7 +8966,7 @@
+@@ -7381,7 +8964,7 @@
  
                  //if (flags_to_write)
                  //{
@@ -2084,7 +2071,7 @@
                  //}
  
                  if (ud_obj.mnemonic == UD_Ifabs) instr = "FABS";
-@@ -7426,7 +9011,7 @@
+@@ -7426,7 +9009,7 @@
  
                  //if (flags_to_write)
                  //{
@@ -2093,7 +2080,7 @@
                  //}
  
                  if (ud_obj.mnemonic == UD_Ifcom) instr = "FCOM";
-@@ -7494,7 +9079,7 @@
+@@ -7494,7 +9077,7 @@
  
                  //if (flags_to_write)
                  //{
@@ -2102,7 +2089,7 @@
                  //}
  
                  if (ud_obj.mnemonic == UD_Ifdivr) instr = "FDIVR";
-@@ -7561,7 +9146,7 @@
+@@ -7561,7 +9144,7 @@
  
                  //if (flags_to_write)
                  //{
@@ -2111,7 +2098,7 @@
                  //}
  
                  if (ud_obj.mnemonic == UD_Ifdivrp) instr = "FDIVRP";
-@@ -7612,7 +9197,7 @@
+@@ -7612,7 +9195,7 @@
  
                  //if (flags_to_write)
                  //{
@@ -2120,7 +2107,7 @@
                  //}
  
                  if (ud_obj.mnemonic == UD_Ifiadd) instr = "FIADD";
-@@ -7656,7 +9241,7 @@
+@@ -7656,7 +9239,7 @@
  
                  //if (flags_to_write)
                  //{
@@ -2129,7 +2116,7 @@
                  //}
  
                  if (ud_obj.operand[1].type == UD_NONE)
-@@ -7701,7 +9286,7 @@
+@@ -7701,7 +9284,7 @@
  
                  //if (flags_to_write)
                  //{
@@ -2138,7 +2125,7 @@
                  //}
  
                  if (ud_obj.operand[1].type == UD_NONE)
-@@ -7730,7 +9315,7 @@
+@@ -7730,7 +9313,7 @@
  
                  //if (flags_to_write)
                  //{
@@ -2147,7 +2134,7 @@
                  //}
  
                  if (ud_obj.operand[1].type == UD_NONE)
-@@ -7779,7 +9364,7 @@
+@@ -7779,7 +9362,7 @@
  
                  //if (flags_to_write)
                  //{
@@ -2156,7 +2143,7 @@
                  //}
  
                  if (ud_obj.operand[1].type == UD_NONE)
-@@ -7848,7 +9433,7 @@
+@@ -7848,7 +9431,7 @@
  
                  //if (flags_to_write)
                  //{
@@ -2165,7 +2152,7 @@
                  //}
  
                  if (ud_obj.operand[0].type == UD_OP_MEM)
-@@ -7882,7 +9467,7 @@
+@@ -7882,7 +9465,7 @@
  
                  //if (flags_to_write)
                  //{
@@ -2174,7 +2161,7 @@
                  //}
  
                  if (ud_obj.mnemonic == UD_Ifnstcw) instr = "FNSTCW";
-@@ -7910,12 +9495,24 @@
+@@ -7910,12 +9493,24 @@
                  }
              }
              break;
@@ -2203,7 +2190,7 @@
              break;
          case UD_Ifst:
          case UD_Ifstp:
-@@ -7926,7 +9523,7 @@
+@@ -7926,7 +9521,7 @@
  
                  //if (flags_to_write)
                  //{
@@ -2212,7 +2199,7 @@
                  //}
  
                  if (ud_obj.mnemonic == UD_Ifst) instr = "FST";
-@@ -7958,10 +9555,13 @@
+@@ -7958,10 +9553,13 @@
                          else if (ud_obj.operand[0].size == 32)
                          {
                              OUTPUT_PARAMSTRING("%s_FLOAT\n", instr);
@@ -2227,7 +2214,7 @@
                          }
                          else if (ud_obj.operand[0].size == 80 && ud_obj.mnemonic == UD_Ifstp)
                          {
-@@ -7982,7 +9582,7 @@
+@@ -7982,7 +9580,7 @@
  
                  //if (flags_to_write)
                  //{
@@ -2236,7 +2223,7 @@
                  //}
  
                  if (ud_obj.operand[1].type == UD_NONE)
-@@ -8023,7 +9623,7 @@
+@@ -8023,7 +9621,7 @@
  
                  //if (flags_to_write)
                  //{
@@ -2245,7 +2232,7 @@
                  //}
  
                  OUTPUT_STRING("; wait\n");
-@@ -8039,6 +9639,15 @@
+@@ -8039,6 +9637,15 @@
              OUTPUT_PARAMSTRING("call halopad_trap_unimplemented 0x%x\n", (unsigned int)(section[Entry].start + cur_ofs));
              flags_write = flags_to_write;
              break;

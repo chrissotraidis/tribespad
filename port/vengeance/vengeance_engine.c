@@ -149,7 +149,13 @@ uint32_t vg_get_proc_address(uint64_t guest,uint32_t image,uint32_t pointer){
  tribes_set_last_error(127);return 0;
 }
 
+#ifdef VENGEANCE_EMBEDDED
+/* In the TribesPad iOS app the picker calls this on the main thread, inside
+   SDL's UIKit application, with the same paths (port/apple/mobile_engine_main.m). */
+int vengeance_mobile_engine_main(int argc,char **argv){
+#else
 int main(int argc,char **argv){
+#endif
  if(argc<5){fprintf(stderr,"usage: %s images volume game temp [arguments]\n",argv[0]);return 2;}
  const unsigned count=sizeof vg_modules/sizeof vg_modules[0];
  /* Unreal allocates through VirtualAlloc (the Windows game peaked near 500 MB in
@@ -208,6 +214,9 @@ int main(int argc,char **argv){
  assert(tribes_command_line_configure(base,line,(uint32_t)used+1));
  assert(tribes_command_line_configure_w(base,wide,2u*((uint32_t)used+1)));
  assert(tribes_filesystem_configure(base,argv[2],argv[3],argv[4]));assert(tribes_named_mutex_configure(argv[4]));
+ /* VENGEANCE_CONTENT: the game's Content folder elsewhere (the iOS app bundle). */
+ {const char *content=getenv("VENGEANCE_CONTENT");
+  if(content&&!tribes_filesystem_configure_content(base,content)){fprintf(stderr,"vengeance: no content folder at %s\n",content);return 2;}}
  /* The game saves to Program\Saves (Default.ini SavePath=../Saves) and reports
     a full drive when the folder is missing; the download does not include it. */
  {char saves[4096];if(snprintf(saves,sizeof saves,"%s/Program/Saves",argv[3])<(int)sizeof saves)mkdir(saves,0755);}

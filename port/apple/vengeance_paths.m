@@ -1,0 +1,69 @@
+/* Tribes: Vengeance storage on iOS. The game folder lives in Application
+   Support, where the game writes its settings (the INI files in Program/Bin),
+   saves (Program/Saves) and logs; the bundle's copy is the source. Its Content
+   (gigabytes of maps, art and sound, never written) stays where it is: the
+   engine reads it in place (VENGEANCE_CONTENT, port/core/guest_filesystem.c).
+   The player's files are copied only when missing; everything else follows the
+   source whenever its stamp changes.
+
+   The source game folder is GameData/Vengeance/Game in the bundle. A
+   development build may leave it out (build-ipad-engine.py --vengeance-sideload)
+   and use one copied once into Application Support/TribesPad/VengeanceGame, so
+   each new build installs without resending the campaign. */
+#import <Foundation/Foundation.h>
+#include <stdio.h>
+#include <string.h>
+#include "vengeance_paths.h"
+
+static NSString *source_game(const char *gamedata,const char *storage){
+    NSFileManager *fm=NSFileManager.defaultManager;
+    NSString *bundled=[@(gamedata) stringByAppendingPathComponent:@"Vengeance/Game"];
+    if([fm fileExistsAtPath:[bundled stringByAppendingPathComponent:@"Program/Bin/TV_CD_DVD.exe"]])return bundled;
+    NSString *sideloaded=[@(storage) stringByAppendingPathComponent:@"VengeanceGame"];
+    if([fm fileExistsAtPath:[sideloaded stringByAppendingPathComponent:@"Program/Bin/TV_CD_DVD.exe"]])return sideloaded;
+    return nil;
+}
+int tb_vengeance_bundled(const char *gamedata,const char *storage){
+    return [NSFileManager.defaultManager fileExistsAtPath:[@(gamedata) stringByAppendingPathComponent:@"Vengeance/images"]]&&source_game(gamedata,storage)!=nil;
+}
+static BOOL players(NSString *relative){
+    NSString *lower=relative.lowercaseString;
+    return [lower hasPrefix:@"program/saves/"]||([lower hasPrefix:@"program/bin/"]&&[lower hasSuffix:@".ini"]);
+}
+int tb_vengeance_prepare_paths(const char *gamedata,const char *storage,char *arguments[6]){
+    @autoreleasepool{
+        NSFileManager *fm=NSFileManager.defaultManager;NSString *data=[@(gamedata) stringByAppendingPathComponent:@"Vengeance"];
+        NSString *volume=[[@(storage) stringByAppendingPathComponent:@"Vengeance"] stringByAppendingPathComponent:@"volume"];
+        NSString *game=[volume stringByAppendingPathComponent:@"TribesPad/Game"],*temp=[volume stringByAppendingPathComponent:@"TribesPad/Temp"];
+        NSString *source=source_game(gamedata,storage),*content=[game stringByAppendingPathComponent:@"Content"];
+        if(!tb_vengeance_bundled(gamedata,storage)||![fm createDirectoryAtPath:game withIntermediateDirectories:YES attributes:nil error:nil]||
+           ![fm createDirectoryAtPath:temp withIntermediateDirectories:YES attributes:nil error:nil])return 0;
+        /* An empty Content folder, so listings of the game folder show it; the engine reads the source's. */
+        if([fm contentsOfDirectoryAtPath:content error:nil].count)[fm removeItemAtPath:content error:nil];
+        [fm createDirectoryAtPath:content withIntermediateDirectories:YES attributes:nil error:nil];
+        NSString *stamp=[NSString stringWithContentsOfFile:[data stringByAppendingPathComponent:@"stamp.txt"] encoding:NSUTF8StringEncoding error:nil]?:@"";
+        stamp=[stamp stringByAppendingString:source];   /* a different source folder is a change too */
+        NSString *installed=[game stringByAppendingPathComponent:@".tribespad-stamp"];
+        if(![[NSString stringWithContentsOfFile:installed encoding:NSUTF8StringEncoding error:nil] isEqualToString:stamp]){
+            NSUInteger copied=0;
+            for(NSString *relative in [fm enumeratorAtPath:source]){
+                if([relative.pathComponents.firstObject.lowercaseString isEqualToString:@"content"])continue;
+                NSString *from=[source stringByAppendingPathComponent:relative],*to=[game stringByAppendingPathComponent:relative];BOOL dir=NO;
+                [fm fileExistsAtPath:from isDirectory:&dir];
+                if(dir){[fm createDirectoryAtPath:to withIntermediateDirectories:YES attributes:nil error:nil];continue;}
+                if([fm fileExistsAtPath:to]){if(players(relative))continue;[fm removeItemAtPath:to error:nil];}
+                NSError *error=nil;
+                if(![fm copyItemAtPath:from toPath:to error:&error]){
+                    fprintf(stderr,"TribesPad: could not copy Vengeance file %s: %s\n",relative.UTF8String,error.description.UTF8String);return 0;}
+                copied++;
+            }
+            [stamp writeToFile:installed atomically:YES encoding:NSUTF8StringEncoding error:nil];
+            fprintf(stderr,"TribesPad: Vengeance game folder updated from %s (%lu files)\n",source.UTF8String,(unsigned long)copied);
+        }
+        arguments[0]=strdup([data stringByAppendingPathComponent:@"images"].fileSystemRepresentation);
+        arguments[1]=strdup(volume.fileSystemRepresentation);arguments[2]=strdup(game.fileSystemRepresentation);
+        arguments[3]=strdup(temp.fileSystemRepresentation);
+        arguments[4]=strdup([source stringByAppendingPathComponent:@"Content"].fileSystemRepresentation);arguments[5]=NULL;
+        return arguments[0]&&arguments[1]&&arguments[2]&&arguments[3]&&arguments[4];
+    }
+}

@@ -228,8 +228,8 @@ void halopad_metal_target_gamma(void *p, const uint16_t ramp[768]) { halopad_hos
 /* HALOPAD_TRACE_FRAMES: shader and pipeline compilation in the current 10 s window */
 static int trace_libs, trace_pipes;
 static double trace_lib_s, trace_pipe_s;
-int halopad_trace_decodes;                          /* DXT decodes on upload (halopad_d3d9_draw.c) */
-double halopad_trace_decode_s, halopad_trace_decode_px;
+int halopad_trace_decodes = 0;                        /* DXT decodes on upload (halopad_d3d9_draw.c) */
+double halopad_trace_decode_s = 0, halopad_trace_decode_px = 0;
 double halopad_trace_now(void) { return CFAbsoluteTimeGetCurrent(); }
 static void arena_reset(void);                       /* the transient arena, below */
 

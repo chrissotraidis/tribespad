@@ -10,6 +10,7 @@
 #include "mobile_controls.h"
 #import "live_servers.h"
 #include "starsiege_paths.h"
+#include "vengeance_paths.h"
 
 typedef NS_ENUM(NSInteger, TBControlKind) { TBKindStick, TBKindLook, TBKindButton };
 extern uint64_t tribes_gl4es_presented_frames(void);
@@ -29,6 +30,8 @@ static NSString * const TBPlayT1Discord=@"https://discord.gg/bf4RHMq";
 static NSString * const TBPlayT1Site=@"https://playt1.com/";
 static NSString * const TBTribes1Servers=@"https://tribes1.co/";
 static NSString * const TBTribes1JunkYard=@"https://twdemos.iateyourbaby.com/";
+/* Tribes: Vengeance: the community that keeps it online (checked 31 October 2026). */
+static NSString * const TBVengeanceSite=@"https://tribesrevengeance.net/";
 
 /* Touch preferences (NSUserDefaults, TribesPad-owned keys). */
 /* Starsiege: Tribes runs these controls too (tb_mobile_controls_install_starsiege):
@@ -46,8 +49,24 @@ int tb_overlay_owns_controller(void){
     if(p&&(p.buttonA.pressed||p.buttonB.pressed||p.dpad.up.pressed||p.dpad.down.pressed||p.dpad.left.pressed||p.dpad.right.pressed))return 1;
     atomic_store(&tb_panel_owns,0);return 0;
 }
+/* Tribes: Vengeance runs these controls too (tb_mobile_controls_install_vengeance):
+   its own keys and menu. Its engine reads the controller as Starsiege's does,
+   reports play (the game holding the mouse for aiming) through
+   tb_vengeance_report_state, and presents with Metal, so it counts its frames
+   here for the FPS counter (tb_app_note_frame). Both are called from the engine. */
+static BOOL tb_vengeance;
+static _Atomic int tb_vengeance_playing=-1;
+void tb_vengeance_report_state(int playing){atomic_store(&tb_vengeance_playing,playing);}
+static _Atomic uint64_t tb_app_frames,tb_app_longest_ns,tb_app_last_ns;
+void tb_app_note_frame(void){
+    uint64_t now=SDL_GetTicksNS(),last=atomic_exchange(&tb_app_last_ns,now);atomic_fetch_add(&tb_app_frames,1);
+    if(last&&now-last>atomic_load(&tb_app_longest_ns))atomic_store(&tb_app_longest_ns,now-last);
+}
+static uint64_t tb_frames(void){return tb_vengeance?atomic_load(&tb_app_frames):tribes_gl4es_presented_frames();}
+static uint64_t tb_take_longest_ns(void){return tb_vengeance?atomic_exchange(&tb_app_longest_ns,0):tribes_gl4es_take_longest_frame_ns();}
 static NSString *tb_state_path(void){
     NSString *support=NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,NSUserDomainMask,YES).firstObject;
+    if(tb_vengeance)return [support stringByAppendingPathComponent:@"TribesPad/Vengeance/tribespad-state.txt"]; /* unused: the engine reports directly */
     return [support stringByAppendingPathComponent:tb_starsiege?@"TribesPad/Starsiege/volume/TribesPad/Game/temp/tribespad-state.cs":@"TribesPad/Game/base/prefs/tribespad-state.txt"];
 }
 static double tb_setting(NSString *key,double fallback){id v=[NSUserDefaults.standardUserDefaults objectForKey:key];return v?[v doubleValue]:fallback;}
@@ -95,6 +114,10 @@ static void tb_set(NSString *key,double value){[NSUserDefaults.standardUserDefau
 @property(nonatomic) BOOL matchSeen;
 @property(nonatomic) BOOL typingDialog;
 @property(nonatomic) BOOL zoomed;
+/* Vengeance's held menu keys (Objectives, Loadout): down until chosen again. */
+@property(nonatomic,strong) NSMutableSet<NSNumber *> *heldKeys;
+-(void)toggleHeldKey:(SDL_Scancode)code;
+-(void)holdKeyBriefly:(SDL_Scancode)code;
 @property(nonatomic,strong) TBQuickChatView *quickChat;
 -(void)showQuickChat;
 -(void)sendChatKeys:(NSString *)keys;
@@ -233,7 +256,8 @@ static UIColor *tb_accent(void){return [UIColor colorWithRed:.60 green:.85 blue:
     tb_mobile_controls_emit(self.owner.controls);self.finger=nil;self.held=NO;
     // The original inventory needs direct taps: the look surface otherwise covers
     // equipment fields and Done. Retire the key before hiding/releasing pads.
-    if(self.action==TBInventory&&self.owner.expanded)[self.owner toggleControls];
+    // (Vengeance's button in that place is Use, which opens nothing.)
+    if(self.action==TBInventory&&self.owner.expanded&&!tb_vengeance)[self.owner toggleControls];
 }
 -(void)touchesCancelled:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
     (void)event;if(![touches containsObject:self.finger])return;
@@ -274,7 +298,7 @@ static const TBSettingRow tb_rows[]={
     {2,NO,"Keep Clear of the Notch","TribesPad.avoidNotch","Keeps the game clear of the notch and rounded corners. Turn off to fill the screen. Applies the next time TribesPad opens.",0,0,NO},
     {2,NO,"Show FPS Counter","TribesPad.showFPS","Frames each second and the longest frame among them. Also in the menu.",0,0,NO},
     {2,YES,"Render Scale","TribesPad.renderScale",NULL,.5,1.0,NO},
-    {2,NO,"Game Picker at Launch","TribesPad.showLauncher","Choose your game when TribesPad opens. Off, it opens Tribes 2 directly.",0,0,NO},
+    {2,NO,"Game Picker at Launch","TribesPad.showLauncher","Choose your game when TribesPad opens. Off, it opens the game you played last.",0,0,NO},
     {3,NO,"WASD Movement","TribesPad.keyboardWASD","Keys from a hardware keyboard only.",0,0,NO},
     {4,NO,"Online Play","TribesPad.onlinePlay","Sign in with TribesNEXT at launch.",0,0,NO}};
 enum {TBRowCount=sizeof tb_rows/sizeof tb_rows[0],TBSectionCount=sizeof tb_sections/sizeof tb_sections[0]};
@@ -287,11 +311,11 @@ static void tb_register_defaults(void){
             @"TribesPad.onlinePlay":@1}];
     });
 }
-/* Starsiege: Tribes draws a fixed 800x600 frame (content_area.m) and has its own
-   WASD keys and no TribesNEXT login, so these rows only change Tribes 2. */
+/* Starsiege: Tribes and Tribes: Vengeance draw a fixed frame (content_area.m) and
+   have their own WASD keys and no TribesNEXT login, so these rows only change Tribes 2. */
 static BOOL tb_row_applies(const TBSettingRow *r){
     static const char *const tribes2[]={"TribesPad.avoidNotch","TribesPad.renderScale","TribesPad.keyboardWASD","TribesPad.onlinePlay"};
-    if(tb_starsiege)for(unsigned i=0;i<sizeof tribes2/sizeof tribes2[0];i++)if(!strcmp(r->key,tribes2[i]))return NO;
+    if(tb_starsiege||tb_vengeance)for(unsigned i=0;i<sizeof tribes2/sizeof tribes2[0];i++)if(!strcmp(r->key,tribes2[i]))return NO;
     return YES;
 }
 static NSInteger tb_section_rows(NSInteger section){
@@ -328,6 +352,7 @@ static const TBSettingRow *tb_row(NSIndexPath *path){
 -(NSString *)tableView:(UITableView *)tableView titleForFooterInSection:(NSInteger)section {
     (void)tableView;NSInteger s=tb_section(section);if(s>=TBSectionCount)return nil;
     if(tb_starsiege&&s==2)return @"Starsiege: Tribes draws its original 800x600 frame, which the screen scales up to fit, centred.";
+    if(tb_vengeance&&s==2)return @"Tribes: Vengeance draws its original 1024x768 frame, which the screen scales up to fit, centred.";
     return tb_sections[s][1]?@(tb_sections[s][1]):nil;
 }
 static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multiplier?[NSString stringWithFormat:@"%.1f×",v]:[NSString stringWithFormat:@"%.0f%%",v*100];}
@@ -646,6 +671,9 @@ static TBChatNode *tb_starsiege_chat_tree(void){
         {TBKindButton,TBGrenade,"burst.fill","circle.fill","Grenade",NO},
         {TBKindButton,TBUse,"backpack.fill","shippingbox.fill","Pack",NO},
         {TBKindButton,TBInventory,"square.grid.2x2.fill","square.grid.2x2","Inventory",NO}};
+    /* Tribes: Vengeance: Space skis (jumping is on Jet, the right mouse button)
+       and the last button is Use (F). */
+    if(tb_vengeance){spec[4].caption="Ski";spec[8].symbol="hand.point.up.left.fill";spec[8].fallback="hand.raised.fill";spec[8].caption="Use";}
     NSMutableArray *pads=[NSMutableArray new];
     for(unsigned i=0;i<sizeof spec/sizeof spec[0];i++) {
         TBGamePad *pad=[[TBGamePad alloc] initWithKind:spec[i].kind symbol:@(spec[i].symbol) fallback:@(spec[i].fallback) caption:@(spec[i].caption)];
@@ -776,9 +804,11 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
 }
 -(void)controllerChanged:(NSNotification *)notification {
     (void)notification;if(!self.superview)return;
-    if(tb_starsiege){
+    if(tb_starsiege||tb_vengeance){
         /* The engine reads the controller itself (starsiege_controller.m) and
-           steps aside for it; Menu opens the game menu (Escape), as in Tribes 2. */
+           steps aside for it; Menu opens the game menu (Escape), as in Tribes 2.
+           Vengeance has no quick chat panel: its D-pad right stays the game's
+           loadout key. */
         BOOL any=NO;for(GCController *c in GCController.controllers)if(c.extendedGamepad)any=YES;
         if(getenv("TRIBESPAD_TOUCH_CONTROLS"))any=NO; /* tests: touch controls even with a controller */
         __weak TBGameControls *weakSelf=self;
@@ -786,6 +816,7 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
             c.extendedGamepad.buttonMenu.pressedChangedHandler=^(GCControllerButtonInput *button,float value,BOOL pressed){
                 (void)button;(void)value;TBGameControls *owner=weakSelf;
                 if(pressed&&UIApplication.sharedApplication.applicationState==UIApplicationStateActive)[owner openMenu];};
+            if(tb_vengeance)continue;
             /* Quick chat: D-pad right in a match opens the panel; while it is
                open the D-pad, A and B drive it and the engine steps aside
                (tb_overlay_owns_controller). */
@@ -798,7 +829,7 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
                     else if(what==2)[owner.quickChat moveSelection:1];else [owner.quickChat back];};};
             panel(pad.dpad.right,0);panel(pad.dpad.up,1);panel(pad.dpad.down,2);panel(pad.buttonA,3);panel(pad.dpad.left,4);panel(pad.buttonB,4);
         }
-        if(any!=self.controllerUsed)fprintf(stderr,"TribesPad controller %s (Starsiege)\n",any?"connected":"disconnected");
+        if(any!=self.controllerUsed)fprintf(stderr,"TribesPad controller %s (%s)\n",any?"connected":"disconnected",tb_vengeance?"Vengeance":"Starsiege");
         self.controllerUsed=any;[self rebuildMenu];return;
     }
     if(self.controller&&[GCController.controllers containsObject:self.controller])return;
@@ -906,7 +937,7 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
     }
     /* Menus with a mouse or trackpad attached: the game takes no touches then,
        so a finger works TribesPad's own pointer (touchesBegan below). */
-    if(hit==self&&!tb_starsiege&&!self.inMatch&&self.mouseConnected&&event.type==UIEventTypeTouches)
+    if(hit==self&&!tb_starsiege&&!tb_vengeance&&!self.inMatch&&self.mouseConnected&&event.type==UIEventTypeTouches)
         for(UITouch *t in event.allTouches)if(t.type==UITouchTypeDirect)return self;
     return hit==self?nil:hit;
 }
@@ -976,6 +1007,8 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
     // a dialog made for typing (login, server password...) is open; connected
     // is 1 on a server (including one hosted here).
     NSString *state=[NSString stringWithContentsOfFile:tb_state_path() encoding:NSUTF8StringEncoding error:nil];
+    /* Vengeance: the engine reports whether the game holds the mouse for aiming. */
+    if(tb_vengeance){int p=atomic_load(&tb_vengeance_playing);state=p<0?nil:p?@"1 0 0":@"0 0 0";}
     if(tb_starsiege&&state.length){
         /* Starsiege's export: $TribesPad::state = "1 0 1"; */
         NSRange q=[state rangeOfString:@"\""];if(q.location==NSNotFound)return;
@@ -990,7 +1023,8 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
         [self rebuildMenu];
         // New players rarely know where the games are; point at Find a Game.
         double shown=tb_setting(@"TribesPad.findHintsShown",0);
-        if(shown<3){tb_set(@"TribesPad.findHintsShown",shown+1);
+        if(tb_vengeance){} /* the campaign: nothing to find */
+        else if(shown<3){tb_set(@"TribesPad.findHintsShown",shown+1);
             [self flashHint:@"Looking for a game?  ··· > Play Online has the server list,\nwho is playing now, game nights and the community Discords"];}
         // The graphics presets are Tribes 2's (base/autoexec.cs).
         else if(!tb_starsiege)[self performSelector:@selector(offerBalancedIfMaximum) withObject:nil afterDelay:3];
@@ -1018,6 +1052,7 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
     }
     if(playing==self.inMatch)return;
     self.inMatch=playing;if(playing)self.matchSeen=YES;
+    [self releaseHeldKeys];
     if(self.zoomed){self.zoomed=NO;[self pushKey:SDL_SCANCODE_A down:NO mod:SDL_KMOD_NONE];}
     if(self.controls){tb_input_release(&self.controls->input,9);tb_mobile_controls_emit(self.controls);}
     if(playing){
@@ -1030,7 +1065,8 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
 /* The first few times the controls appear, say what the main buttons do. */
 -(void)showHint {
     double shown=tb_setting(@"TribesPad.hintsShown",0);if(shown>=3)return;tb_set(@"TribesPad.hintsShown",shown+1);
-    [self flashHint:@"Hold JET to fly  ·  Hold SKI / JUMP on slopes to keep speed\nDrag the right side to aim  ·  ··· has chat, scores and the game menu"];
+    [self flashHint:tb_vengeance?@"Hold JET to jump and fly  ·  Hold SKI on slopes to keep speed\nDrag the right side to aim  ·  ··· has the game menu, quick save and quick load":
+        @"Hold JET to fly  ·  Hold SKI / JUMP on slopes to keep speed\nDrag the right side to aim  ·  ··· has chat, scores and the game menu"];
 }
 -(void)flashHint:(NSString *)text {
     self.hint.text=text;
@@ -1067,7 +1103,10 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
 -(void)showControllerHint {
     double shown=tb_setting(@"TribesPad.controllerHintsShown",0);if(shown>=3)return;tb_set(@"TribesPad.controllerHintsShown",shown+1);
     /* Each game's own layout: Starsiege's is starsiege_input.c's. */
-    self.hint.text=tb_starsiege?@"RT fire  ·  LT jet  ·  A jump / ski  ·  RB / LB next / previous weapon\n"
+    self.hint.text=tb_vengeance?@"RT fire  ·  LT jet / jump  ·  A or LB ski  ·  RB / D-pad left next / previous weapon\n"
+        "Y grenade  ·  X pack  ·  B use  ·  D-pad: up zoom level, down objectives, right loadout\n"
+        "Click right stick: zoom  ·  click left stick: third person  ·  Menu: game menu  ·  View: scores":
+        tb_starsiege?@"RT fire  ·  LT jet  ·  A jump / ski  ·  RB / LB next / previous weapon\n"
         "Y grenade  ·  X use pack  ·  B crouch  ·  D-pad: up repair kit, down inventory, left beacon, right quick chat\n"
         "Spawning? Press RT  ·  Menu: game menu  ·  View: scores":
         @"RT fire  ·  LT jet  ·  A ski / jump  ·  RB next weapon  ·  LB targeting laser\n"
@@ -1236,6 +1275,45 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
                 item(@"Tribes 1 JunkYard: configs, mods, demos",@"archivebox",^{[weak openPage:TBTribes1JunkYard];})])]];
         matchItems=t1;onlineItems=@[t1playing,t1servers,t1nights,t1community];
     }
+    if(tb_vengeance){
+        /* Vengeance's own keys (DefUser.ini): F2 scores, T and Y chat, V quick
+           chat, F use, Z third person, R zoom level, B respawn, F5 and F8 quick
+           save and load. C objectives and Shift loadout are held buttons in the
+           game: they stay on until chosen again. Alt (drop weapon) is held briefly,
+           so the game sees it for a frame. Escape is the game menu, as in the other two. */
+        UIAction *(^held)(NSString *,NSString *,SDL_Scancode)=^UIAction *(NSString *title,NSString *symbol,SDL_Scancode code){
+            UIAction *a=item(title,symbol,^{[weak toggleHeldKey:code];});a.subtitle=@"Stays on until you choose it again";
+            a.state=[weak.heldKeys containsObject:@(code)]?UIMenuElementStateOn:UIMenuElementStateOff;return a;};
+        UIAction *respawn=key(@"Respawn",@"arrow.counterclockwise",SDL_SCANCODE_B,SDL_KMOD_NONE);respawn.attributes=UIMenuElementAttributesDestructive;
+        UIAction *drop=item(@"Drop Weapon",@"arrow.down.to.line",^{[weak holdKeyBriefly:SDL_SCANCODE_LALT];});
+        matchItems=@[game[0],
+            key(@"Scores",@"trophy",SDL_SCANCODE_F2,SDL_KMOD_NONE),
+            [UIMenu menuWithTitle:@"Chat" image:icon(@"bubble.left.and.bubble.right") identifier:nil options:0 children:@[
+                item(@"All Chat",@"bubble.left.and.bubble.right",^{[weak openChat:SDL_SCANCODE_T];}),
+                item(@"Team Chat",@"bubble.left",^{[weak openChat:SDL_SCANCODE_Y];}),
+                item(@"Quick Chat Menu",@"text.bubble",^{[weak openChat:SDL_SCANCODE_V];})]],
+            [UIMenu menuWithTitle:@"Actions" image:icon(@"bolt") identifier:nil options:0 children:@[
+                group(@[held(@"Objectives",@"list.number",SDL_SCANCODE_C),held(@"Loadout",@"square.grid.2x2",SDL_SCANCODE_LSHIFT)]),
+                group(@[key(@"Use",@"hand.point.up.left",SDL_SCANCODE_F,SDL_KMOD_NONE),key(@"Third-Person View",@"person.crop.square",SDL_SCANCODE_Z,SDL_KMOD_NONE),
+                    key(@"Zoom Level",@"plus.magnifyingglass",SDL_SCANCODE_R,SDL_KMOD_NONE)]),
+                group(@[drop,respawn])]],
+            [UIMenu menuWithTitle:@"Campaign" image:icon(@"flag.checkered") identifier:nil options:0 children:@[
+                key(@"Quick Save",@"square.and.arrow.down",SDL_SCANCODE_F5,SDL_KMOD_NONE),
+                key(@"Quick Load",@"arrow.counterclockwise.circle",SDL_SCANCODE_F8,SDL_KMOD_NONE)]]];
+        optionItems=@[controls[0],controls[1],controls[2],controls[4]];
+        help=[UIMenu menuWithTitle:@"Help" image:icon(@"questionmark.circle") identifier:nil options:0 children:@[
+            group(@[item(@"Touch and Trackpad Guide",@"hand.tap",^{[weak showTouchGuide];}),controllerGuide]),
+            group(@[item(@"Console",@"terminal",^{[weak openConsole];}),
+                item(@"TribesPad on GitHub",@"safari",^{[UIApplication.sharedApplication openURL:[NSURL URLWithString:TBRepositoryURL] options:@{} completionHandler:nil];}),
+                item(@"About TribesPad",@"info.circle",^{[weak showAbout];})])]];
+        UIAction *multiplayer=item(@"Multiplayer",@"server.rack",^{[weak showMessage:@"Multiplayer" text:
+            @"The campaign plays in TribesPad now. Multiplayer is not ready yet. The community keeps Tribes: Vengeance online at tribesrevengeance.net."];});
+        multiplayer.subtitle=@"Not ready in TribesPad yet";
+        UIMenu *tvcommunity=[UIMenu menuWithTitle:@"Community" image:icon(@"bubble.left.and.text.bubble.right") identifier:nil options:0 children:@[
+            group(@[item(@"Tribes: Vengeance Community",@"safari",^{[weak openPage:TBVengeanceSite];}),
+                item(@"TribesPad Discord",@"person.2",^{[weak openLink:TBTribesPadDiscord];})])]];
+        onlineItems=@[multiplayer,tvcommunity];
+    }
     /* The same order in both games: This Match (on a server), Play Online,
        Options, Help, then Choose Game. Off a server Play Online leads, open. */
     BOOL onServer=self.connected||self.inMatch;
@@ -1246,9 +1324,14 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
     if(onServer)[groups addObject:[UIMenu menuWithTitle:@"This Match" image:nil identifier:nil options:UIMenuOptionsDisplayInline children:matchItems]];
     [groups addObject:onServer?group(@[online]):online];
     [groups addObject:group(@[options,help])];
-    if(tb_starsiege_bundled([NSBundle.mainBundle.resourcePath stringByAppendingPathComponent:@"GameData"].fileSystemRepresentation)){
+    const char *gamedata=[NSBundle.mainBundle.resourcePath stringByAppendingPathComponent:@"GameData"].fileSystemRepresentation;
+    NSString *support=[NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,NSUserDomainMask,YES).firstObject stringByAppendingPathComponent:@"TribesPad"];
+    BOOL starsiegeHere=tb_starsiege_bundled(gamedata),vengeanceHere=tb_vengeance_bundled(gamedata,support.fileSystemRepresentation);
+    if(starsiegeHere||vengeanceHere){
         UIAction *choose=item(@"Choose Game\u2026",@"square.grid.2x2",^{[weak chooseGame];});
-        choose.subtitle=tb_starsiege?@"Starsiege: Tribes or Tribes 2":@"Tribes 2 or Starsiege: Tribes";
+        choose.subtitle=starsiegeHere&&vengeanceHere?@"Starsiege: Tribes, Tribes 2 or Tribes: Vengeance":
+            vengeanceHere?(tb_vengeance?@"Tribes: Vengeance or Tribes 2":@"Tribes 2 or Tribes: Vengeance"):
+            tb_starsiege?@"Starsiege: Tribes or Tribes 2":@"Tribes 2 or Starsiege: Tribes";
         [groups addObject:group(@[choose])];
     }
     self.menu.menu=[UIMenu menuWithTitle:@"TribesPad" children:groups];
@@ -1260,17 +1343,33 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
 -(void)applyFPSSetting {
     [self.fpsClock invalidate];self.fpsClock=nil;self.fps.hidden=!TB_SHOW_FPS;
     if(!TB_SHOW_FPS)return;
-    self.fpsFrames=tribes_gl4es_presented_frames();tribes_gl4es_take_longest_frame_ns();self.fps.text=@"– FPS";
+    self.fpsFrames=tb_frames();tb_take_longest_ns();self.fps.text=@"– FPS";
     __weak TBGameControls *weak=self;
     self.fpsClock=[NSTimer scheduledTimerWithTimeInterval:1 repeats:YES block:^(NSTimer *timer){(void)timer;
-        TBGameControls *owner=weak;if(!owner)return;uint64_t now=tribes_gl4es_presented_frames();
-        uint64_t frames=now-owner.fpsFrames;double longest=tribes_gl4es_take_longest_frame_ns()/1e6;owner.fpsFrames=now;
+        TBGameControls *owner=weak;if(!owner)return;uint64_t now=tb_frames();
+        uint64_t frames=now-owner.fpsFrames;double longest=tb_take_longest_ns()/1e6;owner.fpsFrames=now;
         // Frames per second, then the longest frame: a hitch hides in the average.
         BOOL hot=NSProcessInfo.processInfo.thermalState>=NSProcessInfoThermalStateSerious;
         owner.fps.text=frames?[NSString stringWithFormat:@"%llu FPS · slowest %.0f ms%@",(unsigned long long)frames,longest,hot?@" · Hot":@""]:@"0 FPS";
         owner.fps.textColor=frames>=30&&longest<50&&!hot?UIColor.greenColor:UIColor.orangeColor;}];
 }
 -(void)tapKey:(SDL_Scancode)scancode {[self tapKey:scancode mod:SDL_KMOD_NONE];}
+-(void)toggleHeldKey:(SDL_Scancode)code {
+    if(!self.heldKeys)self.heldKeys=[NSMutableSet set];
+    BOOL down=![self.heldKeys containsObject:@(code)];
+    if(down)[self.heldKeys addObject:@(code)];else [self.heldKeys removeObject:@(code)];
+    [self releaseControls];[self pushKey:code down:down mod:SDL_KMOD_NONE];[self rebuildMenu];
+}
+-(void)releaseHeldKeys {
+    if(!self.heldKeys.count)return;
+    for(NSNumber *code in self.heldKeys)[self pushKey:(SDL_Scancode)code.intValue down:NO mod:SDL_KMOD_NONE];
+    [self.heldKeys removeAllObjects];[self rebuildMenu];
+}
+/* A key the game reads as a held button: long enough to be seen in a frame. */
+-(void)holdKeyBriefly:(SDL_Scancode)code {
+    [self releaseControls];[self pushKey:code down:YES mod:SDL_KMOD_NONE];__weak TBGameControls *weak=self;
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW,(int64_t)(.15*NSEC_PER_SEC)),dispatch_get_main_queue(),^{[weak pushKey:code down:NO mod:SDL_KMOD_NONE];});
+}
 -(void)tapKey:(SDL_Scancode)scancode mod:(SDL_Keymod)mod {
     SDL_Scancode modifier=mod&SDL_KMOD_CTRL?SDL_SCANCODE_LCTRL:SDL_SCANCODE_UNKNOWN;
     if(modifier)[self pushKey:modifier down:YES mod:mod];
@@ -1495,6 +1594,16 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
     alert.overrideUserInterfaceStyle=UIUserInterfaceStyleDark;[[self presenter] presentViewController:alert animated:YES completion:nil];
 }
 -(void)showTouchGuide {
+    if(tb_vengeance){
+        [self showMessage:@"Touch and Trackpad" text:@"Menus: tap them directly, or turn on the cursor button, then drag anywhere to move the cursor and tap to click. "
+            "Drag with two fingers to scroll.\n\n"
+            "Playing: the touch controls appear by themselves when play starts and step aside for menus.\n"
+            "Move: stick, bottom left\nAim: drag on the right side\n"
+            "Fire: hold; drag while firing to aim\nJet (orange): tap to jump, hold to fly. Ski: hold on downhill slopes to keep speed\n"
+            "Grenade and Weapon: beside Jet and above Fire\nPack and Use: above the stick\n\n"
+            "The game menu, quick save, quick load, objectives and the other keys are in the ··· menu."];
+        return;
+    }
     [self showMessage:@"Touch and Trackpad" text:@"Menus: with the cursor button on, drag anywhere to move the cursor and tap to click. "
         "Touch and hold, then drag, to move sliders. Drag with two fingers to scroll. Turn the cursor off to tap menus directly.\n\n"
         "Playing: the touch controls appear by themselves when play starts and step aside for menus.\n"
@@ -1506,6 +1615,15 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
 -(void)showControllerGuide {
     NSString *name=[self controllerName];
     NSString *status=name.length?@"Connected. Touch controls step aside once you use it.":@"Connect an Xbox, PlayStation or MFi controller in Settings > Bluetooth.";
+    if(tb_vengeance){
+        [self showMessage:name.length?name:@"Controller Guide" text:[NSString stringWithFormat:@"%@\n\n"
+            "PLAYING\nLeft stick: move · Right stick: aim\nRT: fire · LT: jet (tap to jump) · A or LB: ski\n"
+            "RB / D-pad left: next / previous weapon\nY: grenade · X: pack · B: use\n"
+            "D-pad: up zoom level · down objectives · right loadout (hold)\n"
+            "Click right stick: zoom on / off · click left stick: third person\nMenu: game menu (save and load) · View: scores\n\n"
+            "MENUS\nLeft stick or D-pad: move the cursor · A: click\nX: double-click · B: back · Right stick: scroll",status]];
+        return;
+    }
     if(tb_starsiege){
         [self showMessage:name.length?name:@"Controller Guide" text:[NSString stringWithFormat:@"%@\n\n"
             "PLAYING\nLeft stick: move · Right stick: aim\nRT: fire · LT: jet · A: jump / ski\n"
@@ -1538,10 +1656,10 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
     if(!pad)for(GCController *c in GCController.controllers)if(c.extendedGamepad){pad=c;break;}
     return pad.vendorName;
 }
-/* The original console toggles on the grave key; open the keyboard for typing. */
+/* The original console toggles on the grave key (Vengeance: Tab); open the keyboard for typing. */
 -(void)openConsole {
     if(self.expanded)[self toggleControls];else [self releaseControls];
-    [self tapKey:SDL_SCANCODE_GRAVE];
+    [self tapKey:tb_vengeance?SDL_SCANCODE_TAB:SDL_SCANCODE_GRAVE];
     SDL_Window *window=SDL_GetWindowFromID(self.controls->window);
     if(window&&!SDL_TextInputActive(window)){SDL_SetHint(SDL_HINT_RETURN_KEY_HIDES_IME,"0");tb_start_typing(window);}
 }
@@ -1551,8 +1669,11 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
     NSString *data=[NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,NSUserDomainMask,YES).firstObject stringByAppendingPathComponent:@"TribesPad/Game"];
     if(tb_starsiege)data=[NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,NSUserDomainMask,YES).firstObject
         stringByAppendingPathComponent:@"TribesPad/Starsiege/volume/TribesPad/Game"];
+    if(tb_vengeance)data=[NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,NSUserDomainMask,YES).firstObject
+        stringByAppendingPathComponent:@"TribesPad/Vengeance/volume/TribesPad/Game"];
     UIAlertController *alert=[UIAlertController alertControllerWithTitle:@"TribesPad"
-        message:[NSString stringWithFormat:@"%@\n\nVersion %@\nGame data: %@",tb_starsiege?
+        message:[NSString stringWithFormat:@"%@\n\nVersion %@\nGame data: %@",tb_vengeance?
+            @"Tribes: Vengeance, its single-player campaign, translated ahead of time to native ARM64, with its Direct3D 9 drawn through Metal.":tb_starsiege?
             @"Starsiege: Tribes 1.41, the version the community plays, translated ahead of time to native ARM64. Online through the community master servers (tribes1.co).":
             @"The original Tribes 2 with TribesNEXT/QoL, translated ahead of time to native ARM64.",version,data]
         preferredStyle:UIAlertControllerStyleAlert];
@@ -1626,7 +1747,7 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
     /* A connected mouse or trackpad points at the game itself (SDL), so the
        trackpad-cursor overlay must not take its clicks. */
     /* Starsiege moves the game's own cursor from the controller (starsiege_input.c). */
-    self.trackpad.frame=self.bounds;self.trackpad.hidden=self.expanded||self.inMatch||!(TB_TRACKPAD||(self.controllerUsed&&!tb_starsiege))||(self.mouseConnected&&!self.controllerUsed);
+    self.trackpad.frame=self.bounds;self.trackpad.hidden=self.expanded||self.inMatch||!(TB_TRACKPAD||(self.controllerUsed&&!tb_starsiege&&!tb_vengeance))||(self.mouseConnected&&!self.controllerUsed);
     // Movement stick bottom left; Pack and Inventory above it.
     CGFloat stick=170*k,small=58*k;
     CGRect stickFrame=CGRectMake(x+margin,y+h-margin-stick,stick,stick);
@@ -1663,6 +1784,14 @@ void tb_mobile_controls_install_starsiege(void) {
     static const SDL_Scancode keys[9]={SDL_SCANCODE_W,SDL_SCANCODE_S,SDL_SCANCODE_A,SDL_SCANCODE_D,SDL_SCANCODE_SPACE,
         SDL_SCANCODE_G,SDL_SCANCODE_Q,SDL_SCANCODE_P,SDL_SCANCODE_I};
     tb_starsiege=YES;tb_mobile_controls_keys(keys);tb_mobile_controls_install();
+}
+void tb_mobile_controls_install_vengeance(void) {
+    /* Vengeance's DefUser.ini: W S A D move, Space skis, E grenade, the mouse
+       wheel picks the next weapon, Q pack, F use; fire and jet (jump) are the
+       mouse buttons. */
+    static const SDL_Scancode keys[9]={SDL_SCANCODE_W,SDL_SCANCODE_S,SDL_SCANCODE_A,SDL_SCANCODE_D,SDL_SCANCODE_SPACE,
+        SDL_SCANCODE_E,TB_KEY_WHEEL_DOWN,SDL_SCANCODE_Q,SDL_SCANCODE_F};
+    tb_vengeance=YES;tb_mobile_controls_keys(keys);tb_mobile_controls_install();
 }
 void tb_mobile_controls_install(void) {
     static TBMobileControls controls;

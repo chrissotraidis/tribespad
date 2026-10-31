@@ -15,6 +15,8 @@ R=pathlib.Path(__file__).resolve().parents[1]
 ap=argparse.ArgumentParser(description=__doc__)
 ap.add_argument('--platform',choices=['simulator','device','macos'],default='simulator')
 ap.add_argument('--starsiege-object',type=pathlib.Path,help='Starsiege: Tribes for iOS (scripts/starsiege/build_engine.py --platform ...); adds its card and data')
+ap.add_argument('--vengeance-object',type=pathlib.Path,help='Tribes: Vengeance for iOS (scripts/vengeance/build_engine.py --target client --platform ...); adds its campaign and data')
+ap.add_argument('--vengeance-sideload',action='store_true',help='Development: leave the Vengeance game folder out of the bundle; the app uses one copied into Application Support/TribesPad/VengeanceGame')
 ap.add_argument('--simulator-device')
 ap.add_argument('--angle',action='store_true',help='Use the pinned ANGLE Metal renderer')
 ap.add_argument('--cpu-host-checks',action='store_true',help='Validate native CPU spans and prove bounded native-object accesses; keep guest accesses checked')
@@ -420,13 +422,32 @@ if bundled:
   from bundle_mac import add_game_data
   add_game_data(data);config+='#define TB_STARSIEGE 1\n'
  elif not mac and (data/'Starsiege').exists():shutil.rmtree(data/'Starsiege')
+ if a.vengeance_object and not mac:
+  # Tribes: Vengeance, one object exporting only vengeance_mobile_engine_main,
+  # with its module images and the game folder from the player's own download
+  # (scripts/vengeance/prepare.py). The campaign only: multiplayer maps stay out.
+  vengeance=data/'Vengeance';vengeance.mkdir(exist_ok=True)
+  subprocess.run(['rsync','-a','--delete',str(a.vengeance_object.resolve().parent/'images')+'/',str(vengeance/'images')+'/'],check=True)
+  game=R/'ref/vengeance/game';assert (game/'Program/Bin/TV_CD_DVD.exe').exists(),'Tribes: Vengeance is not prepared (scripts/vengeance/prepare.py)'
+  if a.vengeance_sideload:
+   if (vengeance/'Game').exists():shutil.rmtree(vengeance/'Game')
+   listed=game
+  else:
+   subprocess.run(['rsync','-a','--delete','--exclude','/Content/Maps/MP-*',str(game)+'/',str(vengeance/'Game')+'/'],check=True)
+   listed=vengeance/'Game'
+  # The app copies the game folder into its storage when this changes (port/apple/vengeance_paths.m).
+  listing=''.join('%s %d\n'%(f.relative_to(listed),f.stat().st_size) for f in sorted(listed.rglob('*')) if f.is_file() and not str(f.relative_to(listed)).startswith('Content/Maps/MP-'))
+  (vengeance/'stamp.txt').write_text(hashlib.sha256(listing.encode()).hexdigest()[:16]+'\n')
+  config+='#define TB_VENGEANCE 1\n'
+ elif not mac and (data/'Vengeance').exists():shutil.rmtree(data/'Vengeance')
 else:
  config='#define TB_BUNDLED_GAME_DATA 0\nstatic const char *launch_workdir='+json.dumps(str(R))+';\nstatic char *launch_arguments[]={'+','.join(json.dumps(p) for p in args)+',NULL};\n'
 (out/'mobile-engine-launch-config.h').write_text(config)
 host=[R/'port/apple/mobile_engine_main.m',R/'port/apple/mobile_game_paths.m',R/'port/apple/sdl_main.c',R/'port/apple/gl4es_context.c',R/'port/core/input.c']
-host+=[R/'port/apple/desktop_controls.c'] if mac else [R/'port/apple/mobile_controls.m',R/'port/apple/launcher.m',R/'port/apple/starsiege_paths.m',R/'port/apple/t1_live.c',R/'port/apple/mobile_controls.c',R/'port/apple/live_servers.m',R/'port/apple/content_area.m']
+host+=[R/'port/apple/desktop_controls.c'] if mac else [R/'port/apple/mobile_controls.m',R/'port/apple/launcher.m',R/'port/apple/starsiege_paths.m',R/'port/apple/vengeance_paths.m',R/'port/apple/t1_live.c',R/'port/apple/mobile_controls.c',R/'port/apple/live_servers.m',R/'port/apple/content_area.m']
 if a.angle:host.append(R/'port/apple/angle_sdl.c')
-command=['clang','-target',target,'-isysroot',sdk,'-O2','-I',str(out),*sdl_flags,*gl_flags,'-DNOX11','-DNOEGL','-DNO_LOADER','-DDEFAULT_ES=2','-isystem',str(R/'ref/gl4es/src'),*map(str,host),*objects,*([str(a.starsiege_object.resolve()),'-framework','ImageIO'] if a.starsiege_object and not mac else []),*gl_libraries,*libraries,*math['libraries'],*[str(R/n) for n in http['libraries']],str(R/al['library']),str(zbuild/'libz-ng.a'),'-lz','-lc++','-framework','Foundation','-framework','GameController','-framework','AVFoundation','-framework','CoreGraphics','-framework','CoreText','-framework','CoreFoundation','-framework','SystemConfiguration','-framework','AudioToolbox','-framework','CoreAudio',*(['-framework','AppKit','-framework','Metal','-framework','QuartzCore'] if mac else ['-framework','SafariServices']),'-o',str(exe)]
+vengeance_link=[str(a.vengeance_object.resolve()),'-framework','ImageIO','-framework','Metal','-framework','QuartzCore'] if a.vengeance_object and not mac else []
+command=['clang','-target',target,'-isysroot',sdk,'-O2','-I',str(out),*sdl_flags,*gl_flags,'-DNOX11','-DNOEGL','-DNO_LOADER','-DDEFAULT_ES=2','-isystem',str(R/'ref/gl4es/src'),*map(str,host),*objects,*([str(a.starsiege_object.resolve()),'-framework','ImageIO'] if a.starsiege_object and not mac else []),*vengeance_link,*gl_libraries,*libraries,*math['libraries'],*[str(R/n) for n in http['libraries']],str(R/al['library']),str(zbuild/'libz-ng.a'),'-lz','-lc++','-framework','Foundation','-framework','GameController','-framework','AVFoundation','-framework','CoreGraphics','-framework','CoreText','-framework','CoreFoundation','-framework','SystemConfiguration','-framework','AudioToolbox','-framework','CoreAudio',*(['-framework','AppKit','-framework','Metal','-framework','QuartzCore'] if mac else ['-framework','SafariServices']),'-o',str(exe)]
 command[1:1]=['-fobjc-arc']
 with (out/'link.log').open('w') as log:subprocess.run(command,stdout=log,stderr=log,check=True)
 identifier='com.tribespad.full-engine.ipad'

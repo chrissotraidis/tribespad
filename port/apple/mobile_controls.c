@@ -24,7 +24,12 @@ void tb_mobile_controls_emit(TBMobileControls *controls) {
     uint32_t changed=held^controls->held;
     for(unsigned i=0;i<11;i++) if(changed&(1u<<i)) {
         bool down=(held&(1u<<i))!=0; SDL_Event event={0};
-        if(i<9) {
+        if(i<9&&keys[i]==TB_KEY_WHEEL_DOWN) {
+            /* Vengeance picks the next weapon with the wheel: one step per press. */
+            if(!down) continue;
+            event.type=SDL_EVENT_MOUSE_WHEEL;event.wheel.windowID=controls->window;
+            event.wheel.y=-1;event.wheel.integer_y=-1;event.wheel.direction=SDL_MOUSEWHEEL_NORMAL;
+        } else if(i<9) {
             event.type=down?SDL_EVENT_KEY_DOWN:SDL_EVENT_KEY_UP;
             event.key.windowID=controls->window;event.key.scancode=keys[i];
             event.key.key=SDL_GetKeyFromScancode(keys[i],SDL_KMOD_NONE,false);

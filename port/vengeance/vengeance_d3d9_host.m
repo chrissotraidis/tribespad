@@ -10,6 +10,7 @@
  * (VENGEANCE_CAPTURE_FRAMES=first:every, default 1:60) for headless checks. */
 #import <QuartzCore/QuartzCore.h>
 #import <ImageIO/ImageIO.h>
+#include <TargetConditionals.h>
 #include <SDL3/SDL.h>
 #include <stdio.h>
 #include <time.h>
@@ -33,6 +34,10 @@ extern void *halopad_com_state(const char *iface, uint32_t g);
 extern void halopad_metal_read_image(void *target, uint32_t *out, uint32_t w, uint32_t h);
 extern void (*halopad_d3d9_present_hook)(uint32_t device);
 extern uint32_t halopad_d3d9_frame;
+#if TARGET_OS_IPHONE
+/* The app's game area (port/apple/content_area.m): a 4:3 layer centred on wider screens. */
+extern void *tb_content_layer(SDL_MetalView view);
+#endif
 
 _Thread_local _cpu *halopad_cpu;   /* set by each COM method's wrapper (scripts/vengeance/build_engine.py) */
 
@@ -100,7 +105,11 @@ void *halopad_window_host(uint32_t hwnd, uint32_t width, uint32_t height)
     SDL_MetalView view = native ? SDL_Metal_CreateView(native) : NULL;
     if (!view) hp_unsupported("Direct3D window", "a Metal view for window 0x%08x (%s)", hwnd, SDL_GetError());
     hp_window *w = calloc(1, sizeof *w);
+#if TARGET_OS_IPHONE
+    w->layer = (__bridge CAMetalLayer *)tb_content_layer(view);
+#else
     w->layer = (__bridge CAMetalLayer *)SDL_Metal_GetLayer(view);
+#endif
     w->layer.device = halopad_metal_gpu();
     w->layer.pixelFormat = MTLPixelFormatBGRA8Unorm;
     w->layer.framebufferOnly = YES;

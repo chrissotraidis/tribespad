@@ -2,9 +2,9 @@
    runs natively before either game starts (docs/LAUNCHER-PLAN.md) and waits
    on the main run loop until a game is chosen. Tribes 2 (TribesNEXT) starts;
    Starsiege: Tribes plays when the build included it; otherwise its card says
-   so and how to add it. Tribes: Vengeance is in development: its card opens
-   the plan (docs/VENGEANCE-IMPLEMENTATION-PLAN.md) until it plays. Each card
-   shows its game's own title
+   so and how to add it. Tribes: Vengeance's campaign plays when the build
+   included it; otherwise its card says it is in development and opens the
+   plan (docs/VENGEANCE-IMPLEMENTATION-PLAN.md). Each card shows its game's own title
    screen, taken at build time from the player's own downloads
    (scripts/launcher_art.py) into GameData/Launcher; nothing from the games
    is in the repository. */
@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "starsiege_paths.h"
+#include "vengeance_paths.h"
 #include "t1_live.h"
 
 static NSString * const TBLaunchStarsiegePlan=@"https://github.com/chrissotraidis/tribespad#get-tribespad";
@@ -22,6 +23,25 @@ static NSString * const TBLaunchRepository=@"https://github.com/chrissotraidis/t
 static BOOL tb_launch_chosen;
 static TBGame tb_launch_game=TBGameTribes2;
 static BOOL tb_starsiege_here(void){return tb_starsiege_bundled([NSBundle.mainBundle.resourcePath stringByAppendingPathComponent:@"GameData"].fileSystemRepresentation);}
+static BOOL tb_vengeance_here(void){
+    NSString *support=[NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,NSUserDomainMask,YES).firstObject stringByAppendingPathComponent:@"TribesPad"];
+    return tb_vengeance_bundled([NSBundle.mainBundle.resourcePath stringByAppendingPathComponent:@"GameData"].fileSystemRepresentation,support.fileSystemRepresentation);
+}
+static const char *tb_game_name(TBGame game){return game==TBGameStarsiege?"Starsiege: Tribes":game==TBGameVengeance?"Tribes: Vengeance":"Tribes 2";}
+/* A game by its stable name (TRIBESPAD_PICK, TribesPad.nextGame); Tribes 2 when absent from this build. */
+static TBGame tb_game_named(NSString *name){
+    if([name isEqualToString:@"starsiege"]&&tb_starsiege_here())return TBGameStarsiege;
+    if([name isEqualToString:@"vengeance"]&&tb_vengeance_here())return TBGameVengeance;
+    return TBGameTribes2;
+}
+/* The game played last (TribesPad.lastGame): the picker's first focus, and what
+   opens when the picker is off. Players who turned it off before were playing
+   Tribes 2, which is also what an unset value means. */
+static TBGame tb_last_game(void){return tb_game_named([NSUserDefaults.standardUserDefaults stringForKey:@"TribesPad.lastGame"]);}
+static TBGame tb_remember(TBGame game){
+    [NSUserDefaults.standardUserDefaults setObject:game==TBGameStarsiege?@"starsiege":game==TBGameVengeance?@"vengeance":@"tribes2" forKey:@"TribesPad.lastGame"];
+    return game;
+}
 
 static UIColor *tb_rgb(unsigned hex,CGFloat a){return [UIColor colorWithRed:((hex>>16)&255)/255.0 green:((hex>>8)&255)/255.0 blue:(hex&255)/255.0 alpha:a];}
 #define TB_CYAN 0x2EC4C9
@@ -176,14 +196,16 @@ static UIBezierPath *tb_chamfer(CGRect r,CGFloat c){
         label:@"Tribes 2, play"];
     tribes2.status.text=@"Checking who is playing\u2026";
     TBLauncherCard *vengeance=[[TBLauncherCard alloc] initWithKicker:@"Tribes: Vengeance  \u00B7  2004"
-        art:[UIImage imageWithContentsOfFile:[art stringByAppendingPathComponent:@"vengeance.png"]] fallback:emblem available:NO badge:@"IN DEVELOPMENT"
-        label:@"Tribes: Vengeance, in development"];
-    vengeance.status.text=@"The campaign first. Being translated to native code; it opens here once it plays.";
+        art:[UIImage imageWithContentsOfFile:[art stringByAppendingPathComponent:@"vengeance.png"]] fallback:emblem available:tb_vengeance_here()
+        badge:tb_vengeance_here()?@"PLAY  \u25B8":@"IN DEVELOPMENT"
+        label:tb_vengeance_here()?@"Tribes: Vengeance, play the campaign":@"Tribes: Vengeance, in development"];
+    vengeance.status.text=tb_vengeance_here()?@"The single-player campaign, translated to native code. Multiplayer comes later.":
+        @"The campaign first. Being translated to native code; it opens here once it plays.";
     [starsiege addTarget:self action:@selector(starsiegeTapped) forControlEvents:UIControlEventTouchUpInside];
     [tribes2 addTarget:self action:@selector(play) forControlEvents:UIControlEventTouchUpInside];
     [vengeance addTarget:self action:@selector(vengeanceTapped) forControlEvents:UIControlEventTouchUpInside];
     self.cards=@[starsiege,tribes2,vengeance];for(UIView *c in self.cards)[self.view addSubview:c];
-    self.focus=1;[self showFocus];
+    TBGame last=tb_last_game();self.focus=last==TBGameStarsiege?0:last==TBGameVengeance?2:1;[self showFocus];
     self.footer=[UILabel new];self.footer.numberOfLines=0;self.footer.textAlignment=NSTextAlignmentCenter;
     self.footer.font=[UIFont systemFontOfSize:11 weight:UIFontWeightMedium];self.footer.textColor=[UIColor colorWithWhite:1 alpha:.4];
     self.footer.text=@"Native ARM64 recompilations of the original games, built from your own copies. Starsiege: Tribes, Tribes 2 and Tribes: Vengeance belong to their owners; TribesPad is MIT licensed.";
@@ -208,10 +230,10 @@ static UIBezierPath *tb_chamfer(CGRect r,CGFloat c){
     __weak TBLauncherController *weak=self;
     id show=[NSUserDefaults.standardUserDefaults objectForKey:@"TribesPad.showLauncher"];
     BOOL direct_on=show&&![show boolValue];
-    UIAction *direct=[UIAction actionWithTitle:@"Open Tribes 2 Directly" image:[UIImage systemImageNamed:@"forward.end"] identifier:nil
+    UIAction *direct=[UIAction actionWithTitle:@"Open the Last Game Directly" image:[UIImage systemImageNamed:@"forward.end"] identifier:nil
         handler:^(__kindof UIAction *a){(void)a;
             [NSUserDefaults.standardUserDefaults setBool:direct_on forKey:@"TribesPad.showLauncher"];[weak rebuildSettingsMenu];}];
-    direct.subtitle=@"Skip this screen; Settings > Display brings it back";
+    direct.subtitle=@"Skip this screen and open the game you played last; Settings > Display brings it back";
     direct.state=direct_on?UIMenuElementStateOn:UIMenuElementStateOff;
     UIAction *about=[UIAction actionWithTitle:@"TribesPad on GitHub" image:[UIImage systemImageNamed:@"safari"] identifier:nil
         handler:^(__kindof UIAction *a){(void)a;[UIApplication.sharedApplication openURL:[NSURL URLWithString:TBLaunchRepository] options:@{} completionHandler:nil];}];
@@ -291,10 +313,11 @@ static UIBezierPath *tb_chamfer(CGRect r,CGFloat c){
         [UIApplication.sharedApplication openURL:[NSURL URLWithString:TBLaunchStarsiegePlan] options:@{} completionHandler:nil];}]];
     a.overrideUserInterfaceStyle=UIUserInterfaceStyleDark;[self presentViewController:a animated:YES completion:nil];
 }
-/* Tribes: Vengeance has no engine in TribesPad yet: say so and offer the plan. */
+/* Tribes: Vengeance starts when this build carries it; otherwise say so and offer the plan. */
 -(void)vengeanceTapped {
     if(self.presentedViewController)return;
     self.focus=2;[self showFocus];
+    if(tb_vengeance_here()){[self launch:TBGameVengeance];return;}
     UIAlertController *a=[UIAlertController alertControllerWithTitle:@"Tribes: Vengeance"
         message:@"Tribes: Vengeance is in development. Its engine is being translated to native code, campaign first, and it opens here once it plays."
         preferredStyle:UIAlertControllerStyleAlert];
@@ -308,7 +331,7 @@ static UIBezierPath *tb_chamfer(CGRect r,CGFloat c){
 }
 -(void)launch:(TBGame)game {
     if(tb_launch_chosen||self.presentedViewController)return;
-    TBLauncherCard *card=self.cards[game==TBGameStarsiege?0:1];
+    TBLauncherCard *card=self.cards[game==TBGameStarsiege?0:game==TBGameVengeance?2:1];
     [UIView animateWithDuration:.3 animations:^{self.view.alpha=0;card.transform=CGAffineTransformMakeScale(1.04,1.04);}
         completion:^(BOOL f){(void)f;tb_launch_game=game;tb_launch_chosen=YES;}];
 }
@@ -358,29 +381,29 @@ TBGame tb_launcher_run(void) {
     if(!scene)for(UIScene *s in UIApplication.sharedApplication.connectedScenes)if([s isKindOfClass:UIWindowScene.class])scene=(UIWindowScene *)s;
     /* TRIBESPAD_PICK (devicectl --environment-variables, tests) chooses without the picker. */
     const char *pick=getenv("TRIBESPAD_PICK");
-    if(pick)return !strcmp(pick,"starsiege")&&tb_starsiege_here()?TBGameStarsiege:TBGameTribes2;
+    if(pick)return tb_game_named(@(pick));
     /* Choose Game (mobile_controls.m) asks for the picker at this launch; an older
        build's Switch Game named a game, which starts once without it. */
     NSString *next=[NSUserDefaults.standardUserDefaults stringForKey:@"TribesPad.nextGame"];
     BOOL asked=[next isEqualToString:@"picker"];
     if(next)[NSUserDefaults.standardUserDefaults removeObjectForKey:@"TribesPad.nextGame"];
     if(next&&!asked){
-        TBGame chosen=[next isEqualToString:@"starsiege"]&&tb_starsiege_here()?TBGameStarsiege:TBGameTribes2;
-        fprintf(stderr,"TribesPad launcher: Switch Game chose %s\n",chosen==TBGameStarsiege?"Starsiege: Tribes":"Tribes 2");
-        return chosen;
+        TBGame chosen=tb_game_named(next);
+        fprintf(stderr,"TribesPad launcher: Switch Game chose %s\n",tb_game_name(chosen));
+        return tb_remember(chosen);
     }
     id show=[NSUserDefaults.standardUserDefaults objectForKey:@"TribesPad.showLauncher"];
-    if(!asked&&show&&![show boolValue])return TBGameTribes2;
-    if(!scene){fprintf(stderr,"TribesPad launcher: no window scene; starting Tribes 2\n");return TBGameTribes2;}
+    if(!asked&&show&&![show boolValue])return tb_last_game();
+    if(!scene){fprintf(stderr,"TribesPad launcher: no window scene; starting %s\n",tb_game_name(tb_last_game()));return tb_last_game();}
     UIWindow *window=[[UIWindow alloc] initWithWindowScene:scene];
     window.windowLevel=UIWindowLevelNormal+1;window.backgroundColor=UIColor.blackColor;
     window.overrideUserInterfaceStyle=UIUserInterfaceStyleDark;
     window.rootViewController=[TBLauncherController new];[window makeKeyAndVisible];
     fprintf(stderr,"TribesPad launcher shown\n");
     while(!tb_launch_chosen)@autoreleasepool{CFRunLoopRunInMode(kCFRunLoopDefaultMode,.05,true);}
-    fprintf(stderr,"TribesPad launcher: starting %s\n",tb_launch_game==TBGameStarsiege?"Starsiege: Tribes":"Tribes 2");
+    fprintf(stderr,"TribesPad launcher: starting %s\n",tb_game_name(tb_launch_game));
     [(TBLauncherController *)window.rootViewController stopWatching];
     window.hidden=YES;window.rootViewController=nil;
-    return tb_launch_game;
+    return tb_remember(tb_launch_game);
 }
 

@@ -46,6 +46,29 @@ static int enter_starsiege(void) {
     return starsiege_mobile_engine_main(5,arguments);
 }
 #endif
+#if TB_VENGEANCE
+#include "vengeance_paths.h"
+#include "content_area.h"
+/* Tribes: Vengeance, linked in as one object (scripts/vengeance/build_engine.py
+   --platform device|simulator), the same process model as the other two. */
+extern int vengeance_mobile_engine_main(int,char **);
+static int enter_vengeance(void) {
+    NSURL *support=[NSFileManager.defaultManager URLForDirectory:NSApplicationSupportDirectory inDomain:NSUserDomainMask appropriateForURL:nil create:YES error:nil];
+    if(!support){fprintf(stderr,"TribesPad: no app support directory\n");return 125;}
+    NSString *gamedata=[NSBundle.mainBundle.resourcePath stringByAppendingPathComponent:@"GameData"];
+    char *paths[6];
+    if(!tb_vengeance_prepare_paths(gamedata.fileSystemRepresentation,[support.path stringByAppendingPathComponent:@"TribesPad"].fileSystemRepresentation,paths))return 125;
+    if(chdir(paths[2])){perror("TribesPad Vengeance folder");return 125;}
+    setenv("VENGEANCE_CONTENT",paths[4],1);
+    char *arguments[]={"VengeanceEngine",paths[0],paths[1],paths[2],paths[3],NULL};
+    /* The game draws a 1024x768 frame; the screen scales it up (content_area.m). */
+    tb_content_fix_game_size(1024,768);
+    extern void tb_mobile_controls_install_vengeance(void);
+    tb_mobile_controls_install_vengeance();
+    fprintf(stderr,"TribesPad: entering Tribes: Vengeance\n");
+    return vengeance_mobile_engine_main(5,arguments);
+}
+#endif
 extern void tb_mobile_controls_install(void);
 static int enter_engine(int argc,char **argv) {
     (void)argc;(void)argv;
@@ -54,9 +77,11 @@ static int enter_engine(int argc,char **argv) {
     TBGame game=tb_launcher_run();
 #if TB_STARSIEGE
     if(game==TBGameStarsiege)return enter_starsiege();
-#else
-    (void)game;
 #endif
+#if TB_VENGEANCE
+    if(game==TBGameVengeance)return enter_vengeance();
+#endif
+    (void)game;
 #endif
 #if TB_BUNDLED_GAME_DATA
     char *launch_arguments[9];

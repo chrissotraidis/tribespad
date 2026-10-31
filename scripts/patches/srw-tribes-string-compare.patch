@@ -1,0 +1,15 @@
+--- a/SR_full_llasm_instr.c
++++ b/SR_full_llasm_instr.c
+@@ -3255,8 +3255,10 @@
+                 }
+                 if (flags_to_write)
+                 {
+-                    if (hp_w) SR_llasm_helper_add_16(UD_Icmp, LR_TMP3, LR_TMP1, LR_TMP2, 0);
+-                    else SR_llasm_helper_add_32(UD_Icmp, LR_TMP3, LR_TMP1, LR_TMP2, 0);
++                    /* Tribes: the difference goes to tmp2. The flag helpers use tmp3 as
++                       scratch, which would overwrite it before ZF, SF and PF are set. */
++                    if (hp_w) SR_llasm_helper_add_16(UD_Icmp, LR_TMP2, LR_TMP1, LR_TMP2, 0);
++                    else SR_llasm_helper_add_32(UD_Icmp, LR_TMP2, LR_TMP1, LR_TMP2, 0);
+                 }
+                 if (hp_rep)
+                 {
