@@ -511,6 +511,10 @@ What V1 found for V2:
 
 ## Next step: V2
 
+The working loop, milestone checks and stop points are in
+[VENGEANCE-GOAL-LOOP.md](VENGEANCE-GOAL-LOOP.md); results go in
+[the progress ledger](validation/vengeance-progress.md).
+
 1. Extend Starsiege's `build_engine.py` pattern into
    `scripts/vengeance/build_engine.py` for several modules: rebased copies,
    lift, shared dispatch, cross-module import slots, generated stops for the 87.
