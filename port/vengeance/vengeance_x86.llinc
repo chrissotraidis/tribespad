@@ -1,0 +1,8 @@
+; x86 forms SRW leaves untranslated in Tribes: Vengeance's modules, done by host
+; helpers (port/vengeance/vengeance_x86.c). Used through config/vengeance/lift-fixups.json.
+funcv vg_bt_esp_eax $
+funcv vg_bts_esp_eax $
+funcv vg_not_bh $
+funcv vg_xor_byte_eax1_bh $
+funcv vg_fnstenv_esp $
+funcv vg_fldenv_esp $

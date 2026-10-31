@@ -71,7 +71,10 @@ static uint32_t string_copy(_cpu *c,const char *s,size_t n){
  String *p=calloc(1,sizeof *p);if(!p)stop("string metadata allocation");p->host=malloc(n);if(!p->host)stop("string copy allocation");memcpy(p->host,s,n);memcpy(guest(c,a,n),s,n);p->guest=a;p->size=n;p->next=strings;strings=p;return a;
 }
 static size_t text_size(const char *s,int list){if(!s)return 0;size_t n=0;do {size_t k=strnlen(s+n,65536-n);if(k==65536-n)stop("native string too long");n+=k+1;if(!list||!s[n])break;}while(n<65535);return n+(list?1:0);}
-uint32_t tribes_oa_alcOpenDevice(_cpu *c,uint32_t a){BEGIN;char name[256];if(a)name_copy(c,a,name);ALCdevice *native=alcOpenDevice(a?name:NULL);if(!native)DONE(0);Device *d=calloc(1,sizeof *d);if(!d)stop("device metadata");d->native=native;d->token=token();d->next=devices;devices=d;fprintf(stderr,"TribesPad: native OpenAL device opened, token 0x%x\n",d->token);DONE(d->token);}
+/* The Windows OpenAL router's device names (Tribes: Vengeance asks for
+   "DirectSound3D") name its back ends; here they open the default device. */
+static int router_name(const char *s){return !strcmp(s,"DirectSound3D")||!strcmp(s,"DirectSound")||!strcmp(s,"MMSYSTEM")||!strcmp(s,"Generic Hardware")||!strcmp(s,"Generic Software");}
+uint32_t tribes_oa_alcOpenDevice(_cpu *c,uint32_t a){BEGIN;char name[256];if(a)name_copy(c,a,name);ALCdevice *native=alcOpenDevice(a&&!router_name(name)?name:NULL);if(!native)DONE(0);Device *d=calloc(1,sizeof *d);if(!d)stop("device metadata");d->native=native;d->token=token();d->next=devices;devices=d;fprintf(stderr,"TribesPad: native OpenAL device opened, token 0x%x\n",d->token);DONE(d->token);}
 uint32_t tribes_oa_alcCloseDevice(_cpu *c,uint32_t a){BEGIN;Device *d=device(a);ALCboolean r=alcCloseDevice(d?d->native:NULL);if(r&&d){Context **q=&contexts;while(*q){if((*q)->device==d){Context *old=*q;*q=old->next;free(old);}else q=&(*q)->next;}Device **p=&devices;while(*p!=d)p=&(*p)->next;*p=d->next;free(d);}DONE(r);}
 uint32_t tribes_oa_alcCreateContext(_cpu *c,uint32_t a,uint32_t b){BEGIN;ALCint attrs[129];unsigned n=0;
  /* ALC context attributes are integer key/value pairs, never pointers.
@@ -128,6 +131,16 @@ uint32_t tribes_oa_alGetSource3f(_cpu *c,uint32_t o,uint32_t p,uint32_t a,uint32
 IDS(alGenSources,1) IDS(alDeleteSources,0) IDS(alGenBuffers,1) IDS(alDeleteBuffers,0) IDS(alSourceStopv,0)
 #define QUEUE(name,output) uint32_t tribes_oa_##name(_cpu *c,uint32_t o,uint32_t n,uint32_t a){BEGIN;if(n>65536)stop("queue count");ALuint *v=n?malloc(n*4):NULL;if(n&&!v)stop("queue allocation");if(n)memcpy(v,guest(c,a,n*4),n*4);name(o,n,v);if((output)&&n)memcpy(guest(c,a,n*4),v,n*4);free(v);DONE(0);}
 QUEUE(alSourceQueueBuffers,0) QUEUE(alSourceUnqueueBuffers,1)
+/* Tribes: Vengeance's ALAudio requires these as well. */
+VOID1(alDopplerVelocity,ALfloat,f32(a))
+uint32_t tribes_oa_alcProcessContext(_cpu *c,uint32_t a){BEGIN;alcProcessContext(CN(a));DONE(0);}
+uint32_t tribes_oa_alcSuspendContext(_cpu *c,uint32_t a){BEGIN;alcSuspendContext(CN(a));DONE(0);}
+uint32_t tribes_oa_alListeneri(_cpu *c,uint32_t p,uint32_t v){BEGIN;alListeneri(p,(ALint)v);DONE(0);}
+uint32_t tribes_oa_alGetListenerf(_cpu *c,uint32_t p,uint32_t out){BEGIN;if(width(p)!=1)stop("listener scalar width");ALfloat v;memcpy(&v,guest(c,out,4),4);alGetListenerf(p,&v);memcpy(guest(c,out,4),&v,4);DONE(0);}
+uint32_t tribes_oa_alGetListeneri(_cpu *c,uint32_t p,uint32_t out){BEGIN;if(width(p)!=1)stop("listener scalar width");ALint v;memcpy(&v,guest(c,out,4),4);alGetListeneri(p,&v);memcpy(guest(c,out,4),&v,4);DONE(0);}
+uint32_t tribes_oa_alGetListener3f(_cpu *c,uint32_t p,uint32_t a,uint32_t b,uint32_t d){BEGIN;float x,y,z;memcpy(&x,guest(c,a,4),4);memcpy(&y,guest(c,b,4),4);memcpy(&z,guest(c,d,4),4);alGetListener3f(p,&x,&y,&z);memcpy(guest(c,a,4),&x,4);memcpy(guest(c,b,4),&y,4);memcpy(guest(c,d,4),&z,4);DONE(0);}
+OBJECT_VECTOR(alGetSourcef,ALfloat,1,1) OBJECT_VECTOR(alGetSourcei,ALint,1,1)
+IDS(alSourcePausev,0) IDS(alSourceRewindv,0)
 uint32_t tribes_oa_alSourcePlayv(_cpu *c,uint32_t n,uint32_t a){BEGIN;if(n>65536)stop("object count");ALuint *v=n?malloc(n*4):NULL;if(n&&!v)stop("object array allocation");if(n)memcpy(v,guest(c,a,n*4),n*4);alSourcePlayv(n,v);free(v);trace_plays+=n;trace_report();DONE(0);}
 uint32_t tribes_oa_alBufferData(_cpu *c,uint32_t o,uint32_t format,uint32_t a,uint32_t n,uint32_t hz){BEGIN;
  if(format!=AL_FORMAT_MONO8&&format!=AL_FORMAT_MONO16&&format!=AL_FORMAT_STEREO8&&format!=AL_FORMAT_STEREO16)stop("unbridged sample format");

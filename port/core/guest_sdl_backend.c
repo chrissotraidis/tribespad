@@ -988,6 +988,9 @@ static Window **window_slot(uint32_t token){Window **p=&windows;while(*p&&(*p)->
 static GLContext **context_slot(uint32_t token){GLContext **p=&contexts;while(*p&&(*p)->token!=token)p=&(*p)->next;if(!*p)stop();return p;}
 static SDL_Window *native_window(uint32_t token){return token?(*window_slot(token))->native:NULL;}
 static SDL_GLContext native_context(uint32_t token){return token?(*context_slot(token))->native:NULL;}
+/* The native window behind a token, for a host that draws into it itself
+   (Tribes: Vengeance's Direct3D on Metal). Same owner thread as the token's calls. */
+SDL_Window *tribes_sdl_native_window(uint32_t token){return native_window(token);}
 static GLContext *current_context(void){
     SDL_GLContext native=SDL_GL_GetCurrentContext();
     for(GLContext *c=contexts;c;c=c->next)if(c->native==native)return c;return NULL;

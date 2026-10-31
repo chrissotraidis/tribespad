@@ -1,0 +1,1027 @@
+{
+ "note": "Tribes: Vengeance additions to TribesPad native services (scripts/vengeance/build_engine.py). New services go in bindings; replacements of existing ones in overrides, each with a why.",
+ "bindings": {
+  "GetCurrentDirectoryW": {
+   "helper": "vg_get_current_directory_w",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "SetCurrentDirectoryW": {
+   "helper": "vg_set_current_directory_w",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "GetFullPathNameA": {
+   "helper": "vg_get_full_path_name_a",
+   "arguments": 4,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "GetFullPathNameW": {
+   "helper": "vg_get_full_path_name_w",
+   "arguments": 4,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "FindFirstFileW": {
+   "helper": "vg_find_first_w",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "FindNextFileW": {
+   "helper": "vg_find_next_w",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "GetFileAttributesExA": {
+   "helper": "vg_get_file_attributes_ex_a",
+   "arguments": 3,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "GetFileAttributesExW": {
+   "helper": "vg_get_file_attributes_ex_w",
+   "arguments": 3,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "DeleteFileA": {
+   "helper": "vg_delete_file_a",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true
+  },
+  "DeleteFileW": {
+   "helper": "vg_delete_file_w",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true
+  },
+  "RemoveDirectoryA": {
+   "helper": "vg_remove_directory_a",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true
+  },
+  "RemoveDirectoryW": {
+   "helper": "vg_remove_directory_w",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true
+  },
+  "MoveFileA": {
+   "helper": "vg_move_file_a",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "MoveFileW": {
+   "helper": "vg_move_file_w",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true
+  },
+  "SetFileAttributesA": {
+   "helper": "vg_set_file_attributes_a",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true
+  },
+  "SetFileAttributesW": {
+   "helper": "vg_set_file_attributes_w",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true
+  },
+  "GetDriveTypeW": {
+   "helper": "vg_get_drive_type_w",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "GetDiskFreeSpaceExA": {
+   "helper": "vg_get_disk_free_space_ex_a",
+   "arguments": 4,
+   "returns": true,
+   "guest_base": true
+  },
+  "FlushFileBuffers": {
+   "helper": "tribes_flush_file_buffers",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true
+  },
+  "SetEndOfFile": {
+   "helper": "tribes_set_end_of_file",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true
+  },
+  "GetFileInformationByHandle": {
+   "helper": "tribes_get_file_information_by_handle",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true
+  },
+  "RtlUnwind": {
+   "helper": "vg_rtl_unwind",
+   "arguments": 4,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "IsBadReadPtr": {
+   "helper": "vg_is_bad_read_ptr",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "IsBadWritePtr": {
+   "helper": "vg_is_bad_write_ptr",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "IsBadCodePtr": {
+   "helper": "vg_is_bad_code_ptr",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "LoadLibraryW": {
+   "helper": "vg_load_library_w",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "MessageBoxW": {
+   "helper": "vg_message_box_w",
+   "arguments": 4,
+   "returns": true,
+   "guest_base": true
+  },
+  "GetComputerNameA": {
+   "helper": "vg_get_computer_name_a",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true
+  },
+  "GetComputerNameW": {
+   "helper": "vg_get_computer_name_w",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true
+  },
+  "GetUserNameA": {
+   "helper": "vg_get_user_name_a",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true
+  },
+  "GetUserNameW": {
+   "helper": "vg_get_user_name_w",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true
+  },
+  "GetVersionExW": {
+   "helper": "vg_get_version_ex_w",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true
+  },
+  "GlobalMemoryStatus": {
+   "helper": "vg_global_memory_status",
+   "arguments": 1,
+   "returns": false,
+   "guest_base": true,
+   "helper_returns": "void"
+  },
+  "GetUserDefaultLCID": {
+   "helper": "vg_get_user_default_lcid",
+   "arguments": 0,
+   "returns": true,
+   "guest_base": false
+  },
+  "IsValidLocale": {
+   "helper": "vg_is_valid_locale",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": false
+  },
+  "CompareStringW": {
+   "helper": "vg_compare_string_w",
+   "arguments": 6,
+   "returns": true,
+   "guest_base": true
+  },
+  "GetLocaleInfoW": {
+   "helper": "vg_get_locale_info_w",
+   "arguments": 4,
+   "returns": true,
+   "guest_base": true
+  },
+  "GetTimeZoneInformation": {
+   "helper": "vg_get_time_zone_information",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true
+  },
+  "GetProcessWorkingSetSize": {
+   "helper": "vg_get_process_working_set_size",
+   "arguments": 3,
+   "returns": true,
+   "guest_base": true
+  },
+  "CreateWindowExW": {
+   "helper": "vg_create_window_ex_w",
+   "arguments": 12,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "RegisterClassExW": {
+   "helper": "vg_register_class_ex_w",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true
+  },
+  "RegisterClassW": {
+   "helper": "vg_register_class_w",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true
+  },
+  "UnregisterClassW": {
+   "helper": "vg_unregister_class_w",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true
+  },
+  "GetClassInfoExA": {
+   "helper": "vg_get_class_info_ex_a",
+   "arguments": 3,
+   "returns": true,
+   "guest_base": true
+  },
+  "GetClassInfoExW": {
+   "helper": "vg_get_class_info_ex_w",
+   "arguments": 3,
+   "returns": true,
+   "guest_base": true
+  },
+  "SetWindowTextW": {
+   "helper": "vg_set_window_text_w",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "LoadCursorW": {
+   "helper": "vg_load_cursor_w",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true
+  },
+  "LoadIconW": {
+   "helper": "vg_load_icon_w",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true
+  },
+  "FindWindowExA": {
+   "helper": "vg_find_window_ex_a",
+   "arguments": 4,
+   "returns": true,
+   "guest_base": true
+  },
+  "FindWindowExW": {
+   "helper": "vg_find_window_ex_w",
+   "arguments": 4,
+   "returns": true,
+   "guest_base": true
+  },
+  "SetPropA": {
+   "helper": "vg_set_prop_a",
+   "arguments": 3,
+   "returns": true,
+   "guest_base": true
+  },
+  "SetPropW": {
+   "helper": "vg_set_prop_w",
+   "arguments": 3,
+   "returns": true,
+   "guest_base": true
+  },
+  "GetPropA": {
+   "helper": "vg_get_prop_a",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true
+  },
+  "GetPropW": {
+   "helper": "vg_get_prop_w",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true
+  },
+  "RemovePropA": {
+   "helper": "vg_remove_prop_a",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true
+  },
+  "RemovePropW": {
+   "helper": "vg_remove_prop_w",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true
+  },
+  "RegisterWindowMessageA": {
+   "helper": "vg_register_window_message_a",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true
+  },
+  "RegisterWindowMessageW": {
+   "helper": "vg_register_window_message_w",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true
+  },
+  "GetAsyncKeyState": {
+   "helper": "vg_get_async_key_state",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true
+  },
+  "SetCursor": {
+   "helper": "vg_set_cursor",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false
+  },
+  "GetCapture": {
+   "helper": "vg_get_capture",
+   "arguments": 0,
+   "returns": true,
+   "guest_base": false
+  },
+  "DefWindowProcW": {
+   "helper": "vg_def_window_proc_w",
+   "arguments": 4,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "CallWindowProcW": {
+   "helper": "ss_call_window_proc_a",
+   "arguments": 5,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "SendMessageW": {
+   "helper": "ss_send_message_a",
+   "arguments": 4,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "DispatchMessageW": {
+   "helper": "ss_dispatch_message_a",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "PostMessageW": {
+   "helper": "tribes_post_message",
+   "arguments": 4,
+   "returns": true,
+   "guest_base": true
+  },
+  "PeekMessageW": {
+   "helper": "tribes_peek_message",
+   "arguments": 5,
+   "returns": true,
+   "guest_base": true
+  },
+  "GetMessageW": {
+   "helper": "tribes_get_message",
+   "arguments": 4,
+   "returns": true,
+   "guest_base": true
+  },
+  "SetWindowLongW": {
+   "helper": "ss_set_window_long_a",
+   "arguments": 3,
+   "returns": true,
+   "guest_base": true
+  },
+  "GetWindowLongW": {
+   "helper": "ss_get_window_long_a",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true
+  },
+  "MapVirtualKeyW": {
+   "helper": "tribes_map_virtual_key",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": false
+  },
+  "GetFileVersionInfoSizeA": {
+   "helper": "vg_get_file_version_info_size_a",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true
+  },
+  "GetFileVersionInfoSizeW": {
+   "helper": "vg_get_file_version_info_size_w",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true
+  },
+  "GetFileVersionInfoA": {
+   "helper": "vg_get_file_version_info_a",
+   "arguments": 4,
+   "returns": true,
+   "guest_base": true
+  },
+  "GetFileVersionInfoW": {
+   "helper": "vg_get_file_version_info_w",
+   "arguments": 4,
+   "returns": true,
+   "guest_base": true
+  },
+  "VerQueryValueA": {
+   "helper": "vg_ver_query_value_a",
+   "arguments": 4,
+   "returns": true,
+   "guest_base": true
+  },
+  "VerQueryValueW": {
+   "helper": "vg_ver_query_value_w",
+   "arguments": 4,
+   "returns": true,
+   "guest_base": true
+  },
+  "DirectDrawCreate": {
+   "helper": "vg_direct_draw_create",
+   "arguments": 3,
+   "returns": true,
+   "guest_base": true
+  },
+  "CoInitialize": {
+   "helper": "vg_co_initialize",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false
+  },
+  "CoInitializeEx": {
+   "helper": "vg_co_initialize_ex",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": false
+  },
+  "CoUninitialize": {
+   "helper": "vg_co_uninitialize",
+   "arguments": 0,
+   "returns": false,
+   "guest_base": false,
+   "helper_returns": "void"
+  },
+  "CoCreateInstance": {
+   "helper": "vg_co_create_instance",
+   "arguments": 5,
+   "returns": true,
+   "guest_base": true
+  },
+  "CoCreateGuid": {
+   "helper": "vg_co_create_guid",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true
+  },
+  "InitCommonControls": {
+   "helper": "vg_init_common_controls",
+   "arguments": 0,
+   "returns": false,
+   "guest_base": false,
+   "helper_returns": "void"
+  },
+  "ImmGetContext": {
+   "helper": "vg_imm_get_context",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false
+  },
+  "ImmReleaseContext": {
+   "helper": "vg_imm_release_context",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": false
+  },
+  "ImmAssociateContext": {
+   "helper": "vg_imm_associate_context",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": false
+  },
+  "ImmCreateContext": {
+   "helper": "vg_imm_create_context",
+   "arguments": 0,
+   "returns": true,
+   "guest_base": false
+  },
+  "ImmDestroyContext": {
+   "helper": "vg_imm_destroy_context",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false
+  },
+  "Direct3DCreate9": {
+   "helper": "Direct3DCreate9_c",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false
+  },
+  "CreateSolidBrush": {
+   "helper": "vg_create_solid_brush",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false
+  },
+  "CreatePen": {
+   "helper": "vg_create_pen",
+   "arguments": 3,
+   "returns": true,
+   "guest_base": false
+  },
+  "CreateFontW": {
+   "helper": "vg_create_font_w",
+   "arguments": 14,
+   "returns": true,
+   "guest_base": false
+  },
+  "SetBkMode": {
+   "helper": "vg_set_bk_mode",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": false
+  },
+  "SetROP2": {
+   "helper": "vg_set_rop2",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": false
+  },
+  "GetSysColor": {
+   "helper": "vg_get_sys_color",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false
+  },
+  "GetSysColorBrush": {
+   "helper": "vg_get_sys_color_brush",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false
+  },
+  "SystemParametersInfoA": {
+   "helper": "vg_system_parameters_info_a",
+   "arguments": 4,
+   "returns": true,
+   "guest_base": true
+  },
+  "SystemParametersInfoW": {
+   "helper": "vg_system_parameters_info_w",
+   "arguments": 4,
+   "returns": true,
+   "guest_base": true
+  },
+  "BeginPaint": {
+   "helper": "vg_begin_paint",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true
+  },
+  "EndPaint": {
+   "helper": "vg_end_paint",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true
+  },
+  "FillRect": {
+   "helper": "vg_fill_rect",
+   "arguments": 3,
+   "returns": true,
+   "guest_base": false
+  },
+  "GetUpdateRect": {
+   "helper": "vg_get_update_rect",
+   "arguments": 3,
+   "returns": true,
+   "guest_base": true
+  },
+  "IsZoomed": {
+   "helper": "vg_is_zoomed",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true
+  },
+  "IsWindowEnabled": {
+   "helper": "vg_is_window_enabled",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true
+  },
+  "SetActiveWindow": {
+   "helper": "vg_set_active_window",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "BringWindowToTop": {
+   "helper": "vg_bring_window_to_top",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false
+  },
+  "ClipCursor": {
+   "helper": "vg_clip_cursor",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false
+  },
+  "_TrackMouseEvent": {
+   "helper": "vg_track_mouse_event",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false
+  },
+  "MapWindowPoints": {
+   "helper": "vg_map_window_points",
+   "arguments": 4,
+   "returns": true,
+   "guest_base": true
+  },
+  "GetMessageTime": {
+   "helper": "vg_get_message_time",
+   "arguments": 0,
+   "returns": true,
+   "guest_base": false
+  },
+  "GetCursor": {
+   "helper": "vg_get_cursor",
+   "arguments": 0,
+   "returns": true,
+   "guest_base": false
+  },
+  "MulDiv": {
+   "helper": "vg_mul_div",
+   "arguments": 3,
+   "returns": true,
+   "guest_base": false
+  },
+  "lstrcmpiA": {
+   "helper": "vg_lstrcmpi_a",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true
+  },
+  "lstrcmpiW": {
+   "helper": "vg_lstrcmpi_w",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true
+  },
+  "GetSystemTime": {
+   "helper": "vg_get_system_time",
+   "arguments": 1,
+   "returns": false,
+   "guest_base": true,
+   "helper_returns": "void"
+  },
+  "GetSystemDefaultLangID": {
+   "helper": "vg_get_system_default_lang_id",
+   "arguments": 0,
+   "returns": true,
+   "guest_base": false
+  },
+  "InterlockedCompareExchange": {
+   "helper": "vg_interlocked_compare_exchange",
+   "arguments": 3,
+   "returns": true,
+   "guest_base": true
+  },
+  "OutputDebugStringA": {
+   "helper": "vg_output_debug_string_a",
+   "arguments": 1,
+   "returns": false,
+   "guest_base": true,
+   "helper_returns": "void"
+  },
+  "CreateDIBitmap": {
+   "helper": "vg_create_di_bitmap",
+   "arguments": 6,
+   "returns": true,
+   "guest_base": true
+  },
+  "GetObjectA": {
+   "helper": "vg_get_object_a",
+   "arguments": 3,
+   "returns": true,
+   "guest_base": true
+  },
+  "CreateDialogParamW": {
+   "helper": "vg_create_dialog_param_w",
+   "arguments": 5,
+   "returns": true,
+   "guest_base": false
+  },
+  "CreateDialogParamA": {
+   "helper": "vg_create_dialog_param_a",
+   "arguments": 5,
+   "returns": true,
+   "guest_base": false
+  },
+  "DirectInput8Create": {
+   "helper": "vg_direct_input8_create",
+   "arguments": 5,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "CreateMutexW": {
+   "helper": "vg_create_mutex_w",
+   "arguments": 3,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "CreateEventW": {
+   "helper": "vg_create_event_w",
+   "arguments": 4,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "GetSystemDirectoryW": {
+   "helper": "vg_get_system_directory_w",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "GetWindowsDirectoryW": {
+   "helper": "vg_get_windows_directory_w",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "GlobalLock": {
+   "helper": "vg_global_lock",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false
+  },
+  "GlobalUnlock": {
+   "helper": "vg_global_unlock",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false
+  },
+  "GlobalAddAtomW": {
+   "helper": "vg_global_add_atom_w",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "GlobalDeleteAtom": {
+   "helper": "vg_global_delete_atom",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false
+  },
+  "RegisterHotKey": {
+   "helper": "vg_register_hot_key",
+   "arguments": 4,
+   "returns": true,
+   "guest_base": false
+  },
+  "UnregisterHotKey": {
+   "helper": "vg_unregister_hot_key",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": false
+  },
+  "SetKeyboardState": {
+   "helper": "vg_set_keyboard_state",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false
+  },
+  "AttachThreadInput": {
+   "helper": "vg_attach_thread_input",
+   "arguments": 3,
+   "returns": true,
+   "guest_base": false
+  },
+  "GetKeyNameTextW": {
+   "helper": "vg_get_key_name_text_w",
+   "arguments": 3,
+   "returns": true,
+   "guest_base": true
+  },
+  "GetMenu": {
+   "helper": "vg_get_menu",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false
+  },
+  "SetMenu": {
+   "helper": "vg_set_menu",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": false
+  },
+  "DestroyMenu": {
+   "helper": "vg_destroy_menu",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false
+  },
+  "RegOpenKeyA": {
+   "helper": "vg_reg_open_key_a",
+   "arguments": 3,
+   "returns": true,
+   "guest_base": true
+  },
+  "SysAllocString": {
+   "helper": "vg_sys_alloc_string",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true
+  },
+  "SysFreeString": {
+   "helper": "vg_sys_free_string",
+   "arguments": 1,
+   "returns": false,
+   "guest_base": true,
+   "helper_returns": "void"
+  },
+  "VariantInit": {
+   "helper": "vg_variant_init",
+   "arguments": 1,
+   "returns": false,
+   "guest_base": true,
+   "helper_returns": "void"
+  },
+  "VariantClear": {
+   "helper": "vg_variant_clear",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true
+  }
+ },
+ "overrides": {
+  "RaiseException": {
+   "helper": "vg_raise_exception",
+   "arguments": 4,
+   "returns": false,
+   "guest_base": false,
+   "cpu_argument": true,
+   "helper_returns": "void",
+   "why": "Tribes 2's RaiseException admits only the thread-name notification; Vengeance throws C++ exceptions (0xE06D7363) and uses __try/__except, so it gets full SEH dispatch (port/vengeance/vengeance_seh.c)."
+  },
+  "CreateFileW": {
+   "helper": "vg_create_file_w",
+   "arguments": 7,
+   "returns": true,
+   "guest_base": true,
+   "why": "Unreal tests write permission by opening its own folder for GENERIC_WRITE with FILE_FLAG_BACKUP_SEMANTICS; TribesPad's CreateFileW opens directories read-only, so that case checks the host folder's write permission (port/vengeance/vengeance_win32.c). Every other call goes to TribesPad's service unchanged."
+  },
+  "GetProcAddress": {
+   "helper": "vg_get_proc_address",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true,
+   "why": "Vengeance's translated modules answer from their own PE export tables (Unreal looks up native functions by name); other modules go to TribesPad's loader (port/vengeance/vengeance_engine.c)."
+  },
+  "VirtualAlloc": {
+   "helper": "vg_virtual_alloc",
+   "arguments": 4,
+   "returns": true,
+   "guest_base": true,
+   "why": "MSVC's runtime commits 4-8 KiB pieces; TribesPad backs memory per 16 KiB host page, so commits are rounded out to whole host pages inside the same reservation (port/vengeance/vengeance_win32.c)."
+  },
+  "FreeLibrary": {
+   "helper": "vg_free_library",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true,
+   "why": "The game frees some of its own DLLs after probing them (RTCShader at start-up); TribesPad cannot unmap a translated image, so the last FreeLibrary of one pins it instead of stopping (port/vengeance/vengeance_win32.c). Other modules go to TribesPad's service unchanged."
+  },
+  "DeleteObject": {
+   "helper": "vg_delete_object",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true,
+   "why": "Brushes, pens and fonts Vengeance's windowing creates live in port/vengeance/vengeance_gdi.c; other handles go to TribesPad's GDI unchanged."
+  },
+  "SelectObject": {
+   "helper": "vg_select_object",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true,
+   "why": "Selecting a brush, pen or font from port/vengeance/vengeance_gdi.c is tracked there; other objects go to TribesPad's GDI unchanged."
+  },
+  "GetDeviceCaps": {
+   "helper": "vg_get_device_caps",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true,
+   "why": "Window.dll asks for the screen's DPI (LOGPIXELSY), refresh and palette; port/vengeance/vengeance_gdi.c answers those for a 96 DPI, 60 Hz, 32-bit display and passes sizes and depth to TribesPad's service."
+  },
+  "GetStockObject": {
+   "helper": "vg_get_stock_object",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true,
+   "why": "Window.dll selects stock pens and fonts; port/vengeance/vengeance_gdi.c gives them permanent handles and passes the stock brushes to TribesPad's service."
+  },
+  "LoadCursorA": {
+   "helper": "vg_load_cursor_a",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true,
+   "why": "WinDrv loads system cursor shapes besides the arrow; they are the arrow here (port/vengeance/vengeance_windows.c), since the game draws its own cursor. An ordinal name is the same in both forms; named cursors stay TribesPad's."
+  },
+  "RegOpenKeyExA": {
+   "helper": "vg_reg_open_key_ex_a",
+   "arguments": 5,
+   "returns": true,
+   "guest_base": true,
+   "why": "Vengeance looks for keys under Software (Direct3D switches, installer records) that TribesPad's registry does not model; they are reported absent (port/vengeance/vengeance_win32.c). Other keys go to TribesPad's registry unchanged."
+  },
+  "IsProcessorFeaturePresent": {
+   "helper": "vg_processor_feature_present",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false,
+   "why": "D3DDrv also asks for 3DNow! (7); port/vengeance/vengeance_win32.c answers it and the FPU errata/emulation features as absent and passes the rest to TribesPad's CPUID-based service."
+  },
+  "TranslateMessage": {
+   "helper": "vg_translate_message",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true,
+   "why": "WinDrv reads typed characters as WM_CHAR from TranslateMessage; port/vengeance/vengeance_input.c posts them for key-down messages (US layout). TribesPad's service stops on keyboard messages."
+  },
+  "GetDC": {
+   "helper": "vg_get_dc",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true,
+   "why": "Only Window.dll's hidden log window and controls paint through GDI; their DCs are screen DCs (port/vengeance/vengeance_gdi.c), so Starsiege's GetDC does not make a native drawable for them. The Direct3D window gets its drawable from the device."
+  },
+  "ReleaseDC": {
+   "helper": "vg_release_dc",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true,
+   "why": "Releases the screen DCs GetDC hands out (port/vengeance/vengeance_gdi.c)."
+  },
+  "GetKeyState": {
+   "helper": "vg_get_key_state",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true,
+   "why": "TribesPad's GetKeyState, with VENGEANCE_TRACE_KEYS diagnostics (port/vengeance/vengeance_windows.c)."
+  }
+ }
+}

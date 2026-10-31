@@ -1,0 +1,244 @@
+{
+ "version": 1,
+ "note": "Frozen guest layout for Tribes: Vengeance (scripts/vengeance/layout.py). Append new modules after the last one; never move an existing entry.",
+ "reserved": [
+  [
+   "0x0",
+   "0x10000",
+   "null page"
+  ],
+  [
+   "0x100000",
+   "0x300000",
+   "main thread stack"
+  ],
+  [
+   "0x3a0000",
+   "0x3f0000",
+   "process parameters, PEB, TEB"
+  ],
+  [
+   "0x2f000000",
+   "0x30000000",
+   "patch capture window"
+  ]
+ ],
+ "modules": {
+  "aicommon.dll": {
+   "file": "Program/Bin/AICommon.dll",
+   "sha256": "9be6ec2b49a0c9dc9026dde00a3c30e097faa4d924177db71549dc0aa1379b57",
+   "base": 285212672,
+   "image_size": 53248
+  },
+  "alaudio.dll": {
+   "file": "Program/Bin/ALAudio.dll",
+   "sha256": "409a8fc42558922d8ba9f44104bb8ed80f44bf969890c78afe1379a540d9f698",
+   "base": 285278208,
+   "image_size": 81920
+  },
+  "core.dll": {
+   "file": "Program/Bin/Core.dll",
+   "sha256": "dad4691fb0b724ffdcd66f4553e4bbb7076bb331718f9cdd43aba8ed8286f934",
+   "base": 285409280,
+   "image_size": 3301376
+  },
+  "d3ddrv.dll": {
+   "file": "Program/Bin/D3DDrv.dll",
+   "sha256": "b042c78b130bd7e164a07d1ad453dc8407af75911acce245caf5e38d5fafe26f",
+   "base": 288751616,
+   "image_size": 552960
+  },
+  "editor.dll": {
+   "file": "Program/Bin/Editor.dll",
+   "sha256": "a98099221c67e36a01c5441d55645a8fd6e15b7796ce10f8adf26845d3b53f9a",
+   "base": 305201152,
+   "image_size": 950272
+  },
+  "engine.dll": {
+   "file": "Program/Bin/Engine.dll",
+   "sha256": "e85ca1a1f5795caf3506b150e00d7969deaa894fdab54cd4221f9e9762267590",
+   "base": 289341440,
+   "image_size": 9576448
+  },
+  "gameaisupport.dll": {
+   "file": "Program/Bin/GameAISupport.dll",
+   "sha256": "cd095294ef5e33939e3a401c0ed30db5d861cfcfd95517cc7f7e9b21727a0507",
+   "base": 298975232,
+   "image_size": 86016
+  },
+  "gameplay.dll": {
+   "file": "Program/Bin/Gameplay.dll",
+   "sha256": "91f25522a6fd554e5dd37827d420c9c3757eb6a0b5ade1e87df9fcce6b2916cb",
+   "base": 299106304,
+   "image_size": 966656
+  },
+  "gui.dll": {
+   "file": "Program/Bin/GUI.dll",
+   "sha256": "5e8813b9405e8fc046d2b1dea014cd2d57f50e5e847a66bb47ab94b675fc5d42",
+   "base": 300089344,
+   "image_size": 376832
+  },
+  "ifc23.dll": {
+   "file": "Program/Bin/IFC23.dll",
+   "sha256": "25927b0415e856237859c9cb54bc3ac6c19637382741f2234d3cbeae1a06ac70",
+   "base": 300482560,
+   "image_size": 245760
+  },
+  "igeffectssystem.dll": {
+   "file": "Program/Bin/IGEffectsSystem.dll",
+   "sha256": "ffd80582698c380db836e8f10692a4ff0f09c8e77f0c251bee8239387425e15e",
+   "base": 304480256,
+   "image_size": 61440
+  },
+  "igsoundeffectssubsystem.dll": {
+   "file": "Program/Bin/IGSoundEffectsSubsystem.dll",
+   "sha256": "a76430b609a3352eeabe073ded6df001180f5da9c103213de13d8a79458225cf",
+   "base": 304545792,
+   "image_size": 118784
+  },
+  "igvisualeffectssubsystem.dll": {
+   "file": "Program/Bin/IGVisualEffectsSubsystem.dll",
+   "sha256": "2264af0d20b5a126b5c6f48c28b05bc4b474624f0ff11a6332dde09f703bf5e0",
+   "base": 304676864,
+   "image_size": 28672
+  },
+  "ipdrv.dll": {
+   "file": "Program/Bin/IpDrv.dll",
+   "sha256": "ed48f8b357c57e7306a47392649dc5c2affd77b1fde3b4384fd8bc7684e0ddde",
+   "base": 300744704,
+   "image_size": 217088
+  },
+  "mojoactions.dll": {
+   "file": "Program/Bin/MojoActions.dll",
+   "sha256": "b87a48b4dfcd733600be5e941d308ed9ed5f0cd46afe1c54c2057ddcb168bc76",
+   "base": 301006848,
+   "image_size": 61440
+  },
+  "mojocore.dll": {
+   "file": "Program/Bin/MojoCore.dll",
+   "sha256": "e0176e74c07b24ec5ad9e9539d9560f57b71c723a9ebfc52d78a1d4021d943ea",
+   "base": 301072384,
+   "image_size": 94208
+  },
+  "movement.dll": {
+   "file": "Program/Bin/Movement.dll",
+   "sha256": "480abe571da62152c47564f48af4c02a042fac12eb96af4cabcc7a9b7819e762",
+   "base": 301203456,
+   "image_size": 299008
+  },
+  "msvcp71.dll": {
+   "file": "Program/Bin/msvcp71.dll",
+   "sha256": "df96156f6a548fd6fe5672918de5ae4509d3c810a57bffd2a91de45a3ed5b23b",
+   "base": 301531136,
+   "image_size": 503808
+  },
+  "msvcr71.dll": {
+   "file": "Program/Bin/msvcr71.dll",
+   "sha256": "8094af5ee310714caebccaeee7769ffb08048503ba478b879edfef5f1a24fefe",
+   "base": 302055424,
+   "image_size": 352256
+  },
+  "ogg.dll": {
+   "file": "Program/Bin/ogg.dll",
+   "sha256": "82a4dde1eebdda18be8ef99538193d73b097f16ce30a20b08f667a94854c0c83",
+   "base": 302448640,
+   "image_size": 24576
+  },
+  "pathfinding.dll": {
+   "file": "Program/Bin/Pathfinding.dll",
+   "sha256": "6a457418f53c28147fb93c5e7522e9fb40a12bb85b490b71f5f67bb6a48f6b93",
+   "base": 302514176,
+   "image_size": 204800
+  },
+  "perforcewrapper.dll": {
+   "file": "Program/Bin/PerforceWrapper.dll",
+   "sha256": "e43165dd32df27935c183e5e6c60ac3d3a741e8b606d8e60da733b09da8d9abd",
+   "base": 306184192,
+   "image_size": 401408
+  },
+  "renderutilities.dll": {
+   "file": "Program/Bin/RenderUtilities.dll",
+   "sha256": "d88fbb854066cb6875e373f0828fcd2a5fdd626b080eada92b103e21b5e5ef9d",
+   "base": 302776320,
+   "image_size": 114688
+  },
+  "rtcshader.dll": {
+   "file": "Program/Bin/RTCShader.dll",
+   "sha256": "a2a35987fb0be96ec918fb731a8102c776f85f9895390b689e9b104b3402f9fb",
+   "base": 302907392,
+   "image_size": 274432
+  },
+  "scriptcompiler.dll": {
+   "file": "Program/Bin/ScriptCompiler.dll",
+   "sha256": "90ac2697fdff8979750b82e67eccea4c2c74055c6c3411d99d9aea293f6a7565",
+   "base": 306642944,
+   "image_size": 253952
+  },
+  "scripting.dll": {
+   "file": "Program/Bin/Scripting.dll",
+   "sha256": "d6fdd9b9ac5a92098a332a31e0545efb522f10eca5dd941da6d74157e1ab61f7",
+   "base": 303235072,
+   "image_size": 81920
+  },
+  "tribesgui.dll": {
+   "file": "Program/Bin/TribesGui.dll",
+   "sha256": "d0c1d872b73eb8b20340c20d22d8c51a9e3ad7ffb415710ce0bc4cf2bcc3a700",
+   "base": 303366144,
+   "image_size": 159744
+  },
+  "tribestv.dll": {
+   "file": "Program/Bin/TribesTV.dll",
+   "sha256": "8c5491d66e1d55b94ee3c8f05c9467e8ae02837006c96569ca02bd66ba0e885f",
+   "base": 304742400,
+   "image_size": 188416
+  },
+  "tv_cd_dvd.exe": {
+   "file": "Program/Bin/TV_CD_DVD.exe",
+   "sha256": "fe398d0e7f0427d3ed765bb6b220e46502ff53d17b8239ee4b02b19754a983c2",
+   "base": 277872640,
+   "image_size": 2289664
+  },
+  "tyrion.dll": {
+   "file": "Program/Bin/Tyrion.dll",
+   "sha256": "9892d852be00203a1c6eb194dce2886d2c0d272277f1857700601b2a19f60e4e",
+   "base": 304939008,
+   "image_size": 192512
+  },
+  "ucc.exe": {
+   "file": "Program/Bin/UCC.exe",
+   "sha256": "4bfa0e2c872fc86e70027a237feed443671951a9136e968875db68ca1f7ee341",
+   "base": 4194304,
+   "image_size": 102400
+  },
+  "uweb.dll": {
+   "file": "Program/Bin/UWeb.dll",
+   "sha256": "c37ca4fb2d4ff4278f3c3be217390219fdc31587039c0dea81218a22b71423b1",
+   "base": 305135616,
+   "image_size": 45056
+  },
+  "vorbis.dll": {
+   "file": "Program/Bin/vorbis.dll",
+   "sha256": "b199c31559b233dbe62a864a1eed3812fd83f076eee09e15fc04a820ab706724",
+   "base": 303562752,
+   "image_size": 126976
+  },
+  "vorbisfile.dll": {
+   "file": "Program/Bin/vorbisfile.dll",
+   "sha256": "8295974654db11f3143e801f377854ffa5f01b09e9645ab03f75bfa7c603a61f",
+   "base": 303693824,
+   "image_size": 32768
+  },
+  "window.dll": {
+   "file": "Program/Bin/Window.dll",
+   "sha256": "374750cc233e7cb2558066c8c5a1475050c9845946b580ab547a50a1adb68809",
+   "base": 303759360,
+   "image_size": 503808
+  },
+  "windrv.dll": {
+   "file": "Program/Bin/WinDrv.dll",
+   "sha256": "a3f16fc7c181ad419944eef4a43518afec681ac6bbb09f28f44f2da326154c36",
+   "base": 304283648,
+   "image_size": 159744
+  }
+ }
+}

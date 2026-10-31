@@ -6,13 +6,15 @@
 #include "guest_virtual_memory.h"
 #include "guest_system.h"
 #include "guest_heap.h"
+#include "guest_memory_layout.h"
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/mman.h>
 #include <unistd.h>
-#define LOW UINT32_C(0x60030000)
+uint32_t tribes_virtual_memory_low=0x60030000;
+#define LOW tribes_virtual_memory_low
 #define END UINT32_C(0x7fff0000)
 typedef struct Region { uint64_t base;uint32_t address,size,backing,page,allocation_protect;unsigned char *state;struct Region *next; } Region;
 static Region *regions;
