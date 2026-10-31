@@ -163,6 +163,10 @@ int main(int argc,char **argv){
     VirtualAlloc from 0x44030000 to 0x7fff0000 (about 950 MiB). */
  tribes_global_heap_span=0x04000000u;tribes_process_heap_low=0x34000000u;tribes_virtual_memory_low=0x44030000u;
  tribes_virtual_memory_next_fit=1;
+ /* Also the free space between the last module (scriptcompiler.dll ends at
+    0x124ae000) and TribesPad's runtime storage at 0x2f000000: about 460 MiB more,
+    which the largest campaign maps need (SP-Rescue-Exterior, SP-Mercy-Escape). */
+ tribes_virtual_memory_extra_low=0x12500000u;tribes_virtual_memory_extra_high=0x2f000000u;
  /* Desktop SDL runs on process main; the backend checks this before video. */
  extern void tribes_sdl_host_application_ready(void);
  tribes_sdl_host_application_ready();

@@ -56,3 +56,26 @@ connect a controller and read the hint and guide.
 - Game-specific menu sections branch on one `BOOL`. A third game should first
   move them into a per-game table (the profile in
   [LAUNCHER-PLAN.md](../LAUNCHER-PLAN.md#3-shared-controls-per-game-profile)).
+
+## Tribes: Vengeance (1 November)
+
+Vengeance's menu follows the same order and handlers (This Match, Play Online,
+Options, Help, Choose Game), built from its own keys in `DefUser.ini`
+([mobile_controls.m](../../port/apple/mobile_controls.m), `tb_vengeance`).
+
+| Section | Vengeance | Same as T1/T2? |
+| --- | --- | --- |
+| This Match: game menu | Game Menu in play, Back to Game in menus (Escape) | Same item and handler |
+| Scores | F2 | Each game's own key |
+| Chat | T all, Y team, V quick chat; keyboard opens | Same handler (`openChat`) |
+| Actions | Objectives (C) and Loadout (Shift) stay held until chosen again; Use F, third person Z, zoom level R; Drop Weapon (Alt held briefly), Respawn B | Held items are new: the game reads C and Shift as held buttons |
+| Campaign | Quick Save F5, Quick Load F8 | Vengeance only (single player) |
+| Play Online | Multiplayer (not ready in TribesPad yet, says so), Community (tribesrevengeance.net, TribesPad Discord) | Same section; no server list or live count until multiplayer works |
+| Options | Touch controls, trackpad, FPS (frames counted at the Metal present), Settings | Same as Starsiege (no Graphics Quality) |
+| Help | Touch Guide, Controller Guide (Vengeance layout), Console (Tab), GitHub, About | Same items; console key differs |
+| Choose Game | Subtitle names the games in this build | Same handler; three-game wording |
+
+Settings hides Keep Clear of the Notch, Render Scale, WASD Movement and Online
+Play for Vengeance, as for Starsiege; the Display footer describes its 1024x768
+frame. Play state comes from the game's GUI controller (menu up or not) rather
+than a script export.

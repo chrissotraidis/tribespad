@@ -124,7 +124,7 @@ static int heap_run(uint32_t address,uint32_t size,void *context){
 /* Ownership domains are disjoint and permanently reserved for heap providers.
    Query a dynamic domain under its provider lock; no torn cross-provider state. */
 static int query(Space *s,uint32_t address,uint32_t out[7]){
-    if(address>=VM_BEGIN)return tribes_virtual_memory_query(s->base,address,out);
+    if(address>=VM_BEGIN||(tribes_virtual_memory_extra_high&&address>=tribes_virtual_memory_extra_low&&address<tribes_virtual_memory_extra_high))return tribes_virtual_memory_query(s->base,address,out);
     if(address>=tribes_process_heap_low+0x10000000u){uint32_t allocation=address&~65535u;uint32_t fields[]={address,allocation,1,allocation+65536-address,0x2000,0,0x20000};memcpy(out,fields,28);return 1;}
     if(address>=tribes_process_heap_low)return tribes_process_heap_memory_query(s->base,address,out);
     if(address>=STATIC_END){HeapQuery q={address,tribes_process_heap_low,0};if(!tribes_heap_visit(s->base,heap_run,&q))return 0;uint32_t fields[]={address,STATIC_END,4,q.end-address,q.committed?0x1000u:0x2000u,q.committed?4u:0u,0x20000};memcpy(out,fields,28);return 1;}
@@ -141,7 +141,7 @@ uint32_t tribes_virtual_protect(uint64_t base,uint32_t address,uint32_t size,uin
     uint32_t start=address&~4095u;
     if(!size||end>USER_END)return fail(87);
     if(protection!=1&&protection!=2&&protection!=4&&protection!=0x20&&protection!=0x40)return fail(50);
-    if(end>STATIC_END)return fail(50);
+    if(end>STATIC_END||(tribes_virtual_memory_extra_high&&end>tribes_virtual_memory_extra_low&&start<tribes_virtual_memory_extra_high))return fail(50);
     long host_page=sysconf(_SC_PAGESIZE);
     if(host_page<4096||host_page>65536||(host_page&(host_page-1))||base%(uint64_t)host_page)return fail(50);
     uint32_t lo=start&~((uint32_t)host_page-1),hi=(uint32_t)((end+host_page-1)&~((uint64_t)host_page-1));
