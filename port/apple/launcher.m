@@ -2,7 +2,9 @@
    runs natively before either game starts (docs/LAUNCHER-PLAN.md) and waits
    on the main run loop until a game is chosen. Tribes 2 (TribesNEXT) starts;
    Starsiege: Tribes plays when the build included it; otherwise its card says
-   so and how to add it. Each card shows its game's own title
+   so and how to add it. Tribes: Vengeance is in development: its card opens
+   the plan (docs/VENGEANCE-IMPLEMENTATION-PLAN.md) until it plays. Each card
+   shows its game's own title
    screen, taken at build time from the player's own downloads
    (scripts/launcher_art.py) into GameData/Launcher; nothing from the games
    is in the repository. */
@@ -15,6 +17,7 @@
 #include "t1_live.h"
 
 static NSString * const TBLaunchStarsiegePlan=@"https://github.com/chrissotraidis/tribespad#get-tribespad";
+static NSString * const TBLaunchVengeancePlan=@"https://github.com/chrissotraidis/tribespad/blob/main/docs/VENGEANCE-IMPLEMENTATION-PLAN.md";
 static NSString * const TBLaunchRepository=@"https://github.com/chrissotraidis/tribespad";
 static BOOL tb_launch_chosen;
 static TBGame tb_launch_game=TBGameTribes2;
@@ -39,14 +42,19 @@ static UIBezierPath *tb_chamfer(CGRect r,CGFloat c){
 @property(nonatomic,strong) CAGradientLayer *shade;
 @property(nonatomic,strong) CAShapeLayer *mask,*frameLine;
 @property(nonatomic) BOOL available,selectedCard;
+@property(nonatomic) BOOL titleArt,banner;
+@property(nonatomic,copy) NSString *badgeTitle;
 @end
 @implementation TBLauncherCard
--(instancetype)initWithKicker:(NSString *)kicker art:(UIImage *)art fallback:(UIImage *)fallback available:(BOOL)available label:(NSString *)label {
+-(instancetype)initWithKicker:(NSString *)kicker art:(UIImage *)art fallback:(UIImage *)fallback available:(BOOL)available badge:(NSString *)badge label:(NSString *)label {
     if(!(self=[super initWithFrame:CGRectZero]))return nil;
     self.available=available;self.backgroundColor=tb_rgb(0x050B14,1);
+    /* A wide banner (Vengeance's splash top) sits near the top, without the
+       enlarged backdrop, which would only magnify its pixels. */
+    self.titleArt=art!=nil;self.banner=art&&art.size.width>art.size.height*2;
     /* The title screen shows whole across the card; a dimmed, enlarged copy
        fills the rest, so the 4:3 art suits a tall card without cropping. */
-    self.backdrop=[[UIImageView alloc] initWithImage:art];self.backdrop.contentMode=UIViewContentModeScaleAspectFill;
+    self.backdrop=[[UIImageView alloc] initWithImage:self.banner?nil:art];self.backdrop.contentMode=UIViewContentModeScaleAspectFill;
     self.backdrop.alpha=.32;self.backdrop.userInteractionEnabled=NO;[self addSubview:self.backdrop];
     // Only the lower part of the title screen, so its logo doesn't repeat.
     self.backdrop.layer.contentsRect=CGRectMake(.1,.45,.8,.55);
@@ -55,7 +63,7 @@ static UIBezierPath *tb_chamfer(CGRect r,CGFloat c){
     self.art.alpha=art?1:.25;[self addSubview:self.art];
     if(art){CAGradientLayer *fade=[CAGradientLayer layer];
         fade.colors=@[(id)UIColor.clearColor.CGColor,(id)UIColor.blackColor.CGColor,(id)UIColor.blackColor.CGColor,(id)UIColor.clearColor.CGColor];
-        fade.locations=@[@0,@.12,@.72,@1];self.art.layer.mask=fade;}
+        fade.locations=self.banner?@[@0,@.18,@.8,@1]:@[@0,@.12,@.72,@1];self.art.layer.mask=fade;}
     self.shade=[CAGradientLayer layer];
     self.shade.colors=@[(id)[UIColor colorWithWhite:0 alpha:0].CGColor,(id)[UIColor colorWithWhite:0 alpha:0].CGColor,(id)tb_rgb(0x02060C,.94).CGColor];
     self.shade.locations=@[@0,@.55,@1];[self.layer addSublayer:self.shade];
@@ -66,7 +74,7 @@ static UIBezierPath *tb_chamfer(CGRect r,CGFloat c){
     self.status=label_([UIFont monospacedDigitSystemFontOfSize:15 weight:UIFontWeightMedium],[UIColor colorWithWhite:1 alpha:.9]);
     self.badge=label_([UIFont systemFontOfSize:14 weight:UIFontWeightBlack],tb_rgb(0x02060C,1));
     self.badge.textAlignment=NSTextAlignmentCenter;self.badge.backgroundColor=tb_rgb(available?TB_CYAN:TB_AMBER,1);
-    self.badge.attributedText=[[NSAttributedString alloc] initWithString:!available?@"NOT IN THIS BUILD":@"PLAY  \u25B8" attributes:@{NSKernAttributeName:@2}];
+    self.badgeTitle=badge;
     CAShapeLayer *badgeMask=[CAShapeLayer layer];self.badge.layer.mask=badgeMask;
     self.mask=[CAShapeLayer layer];self.layer.mask=self.mask;
     self.frameLine=[CAShapeLayer layer];self.frameLine.fillColor=UIColor.clearColor.CGColor;self.frameLine.lineWidth=3;
@@ -95,13 +103,18 @@ static UIBezierPath *tb_chamfer(CGRect r,CGFloat c){
     [super layoutSubviews];CGRect b=self.bounds;CGFloat c=fmin(36,b.size.width*.08),pad=fmax(18,b.size.width*.055);
     self.backdrop.frame=b;
     CGSize image=self.art.image.size;
-    if(self.backdrop.image&&image.width>0){
+    if(self.titleArt&&image.width>0){
         CGFloat h=fmin(b.size.width*image.height/image.width,b.size.height*.7);
-        self.art.frame=CGRectMake(0,fmax(0,b.size.height*.42-h/2),b.size.width,h);
+        self.art.frame=CGRectMake(0,self.banner?b.size.height*.1:fmax(0,b.size.height*.42-h/2),b.size.width,h);
         self.art.layer.mask.frame=self.art.bounds;
     } else self.art.frame=CGRectInset(b,b.size.width*.2,b.size.height*.2);
     self.shade.frame=b;self.mask.path=tb_chamfer(b,c).CGPath;self.frameLine.path=tb_chamfer(CGRectInset(b,1.5,1.5),c-1).CGPath;
+    /* Three cards side by side on a phone are narrow: a smaller badge fits. */
+    BOOL narrow=b.size.width<300;
+    self.badge.attributedText=[[NSAttributedString alloc] initWithString:self.badgeTitle attributes:@{NSKernAttributeName:narrow?@1:@2,
+        NSFontAttributeName:[UIFont systemFontOfSize:narrow?11:14 weight:UIFontWeightBlack],NSForegroundColorAttributeName:tb_rgb(0x02060C,1)}];
     CGSize badge=[self.badge sizeThatFits:CGSizeMake(320,40)];badge.width+=40;badge.height+=16;
+    if(narrow){badge.width-=16;badge.height-=4;}
     self.badge.frame=CGRectMake(pad,b.size.height-pad-badge.height,badge.width,badge.height);
     ((CAShapeLayer *)self.badge.layer.mask).path=tb_chamfer(self.badge.bounds,10).CGPath;
     CGFloat w=b.size.width-2*pad-c,y=CGRectGetMinY(self.badge.frame)-12;
@@ -155,19 +168,25 @@ static UIBezierPath *tb_chamfer(CGRect r,CGFloat c){
     [self.view addSubview:self.settings];
     TBLauncherCard *starsiege=[[TBLauncherCard alloc] initWithKicker:@"Starsiege: Tribes  \u00B7  1998"
         art:[UIImage imageWithContentsOfFile:[art stringByAppendingPathComponent:@"starsiege.png"]] fallback:emblem available:tb_starsiege_here()
+        badge:tb_starsiege_here()?@"PLAY  \u25B8":@"NOT IN THIS BUILD"
         label:tb_starsiege_here()?@"Starsiege: Tribes, play":@"Starsiege: Tribes, not in this build"];
     starsiege.status.text=tb_starsiege_here()?@"Version 1.41, the one the community plays. Bot matches offline, community servers online.":@"The original. Being translated to native code; it opens here once it plays.";
     TBLauncherCard *tribes2=[[TBLauncherCard alloc] initWithKicker:@"Tribes 2  \u00B7  2001  \u00B7  TribesNEXT online"
-        art:[UIImage imageWithContentsOfFile:[art stringByAppendingPathComponent:@"tribes2.png"]] fallback:emblem available:YES
+        art:[UIImage imageWithContentsOfFile:[art stringByAppendingPathComponent:@"tribes2.png"]] fallback:emblem available:YES badge:@"PLAY  \u25B8"
         label:@"Tribes 2, play"];
     tribes2.status.text=@"Checking who is playing\u2026";
+    TBLauncherCard *vengeance=[[TBLauncherCard alloc] initWithKicker:@"Tribes: Vengeance  \u00B7  2004"
+        art:[UIImage imageWithContentsOfFile:[art stringByAppendingPathComponent:@"vengeance.png"]] fallback:emblem available:NO badge:@"IN DEVELOPMENT"
+        label:@"Tribes: Vengeance, in development"];
+    vengeance.status.text=@"The campaign first. Being translated to native code; it opens here once it plays.";
     [starsiege addTarget:self action:@selector(starsiegeTapped) forControlEvents:UIControlEventTouchUpInside];
     [tribes2 addTarget:self action:@selector(play) forControlEvents:UIControlEventTouchUpInside];
-    self.cards=@[starsiege,tribes2];for(UIView *c in self.cards)[self.view addSubview:c];
+    [vengeance addTarget:self action:@selector(vengeanceTapped) forControlEvents:UIControlEventTouchUpInside];
+    self.cards=@[starsiege,tribes2,vengeance];for(UIView *c in self.cards)[self.view addSubview:c];
     self.focus=1;[self showFocus];
     self.footer=[UILabel new];self.footer.numberOfLines=0;self.footer.textAlignment=NSTextAlignmentCenter;
     self.footer.font=[UIFont systemFontOfSize:11 weight:UIFontWeightMedium];self.footer.textColor=[UIColor colorWithWhite:1 alpha:.4];
-    self.footer.text=@"Native ARM64 recompilations of the original games, built from your own copies. Starsiege: Tribes and Tribes 2 belong to their owners; TribesPad is MIT licensed.";
+    self.footer.text=@"Native ARM64 recompilations of the original games, built from your own copies. Starsiege: Tribes, Tribes 2 and Tribes: Vengeance belong to their owners; TribesPad is MIT licensed.";
     [self.view addSubview:self.footer];
     [self loadPlayers];
     fprintf(stderr,"TribesPad launcher: %lu controllers at start\n",(unsigned long)GCController.controllers.count);
@@ -218,13 +237,14 @@ static UIBezierPath *tb_chamfer(CGRect r,CGFloat c){
         [UIKeyCommand keyCommandWithInput:UIKeyInputLeftArrow modifierFlags:0 action:@selector(focusLeft)],
         [UIKeyCommand keyCommandWithInput:UIKeyInputRightArrow modifierFlags:0 action:@selector(focusRight)],
         [UIKeyCommand keyCommandWithInput:@"1" modifierFlags:0 action:@selector(starsiegeTapped)],
-        [UIKeyCommand keyCommandWithInput:@"2" modifierFlags:0 action:@selector(play)]];
+        [UIKeyCommand keyCommandWithInput:@"2" modifierFlags:0 action:@selector(play)],
+        [UIKeyCommand keyCommandWithInput:@"3" modifierFlags:0 action:@selector(vengeanceTapped)]];
 }
 -(void)focusLeft{[self moveFocus:-1];}
 -(void)focusRight{[self moveFocus:1];}
 -(void)moveFocus:(int)step{self.focus=(NSUInteger)MAX(0,MIN((int)self.cards.count-1,(int)self.focus+step));[self showFocus];}
 -(void)showFocus{for(NSUInteger i=0;i<self.cards.count;i++)self.cards[i].selectedCard=i==self.focus;}
--(void)activate{if(self.focus==0)[self starsiegeTapped];else [self play];}
+-(void)activate{if(self.focus==0)[self starsiegeTapped];else if(self.focus==2)[self vengeanceTapped];else [self play];}
 -(BOOL)canBecomeFirstResponder{return YES;}
 -(void)viewDidAppear:(BOOL)animated{[super viewDidAppear:animated];[self becomeFirstResponder];}
 -(BOOL)prefersHomeIndicatorAutoHidden{return YES;}
@@ -248,9 +268,8 @@ static UIBezierPath *tb_chamfer(CGRect r,CGFloat c){
     CGSize f=[self.footer sizeThatFits:CGSizeMake(b.size.width-left-right-80,80)];
     self.footer.frame=CGRectMake((b.size.width-f.width)/2,b.size.height-bottom-f.height,f.width,f.height);
     CGFloat cardTop=CGRectGetMaxY(self.emblem.frame)+(phone?12:28),cardBottom=CGRectGetMinY(self.footer.frame)-(phone?10:22),gap=phone?14:30;
-    CGFloat cw=(b.size.width-left-right-16-gap)/2;
-    self.cards[0].frame=CGRectMake(left+8,cardTop,cw,cardBottom-cardTop);
-    self.cards[1].frame=CGRectMake(left+8+cw+gap,cardTop,cw,cardBottom-cardTop);
+    NSUInteger n=self.cards.count;CGFloat cw=(b.size.width-left-right-16-gap*(n-1))/n;
+    for(NSUInteger i=0;i<n;i++)self.cards[i].frame=CGRectMake(left+8+i*(cw+gap),cardTop,cw,cardBottom-cardTop);
 }
 /* A faint, fixed starfield behind everything. */
 -(void)layoutStars:(CGRect)b {
@@ -270,6 +289,18 @@ static UIBezierPath *tb_chamfer(CGRect r,CGFloat c){
     [a addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleCancel handler:nil]];
     [a addAction:[UIAlertAction actionWithTitle:@"How to Build" style:UIAlertActionStyleDefault handler:^(UIAlertAction *x){(void)x;
         [UIApplication.sharedApplication openURL:[NSURL URLWithString:TBLaunchStarsiegePlan] options:@{} completionHandler:nil];}]];
+    a.overrideUserInterfaceStyle=UIUserInterfaceStyleDark;[self presentViewController:a animated:YES completion:nil];
+}
+/* Tribes: Vengeance has no engine in TribesPad yet: say so and offer the plan. */
+-(void)vengeanceTapped {
+    if(self.presentedViewController)return;
+    self.focus=2;[self showFocus];
+    UIAlertController *a=[UIAlertController alertControllerWithTitle:@"Tribes: Vengeance"
+        message:@"Tribes: Vengeance is in development. Its engine is being translated to native code, campaign first, and it opens here once it plays."
+        preferredStyle:UIAlertControllerStyleAlert];
+    [a addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleCancel handler:nil]];
+    [a addAction:[UIAlertAction actionWithTitle:@"Read the Plan" style:UIAlertActionStyleDefault handler:^(UIAlertAction *x){(void)x;
+        [UIApplication.sharedApplication openURL:[NSURL URLWithString:TBLaunchVengeancePlan] options:@{} completionHandler:nil];}]];
     a.overrideUserInterfaceStyle=UIUserInterfaceStyleDark;[self presentViewController:a animated:YES completion:nil];
 }
 -(void)play {
