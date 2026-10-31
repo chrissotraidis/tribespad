@@ -7,6 +7,7 @@
 #include "guest_heap.h"
 #include "guest_system.h"
 #include "guest_memory_checks.h"
+#include "guest_memory_layout.h"
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,7 +15,7 @@
 #include <sys/mman.h>
 #include <unistd.h>
 #define STATIC_END UINT32_C(0x30000000)
-#define VM_BEGIN UINT32_C(0x60030000)
+#define VM_BEGIN tribes_virtual_memory_low
 #define USER_END (TRIBES_GUEST_MAXIMUM_ADDRESS+1u)
 typedef struct Page {uint32_t allocation,allocation_protect,state,protect,type;} Page;
 typedef struct Space {uint64_t base;Page *pages;int sealed,checked;TribesCheckedMemoryBackend backend;unsigned char *capture_pages;uint32_t capture_allocation;struct Space *next;} Space;
@@ -124,9 +125,9 @@ static int heap_run(uint32_t address,uint32_t size,void *context){
    Query a dynamic domain under its provider lock; no torn cross-provider state. */
 static int query(Space *s,uint32_t address,uint32_t out[7]){
     if(address>=VM_BEGIN)return tribes_virtual_memory_query(s->base,address,out);
-    if(address>=0x60000000){uint32_t allocation=address&~65535u;uint32_t fields[]={address,allocation,1,allocation+65536-address,0x2000,0,0x20000};memcpy(out,fields,28);return 1;}
-    if(address>=0x50000000)return tribes_process_heap_memory_query(s->base,address,out);
-    if(address>=STATIC_END){HeapQuery q={address,0x50000000,0};if(!tribes_heap_visit(s->base,heap_run,&q))return 0;uint32_t fields[]={address,STATIC_END,4,q.end-address,q.committed?0x1000u:0x2000u,q.committed?4u:0u,0x20000};memcpy(out,fields,28);return 1;}
+    if(address>=tribes_process_heap_low+0x10000000u){uint32_t allocation=address&~65535u;uint32_t fields[]={address,allocation,1,allocation+65536-address,0x2000,0,0x20000};memcpy(out,fields,28);return 1;}
+    if(address>=tribes_process_heap_low)return tribes_process_heap_memory_query(s->base,address,out);
+    if(address>=STATIC_END){HeapQuery q={address,tribes_process_heap_low,0};if(!tribes_heap_visit(s->base,heap_run,&q))return 0;uint32_t fields[]={address,STATIC_END,4,q.end-address,q.committed?0x1000u:0x2000u,q.committed?4u:0u,0x20000};memcpy(out,fields,28);return 1;}
     uint32_t index=address/4096,end=index+1;Page p=s->pages[index];
     while(end<STATIC_END/4096&&!memcmp(&p,&s->pages[end],sizeof p))end++;
     uint32_t fields[]={address,p.allocation,p.allocation_protect,(end-index)*4096u,p.state?p.state:0x10000,p.protect,p.type};memcpy(out,fields,28);return 1;

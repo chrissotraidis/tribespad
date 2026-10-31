@@ -40,14 +40,20 @@ typedef struct {
 typedef struct { char *s; size_t n, cap; } sb;
 static void add(sb *b, const char *fmt, ...)
 {
-    va_list ap;
+    va_list ap, again;
     va_start(ap, fmt);
+    va_copy(again, ap);
     char tmp[2048];
     int k = vsnprintf(tmp, sizeof tmp, fmt, ap);
     va_end(ap);
+    if (k < 0) { va_end(again); return; }
+    char *text = tmp;
+    if ((size_t)k >= sizeof tmp) { text = malloc((size_t)k + 1); vsnprintf(text, (size_t)k + 1, fmt, again); }   /* longer than the scratch buffer */
+    va_end(again);
     if (b->n + (size_t)k + 1 > b->cap) { b->cap = (b->cap + (size_t)k + 1) * 2; b->s = realloc(b->s, b->cap); }
-    memcpy(b->s + b->n, tmp, (size_t)k + 1);
+    memcpy(b->s + b->n, text, (size_t)k + 1);
     b->n += (size_t)k;
+    if (text != tmp) free(text);
 }
 
 static const char *common =

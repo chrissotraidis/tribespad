@@ -147,11 +147,17 @@ uint32_t vg_system_parameters_info_a(uint64_t base,uint32_t action,uint32_t ui,u
 uint32_t vg_system_parameters_info_w(uint64_t base,uint32_t action,uint32_t ui,uint32_t pv,uint32_t ini){return system_parameters(base,action,ui,pv,ini);}
 
 /* ---- painting: the window's DC, the client area as the paint rectangle, validated ---- */
+/* GetDC / ReleaseDC: Vengeance's windows paint through GDI only for Window.dll's
+   log window and controls, which are never shown; their DCs are screen DCs
+   (TribesPad's desktop), so no native drawable is made for them. The game's
+   Direct3D window gets its drawable from the device (port/vengeance/vengeance_d3d9_host.m). */
+uint32_t vg_get_dc(uint64_t base,uint32_t window){(void)window;return tribes_get_window_dc(base,0);}
+uint32_t vg_release_dc(uint64_t base,uint32_t window,uint32_t dc){(void)window;return tribes_release_window_dc(base,0,dc);}
 uint32_t vg_begin_paint(uint64_t base,uint32_t window,uint32_t ps){
- uint32_t dc=tribes_get_window_dc(base,window);if(!dc||!ps)return 0;
+ uint32_t dc=vg_get_dc(base,window);if(!dc||!ps)return 0;
  memset(GUEST(base,ps),0,64);wr(base,ps,dc);ss_get_client_rect(base,window,ps+8);ss_validate_rect(window,0);return dc;
 }
-uint32_t vg_end_paint(uint64_t base,uint32_t window,uint32_t ps){if(ps)tribes_release_window_dc(base,window,rd(base,ps));return 1;}
+uint32_t vg_end_paint(uint64_t base,uint32_t window,uint32_t ps){if(ps)vg_release_dc(base,window,rd(base,ps));return 1;}
 uint32_t vg_fill_rect(uint32_t dc,uint32_t rect,uint32_t brush){(void)dc;(void)rect;(void)brush;return 1;}
 uint32_t vg_get_update_rect(uint64_t base,uint32_t window,uint32_t rect,uint32_t erase){(void)window;(void)erase;if(rect)memset(GUEST(base,rect),0,16);return 0;}
 

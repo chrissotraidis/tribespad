@@ -1001,6 +1001,20 @@
    "returns": true,
    "guest_base": true,
    "why": "WinDrv reads typed characters as WM_CHAR from TranslateMessage; port/vengeance/vengeance_input.c posts them for key-down messages (US layout). TribesPad's service stops on keyboard messages."
+  },
+  "GetDC": {
+   "helper": "vg_get_dc",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true,
+   "why": "Only Window.dll's hidden log window and controls paint through GDI; their DCs are screen DCs (port/vengeance/vengeance_gdi.c), so Starsiege's GetDC does not make a native drawable for them. The Direct3D window gets its drawable from the device."
+  },
+  "ReleaseDC": {
+   "helper": "vg_release_dc",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true,
+   "why": "Releases the screen DCs GetDC hands out (port/vengeance/vengeance_gdi.c)."
   }
  }
 }

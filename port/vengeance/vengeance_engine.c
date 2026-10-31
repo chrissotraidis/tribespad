@@ -33,6 +33,7 @@
 #include "../core/guest_display.h"
 #include "../core/guest_graphics.h"
 #include "../core/guest_dinput.h"
+#include "../core/guest_memory_layout.h"
 #include "vengeance_engine.inc"
 
 extern uint32_t vg_enter(_cpu *cpu,uint32_t va,uint32_t count,const uint32_t *arguments);
@@ -149,6 +150,10 @@ uint32_t vg_get_proc_address(uint64_t guest,uint32_t image,uint32_t pointer){
 int main(int argc,char **argv){
  if(argc<5){fprintf(stderr,"usage: %s images volume game temp [arguments]\n",argv[0]);return 2;}
  const unsigned count=sizeof vg_modules/sizeof vg_modules[0];
+ /* Unreal allocates through VirtualAlloc (the Windows game peaked near 500 MB in
+    its menus): GlobalAlloc 64 MiB from 0x30000000, the process heap at 0x34000000,
+    VirtualAlloc from 0x44030000 to 0x7fff0000 (about 950 MiB). */
+ tribes_global_heap_span=0x04000000u;tribes_process_heap_low=0x34000000u;tribes_virtual_memory_low=0x44030000u;
  /* Desktop SDL runs on process main; the backend checks this before video. */
  extern void tribes_sdl_host_application_ready(void);
  tribes_sdl_host_application_ready();

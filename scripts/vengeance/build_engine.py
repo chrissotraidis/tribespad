@@ -424,6 +424,9 @@ def compile_and_link(modules, out, report, graphics):
         key = sha(source) + (sha(out / 'vengeance_engine.inc') if source.parent.name == 'vengeance' else '') + ' '.join(flags)
         if source.parent == D3D9 or source.parent.name == 'vengeance':  # the Direct3D code's headers
             key += ''.join(sha(h) for h in sorted(D3D9.glob('*.h')))
+        if source.suffix in ('.c', '.m'):  # C files a source includes (Starsiege's heap and input include TribesPad's)
+            key += ''.join(sha(source.parent / inc) for inc in re.findall(r'^#include "([^"]+\.c)"', source.read_text(errors='replace'), re.M))
+            key += sha(R / 'port/core/guest_memory_layout.h')
         if cache.get(str(source)) != key or not obj.exists():
             if source.suffix == '.ll':
                 cmd = ['clang'] + TARGET + ['-O2', '-Wno-override-module', '-c', str(source), '-o', str(obj)]

@@ -37,15 +37,23 @@ typedef struct { char *s; size_t n, cap; char *err; size_t errlen; int failed; }
 
 static void emit(out *o, const char *fmt, ...)
 {
-    va_list ap;
+    va_list ap, again;
     va_start(ap, fmt);
+    va_copy(again, ap);
     char tmp[4096];
     int k = vsnprintf(tmp, sizeof tmp, fmt, ap);
     va_end(ap);
-    if (k < 0) return;
+    if (k < 0) { va_end(again); return; }
+    char *text = tmp;
+    if ((size_t)k >= sizeof tmp) {                  /* longer than the scratch buffer (a whole shader body): format again in full */
+        text = malloc((size_t)k + 1);
+        vsnprintf(text, (size_t)k + 1, fmt, again);
+    }
+    va_end(again);
     if (o->n + (size_t)k + 1 > o->cap) { o->cap = (o->cap + (size_t)k + 1) * 2; o->s = realloc(o->s, o->cap); }
-    memcpy(o->s + o->n, tmp, (size_t)k + 1);
+    memcpy(o->s + o->n, text, (size_t)k + 1);
     o->n += (size_t)k;
+    if (text != tmp) free(text);
 }
 
 static void fail(out *o, const char *fmt, ...)
