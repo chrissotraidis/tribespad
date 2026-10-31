@@ -48,9 +48,11 @@ connect a controller and read the hint and guide.
 
 ## Left for the three-game picker
 
-- Choose Game's subtitle, the gear menu's **Open Tribes 2 Directly** and the
-  Settings row **Game Picker at Launch** ("Off, it opens Tribes 2 directly") all
-  name two games. See the [Vengeance plan](../VENGEANCE-IMPLEMENTATION-PLAN.md#three-games-in-the-picker).
+- The picker shows Tribes: Vengeance as **In development**, and Settings' **Game
+  Picker at Launch** now reads "Choose your game when TribesPad opens". Choose
+  Game's subtitle and the gear menu's **Open Tribes 2 Directly** still name the
+  two playable games; they change when Vengeance plays. See the
+  [Vengeance plan](../VENGEANCE-IMPLEMENTATION-PLAN.md#card-stages).
 - Game-specific menu sections branch on one `BOOL`. A third game should first
   move them into a per-game table (the profile in
   [LAUNCHER-PLAN.md](../LAUNCHER-PLAN.md#3-shared-controls-per-game-profile)).

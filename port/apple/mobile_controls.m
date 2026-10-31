@@ -274,7 +274,7 @@ static const TBSettingRow tb_rows[]={
     {2,NO,"Keep Clear of the Notch","TribesPad.avoidNotch","Keeps the game clear of the notch and rounded corners. Turn off to fill the screen. Applies the next time TribesPad opens.",0,0,NO},
     {2,NO,"Show FPS Counter","TribesPad.showFPS","Frames each second and the longest frame among them. Also in the menu.",0,0,NO},
     {2,YES,"Render Scale","TribesPad.renderScale",NULL,.5,1.0,NO},
-    {2,NO,"Game Picker at Launch","TribesPad.showLauncher","Choose between Starsiege: Tribes and Tribes 2 when TribesPad opens. Off, it opens Tribes 2 directly.",0,0,NO},
+    {2,NO,"Game Picker at Launch","TribesPad.showLauncher","Choose your game when TribesPad opens. Off, it opens Tribes 2 directly.",0,0,NO},
     {3,NO,"WASD Movement","TribesPad.keyboardWASD","Keys from a hardware keyboard only.",0,0,NO},
     {4,NO,"Online Play","TribesPad.onlinePlay","Sign in with TribesNEXT at launch.",0,0,NO}};
 enum {TBRowCount=sizeof tb_rows/sizeof tb_rows[0],TBSectionCount=sizeof tb_sections/sizeof tb_sections[0]};

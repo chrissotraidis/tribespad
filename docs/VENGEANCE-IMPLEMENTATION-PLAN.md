@@ -263,43 +263,59 @@ Tribes 2 (2001), Tribes: Vengeance (2004). One engine still runs per launch, and
 Choose Game still closes the app so the next launch shows the picker. Nothing
 about that process model changes for a third game.
 
-Both pickers are written for exactly two cards today, so this is a small
-rewrite rather than an added card:
+### Built: the In development card (31 October)
 
-- [launcher.h](../port/apple/launcher.h) has `TBGameTribes2` and
-  `TBGameStarsiege`. Add `TBGameVengeance` and stable string IDs (`tribes2`,
-  `starsiege`, `vengeance`) for `TribesPad.nextGame`, a new
-  `TribesPad.lastGame` and `TRIBESPAD_PICK`.
-- [launcher.m](../port/apple/launcher.m) and its AppKit twin
-  [launcher_mac.m](../port/apple/launcher_mac.m) address cards as `cards[0]`
-  (Starsiege) and `cards[1]` (Tribes 2): two hard-coded frames, `focus=1`,
-  `focus==0` meaning Starsiege in `activate`, keys 1 and 2, and live counts
-  written to fixed indexes. Replace this with one table of cards (ID, kicker,
-  art, availability, status loader, launch) laid out in N equal columns. On an
-  iPhone in landscape each card is about 250 points wide, enough for the art,
-  title and one status line; check it in the iPhone 17e Simulator.
-- Default focus becomes the last game played, falling back to Tribes 2.
+At the owner's request, every build now shows a third card, as Starsiege's did
+at P0. [launcher.m](../port/apple/launcher.m) and its AppKit twin
+[launcher_mac.m](../port/apple/launcher_mac.m) lay out any number of cards in
+equal columns. The Vengeance card has an amber **IN DEVELOPMENT** badge, and
+tapping it, pressing 3, or pressing A on it explains that the game is being
+translated and offers **Read the Plan** (this document). Starsiege and Tribes 2
+keep their positions, focus, keys 1 and 2 and live counts. Narrow cards (iPhone,
+the smallest Mac window) use a smaller badge font so NOT IN THIS BUILD fits.
+
+The art is the top 172 rows of the game's own splash, `Content/Art/StartupLogo.bmp`
+(600x428; the rest is legal text), cut by [launcher_art.py](../scripts/launcher_art.py)
+with innoextract when the community installer is on the build Mac. A banner
+that wide sits near the top of the card without the enlarged backdrop the 4:3
+title screens use. Builds without the installer show the TribesPad emblem, as
+the Starsiege card does without its data. No game file enters the repository.
+
+Checked: Mac picker snapshots at 1280x800, 720x480 and 844x390; the iOS picker
+in the iPhone 17e and iPad Air 11-inch (M4) Simulators through a throwaway
+harness; both pickers compile with `-Werror`. Not yet seen on the iPad Pro or
+iPhone 14, or with a controller and keyboard.
+
+### Card stages
+
+| Stage | Unlocked by | Card says | Tapping it |
+| --- | --- | --- | --- |
+| VP0 (built) | Owner, 31 October | In development | Explains; Read the Plan |
+| VP1 | V3 on the Mac | Dev build · main menu (opt-in builds) | Starts Vengeance |
+| VP2 | V4–V5 on a device | Play campaign | Campaign through the original menus |
+| VP3 | V6 and owner approval | Play · N playing now | Also the multiplayer browser |
+| VP4 | V7 and the player-check | Play | Released |
+
+VP1 needs the rest of the picker work, none of which is useful before an engine
+exists:
+
+- [launcher.h](../port/apple/launcher.h) gains `TBGameVengeance`, and stable
+  string IDs (`tribes2`, `starsiege`, `vengeance`) replace the two-way checks
+  on `TribesPad.nextGame` and `TRIBESPAD_PICK`. A new `TribesPad.lastGame`
+  sets the default focus, falling back to Tribes 2.
 - The gear menu's **Open Tribes 2 Directly** and Settings' **Game Picker at
-  Launch** ("Off, it opens Tribes 2 directly") name one game. Proposed: "Open
-  the Last Game Directly". Players who turned the picker off have been playing
-  Tribes 2, so their launch does not change.
-- Card art: `Content/Art/StartupLogo.bmp` (600x428) is the game's own splash.
-  Its top band holds the logo and character; the lower two thirds is legal text,
-  so [launcher_art.py](../scripts/launcher_art.py) should crop about the top 165
-  rows. It is a plain BMP; no Unreal texture reader is needed.
+  Launch** ("Off, it opens Tribes 2 directly") become "Open the Last Game
+  Directly". Players who turned the picker off have been playing Tribes 2, so
+  their launch does not change.
+- Mac: the picker execs a bundled `VengeanceEngine`, as it does
+  `StarsiegeEngine`.
 - Live count: OpenSpy publishes
   [tribesv.json](https://openspy-website.nyc3.digitaloceanspaces.com/servers/tribesv.json)
   over HTTPS (7 servers listed on 31 October, with `numplayers` and
   `maxplayers`), the same shape of source as Tribes 2's list. Its entries carry
   no address field, so joining stays in the game's own browser or uses the
-  master query from the research notes.
-
-Card states follow the Starsiege precedent: **Not in this build** (default
-builds), **Dev build** (V3, opt-in builds), **Play campaign** (V4–V5), **Play ·
-N playing now** (V6), then **Play** (V7). Whether the card appears before V3 as
-**In development**, as Starsiege's did at P0, is the owner's choice; the table
-refactor can land earlier with the card hidden, since it changes nothing for
-the two current games.
+  master query from the research notes. Show the count from VP3, when joining
+  works; a count on a card that cannot play yet would mislead.
 
 ## Vengeance's ··· menu
 
@@ -459,5 +475,6 @@ Do not repeat the broad game-selection research or build a picker-only prototype
 and call Vengeance integrated.
 
 V0 also settles the content split from [Size](#size). The per-game overlay table
-and N-card picker can be done separately at any point; they change nothing for
-Tribes 2 or Starsiege and are checked on both current games.
+can be done separately at any point; it changes nothing for Tribes 2 or
+Starsiege and is checked on both current games. The picker already has its
+third card ([VP0](#built-the-in-development-card-31-october)).
