@@ -1,0 +1,20 @@
+{
+ "note": "Recorded corrections for lifting Tribes: Vengeance (scripts/vengeance/lift.py). Addresses are layout (rebased) addresses.",
+ "tv_cd_dvd.exe": {
+  "data_sections": [
+   ".kpjaig",
+   ".bokuht"
+  ],
+  "why": "Leftover copy protection in the community no-CD executable: the entry point is ordinary MSVC start-up in .text; none of the 5,000+ relocations in .text/.rdata/.data and no .text instruction refers to these sections; no TLS callbacks; .kpjaig (808 KB, 7.81 bits/byte) has 16,328 relocations whose targets lie outside every section, as encrypted bytes do; the only pointers into it come from .bokuht, which holds the SafeDisc interface name SIntfNT.dll. The lifted copy marks both as data. A jump into them would stop at dispatch as an unpublished guest PC."
+ },
+ "window.dll": {
+  "instruction_replacements": [
+   {
+    "address": "0x121D2987",
+    "length": 6,
+    "why": "cmp edi, [IAT slot of Scripting.dll ?PrivateStaticClass@UVariable@@0VUClass@@A]: SRW does not lift an import as cmp's memory operand. Load the import's value (the class object's address) and set the flags with SRW's own 32-bit cmp sequence.",
+    "llasm": ";cmp edi, [__imp_?PrivateStaticClass@UVariable@@0VUClass@@A]|mov tmp1, ?PrivateStaticClass@UVariable@@0VUClass@@A|and eflags, eflags, ~(CF+ZF+SF+OF+PF+AF)|xor tmp4, edi, tmp1|cmovult edi, tmp1, tmp3, CF, 0|or eflags, eflags, tmp3|sub tmp2, edi, tmp1|xor tmp3, tmp2, edi|and tmp3, tmp3, tmp4|and tmp3, tmp3, 0x80000000|lshr tmp3, tmp3, 31 - OF_SHIFT|or eflags, eflags, tmp3|xor tmp0, tmp4, tmp2|and tmp0, tmp0, AF|or eflags, eflags, tmp0|cmovz tmp2, tmp0, ZF, 0|or eflags, eflags, tmp0|and tmp0, tmp2, 0x80000000|cmovz tmp0, tmp0, 0, SF|or eflags, eflags, tmp0|lshr tmp0, tmp2, 4|xor tmp0, tmp2, tmp0|and tmp0, tmp0, 0xf|mov tmp4, 0x9669 << PF_SHIFT|lshr tmp0, tmp4, tmp0|and tmp0, tmp0, PF|or eflags, eflags, tmp0"
+   }
+  ]
+ }
+}

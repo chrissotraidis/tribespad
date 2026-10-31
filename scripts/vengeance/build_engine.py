@@ -27,7 +27,10 @@ sys.path.insert(0, str(R / 'scripts'))
 LAYOUT = json.loads((R / 'config/vengeance/layout.json').read_text())['modules']
 LIFT = R / 'generated/vengeance/lift'
 IMPORT_BASE, IMPORT_STRIDE = 0xfffe0000, 16
-TARGETS = {'ucc': ['msvcr71.dll', 'msvcp71.dll', 'ogg.dll', 'vorbis.dll', 'vorbisfile.dll', 'core.dll', 'ucc.exe']}
+TARGETS = {'ucc': ['msvcr71.dll', 'msvcp71.dll', 'ogg.dll', 'vorbis.dll', 'vorbisfile.dll', 'core.dll', 'ucc.exe'],
+           # The game: every module except UCC. Those the executable does not import
+           # (renderer, audio, network, GUI...) attach when the game loads them.
+           'client': sorted(m for m in LAYOUT if m != 'ucc.exe')}
 OPT = os.environ.get('VENGEANCE_OPT', '-O1')
 GUEST_BIN = 'C:\\TribesPad\\Game\\Program\\Bin\\'
 ENC = 'latin-1'  # SRW output carries raw bytes from the images
@@ -54,6 +57,16 @@ HOST = sorted((R / 'port/vengeance').glob('*.c'))
 
 def say(message):
     print('vengeance engine: ' + message, flush=True)
+
+# Ordinal-only imports. WS2_32's numbers come from Starsiege's census; WSOCK32
+# (Wine's wsock32.spec) numbers 10-12 differently: inet_addr, inet_ntoa, ioctlsocket.
+_ws2 = load('census', R / 'scripts/starsiege/census.py').WS2_ORDINALS
+_extra = {52: 'gethostbyname', 57: 'gethostname', 111: 'WSAGetLastError', 115: 'WSAStartup', 116: 'WSACleanup', 151: '__WSAFDIsSet'}
+ORDINALS = {'ws2_32': {**_ws2, **_extra},
+            'wsock32': {**_ws2, 10: 'inet_addr', 11: 'inet_ntoa', 12: 'ioctlsocket', **_extra},
+            'oleaut32': {2: 'SysAllocString', 3: 'SysReAllocString', 4: 'SysAllocStringLen', 5: 'SysReAllocStringLen',
+                         6: 'SysFreeString', 7: 'SysStringLen', 8: 'VariantInit', 9: 'VariantClear', 10: 'VariantCopy'},
+            'comctl32': {17: 'InitCommonControls'}}
 
 def exports_of(pe, base):
     """name/ordinal -> (address, is_code)."""
@@ -94,9 +107,16 @@ def prepare(modules, out, report, backend_bindings):
         for d in getattr(pes[m], 'DIRECTORY_ENTRY_IMPORT', []):
             dll = d.dll.decode().lower()
             for imp in d.imports:
-                ordinal = dll.split('.')[0] + '_ord' + str(imp.ordinal) if imp.import_by_ordinal else None
-                name = imp.name.decode() if imp.name else ordinal
-                rows.append(dict(module=m, dll=dll, name=name, ordinal=imp.ordinal if imp.import_by_ordinal else None, slot=imp.address))
+                spellings = []
+                if imp.import_by_ordinal:
+                    # SRW spells ordinal imports LIB_ordN or ws2_32.<name>; bind by the real name.
+                    friendly = ORDINALS.get(dll.split('.')[0], {}).get(imp.ordinal)
+                    raw_name = d.dll.decode().split('.')[0] + '_ord' + str(imp.ordinal)
+                    name = friendly or raw_name
+                    spellings = [raw_name] + (['ws2_32.' + friendly, friendly] if friendly else [])
+                else:
+                    name = imp.name.decode()
+                rows.append(dict(module=m, dll=dll, name=name, spellings=spellings, ordinal=imp.ordinal if imp.import_by_ordinal else None, slot=imp.address))
                 if dll not in modules:
                     windows.setdefault(name, dll)
     names = sorted(windows)
@@ -126,6 +146,10 @@ def prepare(modules, out, report, backend_bindings):
                 symbol = va.symbol(row['name'])
                 aliases.add('define %s %s' % (row['name'], symbol)); declare.add('proc %s external' % symbol)
             values[row['name']] = value
+            for spelling in row['spellings']:
+                if spelling in known and spelling != row['name']:
+                    values[spelling] = value
+                    aliases.add('define %s %s' % (spelling, va.symbol(row['name']) if row['dll'] not in modules else 'loc_%X' % value))
             slots.append((row['slot'], value))
         code = '\n'.join(p.read_text(ENC) for p in sorted(lift_dir.glob('seg*_code.llinc')))
         # SRW names exported procedures after their exports (malloc, memcpy, ...),
@@ -242,14 +266,21 @@ def prepare(modules, out, report, backend_bindings):
     init = order(modules, pes)
     exe = [m for m in modules if not pes[m].is_dll()]
     assert len(exe) == 1
+    # Statically linked: reachable from the executable through imports.
+    static, todo = set(), [exe[0]]
+    while todo:
+        m = todo.pop()
+        if m in static: continue
+        static.add(m)
+        todo += [d.dll.decode().lower() for d in getattr(pes[m], 'DIRECTORY_ENTRY_IMPORT', []) if d.dll.decode().lower() in modules]
     env = json.loads((R / 'config/runtime/environment.json').read_text())
     variables = b''.join((k + '=' + v).encode(env['encoding']) + b'\0' for k, v in sorted(env['variables'].items(), key=lambda kv: kv[0].casefold())) + b'\0'
     header = lambda name, data: 'static const unsigned char %s[]={%s};' % (name, ','.join(map(str, data)))
     files = {m: pathlib.Path(LAYOUT[m]['file']).name for m in modules}
-    inc = ['typedef struct {uint32_t base,size,entry,dll;const char *image,*path;} VgModule;',
-           'static const VgModule vg_modules[]={%s};' % ','.join('{%du,%du,%du,%d,%s,%s}' % (
+    inc = ['typedef struct {uint32_t base,size,entry,dll,dynamic;const char *image,*path;} VgModule;',
+           'static const VgModule vg_modules[]={%s};' % ','.join('{%du,%du,%du,%d,%d,%s,%s}' % (
                LAYOUT[m]['base'], pes[m].OPTIONAL_HEADER.SizeOfImage, LAYOUT[m]['base'] + pes[m].OPTIONAL_HEADER.AddressOfEntryPoint,
-               int(pes[m].is_dll()), json.dumps(pathlib.Path(m).stem + '.bin'), json.dumps(GUEST_BIN + files[m])) for m in init),
+               int(pes[m].is_dll()), int(m not in static), json.dumps(pathlib.Path(m).stem + '.bin'), json.dumps(GUEST_BIN + files[m])) for m in init),
            '#define VG_STACK_RESERVE %du' % max(pes[exe[0]].OPTIONAL_HEADER.SizeOfStackReserve, 0x10000),
            '#define VG_GUEST_BIN %s' % json.dumps(GUEST_BIN), '#define VG_EXE_NAME %s' % json.dumps(files[exe[0]]),
            '#define VG_WINDOWS_DIRECTORY ' + json.dumps(env['legacy_profile']['windows_directory']),
@@ -266,7 +297,7 @@ def prepare(modules, out, report, backend_bindings):
            'static const VgOrdinal vg_ordinals[]={%s};' % ','.join('{%du,%du,%du}' % (LAYOUT[m]['base'], int(n[1:]), a)
                for m in modules for n, (a, _) in sorted(exports[m].items()) if n.startswith('#'))]
     (out / 'vengeance_engine.inc').write_text('\n'.join(inc) + '\n')
-    report.update(init_order=init, windows_imports=len(names), bound=len(used), stops=len(names) - len(used),
+    report.update(init_order=init, dynamic=sorted(set(modules) - static), windows_imports=len(names), bound=len(used), stops=len(names) - len(used),
                   internal_code_imports=internal_code, internal_data_imports=internal_data, dispatch_entries=len(entries))
     (out / 'imports.json').write_text(json.dumps({'windows': [{'name': n, 'dll': windows[n], 'guest_va': wva[n], 'bound': n in used} for n in names]}, indent=1) + '\n')
     return modules

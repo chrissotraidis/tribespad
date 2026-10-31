@@ -19,7 +19,8 @@ GAME = R / 'ref/vengeance/game'
 LAYOUT = json.loads((R / 'config/vengeance/layout.json').read_text())['modules']
 OUT = R / 'generated/vengeance/lift'
 UCC = ['msvcr71.dll', 'msvcp71.dll', 'ogg.dll', 'vorbis.dll', 'vorbisfile.dll', 'core.dll', 'ucc.exe']
-VERSION = 2  # bump when this script's output changes
+VERSION = 3  # bump when this script's output changes
+FIXUPS = json.loads((R / 'config/vengeance/lift-fixups.json').read_text())
 sha = lambda p: hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
 
 def say(message):
@@ -45,6 +46,13 @@ def rebase(name, entry, work):
             raw[at:at + 4] = ((int.from_bytes(raw[at:at + 4], 'little') + delta) & 0xffffffff).to_bytes(4, 'little')
     field = original.OPTIONAL_HEADER.get_field_absolute_offset('ImageBase')
     raw[field:field + 4] = entry['base'].to_bytes(4, 'little')
+    # Sections recorded as data (config/vengeance/lift-fixups.json): clear their
+    # code and execute flags in the copy, so the audit and SRW leave them alone.
+    for section in original.sections:
+        if section.Name.rstrip(b'\x00').decode() in FIXUPS.get(name, {}).get('data_sections', []):
+            at = section.get_field_absolute_offset('Characteristics')
+            value = int.from_bytes(raw[at:at + 4], 'little') & ~0x20000020
+            raw[at:at + 4] = value.to_bytes(4, 'little')
     stem = 'tv_' + pathlib.Path(name).stem
     image = work / (stem + pathlib.Path(name).suffix)
     image.write_bytes(bytes(raw))
@@ -66,7 +74,7 @@ def lift(name):
     work = OUT / pathlib.Path(name).stem
     srw = R / 'generated/tools/SRW-tribes/SRW.exe'
     key = {'version': VERSION, 'module_sha256': entry['sha256'], 'base': entry['base'], 'srw_sha256': sha(srw),
-           'audit_sha256': sha(R / 'scripts/audit-code.py')}
+           'audit_sha256': sha(R / 'scripts/audit-code.py'), 'fixups': FIXUPS.get(name)}
     done = work / 'result.json'
     if done.exists() and json.loads(done.read_text()).get('key') == key and json.loads(done.read_text()).get('srw_exit') == 0:
         say('%s: up to date' % name)
@@ -101,6 +109,9 @@ def lift(name):
     (work / 'fixup_interpret_as_code.sci').write_text(''.join(n + '\n' for n in sorted(as_code)))
     (work / 'fixup_do_not_interpret_as_code.sci').write_text(''.join(n + '\n' for n in sorted(as_data)))
     report['export_seeds'] = len(seeds)
+    replacements = FIXUPS.get(name, {}).get('instruction_replacements', [])
+    (work / 'instruction_replacements.sci').write_text(''.join('loc_%X,%d,%s\n' % (int(x['address'], 16), x['length'], x['llasm']) for x in replacements))
+    report['instruction_replacements'] = len(replacements)
     say('%s: SRW (base %s)' % (name, hex(entry['base'])))
     env = {'HALOPAD_SRW_DIAG': '1', 'TRIBES_SRW_FULL_FLAGS': '1', 'PATH': '/usr/bin:/bin'}
     llasm = stem + '.llasm'

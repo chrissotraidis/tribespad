@@ -53,7 +53,12 @@ static _Noreturn void stop(_cpu *c,const char *kind,uint32_t index){
  printf("],\"registers\":{\"eax\":%u,\"ecx\":%u,\"edx\":%u,\"ebx\":%u,\"esp\":%u,\"ebp\":%u,\"esi\":%u,\"edi\":%u}}\n",c->_eax,c->_ecx,c->_edx,c->_ebx,c->_esp,c->_ebp,c->_esi,c->_edi);
  /* The first argument as text, when it is one (a file or library name, say). */
  uint32_t first=0;if(stack_readable(c,8))memcpy(&first,(void *)(uintptr_t)(base+c->_esp+4),4);
- if(first>=0x10000&&first<0xfffe0000u){
+ /* Only read committed guest memory (TribesPad's VirtualQuery, into process scratch). */
+ extern uint32_t tribes_virtual_query(uint64_t,uint32_t,uint32_t,uint32_t);
+ uint32_t info[7]={0};int committed=0;
+ if(first>=0x10000&&first<0xfffe0000u&&tribes_virtual_query(base,first,PARAMETERS+0x9000,28)){
+  memcpy(info,(void *)(uintptr_t)(base+PARAMETERS+0x9000),28);committed=info[4]==0x1000&&(uint64_t)info[0]+info[3]>=(uint64_t)first+320;}
+ if(committed){
   const unsigned char *p=(const unsigned char *)(uintptr_t)(base+first);char text[160];unsigned n=0;
   int wide=p[1]==0&&p[0]>=32&&p[0]<127;
   for(;n<sizeof text-1;n++){unsigned v=wide?p[2*n]|(p[2*n+1]<<8):p[n];if(!v)break;if(v<32||v>126){n=0;break;}text[n]=(char)v;}
@@ -78,8 +83,6 @@ void x86_out_dx_eax(_cpu *c){stop(c,"port_io",5);}
 /* Starsiege's GL wrappers report per-frame call counts; Vengeance does not trace them. */
 void ss_gl_trace_report(uint64_t frame){(void)frame;}
 void x86_int(_cpu *c,uint32_t number){stop(c,"interrupt",number);}
-void x87_fnsave_void(_cpu *c,uint8_t *memory){(void)memory;stop(c,"fnsave",0);}
-void x87_frstor_void(_cpu *c,const uint8_t *memory){(void)memory;stop(c,"frstor",0);}
 
 static void commit(uint32_t address,uint32_t bytes,uint32_t type){
  uint64_t page=(uint64_t)sysconf(_SC_PAGESIZE),lo=address&~(page-1),hi=((uint64_t)address+bytes+page-1)&~(page-1);
@@ -131,8 +134,11 @@ int main(int argc,char **argv){
  for(unsigned i=0;i<count;i++){
   const VgModule *m=&vg_modules[i];if(!m->dll)exe=m;
   assert(tribes_module_register_image(base,m->base,m->size,m->path,!m->dll));
-  /* No static TLS in any module (scripts/vengeance/layout.py); DLL entries get thread notifications. */
-  thread_modules[i]=(TribesThreadModule){m->base,m->dll?m->entry:0,UINT32_MAX,0,0,0,NULL,NULL,0};
+  /* No static TLS in any module (scripts/vengeance/layout.py); DLL entries get
+     thread notifications. A DLL the program loads by name (renderer, audio,
+     network...) stays pending until then and attaches on LoadLibrary. */
+  thread_modules[i]=(TribesThreadModule){m->base,m->dll?m->entry:0,UINT32_MAX,0,0,0,NULL,NULL,m->dynamic};
+  if(m->dynamic)assert(tribes_module_set_pending(base,m->base,1));
  }
  assert(exe);
  assert(tribes_threads_configure(base,(uint32_t)getpid(),(uint32_t)tid,VG_STACK_RESERVE,thread_modules,count));
@@ -164,7 +170,7 @@ int main(int argc,char **argv){
  state._esp=STACK_HIGH-0x100;state._eflags=0x202;
  /* Process attach, in dependency order (DllMain(instance, DLL_PROCESS_ATTACH, NULL)). */
  for(unsigned i=0;i<count;i++){
-  const VgModule *m=&vg_modules[i];if(!m->dll)continue;
+  const VgModule *m=&vg_modules[i];if(!m->dll||m->dynamic)continue;
   uint32_t args[]={m->base,1,0};
   state._esp=STACK_HIGH-0x100;
   uint32_t result=vg_enter(&state,m->entry,3,args);
