@@ -302,6 +302,8 @@ def compile_objects(report, graphics):
         obj = OUT / ('obj' + suffix) / (source.stem + '.o')
         obj.parent.mkdir(exist_ok=True)
         key = sha(source) + (sha(OUT / 'starsiege_engine.inc') if source.name == 'starsiege_engine.c' else '') + ' '.join(graphics['flags']) + PLATFORM
+        if source.suffix in ('.c', '.m'):  # C files a source includes (starsiege_heap.c and starsiege_input.c include TribesPad's)
+            key += ''.join(sha(source.parent / inc) for inc in re.findall(r'^#include "([^"]+\.c)"', source.read_text(errors='replace'), re.M))
         if cache.get(str(source)) != key or not obj.exists():
             embedded = ['-DSTARSIEGE_EMBEDDED'] if PLATFORM != 'macos' and source.name == 'starsiege_engine.c' else []
             cmd = ['clang'] + TARGET + flags + embedded + graphics['flags'] + ['-I', str(OUT), '-c', str(source), '-o', str(obj)]
