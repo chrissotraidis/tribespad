@@ -339,3 +339,63 @@ uint32_t vg_get_process_working_set_size(uint64_t base,uint32_t process,uint32_t
  (void)process;if(!in_guest(base,minimum,4)||!in_guest(base,maximum,4)){tribes_set_last_error(87);return 0;}
  uint32_t lo=204800,hi=1413120;memcpy(GUEST(base,minimum),&lo,4);memcpy(GUEST(base,maximum),&hi,4);return 1;
 }
+
+/* LPVOID VirtualAlloc: TribesPad's service, with commits rounded out to whole
+   host pages (16 KiB on Apple silicon, four Windows pages) inside the same
+   reservation. MSVC's runtime commits 4 and 8 KiB pieces; TribesPad backs and
+   protects memory per host page. A fresh allocation already reserves 64 KiB,
+   so its rounded commit stays inside it. Windows allows committing pages that
+   are already committed; the address returned is the one Windows returns.
+   https://learn.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-virtualalloc */
+#include "../core/guest_virtual_memory.h"
+uint32_t vg_virtual_alloc(uint64_t base,uint32_t address,uint32_t size,uint32_t type,uint32_t protection){
+ const uint32_t host=(uint32_t)getpagesize();
+ if(!(type&0x1000)||!size||host<=4096)return tribes_virtual_alloc(base,address,size,type,protection);
+ if(!address){
+  uint32_t rounded=(size+host-1)&~(host-1);if(rounded<size)return tribes_virtual_alloc(base,address,size,type,protection);
+  return tribes_virtual_alloc(base,0,rounded,type,protection);
+ }
+ uint32_t start=address&~(host-1);uint64_t end=((uint64_t)address+size+host-1)&~(uint64_t)(host-1);
+ if(end>UINT32_MAX)return tribes_virtual_alloc(base,address,size,type,protection);
+ uint32_t result=tribes_virtual_alloc(base,start,(uint32_t)(end-start),type,protection);
+ return result?address&~4095u:0;
+}
+
+/* HRESULT DirectDrawCreate(GUID *, LPDIRECTDRAW *, IUnknown *): TribesPad has no
+   DirectDraw. The game only uses it to measure local video memory before
+   Direct3D starts; on failure it logs "Couldn't query amount of local video
+   memory" and continues with no limit. DDERR_NODIRECTDRAWHW. */
+uint32_t vg_direct_draw_create(uint64_t base,uint32_t guid,uint32_t output,uint32_t outer){
+ (void)guid;(void)outer;if(output&&in_guest(base,output,4)){uint32_t zero=0;memcpy(GUEST(base,output),&zero,4);}
+ return 0x887600ffu;
+}
+
+/* COM start-up for a machine with no registered COM servers: per-thread
+   initialization counts (S_OK the first time, S_FALSE after), CoCreateInstance
+   answers REGDB_E_CLASSNOTREG and logs the class asked for, CoCreateGuid makes
+   random (version 4) GUIDs. IMM: no input method editor is installed, so there
+   is no input context (NULL), as on such Windows systems. */
+#include <stdlib.h>
+static _Thread_local uint32_t com_count;
+uint32_t vg_co_initialize(uint32_t reserved){(void)reserved;return com_count++?1u:0u;}
+uint32_t vg_co_initialize_ex(uint32_t reserved,uint32_t model){(void)reserved;(void)model;return com_count++?1u:0u;}
+void vg_co_uninitialize(void){if(com_count)com_count--;}
+uint32_t vg_co_create_instance(uint64_t base,uint32_t clsid,uint32_t outer,uint32_t context,uint32_t iid,uint32_t output){
+ (void)outer;(void)context;(void)iid;
+ if(output&&in_guest(base,output,4)){uint32_t zero=0;memcpy(GUEST(base,output),&zero,4);}
+ if(clsid&&in_guest(base,clsid,16)){const uint8_t *g=GUEST(base,clsid);
+  fprintf(stderr,"vengeance: CoCreateInstance {%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x}: class not registered\n",
+   g[3],g[2],g[1],g[0],g[5],g[4],g[7],g[6],g[8],g[9],g[10],g[11],g[12],g[13],g[14],g[15]);}
+ return 0x80040154u;
+}
+uint32_t vg_co_create_guid(uint64_t base,uint32_t output){
+ if(!in_guest(base,output,16))return 0x80070057u;
+ uint8_t g[16];arc4random_buf(g,sizeof g);g[7]=(uint8_t)((g[7]&0x0f)|0x40);g[8]=(uint8_t)((g[8]&0x3f)|0x80);
+ memcpy(GUEST(base,output),g,16);return 0;
+}
+void vg_init_common_controls(void){}
+uint32_t vg_imm_get_context(uint32_t window){(void)window;return 0;}
+uint32_t vg_imm_release_context(uint32_t window,uint32_t context){(void)window;(void)context;return 1;}
+uint32_t vg_imm_associate_context(uint32_t window,uint32_t context){(void)window;(void)context;return 0;}
+uint32_t vg_imm_create_context(void){return 0;}
+uint32_t vg_imm_destroy_context(uint32_t context){(void)context;return 0;}

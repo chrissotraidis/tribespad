@@ -250,6 +250,314 @@
    "arguments": 3,
    "returns": true,
    "guest_base": true
+  },
+  "CreateWindowExW": {
+   "helper": "vg_create_window_ex_w",
+   "arguments": 12,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "RegisterClassExW": {
+   "helper": "vg_register_class_ex_w",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true
+  },
+  "RegisterClassW": {
+   "helper": "vg_register_class_w",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true
+  },
+  "UnregisterClassW": {
+   "helper": "vg_unregister_class_w",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true
+  },
+  "GetClassInfoExA": {
+   "helper": "vg_get_class_info_ex_a",
+   "arguments": 3,
+   "returns": true,
+   "guest_base": true
+  },
+  "GetClassInfoExW": {
+   "helper": "vg_get_class_info_ex_w",
+   "arguments": 3,
+   "returns": true,
+   "guest_base": true
+  },
+  "SetWindowTextW": {
+   "helper": "vg_set_window_text_w",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "LoadCursorW": {
+   "helper": "vg_load_cursor_w",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true
+  },
+  "LoadIconW": {
+   "helper": "vg_load_icon_w",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true
+  },
+  "FindWindowExA": {
+   "helper": "vg_find_window_ex_a",
+   "arguments": 4,
+   "returns": true,
+   "guest_base": true
+  },
+  "FindWindowExW": {
+   "helper": "vg_find_window_ex_w",
+   "arguments": 4,
+   "returns": true,
+   "guest_base": true
+  },
+  "SetPropA": {
+   "helper": "vg_set_prop_a",
+   "arguments": 3,
+   "returns": true,
+   "guest_base": true
+  },
+  "SetPropW": {
+   "helper": "vg_set_prop_w",
+   "arguments": 3,
+   "returns": true,
+   "guest_base": true
+  },
+  "GetPropA": {
+   "helper": "vg_get_prop_a",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true
+  },
+  "GetPropW": {
+   "helper": "vg_get_prop_w",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true
+  },
+  "RemovePropA": {
+   "helper": "vg_remove_prop_a",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true
+  },
+  "RemovePropW": {
+   "helper": "vg_remove_prop_w",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true
+  },
+  "RegisterWindowMessageA": {
+   "helper": "vg_register_window_message_a",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true
+  },
+  "RegisterWindowMessageW": {
+   "helper": "vg_register_window_message_w",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true
+  },
+  "GetAsyncKeyState": {
+   "helper": "vg_get_async_key_state",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true
+  },
+  "SetCursor": {
+   "helper": "vg_set_cursor",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false
+  },
+  "GetCapture": {
+   "helper": "vg_get_capture",
+   "arguments": 0,
+   "returns": true,
+   "guest_base": false
+  },
+  "DefWindowProcW": {
+   "helper": "ss_def_window_proc_a",
+   "arguments": 4,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "CallWindowProcW": {
+   "helper": "ss_call_window_proc_a",
+   "arguments": 5,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "SendMessageW": {
+   "helper": "ss_send_message_a",
+   "arguments": 4,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "DispatchMessageW": {
+   "helper": "ss_dispatch_message_a",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false,
+   "cpu_argument": true
+  },
+  "PostMessageW": {
+   "helper": "tribes_post_message",
+   "arguments": 4,
+   "returns": true,
+   "guest_base": true
+  },
+  "PeekMessageW": {
+   "helper": "tribes_peek_message",
+   "arguments": 5,
+   "returns": true,
+   "guest_base": true
+  },
+  "GetMessageW": {
+   "helper": "tribes_get_message",
+   "arguments": 4,
+   "returns": true,
+   "guest_base": true
+  },
+  "SetWindowLongW": {
+   "helper": "ss_set_window_long_a",
+   "arguments": 3,
+   "returns": true,
+   "guest_base": true
+  },
+  "GetWindowLongW": {
+   "helper": "ss_get_window_long_a",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true
+  },
+  "MapVirtualKeyW": {
+   "helper": "tribes_map_virtual_key",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": false
+  },
+  "GetFileVersionInfoSizeA": {
+   "helper": "vg_get_file_version_info_size_a",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true
+  },
+  "GetFileVersionInfoSizeW": {
+   "helper": "vg_get_file_version_info_size_w",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true
+  },
+  "GetFileVersionInfoA": {
+   "helper": "vg_get_file_version_info_a",
+   "arguments": 4,
+   "returns": true,
+   "guest_base": true
+  },
+  "GetFileVersionInfoW": {
+   "helper": "vg_get_file_version_info_w",
+   "arguments": 4,
+   "returns": true,
+   "guest_base": true
+  },
+  "VerQueryValueA": {
+   "helper": "vg_ver_query_value_a",
+   "arguments": 4,
+   "returns": true,
+   "guest_base": true
+  },
+  "VerQueryValueW": {
+   "helper": "vg_ver_query_value_w",
+   "arguments": 4,
+   "returns": true,
+   "guest_base": true
+  },
+  "DirectDrawCreate": {
+   "helper": "vg_direct_draw_create",
+   "arguments": 3,
+   "returns": true,
+   "guest_base": true
+  },
+  "CoInitialize": {
+   "helper": "vg_co_initialize",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false
+  },
+  "CoInitializeEx": {
+   "helper": "vg_co_initialize_ex",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": false
+  },
+  "CoUninitialize": {
+   "helper": "vg_co_uninitialize",
+   "arguments": 0,
+   "returns": false,
+   "guest_base": false,
+   "helper_returns": "void"
+  },
+  "CoCreateInstance": {
+   "helper": "vg_co_create_instance",
+   "arguments": 5,
+   "returns": true,
+   "guest_base": true
+  },
+  "CoCreateGuid": {
+   "helper": "vg_co_create_guid",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true
+  },
+  "InitCommonControls": {
+   "helper": "vg_init_common_controls",
+   "arguments": 0,
+   "returns": false,
+   "guest_base": false,
+   "helper_returns": "void"
+  },
+  "ImmGetContext": {
+   "helper": "vg_imm_get_context",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false
+  },
+  "ImmReleaseContext": {
+   "helper": "vg_imm_release_context",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": false
+  },
+  "ImmAssociateContext": {
+   "helper": "vg_imm_associate_context",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": false
+  },
+  "ImmCreateContext": {
+   "helper": "vg_imm_create_context",
+   "arguments": 0,
+   "returns": true,
+   "guest_base": false
+  },
+  "ImmDestroyContext": {
+   "helper": "vg_imm_destroy_context",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": false
   }
  },
  "overrides": {
@@ -275,6 +583,13 @@
    "returns": true,
    "guest_base": true,
    "why": "Vengeance's translated modules answer from their own PE export tables (Unreal looks up native functions by name); other modules go to TribesPad's loader (port/vengeance/vengeance_engine.c)."
+  },
+  "VirtualAlloc": {
+   "helper": "vg_virtual_alloc",
+   "arguments": 4,
+   "returns": true,
+   "guest_base": true,
+   "why": "MSVC's runtime commits 4-8 KiB pieces; TribesPad backs memory per 16 KiB host page, so commits are rounded out to whole host pages inside the same reservation (port/vengeance/vengeance_win32.c)."
   }
  }
 }
