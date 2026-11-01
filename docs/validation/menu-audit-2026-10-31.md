@@ -71,11 +71,11 @@ Options, Help, Choose Game), built from its own keys in `DefUser.ini`
 | Actions | Objectives (C) and Loadout (Shift) stay held until chosen again; Use F, third person Z, zoom level R; Drop Weapon (Alt held briefly), Respawn B | Held items are new: the game reads C and Shift as held buttons |
 | Campaign | Quick Save F5, Quick Load F8 | Vengeance only (single player) |
 | Play Online | Multiplayer (not ready in TribesPad yet, says so), Community (tribesrevengeance.net, TribesPad Discord) | Same section; no server list or live count until multiplayer works |
-| Options | Touch controls, trackpad, FPS (frames counted at the Metal present), Settings | Same as Starsiege (no Graphics Quality) |
-| Help | Touch Guide, Controller Guide (Vengeance layout), Console (Tab), GitHub, About | Same items; console key differs |
+| Options | Touch controls, trackpad, FPS (frames counted at the Metal present), Graphics Quality (Fast or Full Detail, applied at once through the console) with Resolution (1024x768, 1600x1200 default, 2048x1536; from the next start), Settings | Same items as Starsiege plus Graphics Quality, which only Vengeance has |
+| Help | Touch Guide, Controller Guide (Vengeance layout: A jumps and skis while held, as in T1/T2), Console (Tab; the game starts with \`-console\` so it opens), GitHub, About | Same items; console key differs |
 | Choose Game | Subtitle names the games in this build | Same handler; three-game wording |
 
 Settings hides Keep Clear of the Notch, Render Scale, WASD Movement and Online
-Play for Vengeance, as for Starsiege; the Display footer describes its 1024x768
-frame. Play state comes from the game's GUI controller (menu up or not) rather
+Play for Vengeance, as for Starsiege; the Display footer names the chosen
+resolution. Play state comes from the game's GUI controller (menu up or not) rather
 than a script export.

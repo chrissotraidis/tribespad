@@ -354,7 +354,7 @@ static const TBSettingRow *tb_row(NSIndexPath *path){
 -(NSString *)tableView:(UITableView *)tableView titleForFooterInSection:(NSInteger)section {
     (void)tableView;NSInteger s=tb_section(section);if(s>=TBSectionCount)return nil;
     if(tb_starsiege&&s==2)return @"Starsiege: Tribes draws its original 800x600 frame, which the screen scales up to fit, centred.";
-    if(tb_vengeance&&s==2)return @"Tribes: Vengeance draws its original 1024x768 frame, which the screen scales up to fit, centred.";
+    if(tb_vengeance&&s==2)return [NSString stringWithFormat:@"Tribes: Vengeance draws a 4:3 frame at %@, which the screen scales to fit, centred. Change it in ··· > Options > Graphics Quality > Resolution.",[tb_vengeance_resolution() stringByReplacingOccurrencesOfString:@"x" withString:@" × "]];
     return tb_sections[s][1]?@(tb_sections[s][1]):nil;
 }
 static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multiplier?[NSString stringWithFormat:@"%.1f×",v]:[NSString stringWithFormat:@"%.0f%%",v*100];}
@@ -831,8 +831,14 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
                     else if(what==2)[owner.quickChat moveSelection:1];else [owner.quickChat back];};};
             panel(pad.dpad.right,0);panel(pad.dpad.up,1);panel(pad.dpad.down,2);panel(pad.buttonA,3);panel(pad.dpad.left,4);panel(pad.buttonB,4);
         }
-        if(any!=self.controllerUsed)fprintf(stderr,"TribesPad controller %s (%s)\n",any?"connected":"disconnected",tb_vengeance?"Vengeance":"Starsiege");
-        self.controllerUsed=any;[self rebuildMenu];return;
+        BOOL was=self.controllerUsed;
+        if(any!=was)fprintf(stderr,"TribesPad controller %s (%s)\n",any?"connected":"disconnected",tb_vengeance?"Vengeance":"Starsiege");
+        self.controllerUsed=any;
+        /* As in Tribes 2: a controller connected during play puts the touch
+           controls away; they come back when it goes. */
+        if(any&&!was){[self hideForController];if(self.inMatch)[self showControllerHint];}
+        else if(!any&&was&&self.inMatch&&!self.expanded&&!self.mouseUsed)[self toggleControls];
+        [self rebuildMenu];[self setNeedsLayout];return;
     }
     if(self.controller&&[GCController.controllers containsObject:self.controller])return;
     [self detachController];
@@ -1108,7 +1114,7 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
 -(void)showControllerHint {
     double shown=tb_setting(@"TribesPad.controllerHintsShown",0);if(shown>=3)return;tb_set(@"TribesPad.controllerHintsShown",shown+1);
     /* Each game's own layout: Starsiege's is starsiege_input.c's. */
-    self.hint.text=tb_vengeance?@"RT fire  ·  LT jet / jump  ·  A or LB ski  ·  RB / D-pad left next / previous weapon\n"
+    self.hint.text=tb_vengeance?@"RT fire  ·  LT jet  ·  A jump (hold to ski)  ·  LB ski  ·  RB / D-pad left next / previous weapon\n"
         "Y grenade  ·  X pack  ·  B use  ·  D-pad: up zoom level, down objectives, right loadout\n"
         "Click right stick: zoom  ·  click left stick: third person  ·  Menu: game menu  ·  View: scores":
         tb_starsiege?@"RT fire  ·  LT jet  ·  A jump / ski  ·  RB / LB next / previous weapon\n"
@@ -1311,8 +1317,14 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
         tvFast.subtitle=@"Smoother: no projected lights and shadows";tvFast.state=[quality isEqualToString:@"fast"]?UIMenuElementStateOn:UIMenuElementStateOff;
         UIAction *tvFull=item(@"Full Detail",@"sparkles",^{[weak setVengeanceGraphics:@"full"];});
         tvFull.subtitle=@"The game's own projected lights and shadows";tvFull.state=[quality isEqualToString:@"full"]?UIMenuElementStateOn:UIMenuElementStateOff;
+        /* Resolution: the game's 4:3 drawing size, applied when Vengeance next starts. */
+        NSString *size=tb_vengeance_resolution();NSMutableArray<UIAction *> *sizes=[NSMutableArray array];
+        for(NSArray<NSString *> *r in @[@[@"1024x768",@"The game's own default, the lightest"],@[@"1600x1200",@"Sharper; the TribesPad default"],@[@"2048x1536",@"Sharpest, the most work for the GPU"]]){
+            NSString *value=r[0];UIAction *a=item([value stringByReplacingOccurrencesOfString:@"x" withString:@" × "],@"rectangle.expand.vertical",^{[weak setVengeanceResolution:value];});
+            a.subtitle=r[1];a.state=[size isEqualToString:value]?UIMenuElementStateOn:UIMenuElementStateOff;[sizes addObject:a];}
         optionItems=@[controls[0],controls[1],controls[2],
-            [UIMenu menuWithTitle:@"Graphics Quality" image:icon(@"slider.horizontal.3") identifier:nil options:0 children:@[group(@[tvFast,tvFull])]],controls[4]];
+            [UIMenu menuWithTitle:@"Graphics Quality" image:icon(@"slider.horizontal.3") identifier:nil options:0 children:@[group(@[tvFast,tvFull]),
+                [UIMenu menuWithTitle:@"Resolution" image:icon(@"rectangle.expand.vertical") identifier:nil options:UIMenuOptionsDisplayInline children:sizes]]],controls[4]];
         help=[UIMenu menuWithTitle:@"Help" image:icon(@"questionmark.circle") identifier:nil options:0 children:@[
             group(@[item(@"Touch and Trackpad Guide",@"hand.tap",^{[weak showTouchGuide];}),controllerGuide]),
             group(@[item(@"Console",@"terminal",^{[weak openConsole];}),
@@ -1420,6 +1432,11 @@ static UIAction *tb_menu_find(UIMenuElement *e,NSString *path,NSString *want){
     tb_vengeance_graphics_pending=YES;
     if(self.inMatch)[self applyVengeanceGraphics];
     else [self showMessage:@"Graphics Quality" text:@"Applies when play resumes."];
+}
+-(void)setVengeanceResolution:(NSString *)size {
+    if([size isEqualToString:tb_vengeance_resolution()])return;
+    [NSUserDefaults.standardUserDefaults setObject:size forKey:@"TribesPad.vengeanceResolution"];[self rebuildMenu];
+    [self showMessage:@"Resolution" text:[NSString stringWithFormat:@"Tribes: Vengeance draws at %@ from the next time it starts.",[size stringByReplacingOccurrencesOfString:@"x" withString:@" × "]]];
 }
 -(void)applyVengeanceGraphics {
     if(!tb_vengeance_graphics_pending)return;tb_vengeance_graphics_pending=NO;
@@ -1689,7 +1706,7 @@ static UIAction *tb_menu_find(UIMenuElement *e,NSString *path,NSString *want){
     NSString *status=name.length?@"Connected. Touch controls step aside once you use it.":@"Connect an Xbox, PlayStation or MFi controller in Settings > Bluetooth.";
     if(tb_vengeance){
         [self showMessage:name.length?name:@"Controller Guide" text:[NSString stringWithFormat:@"%@\n\n"
-            "PLAYING\nLeft stick: move · Right stick: aim\nRT: fire · LT: jet (tap to jump) · A or LB: ski\n"
+            "PLAYING\nLeft stick: move · Right stick: aim\nRT: fire · LT: jet · A: jump (hold to ski) · LB: ski\n"
             "RB / D-pad left: next / previous weapon\nY: grenade · X: pack · B: use\n"
             "D-pad: up zoom level · down objectives · right loadout (hold)\n"
             "Click right stick: zoom on / off · click left stick: third person\nMenu: game menu (save and load) · View: scores\n\n"

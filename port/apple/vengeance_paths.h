@@ -9,4 +9,9 @@ int tb_vengeance_bundled(const char *gamedata,const char *storage);
    arguments (images, volume, game folder, temp), then the source Content
    folder, which the engine reads in place (VENGEANCE_CONTENT). 0 on failure. */
 int tb_vengeance_prepare_paths(const char *gamedata,const char *storage,char *arguments[6]);
+#ifdef __OBJC__
+#import <Foundation/Foundation.h>
+/* "WIDTHxHEIGHT": the size the game draws at (TribesPad.vengeanceResolution). */
+NSString *tb_vengeance_resolution(void);
+#endif
 #endif

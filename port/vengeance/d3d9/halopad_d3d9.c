@@ -4,6 +4,7 @@
  * about HaloPad's Metal layer and are reported absent otherwise. The device itself is in
  * halopad_d3d9_device.c. */
 #include "halopad_win32.h"
+#include <TargetConditionals.h>
 
 uint32_t halopad_com_new(const char *iface, uint32_t size, void *state, void (*destroy)(void *));
 uint32_t halopad_com_addref(uint32_t g);
@@ -85,6 +86,12 @@ static uint32_t modes(uint32_t (*out)[2], uint32_t max)
                                       {1920, 1200}, {2560, 1440}, {2560, 1600}};
     int32_t dw, dh;
     halopad_desktop_size(&dw, &dh);
+#if TARGET_OS_IPHONE
+    /* iPhone and iPad: only the desktop's size, which TribesPad's Resolution
+       sets (vengeance_paths.m); the screen scales it to fit, and touches map
+       to it. */
+    if (max) { out[0][0] = (uint32_t)dw; out[0][1] = (uint32_t)dh; return 1; }
+#endif
     uint32_t n = 0;
     for (uint32_t i = 0; i < sizeof std / sizeof std[0] && n < max; i++)
         if (std[i][0] <= (uint32_t)dw && std[i][1] <= (uint32_t)dh) { out[n][0] = std[i][0]; out[n][1] = std[i][1]; n++; }

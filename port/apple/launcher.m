@@ -203,6 +203,8 @@ static UIBezierPath *tb_chamfer(CGRect r,CGFloat c){
         @"The campaign first. Being translated to native code; it opens here once it plays.";
     [starsiege addTarget:self action:@selector(starsiegeTapped) forControlEvents:UIControlEventTouchUpInside];
     [tribes2 addTarget:self action:@selector(play) forControlEvents:UIControlEventTouchUpInside];
+    /* Its title screen centres the logo; the backdrop takes the blue frame below it instead. */
+    vengeance.backdrop.layer.contentsRect=CGRectMake(.05,.74,.9,.24);
     [vengeance addTarget:self action:@selector(vengeanceTapped) forControlEvents:UIControlEventTouchUpInside];
     self.cards=@[starsiege,tribes2,vengeance];for(UIView *c in self.cards)[self.view addSubview:c];
     TBGame last=tb_last_game();self.focus=last==TBGameStarsiege?0:last==TBGameVengeance?2:1;[self showFocus];

@@ -26,6 +26,11 @@ static NSString *source_game(const char *gamedata,const char *storage){
 int tb_vengeance_bundled(const char *gamedata,const char *storage){
     return [NSFileManager.defaultManager fileExistsAtPath:[@(gamedata) stringByAppendingPathComponent:@"Vengeance/images"]]&&source_game(gamedata,storage)!=nil;
 }
+/* The game's drawing size, one of three 4:3 sizes; 1600x1200 unless chosen otherwise. */
+NSString *tb_vengeance_resolution(void){
+    NSString *size=[NSUserDefaults.standardUserDefaults stringForKey:@"TribesPad.vengeanceResolution"];
+    return [@[@"1024x768",@"1600x1200",@"2048x1536"] containsObject:size]?size:@"1600x1200";
+}
 static BOOL players(NSString *relative){
     NSString *lower=relative.lowercaseString;
     return [lower hasPrefix:@"program/saves/"]||([lower hasPrefix:@"program/bin/"]&&[lower hasSuffix:@".ini"]);
@@ -70,6 +75,16 @@ int tb_vengeance_prepare_paths(const char *gamedata,const char *storage,char *ar
             NSString *want=[quality isEqualToString:@"full"]?@"Projectors=True":@"Projectors=False";
             NSString *changed=[[text stringByReplacingOccurrencesOfString:@"Projectors=True" withString:want]
                 stringByReplacingOccurrencesOfString:@"Projectors=False" withString:want];
+            /* TribesPad's Resolution (the same menu): the game draws at this 4:3 size and
+               the screen scales it to fit. The engine's desktop is the same size
+               (VENGEANCE_DISPLAY), so it is the one mode the game offers. */
+            NSString *size=tb_vengeance_resolution();
+            NSArray<NSString *> *wh=[size componentsSeparatedByString:@"x"];
+            for(NSString *key in @[@"FullscreenViewport",@"WindowedViewport"])for(NSUInteger axis=0;axis<2;axis++){
+                NSRegularExpression *re=[NSRegularExpression regularExpressionWithPattern:[NSString stringWithFormat:@"(?m)^%@%@=[0-9]+",key,axis?@"Y":@"X"] options:0 error:nil];
+                changed=[re stringByReplacingMatchesInString:changed options:0 range:NSMakeRange(0,changed.length)
+                    withTemplate:[NSString stringWithFormat:@"%@%@=%@",key,axis?@"Y":@"X",wh[axis]]];}
+            setenv("VENGEANCE_DISPLAY",size.UTF8String,1);
             if(![changed isEqualToString:text])[changed writeToFile:ini atomically:YES encoding:NSISOLatin1StringEncoding error:nil];}
         arguments[0]=strdup([data stringByAppendingPathComponent:@"images"].fileSystemRepresentation);
         arguments[1]=strdup(volume.fileSystemRepresentation);arguments[2]=strdup(game.fileSystemRepresentation);

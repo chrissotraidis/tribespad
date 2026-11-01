@@ -256,7 +256,12 @@ static void controller(void){
  if(playing!=pad_mode){if(pad_mode>=0)pad_release_all();pad_mode=playing;fprintf(stderr,"TribesPad controller: %s layout\n",playing?"play":"menu");}
  if(playing){
   int want[PAD_KEYS]={p.ly>.35f,p.lx<-.35f,p.ly<-.35f,p.lx>.35f,p.a,p.b,p.x,p.y,p.rb,p.lb,p.ls,p.up,p.down,p.left,p.right,p.options,0};
-  if(ss_vengeance_pad){want[PAD_SPACE]=p.a||p.lb;want[PAD_F8]=0;}
+  /* Vengeance: A jumps as in Tribes 1 and 2. Its jump is the jetpack button's
+     tap (right mouse, "Jetpack | Jump"), so A taps that, then skis (Space)
+     while held, the way holding jump skis in Tribes 2. LB skis too. */
+  static uint32_t vg_jump_until;static int vg_a_was;int vg_jump=0;
+  if(ss_vengeance_pad){if(p.a&&!vg_a_was)vg_jump_until=now+90;vg_a_was=p.a;vg_jump=p.a&&(int32_t)(vg_jump_until-now)>0;
+   want[PAD_SPACE]=(p.a&&!vg_jump)||p.lb;want[PAD_F8]=0;}
 #if TARGET_OS_IPHONE
   if(!ss_vengeance_pad)want[PAD_V]=0; /* D-pad right opens the overlay's quick chat panel instead */
 #endif
@@ -264,7 +269,7 @@ static void controller(void){
   want[PAD_ESC]=p.menu;
 #endif
   for(unsigned i=0;i<PAD_KEYS;i++)pad_key(i,want[i]);
-  pad_mouse(0,p.rt>.4f);pad_mouse(1,p.lt>.4f);
+  pad_mouse(0,p.rt>.4f);pad_mouse(1,p.lt>.4f||vg_jump);
   if(p.rs&&!zoom_was){zoomed=!zoomed;key_change(zoom_dik,zoomed);fprintf(stderr,"TribesPad controller: zoom %s\n",zoomed?"on":"off");}zoom_was=p.rs;
   /* Right stick: up to 1100 pixels a second, squared for fine aim near the centre. */
   float rx=fabsf(p.rx)<.12f?0:p.rx,ry=fabsf(p.ry)<.12f?0:p.ry;

@@ -60,16 +60,25 @@ static int enter_vengeance(void) {
     if(!tb_vengeance_prepare_paths(gamedata.fileSystemRepresentation,[support.path stringByAppendingPathComponent:@"TribesPad"].fileSystemRepresentation,paths))return 125;
     if(chdir(paths[2])){perror("TribesPad Vengeance folder");return 125;}
     setenv("VENGEANCE_CONTENT",paths[4],1);
+    /* Every ten seconds, frames drawn and the longest gap go to TribesPad.log,
+       beside the game's own log (Program/Bin/tv_cd_dvd.log, map loads and their
+       times), so a slow or stuck stretch shows when it began. */
+    setenv("HALOPAD_TRACE_FRAMES","1",0);
     /* Test launches only: VENGEANCE_MAP (devicectl --environment-variables) starts
        on that map, as the game's own command line does. */
     char *map=getenv("VENGEANCE_MAP");
-    char *arguments[]={"VengeanceEngine",paths[0],paths[1],paths[2],paths[3],map,NULL};
-    /* The game draws a 1024x768 frame; the screen scales it up (content_area.m). */
-    tb_content_fix_game_size(1024,768);
+    /* -console makes the engine allow its console (Engine.dll sets
+       Engine.Console bAllowed), which TribesPad's ··· menu types commands into. */
+    char *arguments[]={"VengeanceEngine",paths[0],paths[1],paths[2],paths[3],map?map:"-console",map?"-console":NULL,NULL};
+    /* The game draws a 4:3 frame at TribesPad's Resolution (vengeance_paths.m);
+       the screen scales it up (content_area.m). */
+    int width=1024,height=768;const char *display=getenv("VENGEANCE_DISPLAY");
+    if(display)sscanf(display,"%dx%d",&width,&height);
+    tb_content_fix_game_size(width,height);
     extern void tb_mobile_controls_install_vengeance(void);
     tb_mobile_controls_install_vengeance();
     fprintf(stderr,"TribesPad: entering Tribes: Vengeance\n");
-    return vengeance_mobile_engine_main(map?6:5,arguments);
+    return vengeance_mobile_engine_main(map?7:6,arguments);
 }
 #endif
 extern void tb_mobile_controls_install(void);
