@@ -39,7 +39,7 @@ __attribute__((weak,noinline)) int tribes_dispatch_permitted(uint32_t address) {
    entry, and no thread-local lookup is needed. 4096 slots: Tribes: Vengeance's
    virtual calls reach far more targets than 256 held. */
 #include <stdatomic.h>
-_Atomic uint64_t tribes_dispatch_cache[4096];   /* Tribes: Vengeance's dispatch stub reads it too (scripts/vengeance/build_engine.py) */
+_Atomic uint64_t tribes_dispatch_cache[4096] = {0};   /* Tribes: Vengeance's dispatch stub reads it too (scripts/vengeance/build_engine.py) */
 #endif
 void (*tribes_lookup(uint32_t address))(_cpu *) {
     if(!tribes_dispatch_permitted(address)){
