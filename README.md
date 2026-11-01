@@ -217,11 +217,12 @@ it out).
 ### Tribes: Vengeance (in development)
 
 The Tribes: Vengeance campaign runs in development builds, recompiled from the community release
-the same way as the other two games. Nothing from the game is in the repository:
-`scripts/vengeance/prepare.py` downloads the Revengeance community ZIP and checks every file
-against `config/vengeance/inputs.json`; `scripts/vengeance/build_engine.py --target client
---platform device` and `build-ipad-engine.py --vengeance-object` build it into the app
-([progress](docs/validation/vengeance-progress.md)). The regular player build does not include it yet.
+the same way as the other two games. Nothing from the game is in the repository. Add it to the
+build with `scripts/build-tribespad.sh --games tribes2,starsiege,vengeance` (iPhone, iPad and
+Simulator; `brew install innoextract` first): it downloads the Revengeance community ZIP (about 3 G`),
+checks every file against `config/vengeance/inputs.json` and adds about 4 G` to the app
+([progress](docs/validation/vengeance-progress.md)). The default build leaves it out while it is in
+development.
 
 - **Campaign:** New Game, Load Game and the whole story; ··· → This Match → Campaign has Quick
   Save and Quick Load.

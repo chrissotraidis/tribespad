@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Build TribesPad on an Apple Silicon Mac from the official free downloads.
 #
-#   scripts/build-tribespad.sh [--platform device|macos|simulator] [--games tribes2,starsiege|tribes2] [--output DIR] [--ipa FILE] [--zip FILE]
+#   scripts/build-tribespad.sh [--platform device|macos|simulator] [--games tribes2,starsiege[,vengeance]|tribes2] [--output DIR] [--ipa FILE] [--zip FILE]
 #
 # Downloads Tribes 2 and the TribesNEXT client, the pinned open-source
 # dependencies and tools, translates the game on this Mac and builds the app.
@@ -10,7 +10,10 @@
 # --platform macos: TribesPad-mac.zip with TribesPad.app for Apple Silicon Macs.
 # --games tribes2,starsiege (the default) also builds Starsiege: Tribes 1.41,
 # from the PlayT1 community installer, for the game picker; --games tribes2
-# leaves it out.
+# leaves it out. Adding vengeance (--games tribes2,starsiege,vengeance; iPhone,
+# iPad and Simulator, in development) also builds the Tribes: Vengeance
+# campaign from the Revengeance community download (about 3 GB; the app grows
+# by about 4 GB) and needs brew install innoextract.
 # Needs Xcode and: brew install llvm@20 cmake ninja sevenzip zstd
 set -euo pipefail
 
@@ -26,16 +29,24 @@ while [ $# -gt 0 ]; do
     --output) output="$2"; shift 2 ;;
     --ipa) ipa="$2"; shift 2 ;;
     --zip) zip="$2"; shift 2 ;;
-    -h|--help) sed -n '2,13p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,17p' "$0"; exit 0 ;;
     *) echo "unknown option: $1" >&2; exit 2 ;;
   esac
 done
 case "$platform" in device|simulator|macos) ;; *) echo "--platform must be device, macos or simulator" >&2; exit 2 ;; esac
-case ",$games," in
-  ,tribes2,) starsiege=0 ;;
-  ,tribes2,starsiege,|,starsiege,tribes2,) starsiege=1 ;;
-  *) echo "--games must be tribes2 or tribes2,starsiege" >&2; exit 2 ;;
-esac
+starsiege=0
+vengeance=0
+for game in $(printf '%s' "$games" | tr ',' ' '); do
+  case "$game" in
+    tribes2) ;;
+    starsiege) starsiege=1 ;;
+    vengeance) vengeance=1 ;;
+    *) echo "--games lists tribes2, starsiege and vengeance (tribes2 is always built)" >&2; exit 2 ;;
+  esac
+done
+if [ "$vengeance" = 1 ] && [ "$platform" = macos ]; then
+  echo "Tribes: Vengeance builds for iPhone, iPad and the Simulator so far; leave it out of --games for the Mac" >&2; exit 2
+fi
 
 repo="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$repo"
@@ -136,8 +147,23 @@ if [ "$starsiege" = 1 ]; then
   build_starsiege || { starsiege_object=(); starsiege_skipped; }
 fi
 
+vengeance_object=()
+# Tribes: Vengeance, the same way: a failure leaves the other games in the app.
+build_vengeance() {
+  command -v innoextract >/dev/null || { echo "innoextract is missing: brew install innoextract" >&2; return 1; }
+  [ -f ref/vengeance/game/Program/Bin/TV_CD_DVD.exe ] || $py scripts/vengeance/prepare.py || return 1
+  $py scripts/vengeance/lift.py $($py -c 'import json; print(" ".join(json.load(open("config/vengeance/layout.json"))["modules"]))') >/dev/null || return 1
+  [ -f generated/sdl-backend/macos/result.json ] || SDKROOT="$mac_sdk" $py scripts/build-sdl-backend.py --platform macos || return 1
+  $py scripts/vengeance/build_engine.py --target client --platform "$platform" >/dev/null || return 1
+  vengeance_object=(--vengeance-object "generated/vengeance/engine-client-$platform/vengeance.o")
+}
+if [ "$vengeance" = 1 ]; then
+  step "Tribes: Vengeance (in development)"
+  build_vengeance || { vengeance_object=(); vengeance=0; printf '\nbuild-tribespad: Tribes: Vengeance could not be built (see above); continuing without it.\n' >&2; }
+fi
+
 step "TribesPad app"
-SDKROOT="$ios_sdk" $py scripts/build-ipad-engine.py --platform "$platform" --angle --hardware-permissions --bundle-assets --build-only ${starsiege_object[@]+"${starsiege_object[@]}"}
+SDKROOT="$ios_sdk" $py scripts/build-ipad-engine.py --platform "$platform" --angle --hardware-permissions --bundle-assets --build-only ${starsiege_object[@]+"${starsiege_object[@]}"} ${vengeance_object[@]+"${vengeance_object[@]}"}
 case "$platform" in
   device) app="$repo/generated/ipad-engine-device-hw/TribesPad.app" ;;
   simulator) app="$repo/generated/ipad-engine-hw/TribesPad.app" ;;
