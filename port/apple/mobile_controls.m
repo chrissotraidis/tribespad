@@ -1348,7 +1348,7 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
             NSString *value=r[0];UIAction *a=item([value stringByReplacingOccurrencesOfString:@"x" withString:@" × "],@"rectangle.expand.vertical",^{[weak setVengeanceResolution:value];});
             a.subtitle=r[1];a.state=[size isEqualToString:value]?UIMenuElementStateOn:UIMenuElementStateOff;[sizes addObject:a];}
         optionItems=@[controls[0],controls[1],controls[2],
-            [UIMenu menuWithTitle:@"Graphics Quality" image:icon(@"slider.horizontal.3") identifier:nil options:0 children:@[group(@[tvFast,tvFull]),
+            [UIMenu menuWithTitle:@"Graphics Quality" image:icon(@"slider.horizontal.3") identifier:nil options:0 children:@[group(@[tvFull,tvFast]),
                 [UIMenu menuWithTitle:@"Resolution" image:icon(@"rectangle.expand.vertical") identifier:nil options:UIMenuOptionsDisplayInline children:sizes]]],controls[4]];
         help=[UIMenu menuWithTitle:@"Help" image:icon(@"questionmark.circle") identifier:nil options:0 children:@[
             group(@[item(@"Touch and Trackpad Guide",@"hand.tap",^{[weak showTouchGuide];}),controllerGuide]),
@@ -1359,12 +1359,14 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
         tvservers.subtitle=self.connected?@"Leaves this match first":@"MULTIPLAYER > JOIN";
         UIAction *tvplaying=item(@"Who's Playing Now",@"person.3",^{[weak showLiveServers];});
         tvplaying.subtitle=@"Players on each server, from OpenSpy";
+        UIAction *tvnights=item(@"Game Nights",@"calendar",^{[weak showSchedule];});
+        tvnights.subtitle=@"Arranged in the community Discord";
         UIMenu *tvcommunity=[UIMenu menuWithTitle:@"Community" image:icon(@"bubble.left.and.text.bubble.right") identifier:nil options:0 children:@[
             group(@[item(@"Tribes Revengeance Discord",@"person.2",^{[weak openLink:TBVengeanceDiscord];}),
                 item(@"TribesPad Discord",@"person.2",^{[weak openLink:TBTribesPadDiscord];})]),
             group(@[item(@"TribesRevengeance.net",@"safari",^{[weak openPage:TBVengeanceSite];}),
                 item(@"Server List on the Web (OpenSpy)",@"server.rack",^{[weak openPage:TBVengeanceServers];})])]];
-        onlineItems=@[tvplaying,tvservers,tvcommunity];
+        onlineItems=@[tvplaying,tvservers,tvnights,tvcommunity];
     }
     /* The same order in both games: This Match (on a server), Play Online,
        Options, Help, then Choose Game. Off a server Play Online leads, open. */
@@ -1676,9 +1678,23 @@ static UIAction *tb_menu_find(UIMenuElement *e,NSString *path,NSString *want){
     [alert addAction:[UIAlertAction actionWithTitle:@"Done" style:UIAlertActionStyleCancel handler:nil]];
     alert.overrideUserInterfaceStyle=UIUserInterfaceStyleDark;[[self presenter] presentViewController:alert animated:YES completion:nil];
 }
+/* Tribes: Vengeance publishes no fixed schedule: games are arranged in the
+   Tribes Revengeance Discord (linked from tribesrevengeance.net). */
+-(void)showVengeanceSchedule {
+    UIAlertController *alert=[UIAlertController alertControllerWithTitle:@"Game Nights" message:
+        @"Tribes: Vengeance players arrange their games in the Tribes Revengeance Discord rather than on a fixed schedule. "
+        "Its announcements and events show the next one."
+        preferredStyle:UIAlertControllerStyleAlert];
+    __weak TBGameControls *weak=self;
+    [alert addAction:[UIAlertAction actionWithTitle:@"Tribes Revengeance Discord" style:UIAlertActionStyleDefault handler:^(UIAlertAction *a){(void)a;[weak openLink:TBVengeanceDiscord];}]];
+    [alert addAction:[UIAlertAction actionWithTitle:@"Who's Playing Now" style:UIAlertActionStyleDefault handler:^(UIAlertAction *a){(void)a;[weak showLiveServers];}]];
+    [alert addAction:[UIAlertAction actionWithTitle:@"Done" style:UIAlertActionStyleCancel handler:nil]];
+    alert.overrideUserInterfaceStyle=UIUserInterfaceStyleDark;[[self presenter] presentViewController:alert animated:YES completion:nil];
+}
 -(void)showSchedule {
     [self releaseControls];
     if(tb_starsiege){[self showStarsiegeSchedule];return;}
+    if(tb_vengeance){[self showVengeanceSchedule];return;}
     NSCalendar *eastern=[[NSCalendar alloc] initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
     eastern.timeZone=[NSTimeZone timeZoneWithName:@"America/New_York"];
     NSDateFormatter *format=[NSDateFormatter new];[format setLocalizedDateFormatFromTemplate:@"EEEEjmm"];
