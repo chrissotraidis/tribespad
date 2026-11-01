@@ -34,11 +34,12 @@ __attribute__((weak,noinline)) int tribes_dispatch_permitted(uint32_t address) {
 #ifndef TRIBESPAD_DISABLE_DISPATCH_CACHE
 /* Cache only immutable AOT table entries. Publication is checked before every
    hit; native providers may change availability and must still be consulted.
-   Private TLS avoids synchronization between concurrently executing guests. */
-static _Thread_local struct {
-    uint32_t address;
-    void (*function)(_cpu *);
-} dispatch_cache[4096];   /* Tribes: Vengeance's virtual calls reach far more targets than 256 slots held */
+   One table for all threads: each slot is a single 64-bit word (the address,
+   and the table index plus one above it), so a racing write leaves a valid
+   entry, and no thread-local lookup is needed. 4096 slots: Tribes: Vengeance's
+   virtual calls reach far more targets than 256 held. */
+#include <stdatomic.h>
+static _Atomic uint64_t dispatch_cache[4096];
 #endif
 void (*tribes_lookup(uint32_t address))(_cpu *) {
     if(!tribes_dispatch_permitted(address)){
@@ -47,8 +48,9 @@ void (*tribes_lookup(uint32_t address))(_cpu *) {
     if (address == UINT32_C(0xfffff000)) return tribes_return_to_host;
 #ifndef TRIBESPAD_DISABLE_DISPATCH_CACHE
     unsigned slot = (address * UINT32_C(2654435761)) >> 20;
-    if (dispatch_cache[slot].function && dispatch_cache[slot].address == address)
-        return dispatch_cache[slot].function;
+    uint64_t entry = atomic_load_explicit(&dispatch_cache[slot], memory_order_relaxed);
+    if ((uint32_t)entry == address && (entry >> 32))
+        return tribes_dispatch_fns[(entry >> 32) - 1];
 #endif
     uint32_t lower = 0, upper = tribes_dispatch_count;
     while (lower < upper) {
@@ -58,8 +60,7 @@ void (*tribes_lookup(uint32_t address))(_cpu *) {
     }
     if (lower < tribes_dispatch_count && tribes_dispatch_vas[lower] == address) {
 #ifndef TRIBESPAD_DISABLE_DISPATCH_CACHE
-        dispatch_cache[slot].address = address;
-        dispatch_cache[slot].function = tribes_dispatch_fns[lower];
+        atomic_store_explicit(&dispatch_cache[slot], (uint64_t)address | (uint64_t)(lower + 1) << 32, memory_order_relaxed);
 #endif
         return tribes_dispatch_fns[lower];
     }

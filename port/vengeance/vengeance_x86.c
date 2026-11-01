@@ -9,6 +9,24 @@
 
 EXTERNC void CCALL x86_rdtsc(CPU)
 {
+#if defined(__aarch64__)
+    {
+    /* Unreal reads the counter constantly (its timing stats) and calibrates
+       its rate at start-up; the system counter is one instruction, where the
+       monotonic clock cost a call and a division. Scaled by a whole number to
+       about 2.4 GHz (24 MHz times 100 on iPad, 1 GHz times 2 on recent Macs). */
+    static uint64_t factor;
+    if (!factor) {
+        uint64_t hz = __builtin_arm_rsr64("CNTFRQ_EL0");
+        factor = hz ? (2400000000u + hz / 2) / hz : 0;
+        if (!factor) factor = 1;
+    }
+    uint64_t v = __builtin_arm_rsr64("CNTVCT_EL0") * factor;
+    eax = (uint32_t)v;
+    edx = (uint32_t)(v >> 32);
+    return;
+    }
+#endif
     struct timespec t;
     clock_gettime(CLOCK_MONOTONIC, &t);
     uint64_t ns = (uint64_t)t.tv_sec * 1000000000u + (uint64_t)t.tv_nsec;
