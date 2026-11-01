@@ -472,7 +472,9 @@ static id<MTLBuffer> arena_alloc(const void *data, uint32_t len, uint32_t *offse
     arena_used += need;
     return b;
 }
-static void arena_reset(void) { arena_set ^= 1; arena_i = 0; arena_used = 0; [arena_big removeAllObjects]; }
+static uint32_t arena_frame;
+static void arena_reset(void) { arena_set ^= 1; arena_i = 0; arena_used = 0; [arena_big removeAllObjects]; arena_frame++; }
+uint32_t halopad_metal_frame(void) { return arena_frame; }
 
 /* For the runtime: data that lives until the next Present, as an unretained buffer and offset */
 void *halopad_metal_temp(const void *data, uint32_t length, uint32_t *offset)

@@ -169,8 +169,23 @@ static uint8_t metal_vertex_format(uint8_t t)
 
 /* ---- uploads ---- */
 
-static void *upload_buffer(res *r)
+/* Dynamic buffers (D3DUSAGE_DYNAMIC), which Unreal refills many times a frame, are
+   copied into the frame's transient arena at each change and draw from there, at
+   *base; a new Metal buffer per change cost about 7% of the game thread. Others
+   keep their own Metal buffer, made again when changed. */
+static void *upload_buffer(res *r, uint32_t *base)
 {
+    *base = 0;
+    if (r->usage & 0x200u) {
+        uint32_t frame = halopad_metal_frame();
+        if (r->dirty[0] || !r->temp || r->temp_frame != frame) {
+            r->temp = halopad_metal_temp(G(r->buf), r->length, &r->temp_off);
+            r->temp_frame = frame;
+            r->dirty[0] = 0;
+        }
+        *base = r->temp_off;
+        return r->temp;
+    }
     if (r->dirty[0] || !r->native) {
         halopad_metal_release(r->native);
         r->native = halopad_metal_buffer(G(r->buf), r->length);
@@ -504,8 +519,9 @@ static uint32_t draw(device *d, uint32_t type, uint32_t prims, uint32_t start, i
             if (!d->stream[st]) hp_unsupported("draw", "no vertex buffer on stream %u", st);
             pd.stride[st] = d->stream_stride[st];
             if (!dd.vbuf[st]) {
-                dd.vbuf[st] = upload_buffer(halopad_com_state("IDirect3DVertexBuffer9", d->stream[st]));
-                dd.voff[st] = d->stream_offset[st];
+                uint32_t vbase;
+                dd.vbuf[st] = upload_buffer(halopad_com_state("IDirect3DVertexBuffer9", d->stream[st]), &vbase);
+                dd.voff[st] = vbase + d->stream_offset[st];
             }
         }
     }
@@ -618,7 +634,8 @@ static uint32_t draw(device *d, uint32_t type, uint32_t prims, uint32_t start, i
             free(list);
             dd.index32 = 1; dd.index_offset = toff; dd.count = n;
         } else if (ib) {
-            dd.ibuf = upload_buffer(ib); dd.index32 = (uint8_t)i32; dd.index_offset = first_index * isz; dd.count = nverts;
+            uint32_t ibase;
+            dd.ibuf = upload_buffer(ib, &ibase); dd.index32 = (uint8_t)i32; dd.index_offset = ibase + first_index * isz; dd.count = nverts;
         } else {
             dd.ibuf = halopad_metal_temp(src, nverts * isz, &toff);
             dd.index32 = (uint8_t)i32; dd.index_offset = toff; dd.count = nverts;

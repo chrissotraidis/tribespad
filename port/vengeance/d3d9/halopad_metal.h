@@ -58,6 +58,8 @@ void *halopad_metal_sampler(const hp_sampler_desc *d);
 void *halopad_metal_buffer(const void *data, uint32_t length);
 /* transient data that lives until the next Present: an unretained buffer and the offset in it */
 void *halopad_metal_temp(const void *data, uint32_t length, uint32_t *offset);
+/* The frame transient data belongs to: it changes at each Present. */
+uint32_t halopad_metal_frame(void);
 void halopad_metal_release(void *o);
 /* type: 2 = 2D, 3 = cube, 4 = 3D; format: MTLPixelFormat; swizzle: MTLTextureSwizzle x4 */
 void *halopad_metal_texture(int type, uint32_t format, uint32_t w, uint32_t h, uint32_t d, uint32_t levels, const uint8_t swizzle[4]);

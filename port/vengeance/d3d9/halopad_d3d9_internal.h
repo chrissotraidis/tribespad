@@ -19,6 +19,8 @@ typedef struct res {
     uint32_t length, buf, locks;                /* buffers */
     uint32_t count, *tokens;                    /* declarations (elements) and shaders (tokens) */
     void *native;                               /* Metal object, created on first use */
+    void *temp;                                 /* dynamic buffers: this frame's copy in the transient arena, */
+    uint32_t temp_off, temp_frame;              /* at this offset, made in this frame (halopad_metal_frame) */
     void *view;                                 /* render-target textures: the swizzled view that is sampled */
     uint8_t borrowed;                           /* native belongs to the Metal target (back buffer, depth) */
     uint8_t no_lock;
