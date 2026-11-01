@@ -59,6 +59,8 @@ ss = load('starsiege_build', R / 'scripts/starsiege/build_engine.py')
 # VENGEANCE_X87=double, vengeance_float64.c compiles llasm's binary64 runtime (and Starsiege's
 # extended-only helpers stay out).
 X87_DOUBLE = os.environ.get('VENGEANCE_X87', 'double') == 'double'
+# The binary64 runtime as bitcode for the translated modules (compile_and_link), not a host object.
+INLINE_X87 = R / 'port/vengeance/vengeance_float64_inline.c'
 RUNTIME = [p for p in ss.RUNTIME if p.name != 'tribes_float80.c' and not (X87_DOUBLE and p.name == 'starsiege_x87.c')]
 
 def set_platform(platform):
@@ -67,7 +69,7 @@ def set_platform(platform):
     ss.set_platform(platform)
     SDK, TARGET = ss.SDK, ss.TARGET
 # The host: port/vengeance (C and Objective-C), with its Direct3D 9 on Metal in d3d9/.
-HOST = sorted((R / 'port/vengeance').glob('**/*.c')) + sorted((R / 'port/vengeance').glob('**/*.m'))
+HOST = [p for p in sorted((R / 'port/vengeance').glob('**/*.c')) if p.name != INLINE_X87.name] + sorted((R / 'port/vengeance').glob('**/*.m'))
 D3D9 = R / 'port/vengeance/d3d9'
 COM_BASE = 0xfff80000  # COM method addresses: clear of TribesPad's graphics (0xfffa....) and system (0xfffb....) exports
 # Host routes the guest calls (cdecl), at Starsiege's addresses: SDL's allocator callbacks.
@@ -500,10 +502,23 @@ def compile_and_link(modules, out, report, graphics):
             subprocess.run(cmd, check=True)
             cache[str(source)] = key
         objects.append(str(obj))
+    # Binary64 x87: the runtime's helpers linked into each translated module as
+    # bitcode (internal there), so each floating-point instruction is inlined
+    # where the game's code runs it instead of costing a call. The executable
+    # keeps vengeance_float64.c for everything else.
+    inline = []
+    if X87_DOUBLE:
+        bc = out / 'obj' / 'x87-inline.bc'
+        key = ''.join(sha(f) for f in [INLINE_X87, R / 'port/vengeance/vengeance_float64.c', R / 'port/llasm-support/llasm_float.c',
+                                      R / 'port/llasm-support/llasm_cpu.h']) + ' '.join(flags)
+        if cache.get(str(INLINE_X87)) != key or not bc.exists():
+            subprocess.run(['clang'] + TARGET + flags + ['-I', str(R / 'port/llasm-support'), '-c', '-emit-llvm', str(INLINE_X87), '-o', str(bc)], check=True)
+            cache[str(INLINE_X87)] = key
+        inline = ['-Xclang', '-mlink-builtin-bitcode', '-Xclang', str(bc)]
     for m in modules:
         ll = out / pathlib.Path(m).stem / 'module.ll'
         obj = out / 'obj' / ('module_' + pathlib.Path(m).stem + '.o')
-        key = sha(ll) + OPT + PLATFORM + ('' if PLATFORM == 'macos' else ' weak-common')
+        key = sha(ll) + OPT + PLATFORM + ('' if PLATFORM == 'macos' else ' weak-common') + (' x87-inline ' + sha(bc) if inline else '')
         if cache.get(str(ll)) != key or not obj.exists():
             say('%s: compiling translated code (%s)' % (m, OPT))
             start = time.monotonic()
@@ -515,7 +530,7 @@ def compile_and_link(modules, out, report, graphics):
                 # and become local to it.
                 source = ll.with_name('module-embedded.ll')
                 source.write_text(ll.read_text(encoding=ENC).replace(' = common global ', ' = weak global '), encoding=ENC)
-            subprocess.run(['clang'] + TARGET + [OPT, '-Wno-override-module', '-c', str(source), '-o', str(obj)], check=True)
+            subprocess.run(['clang'] + TARGET + [OPT, '-Wno-override-module', '-c', str(source), '-o', str(obj)] + inline, check=True)
             report.setdefault('compile_seconds', {})[m] = round(time.monotonic() - start)
             cache[str(ll)] = key
         objects.append(str(obj))
