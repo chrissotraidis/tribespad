@@ -481,8 +481,8 @@ def compile_and_link(modules, out, report, graphics):
         # shared runtime source (pinned for Tribes 2) stays as it is.
         hot = ['-mllvm', '-inline-threshold=1000'] if source.name == 'vengeance_float80.c' else []
         key = sha(source) + (sha(out / 'vengeance_engine.inc') if source.parent.name == 'vengeance' else '') + ' '.join(flags + hot)
-        if source.parent == D3D9 or source.parent.name == 'vengeance':  # the Direct3D code's headers
-            key += ''.join(sha(h) for h in sorted(D3D9.glob('*.h')))
+        if source.parent == D3D9 or source.parent.name == 'vengeance':  # the Direct3D code's headers, and Vengeance's own
+            key += ''.join(sha(h) for h in sorted(D3D9.glob('*.h')) + sorted((R / 'port/vengeance').glob('*.h')))
         if source.suffix in ('.c', '.m'):  # C files a source includes (Starsiege's heap and input include TribesPad's)
             key += ''.join(sha(source.parent / inc) for inc in re.findall(r'^#include "([^"]+\.c)"', source.read_text(errors='replace'), re.M))
             key += sha(R / 'port/core/guest_memory_layout.h')
