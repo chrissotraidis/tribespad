@@ -13,6 +13,12 @@ static const SDL_Scancode tribes2_keys[9]={SDL_SCANCODE_E,SDL_SCANCODE_D,SDL_SCA
     SDL_SCANCODE_R,SDL_SCANCODE_KP_ENTER};
 static const SDL_Scancode *game_keys=tribes2_keys;
 void tb_mobile_controls_keys(const SDL_Scancode keys[9]){game_keys=keys?keys:tribes2_keys;}
+/* Tribes: Vengeance jumps with a tap of the jetpack (right mouse); Space only skis.
+   Its Ski / Jump button does what Tribes 1 and 2's does, as the controller's A
+   does (starsiege_input.c): a 90 ms jet tap when pressed, then ski while held. */
+static int jump_taps_jet;static uint64_t jump_since;static bool jump_was;
+void tb_mobile_controls_jump_taps_jet(int on){jump_taps_jet=on;}
+int tb_mobile_controls_jumping(void){return jump_taps_jet&&jump_was&&SDL_GetTicks()-jump_since<90;}
 void tb_mobile_controls_emit(TBMobileControls *controls) {
     TBInputFrame frame=tb_input_frame(&controls->input);
     const SDL_Scancode *keys=game_keys;
@@ -21,6 +27,12 @@ void tb_mobile_controls_emit(TBMobileControls *controls) {
         ((!!(frame.actions&TBGrenade))<<5)|((!!(frame.actions&TBWeapon))<<6)|
         ((!!(frame.actions&TBUse))<<7)|((!!(frame.actions&TBInventory))<<8)|
         ((!!(frame.actions&TBFire))<<9)|((!!(frame.actions&TBJet))<<10);
+    if(jump_taps_jet){
+        bool jump=(held&(1u<<4))!=0;
+        if(jump&&!jump_was)jump_since=SDL_GetTicks();
+        jump_was=jump;
+        if(tb_mobile_controls_jumping())held=(held&~(1u<<4))|(1u<<10);
+    }
     uint32_t changed=held^controls->held;
     for(unsigned i=0;i<11;i++) if(changed&(1u<<i)) {
         bool down=(held&(1u<<i))!=0; SDL_Event event={0};

@@ -17,3 +17,7 @@ void tb_mobile_controls_keys(const SDL_Scancode keys[9]);
 void tb_mobile_controls_install_starsiege(void);
 /* Touch controls for Tribes: Vengeance: its keys and menu. */
 void tb_mobile_controls_install_vengeance(void);
+/* Vengeance: Ski / Jump taps the jetpack for 90 ms on press, then skis
+   (mobile_controls.c); emit again after 90 ms to end the tap. */
+void tb_mobile_controls_jump_taps_jet(int on);
+int tb_mobile_controls_jumping(void);

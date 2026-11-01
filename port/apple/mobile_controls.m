@@ -270,6 +270,10 @@ static UIColor *tb_accent(void){return [UIColor colorWithRed:.60 green:.85 blue:
     self.previous=[self.finger locationInView:self];
     tb_input_action(&self.owner.controls->input,self.source,self.action,1);
     self.held=YES;[self update:self.finger];
+    /* Vengeance's Ski / Jump: end its jet tap, then ski (mobile_controls.c). */
+    if(tb_vengeance&&self.action==TBJump){__weak TBGamePad *weak=self;
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW,(int64_t)(.1*NSEC_PER_SEC)),dispatch_get_main_queue(),^{
+            TBGamePad *me=weak;if(me&&me.owner.controls)tb_mobile_controls_emit(me.owner.controls);});}
 }
 -(void)touchesMoved:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
     (void)event;if([touches containsObject:self.finger])[self update:self.finger];
@@ -695,9 +699,9 @@ static TBChatNode *tb_starsiege_chat_tree(void){
         {TBKindButton,TBGrenade,"burst.fill","circle.fill","Grenade",NO},
         {TBKindButton,TBUse,"backpack.fill","shippingbox.fill","Pack",NO},
         {TBKindButton,TBInventory,"square.grid.2x2.fill","square.grid.2x2","Inventory",NO}};
-    /* Tribes: Vengeance: Space skis (jumping is on Jet, the right mouse button)
-       and the last button is Use (F). */
-    if(tb_vengeance){spec[4].caption="Ski";spec[8].symbol="hand.point.up.left.fill";spec[8].fallback="hand.raised.fill";spec[8].caption="Use";}
+    /* Tribes: Vengeance: Ski / Jump taps the jetpack, then skis, as in the other
+       games (tb_mobile_controls_jump_taps_jet); the last button is Use (F). */
+    if(tb_vengeance){spec[8].symbol="hand.point.up.left.fill";spec[8].fallback="hand.raised.fill";spec[8].caption="Use";}
     NSMutableArray *pads=[NSMutableArray new];
     for(unsigned i=0;i<sizeof spec/sizeof spec[0];i++) {
         TBGamePad *pad=[[TBGamePad alloc] initWithKind:spec[i].kind symbol:@(spec[i].symbol) fallback:@(spec[i].fallback) caption:@(spec[i].caption)];
@@ -1099,7 +1103,7 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
 /* The first few times the controls appear, say what the main buttons do. */
 -(void)showHint {
     double shown=tb_setting(@"TribesPad.hintsShown",0);if(shown>=3)return;tb_set(@"TribesPad.hintsShown",shown+1);
-    [self flashHint:tb_vengeance?@"Hold JET to jump and fly  ·  Hold SKI on slopes to keep speed\nDrag the right side to aim  ·  ··· has the game menu, quick save and quick load":
+    [self flashHint:tb_vengeance?@"Hold JET to fly  ·  Tap SKI / JUMP to jump, hold it on slopes to keep speed\nDrag the right side to aim  ·  ··· has the game menu, quick save and quick load":
         @"Hold JET to fly  ·  Hold SKI / JUMP on slopes to keep speed\nDrag the right side to aim  ·  ··· has chat, scores and the game menu"];
 }
 -(void)flashHint:(NSString *)text {
@@ -1741,7 +1745,7 @@ static UIAction *tb_menu_find(UIMenuElement *e,NSString *path,NSString *want){
             "Drag with two fingers to scroll.\n\n"
             "Playing: the touch controls appear by themselves when play starts and step aside for menus.\n"
             "Move: stick, bottom left\nAim: drag on the right side\n"
-            "Fire: hold; drag while firing to aim\nJet (orange): tap to jump, hold to fly. Ski: hold on downhill slopes to keep speed\n"
+            "Fire: hold; drag while firing to aim\nJet (orange): hold to fly. Ski / Jump: tap to jump, hold on downhill slopes to keep speed\n"
             "Grenade and Weapon: beside Jet and above Fire\nPack and Use: above the stick\n\n"
             "The game menu, quick save, quick load, objectives and the other keys are in the ··· menu."];
         return;
@@ -1933,7 +1937,7 @@ void tb_mobile_controls_install_vengeance(void) {
        mouse buttons. */
     static const SDL_Scancode keys[9]={SDL_SCANCODE_W,SDL_SCANCODE_S,SDL_SCANCODE_A,SDL_SCANCODE_D,SDL_SCANCODE_SPACE,
         SDL_SCANCODE_E,TB_KEY_WHEEL_DOWN,SDL_SCANCODE_Q,SDL_SCANCODE_F};
-    tb_vengeance=YES;tb_mobile_controls_keys(keys);tb_mobile_controls_install();
+    tb_vengeance=YES;tb_mobile_controls_keys(keys);tb_mobile_controls_jump_taps_jet(1);tb_mobile_controls_install();
 }
 void tb_mobile_controls_install(void) {
     static TBMobileControls controls;
