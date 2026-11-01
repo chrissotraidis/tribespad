@@ -190,7 +190,7 @@ in TribesPad).
 ### Game picker
 
 TribesPad opens to a picker: **Starsiege: Tribes** and **Tribes 2**, each with how many people
-are playing now. Tap a card, or choose with the D-pad, left stick or arrow keys and press A or
+are playing now, and **Tribes: Vengeance** when the build carries it. Tap a card, or choose with the D-pad, left stick or arrow keys and press A or
 Return. The gear at the top right has **Open Tribes 2 Directly**, which skips the picker;
 **Settings → Display → Game Picker at Launch** brings it back. In a game, **··· → Choose Game…**
 closes TribesPad, and the picker appears the next time you open it (iOS doesn't let an app restart
@@ -214,6 +214,24 @@ it out).
 - **Not yet:** modded servers (RPG and other mods) need their own files, which the game cannot
   download; graphics presets ([validation](docs/validation/starsiege-g2.md)).
 
+### Tribes: Vengeance (in development)
+
+The Tribes: Vengeance campaign runs in development builds, recompiled from the community release
+the same way as the other two games. Nothing from the game is in the repository:
+`scripts/vengeance/prepare.py` downloads the Revengeance community ZIP and checks every file
+against `config/vengeance/inputs.json`; `scripts/vengeance/build_engine.py --target client
+--platform device` and `build-ipad-engine.py --vengeance-object` build it into the app
+([progress](docs/validation/vengeance-progress.md)). The regular player build does not include it yet.
+
+- **Campaign:** New Game, Load Game and the whole story; ··· → This Match → Campaign has Quick
+  Save and Quick Load.
+- **Controller:** RT fire, LT jet, A jump (hold to ski), LB ski, RB and D-pad left change weapons,
+  Y grenade, X pack, B use; Menu opens the game menu.
+- **Graphics:** ··· → Options → Graphics Quality: Fast (the default, without projected lights and
+  shadows) or Full Detail, and a Resolution of 1024 × 768, 1600 × 1200 (the default) or
+  2048 × 1536.
+- **Not yet:** multiplayer; speed is 30 to 40 frames a second indoors and lower in the largest
+  outdoor missions.
 
 ### Keyboard and trackpad
 
@@ -383,8 +401,8 @@ How this works, stage by stage, is in [Reproducible build](docs/REPRODUCIBLE-BUI
 - Join TribesNEXT community servers
 - Starsiege: mod packs, IRC chat, graphics presets and faster loading
   ([plan](docs/STARSIEGE-TRIBES-PLAN.md), [validation](docs/validation/starsiege-g2.md))
-- Optional Vengeance and Ascend engines in the same app
-  ([implementation plan](docs/VENGEANCE-ASCEND-PLAN.md); research only, neither playable here yet)
+- Tribes: Vengeance in the player build, then its multiplayer; Ascend after that
+  ([plan](docs/VENGEANCE-ASCEND-PLAN.md), [progress](docs/validation/vengeance-progress.md))
 - A headless dedicated server on a Mac, then Linux on ARM
   ([plan](docs/DEDICATED-SERVER-PLAN.md))
 - Raspberry Pi 5 / Linux on ARM, then Android, as personal builds
