@@ -433,7 +433,11 @@ def compile_and_link(modules, out, report, graphics):
     (out / 'obj').mkdir(exist_ok=True)
     for source in RUNTIME + graphics['sources'] + HOST + [out / n for n in ['dispatch.ll', 'bindings.ll', 'stops.ll', 'seh.ll', 'com.ll', 'com_table.c']]:
         obj = out / 'obj' / (source.stem + '.o')
-        key = sha(source) + (sha(out / 'vengeance_engine.inc') if source.parent.name == 'vengeance' else '') + ' '.join(flags)
+        # The x87 runtime's small stack and conversion helpers run on every floating-point
+        # instruction; inlined, they no longer cost a call each. A compiler setting, so the
+        # shared runtime source (pinned for Tribes 2) stays as it is.
+        hot = ['-mllvm', '-inline-threshold=1000'] if source.name == 'vengeance_float80.c' else []
+        key = sha(source) + (sha(out / 'vengeance_engine.inc') if source.parent.name == 'vengeance' else '') + ' '.join(flags + hot)
         if source.parent == D3D9 or source.parent.name == 'vengeance':  # the Direct3D code's headers
             key += ''.join(sha(h) for h in sorted(D3D9.glob('*.h')))
         if source.suffix in ('.c', '.m'):  # C files a source includes (Starsiege's heap and input include TribesPad's)
@@ -445,7 +449,7 @@ def compile_and_link(modules, out, report, graphics):
             else:
                 # HaloPad's Direct3D code keeps HaloPad's own C dialect (scripts/run-core.py there).
                 own = ['-std=c2x', '-w', '-fno-fast-math', '-ffp-contract=off'] if source.parent == D3D9 else []
-                cmd = ['clang'] + TARGET + (['-fobjc-arc'] if source.suffix == '.m' else []) + flags + own + [
+                cmd = ['clang'] + TARGET + (['-fobjc-arc'] if source.suffix == '.m' else []) + flags + own + hot + [
                     '-I', str(out), '-I', str(R / 'port/llasm-support'), '-c', str(source), '-o', str(obj)]
             subprocess.run(cmd, check=True)
             cache[str(source)] = key
