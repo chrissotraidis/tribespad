@@ -62,6 +62,7 @@ PREP(x86_repne_cmpsd_prep, uint32_t, 4, !=)
 #include <stdlib.h>
 #include <string.h>
 extern void x87_fninit_void(_cpu *);
+#if !VENGEANCE_X87_DOUBLE  /* the binary64 runtime has its own (llasm_float.c) */
 EXTERNC void CCALL x87_fnsave_void(CPU, uint8_t *state)
 {
     if (!cpu->_st_extended || cpu->_st_top >= 8) abort();
@@ -89,6 +90,12 @@ EXTERNC void CCALL x87_frstor_void(CPU, const uint8_t *state)
         memcpy(&cpu->_st_exp[i], state + 36 + 10 * n, 2);
     }
 }
+#endif
+#if VENGEANCE_X87_DOUBLE
+#define VG_EXTENDED_REQUIRED 0
+#else
+#define VG_EXTENDED_REQUIRED 1
+#endif
 
 /* bt/bts dword [esp], eax (the MSVC runtime's character-set bitmaps, strpbrk and
    kin): eax is a signed bit offset from esp; CF gets the bit, bts then sets it. */
@@ -122,14 +129,14 @@ EXTERNC void CCALL vg_xor_byte_eax1_bh(CPU)
    status with TOP, tag; pointers zero). FNSTENV then masks every exception. */
 EXTERNC void CCALL vg_fnstenv_esp(CPU)
 {
-    if (!cpu->_st_extended || cpu->_st_top >= 8) abort();
+    if ((VG_EXTENDED_REQUIRED && !cpu->_st_extended) || cpu->_st_top >= 8) abort();
     uint32_t words[7] = {cpu->_st_cw & 0xffff, (cpu->_st_sw_cond & ~0x3800u & 0xffff) | (cpu->_st_top << 11), cpu->_st_tag & 0xffff, 0, 0, 0, 0};
     memcpy(REG2PTR(esp), words, sizeof words);
     cpu->_st_cw |= 0x3f;
 }
 EXTERNC void CCALL vg_fldenv_esp(CPU)
 {
-    if (!cpu->_st_extended) abort();
+    if (VG_EXTENDED_REQUIRED && !cpu->_st_extended) abort();
     uint32_t words[3]; memcpy(words, REG2PTR(esp), sizeof words);
     cpu->_st_cw = words[0] & 0xffff;
     cpu->_st_top = (words[1] >> 11) & 7;

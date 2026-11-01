@@ -14,6 +14,7 @@
 
    On the iPad, SoftFloat was about a third of each frame. Checked against Bochs
    on random operands by scripts/test-x87-fast.py. */
+#if !VENGEANCE_X87_DOUBLE  /* vengeance_float64.c replaces this runtime */
 #include <math.h>
 #include "../core/bochs_math.h"
 #include "../core/x87_exact.h"
@@ -101,3 +102,4 @@ static int vg_store_real(unsigned width,TBExt80 value,uint16_t control,uint64_t 
  }
  return tb_bo_store_real(width,value,control,bits,flags);
 }
+#endif

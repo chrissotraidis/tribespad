@@ -55,8 +55,11 @@ PLATFORM = 'macos'
 # cached case-insensitive file lookups, x87 helpers, windows, registry, sockets,
 # sound and input). Its own host program (starsiege_engine.c) is not used.
 ss = load('starsiege_build', R / 'scripts/starsiege/build_engine.py')
-# x87: port/vengeance/vengeance_float80.c compiles tribes_float80.c with fast paths.
-RUNTIME = [p for p in ss.RUNTIME if p.name != 'tribes_float80.c']
+# x87: port/vengeance/vengeance_float80.c compiles tribes_float80.c with fast paths, or with
+# VENGEANCE_X87=double, vengeance_float64.c compiles llasm's binary64 runtime (and Starsiege's
+# extended-only helpers stay out).
+X87_DOUBLE = os.environ.get('VENGEANCE_X87', 'double') == 'double'
+RUNTIME = [p for p in ss.RUNTIME if p.name != 'tribes_float80.c' and not (X87_DOUBLE and p.name == 'starsiege_x87.c')]
 
 def set_platform(platform):
     global PLATFORM, SDK, TARGET
@@ -467,7 +470,7 @@ def fast_dispatch(ir, count):
 
 def compile_and_link(modules, out, report, graphics):
     math = load('sse', R / 'scripts/sse_build_inputs.py').sse_inputs(PLATFORM)
-    flags = ['-O2', '-DPTROFS_64BIT', '-Wno-override-module', '-Wall', '-Wextra', '-Werror'] + math['compile_flags'] + graphics['flags']
+    flags = ['-O2', '-DPTROFS_64BIT', '-Wno-override-module', '-Wall', '-Wextra', '-Werror'] + math['compile_flags'] + graphics['flags'] + (['-DVENGEANCE_X87_DOUBLE=1'] if X87_DOUBLE else [])
     if PLATFORM != 'macos':
         flags.append('-DVENGEANCE_EMBEDDED')  # vengeance_engine.c: vengeance_mobile_engine_main instead of main
     cache_path = out / 'objects.json'

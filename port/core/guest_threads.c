@@ -135,6 +135,9 @@ static void cancel_thread(void *context){
     if(!atomic_load_explicit(&t->process->exiting,memory_order_acquire)||t->phase!=2)stop("cancellation outside process shutdown");
     t->code=t->process->exit_code;retire_thread(t,1);
 }
+/* The x87 register format new threads start in: TribesPad's extended one, unless the
+   game's runtime defines this as 0 (Tribes: Vengeance's binary64 option). */
+__attribute__((weak)) int tribes_x87_extended_default=1;
 static void *run(void *context){
     check(pthread_setcancelstate(PTHREAD_CANCEL_DISABLE,NULL));
     Thread *t=context;self=t;tribes_thread_object_set_current(t->object);
@@ -143,7 +146,7 @@ static void *run(void *context){
     uint64_t base=t->process->base;t->cpu._pointer_offset=base;t->cpu._esp=t->stack_top;t->cpu._eflags=0x202;
     if(!tribes_absolute_memory_bind(base))stop("absolute-memory thread binding");
     t->cpu.stack_bottom=(void *)(uintptr_t)(base+t->stack_bottom);t->cpu.stack_top=(void *)(uintptr_t)(base+t->stack_top);
-    t->cpu._st_cw=0x27f;t->cpu._st_tag=0xffff;t->cpu._st_extended=1;t->cpu._mxcsr=0x1f80;
+    t->cpu._st_cw=0x27f;t->cpu._st_tag=0xffff;t->cpu._st_extended=tribes_x87_extended_default!=0;t->cpu._mxcsr=0x1f80;
     for(ThreadModule *m=t->process->modules;m;m=m->next)if(m->source.tls_index!=UINT32_MAX){
         uint32_t block=t->environment+m->offset;
         if(m->source.template_size)memcpy((void *)(uintptr_t)(base+block),m->source.template_bytes,m->source.template_size);
