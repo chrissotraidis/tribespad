@@ -288,6 +288,18 @@ static void *upload_texture(res *t)
         uint32_t depth = type == 4 ? t->ld[l] : 1, slice = type == 4 ? t->slice[l] : t->size[l];
         for (uint32_t f = 0; f < faces; f++) {
             const uint8_t *src = (const uint8_t *)G(t->mem[l]) + f * t->size[l];
+            {   /* diagnostic: HALOPAD_DUMP_TEXTURE=WIDTHxHEIGHT writes such textures' level data to /tmp */
+                static const char *want = (const char *)1;
+                if (want == (const char *)1) want = getenv("HALOPAD_DUMP_TEXTURE");
+                char size[32];
+                snprintf(size, sizeof size, "%ux%u", t->lw[l], t->lh[l]);
+                if (want && !strcmp(want, size)) {
+                    char path[96];
+                    snprintf(path, sizeof path, "/tmp/hp-tex-%08x-%u-%u-%u.bin", t->guest, t->format, l, (unsigned)halopad_d3d9_frame);
+                    FILE *o = fopen(path, "wb");
+                    if (o) { fwrite(src, 1, t->size[l], o); fclose(o); }
+                }
+            }
             if (convert == 2) {
                 uint32_t n = t->lw[l] * t->lh[l];
                 uint8_t *tmp = malloc(4 * n * depth);
@@ -407,6 +419,14 @@ static uint32_t draw(device *d, uint32_t type, uint32_t prims, uint32_t start, i
                 rs[27], rs[19], rs[20], rs[171], rs[7], rs[14], rs[23], rs[15], rs[25], rs[24] & 0xFF, rs[168],
                 d->texture[0], d->texture[1], d->texture[2], d->texture[3],
                 d->viewport[0], d->viewport[1], d->viewport[2], d->viewport[3], callers);
+        for (int s = 0; s < 2; s++) if (d->texture[s]) {
+            res *t = halopad_com_state(halopad_com_interface(d->texture[s]), d->texture[s]);
+            if (t) fprintf(stderr, "HALOPAD DRAW   tex%d %08x format %u %ux%u levels %u usage %x pool %u\n", s, d->texture[s], t->format, t->width, t->height, t->levels, t->usage, t->pool);
+        }
+        for (int s = 0; s < 3; s++)
+            fprintf(stderr, "HALOPAD DRAW   stage%d color %u(%x,%x,%x) alpha %u(%x,%x,%x) result %x texcoord %x tfactor %08x\n", s,
+                    d->tss[s][1], d->tss[s][2], d->tss[s][3], d->tss[s][26], d->tss[s][4], d->tss[s][5], d->tss[s][6], d->tss[s][27],
+                    d->tss[s][28], d->tss[s][11], d->rs[60]);
         fprintf(stderr, "HALOPAD DRAW   depth %g..%g bias %g slope %g stencil %u fog %u/%08x/%u scissor %u clip %u\n", f32(d->viewport[4]), f32(d->viewport[5]),
                 f32(rs[195]), f32(rs[175]), rs[52], rs[28], rs[34], rs[35], rs[174], rs[136]);
         if (up) {

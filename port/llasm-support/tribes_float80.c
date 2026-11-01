@@ -12,16 +12,19 @@
 /* The checked pass proves only bounded fields of the 440-byte CPU object.
    Addresses loaded from its fields and guest output buffers remain checked. */
 #define NATIVE_CPU __attribute__((annotate("tribes.native-cpu")))
+/* The small stack and conversion helpers run on every x87 instruction; inlined, they
+   no longer cost a call each (they showed up separately in Tribes: Vengeance profiles). */
+#define HOT static inline __attribute__((always_inline))
 
 EXTERNC uint32_t halopad_x87_result(_cpu *, const int64_t *);
 static const TBExt80 indefinite={UINT64_C(0xc000000000000000),0xffff};
-static NATIVE_CPU unsigned slot(CPU,unsigned n){if(n>=8||cpu->_st_top>=8||!cpu->_st_extended)abort();return (cpu->_st_top+n)&7;}
-static unsigned tag(TBExt80 v){unsigned e=v.sign_exponent&0x7fff;if(!e&&!v.significand)return 1;if(!e||e==0x7fff||!(v.significand>>63))return 2;return 0;}
-static NATIVE_CPU void exception(CPU,unsigned flags){cpu->_st_sw_cond|=flags;if(flags&(~cpu->_st_cw)&63){cpu->_st_sw_cond|=0x8080;abort();}}
-static NATIVE_CPU TBExt80 read_st(CPU,unsigned n){unsigned i=slot(cpu,n);TBExt80 v;memcpy(&v.significand,&cpu->_st[i],8);v.sign_exponent=cpu->_st_exp[i];if(((cpu->_st_tag>>(2*i))&3)==3){cpu->_st_sw_cond&=~0x200u;exception(cpu,0x41);return indefinite;}return v;}
-static NATIVE_CPU void write_st(CPU,unsigned n,TBExt80 v){unsigned i=slot(cpu,n);memcpy(&cpu->_st[i],&v.significand,8);cpu->_st_exp[i]=v.sign_exponent;cpu->_st_tag=(cpu->_st_tag&~(3u<<(2*i)))|(tag(v)<<(2*i));}
-static NATIVE_CPU void pop(CPU){cpu->_st_tag|=3u<<(2*slot(cpu,0));cpu->_st_top=(cpu->_st_top+1)&7;}
-static NATIVE_CPU void push(CPU,TBExt80 v){unsigned i=slot(cpu,7);if(((cpu->_st_tag>>(2*i))&3)!=3){cpu->_st_sw_cond|=0x200;exception(cpu,0x41);v=indefinite;}else cpu->_st_sw_cond&=~0x200u;cpu->_st_top=i;write_st(cpu,0,v);}
+HOT NATIVE_CPU unsigned slot(CPU,unsigned n){if(n>=8||cpu->_st_top>=8||!cpu->_st_extended)abort();return (cpu->_st_top+n)&7;}
+HOT unsigned tag(TBExt80 v){unsigned e=v.sign_exponent&0x7fff;if(!e&&!v.significand)return 1;if(!e||e==0x7fff||!(v.significand>>63))return 2;return 0;}
+HOT NATIVE_CPU void exception(CPU,unsigned flags){cpu->_st_sw_cond|=flags;if(flags&(~cpu->_st_cw)&63){cpu->_st_sw_cond|=0x8080;abort();}}
+HOT NATIVE_CPU TBExt80 read_st(CPU,unsigned n){unsigned i=slot(cpu,n);TBExt80 v;memcpy(&v.significand,&cpu->_st[i],8);v.sign_exponent=cpu->_st_exp[i];if(((cpu->_st_tag>>(2*i))&3)==3){cpu->_st_sw_cond&=~0x200u;exception(cpu,0x41);return indefinite;}return v;}
+HOT NATIVE_CPU void write_st(CPU,unsigned n,TBExt80 v){unsigned i=slot(cpu,n);memcpy(&cpu->_st[i],&v.significand,8);cpu->_st_exp[i]=v.sign_exponent;cpu->_st_tag=(cpu->_st_tag&~(3u<<(2*i)))|(tag(v)<<(2*i));}
+HOT NATIVE_CPU void pop(CPU){cpu->_st_tag|=3u<<(2*slot(cpu,0));cpu->_st_top=(cpu->_st_top+1)&7;}
+HOT NATIVE_CPU void push(CPU,TBExt80 v){unsigned i=slot(cpu,7);if(((cpu->_st_tag>>(2*i))&3)!=3){cpu->_st_sw_cond|=0x200;exception(cpu,0x41);v=indefinite;}else cpu->_st_sw_cond&=~0x200u;cpu->_st_top=i;write_st(cpu,0,v);}
 static extFloat80_t sf(TBExt80 v){extFloat80_t x={.signif=v.significand,.signExp=v.sign_exponent};return x;}
 static TBExt80 tb(extFloat80_t x){return (TBExt80){x.signif,x.signExp};}
 typedef struct {uint_fast8_t rounding,flags,precision,tininess;} Environment;
@@ -32,7 +35,7 @@ static unsigned finish(Environment e){unsigned f=softfloat_exceptionFlags;softfl
    all 2^32 binary32 inputs and binary64 edge/random cases), without saving and
    restoring SoftFloat's thread-local environment: these widenings never round,
    and only a signaling NaN raises invalid. Denormal operands flag as before. */
-static TBExt80 widen(uint32_t sign,uint32_t exponent,uint64_t fraction,unsigned exponent_bits,unsigned fraction_bits,unsigned *flags){
+HOT TBExt80 widen(uint32_t sign,uint32_t exponent,uint64_t fraction,unsigned exponent_bits,unsigned fraction_bits,unsigned *flags){
  uint32_t all_ones=(1u<<exponent_bits)-1,bias=all_ones>>1;TBExt80 v;
  if(exponent==all_ones){
   if(fraction){v.significand=UINT64_C(0xC000000000000000)|(fraction<<(63-fraction_bits));if(!(fraction>>(fraction_bits-1)))*flags|=1;}
@@ -46,8 +49,8 @@ static TBExt80 widen(uint32_t sign,uint32_t exponent,uint64_t fraction,unsigned 
  }
  v.significand=(UINT64_C(1)<<63)|(fraction<<(63-fraction_bits));v.sign_exponent=(uint16_t)(sign<<15|(exponent-bias+16383));return v;
 }
-static NATIVE_CPU TBExt80 load32(CPU,uint32_t bits){unsigned f=0;TBExt80 v=widen(bits>>31,(bits>>23)&0xff,bits&0x7fffff,8,23,&f);if(!(bits&0x7f800000)&&(bits&0x7fffff))f|=2;exception(cpu,f);return v;}
-static NATIVE_CPU TBExt80 load64(CPU,uint32_t lo,uint32_t hi){uint64_t bits=lo|((uint64_t)hi<<32);unsigned f=0;TBExt80 v=widen((uint32_t)(bits>>63),(uint32_t)(bits>>52)&0x7ff,bits&UINT64_C(0xfffffffffffff),11,52,&f);if(!(bits&UINT64_C(0x7ff0000000000000))&&(bits&UINT64_C(0xfffffffffffff)))f|=2;exception(cpu,f);return v;}
+HOT NATIVE_CPU TBExt80 load32(CPU,uint32_t bits){unsigned f=0;TBExt80 v=widen(bits>>31,(bits>>23)&0xff,bits&0x7fffff,8,23,&f);if(!(bits&0x7f800000)&&(bits&0x7fffff))f|=2;exception(cpu,f);return v;}
+HOT NATIVE_CPU TBExt80 load64(CPU,uint32_t lo,uint32_t hi){uint64_t bits=lo|((uint64_t)hi<<32);unsigned f=0;TBExt80 v=widen((uint32_t)(bits>>63),(uint32_t)(bits>>52)&0x7ff,bits&UINT64_C(0xfffffffffffff),11,52,&f);if(!(bits&UINT64_C(0x7ff0000000000000))&&(bits&UINT64_C(0xfffffffffffff)))f|=2;exception(cpu,f);return v;}
 TBExt80 tribes_float80_widen32_for_test(uint32_t bits,unsigned *flags){*flags=0;return widen(bits>>31,(bits>>23)&0xff,bits&0x7fffff,8,23,flags);}
 TBExt80 tribes_float80_widen64_for_test(uint64_t bits,unsigned *flags){*flags=0;return widen((uint32_t)(bits>>63),(uint32_t)(bits>>52)&0x7ff,bits&UINT64_C(0xfffffffffffff),11,52,flags);}
 

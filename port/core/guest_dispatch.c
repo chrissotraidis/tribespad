@@ -38,7 +38,7 @@ __attribute__((weak,noinline)) int tribes_dispatch_permitted(uint32_t address) {
 static _Thread_local struct {
     uint32_t address;
     void (*function)(_cpu *);
-} dispatch_cache[256];
+} dispatch_cache[4096];   /* Tribes: Vengeance's virtual calls reach far more targets than 256 slots held */
 #endif
 void (*tribes_lookup(uint32_t address))(_cpu *) {
     if(!tribes_dispatch_permitted(address)){
@@ -46,7 +46,7 @@ void (*tribes_lookup(uint32_t address))(_cpu *) {
     }
     if (address == UINT32_C(0xfffff000)) return tribes_return_to_host;
 #ifndef TRIBESPAD_DISABLE_DISPATCH_CACHE
-    unsigned slot = ((address >> 2) ^ (address >> 12)) & 255;
+    unsigned slot = (address * UINT32_C(2654435761)) >> 20;
     if (dispatch_cache[slot].function && dispatch_cache[slot].address == address)
         return dispatch_cache[slot].function;
 #endif

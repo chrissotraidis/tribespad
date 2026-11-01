@@ -306,15 +306,37 @@ void halopad_metal_read_image(void *p, uint32_t *out, uint32_t w, uint32_t h)
 
 /* ---- frame, pipelines, resources and draws ---- */
 
-static NSMutableDictionary *pipelines, *depth_states, *samplers, *libraries;
+static NSMutableDictionary *libraries;
 static id<MTLBuffer> constant_attr;                 /* float4(0, 0, 0, 1) for missing vertex inputs */
 
-static NSData *key_of(const void *p, size_t n, const char *a, const char *b)
+/* Pipeline, depth-stencil and sampler states by their descriptions: C hash tables, since
+   every draw looks all three up. Keyed by NSData (with the shaders' whole source text),
+   the lookups were about a sixth of the game's thread. A pipeline's key holds its shaders'
+   source addresses: those strings are kept for the life of the process
+   (halopad_d3d9_resources.c), so an address names one source. */
+typedef struct hp_cache_entry { struct hp_cache_entry *next; uint64_t hash; void *object; uint32_t length; uint8_t key[]; } hp_cache_entry;
+typedef struct { hp_cache_entry *bucket[4096]; } hp_cache;
+static hp_cache pipelines, depth_states, samplers;
+static uint64_t cache_hash(const void *key, uint32_t length)
 {
-    NSMutableData *k = [NSMutableData dataWithBytes:p length:n];
-    if (a) [k appendBytes:a length:strlen(a)];
-    if (b) [k appendBytes:b length:strlen(b)];
-    return k;
+    uint64_t h = 1469598103934665603ull;
+    for (uint32_t i = 0; i < length; i++) h = (h ^ ((const uint8_t *)key)[i]) * 1099511628211ull;
+    return h;
+}
+static void *cache_get(hp_cache *c, const void *key, uint32_t length, uint64_t *hash)
+{
+    *hash = cache_hash(key, length);
+    for (hp_cache_entry *e = c->bucket[*hash & 4095]; e; e = e->next)
+        if (e->hash == *hash && e->length == length && !memcmp(e->key, key, length)) return e->object;
+    return NULL;
+}
+static void cache_put(hp_cache *c, const void *key, uint32_t length, uint64_t hash, id object)
+{
+    hp_cache_entry *e = malloc(sizeof *e + length);
+    if (!e) abort();
+    e->hash = hash; e->length = length; memcpy(e->key, key, length);
+    e->object = (__bridge_retained void *)object;
+    e->next = c->bucket[hash & 4095]; c->bucket[hash & 4095] = e;
 }
 
 static id<MTLFunction> function(const char *src, NSString *name, char *err, uint32_t errlen)
@@ -336,12 +358,10 @@ static id<MTLFunction> function(const char *src, NSString *name, char *err, uint
 void *halopad_metal_pipeline(const hp_pipeline_desc *d, char *err, uint32_t errlen)
 {
     ensure_app();
-    if (!pipelines) pipelines = [NSMutableDictionary new];
-    hp_pipeline_desc copy = *d;
-    copy.vs_msl = copy.ps_msl = NULL;
-    NSData *key = key_of(&copy, sizeof copy, d->vs_msl, d->ps_msl);
-    id<MTLRenderPipelineState> ps = pipelines[key];
-    if (ps) return (__bridge void *)ps;
+    uint64_t hash;
+    void *found = cache_get(&pipelines, d, sizeof *d, &hash);
+    if (found) return found;
+    id<MTLRenderPipelineState> ps;
     @autoreleasepool {
         MTLRenderPipelineDescriptor *pd = [MTLRenderPipelineDescriptor new];
         pd.vertexFunction = function(d->vs_msl, @"hp_vs", err, errlen);
@@ -377,17 +397,16 @@ void *halopad_metal_pipeline(const hp_pipeline_desc *d, char *err, uint32_t errl
         trace_pipes++; trace_pipe_s += CFAbsoluteTimeGetCurrent() - t0;
         if (!ps) { snprintf(err, errlen, "%s", e.localizedDescription.UTF8String); return NULL; }
     }
-    pipelines[key] = ps;
+    cache_put(&pipelines, d, sizeof *d, hash, ps);
     return (__bridge void *)ps;
 }
 
 void *halopad_metal_depth_state(const hp_depth_desc *d)
 {
     ensure_app();
-    if (!depth_states) depth_states = [NSMutableDictionary new];
-    NSData *key = key_of(d, sizeof *d, NULL, NULL);
-    id<MTLDepthStencilState> s = depth_states[key];
-    if (s) return (__bridge void *)s;
+    uint64_t hash;
+    void *found = cache_get(&depth_states, d, sizeof *d, &hash);
+    if (found) return found;
     MTLDepthStencilDescriptor *dd = [MTLDepthStencilDescriptor new];
     dd.depthCompareFunction = d->depth_func;
     dd.depthWriteEnabled = d->depth_write;
@@ -401,26 +420,25 @@ void *halopad_metal_depth_state(const hp_depth_desc *d)
         dd.frontFaceStencil = sd[0];
         dd.backFaceStencil = sd[1];
     }
-    s = [gpu newDepthStencilStateWithDescriptor:dd];
-    depth_states[key] = s;
+    id<MTLDepthStencilState> s = [gpu newDepthStencilStateWithDescriptor:dd];
+    cache_put(&depth_states, d, sizeof *d, hash, s);
     return (__bridge void *)s;
 }
 
 void *halopad_metal_sampler(const hp_sampler_desc *d)
 {
     ensure_app();
-    if (!samplers) samplers = [NSMutableDictionary new];
-    NSData *key = key_of(d, sizeof *d, NULL, NULL);
-    id<MTLSamplerState> s = samplers[key];
-    if (s) return (__bridge void *)s;
+    uint64_t hash;
+    void *found = cache_get(&samplers, d, sizeof *d, &hash);
+    if (found) return found;
     MTLSamplerDescriptor *sd = [MTLSamplerDescriptor new];
     sd.minFilter = d->min; sd.magFilter = d->mag; sd.mipFilter = d->mip;
     sd.sAddressMode = d->u; sd.tAddressMode = d->v; sd.rAddressMode = d->w;
     sd.borderColor = d->border;
     sd.maxAnisotropy = d->anisotropy ? d->anisotropy : 1;
     sd.lodMinClamp = d->lod_min;
-    s = [gpu newSamplerStateWithDescriptor:sd];
-    samplers[key] = s;
+    id<MTLSamplerState> s = [gpu newSamplerStateWithDescriptor:sd];
+    cache_put(&samplers, d, sizeof *d, hash, s);
     return (__bridge void *)s;
 }
 
