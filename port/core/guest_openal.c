@@ -134,7 +134,15 @@ uint32_t tribes_oa_alListener3f(_cpu *c,uint32_t p,uint32_t x,uint32_t y,uint32_
 LISTENER_VECTOR(alListenerfv,ALfloat,0) LISTENER_VECTOR(alGetListeneriv,ALint,1) LISTENER_VECTOR(alGetListenerfv,ALfloat,1)
 #define OBJECT_SCALAR(name,type,convert) uint32_t tribes_oa_##name(_cpu *c,uint32_t o,uint32_t p,uint32_t v){BEGIN;name(o,p,(type)(convert));DONE(0);}
 uint32_t tribes_oa_alSourcei(_cpu *c,uint32_t o,uint32_t p,uint32_t v){BEGIN;alSourcei(o,p,(ALint)v);if(p==AL_BUFFER)empty_clear(o);DONE(0);}
-OBJECT_SCALAR(alSourcef,ALfloat,f32(v)) OBJECT_SCALAR(alBufferi,ALint,v)
+/* A negative distance (Tribes: Vengeance sets a reference distance of -0.0127 on some
+   sources) is out of range for OpenAL Soft, which leaves AL_INVALID_VALUE pending; the
+   game's next alGetError, after generating a sound's buffer, then drops that sound
+   ("AL_INVALID_VALUE in RegisterSound"). Such a value is ignored, keeping the source's
+   current setting, with no error. */
+uint32_t tribes_oa_alSourcef(_cpu *c,uint32_t o,uint32_t p,uint32_t v){BEGIN;float f=f32(v);
+ if((p==AL_REFERENCE_DISTANCE||p==AL_MAX_DISTANCE||p==AL_ROLLOFF_FACTOR)&&f<0)DONE(0);
+ alSourcef(o,p,f);DONE(0);}
+ OBJECT_SCALAR(alBufferi,ALint,v)
 uint32_t tribes_oa_alSource3f(_cpu *c,uint32_t o,uint32_t p,uint32_t x,uint32_t y,uint32_t z){BEGIN;alSource3f(o,p,f32(x),f32(y),f32(z));DONE(0);}
 uint32_t tribes_oa_alSource3i(_cpu *c,uint32_t o,uint32_t p,uint32_t x,uint32_t y,uint32_t z){BEGIN;alSource3i(o,p,x,y,z);DONE(0);}
 #define OBJECT_VECTOR(name,type,get,scalar) uint32_t tribes_oa_##name(_cpu *c,uint32_t o,uint32_t p,uint32_t a){BEGIN;unsigned w=width(p);if((scalar)&&w!=1)stop("scalar output width");type v[6];size_t n=sizeof(type)*w;memcpy(v,guest(c,a,n),n);name(o,p,v);if(get)memcpy(guest(c,a,n),v,n);DONE(0);}
