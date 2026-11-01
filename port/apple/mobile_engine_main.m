@@ -60,13 +60,16 @@ static int enter_vengeance(void) {
     if(!tb_vengeance_prepare_paths(gamedata.fileSystemRepresentation,[support.path stringByAppendingPathComponent:@"TribesPad"].fileSystemRepresentation,paths))return 125;
     if(chdir(paths[2])){perror("TribesPad Vengeance folder");return 125;}
     setenv("VENGEANCE_CONTENT",paths[4],1);
-    char *arguments[]={"VengeanceEngine",paths[0],paths[1],paths[2],paths[3],NULL};
+    /* Test launches only: VENGEANCE_MAP (devicectl --environment-variables) starts
+       on that map, as the game's own command line does. */
+    char *map=getenv("VENGEANCE_MAP");
+    char *arguments[]={"VengeanceEngine",paths[0],paths[1],paths[2],paths[3],map,NULL};
     /* The game draws a 1024x768 frame; the screen scales it up (content_area.m). */
     tb_content_fix_game_size(1024,768);
     extern void tb_mobile_controls_install_vengeance(void);
     tb_mobile_controls_install_vengeance();
     fprintf(stderr,"TribesPad: entering Tribes: Vengeance\n");
-    return vengeance_mobile_engine_main(5,arguments);
+    return vengeance_mobile_engine_main(map?6:5,arguments);
 }
 #endif
 extern void tb_mobile_controls_install(void);
