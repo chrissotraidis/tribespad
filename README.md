@@ -219,8 +219,8 @@ it out).
 The Tribes: Vengeance campaign runs in development builds, recompiled from the community release
 the same way as the other two games. Nothing from the game is in the repository. Add it to the
 build with `scripts/build-tribespad.sh --games tribes2,starsiege,vengeance` (iPhone, iPad, Simulator
-and Mac; `brew install innoextract` first): it downloads the Revengeance community ZIP (about 3 G`),
-checks every file against `config/vengeance/inputs.json` and adds about 4 G` to the app
+and Mac; `brew install innoextract` first): it downloads the Revengeance community ZIP (about 3 GB),
+checks every file against `config/vengeance/inputs.json` and adds about 10 GB to the app (the campaign and its 200 multiplayer maps)
 ([progress](docs/validation/vengeance-progress.md)). The default build leaves it out while it is in
 development.
 

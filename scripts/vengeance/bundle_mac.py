@@ -4,7 +4,7 @@
 Puts the Vengeance engine beside the others in Contents/MacOS (VengeanceEngine),
 its module images in Contents/Resources/GameData/Vengeance/images and the game
 folder, prepared from the player's own download (scripts/vengeance/prepare.py),
-in GameData/Vengeance/Game: the campaign, without the multiplayer maps. The Mac
+in GameData/Vengeance/Game: the campaign and the multiplayer maps. The Mac
 game picker (port/apple/launcher_mac.m) then offers it and execs the engine;
 ANGLE comes from the app's Contents/Frameworks like the other engines'. Nothing
 from the game goes into the repository.
@@ -30,10 +30,6 @@ def engine():
     assert report.get('engine_sha256') == sha(exe), 'Vengeance engine build failed'
     return exe
 
-def campaign(path):
-    p = str(path).lower()
-    return not p.startswith('content/maps/mp-') and not p.startswith('content/havokdata/mp-')
-
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split('\n')[0])
     ap.add_argument('--app', required=True, type=pathlib.Path)
@@ -47,13 +43,13 @@ def main():
     subprocess.run(['cp', str(exe), str(macos / 'VengeanceEngine')], check=True)
     data.mkdir(parents=True, exist_ok=True)
     subprocess.run(['rsync', '-a', '--delete', str(ENGINE / 'images') + '/', str(data / 'images') + '/'], check=True)
-    subprocess.run(['rsync', '-a', '--delete', '--exclude', '/Content/Maps/MP-*', '--exclude', '/Content/HavokData/[Mm][Pp]-*',
-                    str(GAME) + '/', str(data / 'Game') + '/'], check=True)
+    # The whole game: the campaign and the multiplayer maps a server would otherwise send slowly.
+    subprocess.run(['rsync', '-a', '--delete', str(GAME) + '/', str(data / 'Game') + '/'], check=True)
     # The same stamp as the iOS build (scripts/build-ipad-engine.py): the app refreshes
     # its copy of the game folder when it changes (port/apple/vengeance_paths.m).
     game = data / 'Game'
     listing = ''.join('%s %d\n' % (f.relative_to(game), f.stat().st_size) for f in sorted(game.rglob('*'))
-                      if f.is_file() and campaign(f.relative_to(game)))
+                      if f.is_file())
     (data / 'stamp.txt').write_text(hashlib.sha256(listing.encode()).hexdigest()[:16] + '\n')
     subprocess.run(['codesign', '--force', '--sign', '-', str(macos / 'VengeanceEngine')], check=True)
     subprocess.run(['codesign', '--force', '--sign', '-', str(app)], check=True)

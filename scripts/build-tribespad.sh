@@ -12,8 +12,8 @@
 # from the PlayT1 community installer, for the game picker; --games tribes2
 # leaves it out. Adding vengeance (--games tribes2,starsiege,vengeance; in
 # development) also builds the Tribes: Vengeance
-# campaign from the Revengeance community download (about 3 GB; the app grows
-# by about 4 GB) and needs brew install innoextract.
+# game from the Revengeance community download (about 3 GB; the app grows
+# by about 10 GB with the campaign and multiplayer maps) and needs brew install innoextract.
 # Needs Xcode and: brew install llvm@20 cmake ninja sevenzip zstd
 set -euo pipefail
 
