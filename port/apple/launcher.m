@@ -195,10 +195,10 @@ static UIBezierPath *tb_chamfer(CGRect r,CGFloat c){
         art:[UIImage imageWithContentsOfFile:[art stringByAppendingPathComponent:@"tribes2.png"]] fallback:emblem available:YES badge:@"PLAY  \u25B8"
         label:@"Tribes 2, play"];
     tribes2.status.text=@"Checking who is playing\u2026";
-    TBLauncherCard *vengeance=[[TBLauncherCard alloc] initWithKicker:@"Tribes: Vengeance  \u00B7  2004"
+    TBLauncherCard *vengeance=[[TBLauncherCard alloc] initWithKicker:@"Tribes: Vengeance  \u00B7  2004  \u00B7  OpenSpy online"
         art:[UIImage imageWithContentsOfFile:[art stringByAppendingPathComponent:@"vengeance.png"]] fallback:emblem available:tb_vengeance_here()
         badge:tb_vengeance_here()?@"PLAY  \u25B8":@"IN DEVELOPMENT"
-        label:tb_vengeance_here()?@"Tribes: Vengeance, play the campaign":@"Tribes: Vengeance, in development"];
+        label:tb_vengeance_here()?@"Tribes: Vengeance, play":@"Tribes: Vengeance, in development"];
     vengeance.status.text=tb_vengeance_here()?@"The campaign and online play, translated to native code.":
         @"The campaign first. Being translated to native code; it opens here once it plays.";
     [starsiege addTarget:self action:@selector(starsiegeTapped) forControlEvents:UIControlEventTouchUpInside];
@@ -349,9 +349,27 @@ static UIBezierPath *tb_chamfer(CGRect r,CGFloat c){
             card.status.text=[NSString stringWithFormat:@"%@\n%@",now,base];[card setNeedsLayout];});
     });
 }
+/* People playing Tribes: Vengeance now, from OpenSpy, the community master
+   (the list its Who's Playing Now reads; live_servers.m). */
+-(void)loadVengeancePlayers {
+    if(!tb_vengeance_here())return;
+    NSMutableURLRequest *r=[NSMutableURLRequest requestWithURL:[NSURL URLWithString:@"https://openspy-website.nyc3.digitaloceanspaces.com/servers/tribesv.json"]];
+    [r setValue:@"TribesPad" forHTTPHeaderField:@"User-Agent"];r.timeoutInterval=8;r.cachePolicy=NSURLRequestReloadIgnoringLocalCacheData;
+    __weak TBLauncherController *weak=self;NSString *base=self.cards[2].status.text;
+    [[NSURLSession.sharedSession dataTaskWithRequest:r completionHandler:^(NSData *data,NSURLResponse *resp,NSError *error){
+        (void)resp;(void)error;NSArray *list=data?[NSJSONSerialization JSONObjectWithData:data options:0 error:nil]:nil;
+        if(![list isKindOfClass:NSArray.class])return;NSInteger people=0,servers=0;
+        for(NSDictionary *s in list){if(![s isKindOfClass:NSDictionary.class])continue;NSInteger n=[s[@"numplayers"] integerValue];if(n>0){people+=n;servers++;}}
+        NSString *now=people?[NSString stringWithFormat:@"%ld %@ playing now on %ld %@",(long)people,people==1?@"person":@"people",(long)servers,servers==1?@"server":@"servers"]:
+            [NSString stringWithFormat:@"Nobody on the %lu Vengeance servers right now",(unsigned long)list.count];
+        dispatch_async(dispatch_get_main_queue(),^{
+            TBLauncherController *me=weak;if(!me)return;TBLauncherCard *card=me.cards[2];
+            card.status.text=[NSString stringWithFormat:@"%@\n%@",now,base];[card setNeedsLayout];});
+    }] resume];
+}
 /* People playing Tribes 2 now (players minus bots, TribesNEXT list.json). */
 -(void)loadPlayers {
-    [self loadStarsiegePlayers];
+    [self loadStarsiegePlayers];[self loadVengeancePlayers];
     NSMutableURLRequest *r=[NSMutableURLRequest requestWithURL:[NSURL URLWithString:@"https://www.tribesnext.com/list.json"]];
     [r setValue:@"TribesPad" forHTTPHeaderField:@"User-Agent"];r.timeoutInterval=8;
     __weak TBLauncherController *weak=self;
