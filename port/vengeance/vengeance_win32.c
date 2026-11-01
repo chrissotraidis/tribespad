@@ -116,6 +116,50 @@ static int software_key(uint64_t base,uint32_t key,uint32_t subkey){
  if(strncasecmp(text,"Software\\",9))return 0;
  fprintf(stderr,"vengeance: registry key %s\\%.200s is not present\n",key==0x80000002u?"HKLM":"HKCU",(const char *)GUEST(base,subkey));return 1;
 }
+/* The CD key multiplayer sends (GameAISupport.dll keeps it in HKLM\SOFTWARE\VUGames\CDKeys,
+   value "tribesv"; Engine.dll asks for it through GameAISupportQueueElement,
+   answered by vg_cdkey_call in vengeance_x86.c). 20 letters and digits, from
+   VENGEANCE_CDKEY, else TribesPad-CDKey.txt in the game folder. The game is
+   free now and its community release installs a shared key with its "TV Key
+   Generator" (Program/Bin), a random one of the keys that program carries; the
+   first time multiplayer needs a key and there is none, TribesPad does the same
+   from the player's copy of that program and keeps the choice in the file. */
+static char game_folder[PATH_MAX];
+void vg_set_game_folder(const char *path){snprintf(game_folder,sizeof game_folder,"%s",path);}
+static int cdkey_text(const char *text,char out[21]){
+ int n=0;for(const char *c=text;*c;c++){if(*c=='-'||*c==' '||*c=='\n'||*c=='\r'||*c=='\t')continue;
+  if(n==20||!((*c>='0'&&*c<='9')||(*c>='a'&&*c<='z')||(*c>='A'&&*c<='Z')))return 0;out[n++]=(char)(*c>='a'&&*c<='z'?*c-32:*c);}
+ if(n!=20)return 0;out[20]=0;return 1;
+}
+/* A random key from the generator's string table: UTF-16 "XXXX-XXXX-XXXX-XXXX-XXXX". */
+static int generated_cdkey(char out[21]){
+ char path[PATH_MAX];if(snprintf(path,sizeof path,"%s/Program/Bin/TV Key Generator.exe",game_folder)>=(int)sizeof path)return 0;
+ FILE *f=fopen(path,"rb");if(!f)return 0;
+ fseek(f,0,SEEK_END);long size=ftell(f);fseek(f,0,SEEK_SET);
+ unsigned char *data=size>0&&size<(16<<20)?malloc((size_t)size):NULL;
+ if(!data||fread(data,1,(size_t)size,f)!=(size_t)size){fclose(f);free(data);return 0;}fclose(f);
+ uint32_t found=0;char key[21],chosen[21]={0};
+ for(long i=0;i+48<=size;i++){  /* .NET user strings start at any byte */
+  int n=0,ok=1;for(int k=0;k<24&&ok;k++){unsigned char ch=data[i+2*k];
+   if(data[i+2*k+1]){ok=0;break;}
+   if(k%5==4)ok=ch=='-';else if((ch>='0'&&ch<='9')||(ch>='A'&&ch<='Z'))key[n++]=(char)ch;else ok=0;}
+  if(!ok)continue;key[20]=0;
+  if(arc4random_uniform(++found)==0)memcpy(chosen,key,21);  /* reservoir: each key equally likely */
+  i+=47;
+ }
+ free(data);if(!found)return 0;
+ memcpy(out,chosen,21);fprintf(stderr,"vengeance: CD key chosen from %u in TV Key Generator.exe\n",found);return 1;
+}
+int vg_cdkey(char out[21]){
+ const char *env=getenv("VENGEANCE_CDKEY");if(env)return cdkey_text(env,out);
+ if(!game_folder[0])return 0;
+ char path[PATH_MAX],text[128]={0};if(snprintf(path,sizeof path,"%s/TribesPad-CDKey.txt",game_folder)>=(int)sizeof path)return 0;
+ FILE *f=fopen(path,"r");
+ if(f){if(!fgets(text,sizeof text,f))text[0]=0;fclose(f);return cdkey_text(text,out);}
+ if(!generated_cdkey(out))return 0;
+ if((f=fopen(path,"w"))){fprintf(f,"%.4s-%.4s-%.4s-%.4s-%.4s\n",out,out+4,out+8,out+12,out+16);fclose(f);}
+ return 1;
+}
 uint32_t vg_reg_open_key_ex_a(uint64_t base,uint32_t key,uint32_t subkey,uint32_t options,uint32_t access,uint32_t output){
  if(software_key(base,key,subkey)){if(output)memset(GUEST(base,output),0,4);return 2;}
  return tribes_reg_open_key_ex_a(base,key,subkey,options,access,output);

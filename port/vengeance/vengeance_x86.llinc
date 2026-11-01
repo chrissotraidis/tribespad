@@ -7,3 +7,4 @@ funcv vg_xor_byte_eax1_bh $
 funcv vg_fnstenv_esp $
 funcv vg_fldenv_esp $
 funcv vg_gui_controller $
+funcv vg_cdkey_call $

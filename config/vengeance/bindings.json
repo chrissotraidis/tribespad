@@ -905,6 +905,69 @@
    "arguments": 1,
    "returns": true,
    "guest_base": true
+  },
+  "gethostname": {
+   "helper": "ss_gethostname",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true,
+   "why": "Engine.dll and IpDrv.dll import it from WSOCK32 (port/starsiege/starsiege_winsock.c)."
+  },
+  "inet_ntoa": {
+   "helper": "ss_inet_ntoa",
+   "arguments": 1,
+   "returns": true,
+   "guest_base": true,
+   "why": "Engine.dll and IpDrv.dll import it from WSOCK32 (port/starsiege/starsiege_winsock.c)."
+  },
+  "__WSAFDIsSet": {
+   "helper": "ss_wsa_fd_is_set",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true,
+   "why": "Engine.dll and IpDrv.dll import it from WSOCK32 (port/starsiege/starsiege_winsock.c)."
+  },
+  "connect": {
+   "helper": "ss_connect",
+   "arguments": 3,
+   "returns": true,
+   "guest_base": true,
+   "why": "Engine.dll and IpDrv.dll import it from WSOCK32 (port/starsiege/starsiege_winsock.c)."
+  },
+  "send": {
+   "helper": "ss_send",
+   "arguments": 4,
+   "returns": true,
+   "guest_base": true,
+   "why": "Engine.dll and IpDrv.dll import it from WSOCK32 (port/starsiege/starsiege_winsock.c)."
+  },
+  "recv": {
+   "helper": "ss_recv",
+   "arguments": 4,
+   "returns": true,
+   "guest_base": true,
+   "why": "Engine.dll and IpDrv.dll import it from WSOCK32 (port/starsiege/starsiege_winsock.c)."
+  },
+  "listen": {
+   "helper": "ss_listen",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true,
+   "why": "Engine.dll and IpDrv.dll import it from WSOCK32 (port/starsiege/starsiege_winsock.c)."
+  },
+  "shutdown": {
+   "helper": "ss_shutdown",
+   "arguments": 2,
+   "returns": true,
+   "guest_base": true,
+   "why": "Engine.dll and IpDrv.dll import it from WSOCK32 (port/starsiege/starsiege_winsock.c)."
+  },
+  "accept": {
+   "helper": "ss_accept",
+   "arguments": 3,
+   "returns": true,
+   "guest_base": true,
+   "why": "Engine.dll and IpDrv.dll import it from WSOCK32 (port/starsiege/starsiege_winsock.c)."
   }
  },
  "overrides": {
@@ -1029,6 +1092,20 @@
    "returns": true,
    "guest_base": false,
    "why": "The game's foreground window from Starsiege's window list; TribesPad's catalog knows only SDL windows (port/vengeance/vengeance_windows.c)."
+  },
+  "getsockopt": {
+   "helper": "ss_getsockopt",
+   "arguments": 5,
+   "returns": true,
+   "guest_base": true,
+   "why": "IpDrv reads its sockets' buffer sizes (SO_RCVBUF, SO_SNDBUF) from the host socket; protocol-info queries go to TribesPad's service (port/starsiege/starsiege_winsock.c)."
+  },
+  "sendto": {
+   "helper": "ss_sendto",
+   "arguments": 6,
+   "returns": true,
+   "guest_base": true,
+   "why": "TRIBESPAD_TRACE_NET logs each new destination (port/starsiege/starsiege_winsock.c), then TribesPad's sendto."
   }
  }
 }

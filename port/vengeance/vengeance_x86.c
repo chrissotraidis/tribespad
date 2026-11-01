@@ -154,3 +154,23 @@ EXTERNC void CCALL vg_gui_controller(CPU)
     gui_controller = ecx;
 }
 uint32_t vengeance_gui_controller(void) { return gui_controller; }
+
+/* Engine.dll's call to GameAISupportQueueElement(char *out) (lift fixup in
+   Engine.dll): the CD key it answers a server's GameSpy challenge with. The
+   original decodes WON's encrypted registry record; TribesPad keeps the key as
+   text (vg_cdkey, vengeance_win32.c) and writes it as XXXX-XXXX-XXXX-XXXX-XXXX.
+   Returns 1, or 0 without a key, as the original does, and removes its
+   argument from the stack (stdcall: the original ends with ret 4). */
+int vg_cdkey(char out[21]);
+EXTERNC void CCALL vg_cdkey_call(CPU)
+{
+    char key[21];
+    uint32_t out; memcpy(&out, REG2PTR(esp), 4);
+    esp += 4;
+    if (!out || !vg_cdkey(key)) { eax = 0; return; }
+    char text[25]; int n = 0;
+    for (int i = 0; i < 20; i++) { if (i && i % 4 == 0) text[n++] = '-'; text[n++] = key[i]; }
+    text[n] = 0;
+    memcpy(REG2PTR(out), text, (size_t)n + 1);
+    eax = 1;
+}

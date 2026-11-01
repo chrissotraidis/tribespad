@@ -434,5 +434,15 @@
     "llasm": ";mov esi, ecx|call vg_gui_controller $"
    }
   ]
+ },
+ "engine.dll": {
+  "instruction_replacements": [
+   {
+    "address": "0x115E3B66",
+    "length": 6,
+    "why": "call [GameAISupport.dll GameAISupportQueueElement]: the CD key Engine.dll answers a server's GameSpy challenge with, as text from TribesPad instead of WON's encrypted registry record (port/vengeance/vengeance_x86.c vg_cdkey_call)",
+    "llasm": ";call [__imp_GameAISupportQueueElement]|call vg_cdkey_call $"
+   }
+  ]
  }
 }

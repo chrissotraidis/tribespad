@@ -218,7 +218,7 @@ int main(int argc,char **argv){
  static uint16_t wide[8192];for(int i=0;i<=used;i++)wide[i]=(unsigned char)line[i];
  assert(tribes_command_line_configure(base,line,(uint32_t)used+1));
  assert(tribes_command_line_configure_w(base,wide,2u*((uint32_t)used+1)));
- assert(tribes_filesystem_configure(base,argv[2],argv[3],argv[4]));assert(tribes_named_mutex_configure(argv[4]));
+ assert(tribes_filesystem_configure(base,argv[2],argv[3],argv[4]));{extern void vg_set_game_folder(const char *);vg_set_game_folder(argv[3]);}assert(tribes_named_mutex_configure(argv[4]));
  /* VENGEANCE_CONTENT: the game's Content folder elsewhere (the iOS app bundle). */
  {const char *content=getenv("VENGEANCE_CONTENT");
   if(content&&!tribes_filesystem_configure_content(base,content)){fprintf(stderr,"vengeance: no content folder at %s\n",content);return 2;}}
