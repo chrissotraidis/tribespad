@@ -44,6 +44,8 @@ static uint64_t swaps;
 static int has_context(void);
 
 static _Noreturn void unsupported(const char *what,uint32_t value){fprintf(stderr,"TribesPad: unsupported Starsiege GL operation: %s 0x%x\n",what,value);abort();}
+/* The window title (Mac); Tribes: Vengeance sets its own (vengeance_input.c). */
+const char *ss_window_title="Starsiege: Tribes";
 static int headless(void){const char *v=getenv("STARSIEGE_HEADLESS");return v&&!strcmp(v,"1");}
 static DeviceContext *dc_of(uint32_t dc){for(unsigned i=0;i<16;i++)if(dcs[i].dc&&dcs[i].dc==dc)return &dcs[i];return NULL;}
 
@@ -78,8 +80,8 @@ uint32_t ss_get_dc(_cpu *cpu,uint32_t window){
  if(!start_sdl(cpu)){tribes_set_last_error(2000);return 0;}
  int32_t width,height;if(!ss_window_client_size(base,window,&width,&height))unsupported("GL window",window);
  if(width<1)width=1;if(height<1)height=1;
- static const char title[]="Starsiege: Tribes";uint32_t guest_title=cpu->_esp-1024,token=tribes_memory_access_begin((void *)(uintptr_t)(base+guest_title),sizeof title,2);
- memcpy((void *)(uintptr_t)(base+guest_title),title,sizeof title);tribes_memory_access_end(token);
+ const char *title=ss_window_title;size_t title_size=strlen(title)+1;uint32_t guest_title=cpu->_esp-1024,token=tribes_memory_access_begin((void *)(uintptr_t)(base+guest_title),title_size,2);
+ memcpy((void *)(uintptr_t)(base+guest_title),title,title_size);tribes_memory_access_end(token);
  uint64_t flags=SDL_WINDOW_OPENGL|(headless()?SDL_WINDOW_HIDDEN:0);
 #if TARGET_OS_IPHONE
  /* Borderless: SDL hides the status bar for it, so the clock and battery do

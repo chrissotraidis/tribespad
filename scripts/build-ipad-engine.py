@@ -454,7 +454,7 @@ with (out/'link.log').open('w') as log:subprocess.run(command,stdout=log,stderr=
 identifier='com.tribespad.full-engine.ipad'
 if mac:
  picker=contents/'MacOS'/'TribesPad'
- subprocess.run(['clang','-target',target,'-isysroot',sdk,'-fobjc-arc','-O2','-Wall','-Wextra','-Werror',str(R/'port/apple/launcher_mac.m'),str(R/'port/apple/starsiege_paths.m'),str(R/'port/apple/t1_live.c'),'-framework','AppKit','-framework','QuartzCore','-framework','GameController','-o',str(picker)],check=True)
+ subprocess.run(['clang','-target',target,'-isysroot',sdk,'-fobjc-arc','-O2','-Wall','-Wextra','-Werror',str(R/'port/apple/launcher_mac.m'),str(R/'port/apple/starsiege_paths.m'),str(R/'port/apple/vengeance_paths.m'),str(R/'port/apple/t1_live.c'),'-framework','AppKit','-framework','QuartzCore','-framework','GameController','-o',str(picker)],check=True)
 from app_icon import compile_icon
 if mac:
  icon_keys=compile_icon(resources,'macos',minimum='12.0')

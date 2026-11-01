@@ -67,6 +67,7 @@ static void button(unsigned b,int down){
  tribes_post_message(vengeance_guest_base(),window,msg[b]+(down?0:1),held,point(x,y));
 }
 extern void ss_input_use_vengeance_pad(void);
+extern const char *ss_window_title;
 /* Playing or in a menu: the game's GUI controller (recorded by a lift fixup,
    port/vengeance/vengeance_x86.c) is an Interaction whose bVisible flag (bit 1 of
    the flags after UObject's 0x28 bytes) is set while a menu or loading screen is
@@ -78,7 +79,7 @@ static int playing(void){
  uint32_t g=vengeance_gui_controller();if(!g)return 0;
  uint32_t flags;memcpy(&flags,GUEST(vengeance_guest_base(),g+0x28),4);return !(flags&2);
 }
-__attribute__((constructor)) static void install(void){ss_key_hook=key;ss_pointer_hook=pointer;ss_button_hook=button;ss_input_use_vengeance_pad();ss_play_state_hook=playing;}
+__attribute__((constructor)) static void install(void){ss_key_hook=key;ss_pointer_hook=pointer;ss_button_hook=button;ss_input_use_vengeance_pad();ss_play_state_hook=playing;ss_window_title="Tribes: Vengeance";}
 
 #if TARGET_OS_IPHONE
 /* TribesPad's overlay in the app (port/apple/mobile_controls.m): frames for its

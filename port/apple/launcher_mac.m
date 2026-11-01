@@ -7,16 +7,18 @@
  * Starsiege is offered when the app was built with it
  * (the default; its download can fail); otherwise its card says "Not in this
  * build" and how to add it. "Open Tribes 2 Directly" skips the picker.
- * Tribes: Vengeance is in development: its card opens the plan until it plays.
+ * Tribes: Vengeance (in development) is offered when the app was built with it
+ * (build-tribespad.sh --games ...,vengeance); its engine is VengeanceEngine.
  * TRIBESPAD_PICKER_SNAPSHOT=file.png renders the picker offscreen to a PNG and
  * exits (TRIBESPAD_PICKER_SIZE=WxH), so it can be checked without a window.
- * TRIBESPAD_PICK=tribes2|starsiege chooses without showing it. */
+ * TRIBESPAD_PICK=tribes2|starsiege|vengeance chooses without showing it. */
 #import <AppKit/AppKit.h>
 #import <QuartzCore/QuartzCore.h>
 #import <GameController/GameController.h>
 #include <stdio.h>
 #include <unistd.h>
 #include "starsiege_paths.h"
+#include "vengeance_paths.h"
 #include "t1_live.h"
 
 static NSString * const TBRepository=@"https://github.com/chrissotraidis/tribespad";
@@ -51,6 +53,15 @@ static NSString *tb_macos(NSString *name){return [[NSBundle.mainBundle.executabl
 static NSString *tb_data(NSString *name){return [[NSBundle.mainBundle.resourcePath stringByAppendingPathComponent:@"GameData"] stringByAppendingPathComponent:name];}
 static BOOL tb_starsiege_ready(void){
     return [NSFileManager.defaultManager isExecutableFileAtPath:tb_macos(@"StarsiegeEngine")]&&tb_starsiege_bundled(tb_data(@"").fileSystemRepresentation);
+}
+static NSString *tb_storage(void){
+    NSURL *support=[NSFileManager.defaultManager URLForDirectory:NSApplicationSupportDirectory inDomain:NSUserDomainMask appropriateForURL:nil create:YES error:nil];
+    return support?[support.path stringByAppendingPathComponent:@"TribesPad"]:nil;
+}
+static BOOL tb_vengeance_ready(void){
+    NSString *storage=tb_storage();
+    return storage&&[NSFileManager.defaultManager isExecutableFileAtPath:tb_macos(@"VengeanceEngine")]&&
+        tb_vengeance_bundled(tb_data(@"").fileSystemRepresentation,storage.fileSystemRepresentation);
 }
 
 @interface TBCard:NSObject
@@ -121,7 +132,7 @@ static BOOL tb_starsiege_ready(void){
 }
 @end
 
-typedef enum {TBNone,TBTribes2,TBStarsiege} TBChoice; /* Vengeance: no engine yet */
+typedef enum {TBNone,TBTribes2,TBStarsiege,TBVengeance} TBChoice;
 static TBChoice tb_choice;
 
 @interface TBPickerView:NSView
@@ -131,7 +142,7 @@ static TBChoice tb_choice;
 @property(nonatomic,strong) CATextLayer *wordmark,*tagline,*footer;
 @property(nonatomic,strong) NSArray<TBCard *> *cards;
 @property(nonatomic) NSUInteger focus;
-@property(nonatomic) BOOL starsiege;
+@property(nonatomic) BOOL starsiege,vengeance;
 @end
 @implementation TBPickerView
 -(BOOL)isFlipped{return YES;}
@@ -139,7 +150,7 @@ static TBChoice tb_choice;
 -(instancetype)initWithFrame:(NSRect)frame {
     if(!(self=[super initWithFrame:frame]))return nil;
     self.wantsLayer=YES;self.layer=[CALayer layer];self.layer.geometryFlipped=YES;self.layer.backgroundColor=NSColor.blackColor.CGColor;
-    self.starsiege=tb_starsiege_ready();
+    self.starsiege=tb_starsiege_ready();self.vengeance=tb_vengeance_ready();
     self.backdrop=[CAGradientLayer layer];self.backdrop.startPoint=CGPointMake(.5,0);self.backdrop.endPoint=CGPointMake(.5,1);
     self.backdrop.colors=@[(__bridge id)tb_rgb(0x0A1A2C,1),(__bridge id)tb_rgb(0x03070D,1),(__bridge id)tb_rgb(0x061A20,1)];[self.layer addSublayer:self.backdrop];
     self.stars=[CALayer layer];[self.layer addSublayer:self.stars];
@@ -160,8 +171,10 @@ static TBChoice tb_choice;
     starsiege.statusText=self.starsiege?@"Version 1.41, the one the community plays. Bot matches offline, community servers online.":@"The original. Being translated to native code; it opens here once it plays.";
     TBCard *tribes2=[[TBCard alloc] initWithKicker:@"Tribes 2  \u00B7  2001  \u00B7  TribesNEXT online" art:art(@"tribes2.png") fallback:emblem available:YES badge:@"PLAY  \u25B8"];
     tribes2.statusText=@"Checking who is playing\u2026";
-    TBCard *vengeance=[[TBCard alloc] initWithKicker:@"Tribes: Vengeance  \u00B7  2004" art:art(@"vengeance.png") fallback:emblem available:NO badge:@"IN DEVELOPMENT"];
-    vengeance.statusText=@"The campaign first. Being translated to native code; it opens here once it plays.";
+    TBCard *vengeance=[[TBCard alloc] initWithKicker:@"Tribes: Vengeance  \u00B7  2004" art:art(@"vengeance.png") fallback:emblem available:self.vengeance
+        badge:self.vengeance?@"PLAY  \u25B8":@"IN DEVELOPMENT"];
+    vengeance.statusText=self.vengeance?@"The single-player campaign, translated to native code. Multiplayer comes later.":
+        @"The campaign plays in development builds; build TribesPad with Vengeance to add it.";
     self.cards=@[starsiege,tribes2,vengeance];for(TBCard *c in self.cards)[self.layer addSublayer:c.root];
     self.focus=1;[self showFocus];
     self.footer=tb_label();self.footer.alignmentMode=kCAAlignmentCenter;
@@ -216,8 +229,9 @@ static TBChoice tb_choice;
 -(void)activate{
     if(self.focus==1){tb_choice=TBTribes2;return;}
     if(self.focus==2){
+        if(self.vengeance){tb_choice=TBVengeance;return;}
         NSAlert *a=[NSAlert new];a.messageText=@"Tribes: Vengeance";
-        a.informativeText=@"Tribes: Vengeance is in development. Its engine is being translated to native code, campaign first, and it opens here once it plays.";
+        a.informativeText=@"Tribes: Vengeance is in development and not in this copy of TribesPad. Build TribesPad with --games tribes2,starsiege,vengeance to add its campaign.";
         [a addButtonWithTitle:@"OK"];[a addButtonWithTitle:@"Read the Plan"];
         if([a runModal]==NSAlertSecondButtonReturn)[NSWorkspace.sharedWorkspace openURL:[NSURL URLWithString:TBVengeancePlan]];
         return;
@@ -272,6 +286,23 @@ static TBChoice tb_choice;
 @end
 
 static int tb_exec(TBChoice choice){
+    if(choice==TBVengeance){
+        /* The same storage and game folder as on iOS (vengeance_paths.m); the engine
+           reads the bundle's Content in place (VENGEANCE_CONTENT). -console lets the
+           game's console open, as on iOS. */
+        NSString *storage=tb_storage();char *paths[6];
+        if(!storage||!tb_vengeance_prepare_paths(tb_data(@"").fileSystemRepresentation,storage.fileSystemRepresentation,paths)){
+            fprintf(stderr,"TribesPad: Vengeance storage unavailable\n");return 125;}
+        setenv("VENGEANCE_CONTENT",paths[4],1);
+        NSString *logs=[NSSearchPathForDirectoriesInDomains(NSLibraryDirectory,NSUserDomainMask,YES).firstObject stringByAppendingPathComponent:@"Logs/TribesPad"];
+        [NSFileManager.defaultManager createDirectoryAtPath:logs withIntermediateDirectories:YES attributes:nil error:nil];
+        NSString *log=[logs stringByAppendingPathComponent:@"Vengeance.log"];
+        if(!getenv("TRIBESPAD_KEEP_STDIO")&&(!freopen(log.fileSystemRepresentation,"w",stdout)||!freopen(log.fileSystemRepresentation,"a",stderr)))return 125;
+        if(chdir(paths[2]))return 125;
+        char *engine=strdup(tb_macos(@"VengeanceEngine").fileSystemRepresentation);
+        char *args[]={engine,paths[0],paths[1],paths[2],paths[3],"-console",NULL};
+        fflush(NULL);execv(engine,args);perror("TribesPad: VengeanceEngine");return 126;
+    }
     if(choice==TBStarsiege){
         NSURL *support=[NSFileManager.defaultManager URLForDirectory:NSApplicationSupportDirectory inDomain:NSUserDomainMask appropriateForURL:nil create:YES error:nil];
         char *paths[5];
@@ -311,7 +342,7 @@ int main(int argc,char **argv){
         NSString *snapshot=getenv("TRIBESPAD_PICKER_SNAPSHOT")?@(getenv("TRIBESPAD_PICKER_SNAPSHOT")):nil;
         if(snapshot){[NSApplication sharedApplication];tb_snapshot(snapshot);return 0;}
         const char *pick=getenv("TRIBESPAD_PICK");
-        if(pick)return tb_exec(!strcmp(pick,"starsiege")&&tb_starsiege_ready()?TBStarsiege:TBTribes2);
+        if(pick)return tb_exec(!strcmp(pick,"starsiege")&&tb_starsiege_ready()?TBStarsiege:!strcmp(pick,"vengeance")&&tb_vengeance_ready()?TBVengeance:TBTribes2);
         id show=[NSUserDefaults.standardUserDefaults objectForKey:@"TribesPad.showLauncher"];
         if(show&&![show boolValue])return tb_exec(TBTribes2);
         [NSApplication sharedApplication];[NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];[NSApp finishLaunching];
@@ -332,7 +363,7 @@ int main(int argc,char **argv){
         }
         if(tb_choice==TBNone)return 0; /* the picker window was closed */
         [window orderOut:nil];
-        fprintf(stderr,"TribesPad picker: starting %s\n",tb_choice==TBStarsiege?"Starsiege: Tribes":"Tribes 2");
+        fprintf(stderr,"TribesPad picker: starting %s\n",tb_choice==TBStarsiege?"Starsiege: Tribes":tb_choice==TBVengeance?"Tribes: Vengeance":"Tribes 2");
         return tb_exec(tb_choice);
     }
 }

@@ -10,8 +10,8 @@
 # --platform macos: TribesPad-mac.zip with TribesPad.app for Apple Silicon Macs.
 # --games tribes2,starsiege (the default) also builds Starsiege: Tribes 1.41,
 # from the PlayT1 community installer, for the game picker; --games tribes2
-# leaves it out. Adding vengeance (--games tribes2,starsiege,vengeance; iPhone,
-# iPad and Simulator, in development) also builds the Tribes: Vengeance
+# leaves it out. Adding vengeance (--games tribes2,starsiege,vengeance; in
+# development) also builds the Tribes: Vengeance
 # campaign from the Revengeance community download (about 3 GB; the app grows
 # by about 4 GB) and needs brew install innoextract.
 # Needs Xcode and: brew install llvm@20 cmake ninja sevenzip zstd
@@ -44,9 +44,6 @@ for game in $(printf '%s' "$games" | tr ',' ' '); do
     *) echo "--games lists tribes2, starsiege and vengeance (tribes2 is always built)" >&2; exit 2 ;;
   esac
 done
-if [ "$vengeance" = 1 ] && [ "$platform" = macos ]; then
-  echo "Tribes: Vengeance builds for iPhone, iPad and the Simulator so far; leave it out of --games for the Mac" >&2; exit 2
-fi
 
 repo="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$repo"
@@ -154,8 +151,13 @@ build_vengeance() {
   [ -f ref/vengeance/game/Program/Bin/TV_CD_DVD.exe ] || $py scripts/vengeance/prepare.py || return 1
   $py scripts/vengeance/lift.py $($py -c 'import json; print(" ".join(json.load(open("config/vengeance/layout.json"))["modules"]))') >/dev/null || return 1
   [ -f generated/sdl-backend/macos/result.json ] || SDKROOT="$mac_sdk" $py scripts/build-sdl-backend.py --platform macos || return 1
-  $py scripts/vengeance/build_engine.py --target client --platform "$platform" >/dev/null || return 1
-  vengeance_object=(--vengeance-object "generated/vengeance/engine-client-$platform/vengeance.o")
+  if [ "$platform" = macos ]; then
+    # The Mac app gets its own engine executable (scripts/vengeance/bundle_mac.py, after the app).
+    $py scripts/vengeance/build_engine.py --target client >/dev/null || return 1
+  else
+    $py scripts/vengeance/build_engine.py --target client --platform "$platform" >/dev/null || return 1
+    vengeance_object=(--vengeance-object "generated/vengeance/engine-client-$platform/vengeance.o")
+  fi
 }
 if [ "$vengeance" = 1 ]; then
   step "Tribes: Vengeance (in development)"
@@ -172,6 +174,10 @@ esac
 
 if [ "$starsiege" = 1 ] && [ "$platform" = macos ]; then
   SDKROOT="$mac_sdk" $py scripts/starsiege/bundle_mac.py --app "$app" || starsiege_skipped
+fi
+if [ "$vengeance" = 1 ] && [ "$platform" = macos ]; then
+  SDKROOT="$mac_sdk" $py scripts/vengeance/bundle_mac.py --app "$app" ||
+    printf '\nbuild-tribespad: Tribes: Vengeance could not be added to the Mac app (see above); continuing without it.\n' >&2
 fi
 
 step "Package"

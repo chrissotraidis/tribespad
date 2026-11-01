@@ -11,6 +11,7 @@
    and use one copied once into Application Support/TribesPad/VengeanceGame, so
    each new build installs without resending the campaign. */
 #import <Foundation/Foundation.h>
+#include <TargetConditionals.h>
 #include <stdio.h>
 #include <string.h>
 #include "vengeance_paths.h"
@@ -26,10 +27,17 @@ static NSString *source_game(const char *gamedata,const char *storage){
 int tb_vengeance_bundled(const char *gamedata,const char *storage){
     return [NSFileManager.defaultManager fileExistsAtPath:[@(gamedata) stringByAppendingPathComponent:@"Vengeance/images"]]&&source_game(gamedata,storage)!=nil;
 }
-/* The game's drawing size, one of three 4:3 sizes; 1600x1200 unless chosen otherwise. */
+/* The game's drawing size, one of three 4:3 sizes, unless chosen otherwise:
+   1600x1200 on iPhone and iPad (scaled to the screen); 1024x768 on the Mac, where
+   it is the game's window and must fit the screen. */
 NSString *tb_vengeance_resolution(void){
     NSString *size=[NSUserDefaults.standardUserDefaults stringForKey:@"TribesPad.vengeanceResolution"];
-    return [@[@"1024x768",@"1600x1200",@"2048x1536"] containsObject:size]?size:@"1600x1200";
+#if TARGET_OS_OSX
+    NSString *fallback=@"1024x768";
+#else
+    NSString *fallback=@"1600x1200";
+#endif
+    return [@[@"1024x768",@"1600x1200",@"2048x1536"] containsObject:size]?size:fallback;
 }
 static BOOL players(NSString *relative){
     NSString *lower=relative.lowercaseString;
