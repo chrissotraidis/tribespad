@@ -327,7 +327,7 @@ def prepare(modules, out, report, backend_bindings):
                                 'define hidden fastcc void @vengeance_nested_handler(ptr %cpu) {\n %ret = call i32 @vg_nested_handler(ptr %cpu)\n'
                                 ' %fn = call ptr @tribes_lookup(i32 %ret)\n musttail call fastcc void %fn(ptr %cpu)\n ret void\n}\n')
     assert len({v for v, _ in entries}) == len(entries), 'duplicate dispatch address'
-    (out / 'dispatch.ll').write_text(va.dispatch_ir(entries))
+    (out / 'dispatch.ll').write_text(fast_dispatch(va.dispatch_ir(entries), len(entries)))
     bindings = json.loads((R / 'port/llasm-runtime/win32-bindings.json').read_text())
     for config in [R / 'config/starsiege/bindings.json', R / 'config/vengeance/bindings.json']:
         extra = json.loads(config.read_text())
@@ -421,6 +421,49 @@ def prepare(modules, out, report, backend_bindings):
                   internal_code_imports=internal_code, internal_data_imports=internal_data, dispatch_entries=len(entries))
     (out / 'imports.json').write_text(json.dumps({'windows': [{'name': n, 'dll': windows[n], 'guest_va': wva[n], 'bound': n in used} for n in names]}, indent=1) + '\n')
     return modules
+
+def fast_dispatch(ir, count):
+    """Every indirect jump passes through tribes_dispatch. Check guest_dispatch.c's cache
+    here (address, and table index plus one, in one 64-bit word) and jump straight to a
+    hit; a miss asks tribes_lookup, which also fills the cache. Vengeance has no
+    publication gates (tribes_dispatch_permitted is always true for it)."""
+    old = ('define hidden fastcc void @tribes_dispatch(ptr %cpu) nounwind {\n'
+           '  %mailbox = getelementptr i8, ptr %cpu, i64 172\n'
+           '  %target = load i32, ptr %mailbox\n'
+           '  %fn = call ptr @tribes_lookup(i32 %target)\n'
+           '  musttail call fastcc void %fn(ptr %cpu)\n'
+           '  ret void\n'
+           '}\n')
+    assert ir.count(old) == 1, 'dispatch stub changed'
+    new = ('@tribes_dispatch_cache = external global [4096 x i64]\n'
+           'define hidden fastcc void @tribes_dispatch(ptr %cpu) nounwind {\n'
+           '  %mailbox = getelementptr i8, ptr %cpu, i64 172\n'
+           '  %target = load i32, ptr %mailbox\n'
+           '  %mix = mul i32 %target, -1640531535\n'
+           '  %slot = lshr i32 %mix, 20\n'
+           '  %slot64 = zext i32 %slot to i64\n'
+           '  %entryp = getelementptr [4096 x i64], ptr @tribes_dispatch_cache, i64 0, i64 %slot64\n'
+           '  %entry = load atomic i64, ptr %entryp monotonic, align 8\n'
+           '  %low = trunc i64 %entry to i32\n'
+           '  %index = lshr i64 %entry, 32\n'
+           '  %same = icmp eq i32 %low, %target\n'
+           '  %filled = icmp ne i64 %index, 0\n'
+           '  %hit = and i1 %same, %filled\n'
+           '  br i1 %hit, label %fast, label %slow\n'
+           'fast:\n'
+           '  %at = sub i64 %index, 1\n'
+           '  %fnp = getelementptr [%d x ptr], ptr @tribes_dispatch_fns, i64 0, i64 %%at\n'
+           '  %%cached = load ptr, ptr %%fnp\n'
+           '  musttail call fastcc void %%cached(ptr %%cpu)\n'
+           '  ret void\n'
+           'slow:\n'
+           '  %%fn = call ptr @tribes_lookup(i32 %%target)\n'
+           '  musttail call fastcc void %%fn(ptr %%cpu)\n'
+           '  ret void\n'
+           '}\n')
+    head, tail = new.split('  %fnp = ', 1)
+    new = head + ('  %%fnp = ' + tail) % count
+    return ir.replace(old, new)
 
 def compile_and_link(modules, out, report, graphics):
     math = load('sse', R / 'scripts/sse_build_inputs.py').sse_inputs(PLATFORM)
