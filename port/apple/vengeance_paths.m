@@ -60,6 +60,17 @@ int tb_vengeance_prepare_paths(const char *gamedata,const char *storage,char *ar
             [stamp writeToFile:installed atomically:YES encoding:NSUTF8StringEncoding error:nil];
             fprintf(stderr,"TribesPad: Vengeance game folder updated from %s (%lu files)\n",source.UTF8String,(unsigned long)copied);
         }
+        /* TribesPad's Graphics Quality (mobile_controls.m): Fast, the default, turns off
+           projectors (projected lights and shadows), about a third of each frame on
+           iPad; Full Detail keeps the game's own setting. Applied at each launch to
+           the game's INI, which the game reads at start. */
+        NSString *ini=[game stringByAppendingPathComponent:@"Program/Bin/TV_CD_DVD.ini"];
+        NSString *text=[NSString stringWithContentsOfFile:ini encoding:NSISOLatin1StringEncoding error:nil];
+        if(text){NSString *quality=[NSUserDefaults.standardUserDefaults stringForKey:@"TribesPad.vengeanceGraphics"]?:@"fast";
+            NSString *want=[quality isEqualToString:@"full"]?@"Projectors=True":@"Projectors=False";
+            NSString *changed=[[text stringByReplacingOccurrencesOfString:@"Projectors=True" withString:want]
+                stringByReplacingOccurrencesOfString:@"Projectors=False" withString:want];
+            if(![changed isEqualToString:text])[changed writeToFile:ini atomically:YES encoding:NSISOLatin1StringEncoding error:nil];}
         arguments[0]=strdup([data stringByAppendingPathComponent:@"images"].fileSystemRepresentation);
         arguments[1]=strdup(volume.fileSystemRepresentation);arguments[2]=strdup(game.fileSystemRepresentation);
         arguments[3]=strdup(temp.fileSystemRepresentation);

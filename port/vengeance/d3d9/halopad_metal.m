@@ -30,6 +30,7 @@ static id<MTLDevice> gpu;
 static id<MTLCommandQueue> queue;
 static void end_encoder(hp_target *t);
 static id<MTLCommandBuffer> frame(hp_target *t);
+static id<MTLCommandBuffer> in_flight;               /* TribesPad: the last presented frame, possibly still on the GPU */
 
 static void ensure_app(void)
 {
@@ -261,8 +262,13 @@ int halopad_metal_present(void *p)
         t->cb = nil;
         present_texture(t->win, cb, t->back);
         [cb commit];
-        [cb waitUntilCompleted];
-        arena_reset();                                    /* the GPU is done with this frame's transient data */
+        /* TribesPad: one frame in flight. The CPU builds the next frame while the GPU
+           draws this one; wait for the previous frame instead, whose transient arena
+           is the one the next frame reuses. Buffers are renamed on upload and texture
+           uploads wait for the frame in flight (halopad_metal_texture_upload). */
+        if (in_flight) [in_flight waitUntilCompleted];
+        in_flight = cb;
+        arena_reset();                                    /* the arena the previous frame used: the GPU is done with it */
     }
     halopad_host_pump();
     return 1;
@@ -419,16 +425,19 @@ void *halopad_metal_sampler(const hp_sampler_desc *d)
 }
 
 /* Transient data for one frame: shader constants and the vertex and index data Direct3D's
-   DrawPrimitiveUP passes by pointer. Bump-allocated from 4 MB shared buffers that are reused
-   after Present (which waits for the GPU); one Metal buffer per draw was three to five driver
+   DrawPrimitiveUP passes by pointer. Bump-allocated from 4 MB shared buffers, two sets used in
+   turn, each reused once the GPU has finished the frame that used it; one Metal buffer per draw was three to five driver
    round trips on the Simulator, and a rules screen ran at 5 frames a second. */
 #define ARENA_CHUNK (4u << 20)
-static NSMutableArray<id<MTLBuffer>> *arena, *arena_big;
+static NSMutableArray<id<MTLBuffer>> *arenas[2], *arenas_big[2];   /* two sets: one per frame in flight */
+static int arena_set;
+#define arena arenas[arena_set]
+#define arena_big arenas_big[arena_set]
 static uint32_t arena_i, arena_used;
 
 static id<MTLBuffer> arena_alloc(const void *data, uint32_t len, uint32_t *offset)
 {
-    if (!arena) { arena = [NSMutableArray new]; arena_big = [NSMutableArray new]; }
+    if (!arenas[0]) for (int i = 0; i < 2; i++) { arenas[i] = [NSMutableArray new]; arenas_big[i] = [NSMutableArray new]; }
     uint32_t need = (len + 255) & ~255u;
     if (!need) need = 256;
     if (need > ARENA_CHUNK) {                             /* larger than a chunk: its own buffer, dropped at the reset */
@@ -445,7 +454,7 @@ static id<MTLBuffer> arena_alloc(const void *data, uint32_t len, uint32_t *offse
     arena_used += need;
     return b;
 }
-static void arena_reset(void) { arena_i = 0; arena_used = 0; [arena_big removeAllObjects]; }
+static void arena_reset(void) { arena_set ^= 1; arena_i = 0; arena_used = 0; [arena_big removeAllObjects]; }
 
 /* For the runtime: data that lives until the next Present, as an unretained buffer and offset */
 void *halopad_metal_temp(const void *data, uint32_t length, uint32_t *offset)
@@ -496,6 +505,7 @@ void halopad_metal_texture_upload(void *tex, uint32_t level, uint32_t slice, con
                                   uint32_t bytes_per_image, uint32_t w, uint32_t h, uint32_t d)
 {
     id<MTLTexture> t = (__bridge id<MTLTexture>)tex;
+    if (in_flight) { [in_flight waitUntilCompleted]; in_flight = nil; }   /* the frame in flight may still sample it */
     [t replaceRegion:MTLRegionMake3D(0, 0, 0, w, h, d) mipmapLevel:level slice:slice withBytes:data
          bytesPerRow:bytes_per_row bytesPerImage:bytes_per_image];
 }

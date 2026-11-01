@@ -56,6 +56,7 @@ int tb_overlay_owns_controller(void){
    tb_vengeance_report_state, and presents with Metal, so it counts its frames
    here for the FPS counter (tb_app_note_frame). Both are called from the engine. */
 static BOOL tb_vengeance;
+static BOOL tb_vengeance_graphics_pending;   /* a Graphics Quality choice not yet sent to the game */
 static _Atomic int tb_vengeance_playing=-1;
 void tb_vengeance_report_state(int playing){atomic_store(&tb_vengeance_playing,playing);}
 static _Atomic uint64_t tb_app_frames,tb_app_longest_ns,tb_app_last_ns;
@@ -1058,6 +1059,8 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
     if(self.zoomed){self.zoomed=NO;[self pushKey:SDL_SCANCODE_A down:NO mod:SDL_KMOD_NONE];}
     if(self.controls){tb_input_release(&self.controls->input,9);tb_mobile_controls_emit(self.controls);}
     if(playing){
+        if(tb_vengeance&&tb_vengeance_graphics_pending){__weak TBGameControls *weak=self;
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW,(int64_t)(NSEC_PER_SEC/2)),dispatch_get_main_queue(),^{[weak applyVengeanceGraphics];});}
         if(!self.expanded&&!(self.controllerUsed&&TB_HIDE_WITH_CONTROLLER)&&!self.mouseUsed)[self toggleControls];
         if(self.controllerUsed)[self showControllerHint];
         else if(self.expanded)[self showHint];
@@ -1302,7 +1305,14 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
             [UIMenu menuWithTitle:@"Campaign" image:icon(@"flag.checkered") identifier:nil options:0 children:@[
                 key(@"Quick Save",@"square.and.arrow.down",SDL_SCANCODE_F5,SDL_KMOD_NONE),
                 key(@"Quick Load",@"arrow.counterclockwise.circle",SDL_SCANCODE_F8,SDL_KMOD_NONE)]]];
-        optionItems=@[controls[0],controls[1],controls[2],controls[4]];
+        /* Graphics Quality: Fast (the default) turns off projectors; Full Detail keeps them. */
+        NSString *quality=[NSUserDefaults.standardUserDefaults stringForKey:@"TribesPad.vengeanceGraphics"]?:@"fast";
+        UIAction *tvFast=item(@"Fast",@"hare",^{[weak setVengeanceGraphics:@"fast"];});
+        tvFast.subtitle=@"Smoother: no projected lights and shadows";tvFast.state=[quality isEqualToString:@"fast"]?UIMenuElementStateOn:UIMenuElementStateOff;
+        UIAction *tvFull=item(@"Full Detail",@"sparkles",^{[weak setVengeanceGraphics:@"full"];});
+        tvFull.subtitle=@"The game's own projected lights and shadows";tvFull.state=[quality isEqualToString:@"full"]?UIMenuElementStateOn:UIMenuElementStateOff;
+        optionItems=@[controls[0],controls[1],controls[2],
+            [UIMenu menuWithTitle:@"Graphics Quality" image:icon(@"slider.horizontal.3") identifier:nil options:0 children:@[group(@[tvFast,tvFull])]],controls[4]];
         help=[UIMenu menuWithTitle:@"Help" image:icon(@"questionmark.circle") identifier:nil options:0 children:@[
             group(@[item(@"Touch and Trackpad Guide",@"hand.tap",^{[weak showTouchGuide];}),controllerGuide]),
             group(@[item(@"Console",@"terminal",^{[weak openConsole];}),
@@ -1392,6 +1402,30 @@ static UIAction *tb_menu_find(UIMenuElement *e,NSString *path,NSString *want){
         owner.fps.textColor=frames>=30&&longest<50&&!hot?UIColor.greenColor:UIColor.orangeColor;}];
 }
 -(void)tapKey:(SDL_Scancode)scancode {[self tapKey:scancode mod:SDL_KMOD_NONE];}
+/* Vengeance: a console command typed through its console (Tab opens a command
+   line, Return runs it), one key every 40 ms. Lower-case letters, digits, spaces. */
+-(void)typeVengeanceCommand:(NSString *)command {
+    [self releaseControls];NSMutableArray<NSNumber *> *codes=[NSMutableArray arrayWithObject:@(SDL_SCANCODE_TAB)];
+    for(NSUInteger i=0;i<command.length;i++){unichar c=[command.lowercaseString characterAtIndex:i];
+        if(c>='a'&&c<='z')[codes addObject:@(SDL_SCANCODE_A+(c-'a'))];
+        else if(c>='1'&&c<='9')[codes addObject:@(SDL_SCANCODE_1+(c-'1'))];else if(c=='0')[codes addObject:@(SDL_SCANCODE_0)];
+        else if(c==' ')[codes addObject:@(SDL_SCANCODE_SPACE)];}
+    [codes addObject:@(SDL_SCANCODE_RETURN)];__weak TBGameControls *weak=self;
+    for(NSUInteger i=0;i<codes.count;i++)dispatch_after(dispatch_time(DISPATCH_TIME_NOW,(int64_t)(i*40*NSEC_PER_MSEC)),dispatch_get_main_queue(),^{
+        [weak tapKey:(SDL_Scancode)codes[i].intValue];});
+}
+-(void)setVengeanceGraphics:(NSString *)quality {
+    [NSUserDefaults.standardUserDefaults setObject:quality forKey:@"TribesPad.vengeanceGraphics"];[self rebuildMenu];
+    /* In play the console applies it now; vengeance_paths.m writes it to the INI at each launch. */
+    tb_vengeance_graphics_pending=YES;
+    if(self.inMatch)[self applyVengeanceGraphics];
+    else [self showMessage:@"Graphics Quality" text:@"Applies when play resumes."];
+}
+-(void)applyVengeanceGraphics {
+    if(!tb_vengeance_graphics_pending)return;tb_vengeance_graphics_pending=NO;
+    NSString *quality=[NSUserDefaults.standardUserDefaults stringForKey:@"TribesPad.vengeanceGraphics"]?:@"fast";
+    [self typeVengeanceCommand:[quality isEqualToString:@"full"]?@"set windowsclient projectors true":@"set windowsclient projectors false"];
+}
 -(void)toggleHeldKey:(SDL_Scancode)code {
     if(!self.heldKeys)self.heldKeys=[NSMutableSet set];
     BOOL down=![self.heldKeys containsObject:@(code)];
