@@ -226,13 +226,18 @@ development.
 
 - **Campaign:** New Game, Load Game and the whole story; ··· → This Match → Campaign has Quick
   Save and Quick Load.
+- **Multiplayer:** the game's own MULTIPLAYER screen (··· → Play Online → Server List opens it)
+  joins internet and LAN servers and hosts games. The game is free now, and like the community
+  release's TV Key Generator, TribesPad gives it a CD key from that program's own list the first
+  time one is needed, kept in `TribesPad-CDKey.txt` in the game folder (put your own key there to
+  use it instead). Who's Playing Now lists OpenSpy's servers with their players and maps.
 - **Controller:** RT fire, LT jet, A jump (hold to ski), LB ski, RB and D-pad left change weapons,
   Y grenade, X pack, B use; Menu opens the game menu.
 - **Graphics:** ··· → Options → Graphics Quality: Fast (the default, without projected lights and
   shadows) or Full Detail, and a Resolution of 1024 × 768, 1600 × 1200 (the default) or
   2048 × 1536.
-- **Not yet:** multiplayer; speed is 30 to 40 frames a second indoors and lower in the largest
-  outdoor missions.
+- **Not yet:** speed is 30 to 40 frames a second indoors and lower in the largest outdoor
+  missions on the iPad.
 
 ### Keyboard and trackpad
 
@@ -402,7 +407,7 @@ How this works, stage by stage, is in [Reproducible build](docs/REPRODUCIBLE-BUI
 - Join TribesNEXT community servers
 - Starsiege: mod packs, IRC chat, graphics presets and faster loading
   ([plan](docs/STARSIEGE-TRIBES-PLAN.md), [validation](docs/validation/starsiege-g2.md))
-- Tribes: Vengeance in the player build, then its multiplayer; Ascend after that
+- Tribes: Vengeance in the default player build; Ascend after that
   ([plan](docs/VENGEANCE-ASCEND-PLAN.md), [progress](docs/validation/vengeance-progress.md))
 - A headless dedicated server on a Mac, then Linux on ARM
   ([plan](docs/DEDICATED-SERVER-PLAN.md))

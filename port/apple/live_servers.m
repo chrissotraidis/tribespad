@@ -12,6 +12,8 @@
 #include <unistd.h>
 
 static NSString * const TBMasterList=@"https://master.tribesnext.com/list";
+/* OpenSpy's own server list page reads this file (openspy.net/server-list/tribesv). */
+static NSString * const TBVengeanceList=@"https://openspy-website.nyc3.digitaloceanspaces.com/servers/tribesv.json";
 
 @interface TBLiveServer : NSObject
 @property(nonatomic,copy) NSString *address,*name,*mission,*type;
@@ -108,8 +110,41 @@ static NSArray<TBLiveServer *> *tb_query(NSArray<NSString *> *addresses){
         });
     });
 }
+/* Tribes: Vengeance: OpenSpy's list, one entry per server with its name,
+   players, maximum and map. It has no addresses: joining is the game's list. */
+-(void)refreshVengeance {
+    NSMutableURLRequest *request=[NSMutableURLRequest requestWithURL:[NSURL URLWithString:TBVengeanceList]];
+    [request setValue:@"TribesPad" forHTTPHeaderField:@"User-Agent"];request.timeoutInterval=10;
+    request.cachePolicy=NSURLRequestReloadIgnoringLocalCacheData;
+    __weak TBLiveServersController *weak=self;
+    [[NSURLSession.sharedSession dataTaskWithRequest:request completionHandler:^(NSData *data,NSURLResponse *response,NSError *error){
+        id list=data&&((NSHTTPURLResponse *)response).statusCode==200?[NSJSONSerialization JSONObjectWithData:data options:0 error:nil]:nil;
+        NSMutableArray<TBLiveServer *> *servers=[NSMutableArray array];
+        if([list isKindOfClass:NSArray.class])for(NSDictionary *e in list){
+            if(![e isKindOfClass:NSDictionary.class]||![e[@"hostname"] isKindOfClass:NSString.class])continue;
+            TBLiveServer *s=[TBLiveServer new];s.name=e[@"hostname"];s.ping=-1;s.answered=YES;
+            s.people=[e[@"numplayers"] respondsToSelector:@selector(integerValue)]?[e[@"numplayers"] integerValue]:0;
+            s.slots=[e[@"maxplayers"] respondsToSelector:@selector(integerValue)]?[e[@"maxplayers"] integerValue]:0;
+            s.mission=[e[@"mapname"] isKindOfClass:NSString.class]?e[@"mapname"]:nil;[servers addObject:s];}
+        [servers sortUsingComparator:^NSComparisonResult(TBLiveServer *a,TBLiveServer *b){
+            if(a.people!=b.people)return a.people>b.people?NSOrderedAscending:NSOrderedDescending;
+            return [a.name localizedCaseInsensitiveCompare:b.name];}];
+        dispatch_async(dispatch_get_main_queue(),^{
+            TBLiveServersController *me=weak;if(!me)return;[me.refreshControl endRefreshing];
+            me.busy=[servers filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"people > 0"]];
+            me.quiet=[servers filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"people == 0"]];
+            NSInteger people=[[me.busy valueForKeyPath:@"@sum.people"] integerValue];
+            me.summary=![list isKindOfClass:NSArray.class]?[NSString stringWithFormat:@"OpenSpy's server list did not answer (%@). Pull down to try again.",error.localizedDescription?:@"no list"]:
+                people?[NSString stringWithFormat:@"%ld %@ on %lu %@ right now.",(long)people,people==1?@"player":@"players",
+                    (unsigned long)me.busy.count,me.busy.count==1?@"server":@"servers"]:
+                @"Nobody is on a server right now. The Tribes Revengeance Discord is where games are arranged.";
+            [me.tableView reloadData];
+        });
+    }] resume];
+}
 -(void)refresh {
     if(self.starsiege){[self refreshStarsiege];return;}
+    if(self.vengeance){[self refreshVengeance];return;}
     NSMutableURLRequest *request=[NSMutableURLRequest requestWithURL:[NSURL URLWithString:TBMasterList]];
     [request setValue:@"TribesPad" forHTTPHeaderField:@"User-Agent"];request.timeoutInterval=10;
     __weak TBLiveServersController *weak=self;
@@ -136,11 +171,13 @@ static NSArray<TBLiveServer *> *tb_query(NSArray<NSString *> *addresses){
 -(NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{(void)tableView;return section?self.quiet.count:self.busy.count;}
 -(NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section {
     (void)tableView;
-    if(self.starsiege)return section?(self.quiet.count?@"Empty":nil):(self.busy.count?@"Playing now":nil);
+    if(self.starsiege||self.vengeance)return section?(self.quiet.count?@"Empty":nil):(self.busy.count?@"Playing now":nil);
     return section?(self.quiet.count?@"Bots only or empty":nil):(self.busy.count?@"People playing":nil);
 }
 -(NSString *)tableView:(UITableView *)tableView titleForFooterInSection:(NSInteger)section {
     (void)tableView;
+    if(self.vengeance)return section?@"The servers OpenSpy, the community master server, lists: the same as the game's MULTIPLAYER > JOIN. "
+        "Join one there; pull down here to refresh.":self.summary;
     if(self.starsiege)return section?@"The same servers as the game's JOIN list (PLAY GAME > JOIN), from the community master servers, each asked directly as the game asks. "
         "Counts include bots on servers that run them. Tap a server to join it, or pull down to refresh.":self.summary;
     return section?@"The same servers as Server List (PLAY GAME > JOIN), read from the TribesNEXT master server and asked directly, as the game asks them. "
@@ -151,8 +188,9 @@ static NSArray<TBLiveServer *> *tb_query(NSArray<NSString *> *addresses){
     UITableViewCell *cell=[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:nil];
     cell.textLabel.text=s.name;cell.textLabel.textColor=path.section?UIColor.secondaryLabelColor:UIColor.labelColor;
     NSMutableArray *details=[NSMutableArray array];
-    if(self.starsiege){
+    if(self.starsiege||self.vengeance){
         [details addObject:[NSString stringWithFormat:@"%ld of %ld players",(long)s.people,(long)s.slots]];
+        if(s.mission.length)[details addObject:s.mission];
         if(s.ping>=0)[details addObject:[NSString stringWithFormat:@"%ld ms",(long)s.ping]];
         cell.detailTextLabel.text=[details componentsJoinedByString:@"  ·  "];cell.detailTextLabel.textColor=UIColor.secondaryLabelColor;
         return cell;
@@ -173,6 +211,7 @@ static NSArray<TBLiveServer *> *tb_query(NSArray<NSString *> *addresses){
     [tableView deselectRowAtIndexPath:path animated:YES];TBLiveServer *s=(path.section?self.quiet:self.busy)[path.row];
     void (^join)(NSString *)=self.join;
     NSString *why=s.password?@"This server needs a password: pick it in the Server List to enter one.":
+        self.vengeance?@"Join it from the game's own list, MULTIPLAYER > JOIN.":
         !join?(self.starsiege?@"Join from the Server List once you are off a server.":@"Join from the Server List once you are signed in and off a server."):nil;
     UIAlertController *sheet=[UIAlertController alertControllerWithTitle:s.name message:why preferredStyle:UIAlertControllerStyleActionSheet];
     if(!why)[sheet addAction:[UIAlertAction actionWithTitle:@"Join" style:UIAlertActionStyleDefault handler:^(UIAlertAction *a){(void)a;

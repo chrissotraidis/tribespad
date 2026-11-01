@@ -69,8 +69,8 @@ Options, Help, Choose Game), built from its own keys in `DefUser.ini`
 | Scores | F2 | Each game's own key |
 | Chat | T all, Y team, V quick chat; keyboard opens | Same handler (`openChat`) |
 | Actions | Objectives (C) and Loadout (Shift) stay held until chosen again; Use F, third person Z, zoom level R; Drop Weapon (Alt held briefly), Respawn B | Held items are new: the game reads C and Shift as held buttons |
-| Campaign | Quick Save F5, Quick Load F8 | Vengeance only (single player) |
-| Play Online | Multiplayer (not ready in TribesPad yet, says so), Community (tribesrevengeance.net, TribesPad Discord) | Same section; no server list or live count until multiplayer works |
+| Campaign | Quick Save F5, Quick Load F8; off a server only | Vengeance only (single player) |
+| Play Online | Who's Playing Now (OpenSpy's list: players, maximum, map), Server List (the game's MULTIPLAYER screen; on a server, the same "Leave This Match?" choice as Tribes 2, then Disconnect and the screen), Community (Tribes Revengeance Discord, TribesPad Discord, tribesrevengeance.net, OpenSpy's list on the web) | Same items and order as T1/T2; no Game Nights (the community publishes no schedule). Joining from Who's Playing Now is the game's list, since OpenSpy's file has no addresses |
 | Options | Touch controls, trackpad, FPS (frames counted at the Metal present), Graphics Quality (Fast or Full Detail, applied at once through the console) with Resolution (1024x768, 1600x1200 default, 2048x1536; from the next start), Settings | Same items as Starsiege plus Graphics Quality, which only Vengeance has |
 | Help | Touch Guide, Controller Guide (Vengeance layout: A jumps and skis while held, as in T1/T2), Console (Tab; the game starts with \`-console\` so it opens), GitHub, About | Same items; console key differs |
 | Choose Game | Subtitle names the games in this build | Same handler; three-game wording |

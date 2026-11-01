@@ -173,7 +173,7 @@ static TBChoice tb_choice;
     tribes2.statusText=@"Checking who is playing\u2026";
     TBCard *vengeance=[[TBCard alloc] initWithKicker:@"Tribes: Vengeance  \u00B7  2004" art:art(@"vengeance.png") fallback:emblem available:self.vengeance
         badge:self.vengeance?@"PLAY  \u25B8":@"IN DEVELOPMENT"];
-    vengeance.statusText=self.vengeance?@"The single-player campaign, translated to native code. Multiplayer comes later.":
+    vengeance.statusText=self.vengeance?@"The campaign and online play, translated to native code.":
         @"The campaign plays in development builds; build TribesPad with Vengeance to add it.";
     self.cards=@[starsiege,tribes2,vengeance];for(TBCard *c in self.cards)[self.layer addSublayer:c.root];
     self.focus=1;[self showFocus];

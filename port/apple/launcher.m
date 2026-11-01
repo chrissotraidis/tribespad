@@ -199,7 +199,7 @@ static UIBezierPath *tb_chamfer(CGRect r,CGFloat c){
         art:[UIImage imageWithContentsOfFile:[art stringByAppendingPathComponent:@"vengeance.png"]] fallback:emblem available:tb_vengeance_here()
         badge:tb_vengeance_here()?@"PLAY  \u25B8":@"IN DEVELOPMENT"
         label:tb_vengeance_here()?@"Tribes: Vengeance, play the campaign":@"Tribes: Vengeance, in development"];
-    vengeance.status.text=tb_vengeance_here()?@"The single-player campaign, translated to native code. Multiplayer comes later.":
+    vengeance.status.text=tb_vengeance_here()?@"The campaign and online play, translated to native code.":
         @"The campaign first. Being translated to native code; it opens here once it plays.";
     [starsiege addTarget:self action:@selector(starsiegeTapped) forControlEvents:UIControlEventTouchUpInside];
     [tribes2 addTarget:self action:@selector(play) forControlEvents:UIControlEventTouchUpInside];

@@ -33,6 +33,9 @@ static NSString * const TBTribes1Servers=@"https://tribes1.co/";
 static NSString * const TBTribes1JunkYard=@"https://twdemos.iateyourbaby.com/";
 /* Tribes: Vengeance: the community that keeps it online (checked 31 October 2026). */
 static NSString * const TBVengeanceSite=@"https://tribesrevengeance.net/";
+/* The community's Discord, linked from tribesrevengeance.net (checked 1 November 2026). */
+static NSString * const TBVengeanceDiscord=@"https://discord.gg/uXHjZ95";
+static NSString * const TBVengeanceServers=@"https://openspy.net/server-list/tribesv";
 
 /* Touch preferences (NSUserDefaults, TribesPad-owned keys). */
 /* Starsiege: Tribes runs these controls too (tb_mobile_controls_install_starsiege):
@@ -59,6 +62,25 @@ static BOOL tb_vengeance;
 static BOOL tb_vengeance_graphics_pending;   /* a Graphics Quality choice not yet sent to the game */
 static _Atomic int tb_vengeance_playing=-1;
 void tb_vengeance_report_state(int playing){atomic_store(&tb_vengeance_playing,playing);}
+/* Vengeance on a server (joined or hosted here): the map it last loaded, from
+   the game's own log, is not a campaign map (SP-, CS-) or the menu map (Entry).
+   Only the lines added since the last look are read. */
+static BOOL tb_vengeance_on_server(void){
+    static unsigned long long seen;static BOOL server;static char tail[512];
+    NSString *path=[NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,NSUserDomainMask,YES).firstObject
+        stringByAppendingPathComponent:@"TribesPad/Vengeance/volume/TribesPad/Game/Program/Bin/tv_cd_dvd.log"];
+    NSFileHandle *log=[NSFileHandle fileHandleForReadingAtPath:path];if(!log)return server;
+    unsigned long long size=[log seekToEndOfFile];if(size<seen){seen=0;tail[0]=0;}  /* a new log at each start */
+    if(size>seen){[log seekToFileOffset:seen];NSData *more=[log readDataToEndOfFile];seen+=more.length;
+        NSMutableData *text=[NSMutableData dataWithBytes:tail length:strlen(tail)];[text appendData:more];
+        NSString *s=[[NSString alloc] initWithData:text encoding:NSWindowsCP1252StringEncoding]?:@"";
+        NSRange last=[s rangeOfString:@"LoadMap: " options:NSBackwardsSearch];
+        if(last.location!=NSNotFound){NSString *map=[s substringFromIndex:NSMaxRange(last)];
+            server=!([map hasPrefix:@"SP-"]||[map hasPrefix:@"CS-"]||[map hasPrefix:@"Entry"]||[map hasPrefix:@"entry"]);}
+        NSRange line=[s rangeOfString:@"\n" options:NSBackwardsSearch];NSString *rest=line.location==NSNotFound?s:[s substringFromIndex:NSMaxRange(line)];
+        snprintf(tail,sizeof tail,"%s",rest.length<sizeof tail?rest.UTF8String:"");}
+    [log closeFile];return server;
+}
 static _Atomic uint64_t tb_app_frames,tb_app_longest_ns,tb_app_last_ns;
 void tb_app_note_frame(void){
     uint64_t now=SDL_GetTicksNS(),last=atomic_exchange(&tb_app_last_ns,now);atomic_fetch_add(&tb_app_frames,1);
@@ -1016,7 +1038,8 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
     // is 1 on a server (including one hosted here).
     NSString *state=[NSString stringWithContentsOfFile:tb_state_path() encoding:NSUTF8StringEncoding error:nil];
     /* Vengeance: the engine reports whether the game holds the mouse for aiming. */
-    if(tb_vengeance){int p=atomic_load(&tb_vengeance_playing);state=p<0?nil:p?@"1 0 0":@"0 0 0";}
+    if(tb_vengeance){int p=atomic_load(&tb_vengeance_playing);
+        state=p<0?nil:[NSString stringWithFormat:@"%d 0 %d",p?1:0,tb_vengeance_on_server()?1:0];}
     if(tb_starsiege&&state.length){
         /* Starsiege's export: $TribesPad::state = "1 0 1"; */
         NSRange q=[state rangeOfString:@"\""];if(q.location==NSNotFound)return;
@@ -1307,7 +1330,9 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
                 group(@[held(@"Objectives",@"list.number",SDL_SCANCODE_C),held(@"Loadout",@"square.grid.2x2",SDL_SCANCODE_LSHIFT)]),
                 group(@[key(@"Use",@"hand.point.up.left",SDL_SCANCODE_F,SDL_KMOD_NONE),key(@"Third-Person View",@"person.crop.square",SDL_SCANCODE_Z,SDL_KMOD_NONE),
                     key(@"Zoom Level",@"plus.magnifyingglass",SDL_SCANCODE_R,SDL_KMOD_NONE)]),
-                group(@[drop,respawn])]],
+                group(@[drop,respawn])]]];
+        /* Quick save and load belong to the campaign: off a server only. */
+        if(!self.connected)matchItems=[matchItems arrayByAddingObject:
             [UIMenu menuWithTitle:@"Campaign" image:icon(@"flag.checkered") identifier:nil options:0 children:@[
                 key(@"Quick Save",@"square.and.arrow.down",SDL_SCANCODE_F5,SDL_KMOD_NONE),
                 key(@"Quick Load",@"arrow.counterclockwise.circle",SDL_SCANCODE_F8,SDL_KMOD_NONE)]]];
@@ -1330,13 +1355,16 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
             group(@[item(@"Console",@"terminal",^{[weak openConsole];}),
                 item(@"TribesPad on GitHub",@"safari",^{[UIApplication.sharedApplication openURL:[NSURL URLWithString:TBRepositoryURL] options:@{} completionHandler:nil];}),
                 item(@"About TribesPad",@"info.circle",^{[weak showAbout];})])]];
-        UIAction *multiplayer=item(@"Multiplayer",@"server.rack",^{[weak showMessage:@"Multiplayer" text:
-            @"The campaign plays in TribesPad now. Multiplayer is not ready yet. The community keeps Tribes: Vengeance online at tribesrevengeance.net."];});
-        multiplayer.subtitle=@"Not ready in TribesPad yet";
+        UIAction *tvservers=item(@"Server List",@"server.rack",^{[weak openServerList];});
+        tvservers.subtitle=self.connected?@"Leaves this match first":@"MULTIPLAYER > JOIN";
+        UIAction *tvplaying=item(@"Who's Playing Now",@"person.3",^{[weak showLiveServers];});
+        tvplaying.subtitle=@"Players on each server, from OpenSpy";
         UIMenu *tvcommunity=[UIMenu menuWithTitle:@"Community" image:icon(@"bubble.left.and.text.bubble.right") identifier:nil options:0 children:@[
-            group(@[item(@"Tribes: Vengeance Community",@"safari",^{[weak openPage:TBVengeanceSite];}),
-                item(@"TribesPad Discord",@"person.2",^{[weak openLink:TBTribesPadDiscord];})])]];
-        onlineItems=@[multiplayer,tvcommunity];
+            group(@[item(@"Tribes Revengeance Discord",@"person.2",^{[weak openLink:TBVengeanceDiscord];}),
+                item(@"TribesPad Discord",@"person.2",^{[weak openLink:TBTribesPadDiscord];})]),
+            group(@[item(@"TribesRevengeance.net",@"safari",^{[weak openPage:TBVengeanceSite];}),
+                item(@"Server List on the Web (OpenSpy)",@"server.rack",^{[weak openPage:TBVengeanceServers];})])]];
+        onlineItems=@[tvplaying,tvservers,tvcommunity];
     }
     /* The same order in both games: This Match (on a server), Play Online,
        Options, Help, then Choose Game. Off a server Play Online leads, open. */
@@ -1415,13 +1443,13 @@ static UIAction *tb_menu_find(UIMenuElement *e,NSString *path,NSString *want){
 }
 -(void)tapKey:(SDL_Scancode)scancode {[self tapKey:scancode mod:SDL_KMOD_NONE];}
 /* Vengeance: a console command typed through its console (Tab opens a command
-   line, Return runs it), one key every 40 ms. Lower-case letters, digits, spaces. */
+   line, Return runs it), one key every 40 ms. Lower-case letters, digits, spaces, periods. */
 -(void)typeVengeanceCommand:(NSString *)command {
     [self releaseControls];NSMutableArray<NSNumber *> *codes=[NSMutableArray arrayWithObject:@(SDL_SCANCODE_TAB)];
     for(NSUInteger i=0;i<command.length;i++){unichar c=[command.lowercaseString characterAtIndex:i];
         if(c>='a'&&c<='z')[codes addObject:@(SDL_SCANCODE_A+(c-'a'))];
         else if(c>='1'&&c<='9')[codes addObject:@(SDL_SCANCODE_1+(c-'1'))];else if(c=='0')[codes addObject:@(SDL_SCANCODE_0)];
-        else if(c==' ')[codes addObject:@(SDL_SCANCODE_SPACE)];}
+        else if(c==' ')[codes addObject:@(SDL_SCANCODE_SPACE)];else if(c=='.')[codes addObject:@(SDL_SCANCODE_PERIOD)];}
     [codes addObject:@(SDL_SCANCODE_RETURN)];__weak TBGameControls *weak=self;
     for(NSUInteger i=0;i<codes.count;i++)dispatch_after(dispatch_time(DISPATCH_TIME_NOW,(int64_t)(i*40*NSEC_PER_MSEC)),dispatch_get_main_queue(),^{
         [weak tapKey:(SDL_Scancode)codes[i].intValue];});
@@ -1503,6 +1531,11 @@ static UIAction *tb_menu_find(UIMenuElement *e,NSString *path,NSString *want){
    "<number> <request>"; each new number is acted on once. Server List asks for
    the original JOIN pane. */
 -(void)openServerList {
+    if(tb_vengeance&&!self.connected){
+        /* The game's Multiplayer screen (its JOIN tab lists the servers), opened
+           by the console's OpenMenu. */
+        [self typeVengeanceCommand:@"openmenu tribesgui.tribesmultiplayermenu"];return;
+    }
     if(!self.gameReported&&!tb_starsiege){
         [self showMessage:@"Server List" text:@"Sign in to TribesNEXT first. Once you are past the login, this opens PLAY GAME > JOIN, the list of internet servers."];return;
     }
@@ -1515,7 +1548,11 @@ static UIAction *tb_menu_find(UIMenuElement *e,NSString *path,NSString *want){
     __weak TBGameControls *weak=self;
     [alert addAction:[UIAlertAction actionWithTitle:@"Who's Playing Now" style:UIAlertActionStyleDefault handler:^(UIAlertAction *a){(void)a;[weak showLiveServers];}]];
     [alert addAction:[UIAlertAction actionWithTitle:@"Leave and Show Servers" style:UIAlertActionStyleDestructive handler:^(UIAlertAction *a){(void)a;
-        [weak sendRequest:@"leave-servers"];}]];
+        if(!tb_vengeance){[weak sendRequest:@"leave-servers"];return;}
+        /* Vengeance: the console's Disconnect, then its Multiplayer screen once the menu map is up. */
+        [weak typeVengeanceCommand:@"disconnect"];
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW,(int64_t)(4*NSEC_PER_SEC)),dispatch_get_main_queue(),^{
+            [weak typeVengeanceCommand:@"openmenu tribesgui.tribesmultiplayermenu"];});}]];
     [alert addAction:[UIAlertAction actionWithTitle:@"Stay" style:UIAlertActionStyleCancel handler:nil]];
     alert.overrideUserInterfaceStyle=UIUserInterfaceStyleDark;[[self presenter] presentViewController:alert animated:YES completion:nil];
 }
@@ -1593,9 +1630,9 @@ static UIAction *tb_menu_find(UIMenuElement *e,NSString *path,NSString *want){
     [self releaseControls];
     __weak TBGameControls *weak=self;
     TBLiveServersController *live=[[TBLiveServersController alloc] initWithStyle:UITableViewStyleInsetGrouped];
-    if(self.gameReported&&!self.connected)live.join=^(NSString *address){[weak sendRequest:[@"join " stringByAppendingString:address]];};
+    if(self.gameReported&&!self.connected&&!tb_vengeance)live.join=^(NSString *address){[weak sendRequest:[@"join " stringByAppendingString:address]];};
     live.serverList=^{[weak openServerList];};
-    live.starsiege=tb_starsiege;
+    live.starsiege=tb_starsiege;live.vengeance=tb_vengeance;
     UINavigationController *sheet=[[UINavigationController alloc] initWithRootViewController:live];
     sheet.modalPresentationStyle=UIModalPresentationFormSheet;sheet.overrideUserInterfaceStyle=UIUserInterfaceStyleDark;
     [[self presenter] presentViewController:sheet animated:YES completion:nil];

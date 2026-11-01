@@ -12,4 +12,7 @@
 /* Starsiege: Tribes: servers from the community masters (t1_live.c). Its
    servers report one player count, bots included, as the game's list does. */
 @property(nonatomic) BOOL starsiege;
+/* Tribes: Vengeance: the servers OpenSpy, the community master server, lists
+   (the game's MULTIPLAYER > JOIN), with their player counts and maps. */
+@property(nonatomic) BOOL vengeance;
 @end
