@@ -7,6 +7,7 @@
  * Starsiege is offered when the app was built with it
  * (the default; its download can fail); otherwise its card says "Not in this
  * build" and how to add it. "Open Tribes 2 Directly" skips the picker.
+ * Tribes: Vengeance is in development: its card opens the plan until it plays.
  * TRIBESPAD_PICKER_SNAPSHOT=file.png renders the picker offscreen to a PNG and
  * exits (TRIBESPAD_PICKER_SIZE=WxH), so it can be checked without a window.
  * TRIBESPAD_PICK=tribes2|starsiege chooses without showing it. */
@@ -20,6 +21,7 @@
 
 static NSString * const TBRepository=@"https://github.com/chrissotraidis/tribespad";
 static NSString * const TBStarsiegePlan=@"https://github.com/chrissotraidis/tribespad#get-tribespad";
+static NSString * const TBVengeancePlan=@"https://github.com/chrissotraidis/tribespad/blob/main/docs/VENGEANCE-IMPLEMENTATION-PLAN.md";
 #define TB_CYAN 0x2EC4C9
 #define TB_AMBER 0xE8A23A
 static CGColorRef tb_rgb(unsigned hex,CGFloat a){return [NSColor colorWithSRGBRed:((hex>>16)&255)/255.0 green:((hex>>8)&255)/255.0 blue:(hex&255)/255.0 alpha:a].CGColor;}
@@ -56,19 +58,22 @@ static BOOL tb_starsiege_ready(void){
 @property(nonatomic,strong) CAGradientLayer *shade,*fade;
 @property(nonatomic,strong) CAShapeLayer *mask,*frameLine,*badgeMask;
 @property(nonatomic,strong) CATextLayer *kicker,*status,*badgeText;
-@property(nonatomic) BOOL available,focused;
-@property(nonatomic,copy) NSString *statusText;
+@property(nonatomic) BOOL available,focused,banner;
+@property(nonatomic,copy) NSString *statusText,*badgeTitle;
 @end
 @implementation TBCard
 -(instancetype)initWithKicker:(NSString *)kicker art:(NSImage *)art fallback:(NSImage *)fallback available:(BOOL)available badge:(NSString *)badge {
     if(!(self=[super init]))return nil;
     self.available=available;self.root=[CALayer layer];self.root.backgroundColor=tb_rgb(0x050B14,1);
-    self.backdrop=[CALayer layer];self.backdrop.contents=art;self.backdrop.contentsGravity=kCAGravityResizeAspectFill;
+    /* A wide banner (Vengeance's splash top) sits near the top, without the
+       enlarged backdrop, which would only magnify its pixels. */
+    self.banner=art&&art.size.width>art.size.height*2;
+    self.backdrop=[CALayer layer];self.backdrop.contents=self.banner?nil:art;self.backdrop.contentsGravity=kCAGravityResizeAspectFill;
     self.backdrop.opacity=.32;self.backdrop.contentsRect=CGRectMake(.1,.45,.8,.55);[self.root addSublayer:self.backdrop];
     self.art=[CALayer layer];self.art.contents=art?:fallback;self.art.contentsGravity=kCAGravityResizeAspect;self.art.opacity=art?1:.25;
     if(art){self.fade=[CAGradientLayer layer];
         self.fade.colors=@[(id)NSColor.clearColor.CGColor,(id)NSColor.blackColor.CGColor,(id)NSColor.blackColor.CGColor,(id)NSColor.clearColor.CGColor];
-        self.fade.locations=@[@0,@.12,@.72,@1];self.art.mask=self.fade;}
+        self.fade.locations=self.banner?@[@0,@.18,@.8,@1]:@[@0,@.12,@.72,@1];self.art.mask=self.fade;}
     [self.root addSublayer:self.art];
     self.shade=[CAGradientLayer layer];
     self.shade.colors=@[(id)[NSColor colorWithWhite:0 alpha:0].CGColor,(id)[NSColor colorWithWhite:0 alpha:0].CGColor,(__bridge id)tb_rgb(0x02060C,.94)];
@@ -78,7 +83,7 @@ static BOOL tb_starsiege_ready(void){
     self.badge=[CALayer layer];self.badge.backgroundColor=tb_rgb(available?TB_CYAN:TB_AMBER,1);
     self.badgeMask=[CAShapeLayer layer];self.badge.mask=self.badgeMask;
     self.badgeText=tb_label();self.badgeText.alignmentMode=kCAAlignmentCenter;
-    self.badgeText.string=tb_text(badge,14,NSFontWeightBlack,tb_rgb(0x02060C,1),2,NO);[self.badge addSublayer:self.badgeText];[self.root addSublayer:self.badge];
+    self.badgeTitle=badge;[self.badge addSublayer:self.badgeText];[self.root addSublayer:self.badge];
     self.mask=[CAShapeLayer layer];self.root.mask=self.mask;
     self.frameLine=[CAShapeLayer layer];self.frameLine.fillColor=NSColor.clearColor.CGColor;self.frameLine.lineWidth=3;[self.root addSublayer:self.frameLine];
     self.focused=NO;return self;
@@ -94,13 +99,16 @@ static BOOL tb_starsiege_ready(void){
     CGRect b=self.root.bounds;CGFloat c=fmin(36,b.size.width*.08),pad=fmax(18,b.size.width*.055);
     self.backdrop.frame=b;
     NSImage *image=self.art.contents;CGSize size=[image isKindOfClass:NSImage.class]?image.size:CGSizeZero;
-    if(self.backdrop.contents&&size.width>0){CGFloat h=fmin(b.size.width*size.height/size.width,b.size.height*.7);
-        self.art.frame=CGRectMake(0,fmax(0,b.size.height*.42-h/2),b.size.width,h);self.fade.frame=self.art.bounds;}
+    if(self.fade&&size.width>0){CGFloat h=fmin(b.size.width*size.height/size.width,b.size.height*.7);
+        self.art.frame=CGRectMake(0,self.banner?b.size.height*.1:fmax(0,b.size.height*.42-h/2),b.size.width,h);self.fade.frame=self.art.bounds;}
     else self.art.frame=CGRectInset(b,b.size.width*.2,b.size.height*.2);
     self.shade.frame=b;self.mask.path=tb_chamfer(b,c);self.frameLine.path=tb_chamfer(CGRectInset(b,1.5,1.5),c-1);
+    /* Three cards in a small window are narrow: a smaller badge fits. */
+    BOOL narrow=b.size.width<300;CGFloat bx=narrow?24:40,by=narrow?12:16;
+    self.badgeText.string=tb_text(self.badgeTitle,narrow?11:14,NSFontWeightBlack,tb_rgb(0x02060C,1),narrow?1:2,NO);
     CGSize badge=tb_fit(self.badgeText.string,320);
-    self.badge.frame=CGRectMake(pad,b.size.height-pad-badge.height-16,badge.width+40,badge.height+16);
-    self.badgeMask.path=tb_chamfer(self.badge.bounds,10);self.badgeText.frame=CGRectMake(0,8,badge.width+40,badge.height);
+    self.badge.frame=CGRectMake(pad,b.size.height-pad-badge.height-by,badge.width+bx,badge.height+by);
+    self.badgeMask.path=tb_chamfer(self.badge.bounds,10);self.badgeText.frame=CGRectMake(0,by/2,badge.width+bx,badge.height);
     CGFloat w=b.size.width-2*pad-c,y=CGRectGetMinY(self.badge.frame)-12;
     if(self.status.string){CGSize s=tb_fit(self.status.string,w);y-=s.height;self.status.frame=CGRectMake(pad,y,w,s.height);}
     CGSize k=tb_fit(self.kicker.string,w);y-=k.height+6;self.kicker.frame=CGRectMake(pad,y,w,k.height);
@@ -113,7 +121,7 @@ static BOOL tb_starsiege_ready(void){
 }
 @end
 
-typedef enum {TBNone,TBTribes2,TBStarsiege} TBChoice;
+typedef enum {TBNone,TBTribes2,TBStarsiege} TBChoice; /* Vengeance: no engine yet */
 static TBChoice tb_choice;
 
 @interface TBPickerView:NSView
@@ -152,10 +160,12 @@ static TBChoice tb_choice;
     starsiege.statusText=self.starsiege?@"Version 1.41, the one the community plays. Bot matches offline, community servers online.":@"The original. Being translated to native code; it opens here once it plays.";
     TBCard *tribes2=[[TBCard alloc] initWithKicker:@"Tribes 2  \u00B7  2001  \u00B7  TribesNEXT online" art:art(@"tribes2.png") fallback:emblem available:YES badge:@"PLAY  \u25B8"];
     tribes2.statusText=@"Checking who is playing\u2026";
-    self.cards=@[starsiege,tribes2];for(TBCard *c in self.cards)[self.layer addSublayer:c.root];
+    TBCard *vengeance=[[TBCard alloc] initWithKicker:@"Tribes: Vengeance  \u00B7  2004" art:art(@"vengeance.png") fallback:emblem available:NO badge:@"IN DEVELOPMENT"];
+    vengeance.statusText=@"The campaign first. Being translated to native code; it opens here once it plays.";
+    self.cards=@[starsiege,tribes2,vengeance];for(TBCard *c in self.cards)[self.layer addSublayer:c.root];
     self.focus=1;[self showFocus];
     self.footer=tb_label();self.footer.alignmentMode=kCAAlignmentCenter;
-    self.footer.string=tb_text(@"Native ARM64 recompilations of the original games, built from your own copies. Starsiege: Tribes and Tribes 2 belong to their owners; TribesPad is MIT licensed.",11,NSFontWeightMedium,tb_white(.4),0,NO);
+    self.footer.string=tb_text(@"Native ARM64 recompilations of the original games, built from your own copies. Starsiege: Tribes, Tribes 2 and Tribes: Vengeance belong to their owners; TribesPad is MIT licensed.",11,NSFontWeightMedium,tb_white(.4),0,NO);
     [self.layer addSublayer:self.footer];
     [self addTrackingArea:[[NSTrackingArea alloc] initWithRect:NSZeroRect options:NSTrackingMouseMoved|NSTrackingActiveAlways|NSTrackingInVisibleRect owner:self userInfo:nil]];
     return self;
@@ -176,9 +186,8 @@ static TBChoice tb_choice;
     self.gear.frame=CGRectMake(b.size.width-right-8-44,CGRectGetMidY(self.emblem.frame)-22,44,44);
     CGSize f=tb_fit(self.footer.string,b.size.width-left-right-80);self.footer.frame=CGRectMake((b.size.width-f.width)/2,b.size.height-bottom-f.height,f.width,f.height);
     CGFloat cardTop=CGRectGetMaxY(self.emblem.frame)+(small?12:28),cardBottom=CGRectGetMinY(self.footer.frame)-(small?10:22),gap=small?14:30;
-    CGFloat cw=(b.size.width-left-right-16-gap)/2;
-    self.cards[0].root.frame=CGRectMake(left+8,cardTop,cw,cardBottom-cardTop);
-    self.cards[1].root.frame=CGRectMake(left+8+cw+gap,cardTop,cw,cardBottom-cardTop);
+    NSUInteger n=self.cards.count;CGFloat cw=(b.size.width-left-right-16-gap*(n-1))/n;
+    for(NSUInteger i=0;i<n;i++)self.cards[i].root.frame=CGRectMake(left+8+i*(cw+gap),cardTop,cw,cardBottom-cardTop);
     [CATransaction commit];for(TBCard *c in self.cards)[c layout];
 }
 /* A faint, fixed starfield behind everything. */
@@ -201,10 +210,18 @@ static TBChoice tb_choice;
     NSString *k=event.charactersIgnoringModifiers;unichar c=k.length?[k characterAtIndex:0]:0;
     if(c==NSLeftArrowFunctionKey)[self moveFocus:-1];else if(c==NSRightArrowFunctionKey)[self moveFocus:1];
     else if(c=='\r'||c==3||c==' ')[self activate];else if(c=='1'){self.focus=0;[self showFocus];[self activate];}
-    else if(c=='2'){self.focus=1;[self showFocus];[self activate];}else [super keyDown:event];
+    else if(c=='2'){self.focus=1;[self showFocus];[self activate];}
+    else if(c=='3'){self.focus=2;[self showFocus];[self activate];}else [super keyDown:event];
 }
 -(void)activate{
     if(self.focus==1){tb_choice=TBTribes2;return;}
+    if(self.focus==2){
+        NSAlert *a=[NSAlert new];a.messageText=@"Tribes: Vengeance";
+        a.informativeText=@"Tribes: Vengeance is in development. Its engine is being translated to native code, campaign first, and it opens here once it plays.";
+        [a addButtonWithTitle:@"OK"];[a addButtonWithTitle:@"Read the Plan"];
+        if([a runModal]==NSAlertSecondButtonReturn)[NSWorkspace.sharedWorkspace openURL:[NSURL URLWithString:TBVengeancePlan]];
+        return;
+    }
     if(self.starsiege){tb_choice=TBStarsiege;return;}
     NSAlert *a=[NSAlert new];a.messageText=@"Starsiege: Tribes";
     a.informativeText=@"Starsiege: Tribes is not in this copy of TribesPad. Its download from PlayT1 did not finish when TribesPad was built, or it was built with --games tribes2. Build TribesPad again to add it.";

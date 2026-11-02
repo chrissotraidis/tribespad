@@ -8,8 +8,12 @@ Background.bmp). Starsiege: Tribes: its title screen, BrightLogo.png from the
 BrightLogo.bmp in Shell.vol from the 2004 freeware installer when
 ref/starsiege/tribes_gsi.exe exists with the pinned SHA-256. Results are
 cached in generated/launcher-art and refreshed when a source changes.
+Tribes: Vengeance (in development, docs/VENGEANCE-IMPLEMENTATION-PLAN.md): the
+top of its startup splash, Content/Art/StartupLogo.bmp, when the community
+installer is on this Mac; the rest of that splash is legal text. Without it
+the card shows the TribesPad emblem.
 """
-import hashlib, json, pathlib, struct, subprocess, sys, tempfile, zipfile, zlib
+import hashlib, json, pathlib, shutil, struct, subprocess, sys, tempfile, zipfile, zlib
 
 R = pathlib.Path(__file__).resolve().parents[1]
 CACHE = R / 'generated/launcher-art'
@@ -19,6 +23,9 @@ STARSIEGE_SHA256 = 'd91ac445d30154aa45cd468e839bd540feca27ad62b3019a73e6fc4224fb
 # Starsiege 1.41, prepared by scripts/starsiege/prepare-inputs.py: the same
 # title screen, already a PNG.
 STARSIEGE_SHELL = R / 'ref/starsiege/game/base/Shell.zip'
+VENGEANCE = R / 'ref/vengeance-research/installer/setup.exe'
+VENGEANCE_SPLASH = 'app/Tribes Vengeance/Content/Art/StartupLogo.bmp'
+VENGEANCE_ROWS = 172  # the logo and character; legal text starts below
 
 def sha256(path):
     h = hashlib.sha256()
@@ -44,6 +51,22 @@ def png(path, width, height, rgb):
     chunk = lambda tag, data: struct.pack('>I', len(data)) + tag + data + struct.pack('>I', zlib.crc32(tag + data) & 0xffffffff)
     path.write_bytes(b'\x89PNG\r\n\x1a\n' + chunk(b'IHDR', struct.pack('>IIBBBBB', width, height, 8, 2, 0, 0, 0)) +
                      chunk(b'IDAT', zlib.compress(rows, 9)) + chunk(b'IEND', b''))
+
+def bmp_top(path, rows):
+    """Width, height and RGB of the top rows of an uncompressed 24- or 32-bit BMP."""
+    data = path.read_bytes()
+    offset, = struct.unpack_from('<I', data, 10)
+    width, height, _, bits, compression = struct.unpack_from('<iiHHI', data, 18)
+    if data[:2] != b'BM' or bits not in (24, 32) or compression != 0:
+        raise ValueError('unsupported BMP')
+    step, stride, rows = bits // 8, (width * bits // 8 + 3) & ~3, min(rows, abs(height))
+    out = bytearray()
+    for y in range(rows):
+        start = offset + (y if height < 0 else abs(height) - 1 - y) * stride
+        line, rgb = data[start:start + width * step], bytearray(width * 3)
+        rgb[0::3], rgb[1::3], rgb[2::3] = line[2::step], line[1::step], line[0::step]
+        out += rgb
+    return width, rows, bytes(out)
 
 def pvol(path):
     """Darkstar PVOL archive: name -> uncompressed bytes."""
@@ -125,11 +148,24 @@ def starsiege():
         done()
     return image
 
+def vengeance():
+    if not VENGEANCE.exists() or not shutil.which('innoextract'):
+        return None
+    image, done = cached('vengeance', VENGEANCE)
+    if done:
+        with tempfile.TemporaryDirectory() as folder:
+            # One file from the installer's data; the installer itself never runs.
+            subprocess.run(['innoextract', '-s', '-d', folder, '-I', VENGEANCE_SPLASH, str(VENGEANCE)],
+                           check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            png(image, *bmp_top(pathlib.Path(folder) / VENGEANCE_SPLASH, VENGEANCE_ROWS))
+        done()
+    return image
+
 def prepare(out):
-    """Copy the art that exists into out (tribes2.png, starsiege.png)."""
+    """Copy the art that exists into out (tribes2.png, starsiege.png, vengeance.png)."""
     CACHE.mkdir(parents=True, exist_ok=True)
     found = {}
-    for name, make in (('tribes2', tribes2), ('starsiege', starsiege)):
+    for name, make in (('tribes2', tribes2), ('starsiege', starsiege), ('vengeance', vengeance)):
         try:
             image = make()
         except (OSError, ValueError, KeyError, subprocess.CalledProcessError) as error:

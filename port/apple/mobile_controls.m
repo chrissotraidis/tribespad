@@ -274,7 +274,7 @@ static const TBSettingRow tb_rows[]={
     {2,NO,"Keep Clear of the Notch","TribesPad.avoidNotch","Keeps the game clear of the notch and rounded corners. Turn off to fill the screen. Applies the next time TribesPad opens.",0,0,NO},
     {2,NO,"Show FPS Counter","TribesPad.showFPS","Frames each second and the longest frame among them. Also in the menu.",0,0,NO},
     {2,YES,"Render Scale","TribesPad.renderScale",NULL,.5,1.0,NO},
-    {2,NO,"Game Picker at Launch","TribesPad.showLauncher","Choose between Starsiege: Tribes and Tribes 2 when TribesPad opens. Off, it opens Tribes 2 directly.",0,0,NO},
+    {2,NO,"Game Picker at Launch","TribesPad.showLauncher","Choose your game when TribesPad opens. Off, it opens Tribes 2 directly.",0,0,NO},
     {3,NO,"WASD Movement","TribesPad.keyboardWASD","Keys from a hardware keyboard only.",0,0,NO},
     {4,NO,"Online Play","TribesPad.onlinePlay","Sign in with TribesNEXT at launch.",0,0,NO}};
 enum {TBRowCount=sizeof tb_rows/sizeof tb_rows[0],TBSectionCount=sizeof tb_sections/sizeof tb_sections[0]};
@@ -287,8 +287,24 @@ static void tb_register_defaults(void){
             @"TribesPad.onlinePlay":@1}];
     });
 }
+/* Starsiege: Tribes draws a fixed 800x600 frame (content_area.m) and has its own
+   WASD keys and no TribesNEXT login, so these rows only change Tribes 2. */
+static BOOL tb_row_applies(const TBSettingRow *r){
+    static const char *const tribes2[]={"TribesPad.avoidNotch","TribesPad.renderScale","TribesPad.keyboardWASD","TribesPad.onlinePlay"};
+    if(tb_starsiege)for(unsigned i=0;i<sizeof tribes2/sizeof tribes2[0];i++)if(!strcmp(r->key,tribes2[i]))return NO;
+    return YES;
+}
+static NSInteger tb_section_rows(NSInteger section){
+    NSInteger n=0;for(unsigned i=0;i<TBRowCount;i++)n+=tb_rows[i].section==section&&tb_row_applies(&tb_rows[i]);return n;
+}
+/* The sheet shows the sections that have rows in this game, then Reset to
+   Defaults (TBSectionCount). */
+static NSInteger tb_section(NSInteger shown){
+    for(NSInteger s=0;s<TBSectionCount;s++)if(tb_section_rows(s)&&shown--==0)return s;return TBSectionCount;
+}
 static const TBSettingRow *tb_row(NSIndexPath *path){
-    NSInteger n=0;for(unsigned i=0;i<TBRowCount;i++)if(tb_rows[i].section==path.section&&n++==path.row)return &tb_rows[i];return NULL;
+    NSInteger section=tb_section(path.section),n=0;
+    for(unsigned i=0;i<TBRowCount;i++)if(tb_rows[i].section==section&&tb_row_applies(&tb_rows[i])&&n++==path.row)return &tb_rows[i];return NULL;
 }
 
 @interface TBSettingsController : UITableViewController
@@ -300,22 +316,25 @@ static const TBSettingRow *tb_row(NSIndexPath *path){
     self.navigationItem.rightBarButtonItem=[[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone target:self action:@selector(done)];
 }
 -(void)done{[self dismissViewControllerAnimated:YES completion:nil];}
--(NSInteger)numberOfSectionsInTableView:(UITableView *)tableView{(void)tableView;return TBSectionCount+1;}
+-(NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
+    (void)tableView;NSInteger n=1;for(NSInteger s=0;s<TBSectionCount;s++)n+=tb_section_rows(s)>0;return n;
+}
 -(NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    (void)tableView;if(section==TBSectionCount)return 1;
-    NSInteger n=0;for(unsigned i=0;i<TBRowCount;i++)n+=tb_rows[i].section==section;return n;
+    (void)tableView;NSInteger s=tb_section(section);return s==TBSectionCount?1:tb_section_rows(s);
 }
 -(NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section {
-    (void)tableView;return section<TBSectionCount?@(tb_sections[section][0]):nil;
+    (void)tableView;NSInteger s=tb_section(section);return s<TBSectionCount?@(tb_sections[s][0]):nil;
 }
 -(NSString *)tableView:(UITableView *)tableView titleForFooterInSection:(NSInteger)section {
-    (void)tableView;return section<TBSectionCount&&tb_sections[section][1]?@(tb_sections[section][1]):nil;
+    (void)tableView;NSInteger s=tb_section(section);if(s>=TBSectionCount)return nil;
+    if(tb_starsiege&&s==2)return @"Starsiege: Tribes draws its original 800x600 frame, which the screen scales up to fit, centred.";
+    return tb_sections[s][1]?@(tb_sections[s][1]):nil;
 }
 static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multiplier?[NSString stringWithFormat:@"%.1f×",v]:[NSString stringWithFormat:@"%.0f%%",v*100];}
 -(UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)path {
     (void)tableView;UITableViewCell *cell=[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:nil];
     cell.selectionStyle=UITableViewCellSelectionStyleNone;
-    if(path.section==TBSectionCount) {
+    if(tb_section(path.section)==TBSectionCount) {
         cell.textLabel.text=@"Reset to Defaults";cell.textLabel.textColor=UIColor.systemRedColor;
         cell.textLabel.textAlignment=NSTextAlignmentCenter;cell.selectionStyle=UITableViewCellSelectionStyleDefault;return cell;
     }
@@ -353,7 +372,7 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
     if(toggle.on&&!strcmp(r->key,"TribesPad.hideWithController"))[self.owner hideForController];
 }
 -(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)path {
-    [tableView deselectRowAtIndexPath:path animated:YES];if(path.section!=TBSectionCount)return;
+    [tableView deselectRowAtIndexPath:path animated:YES];if(tb_section(path.section)!=TBSectionCount)return;
     for(unsigned i=0;i<TBRowCount;i++)[NSUserDefaults.standardUserDefaults removeObjectForKey:@(tb_rows[i].key)];
     [tableView reloadData];[self.owner settingsChanged];
 }
@@ -759,7 +778,7 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
     (void)notification;if(!self.superview)return;
     if(tb_starsiege){
         /* The engine reads the controller itself (starsiege_controller.m) and
-           steps aside for it; Menu opens the ··· menu, as in Tribes 2. */
+           steps aside for it; Menu opens the game menu (Escape), as in Tribes 2. */
         BOOL any=NO;for(GCController *c in GCController.controllers)if(c.extendedGamepad)any=YES;
         if(getenv("TRIBESPAD_TOUCH_CONTROLS"))any=NO; /* tests: touch controls even with a controller */
         __weak TBGameControls *weakSelf=self;
@@ -970,18 +989,18 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
         self.typingDialog=window&&SDL_TextInputActive(window);
         [self rebuildMenu];
         // New players rarely know where the games are; point at Find a Game.
-        double shown=tb_starsiege?3:tb_setting(@"TribesPad.findHintsShown",0);
-        if(tb_starsiege){}
-        else if(shown<3){tb_set(@"TribesPad.findHintsShown",shown+1);
+        double shown=tb_setting(@"TribesPad.findHintsShown",0);
+        if(shown<3){tb_set(@"TribesPad.findHintsShown",shown+1);
             [self flashHint:@"Looking for a game?  ··· > Play Online has the server list,\nwho is playing now, game nights and the community Discords"];}
-        else [self performSelector:@selector(offerBalancedIfMaximum) withObject:nil afterDelay:3];
+        // The graphics presets are Tribes 2's (base/autoexec.cs).
+        else if(!tb_starsiege)[self performSelector:@selector(offerBalancedIfMaximum) withObject:nil afterDelay:3];
     }
     BOOL playing=[state hasPrefix:@"1"],typing=[state hasPrefix:@"0 1"];
     /* Starsiege reports 2 while a station's buy screen is open: say how to buy. */
     BOOL station=tb_starsiege&&[state hasPrefix:@"2"];
     if(station!=self.stationOpen){self.stationOpen=station;
         if(station)[self flashHint:self.controllerUsed?@"Station: point at an item and press A to buy it\nB closes the station":
-            @"Station: double-tap an item to buy it\n··· > This Match > Game Menu closes the station"];}
+            @"Station: double-tap an item to buy it\n··· > This Match > Back to Game closes the station"];}
     NSArray *words=[state componentsSeparatedByCharactersInSet:NSCharacterSet.whitespaceAndNewlineCharacterSet];
     BOOL connected=words.count>2&&[words[2] isEqualToString:@"1"];
     /* Starsiege reports the last request it handled; then the flag goes. */
@@ -1047,7 +1066,11 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
 }
 -(void)showControllerHint {
     double shown=tb_setting(@"TribesPad.controllerHintsShown",0);if(shown>=3)return;tb_set(@"TribesPad.controllerHintsShown",shown+1);
-    self.hint.text=@"RT fire  ·  LT jet  ·  A ski / jump  ·  RB next weapon  ·  LB targeting laser\n"
+    /* Each game's own layout: Starsiege's is starsiege_input.c's. */
+    self.hint.text=tb_starsiege?@"RT fire  ·  LT jet  ·  A jump / ski  ·  RB / LB next / previous weapon\n"
+        "Y grenade  ·  X use pack  ·  B crouch  ·  D-pad: up repair kit, down inventory, left beacon, right quick chat\n"
+        "Spawning? Press RT  ·  Menu: game menu  ·  View: scores":
+        @"RT fire  ·  LT jet  ·  A ski / jump  ·  RB next weapon  ·  LB targeting laser\n"
         "Y grenade  ·  X use pack  ·  B place mine  ·  D-pad: up repair kit, down inventory, left beacon, right quick chat\n"
         "Watching as an observer? Press RT to join a team  ·  Menu: game menu  ·  View: scores";
     [self.hint.layer removeAllAnimations];[self setNeedsLayout];[self layoutIfNeeded];
@@ -1151,10 +1174,10 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
         [UIMenu menuWithTitle:@"Graphics Quality" image:icon(@"slider.horizontal.3") identifier:nil options:0 children:@[
             group(@[balanced,fast]),group(@[scale])]],
         item(@"Settings…",@"gearshape",^{[weak showSettings];})];
-    NSString *pad=self.controller.vendorName;
+    NSString *pad=[self controllerName];
+    UIAction *controllerGuide=item(pad.length?[NSString stringWithFormat:@"Controller: %@",pad]:@"Controller Guide",@"gamecontroller.fill",^{[weak showControllerGuide];});
     UIMenu *help=[UIMenu menuWithTitle:@"Help" image:icon(@"questionmark.circle") identifier:nil options:0 children:@[
-        group(@[item(@"Touch and Trackpad Guide",@"hand.tap",^{[weak showTouchGuide];}),
-            item(pad.length?[NSString stringWithFormat:@"Controller: %@",pad]:@"Controller Guide",@"gamecontroller.fill",^{[weak showControllerGuide];})]),
+        group(@[item(@"Touch and Trackpad Guide",@"hand.tap",^{[weak showTouchGuide];}),controllerGuide]),
         group(@[item(@"Console",@"terminal",^{[weak openConsole];}),
             item(@"TribesPad on GitHub",@"safari",^{
                 [UIApplication.sharedApplication openURL:[NSURL URLWithString:TBRepositoryURL] options:@{} completionHandler:nil];}),
@@ -1179,12 +1202,13 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
         /* Starsiege's own keys (config/config.cs): T and Y chat, I inventory,
            O objectives, C command, Tab scores, Ctrl+K kill. */
         UIAction *kill=key(@"Suicide",@"xmark.octagon",SDL_SCANCODE_K,SDL_KMOD_LCTRL);kill.attributes=UIMenuElementAttributesDestructive;
-        NSArray *t1=@[item(@"Game Menu",@"list.bullet",^{[weak tapKey:SDL_SCANCODE_ESCAPE];}),
+        /* Escape, as in Tribes 2 and the controller's Menu button. */
+        NSArray *t1=@[game[0],
             key(@"Scores",@"trophy",SDL_SCANCODE_TAB,SDL_KMOD_NONE),
             [UIMenu menuWithTitle:@"Chat" image:icon(@"bubble.left.and.bubble.right") identifier:nil options:0 children:@[
                 item(@"All Chat",@"bubble.left.and.bubble.right",^{[weak openChat:SDL_SCANCODE_T];}),
                 item(@"Team Chat",@"bubble.left",^{[weak openChat:SDL_SCANCODE_Y];}),
-                item(@"Quick Chat Menu",@"text.bubble",^{[weak sendGameKey:SDL_SCANCODE_V mod:SDL_KMOD_NONE];})]],
+                item(@"Quick Chat Menu",@"text.bubble",^{[weak openChat:SDL_SCANCODE_V];})]],
             [UIMenu menuWithTitle:@"Actions" image:icon(@"bolt") identifier:nil options:0 children:@[
                 group(@[key(@"Inventory",@"square.grid.2x2",SDL_SCANCODE_I,SDL_KMOD_NONE),key(@"Objectives",@"list.number",SDL_SCANCODE_O,SDL_KMOD_NONE),
                     key(@"Command Map",@"map",SDL_SCANCODE_C,SDL_KMOD_NONE)]),
@@ -1194,9 +1218,8 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
                 group(@[kill])]]];
         optionItems=@[controls[0],controls[1],controls[2],controls[4]];
         help=[UIMenu menuWithTitle:@"Help" image:icon(@"questionmark.circle") identifier:nil options:0 children:@[
-            group(@[item(@"Touch and Trackpad Guide",@"hand.tap",^{[weak showTouchGuide];}),
-                item(@"Controller Guide",@"gamecontroller.fill",^{[weak showControllerGuide];})]),
-            group(@[item(@"Console",@"terminal",^{[weak tapKey:SDL_SCANCODE_GRAVE];}),
+            group(@[item(@"Touch and Trackpad Guide",@"hand.tap",^{[weak showTouchGuide];}),controllerGuide]),
+            group(@[item(@"Console",@"terminal",^{[weak openConsole];}),
                 item(@"TribesPad on GitHub",@"safari",^{[UIApplication.sharedApplication openURL:[NSURL URLWithString:TBRepositoryURL] options:@{} completionHandler:nil];}),
                 item(@"About TribesPad",@"info.circle",^{[weak showAbout];})])]];
         UIAction *t1servers=item(@"Server List",@"server.rack",^{[weak openServerList];});
@@ -1481,19 +1504,21 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
         "Chat, Scores and other keys are in the ··· menu."];
 }
 -(void)showControllerGuide {
+    NSString *name=[self controllerName];
+    NSString *status=name.length?@"Connected. Touch controls step aside once you use it.":@"Connect an Xbox, PlayStation or MFi controller in Settings > Bluetooth.";
     if(tb_starsiege){
-        [self showMessage:@"Controller Guide" text:@"PLAYING\nLeft stick: move · Right stick: aim\nRT: fire · LT: jet · A: jump / ski\n"
+        [self showMessage:name.length?name:@"Controller Guide" text:[NSString stringWithFormat:@"%@\n\n"
+            "PLAYING\nLeft stick: move · Right stick: aim\nRT: fire · LT: jet · A: jump / ski\n"
             "RB / LB: next / previous weapon\nY: grenade · X: use pack · B: crouch\n"
             "D-pad: up repair kit · down inventory · left beacon · right quick chat\n"
             "Quick chat: D-pad to choose, A to say or open, B to go back\n"
-            "Click right stick: zoom on / off · click left stick: third person\nMenu: TribesPad's ··· menu · View: scores\n"
+            "Click right stick: zoom on / off · click left stick: third person\nMenu: game menu · View: scores\n"
             "Spawning: press RT (fire).\n\n"
             "MENUS AND INVENTORY\nLeft stick or D-pad: move the cursor · A: click\nX: double-click (buy from the inventory station's lists)\n"
             "B: back · Right stick: scroll\n\n"
-            "Recorded demos play as a menu: B leaves them.\nWith a controller in use, the touch controls step aside."];
+            "Recorded demos play as a menu: B leaves them.",status]];
         return;
     }
-    NSString *name=self.controller.vendorName;
     [self showMessage:name.length?name:@"Controller Guide" text:[NSString stringWithFormat:@"%@\n\n"
         "PLAYING\nLeft stick: move · Right stick: aim\nRT: fire · LT: jet · A: ski / jump\n"
         "RB: next weapon · LB: targeting laser\nY: grenade · X: use pack · B: place mine\n"
@@ -1503,7 +1528,15 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
         "Observing after you join? Press RT to join a team.\n"
         "Loadout: D-pad down opens inventory; pick armor and weapons there.\n\n"
         "MENUS\nLeft stick or D-pad: move the cursor · A: click (hold to drag)\nB or Menu: back · Right stick: scroll",
-        name.length?@"Connected. Touch controls step aside once you use it.":@"Connect an Xbox, PlayStation or MFi controller in Settings > Bluetooth."]];
+        status]];
+}
+/* The connected gamepad's name. Tribes 2 holds the one it reads (self.controller);
+   Starsiege's engine reads the first gamepad itself (starsiege_controller.m). */
+-(NSString *)controllerName {
+    GCController *pad=self.controller;
+    if(!pad&&GCController.current.extendedGamepad)pad=GCController.current;
+    if(!pad)for(GCController *c in GCController.controllers)if(c.extendedGamepad){pad=c;break;}
+    return pad.vendorName;
 }
 /* The original console toggles on the grave key; open the keyboard for typing. */
 -(void)openConsole {
