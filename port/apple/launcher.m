@@ -2,9 +2,9 @@
    runs natively before either game starts (docs/LAUNCHER-PLAN.md) and waits
    on the main run loop until a game is chosen. Tribes 2 (TribesNEXT) starts;
    Starsiege: Tribes plays when the build included it; otherwise its card says
-   so and how to add it. Tribes: Vengeance's campaign plays when the build
-   included it; otherwise its card says it is in development and opens the
-   plan (docs/VENGEANCE-IMPLEMENTATION-PLAN.md). Each card shows its game's own title
+   so and how to add it. Tribes: Vengeance is an optional download: in a build
+   with its engine the card offers it (vengeance_download.m) and plays it once
+   installed. Each card shows its game's own title
    screen, taken at build time from the player's own downloads
    (scripts/launcher_art.py) into GameData/Launcher; nothing from the games
    is in the repository. */
@@ -18,7 +18,6 @@
 #include "t1_live.h"
 
 static NSString * const TBLaunchStarsiegePlan=@"https://github.com/chrissotraidis/tribespad#get-tribespad";
-static NSString * const TBLaunchVengeancePlan=@"https://github.com/chrissotraidis/tribespad/blob/main/docs/VENGEANCE-IMPLEMENTATION-PLAN.md";
 static NSString * const TBLaunchRepository=@"https://github.com/chrissotraidis/tribespad";
 static BOOL tb_launch_chosen;
 static TBGame tb_launch_game=TBGameTribes2;
@@ -27,6 +26,17 @@ static BOOL tb_vengeance_here(void){
     NSString *support=[NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,NSUserDomainMask,YES).firstObject stringByAppendingPathComponent:@"TribesPad"];
     return tb_vengeance_bundled([NSBundle.mainBundle.resourcePath stringByAppendingPathComponent:@"GameData"].fileSystemRepresentation,support.fileSystemRepresentation);
 }
+/* The download's interface (vengeance_download.h), reached by name: the class is in the app only with Vengeance. */
+@protocol TBVengeanceDownloadAPI <NSObject>
++(instancetype)shared;+(BOOL)engineHere;+(uint64_t)spaceNeeded;+(uint64_t)gameSize;+(uint64_t)downloadSize;+(void)removeGame;
+@property(nonatomic,readonly) BOOL running;
+@property(nonatomic,copy) void (^progress)(NSString *status,double fraction);
+@property(nonatomic,copy) void (^finished)(NSError *error);
+-(void)start;-(void)cancel;
+@end
+typedef id<TBVengeanceDownloadAPI> TBVengeanceDownloadRef;
+/* The engine is in this app and the game can be downloaded (vengeance_download.m, linked only then). */
+static Class tb_vengeance_download_class(void){Class c=NSClassFromString(@"TBVengeanceDownload");return [c engineHere]?c:nil;}
 static const char *tb_game_name(TBGame game){return game==TBGameStarsiege?"Starsiege: Tribes":game==TBGameVengeance?"Tribes: Vengeance":"Tribes 2";}
 /* A game by its stable name (TRIBESPAD_PICK, TribesPad.nextGame); Tribes 2 when absent from this build. */
 static TBGame tb_game_named(NSString *name){
@@ -195,12 +205,13 @@ static UIBezierPath *tb_chamfer(CGRect r,CGFloat c){
         art:[UIImage imageWithContentsOfFile:[art stringByAppendingPathComponent:@"tribes2.png"]] fallback:emblem available:YES badge:@"PLAY  \u25B8"
         label:@"Tribes 2, play"];
     tribes2.status.text=@"Checking who is playing\u2026";
+    BOOL vgInstalled=tb_vengeance_here(),vgDownload=!vgInstalled&&tb_vengeance_download_class()!=nil;
     TBLauncherCard *vengeance=[[TBLauncherCard alloc] initWithKicker:@"Tribes: Vengeance  \u00B7  2004  \u00B7  OpenSpy online"
-        art:[UIImage imageWithContentsOfFile:[art stringByAppendingPathComponent:@"vengeance.png"]] fallback:emblem available:tb_vengeance_here()
-        badge:tb_vengeance_here()?@"PLAY  \u25B8":@"IN DEVELOPMENT"
-        label:tb_vengeance_here()?@"Tribes: Vengeance, play":@"Tribes: Vengeance, in development"];
-    vengeance.status.text=tb_vengeance_here()?@"The campaign and online play, translated to native code.":
-        @"The campaign first. Being translated to native code; it opens here once it plays.";
+        art:[UIImage imageWithContentsOfFile:[art stringByAppendingPathComponent:@"vengeance.png"]] fallback:emblem available:vgInstalled||vgDownload
+        badge:vgInstalled?@"PLAY  \u25B8":vgDownload?@"DOWNLOAD  \u25BE":@"NOT IN THIS BUILD"
+        label:vgInstalled?@"Tribes: Vengeance, play":vgDownload?@"Tribes: Vengeance, download":@"Tribes: Vengeance, not in this build"];
+    vengeance.status.text=vgInstalled?@"The campaign and online play, translated to native code.":
+        vgDownload?[self vengeanceOffer]:@"Not in this copy of TribesPad.";
     [starsiege addTarget:self action:@selector(starsiegeTapped) forControlEvents:UIControlEventTouchUpInside];
     [tribes2 addTarget:self action:@selector(play) forControlEvents:UIControlEventTouchUpInside];
     /* Its title screen centres the logo; the backdrop takes the blue frame below it instead. */
@@ -213,6 +224,8 @@ static UIBezierPath *tb_chamfer(CGRect r,CGFloat c){
     self.footer.text=@"Native ARM64 recompilations of the original games, built from your own copies. Starsiege: Tribes, Tribes 2 and Tribes: Vengeance belong to their owners; TribesPad is MIT licensed.";
     [self.view addSubview:self.footer];
     [self loadPlayers];
+    /* Test launches: TRIBESPAD_VENGEANCE_DOWNLOAD=1 starts the Vengeance download from its card. */
+    if(vgDownload&&getenv("TRIBESPAD_VENGEANCE_DOWNLOAD"))dispatch_async(dispatch_get_main_queue(),^{[self vengeanceDownload];});
     fprintf(stderr,"TribesPad launcher: %lu controllers at start\n",(unsigned long)GCController.controllers.count);
     for(GCController *c in GCController.controllers)[self watch:c];
     __weak TBLauncherController *weak=self;
@@ -239,7 +252,28 @@ static UIBezierPath *tb_chamfer(CGRect r,CGFloat c){
     direct.state=direct_on?UIMenuElementStateOn:UIMenuElementStateOff;
     UIAction *about=[UIAction actionWithTitle:@"TribesPad on GitHub" image:[UIImage systemImageNamed:@"safari"] identifier:nil
         handler:^(__kindof UIAction *a){(void)a;[UIApplication.sharedApplication openURL:[NSURL URLWithString:TBLaunchRepository] options:@{} completionHandler:nil];}];
-    self.settings.menu=[UIMenu menuWithTitle:@"TribesPad" children:@[direct,about]];
+    NSMutableArray *items=[NSMutableArray arrayWithObjects:direct,about,nil];
+    /* An installed Tribes: Vengeance can be removed to free its space, and downloaded again from its card. */
+    Class d=tb_vengeance_download_class();
+    if(d&&tb_vengeance_here()){
+        UIAction *remove=[UIAction actionWithTitle:@"Remove Tribes: Vengeance" image:[UIImage systemImageNamed:@"trash"] identifier:nil
+            handler:^(__kindof UIAction *a){(void)a;[weak confirmVengeanceRemoval];}];
+        remove.subtitle=[NSString stringWithFormat:@"Frees %.0f GB, saves included; download it again from its card",(double)[d gameSize]/1e9];
+        remove.attributes=UIMenuElementAttributesDestructive;[items addObject:[UIMenu menuWithTitle:@"" image:nil identifier:nil options:UIMenuOptionsDisplayInline children:@[remove]]];
+    }
+    self.settings.menu=[UIMenu menuWithTitle:@"TribesPad" children:items];
+}
+-(void)confirmVengeanceRemoval {
+    UIAlertController *a=[UIAlertController alertControllerWithTitle:@"Remove Tribes: Vengeance?"
+        message:@"This deletes the game from this device, with its saves and settings. You can download it again from its card."
+        preferredStyle:UIAlertControllerStyleAlert];
+    __weak TBLauncherController *weak=self;
+    [a addAction:[UIAlertAction actionWithTitle:@"Remove" style:UIAlertActionStyleDestructive handler:^(UIAlertAction *x){(void)x;
+        TBLauncherController *me=weak;if(!me)return;[tb_vengeance_download_class() removeGame];TBLauncherCard *card=me.cards[2];
+        card.badgeTitle=@"DOWNLOAD  \u25BE";card.status.text=[me vengeanceOffer];card.accessibilityLabel=@"Tribes: Vengeance, download";
+        [card setNeedsLayout];[me rebuildSettingsMenu];}]];
+    [a addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
+    a.overrideUserInterfaceStyle=UIUserInterfaceStyleDark;[self presentViewController:a animated:YES completion:nil];
 }
 -(void)watch:(GCController *)controller {
     __weak TBLauncherController *weak=self;GCExtendedGamepad *pad=controller.extendedGamepad;
@@ -316,16 +350,49 @@ static UIBezierPath *tb_chamfer(CGRect r,CGFloat c){
     a.overrideUserInterfaceStyle=UIUserInterfaceStyleDark;[self presentViewController:a animated:YES completion:nil];
 }
 /* Tribes: Vengeance starts when this build carries it; otherwise say so and offer the plan. */
+/* Tribes: Vengeance, free from its community: the card's line before it is downloaded. */
+-(NSString *)vengeanceOffer{
+    Class d=tb_vengeance_download_class();
+    return [NSString stringWithFormat:@"Optional: the campaign and online play, free from the community. %.1f GB to download, %.0f GB on this device.",
+        (double)[d downloadSize]/1e9,(double)[d gameSize]/1e9];
+}
+/* Download Tribes: Vengeance from its community release, with progress on its card. */
+-(void)vengeanceDownload{
+    Class d=tb_vengeance_download_class();TBVengeanceDownloadRef shared=[d shared];TBLauncherCard *card=self.cards[2];
+    __weak TBLauncherController *weak=self;
+    [shared setProgress:^(NSString *status,double fraction){TBLauncherController *me=weak;if(!me)return;
+        card.status.text=status;card.badgeTitle=[NSString stringWithFormat:@"%.0f%%",fraction*100];[card setNeedsLayout];}];
+    [shared setFinished:^(NSError *error){TBLauncherController *me=weak;if(!me)return;
+        if(!error&&tb_vengeance_here()){card.badgeTitle=@"PLAY  \u25B8";card.status.text=@"Installed. The campaign and online play, translated to native code.";
+            card.accessibilityLabel=@"Tribes: Vengeance, play";[card setNeedsLayout];[me rebuildSettingsMenu];return;}
+        card.badgeTitle=@"DOWNLOAD  \u25BE";card.status.text=[me vengeanceOffer];[card setNeedsLayout];
+        UIAlertController *a=[UIAlertController alertControllerWithTitle:@"Tribes: Vengeance" message:error.localizedDescription preferredStyle:UIAlertControllerStyleAlert];
+        [a addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleCancel handler:nil]];
+        a.overrideUserInterfaceStyle=UIUserInterfaceStyleDark;[me presentViewController:a animated:YES completion:nil];}];
+    [shared start];
+}
 -(void)vengeanceTapped {
     if(self.presentedViewController)return;
     self.focus=2;[self showFocus];
     if(tb_vengeance_here()){[self launch:TBGameVengeance];return;}
+    Class d=tb_vengeance_download_class();
+    if(d){
+        BOOL running=[[d shared] running];__weak TBLauncherController *weak=self;
+        UIAlertController *a=[UIAlertController alertControllerWithTitle:running?@"Downloading Tribes: Vengeance":@"Download Tribes: Vengeance?"
+            message:running?@"Keep TribesPad open until it finishes. A paused download continues where it left off.":
+                [NSString stringWithFormat:@"TribesPad downloads the free community release from tribesrevengeance.net (%.1f GB), unpacks it here and checks every file. "
+                    "It needs %.0f GB free while it installs and keeps %.0f GB. Keep TribesPad open meanwhile; Wi-Fi recommended.",
+                    (double)[d downloadSize]/1e9,(double)[d spaceNeeded]/1e9,(double)[d gameSize]/1e9]
+            preferredStyle:UIAlertControllerStyleAlert];
+        if(running)[a addAction:[UIAlertAction actionWithTitle:@"Pause Download" style:UIAlertActionStyleDestructive handler:^(UIAlertAction *x){(void)x;[[d shared] cancel];}]];
+        else [a addAction:[UIAlertAction actionWithTitle:@"Download" style:UIAlertActionStyleDefault handler:^(UIAlertAction *x){(void)x;[weak vengeanceDownload];}]];
+        [a addAction:[UIAlertAction actionWithTitle:running?@"Keep Going":@"Not Now" style:UIAlertActionStyleCancel handler:nil]];
+        a.overrideUserInterfaceStyle=UIUserInterfaceStyleDark;[self presentViewController:a animated:YES completion:nil];return;
+    }
     UIAlertController *a=[UIAlertController alertControllerWithTitle:@"Tribes: Vengeance"
-        message:@"Tribes: Vengeance is in development. Its engine is being translated to native code, campaign first, and it opens here once it plays."
+        message:@"This copy of TribesPad was built without Tribes: Vengeance. Build TribesPad with it (the default) to download and play it."
         preferredStyle:UIAlertControllerStyleAlert];
     [a addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleCancel handler:nil]];
-    [a addAction:[UIAlertAction actionWithTitle:@"Read the Plan" style:UIAlertActionStyleDefault handler:^(UIAlertAction *x){(void)x;
-        [UIApplication.sharedApplication openURL:[NSURL URLWithString:TBLaunchVengeancePlan] options:@{} completionHandler:nil];}]];
     a.overrideUserInterfaceStyle=UIUserInterfaceStyleDark;[self presentViewController:a animated:YES completion:nil];
 }
 -(void)play {

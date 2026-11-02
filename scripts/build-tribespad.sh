@@ -1,24 +1,26 @@
 #!/usr/bin/env bash
 # Build TribesPad on an Apple Silicon Mac from the official free downloads.
 #
-#   scripts/build-tribespad.sh [--platform device|macos|simulator] [--games tribes2,starsiege[,vengeance]|tribes2] [--output DIR] [--ipa FILE] [--zip FILE]
+#   scripts/build-tribespad.sh [--platform device|macos|simulator] [--games tribes2,starsiege,vengeance|...] [--output DIR] [--ipa FILE] [--zip FILE]
 #
 # Downloads Tribes 2 and the TribesNEXT client, the pinned open-source
 # dependencies and tools, translates the game on this Mac and builds the app.
 # --platform device (default): an unsigned TribesPad.ipa for iPhone and iPad;
 # sign it with your own Apple account (see README).
 # --platform macos: TribesPad-mac.zip with TribesPad.app for Apple Silicon Macs.
-# --games tribes2,starsiege (the default) also builds Starsiege: Tribes 1.41,
-# from the PlayT1 community installer, for the game picker; --games tribes2
-# leaves it out. Adding vengeance (--games tribes2,starsiege,vengeance; in
-# development) also builds the Tribes: Vengeance
-# game from the Revengeance community download (about 3 GB; the app grows
-# by about 10 GB with the campaign and multiplayer maps) and needs brew install innoextract.
-# Needs Xcode and: brew install llvm@20 cmake ninja sevenzip zstd
+# --games tribes2,starsiege,vengeance (the default) also builds Starsiege: Tribes
+# 1.41, from the PlayT1 community installer, and Tribes: Vengeance, whose code is
+# translated from the Revengeance community download (about 3 GB, kept on this
+# Mac; needs brew install innoextract). On iPhone and iPad, Vengeance is an
+# optional download in the app: players tap its card and the app fetches the same
+# community release and checks every file, so the app stays about 1 GB. The Mac
+# app carries the whole game. List fewer games to leave some out; tribes2 is
+# always built.
+# Needs Xcode and: brew install llvm@20 cmake ninja sevenzip zstd innoextract
 set -euo pipefail
 
 platform=device
-games=tribes2,starsiege
+games=tribes2,starsiege,vengeance
 output=
 ipa=
 zip=
@@ -29,7 +31,7 @@ while [ $# -gt 0 ]; do
     --output) output="$2"; shift 2 ;;
     --ipa) ipa="$2"; shift 2 ;;
     --zip) zip="$2"; shift 2 ;;
-    -h|--help) sed -n '2,17p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,19p' "$0"; exit 0 ;;
     *) echo "unknown option: $1" >&2; exit 2 ;;
   esac
 done
@@ -160,7 +162,7 @@ build_vengeance() {
   fi
 }
 if [ "$vengeance" = 1 ]; then
-  step "Tribes: Vengeance (in development)"
+  step "Tribes: Vengeance"
   build_vengeance || { vengeance_object=(); vengeance=0; printf '\nbuild-tribespad: Tribes: Vengeance could not be built (see above); continuing without it.\n' >&2; }
 fi
 

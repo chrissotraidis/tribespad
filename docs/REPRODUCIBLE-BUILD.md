@@ -14,7 +14,7 @@ Every build also downloads PlayT1's Starsiege: Tribes 1.41 installer (checked ag
 Tribes 2 alone. If Starsiege cannot be built, the build says so and finishes with Tribes 2.
 
 Prerequisites: Xcode with the iOS platform, and
-`brew install llvm@20 cmake ninja sevenzip zstd`. No game data or translated game
+`brew install llvm@20 cmake ninja sevenzip zstd innoextract`. No game data or translated game
 code is committed or published; every stage downloads or derives its inputs on the
 player's Mac and checks them by SHA-256.
 

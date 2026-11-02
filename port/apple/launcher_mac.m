@@ -7,7 +7,7 @@
  * Starsiege is offered when the app was built with it
  * (the default; its download can fail); otherwise its card says "Not in this
  * build" and how to add it. "Open Tribes 2 Directly" skips the picker.
- * Tribes: Vengeance (in development) is offered when the app was built with it
+ * Tribes: Vengeance is offered when the app was built with it
  * (build-tribespad.sh --games ...,vengeance); its engine is VengeanceEngine.
  * TRIBESPAD_PICKER_SNAPSHOT=file.png renders the picker offscreen to a PNG and
  * exits (TRIBESPAD_PICKER_SIZE=WxH), so it can be checked without a window.
@@ -172,9 +172,9 @@ static TBChoice tb_choice;
     TBCard *tribes2=[[TBCard alloc] initWithKicker:@"Tribes 2  \u00B7  2001  \u00B7  TribesNEXT online" art:art(@"tribes2.png") fallback:emblem available:YES badge:@"PLAY  \u25B8"];
     tribes2.statusText=@"Checking who is playing\u2026";
     TBCard *vengeance=[[TBCard alloc] initWithKicker:@"Tribes: Vengeance  \u00B7  2004  \u00B7  OpenSpy online" art:art(@"vengeance.png") fallback:emblem available:self.vengeance
-        badge:self.vengeance?@"PLAY  \u25B8":@"IN DEVELOPMENT"];
+        badge:self.vengeance?@"PLAY  \u25B8":@"NOT IN THIS BUILD"];
     vengeance.statusText=self.vengeance?@"The campaign and online play, translated to native code.":
-        @"The campaign plays in development builds; build TribesPad with Vengeance to add it.";
+        @"Not in this copy of TribesPad; build it with Vengeance (the default) to add it.";
     self.cards=@[starsiege,tribes2,vengeance];for(TBCard *c in self.cards)[self.layer addSublayer:c.root];
     self.focus=1;[self showFocus];
     self.footer=tb_label();self.footer.alignmentMode=kCAAlignmentCenter;
@@ -231,7 +231,7 @@ static TBChoice tb_choice;
     if(self.focus==2){
         if(self.vengeance){tb_choice=TBVengeance;return;}
         NSAlert *a=[NSAlert new];a.messageText=@"Tribes: Vengeance";
-        a.informativeText=@"Tribes: Vengeance is in development and not in this copy of TribesPad. Build TribesPad with --games tribes2,starsiege,vengeance to add its campaign.";
+        a.informativeText=@"Tribes: Vengeance is not in this copy of TribesPad. Build TribesPad with it (the default, --games tribes2,starsiege,vengeance) to add it.";
         [a addButtonWithTitle:@"OK"];[a addButtonWithTitle:@"Read the Plan"];
         if([a runModal]==NSAlertSecondButtonReturn)[NSWorkspace.sharedWorkspace openURL:[NSURL URLWithString:TBVengeancePlan]];
         return;

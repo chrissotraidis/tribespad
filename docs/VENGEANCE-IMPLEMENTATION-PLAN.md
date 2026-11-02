@@ -294,7 +294,8 @@ iPhone 14, or with a controller and keyboard.
 | VP1 | V3 on the Mac | Dev build · main menu (opt-in builds) | Starts Vengeance |
 | VP2 | V4–V5 on a device | Play campaign | Campaign through the original menus |
 | VP3 (built, 2 November) | V6 and owner approval | Play · N playing now (OpenSpy's tribesv.json) | Also the multiplayer browser |
-| VP4 | V7 and the player-check | Play | Released |
+| VP4 (built, 2 November) | Owner, 2 November: an optional download | Download, then Play · N playing now | Downloads the community release on the device (port/apple/vengeance_download.m), then plays |
+| VP5 | Device acceptance and the player-check | Play | Released |
 
 VP1 needs the rest of the picker work, none of which is useful before an engine
 exists:

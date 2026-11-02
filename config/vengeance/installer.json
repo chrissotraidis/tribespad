@@ -1,0 +1,52 @@
+{
+ "note": "Sources for the in-app Tribes: Vengeance installer (scripts/build-vengeance-installer.py): checked against these SHA-256 digests when downloaded; nothing from them is committed.",
+ "sources": {
+  "innoextract": {
+   "url": "https://constexpr.org/innoextract/files/innoextract-1.9.tar.gz",
+   "archive": "innoextract-1.9.tar.gz",
+   "tree": "innoextract-1.9",
+   "sha256": "6344a69fc1ed847d4ed3e272e0da5998948c6b828cb7af39c6321aba6cf88126",
+   "license": "zlib",
+   "patches": [
+    {
+     "url": "https://github.com/dscharrer/innoextract/commit/264c2fe6b84f90f6290c670e5f676660ec7b2387.patch?full_index=1",
+     "file": "innoextract-boost185.patch",
+     "sha256": "f968a9c0521083dd4076ce5eed56127099a9c9888113fc50f476b914396045cc",
+     "why": "Boost 1.85 (innoextract PR 169, as Homebrew applies it)"
+    },
+    {
+     "url": "https://github.com/dscharrer/innoextract/commit/882796e0e9b134b02deeaae4bbfe92920adb6fe2.patch?full_index=1",
+     "file": "innoextract-boost189.patch",
+     "sha256": "d5af3e86eb2b74bff559885440d330678e5dbb028ce165bb836ddb14224af201",
+     "why": "Boost 1.89 (innoextract PR 199, as Homebrew applies it)"
+    }
+   ]
+  },
+  "boost": {
+   "url": "https://archives.boost.io/release/1.90.0/source/boost_1_90_0.tar.bz2",
+   "archive": "boost_1_90_0.tar.bz2",
+   "tree": "boost_1_90_0",
+   "sha256": "49551aff3b22cbc5c5a9ed3dbc92f0e23ea50a0f7325b0d198b705e8ee3fc305",
+   "only": [
+    "boost/",
+    "libs/filesystem/src/",
+    "libs/iostreams/src/"
+   ],
+   "license": "BSL-1.0"
+  },
+  "xz": {
+   "url": "https://github.com/tukaani-project/xz/releases/download/v5.8.1/xz-5.8.1.tar.gz",
+   "archive": "xz-5.8.1.tar.gz",
+   "tree": "xz-5.8.1",
+   "sha256": "507825b599356c10dca1cd720c9d0d0c9d5400b9de300af00e4d1ea150795543",
+   "license": "0BSD"
+  },
+  "zlib": {
+   "url": "https://zlib.net/fossils/zlib-1.3.1.tar.gz",
+   "archive": "zlib-1.3.1.tar.gz",
+   "tree": "zlib-1.3.1",
+   "sha256": "9a93b2b7dfdac77ceba5a558a580e74667dd6fede4585b91eefb60f03b72df23",
+   "license": "zlib"
+  }
+ }
+}
