@@ -5,6 +5,7 @@
 /* Immutable, explicit mounts: C:\ root, C:\TribesPad\Game and Temp.
    Initial process current directory is C:\TribesPad\Game. Set/Get share process state. Existing ASCII paths only for now. */
 int tribes_filesystem_configure(uint64_t base,const char *volume,const char *game,const char *temp);
+int tribes_filesystem_configure_content(uint64_t base,const char *content);
 int tribes_filesystem_open_create(uint64_t base,const char *guest,char *host,size_t capacity,char *canonical,int mode,int *created);
 int tribes_filesystem_create_directory(uint64_t base,const char *guest);
 int tribes_filesystem_resolve_create(uint64_t base,const char *guest,char *host,size_t capacity);

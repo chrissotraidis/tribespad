@@ -23,7 +23,7 @@ sources=[R/'port/core'/n for n in ['guest_sdl_io.c','guest_filesystem.c','guest_
 objects,_=compile_support(sources,out/'checked',['-DPTROFS_64BIT',*flags]);meta=json.loads((out/'checked/result.json').read_text());entries=[dict(object=str(p),object_sha256=sha(p),bitcode=str(p.with_suffix('.bc')),bitcode_sha256=meta['objects'][p.stem]['bitcode_sha256']) for p in map(pathlib.Path,objects)];guarded,_=guard_link(entries,out/'guarded')
 fixture=R/'tests/sdl_io_test.c';guards=[R/'port/core/guest_memory_checks.c',R/'port/core/guest_external_checks.c'];runs=[]
 for mode in ['normal','checked','tsan']:
- exe=out/(mode+'-test');cmd=['clang','-target','arm64-apple-macos12','-isysroot',backend['sdk'],'-O2','-DPTROFS_64BIT','-Wall','-Wextra','-Werror','-Wno-override-module',*flags]+(['-fsanitize=thread'] if mode=='tsan' else [])
+ exe=out/(mode+'-test');cmd=['clang','-target','arm64-apple-macos12','-isysroot',backend['sdk'] if pathlib.Path(backend['sdk']).exists() else subprocess.check_output(['xcrun','--sdk','macosx','--show-sdk-path'],text=True).strip(),'-O2','-DPTROFS_64BIT','-Wall','-Wextra','-Werror','-Wno-override-module',*flags]+(['-fsanitize=thread'] if mode=='tsan' else [])
  subprocess.run(cmd+list(map(str,[fixture,*guards,*(guarded if mode=='checked' else sources)]))+libraries+['-o',str(exe)],check=True)
  run=subprocess.run([str(exe)],capture_output=True,text=True,timeout=30);(out/(mode+'.log')).write_text(run.stdout+run.stderr);assert run.returncode==0 and run.stdout.startswith('PASS:') and not run.stderr,(mode,run.returncode,run.stdout,run.stderr)
  faults=[]

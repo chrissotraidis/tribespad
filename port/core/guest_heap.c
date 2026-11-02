@@ -2,6 +2,7 @@
    Host metadata is never guest writable. Movable handles remain an explicit gate.
    Contract: https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-globalalloc */
 #include "guest_heap.h"
+#include "guest_memory_layout.h"
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -12,6 +13,7 @@ typedef struct Heap { uint64_t base;Block *blocks;struct Heap *next; } Heap;
 static Heap *heaps;
 static pthread_mutex_t lock=PTHREAD_MUTEX_INITIALIZER;
 static _Thread_local uint32_t last_error;
+uint32_t tribes_global_heap_span=0x20000000;
 uint32_t tribes_get_last_error(void) { return last_error; }
 uint32_t tribes_set_last_error(uint32_t value) { last_error=value;return 0; }
 static Heap *find_heap(uint64_t base,int create) {
@@ -19,14 +21,14 @@ static Heap *find_heap(uint64_t base,int create) {
     if(!create)return NULL;
     Heap *h=calloc(1,sizeof(*h));Block *b=calloc(1,sizeof(*b));
     if(!h||!b){free(h);free(b);return NULL;}
-    b->address=0x30000000;b->span=0x20000000;
+    b->address=0x30000000;b->span=tribes_global_heap_span;
     h->base=base;h->blocks=b;h->next=heaps;heaps=h;return h;
 }
 uint32_t tribes_global_alloc(uint64_t base,uint32_t flags,uint32_t bytes) {
     if(flags&~UINT32_C(0x40)) { fprintf(stderr,"TribesPad: unsupported GlobalAlloc flags 0x%x\n",flags);abort(); }
     long host_page=sysconf(_SC_PAGESIZE);if(host_page<=0)return 0;
     uint64_t page=(uint64_t)host_page,n=((bytes?bytes:1)+(page-1))&~(page-1);
-    if(n>0x20000000 || base>UINTPTR_MAX-UINT32_C(0x50000000)){last_error=8;return 0;}
+    if(n>tribes_global_heap_span || base>UINTPTR_MAX-UINT32_C(0x50000000)){last_error=8;return 0;}
     pthread_mutex_lock(&lock);Heap *h=find_heap(base,1);Block *b=h?h->blocks:NULL;
     while(b&&(b->used||b->span<n))b=b->next;
     if(!b){pthread_mutex_unlock(&lock);last_error=8;return 0;}

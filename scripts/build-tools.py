@@ -74,6 +74,7 @@ def main():
     tribes = TOOLS / 'SRW-tribes'
     build = tribes / 'tribes-build.json'
     if not (build.exists() and json.loads(build.read_text())['patch_sha256'] == sha256(R / 'scripts/patches/srw-tribes.patch')
+            and json.loads(build.read_text()).get('string_compare_patch_sha256') == sha256(R / 'scripts/patches/srw-tribes-string-compare.patch')
             and sha256(tribes / 'SRW.exe') == json.loads(build.read_text())['srw_sha256']):
         say('building the Tribes lifter')
         run([sys.executable, R / 'scripts/build-tribes-lifter.py'])

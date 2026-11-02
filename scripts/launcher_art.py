@@ -8,10 +8,11 @@ Background.bmp). Starsiege: Tribes: its title screen, BrightLogo.png from the
 BrightLogo.bmp in Shell.vol from the 2004 freeware installer when
 ref/starsiege/tribes_gsi.exe exists with the pinned SHA-256. Results are
 cached in generated/launcher-art and refreshed when a source changes.
-Tribes: Vengeance (in development, docs/VENGEANCE-IMPLEMENTATION-PLAN.md): the
-top of its startup splash, Content/Art/StartupLogo.bmp, when the community
-installer is on this Mac; the rest of that splash is legal text. Without it
-the card shows the TribesPad emblem.
+Tribes: Vengeance: its default loading screen (the title on the game's blue
+frame), the loadingDefault texture in Content/Art/LoadingScreens.pkg of the
+game on this Mac (ref/vengeance/game), shown at the game's 4:3. Without the
+game, the top of its startup splash from the community installer, or else the
+TribesPad emblem.
 """
 import hashlib, json, pathlib, shutil, struct, subprocess, sys, tempfile, zipfile, zlib
 
@@ -26,6 +27,7 @@ STARSIEGE_SHELL = R / 'ref/starsiege/game/base/Shell.zip'
 VENGEANCE = R / 'ref/vengeance-research/installer/setup.exe'
 VENGEANCE_SPLASH = 'app/Tribes Vengeance/Content/Art/StartupLogo.bmp'
 VENGEANCE_ROWS = 172  # the logo and character; legal text starts below
+VENGEANCE_SCREENS = R / 'ref/vengeance/game/Content/Art/LoadingScreens.pkg'
 
 def sha256(path):
     h = hashlib.sha256()
@@ -148,7 +150,74 @@ def starsiege():
         done()
     return image
 
+def compact(data, at):
+    """Unreal package compact index: value and the offset after it."""
+    first = data[at]; at += 1
+    value, shift = first & 0x3f, 6
+    more = first & 0x40
+    while more:
+        b = data[at]; at += 1
+        value |= (b & 0x7f) << shift; shift += 7
+        more = b & 0x80
+    return (-value if first & 0x80 else value), at
+
+def unreal_dxt1(package, name):
+    """Width, height and RGB of a single-mip DXT1 texture in an Unreal 2 package."""
+    data = package.read_bytes()
+    tag, _, _, _, name_count, name_at, export_count, export_at = struct.unpack_from('<IHHIIIII', data, 0)
+    if tag != 0x9E2A83C1:
+        raise ValueError('not an Unreal package')
+    names, at = [], name_at
+    for _ in range(name_count):
+        size, at = compact(data, at)
+        names.append(data[at:at + size - 1].decode('latin-1')); at += size + 4
+    at = export_at
+    for _ in range(export_count):
+        _, at = compact(data, at); _, at = compact(data, at); at += 4
+        index, at = compact(data, at); at += 4
+        size, at = compact(data, at)
+        offset = 0
+        if size > 0:
+            offset, at = compact(data, at)
+        if names[index] != name:
+            continue
+        # The object ends with the mip's width, height and two size bits;
+        # DXT1 data (half a byte a pixel) comes just before them.
+        width, height = struct.unpack_from('<II', data, offset + size - 10)
+        length = width * height // 2
+        if width % 4 or height % 4 or length + 10 > size:
+            raise ValueError('unexpected texture layout')
+        return width, height, dxt1(data[offset + size - 10 - length:offset + size - 10], width, height)
+    raise KeyError(name)
+
+def dxt1(data, width, height):
+    out = bytearray(width * height * 3)
+    at = 0
+    expand = lambda c: ((c >> 11 & 31) * 255 // 31, (c >> 5 & 63) * 255 // 63, (c & 31) * 255 // 31)
+    for y0 in range(0, height, 4):
+        for x0 in range(0, width, 4):
+            c0, c1, bits = struct.unpack_from('<HHI', data, at); at += 8
+            a, b = expand(c0), expand(c1)
+            if c0 > c1:
+                colors = [a, b, tuple((2 * p + q) // 3 for p, q in zip(a, b)), tuple((p + 2 * q) // 3 for p, q in zip(a, b))]
+            else:
+                colors = [a, b, tuple((p + q) // 2 for p, q in zip(a, b)), (0, 0, 0)]
+            colors = [bytes(c) for c in colors]
+            for y in range(4):
+                row = ((y0 + y) * width + x0) * 3
+                for x in range(4):
+                    out[row + 3 * x:row + 3 * x + 3] = colors[bits >> (2 * (4 * y + x)) & 3]
+    return bytes(out)
+
 def vengeance():
+    if VENGEANCE_SCREENS.exists():
+        image, done = cached('vengeance', VENGEANCE_SCREENS)
+        if done:
+            png(image, *unreal_dxt1(VENGEANCE_SCREENS, 'loadingDefault'))
+            # Square in the package; the game shows it at 4:3.
+            subprocess.run(['sips', '-z', '768', '1024', str(image)], check=True, stdout=subprocess.DEVNULL)
+            done()
+        return image
     if not VENGEANCE.exists() or not shutil.which('innoextract'):
         return None
     image, done = cached('vengeance', VENGEANCE)

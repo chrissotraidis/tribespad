@@ -95,7 +95,9 @@ static void activate(_cpu *cpu,uint32_t handle){
 uint32_t ss_create_window_ex_a(_cpu *cpu,uint32_t exstyle,uint32_t class_name,uint32_t title,uint32_t style,uint32_t x,uint32_t y,uint32_t width,uint32_t height,uint32_t parent,uint32_t menu,uint32_t instance,uint32_t parameter){
  uint64_t base=cpu->_pointer_offset;
  if(!exstyle&&!style&&!x&&!y&&!width&&!height&&!parent&&!menu)return tribes_create_hidden_window(cpu,exstyle,class_name,title,style,x,y,width,height,parent,menu,instance,parameter);
- if(style&WS_CHILD)unsupported("child window style",style);
+ /* Child windows (Tribes: Vengeance's log window and its controls) live in
+    their parent: no activation of their own and never the main window. */
+ if(style&WS_CHILD){pthread_mutex_lock(&lock);int known=find(base,parent)!=NULL;pthread_mutex_unlock(&lock);if(!known)unsupported("child window without a parent window",style);}
  if(exstyle&~(uint32_t)(0x1|0x8|0x40000|0x100|0x200))unsupported("extended window style",exstyle);
  uint32_t fields[10];uint32_t atom=tribes_class_acquire(base,class_name,instance,fields);
  if(!atom){tribes_set_last_error(1407);return 0;}
@@ -124,7 +126,7 @@ uint32_t ss_create_window_ex_a(_cpu *cpu,uint32_t exstyle,uint32_t class_name,ui
  if(style&WS_VISIBLE){
   pthread_mutex_lock(&lock);w=find(base,handle);if(w){w->style|=WS_VISIBLE;w->visible=1;}Window snapshot=w?*w:(Window){0};pthread_mutex_unlock(&lock);
   if(!snapshot.handle)return 0;
-  send(cpu,handle,0x0018,1,0);move_messages(cpu,&snapshot);activate(cpu,handle);
+  send(cpu,handle,0x0018,1,0);move_messages(cpu,&snapshot);if(!(style&WS_CHILD))activate(cpu,handle);
  }
  return handle;
 failed:
@@ -167,6 +169,9 @@ uint32_t ss_destroy_window(_cpu *cpu,uint32_t handle){
  uint64_t base=cpu->_pointer_offset;
  pthread_mutex_lock(&lock);Window *w=find(base,handle);int ours=w!=NULL;if(w&&w->destroying){pthread_mutex_unlock(&lock);return 0;}if(w)w->destroying=1;pthread_mutex_unlock(&lock);
  if(!ours)return tribes_destroy_hidden_window(cpu,handle);
+ /* Children go first, as on Windows. */
+ for(;;){uint32_t child=0;pthread_mutex_lock(&lock);for(Window *c=windows;c;c=c->next)if(c->base==base&&c->parent==handle&&(c->style&WS_CHILD)&&!c->destroying){child=c->handle;break;}pthread_mutex_unlock(&lock);
+  if(!child)break;ss_destroy_window(cpu,child);}
  send(cpu,handle,0x0002,0,0);send(cpu,handle,0x0082,0,0);
  pthread_mutex_lock(&lock);Window **p=&windows;while(*p&&((*p)->base!=base||(*p)->handle!=handle))p=&(*p)->next;
  if(*p){w=*p;*p=w->next;tribes_class_release(base,w->atom);free(w->extra);free(w);}
@@ -177,6 +182,7 @@ uint32_t ss_dispatch_message_a(_cpu *cpu,uint32_t address){
  extern uint32_t tribes_dispatch_message(_cpu *cpu,uint32_t address);
  uint64_t base=cpu->_pointer_offset;uint32_t token,m[7];memcpy(m,guest(base,address,28,1,&token),28);tribes_memory_access_end(token);
  pthread_mutex_lock(&lock);Window *w=m[1]!=0x0113?find(base,m[0]):NULL;uint32_t proc=w?w->proc:0;pthread_mutex_unlock(&lock);
+ {static int on=-1;if(on<0)on=getenv("STARSIEGE_TRACE_WINDOWS")!=NULL;if(on&&m[1]>=0x100&&m[1]<=0x105)fprintf(stderr,"TribesPad windows: DispatchMessage 0x%x wp 0x%x to 0x%x proc 0x%x\n",m[1],m[2],m[0],proc);}
  if(!proc)return tribes_dispatch_message(cpu,address);
  return call_proc(cpu,proc,m[0],m[1],m[2],m[3],cpu->_esp-64);
 }
@@ -239,10 +245,11 @@ uint32_t ss_call_next_hook_ex(uint32_t hook,uint32_t code,uint32_t wp,uint32_t l
 /* Geometry and visibility. Screen coordinates are the guest desktop's. */
 uint32_t ss_show_window(_cpu *cpu,uint32_t handle,uint32_t command){
  uint64_t base=cpu->_pointer_offset;
- pthread_mutex_lock(&lock);Window *w=find(base,handle);if(!w){pthread_mutex_unlock(&lock);unsupported("ShowWindow on a hidden window",handle);}
+ /* Not one of ours (Vengeance's quick save passes 0): fails, as on Windows. */
+ pthread_mutex_lock(&lock);Window *w=find(base,handle);if(!w){pthread_mutex_unlock(&lock);tribes_set_last_error(1400);return 0;}
  int was=w->visible,show=command!=0;fprintf(stderr,"TribesPad: ShowWindow 0x%x command %u\n",handle,command);if(command==2||command==6||command==7||command==11)unsupported("ShowWindow minimize",command);
  w->visible=show;if(show)w->style|=WS_VISIBLE;else w->style&=~WS_VISIBLE;Window snapshot=*w;pthread_mutex_unlock(&lock);
- if(was!=show){send(cpu,handle,0x0018,(uint32_t)show,0);if(show){move_messages(cpu,&snapshot);activate(cpu,handle);}}
+ if(was!=show){send(cpu,handle,0x0018,(uint32_t)show,0);if(show){move_messages(cpu,&snapshot);if(!(snapshot.style&WS_CHILD))activate(cpu,handle);}}
  return (uint32_t)was;
 }
 uint32_t ss_update_window(_cpu *cpu,uint32_t handle){
@@ -252,10 +259,12 @@ uint32_t ss_update_window(_cpu *cpu,uint32_t handle){
 static void write_rect(uint64_t base,uint32_t address,int32_t l,int32_t t,int32_t r,int32_t b){
  uint32_t token;int32_t v[4]={l,t,r,b};memcpy(guest(base,address,16,2,&token),v,16);tribes_memory_access_end(token);
 }
+static void trace_window_query(const char *what,uint32_t r);
 uint32_t ss_get_client_rect(uint64_t base,uint32_t handle,uint32_t output){
  pthread_mutex_lock(&lock);Window *w=find(base,handle);Window s=w?*w:(Window){0};pthread_mutex_unlock(&lock);
  if(!s.handle){if(tribes_is_desktop_window(base,handle)){write_rect(base,output,0,0,(int32_t)tribes_get_system_metrics(base,0),(int32_t)tribes_get_system_metrics(base,1));return 1;}tribes_set_last_error(1400);return 0;}
- int32_t dx,dy,cap;frame(s.style,s.exstyle,&dx,&dy,&cap);write_rect(base,output,0,0,s.width-2*dx,s.height-2*dy-cap);return 1;
+ int32_t dx,dy,cap;frame(s.style,s.exstyle,&dx,&dy,&cap);write_rect(base,output,0,0,s.width-2*dx,s.height-2*dy-cap);
+ {char what[64];snprintf(what,sizeof what,"GetClientRect 0x%x %dx%d",handle,s.width-2*dx,s.height-2*dy-cap);trace_window_query(what,1);}return 1;
 }
 uint32_t ss_get_window_rect(uint64_t base,uint32_t handle,uint32_t output){
  pthread_mutex_lock(&lock);Window *w=find(base,handle);Window s=w?*w:(Window){0};pthread_mutex_unlock(&lock);
@@ -308,8 +317,9 @@ uint32_t ss_set_foreground_window(_cpu *cpu,uint32_t handle){
  pthread_mutex_lock(&lock);int ours=find(cpu->_pointer_offset,handle)!=NULL;pthread_mutex_unlock(&lock);
  if(!ours)return 0;activate(cpu,handle);return 1;
 }
-uint32_t ss_get_foreground_window(void){pthread_mutex_lock(&lock);uint32_t r=foreground;pthread_mutex_unlock(&lock);return r;}
-uint32_t ss_get_focus(void){pthread_mutex_lock(&lock);uint32_t r=focus;pthread_mutex_unlock(&lock);return r;}
+static void trace_window_query(const char *what,uint32_t r){static int on=-1;static unsigned n;if(on<0)on=getenv("STARSIEGE_TRACE_WINDOWS")!=NULL;if(on&&(n<40||n%2000==0))fprintf(stderr,"TribesPad windows: %s -> 0x%x (call %u)\n",what,r,n);n++;}
+uint32_t ss_get_foreground_window(void){pthread_mutex_lock(&lock);uint32_t r=foreground;pthread_mutex_unlock(&lock);trace_window_query("GetForegroundWindow",r);return r;}
+uint32_t ss_get_focus(void){pthread_mutex_lock(&lock);uint32_t r=focus;pthread_mutex_unlock(&lock);trace_window_query("GetFocus",r);return r;}
 uint32_t ss_is_iconic(uint32_t handle){(void)handle;return 0;}
 uint32_t ss_set_capture(uint32_t handle){pthread_mutex_lock(&lock);uint32_t old=capture;capture=handle;pthread_mutex_unlock(&lock);return old;}
 uint32_t ss_release_capture(void){pthread_mutex_lock(&lock);capture=0;pthread_mutex_unlock(&lock);return 1;}
@@ -398,5 +408,5 @@ uint32_t ss_pointer_to_client(int32_t dx,int32_t dy,int32_t *cx,int32_t *cy){
 }
 /* For the host: the visible game window, if any. */
 uint32_t ss_main_window(int32_t *width,int32_t *height){
- pthread_mutex_lock(&lock);uint32_t r=0;for(Window *w=windows;w;w=w->next)if(w->visible){r=w->handle;*width=w->width;*height=w->height;break;}pthread_mutex_unlock(&lock);return r;
+ pthread_mutex_lock(&lock);uint32_t r=0;for(Window *w=windows;w;w=w->next)if(w->visible&&!(w->style&WS_CHILD)){r=w->handle;*width=w->width;*height=w->height;break;}pthread_mutex_unlock(&lock);return r;
 }

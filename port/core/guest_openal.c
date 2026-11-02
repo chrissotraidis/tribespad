@@ -50,6 +50,18 @@ static void trace_report(void){
   trace_plays,trace_buffers,(unsigned long long)trace_bytes,trace_peak,gain,(void *)cx,trace_errors,e);
  trace_plays=trace_buffers=trace_errors=0;trace_bytes=0;trace_peak=0;
 }
+/* Empty buffers. Tribes: Vengeance starts each music or speech stream by
+   queueing freshly generated buffers that hold no data yet; Creative's OpenAL
+   treats them as already played, so the game unqueues them at once, fills
+   them and queues them again. OpenAL Soft refuses a buffer without a format,
+   which left every stream silent and holding its slot ("8 streams already in
+   use"). Such buffers wait here instead, counted as processed and handed back
+   first when the game unqueues. */
+#define EMPTY_SOURCES 4096
+#define EMPTY_PER_SOURCE 16
+static ALuint empty_ids[EMPTY_SOURCES][EMPTY_PER_SOURCE];static unsigned char empty_count[EMPTY_SOURCES];
+static unsigned empty_of(uint32_t o){return o<EMPTY_SOURCES?empty_count[o]:0;}
+static void empty_clear(uint32_t o){if(o<EMPTY_SOURCES)empty_count[o]=0;}
 static uint32_t token(void){if(serial>=0x75ffffff)stop("token exhaustion");return ++serial;}
 uint32_t tribes_openal_load(uint64_t base,const char *name){
  if(strcmp(name,"openal32.dll")&&strcmp(name,"soft_oal.dll"))return 0;
@@ -71,7 +83,10 @@ static uint32_t string_copy(_cpu *c,const char *s,size_t n){
  String *p=calloc(1,sizeof *p);if(!p)stop("string metadata allocation");p->host=malloc(n);if(!p->host)stop("string copy allocation");memcpy(p->host,s,n);memcpy(guest(c,a,n),s,n);p->guest=a;p->size=n;p->next=strings;strings=p;return a;
 }
 static size_t text_size(const char *s,int list){if(!s)return 0;size_t n=0;do {size_t k=strnlen(s+n,65536-n);if(k==65536-n)stop("native string too long");n+=k+1;if(!list||!s[n])break;}while(n<65535);return n+(list?1:0);}
-uint32_t tribes_oa_alcOpenDevice(_cpu *c,uint32_t a){BEGIN;char name[256];if(a)name_copy(c,a,name);ALCdevice *native=alcOpenDevice(a?name:NULL);if(!native)DONE(0);Device *d=calloc(1,sizeof *d);if(!d)stop("device metadata");d->native=native;d->token=token();d->next=devices;devices=d;fprintf(stderr,"TribesPad: native OpenAL device opened, token 0x%x\n",d->token);DONE(d->token);}
+/* The Windows OpenAL router's device names (Tribes: Vengeance asks for
+   "DirectSound3D") name its back ends; here they open the default device. */
+static int router_name(const char *s){return !strcmp(s,"DirectSound3D")||!strcmp(s,"DirectSound")||!strcmp(s,"MMSYSTEM")||!strcmp(s,"Generic Hardware")||!strcmp(s,"Generic Software");}
+uint32_t tribes_oa_alcOpenDevice(_cpu *c,uint32_t a){BEGIN;char name[256];if(a)name_copy(c,a,name);ALCdevice *native=alcOpenDevice(a&&!router_name(name)?name:NULL);if(!native)DONE(0);Device *d=calloc(1,sizeof *d);if(!d)stop("device metadata");d->native=native;d->token=token();d->next=devices;devices=d;fprintf(stderr,"TribesPad: native OpenAL device opened, token 0x%x\n",d->token);DONE(d->token);}
 uint32_t tribes_oa_alcCloseDevice(_cpu *c,uint32_t a){BEGIN;Device *d=device(a);ALCboolean r=alcCloseDevice(d?d->native:NULL);if(r&&d){Context **q=&contexts;while(*q){if((*q)->device==d){Context *old=*q;*q=old->next;free(old);}else q=&(*q)->next;}Device **p=&devices;while(*p!=d)p=&(*p)->next;*p=d->next;free(d);}DONE(r);}
 uint32_t tribes_oa_alcCreateContext(_cpu *c,uint32_t a,uint32_t b){BEGIN;ALCint attrs[129];unsigned n=0;
  /* ALC context attributes are integer key/value pairs, never pointers.
@@ -118,16 +133,52 @@ uint32_t tribes_oa_alListener3f(_cpu *c,uint32_t p,uint32_t x,uint32_t y,uint32_
 #define LISTENER_VECTOR(name,type,get) uint32_t tribes_oa_##name(_cpu *c,uint32_t p,uint32_t a){BEGIN;type v[6];size_t n=sizeof(type)*width(p);memcpy(v,guest(c,a,n),n);name(p,v);if(get)memcpy(guest(c,a,n),v,n);DONE(0);}
 LISTENER_VECTOR(alListenerfv,ALfloat,0) LISTENER_VECTOR(alGetListeneriv,ALint,1) LISTENER_VECTOR(alGetListenerfv,ALfloat,1)
 #define OBJECT_SCALAR(name,type,convert) uint32_t tribes_oa_##name(_cpu *c,uint32_t o,uint32_t p,uint32_t v){BEGIN;name(o,p,(type)(convert));DONE(0);}
-OBJECT_SCALAR(alSourcei,ALint,v) OBJECT_SCALAR(alSourcef,ALfloat,f32(v)) OBJECT_SCALAR(alBufferi,ALint,v)
+uint32_t tribes_oa_alSourcei(_cpu *c,uint32_t o,uint32_t p,uint32_t v){BEGIN;alSourcei(o,p,(ALint)v);if(p==AL_BUFFER)empty_clear(o);DONE(0);}
+/* A negative distance (Tribes: Vengeance sets a reference distance of -0.0127 on some
+   sources) is out of range for OpenAL Soft, which leaves AL_INVALID_VALUE pending; the
+   game's next alGetError, after generating a sound's buffer, then drops that sound
+   ("AL_INVALID_VALUE in RegisterSound"). Such a value is ignored, keeping the source's
+   current setting, with no error. */
+uint32_t tribes_oa_alSourcef(_cpu *c,uint32_t o,uint32_t p,uint32_t v){BEGIN;float f=f32(v);
+ if((p==AL_REFERENCE_DISTANCE||p==AL_MAX_DISTANCE||p==AL_ROLLOFF_FACTOR)&&f<0)DONE(0);
+ alSourcef(o,p,f);DONE(0);}
+ OBJECT_SCALAR(alBufferi,ALint,v)
 uint32_t tribes_oa_alSource3f(_cpu *c,uint32_t o,uint32_t p,uint32_t x,uint32_t y,uint32_t z){BEGIN;alSource3f(o,p,f32(x),f32(y),f32(z));DONE(0);}
 uint32_t tribes_oa_alSource3i(_cpu *c,uint32_t o,uint32_t p,uint32_t x,uint32_t y,uint32_t z){BEGIN;alSource3i(o,p,x,y,z);DONE(0);}
 #define OBJECT_VECTOR(name,type,get,scalar) uint32_t tribes_oa_##name(_cpu *c,uint32_t o,uint32_t p,uint32_t a){BEGIN;unsigned w=width(p);if((scalar)&&w!=1)stop("scalar output width");type v[6];size_t n=sizeof(type)*w;memcpy(v,guest(c,a,n),n);name(o,p,v);if(get)memcpy(guest(c,a,n),v,n);DONE(0);}
 OBJECT_VECTOR(alSourceiv,ALint,0,0) OBJECT_VECTOR(alSourcefv,ALfloat,0,0) OBJECT_VECTOR(alGetSourceiv,ALint,1,0) OBJECT_VECTOR(alGetSourcefv,ALfloat,1,0) OBJECT_VECTOR(alGetBufferi,ALint,1,1) OBJECT_VECTOR(alGetBufferf,ALfloat,1,1)
 uint32_t tribes_oa_alGetSource3f(_cpu *c,uint32_t o,uint32_t p,uint32_t a,uint32_t b,uint32_t d){BEGIN;float x,y,z;memcpy(&x,guest(c,a,4),4);memcpy(&y,guest(c,b,4),4);memcpy(&z,guest(c,d,4),4);alGetSource3f(o,p,&x,&y,&z);memcpy(guest(c,a,4),&x,4);memcpy(guest(c,b,4),&y,4);memcpy(guest(c,d,4),&z,4);DONE(0);}
 #define IDS(name,output) uint32_t tribes_oa_##name(_cpu *c,uint32_t n,uint32_t a){BEGIN;if(n>65536)stop("object count");ALuint *v=n?malloc(n*4):NULL;if(n&&!v)stop("object array allocation");if(n)memcpy(v,guest(c,a,n*4),n*4);name(n,v);if((output)&&n)memcpy(guest(c,a,n*4),v,n*4);free(v);DONE(0);}
-IDS(alGenSources,1) IDS(alDeleteSources,0) IDS(alGenBuffers,1) IDS(alDeleteBuffers,0) IDS(alSourceStopv,0)
+IDS(alGenSources,1)
+uint32_t tribes_oa_alDeleteSources(_cpu *c,uint32_t n,uint32_t a){BEGIN;if(n>65536)stop("object count");ALuint *v=n?malloc(n*4):NULL;if(n&&!v)stop("object array allocation");if(n)memcpy(v,guest(c,a,n*4),n*4);alDeleteSources(n,v);for(uint32_t i=0;i<n;i++)empty_clear(v[i]);free(v);DONE(0);}
+IDS(alGenBuffers,1) IDS(alDeleteBuffers,0) IDS(alSourceStopv,0)
 #define QUEUE(name,output) uint32_t tribes_oa_##name(_cpu *c,uint32_t o,uint32_t n,uint32_t a){BEGIN;if(n>65536)stop("queue count");ALuint *v=n?malloc(n*4):NULL;if(n&&!v)stop("queue allocation");if(n)memcpy(v,guest(c,a,n*4),n*4);name(o,n,v);if((output)&&n)memcpy(guest(c,a,n*4),v,n*4);free(v);DONE(0);}
-QUEUE(alSourceQueueBuffers,0) QUEUE(alSourceUnqueueBuffers,1)
+uint32_t tribes_oa_alSourceQueueBuffers(_cpu *c,uint32_t o,uint32_t n,uint32_t a){BEGIN;if(n>65536)stop("queue count");ALuint *v=n?malloc(n*4):NULL;if(n&&!v)stop("queue allocation");if(n)memcpy(v,guest(c,a,n*4),n*4);
+ uint32_t real=0;
+ for(uint32_t i=0;i<n;i++){ALint hz=-1;if(alIsBuffer(v[i]))alGetBufferi(v[i],AL_FREQUENCY,&hz);
+  if(hz==0&&o<EMPTY_SOURCES&&empty_count[o]<EMPTY_PER_SOURCE&&alIsSource(o)){empty_ids[o][empty_count[o]++]=v[i];continue;}
+  v[real++]=v[i];}
+ if(real||!n)alSourceQueueBuffers(o,real,v);
+ free(v);DONE(0);}
+uint32_t tribes_oa_alSourceUnqueueBuffers(_cpu *c,uint32_t o,uint32_t n,uint32_t a){BEGIN;if(n>65536)stop("queue count");ALuint *v=n?malloc(n*4):NULL;if(n&&!v)stop("queue allocation");
+ uint32_t held=empty_of(o),take=n<held?n:held;
+ for(uint32_t i=0;i<take;i++)v[i]=empty_ids[o][i];
+ if(take){memmove(empty_ids[o],empty_ids[o]+take,(held-take)*sizeof(ALuint));empty_count[o]=(unsigned char)(held-take);}
+ if(n>take)alSourceUnqueueBuffers(o,n-take,v+take);
+ if(n)memcpy(guest(c,a,n*4),v,n*4);free(v);DONE(0);}
+/* Tribes: Vengeance's ALAudio requires these as well. */
+VOID1(alDopplerVelocity,ALfloat,f32(a))
+uint32_t tribes_oa_alcProcessContext(_cpu *c,uint32_t a){BEGIN;alcProcessContext(CN(a));DONE(0);}
+uint32_t tribes_oa_alcSuspendContext(_cpu *c,uint32_t a){BEGIN;alcSuspendContext(CN(a));DONE(0);}
+uint32_t tribes_oa_alListeneri(_cpu *c,uint32_t p,uint32_t v){BEGIN;alListeneri(p,(ALint)v);DONE(0);}
+uint32_t tribes_oa_alGetListenerf(_cpu *c,uint32_t p,uint32_t out){BEGIN;if(width(p)!=1)stop("listener scalar width");ALfloat v;memcpy(&v,guest(c,out,4),4);alGetListenerf(p,&v);memcpy(guest(c,out,4),&v,4);DONE(0);}
+uint32_t tribes_oa_alGetListeneri(_cpu *c,uint32_t p,uint32_t out){BEGIN;if(width(p)!=1)stop("listener scalar width");ALint v;memcpy(&v,guest(c,out,4),4);alGetListeneri(p,&v);memcpy(guest(c,out,4),&v,4);DONE(0);}
+uint32_t tribes_oa_alGetListener3f(_cpu *c,uint32_t p,uint32_t a,uint32_t b,uint32_t d){BEGIN;float x,y,z;memcpy(&x,guest(c,a,4),4);memcpy(&y,guest(c,b,4),4);memcpy(&z,guest(c,d,4),4);alGetListener3f(p,&x,&y,&z);memcpy(guest(c,a,4),&x,4);memcpy(guest(c,b,4),&y,4);memcpy(guest(c,d,4),&z,4);DONE(0);}
+OBJECT_VECTOR(alGetSourcef,ALfloat,1,1)
+uint32_t tribes_oa_alGetSourcei(_cpu *c,uint32_t o,uint32_t p,uint32_t a){BEGIN;if(width(p)!=1)stop("scalar output width");ALint v;memcpy(&v,guest(c,a,4),4);alGetSourcei(o,p,&v);
+ if(p==AL_BUFFERS_PROCESSED||p==AL_BUFFERS_QUEUED)v+=(ALint)empty_of(o);
+ memcpy(guest(c,a,4),&v,4);DONE(0);}
+IDS(alSourcePausev,0) IDS(alSourceRewindv,0)
 uint32_t tribes_oa_alSourcePlayv(_cpu *c,uint32_t n,uint32_t a){BEGIN;if(n>65536)stop("object count");ALuint *v=n?malloc(n*4):NULL;if(n&&!v)stop("object array allocation");if(n)memcpy(v,guest(c,a,n*4),n*4);alSourcePlayv(n,v);free(v);trace_plays+=n;trace_report();DONE(0);}
 uint32_t tribes_oa_alBufferData(_cpu *c,uint32_t o,uint32_t format,uint32_t a,uint32_t n,uint32_t hz){BEGIN;
  if(format!=AL_FORMAT_MONO8&&format!=AL_FORMAT_MONO16&&format!=AL_FORMAT_STEREO8&&format!=AL_FORMAT_STEREO16)stop("unbridged sample format");

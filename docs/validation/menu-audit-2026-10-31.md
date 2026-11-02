@@ -56,3 +56,36 @@ connect a controller and read the hint and guide.
 - Game-specific menu sections branch on one `BOOL`. A third game should first
   move them into a per-game table (the profile in
   [LAUNCHER-PLAN.md](../LAUNCHER-PLAN.md#3-shared-controls-per-game-profile)).
+
+## Tribes: Vengeance (1 November)
+
+Vengeance's menu follows the same order and handlers (This Match, Play Online,
+Options, Help, Choose Game), built from its own keys in `DefUser.ini`
+([mobile_controls.m](../../port/apple/mobile_controls.m), `tb_vengeance`).
+
+| Section | Vengeance | Same as T1/T2? |
+| --- | --- | --- |
+| This Match: game menu | Game Menu in play, Back to Game in menus (Escape) | Same item and handler |
+| Scores | F2 | Each game's own key |
+| Chat | T all, Y team, V quick chat; keyboard opens | Same handler (`openChat`) |
+| Actions | Objectives (C) and Loadout (Shift) stay held until chosen again; Use F, third person Z, zoom level R; Drop Weapon (Alt held briefly), Respawn B | Held items are new: the game reads C and Shift as held buttons |
+| Campaign | Quick Save F5, Quick Load F8; off a server only | Vengeance only (single player) |
+| Play Online | Who's Playing Now (OpenSpy's list: players, maximum, map), Server List (the game's MULTIPLAYER screen; on a server, the same "Leave This Match?" choice as Tribes 2, then Disconnect and the screen), Community (Tribes Revengeance Discord, TribesPad Discord, tribesrevengeance.net, OpenSpy's list on the web) | Same items and order as T1/T2; Game Nights explains that games are arranged in the Tribes Revengeance Discord (no published schedule) and links it. Joining from Who's Playing Now is the game's list, since OpenSpy's file has no addresses |
+| Options | Touch controls, trackpad, FPS (frames counted at the Metal present), Graphics Quality (Fast or Full Detail, applied at once through the console) with Resolution (1024x768, 1600x1200 default, 2048x1536; from the next start), Settings | Same items as Starsiege plus Graphics Quality, which only Vengeance has |
+| Help | Touch Guide, Controller Guide (Vengeance layout: A jumps and skis while held, as in T1/T2), Console (Tab; the game starts with \`-console\` so it opens), GitHub, About | Same items; console key differs |
+| Choose Game | Subtitle names the games in this build | Same handler; three-game wording |
+
+Settings hides Keep Clear of the Notch, Render Scale, WASD Movement and Online
+Play for Vengeance, as for Starsiege; the Display footer names the chosen
+resolution. Play state comes from the game's GUI controller (menu up or not) rather
+than a script export.
+
+### Side-by-side check (2 November)
+
+The menus of all three games were dumped from the iPad Simulator (\`TRIBESPAD_MENU_DUMP\`) and compared.
+Off a server each shows Play Online (Who's Playing Now, Server List, Game Nights, Community),
+Options (Show Touch Controls, Trackpad Cursor, FPS Counter, then the game's own graphics items,
+Settings), Help (Touch and Trackpad Guide, Controller, Console, GitHub, About) and Choose Game,
+in that order. Graphics Quality lists the richer choice first in both Tribes 2 (Balanced, Fast)
+and Vengeance (Full Detail, Fast); Starsiege has no presets. In a match each adds This Match
+first (Game Menu, Scores, Chat, Actions); Vengeance adds Campaign (quick save and load) off a server.

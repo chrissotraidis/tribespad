@@ -45,16 +45,22 @@ int main(void) {
     assert(events[0].key.scancode==SDL_SCANCODE_SPACE&&!events[0].key.down);
     assert(events[1].button.button==SDL_BUTTON_RIGHT&&!events[1].button.down);
     tb_mobile_controls_release(&c);assert(drain(events)==1&&!events[0].button.down);
-    // Stick aim remains time based at 60/120 Hz, with deadzone and pause cap.
-    tb_mobile_controls_gamepad_look(&c,.1f,-.1f,1.0/60);assert(!drain(events));
-    tb_mobile_controls_gamepad_look(&c,1,-1,1.0/60);assert(drain(events)==1);
-    assert(events[0].motion.xrel==15&&events[0].motion.yrel==15);
-    tb_mobile_controls_gamepad_look(&c,1,-1,1.0/120);assert(drain(events)==1);
-    assert(events[0].motion.xrel==7.5f&&events[0].motion.yrel==7.5f);
-    tb_mobile_controls_gamepad_look(&c,2,2,3);assert(drain(events)==1);
-    assert(events[0].motion.xrel==45&&events[0].motion.yrel==-45);
-    tb_mobile_controls_gamepad_look(&c,NAN,INFINITY,.01);assert(!drain(events));
-    tb_mobile_controls_gamepad_look(&c,1,1,NAN);assert(!drain(events));
-    tb_mobile_controls_gamepad_look(&c,1,1,-1);assert(!drain(events));
+    // Stick aim is time based at 60/120 Hz (900 px/s here), with a radial dead
+    // zone, a squared response, whole-pixel events with the fraction carried,
+    // and a 50 ms cap after a pause.
+    tb_mobile_controls_gamepad_look(&c,.05f,-.05f,1.0/60,900);assert(!drain(events));
+    tb_mobile_controls_gamepad_look(&c,1,0,1.0/60,900);assert(drain(events)==1);
+    assert(events[0].motion.xrel==15&&events[0].motion.yrel==0);
+    tb_mobile_controls_gamepad_look(&c,0,-1,1.0/120,900);assert(drain(events)==1);
+    assert(events[0].motion.xrel==0&&events[0].motion.yrel==7);
+    tb_mobile_controls_gamepad_look(&c,0,-1,1.0/120,900);assert(drain(events)==1);
+    assert(events[0].motion.yrel==8);
+    tb_mobile_controls_gamepad_look(&c,.57f,0,1.0/60,900);assert(drain(events)==1);
+    assert(events[0].motion.xrel==3);
+    tb_mobile_controls_gamepad_look(&c,1,0,3,900);assert(drain(events)==1);
+    assert(events[0].motion.xrel==45);
+    tb_mobile_controls_gamepad_look(&c,NAN,INFINITY,.01,900);assert(!drain(events));
+    tb_mobile_controls_gamepad_look(&c,1,1,NAN,900);assert(!drain(events));
+    tb_mobile_controls_gamepad_look(&c,1,1,-1,900);assert(!drain(events));
     SDL_Quit();puts("PASS: simultaneous controls, relative aim, tap edges, cancellation and gamepad aim timing");
 }

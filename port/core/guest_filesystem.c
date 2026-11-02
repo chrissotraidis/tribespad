@@ -13,7 +13,7 @@
 #include <sys/stat.h>
 #include <sys/statvfs.h>
 
-typedef struct Mounts { uint64_t base;char volume[PATH_MAX],game[PATH_MAX],temp[PATH_MAX],cwd[PATH_MAX];int cwd_fd;struct Mounts *next; } Mounts;
+typedef struct Mounts { uint64_t base;char volume[PATH_MAX],game[PATH_MAX],temp[PATH_MAX],content[PATH_MAX],cwd[PATH_MAX];int cwd_fd;struct Mounts *next; } Mounts;
 static Mounts *mounts;
 static pthread_mutex_t lock=PTHREAD_MUTEX_INITIALIZER;
 static int directory(const char *in,char *out,dev_t *device) {
@@ -28,6 +28,14 @@ int tribes_filesystem_configure(uint64_t base,const char *volume,const char *gam
     m->cwd_fd=open(m->game,O_RDONLY|O_DIRECTORY|O_CLOEXEC);if(m->cwd_fd<0){free(m);return 0;}
     pthread_mutex_lock(&lock);for(Mounts *p=mounts;p;p=p->next)if(p->base==base){pthread_mutex_unlock(&lock);close(m->cwd_fd);free(m);errno=EALREADY;return 0;}
     m->next=mounts;mounts=m;pthread_mutex_unlock(&lock);return 1;
+}
+/* Optional: C:\TribesPad\Game\Content from another folder, confined to it. On iOS
+   Tribes: Vengeance reads its gigabytes of content from the app bundle in place,
+   while the rest of the game folder stays writable in Application Support. */
+int tribes_filesystem_configure_content(uint64_t base,const char *content) {
+    char path[PATH_MAX];dev_t device;if(!content||!directory(content,path,&device))return 0;
+    pthread_mutex_lock(&lock);Mounts *m=mounts;while(m&&m->base!=base)m=m->next;
+    if(m)strcpy(m->content,path);pthread_mutex_unlock(&lock);if(!m)errno=ENODEV;return m!=NULL;
 }
 static int ascii(const char *s) { for(;*s;s++)if((unsigned char)*s>=128)return 0;return 1; }
 static int inside(const char *root,const char *path) {
@@ -55,6 +63,7 @@ static int resolve_path(const Mounts *m,const char *cwd,const char *guest,char *
     if(count>=2&&!strcasecmp(parts[0],"TribesPad")){
         if(!strcasecmp(parts[1],"Game")){root=m->game;start=2;strcpy(logical,"C:\\TribesPad\\Game");}
         else if(!strcasecmp(parts[1],"Temp")){root=m->temp;start=2;strcpy(logical,"C:\\TribesPad\\Temp");}
+        if(root==m->game&&m->content[0]&&count>=3&&!strcasecmp(parts[2],"Content")){root=m->content;start=3;strcpy(logical,"C:\\TribesPad\\Game\\Content");}
     }
     char path[PATH_MAX];strcpy(path,root);
     for(size_t i=start;i<count;i++){

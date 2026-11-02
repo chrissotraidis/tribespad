@@ -6,6 +6,7 @@
 #include "process_heap.h"
 #include "guest_heap.h"
 #include "guest_virtual_memory.h"
+#include "guest_memory_layout.h"
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,6 +15,7 @@
 #include <unistd.h>
 typedef struct Segment { uint32_t address,size;struct Segment *next; } Segment;
 typedef struct Block { uint32_t address,span,requested;int used;Segment *segment;struct Block *next; } Block;
+uint32_t tribes_process_heap_low=0x50000000;
 typedef struct Heap { uint64_t base;uint32_t handle;int private_heap;Block *blocks;Segment *segments;unsigned char committed[65536];struct Heap *next; } Heap;
 static Heap *heaps;
 static uint32_t next_handle=0xe4000001;
@@ -53,7 +55,7 @@ uint32_t tribes_get_process_heap(uint64_t base) {
     for(Heap *h=heaps;h;h=h->next)if(h->base==base&&!h->private_heap){uint32_t result=h->handle;pthread_mutex_unlock(&lock);return result;}
     Heap *h=new_heap(base,0);Block *b=calloc(1,sizeof *b);
     if(!h||!b){free(h);free(b);pthread_mutex_unlock(&lock);tribes_set_last_error(8);return 0;}
-    b->address=0x50000000;b->span=0x10000000;h->blocks=b;h->next=heaps;heaps=h;
+    b->address=tribes_process_heap_low;b->span=0x10000000;h->blocks=b;h->next=heaps;heaps=h;
     uint32_t result=h->handle;pthread_mutex_unlock(&lock);return result;
 }
 uint32_t tribes_heap_create(uint64_t base,uint32_t options,uint32_t initial,uint32_t maximum) {
@@ -68,7 +70,7 @@ static int commit_block(Heap *h,uint32_t address,uint32_t bytes) {
     uint64_t start=address&~((uint64_t)page-1),end=((uint64_t)address+bytes+page-1)&~((uint64_t)page-1);
     if(h->private_heap)return tribes_virtual_alloc(h->base,(uint32_t)start,(uint32_t)(end-start),0x1000,4)!=0;
     if(mprotect((void *)(uintptr_t)(h->base+start),(size_t)(end-start),PROT_READ|PROT_WRITE))return 0;
-    memset(h->committed+(start-0x50000000)/4096,1,(size_t)((end-start)/4096));return 1;
+    memset(h->committed+(start-tribes_process_heap_low)/4096,1,(size_t)((end-start)/4096));return 1;
 }
 static int split(Block *b,uint32_t size) {
     if(size==b->span)return 1;
@@ -150,10 +152,10 @@ uint32_t tribes_heap_destroy(uint64_t base,uint32_t heap) {
 /* Freed default-heap blocks leave native backing committed. Private heaps are
    queried by the VM owner, including released/invalidated mappings. */
 int tribes_process_heap_memory_query(uint64_t base,uint32_t address,uint32_t fields[7]) {
-    if(!fields||address<0x50000000||address>=0x60000000||address%4096)return 0;
+    if(!fields||address<tribes_process_heap_low||address>=tribes_process_heap_low+0x10000000u||address%4096)return 0;
     pthread_mutex_lock(&lock);Heap *h=heaps;while(h&&(h->base!=base||h->private_heap))h=h->next;
-    unsigned index=(address-0x50000000)/4096,end=index+1;int committed=h&&h->committed[index];
+    unsigned index=(address-tribes_process_heap_low)/4096,end=index+1;int committed=h&&h->committed[index];
     while(end<65536&&(h&&h->committed[end])==committed)end++;
-    uint32_t out[7]={address,0x50000000,4,(end-index)*4096u,committed?0x1000u:0x2000u,committed?4u:0u,0x20000};
+    uint32_t out[7]={address,tribes_process_heap_low,4,(end-index)*4096u,committed?0x1000u:0x2000u,committed?4u:0u,0x20000};
     memcpy(fields,out,sizeof out);pthread_mutex_unlock(&lock);return 1;
 }

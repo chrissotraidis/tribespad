@@ -189,8 +189,9 @@ in TribesPad).
 
 ### Game picker
 
-TribesPad opens to a picker: **Starsiege: Tribes** and **Tribes 2**, each with how many people
-are playing now. Tap a card, or choose with the D-pad, left stick or arrow keys and press A or
+TribesPad opens to a picker: **Starsiege: Tribes**, **Tribes 2** and **Tribes: Vengeance**, each
+with how many people are playing now. Vengeance is an optional download: its card says
+**DOWNLOAD** until you install it (below). Tap a card, or choose with the D-pad, left stick or arrow keys and press A or
 Return. The gear at the top right has **Open Tribes 2 Directly**, which skips the picker;
 **Settings → Display → Game Picker at Launch** brings it back. In a game, **··· → Choose Game…**
 closes TribesPad, and the picker appears the next time you open it (iOS doesn't let an app restart
@@ -214,6 +215,33 @@ it out).
 - **Not yet:** modded servers (RPG and other mods) need their own files, which the game cannot
   download; graphics presets ([validation](docs/validation/starsiege-g2.md)).
 
+### Tribes: Vengeance
+
+Tribes: Vengeance runs natively on iPhone, iPad and Mac, recompiled from the community's free
+Revengeance release the same way as the other two games. Nothing from the game is in the
+repository, and on iPhone and iPad it is an **optional download**: tap its card, then
+**Download**. TribesPad fetches the same release from tribesrevengeance.net (3.1 GB), unpacks it
+on the device and checks every file against `config/vengeance/inputs.json`. It needs about
+15 GB free while it installs and keeps 11 GB (the campaign and its 200 multiplayer maps); keep
+TribesPad open meanwhile, and a paused download continues where it left off. The gear on the
+picker has **Remove Tribes: Vengeance** to free the space. The Mac app carries the game itself.
+Every build includes it (`--games tribes2,starsiege` leaves it out); the build downloads the
+same release once to translate the game's code ([progress](docs/validation/vengeance-progress.md)).
+
+- **Campaign:** New Game, Load Game and the whole story; ··· → This Match → Campaign has Quick
+  Save and Quick Load.
+- **Multiplayer:** the game's own MULTIPLAYER screen (··· → Play Online → Server List opens it)
+  joins internet and LAN servers and hosts games. The game is free now, and like the community
+  release's TV Key Generator, TribesPad gives it a CD key from that program's own list the first
+  time one is needed, kept in `TribesPad-CDKey.txt` in the game folder (put your own key there to
+  use it instead). Who's Playing Now lists OpenSpy's servers with their players and maps.
+- **Controller:** RT fire, LT jet, A jump (hold to ski), LB ski, RB and D-pad left change weapons,
+  Y grenade, X pack, B use; Menu opens the game menu.
+- **Graphics:** ··· → Options → Graphics Quality: Fast (the default, without projected lights and
+  shadows) or Full Detail, and a Resolution of 1024 × 768, 1600 × 1200 (the default) or
+  2048 × 1536.
+- **Speed:** 80 frames a second on the heaviest map on a Mac (SP-Spaceship); the iPad has not
+  been measured since the latest speed work.
 
 ### Keyboard and trackpad
 
@@ -284,8 +312,9 @@ flowchart LR
 ## Get TribesPad
 
 TribesPad never ships the games. You build your own copy: the build downloads the free
-official Tribes 2 and TribesNEXT files and PlayT1's Starsiege: Tribes installer, and turns
-them into one app on your Mac (add `--games tribes2` to build Tribes 2 alone). It needs a
+official Tribes 2 and TribesNEXT files, PlayT1's Starsiege: Tribes installer and the
+Revengeance release of Tribes: Vengeance, and turns them into one app on your Mac (add
+`--games tribes2` to build Tribes 2 alone). It needs a
 Mac with Apple Silicon and about 40 minutes the first time. After installing Xcode and
 the tools below, allow **20 GiB (about 22 GB) of free build space** for one target with
 both games. This includes downloads, generated code, build files and packaging, with
@@ -298,7 +327,7 @@ for multiple targets or versions.
 1. Install **Xcode** from the App Store and open it once.
 2. Install [Homebrew](https://brew.sh), then run:
    ```sh
-   brew install llvm@20 cmake ninja sevenzip zstd
+   brew install llvm@20 cmake ninja sevenzip zstd innoextract
    ```
 3. Build:
    - **With [PadMint](https://github.com/chrissotraidis/padmint) (0.5.13 or newer):** choose TribesPad and press **Build**.
@@ -383,8 +412,8 @@ How this works, stage by stage, is in [Reproducible build](docs/REPRODUCIBLE-BUI
 - Join TribesNEXT community servers
 - Starsiege: mod packs, IRC chat, graphics presets and faster loading
   ([plan](docs/STARSIEGE-TRIBES-PLAN.md), [validation](docs/validation/starsiege-g2.md))
-- Optional Vengeance and Ascend engines in the same app
-  ([implementation plan](docs/VENGEANCE-ASCEND-PLAN.md); research only, neither playable here yet)
+- Tribes: Vengeance device acceptance on iPad; Ascend after that
+  ([plan](docs/VENGEANCE-ASCEND-PLAN.md), [progress](docs/validation/vengeance-progress.md))
 - A headless dedicated server on a Mac, then Linux on ARM
   ([plan](docs/DEDICATED-SERVER-PLAN.md))
 - Raspberry Pi 5 / Linux on ARM, then Android, as personal builds

@@ -9,7 +9,15 @@ void tb_mobile_controls_release(TBMobileControls *controls);
    the full-deflection turn rate in mouse units per second. */
 void tb_mobile_controls_gamepad_look(TBMobileControls *controls,float x,float y,double seconds,float speed);
 void tb_mobile_controls_install(void);
-/* The nine keys the touch buttons send (see mobile_controls.c); NULL for Tribes 2's. */
+/* The nine keys the touch buttons send (see mobile_controls.c); NULL for Tribes 2's.
+   TB_KEY_WHEEL_DOWN sends one mouse wheel step down on press instead of a key. */
+#define TB_KEY_WHEEL_DOWN ((SDL_Scancode)SDL_SCANCODE_COUNT)
 void tb_mobile_controls_keys(const SDL_Scancode keys[9]);
 /* Touch controls for Starsiege: Tribes: its keys, menu and play state. */
 void tb_mobile_controls_install_starsiege(void);
+/* Touch controls for Tribes: Vengeance: its keys and menu. */
+void tb_mobile_controls_install_vengeance(void);
+/* Vengeance: Ski / Jump taps the jetpack for 90 ms on press, then skis
+   (mobile_controls.c); emit again after 90 ms to end the tap. */
+void tb_mobile_controls_jump_taps_jet(int on);
+int tb_mobile_controls_jumping(void);

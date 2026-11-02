@@ -6,13 +6,26 @@
 #include "guest_virtual_memory.h"
 #include "guest_system.h"
 #include "guest_heap.h"
+#include "guest_memory_layout.h"
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/mman.h>
 #include <unistd.h>
-#define LOW UINT32_C(0x60030000)
+uint32_t tribes_virtual_memory_low=0x60030000;
+#define LOW tribes_virtual_memory_low
+/* Next fit (Tribes: Vengeance sets it): an address search starts where the last
+   allocation ended and wraps around once, instead of rescanning from LOW past
+   every live region. Unreal reserves and releases large blocks every frame, and
+   first fit cost a fifth of a frame on iPad with thousands of regions. */
+int tribes_virtual_memory_next_fit=0;
+/* A second window for VirtualAlloc (Tribes: Vengeance sets it): free address
+   space below the static end that no module uses. Searched when the main window
+   is full; explicit addresses inside it are accepted. 0 when unused. */
+uint32_t tribes_virtual_memory_extra_low=0,tribes_virtual_memory_extra_high=0;
+static int in_extra(uint64_t address,uint64_t size){return tribes_virtual_memory_extra_high&&address>=tribes_virtual_memory_extra_low&&address+size<=tribes_virtual_memory_extra_high;}
+static uint64_t next_fit_hint;
 #define END UINT32_C(0x7fff0000)
 typedef struct Region { uint64_t base;uint32_t address,size,backing,page,allocation_protect;unsigned char *state;struct Region *next; } Region;
 static Region *regions;
@@ -119,9 +132,16 @@ static uint32_t allocate_region(uint64_t base,uint32_t process,uint32_t address,
         }
         pthread_mutex_unlock(&lock);return address;
     }
-    uint64_t candidate=address?address:up(lowest>LOW?lowest:LOW,alignment);
+    uint64_t first=lowest>LOW?lowest:LOW;int wrapped=0,extra=address&&in_extra(address,backing);
+    uint64_t window_low=extra?tribes_virtual_memory_extra_low:LOW,window_high=extra?tribes_virtual_memory_extra_high:END;
+    if(!address&&!count&&tribes_virtual_memory_next_fit&&next_fit_hint>first)first=next_fit_hint;else wrapped=1;
+    uint64_t candidate=address?address:up(first,alignment);
     for(;;) {
-        if(candidate<LOW||candidate+backing>END||candidate+size-1>highest){pthread_mutex_unlock(&lock);return failure(address?487:8);}
+        if(candidate<window_low||candidate+backing>window_high||candidate+size-1>highest){
+            if(!address&&!wrapped){wrapped=1;candidate=up(lowest>LOW?lowest:LOW,alignment);continue;}
+            if(!address&&!extra&&tribes_virtual_memory_extra_high&&!count){
+                extra=1;window_low=tribes_virtual_memory_extra_low;window_high=tribes_virtual_memory_extra_high;candidate=up(window_low,alignment);continue;}
+            pthread_mutex_unlock(&lock);return failure(address?487:8);}
         Region *collision=NULL;
         for(Region *r=regions;r;r=r->next)if(r->base==base&&candidate<(uint64_t)r->address+r->backing&&candidate+backing>r->address){collision=r;break;}
         if(!collision)break;
@@ -145,6 +165,7 @@ static uint32_t allocate_region(uint64_t base,uint32_t process,uint32_t address,
     }
     }
     r->next=regions;regions=r;
+    if(tribes_virtual_memory_next_fit&&!extra)next_fit_hint=(uint64_t)r->address+r->backing;
     uint32_t result=r->address;pthread_mutex_unlock(&lock);return result;
 }
 uint32_t tribes_virtual_alloc2_from_app(uint64_t base,uint32_t process,uint32_t address,uint32_t size,uint32_t type,uint32_t protection,uint32_t parameters,uint32_t count) {
@@ -219,8 +240,9 @@ int tribes_virtual_memory_visit(uint64_t base,int (*visitor)(uint32_t,uint32_t,u
 /* Query one logical page and its forward matching run under provider ownership.
    Native padding is owned reserved address space, never reported as free. */
 int tribes_virtual_memory_query(uint64_t base,uint32_t address,uint32_t fields[7]) {
-    if(!fields||address<LOW||address>=END||address%4096)return 0;
-    pthread_mutex_lock(&lock);Region *found=NULL;uint32_t next=END;
+    int extra=in_extra(address,1);
+    if(!fields||((address<LOW||address>=END)&&!extra)||address%4096)return 0;
+    pthread_mutex_lock(&lock);Region *found=NULL;uint32_t next=extra?tribes_virtual_memory_extra_high:END;
     for(Region *r=regions;r;r=r->next)if(r->base==base){
         if(address>=r->address&&(uint64_t)address<(uint64_t)r->address+r->backing)found=r;
         else if(r->address>address&&r->address<next)next=r->address;

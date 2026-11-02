@@ -67,6 +67,7 @@
       "udis86_dep.h": "af64456fc01952eafc4ed90131b1d88466de4bfa24831daebd0fbb861b11595d"
     },
     "patch_sha256": "ed4ea7fbe9c7a6f2e0a02da304eb2fd9ac9925987084bf8406c962d5b04c3e75",
-    "scons": "4.8.1"
+    "scons": "4.8.1",
+    "string_compare_patch_sha256": "72978c5943ee736965a1e76c42b9b8c7fb01f4495e8a82f8090bbd40b70e5505"
   }
 }
