@@ -157,7 +157,7 @@ int vg_cdkey(char out[21]){
  FILE *f=fopen(path,"r");
  if(f){if(!fgets(text,sizeof text,f))text[0]=0;fclose(f);return cdkey_text(text,out);}
  if(!generated_cdkey(out))return 0;
- if((f=fopen(path,"w"))){fprintf(f,"%.4s-%.4s-%.4s-%.4s-%.4s\n",out,out+4,out+8,out+12,out+16);fclose(f);}
+ if((f=fopen(path,"w"))){fprintf(f,"%.4s-%.4s-%.4s-%.4s-%.4s\n",out,out+4,out+8,out+12,out+16);fclose(f);tribes_filesystem_changed();}
  return 1;
 }
 uint32_t vg_reg_open_key_ex_a(uint64_t base,uint32_t key,uint32_t subkey,uint32_t options,uint32_t access,uint32_t output){
@@ -282,13 +282,13 @@ static uint32_t delete_file(uint64_t base,uint32_t name,int wide){
  char guest[PATH_MAX],host[PATH_MAX];if(!existing(base,name,wide,guest,host))return 0;
  struct stat st;if(lstat(host,&st)){tribes_set_last_error(error_of(errno));return 0;}
  if(S_ISDIR(st.st_mode)){tribes_set_last_error(5);return 0;}
- if(unlink(host)){tribes_set_last_error(error_of(errno));return 0;}return 1;
+ if(unlink(host)){tribes_set_last_error(error_of(errno));return 0;}tribes_filesystem_changed();return 1;
 }
 uint32_t vg_delete_file_a(uint64_t base,uint32_t name){return delete_file(base,name,0);}
 uint32_t vg_delete_file_w(uint64_t base,uint32_t name){return delete_file(base,name,1);}
 static uint32_t remove_directory(uint64_t base,uint32_t name,int wide){
  char guest[PATH_MAX],host[PATH_MAX];if(!existing(base,name,wide,guest,host))return 0;
- if(rmdir(host)){tribes_set_last_error(errno==ENOTDIR?267:error_of(errno));return 0;}return 1;
+ if(rmdir(host)){tribes_set_last_error(errno==ENOTDIR?267:error_of(errno));return 0;}tribes_filesystem_changed();return 1;
 }
 uint32_t vg_remove_directory_a(uint64_t base,uint32_t name){return remove_directory(base,name,0);}
 uint32_t vg_remove_directory_w(uint64_t base,uint32_t name){return remove_directory(base,name,1);}
@@ -306,7 +306,7 @@ static uint32_t set_attributes(uint64_t base,uint32_t name,uint32_t attributes,i
  char guest[PATH_MAX],host[PATH_MAX];if(!existing(base,name,wide,guest,host))return 0;
  struct stat st;if(stat(host,&st)){tribes_set_last_error(error_of(errno));return 0;}
  mode_t mode=attributes&1?st.st_mode&~(mode_t)(S_IWUSR|S_IWGRP|S_IWOTH):st.st_mode|S_IWUSR;
- if(chmod(host,mode&07777)){tribes_set_last_error(error_of(errno));return 0;}return 1;
+ if(chmod(host,mode&07777)){tribes_set_last_error(error_of(errno));return 0;}tribes_filesystem_changed();return 1;
 }
 uint32_t vg_set_file_attributes_a(uint64_t base,uint32_t name,uint32_t attributes){return set_attributes(base,name,attributes,0);}
 uint32_t vg_set_file_attributes_w(uint64_t base,uint32_t name,uint32_t attributes){return set_attributes(base,name,attributes,1);}

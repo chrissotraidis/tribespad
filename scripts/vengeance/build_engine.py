@@ -69,7 +69,8 @@ def set_platform(platform):
     ss.set_platform(platform)
     SDK, TARGET = ss.SDK, ss.TARGET
 # The host: port/vengeance (C and Objective-C), with its Direct3D 9 on Metal in d3d9/.
-HOST = [p for p in sorted((R / 'port/vengeance').glob('**/*.c')) if p.name != INLINE_X87.name] + sorted((R / 'port/vengeance').glob('**/*.m'))
+# The in-app installer (port/vengeance/installer) is the iOS app's, built by scripts/build-vengeance-installer.py.
+HOST = [p for p in sorted((R / 'port/vengeance').glob('**/*.c')) if p.name != INLINE_X87.name and 'installer' not in p.parts] + sorted((R / 'port/vengeance').glob('**/*.m'))
 D3D9 = R / 'port/vengeance/d3d9'
 COM_BASE = 0xfff80000  # COM method addresses: clear of TribesPad's graphics (0xfffa....) and system (0xfffb....) exports
 # Host routes the guest calls (cdecl), at Starsiege's addresses: SDL's allocator callbacks.

@@ -18,6 +18,7 @@
 #include <string.h>
 #include <strings.h>
 #include <sys/mman.h>
+#include <sys/resource.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <pthread.h>
@@ -219,6 +220,10 @@ int main(int argc,char **argv){
  assert(tribes_command_line_configure(base,line,(uint32_t)used+1));
  assert(tribes_command_line_configure_w(base,wide,2u*((uint32_t)used+1)));
  assert(tribes_filesystem_configure(base,argv[2],argv[3],argv[4]));{extern void vg_set_game_folder(const char *);vg_set_game_folder(argv[3]);}assert(tribes_named_mutex_configure(argv[4]));
+ /* The game keeps each package it loads open, and a host lists every
+    multiplayer map (about 200) at once: more than the 256 open files an iOS
+    app starts with. */
+ {struct rlimit r;if(!getrlimit(RLIMIT_NOFILE,&r)&&r.rlim_cur<10240){r.rlim_cur=r.rlim_max<10240?r.rlim_max:10240;setrlimit(RLIMIT_NOFILE,&r);}}
  /* VENGEANCE_CONTENT: the game's Content folder elsewhere (the iOS app bundle). */
  {const char *content=getenv("VENGEANCE_CONTENT");
   if(content&&!tribes_filesystem_configure_content(base,content)){fprintf(stderr,"vengeance: no content folder at %s\n",content);return 2;}}

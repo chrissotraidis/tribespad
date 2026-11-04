@@ -237,10 +237,7 @@ uint32_t tribes_create_file_w(uint64_t base,uint32_t name,uint32_t access,uint32
    type, so those and special objects remain ERROR_NOT_SUPPORTED here. */
 static uint32_t get_attributes(uint64_t base,uint32_t name,int wide) {
     char guest[PATH_MAX],host[PATH_MAX];if(!read_path(base,name,wide,guest))return UINT32_MAX;
-    if(!tribes_filesystem_resolve_link(base,guest,host,sizeof host)){
-        tribes_set_last_error(path_error(base,guest,errno));return UINT32_MAX;
-    }
-    struct stat st;if(lstat(host,&st)){
+    struct stat st;if(!tribes_filesystem_resolve_stat(base,guest,host,sizeof host,&st)){
         tribes_set_last_error(path_error(base,guest,errno));return UINT32_MAX;
     }
     if(!S_ISREG(st.st_mode)&&!S_ISDIR(st.st_mode)){tribes_set_last_error(50);return UINT32_MAX;}
@@ -280,6 +277,7 @@ uint32_t tribes_move_file_ex_w(uint64_t base,uint32_t from,uint32_t to,uint32_t 
         int e=errno;
         tribes_set_last_error(e==EEXIST?183:e==EXDEV?17:e==ENOSPC?112:path_error(base,target,e));return 0;
     }
+    tribes_filesystem_changed();
     if(flags&8){
         char parent[PATH_MAX];strcpy(parent,target_host);char *slash=strrchr(parent,'/');
         if(slash){*slash=0;int fd=open(parent,O_RDONLY|O_CLOEXEC);if(fd>=0){fsync(fd);close(fd);}}
@@ -320,6 +318,7 @@ uint32_t tribes_nt_set_information_file(uint64_t base,uint32_t handle,
         else if(!(flags&16)&&!(st.st_mode&S_IWUSR))status=0xc0000121u;
         else if(S_ISDIR(st.st_mode)?rmdir(info.host):unlink(info.host))
             status=errno==ENOTEMPTY||errno==EEXIST?0xc0000101u:errno==EACCES||errno==EPERM?0xc0000121u:0xc0000001u;
+        else tribes_filesystem_changed();
     }
     close(fd);
     uint32_t completion[2]={status,0};void *io=(void *)(uintptr_t)(base+iosb);

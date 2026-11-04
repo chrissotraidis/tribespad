@@ -238,10 +238,10 @@ same release once to translate the game's code ([progress](docs/validation/venge
 - **Controller:** RT fire, LT jet, A jump (hold to ski), LB ski, RB and D-pad left change weapons,
   Y grenade, X pack, B use; Menu opens the game menu.
 - **Graphics:** ··· → Options → Graphics Quality: Fast (the default, without projected lights and
-  shadows) or Full Detail, and a Resolution of 1024 × 768, 1600 × 1200 (the default) or
-  2048 × 1536.
-- **Speed:** 80 frames a second on the heaviest map on a Mac (SP-Spaceship); the iPad has not
-  been measured since the latest speed work.
+  shadows) or Full Detail, and a Resolution of 1024 × 768, 1600 × 1200 (the iPhone default) or
+  2048 × 1536 (the iPad default). Anisotropic filtering is on (8×).
+- **Speed:** on an iPad Pro (M2) the menus appear about 9 seconds after Play, the first campaign
+  map plays from about 20 seconds, and play runs at 90 to 120 frames a second.
 
 ### Keyboard and trackpad
 

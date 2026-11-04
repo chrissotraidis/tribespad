@@ -12,6 +12,9 @@
    each new build installs without resending the campaign. */
 #import <Foundation/Foundation.h>
 #include <TargetConditionals.h>
+#if !TARGET_OS_OSX
+#import <UIKit/UIKit.h>
+#endif
 #include <stdio.h>
 #include <string.h>
 #include "vengeance_paths.h"
@@ -28,14 +31,15 @@ int tb_vengeance_bundled(const char *gamedata,const char *storage){
     return [NSFileManager.defaultManager fileExistsAtPath:[@(gamedata) stringByAppendingPathComponent:@"Vengeance/images"]]&&source_game(gamedata,storage)!=nil;
 }
 /* The game's drawing size, one of three 4:3 sizes, unless chosen otherwise:
-   1600x1200 on iPhone and iPad (scaled to the screen); 1024x768 on the Mac, where
-   it is the game's window and must fit the screen. */
+   2048x1536 on iPad and 1600x1200 on iPhone (scaled to the screen); 1024x768 on
+   the Mac, where it is the game's window and must fit the screen. The game is
+   bound by the CPU: on an M2 iPad Pro 2048x1536 costs about 1% of the frame rate. */
 NSString *tb_vengeance_resolution(void){
     NSString *size=[NSUserDefaults.standardUserDefaults stringForKey:@"TribesPad.vengeanceResolution"];
 #if TARGET_OS_OSX
     NSString *fallback=@"1024x768";
 #else
-    NSString *fallback=@"1600x1200";
+    NSString *fallback=UIDevice.currentDevice.userInterfaceIdiom==UIUserInterfaceIdiomPad?@"2048x1536":@"1600x1200";
 #endif
     return [@[@"1024x768",@"1600x1200",@"2048x1536"] containsObject:size]?size:fallback;
 }
@@ -83,6 +87,10 @@ int tb_vengeance_prepare_paths(const char *gamedata,const char *storage,char *ar
             NSString *want=[quality isEqualToString:@"full"]?@"Projectors=True":@"Projectors=False";
             NSString *changed=[[text stringByReplacingOccurrencesOfString:@"Projectors=True" withString:want]
                 stringByReplacingOccurrencesOfString:@"Projectors=False" withString:want];
+            /* 8x anisotropic filtering on both settings (the game ships it off): floors
+               and walls stay sharp into the distance, at no measurable cost on iPad. */
+            changed=[changed stringByReplacingOccurrencesOfString:@"LevelOfAnisotropy=1\r" withString:@"LevelOfAnisotropy=8\r"];
+            changed=[changed stringByReplacingOccurrencesOfString:@"LevelOfAnisotropy=1\n" withString:@"LevelOfAnisotropy=8\n"];
             /* TribesPad's Resolution (the same menu): the game draws at this 4:3 size and
                the screen scales it to fit. The engine's desktop is the same size
                (VENGEANCE_DISPLAY), so it is the one mode the game offers. */

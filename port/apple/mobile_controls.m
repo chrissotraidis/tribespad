@@ -1348,7 +1348,7 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
         tvFull.subtitle=@"The game's own projected lights and shadows";tvFull.state=[quality isEqualToString:@"full"]?UIMenuElementStateOn:UIMenuElementStateOff;
         /* Resolution: the game's 4:3 drawing size, applied when Vengeance next starts. */
         NSString *size=tb_vengeance_resolution();NSMutableArray<UIAction *> *sizes=[NSMutableArray array];
-        for(NSArray<NSString *> *r in @[@[@"1024x768",@"The game's own default, the lightest"],@[@"1600x1200",@"Sharper; the TribesPad default"],@[@"2048x1536",@"Sharpest, the most work for the GPU"]]){
+        for(NSArray<NSString *> *r in @[@[@"1024x768",@"The game's own default, the lightest"],@[@"1600x1200",@"Sharper; the iPhone default"],@[@"2048x1536",@"Sharpest; the iPad default"]]){
             NSString *value=r[0];UIAction *a=item([value stringByReplacingOccurrencesOfString:@"x" withString:@" × "],@"rectangle.expand.vertical",^{[weak setVengeanceResolution:value];});
             a.subtitle=r[1];a.state=[size isEqualToString:value]?UIMenuElementStateOn:UIMenuElementStateOff;[sizes addObject:a];}
         optionItems=@[controls[0],controls[1],controls[2],
