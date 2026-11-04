@@ -13,6 +13,7 @@
 #include <string.h>
 #include <strings.h>
 #include <sys/stat.h>
+#include <time.h>
 typedef struct Entry {unsigned char data[320];} Entry;
 typedef struct Search {uint64_t base;uint32_t handle;size_t count,index;Entry *entries;struct Search *next;} Search;
 static Search *searches;static uint32_t next_handle=0xe3000001;static pthread_mutex_t lock=PTHREAD_MUTEX_INITIALIZER;
@@ -52,8 +53,52 @@ static int put_time(unsigned char *data,size_t offset,struct timespec time){
     uint64_t value=seconds*10000000+(uint64_t)time.tv_nsec/100;memcpy(data+offset,&value,8);return 1;
 }
 static uint32_t path_error(void){return errno==EACCES?5:errno==ENOTSUP?50:errno==ENAMETOOLONG?206:3;}
+/* Folder snapshots: every name in a folder with its find data, or the error a
+   search that matches it reports. Tribes: Vengeance lists its 200 multiplayer
+   maps one at a time (each "next map" lists the whole folder again), and each
+   name took two system calls: the Host menu froze for seconds. A snapshot
+   serves searches of its folder for 100 ms, and until TribesPad changes a file
+   (tribes_filesystem_changed), as the folder listings in guest_filesystem.c do. */
+enum {SNAPSHOT_FRESH_NS=100000000,SNAPSHOTS_KEPT=32};
+typedef struct Item {char name[260];uint32_t error;Entry entry;} Item;
+typedef struct Snapshot {struct Snapshot *next;char host[PATH_MAX];unsigned generation;uint64_t taken;size_t count;Item *items;} Snapshot;
+static Snapshot *snapshots;static pthread_mutex_t snapshot_lock=PTHREAD_MUTEX_INITIALIZER;
+static uint64_t now_ns(void){struct timespec t;clock_gettime(CLOCK_UPTIME_RAW,&t);return (uint64_t)t.tv_sec*1000000000u+(uint64_t)t.tv_nsec;}
+/* One name: its find data, or the error a search matching it fails with. */
+static uint32_t describe(uint64_t base,const char *directory,const char *host,const char *name,Entry *entry){
+    size_t n=strlen(name);if(n>=260)return 206;for(size_t i=0;i<n;i++)if((unsigned char)name[i]>=128)return 50;
+    char child[PATH_MAX],resolved[PATH_MAX],native[PATH_MAX];if(snprintf(child,sizeof child,"%s/%s",directory,name)>=(int)sizeof child||snprintf(native,sizeof native,"%s/%s",host,name)>=(int)sizeof native)return 206;
+    if(!tribes_filesystem_resolve(base,child,resolved,sizeof resolved))return path_error();
+    struct stat st,link;if(lstat(native,&link)||stat(resolved,&st))return 5;if(S_ISLNK(link.st_mode)||(!S_ISDIR(st.st_mode)&&!S_ISREG(st.st_mode)))return 50;
+    memset(entry,0,sizeof *entry);uint32_t attributes=S_ISDIR(st.st_mode)?16:32;if(!(st.st_mode&S_IWUSR))attributes|=1;
+#ifdef UF_HIDDEN
+    if(st.st_flags&UF_HIDDEN)attributes|=2;
+#endif
+    put32(entry->data,0,attributes);if(!put_time(entry->data,4,st.st_birthtimespec)||!put_time(entry->data,12,st.st_atimespec)||!put_time(entry->data,20,st.st_mtimespec))return 50;
+    uint64_t size=S_ISREG(st.st_mode)?(uint64_t)st.st_size:0;put32(entry->data,28,(uint32_t)(size>>32));put32(entry->data,32,(uint32_t)size);memcpy(entry->data+44,name,n+1);
+    return 0;
+}
+/* The folder's snapshot, new if needed (snapshot_lock held). 0: error set. */
+static Snapshot *snapshot(uint64_t base,const char *directory,const char *host,uint32_t *error){
+    unsigned generation=tribes_filesystem_generation();uint64_t now=now_ns();size_t kept=0;
+    Snapshot **link=&snapshots;
+    while(*link){Snapshot *s=*link;
+        if(!strcmp(s->host,host)){if(s->generation==generation&&now-s->taken<SNAPSHOT_FRESH_NS)return s;*link=s->next;free(s->items);free(s);continue;}
+        if(++kept>=SNAPSHOTS_KEPT){*link=s->next;free(s->items);free(s);continue;}
+        link=&s->next;}
+    DIR *stream=opendir(host);if(!stream){*error=path_error();return NULL;}
+    Snapshot *s=calloc(1,sizeof *s);if(!s){closedir(stream);*error=8;return NULL;}
+    strcpy(s->host,host);s->generation=generation;s->taken=now;size_t capacity=0;struct dirent *item;
+    for(;;){errno=0;item=readdir(stream);if(!item){if(errno){*error=5;goto failed;}break;}
+        if(s->count==capacity){size_t grown=capacity?capacity*2:16;Item *items=realloc(s->items,grown*sizeof *items);if(!items){*error=8;goto failed;}s->items=items;capacity=grown;}
+        Item *it=&s->items[s->count++];snprintf(it->name,sizeof it->name,"%s",item->d_name);
+        it->error=describe(base,directory,host,item->d_name,&it->entry);}
+    closedir(stream);s->next=snapshots;snapshots=s;return s;
+failed:
+    closedir(stream);free(s->items);free(s);return NULL;
+}
 uint32_t tribes_find_first(uint64_t base,uint32_t pattern_pointer,uint32_t output){
-    uint32_t error=87,result=UINT32_MAX;Search *s=NULL;DIR *stream=NULL;
+    uint32_t error=87,result=UINT32_MAX;Search *s=NULL;
     if(!pattern_pointer||!valid_output(base,output))goto failed;
     char request[PATH_MAX];size_t length=0;
     for(;length<sizeof request;length++){if(pattern_pointer>UINT32_MAX-length||base>UINTPTR_MAX-pattern_pointer-length)goto failed;request[length]=*(const char *)(uintptr_t)(base+pattern_pointer+length);if(!request[length])break;}
@@ -67,27 +112,21 @@ uint32_t tribes_find_first(uint64_t base,uint32_t pattern_pointer,uint32_t outpu
     if(strchr(pattern,'?')||pattern[strlen(pattern)-1]=='.'){fprintf(stderr,"TribesPad: DOS question-mark/trailing-period file searches are not implemented\n");abort();}
     if(strpbrk(pattern,":\"<>|")||strpbrk(directory,"*?")){error=123;goto failed;}
     char host[PATH_MAX];if(!tribes_filesystem_resolve(base,directory,host,sizeof host)){error=path_error();goto failed;}
-    stream=opendir(host);if(!stream){error=path_error();goto failed;}
-    s=calloc(1,sizeof *s);if(!s){error=8;goto failed;}s->base=base;size_t capacity=0;struct dirent *item;
-    for(;;){errno=0;item=readdir(stream);if(!item){if(errno){error=5;goto failed;}break;}if(!match(pattern,item->d_name))continue;
-        size_t n=strlen(item->d_name);if(n>=260){error=206;goto failed;}for(size_t i=0;i<n;i++)if((unsigned char)item->d_name[i]>=128){error=50;goto failed;}
-        char child[PATH_MAX],resolved[PATH_MAX],native[PATH_MAX];if(snprintf(child,sizeof child,"%s/%s",directory,item->d_name)>=(int)sizeof child||snprintf(native,sizeof native,"%s/%s",host,item->d_name)>=(int)sizeof native){error=206;goto failed;}
-        if(!tribes_filesystem_resolve(base,child,resolved,sizeof resolved)){error=path_error();goto failed;}
-        struct stat st,link;if(lstat(native,&link)||stat(resolved,&st)){error=5;goto failed;}if(S_ISLNK(link.st_mode)||(!S_ISDIR(st.st_mode)&&!S_ISREG(st.st_mode))){error=50;goto failed;}
-        if(s->count==capacity){if(capacity>SIZE_MAX/2/sizeof(Entry)){error=8;goto failed;}size_t new_capacity=capacity?capacity*2:16;Entry *entries=realloc(s->entries,new_capacity*sizeof *entries);if(!entries){error=8;goto failed;}s->entries=entries;capacity=new_capacity;}
-        Entry *entry=&s->entries[s->count++];memset(entry,0,sizeof *entry);uint32_t attributes=S_ISDIR(st.st_mode)?16:32;if(!(st.st_mode&S_IWUSR))attributes|=1;
-#ifdef UF_HIDDEN
-        if(st.st_flags&UF_HIDDEN)attributes|=2;
-#endif
-        put32(entry->data,0,attributes);if(!put_time(entry->data,4,st.st_birthtimespec)||!put_time(entry->data,12,st.st_atimespec)||!put_time(entry->data,20,st.st_mtimespec)){error=50;goto failed;}
-        uint64_t size=S_ISREG(st.st_mode)?(uint64_t)st.st_size:0;put32(entry->data,28,(uint32_t)(size>>32));put32(entry->data,32,(uint32_t)size);memcpy(entry->data+44,item->d_name,n+1);
-    }
-    closedir(stream);stream=NULL;if(!s->count){error=2;goto failed;}sort_entries(s->entries,s->count);
+    s=calloc(1,sizeof *s);if(!s){error=8;goto failed;}s->base=base;size_t capacity=0;
+    pthread_mutex_lock(&snapshot_lock);
+    Snapshot *snap=snapshot(base,directory,host,&error);
+    for(size_t i=0;snap&&i<snap->count;i++){Item *it=&snap->items[i];if(!match(pattern,it->name))continue;
+        if(it->error){error=it->error;snap=NULL;break;}
+        if(s->count==capacity){if(capacity>SIZE_MAX/2/sizeof(Entry)){error=8;snap=NULL;break;}size_t new_capacity=capacity?capacity*2:16;Entry *entries=realloc(s->entries,new_capacity*sizeof *entries);if(!entries){error=8;snap=NULL;break;}s->entries=entries;capacity=new_capacity;}
+        s->entries[s->count++]=it->entry;}
+    pthread_mutex_unlock(&snapshot_lock);
+    if(!snap)goto failed;
+    if(!s->count){error=2;goto failed;}sort_entries(s->entries,s->count);
     for(size_t i=1;i<s->count;i++)if(!strcasecmp((char *)s->entries[i-1].data+44,(char *)s->entries[i].data+44)){error=50;goto failed;}
     pthread_mutex_lock(&lock);if(next_handle>=0xe4000000){pthread_mutex_unlock(&lock);error=8;goto failed;}s->handle=next_handle++;s->index=1;s->next=searches;searches=s;result=s->handle;memcpy((void *)(uintptr_t)(base+output),s->entries[0].data,320);
     observe(1,pattern_pointer,output,result,s->entries[0].data);pthread_mutex_unlock(&lock);return result;
 failed:
-    if(stream)closedir(stream);if(s){free(s->entries);free(s);}tribes_set_last_error(error);return observe(1,pattern_pointer,output,UINT32_MAX,NULL);
+    if(s){free(s->entries);free(s);}tribes_set_last_error(error);return observe(1,pattern_pointer,output,UINT32_MAX,NULL);
 }
 uint32_t tribes_find_next(uint64_t base,uint32_t handle,uint32_t output){
     if(!valid_output(base,output)){tribes_set_last_error(87);return observe(2,handle,output,0,NULL);}

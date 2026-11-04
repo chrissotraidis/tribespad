@@ -98,6 +98,11 @@ uint32_t vengeance_import_address(const char *name){
  for(unsigned i=0;i<sizeof import_names/sizeof import_names[0];i++)if(!strcmp(import_names[i],name))return 0xfffe0000u+16u*i;
  return 0;
 }
+/* The guest address of a game module's export by its (decorated) name, 0 if none. */
+uint32_t vengeance_export(const char *name){
+ for(size_t i=0;i<sizeof vg_exports/sizeof vg_exports[0];i++)if(!strcmp(vg_exports[i].name,name))return vg_exports[i].address;
+ return 0;
+}
 _Noreturn void vengeance_d3d9_stop(_cpu *c){stop(c?c:diagnostic_cpu(),"d3d9",0);}
 _Noreturn void halopad_trap_unimplemented(uint32_t pc){stop(diagnostic_cpu(),"instruction",pc);}
 _Noreturn void tribes_unimplemented_dinput(void *c,uint32_t method){stop(c,"dinput",method);}

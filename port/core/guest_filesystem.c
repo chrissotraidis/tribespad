@@ -61,6 +61,7 @@ static Listing *listings[2048];
 static unsigned listing_generation;
 static pthread_mutex_t listing_lock=PTHREAD_MUTEX_INITIALIZER;
 void tribes_filesystem_changed(void){pthread_mutex_lock(&listing_lock);listing_generation++;pthread_mutex_unlock(&listing_lock);}
+unsigned tribes_filesystem_generation(void){pthread_mutex_lock(&listing_lock);unsigned g=listing_generation;pthread_mutex_unlock(&listing_lock);return g;}
 static unsigned listing_slot(const char *s){unsigned h=2166136261u;while(*s)h=(h^(unsigned char)*s++)*16777619u;return h&2047u;}
 /* Sorted and searched here: the guarded runtime admits no callback-taking library calls (qsort, bsearch). */
 static void listed_sort(ListedName *names,size_t count){

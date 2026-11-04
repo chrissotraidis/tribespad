@@ -21,6 +21,8 @@ int tribes_filesystem_resolve_stat(uint64_t base,const char *guest,char *host,si
 /* Call after creating, removing or renaming a file or folder by host path:
    cached folder listings are checked again before they are trusted. */
 void tribes_filesystem_changed(void);
+/* Counts tribes_filesystem_changed calls: a cache made under another number is stale. */
+unsigned tribes_filesystem_generation(void);
 uint32_t tribes_get_logical_drive_strings(uint64_t base,uint32_t capacity,uint32_t output);
 uint32_t tribes_get_drive_type(uint64_t base,uint32_t root);
 uint32_t tribes_disk_free_space(uint64_t base,uint32_t root,uint32_t sectors,uint32_t bytes,uint32_t free_clusters,uint32_t total_clusters);

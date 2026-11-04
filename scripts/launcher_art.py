@@ -8,9 +8,9 @@ Background.bmp). Starsiege: Tribes: its title screen, BrightLogo.png from the
 BrightLogo.bmp in Shell.vol from the 2004 freeware installer when
 ref/starsiege/tribes_gsi.exe exists with the pinned SHA-256. Results are
 cached in generated/launcher-art and refreshed when a source changes.
-Tribes: Vengeance: its default loading screen (the title on the game's blue
-frame), the loadingDefault texture in Content/Art/LoadingScreens.pkg of the
-game on this Mac (ref/vengeance/game), shown at the game's 4:3. Without the
+Tribes: Vengeance: MP-Arid's loading screen (Content/Art/LoadingScreens.pkg)
+with the logo from its startup splash (Content/Art/StartupLogo.bmp), from the
+game on this Mac (ref/vengeance/game), at the game's 4:3. Without the
 game, the top of its startup splash from the community installer, or else the
 TribesPad emblem.
 """
@@ -28,6 +28,7 @@ VENGEANCE = R / 'ref/vengeance-research/installer/setup.exe'
 VENGEANCE_SPLASH = 'app/Tribes Vengeance/Content/Art/StartupLogo.bmp'
 VENGEANCE_ROWS = 172  # the logo and character; legal text starts below
 VENGEANCE_SCREENS = R / 'ref/vengeance/game/Content/Art/LoadingScreens.pkg'
+VENGEANCE_LOGO = R / 'ref/vengeance/game/Content/Art/StartupLogo.bmp'
 
 def sha256(path):
     h = hashlib.sha256()
@@ -108,13 +109,15 @@ def phoenix_bitmap(bitmap, palette_file, out):
     colors = palettes.get(index) or next(iter(palettes.values()))
     png(out, width, height, bytes(c for v in chunks[b'data'] for c in colors[v * 4:v * 4 + 3]))
 
-def cached(name, source):
+def cached(name, source, recipe=1):
     marker = CACHE / (name + '.json')
     image = CACHE / (name + '.png')
     digest = sha256(source)
-    if image.exists() and marker.exists() and json.loads(marker.read_text()).get('source_sha256') == digest:
-        return image, None
-    return image, lambda: marker.write_text(json.dumps({'source': str(source.relative_to(R)), 'source_sha256': digest}) + '\n')
+    if image.exists() and marker.exists():
+        known = json.loads(marker.read_text())
+        if known.get('source_sha256') == digest and known.get('recipe', 1) == recipe:
+            return image, None
+    return image, lambda: marker.write_text(json.dumps({'source': str(source.relative_to(R)), 'source_sha256': digest, 'recipe': recipe}) + '\n')
 
 def tribes2():
     if not TRIBES2.exists() or not rewise():
@@ -209,13 +212,46 @@ def dxt1(data, width, height):
                     out[row + 3 * x:row + 3 * x + 3] = colors[bits >> (2 * (4 * y + x)) & 3]
     return bytes(out)
 
+LOGO_BOX = (6, 6, 386, 134)  # x, y, width, height: TRIBES and Vengeance, left of the character
+
+def vengeance_card(screens, splash):
+    """A 1024x768 card in the style of the others: a scene from the game with
+    its logo. MP-Arid's loading screen (cropped to 4:3), darkened at the top,
+    and the logo from the startup splash, its black made transparent."""
+    width, height, scene = unreal_dxt1(screens, 'MP_AridLoadScreen')
+    top = 176
+    out = bytearray(scene[top * width * 3:(top + 768) * width * 3])
+    for y in range(768):
+        shade = 0.38 + 0.62 * min(1.0, y / 420)  # darker sky behind the logo
+        row = y * width * 3
+        for i in range(row, row + width * 3):
+            out[i] = int(out[i] * shade)
+    sw, sh, splash_rgb = bmp_top(splash, LOGO_BOX[1] + LOGO_BOX[3])
+    bx, by, bw, bh = LOGO_BOX
+    scale = 1.55
+    lw, lh = int(bw * scale), int(bh * scale)
+    ox, oy = (width - lw) // 2, 70
+    for y in range(lh):
+        sy = min(bh - 1, int(y / scale))
+        for x in range(lw):
+            sx = min(bw - 1, int(x / scale))
+            i = ((by + sy) * sw + bx + sx) * 3
+            r, g, b = splash_rgb[i], splash_rgb[i + 1], splash_rgb[i + 2]
+            a = min(1.0, max(0, max(r, g, b) - 70) / 50)
+            if a <= 0 or b > r + 20:  # the character beside it is blue
+                continue
+            o = ((oy + y) * width + ox + x) * 3
+            out[o] = int(out[o] * (1 - a) + r * a)
+            out[o + 1] = int(out[o + 1] * (1 - a) + g * a)
+            out[o + 2] = int(out[o + 2] * (1 - a) + b * a)
+    return width, 768, bytes(out)
+
+
 def vengeance():
-    if VENGEANCE_SCREENS.exists():
-        image, done = cached('vengeance', VENGEANCE_SCREENS)
+    if VENGEANCE_SCREENS.exists() and VENGEANCE_LOGO.exists():
+        image, done = cached('vengeance', VENGEANCE_SCREENS, recipe=2)
         if done:
-            png(image, *unreal_dxt1(VENGEANCE_SCREENS, 'loadingDefault'))
-            # Square in the package; the game shows it at 4:3.
-            subprocess.run(['sips', '-z', '768', '1024', str(image)], check=True, stdout=subprocess.DEVNULL)
+            png(image, *vengeance_card(VENGEANCE_SCREENS, VENGEANCE_LOGO))
             done()
         return image
     if not VENGEANCE.exists() or not shutil.which('innoextract'):

@@ -62,6 +62,8 @@ static BOOL tb_vengeance;
 static BOOL tb_vengeance_graphics_pending;   /* a Graphics Quality choice not yet sent to the game */
 static _Atomic int tb_vengeance_playing=-1;
 void tb_vengeance_report_state(int playing){atomic_store(&tb_vengeance_playing,playing);}
+static _Atomic int tb_vengeance_typing;
+void tb_vengeance_report_typing(int typing){atomic_store(&tb_vengeance_typing,typing);}
 /* Vengeance on a server (joined or hosted here): the map it last loaded, from
    the game's own log, is not a campaign map (SP-, CS-) or the menu map (Entry).
    Only the lines added since the last look are read. */
@@ -83,7 +85,9 @@ static BOOL tb_vengeance_on_server(void){
 }
 static _Atomic uint64_t tb_app_frames,tb_app_longest_ns,tb_app_last_ns;
 void tb_app_note_frame(void){
-    uint64_t now=SDL_GetTicksNS(),last=atomic_exchange(&tb_app_last_ns,now);atomic_fetch_add(&tb_app_frames,1);
+    uint64_t now=SDL_GetTicksNS(),last=atomic_exchange(&tb_app_last_ns,now);
+    /* The first frame takes the loading screen away (launcher.m). The engine runs on the main thread. */
+    if(!atomic_fetch_add(&tb_app_frames,1)){extern void tb_launcher_hide_loading(void);tb_launcher_hide_loading();}
     if(last&&now-last>atomic_load(&tb_app_longest_ns))atomic_store(&tb_app_longest_ns,now-last);
 }
 static uint64_t tb_frames(void){return tb_vengeance?atomic_load(&tb_app_frames):tribes_gl4es_presented_frames();}
@@ -1043,7 +1047,7 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
     NSString *state=[NSString stringWithContentsOfFile:tb_state_path() encoding:NSUTF8StringEncoding error:nil];
     /* Vengeance: the engine reports whether the game holds the mouse for aiming. */
     if(tb_vengeance){int p=atomic_load(&tb_vengeance_playing);
-        state=p<0?nil:[NSString stringWithFormat:@"%d 0 %d",p?1:0,tb_vengeance_on_server()?1:0];}
+        state=p<0?nil:[NSString stringWithFormat:@"%d %d %d",p?1:0,!p&&atomic_load(&tb_vengeance_typing)?1:0,tb_vengeance_on_server()?1:0];}
     if(tb_starsiege&&state.length){
         /* Starsiege's export: $TribesPad::state = "1 0 1"; */
         NSRange q=[state rangeOfString:@"\""];if(q.location==NSNotFound)return;
@@ -1143,7 +1147,8 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
     /* Each game's own layout: Starsiege's is starsiege_input.c's. */
     self.hint.text=tb_vengeance?@"RT fire  ·  LT jet  ·  A jump (hold to ski)  ·  LB ski  ·  RB / D-pad left next / previous weapon\n"
         "Y grenade  ·  X pack  ·  B use  ·  D-pad: up zoom level, down objectives, right loadout\n"
-        "Click right stick: zoom  ·  click left stick: third person  ·  Menu: game menu  ·  View: scores":
+        "Click right stick: zoom  ·  click left stick: third person  ·  Menu: game menu  ·  View: scores\n"
+        "Respawn and loadout screens: the right stick moves the pointer, RT clicks  ·  Main menus: the left stick does, A clicks":
         tb_starsiege?@"RT fire  ·  LT jet  ·  A jump / ski  ·  RB / LB next / previous weapon\n"
         "Y grenade  ·  X use pack  ·  B crouch  ·  D-pad: up repair kit, down inventory, left beacon, right quick chat\n"
         "Spawning? Press RT  ·  Menu: game menu  ·  View: scores":
@@ -1767,6 +1772,7 @@ static UIAction *tb_menu_find(UIMenuElement *e,NSString *path,NSString *want){
             "RB / D-pad left: next / previous weapon\nY: grenade · X: pack · B: use\n"
             "D-pad: up zoom level · down objectives · right loadout (hold)\n"
             "Click right stick: zoom on / off · click left stick: third person\nMenu: game menu (save and load) · View: scores\n\n"
+            "RESPAWN AND LOADOUT SCREENS\nRight stick: move the pointer · RT: click\n\n"
             "MENUS\nLeft stick or D-pad: move the cursor · A: click\nX: double-click · B: back · Right stick: scroll",status]];
         return;
     }

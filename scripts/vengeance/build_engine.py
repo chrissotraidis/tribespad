@@ -348,7 +348,8 @@ def prepare(modules, out, report, backend_bindings):
     text = wrappers.read_text()
     for name in sorted(replaced):
         text, count = re.subn(r'^define hidden fastcc void @tbimp_%s\(ptr %%cpu\) \{\n.*?^\}\n' % re.escape(name), '', text, flags=re.M | re.S)
-        assert count == 1, name
+        # 0: removed by an earlier build that reused this backend file.
+        assert count == 1 or (count == 0 and not re.search(r'^define [^\n]*@tbimp_%s\(' % re.escape(name), text, re.M)), name
     wrappers.write_text(text)
     # Every wrapper: the native export table (GetProcAddress) refers to all of them.
     host = {name: {'helper': helper, 'arguments': n, 'returns': True, 'guest_base': True, 'calling_convention': 'cdecl'}

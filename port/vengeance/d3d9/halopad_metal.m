@@ -233,6 +233,20 @@ int halopad_trace_decodes = 0;                        /* DXT decodes on upload (
 double halopad_trace_decode_s = 0, halopad_trace_decode_px = 0;
 double halopad_trace_now(void) { return CFAbsoluteTimeGetCurrent(); }
 static void arena_reset(void);                       /* the transient arena, below */
+/* Running totals for the hitch log: a frame over 100 ms is reported with what it did. */
+static double total_wait_s, total_upload_s, total_gpu_s, total_upload_bytes;
+static int total_skipped, total_uploads, total_libs;
+extern void tribes_trace_read_totals(uint32_t *reads, uint64_t *bytes, double *seconds);   /* ReadFile (port/core/guest_file.c) */
+static void wait_in_flight(void)
+{
+    if (!in_flight) return;
+    double t0 = CFAbsoluteTimeGetCurrent();
+    [in_flight waitUntilCompleted];
+    total_gpu_s += CFAbsoluteTimeGetCurrent() - t0;
+    in_flight = nil;
+}
+static double wait_budget = 0.004;                   /* seconds left this frame for waiting on pipelines */
+static int halopad_trace_skipped;                    /* this window: draws deferred */
 
 int halopad_metal_present(void *p)
 {
@@ -245,17 +259,41 @@ int halopad_metal_present(void *p)
     if (trace < 0) trace = getenv("HALOPAD_TRACE_FRAMES") != NULL;
     if (trace) {
         double now = CFAbsoluteTimeGetCurrent();
-        if (last) { double gap = now - last; frames++; if (gap > longest) longest = gap; if (gap > 0.1) long_gaps++; }
+        uint32_t tribes_trace_reads; uint64_t tribes_trace_read_bytes; double tribes_trace_read_s;
+        tribes_trace_read_totals(&tribes_trace_reads, &tribes_trace_read_bytes, &tribes_trace_read_s);
+        /* HALOPAD HITCH: a frame over 100 ms, and where its time went. "other" is the
+           game's own work (its code, loading objects from packages already read). */
+        static double s_wait, s_upload, s_gpu, s_bytes, s_read;
+        static int s_skipped, s_uploads, s_libs, s_frame;
+        static uint32_t s_reads;
+        static uint64_t s_read_bytes;
+        if (last) {
+            double gap = now - last; frames++; if (gap > longest) longest = gap;
+            if (gap > 0.1) {
+                long_gaps++;
+                double wait = total_wait_s - s_wait, upload = total_upload_s - s_upload, gpu = total_gpu_s - s_gpu, read = tribes_trace_read_s - s_read;
+                fprintf(stderr, "HALOPAD HITCH: %.0f ms at frame %d: shader waits %.0f ms, %d shaders compiled, %d draws deferred; "
+                        "%d texture uploads (%.1f MB, %.0f ms); %u file reads (%.1f MB, %.0f ms); GPU wait %.0f ms; other %.0f ms\n",
+                        gap * 1000, s_frame, wait * 1000, total_libs - s_libs, total_skipped - s_skipped,
+                        total_uploads - s_uploads, (total_upload_bytes - s_bytes) / 1e6, upload * 1000,
+                        tribes_trace_reads - s_reads, (double)(tribes_trace_read_bytes - s_read_bytes) / 1e6, read * 1000, gpu * 1000,
+                        (gap - wait - upload - read - gpu) * 1000);
+            }
+        }
         else since = now;
         last = now;
+        s_wait = total_wait_s; s_upload = total_upload_s; s_gpu = total_gpu_s; s_bytes = total_upload_bytes; s_read = tribes_trace_read_s;
+        s_skipped = total_skipped; s_uploads = total_uploads; s_libs = total_libs; s_reads = tribes_trace_reads; s_read_bytes = tribes_trace_read_bytes;
+        s_frame++;
         if (now - since >= 10) {
-            fprintf(stderr, "HALOPAD FRAMES: %d in %.1f s (%.1f/s), longest gap %.0f ms, %d gaps over 100 ms; %d shader libraries (%.2f s), %d pipelines (%.2f s), %d DXT decodes (%.2f s, %.1f Mpx)\n",
+            fprintf(stderr, "HALOPAD FRAMES: %d in %.1f s (%.1f/s), longest gap %.0f ms, %d gaps over 100 ms; %d shader libraries (%.2f s), %d pipelines (%.2f s), %d DXT decodes (%.2f s, %.1f Mpx); %d draws deferred\n",
                     frames, now - since, frames / (now - since), longest * 1000, long_gaps, trace_libs, trace_lib_s, trace_pipes, trace_pipe_s,
-                    halopad_trace_decodes, halopad_trace_decode_s, halopad_trace_decode_px / 1e6);
+                    halopad_trace_decodes, halopad_trace_decode_s, halopad_trace_decode_px / 1e6, halopad_trace_skipped);
             since = now; frames = 0; longest = 0; long_gaps = 0; trace_libs = trace_pipes = 0; trace_lib_s = trace_pipe_s = 0;
-            halopad_trace_decodes = 0; halopad_trace_decode_s = halopad_trace_decode_px = 0;
+            halopad_trace_decodes = 0; halopad_trace_decode_s = halopad_trace_decode_px = 0; halopad_trace_skipped = 0;
         }
     }
+    wait_budget = 0.004;
     @autoreleasepool {
         end_encoder(t);
         id<MTLCommandBuffer> cb = frame(t);
@@ -266,7 +304,7 @@ int halopad_metal_present(void *p)
            draws this one; wait for the previous frame instead, whose transient arena
            is the one the next frame reuses. Buffers are renamed on upload and texture
            uploads wait for the frame in flight (halopad_metal_texture_upload). */
-        if (in_flight) [in_flight waitUntilCompleted];
+        wait_in_flight();
         in_flight = cb;
         arena_reset();                                    /* the arena the previous frame used: the GPU is done with it */
     }
@@ -307,6 +345,7 @@ void halopad_metal_read_image(void *p, uint32_t *out, uint32_t w, uint32_t h)
 /* ---- frame, pipelines, resources and draws ---- */
 
 static NSMutableDictionary *libraries;
+static NSLock *libraries_lock;                       /* pipelines build on other threads too */
 static id<MTLBuffer> constant_attr;                 /* float4(0, 0, 0, 1) for missing vertex inputs */
 
 /* Pipeline, depth-stencil and sampler states by their descriptions: C hash tables, since
@@ -341,32 +380,31 @@ static void cache_put(hp_cache *c, const void *key, uint32_t length, uint64_t ha
 
 static id<MTLFunction> function(const char *src, NSString *name, char *err, uint32_t errlen)
 {
-    if (!libraries) libraries = [NSMutableDictionary new];
     NSString *s = [NSString stringWithUTF8String:src];
+    [libraries_lock lock];
     id<MTLLibrary> lib = libraries[s];
+    [libraries_lock unlock];
     if (!lib) {
         NSError *e = nil;
         double t0 = CFAbsoluteTimeGetCurrent();
         lib = [gpu newLibraryWithSource:s options:nil error:&e];
-        trace_libs++; trace_lib_s += CFAbsoluteTimeGetCurrent() - t0;
         if (!lib) { snprintf(err, errlen, "%s", e.localizedDescription.UTF8String); return nil; }
+        [libraries_lock lock];
+        trace_libs++; total_libs++; trace_lib_s += CFAbsoluteTimeGetCurrent() - t0;
         libraries[s] = lib;
+        [libraries_lock unlock];
     }
     return [lib newFunctionWithName:name];
 }
 
-void *halopad_metal_pipeline(const hp_pipeline_desc *d, char *err, uint32_t errlen)
+static id<MTLRenderPipelineState> build_pipeline(const hp_pipeline_desc *d, char *err, uint32_t errlen)
 {
-    ensure_app();
-    uint64_t hash;
-    void *found = cache_get(&pipelines, d, sizeof *d, &hash);
-    if (found) return found;
     id<MTLRenderPipelineState> ps;
     @autoreleasepool {
         MTLRenderPipelineDescriptor *pd = [MTLRenderPipelineDescriptor new];
         pd.vertexFunction = function(d->vs_msl, @"hp_vs", err, errlen);
         pd.fragmentFunction = function(d->ps_msl, @"hp_ps", err, errlen);
-        if (!pd.vertexFunction || !pd.fragmentFunction) return NULL;
+        if (!pd.vertexFunction || !pd.fragmentFunction) return nil;
         MTLVertexDescriptor *vd = [MTLVertexDescriptor vertexDescriptor];
         for (uint32_t i = 0; i < d->nattr; i++) {
             vd.attributes[d->attr[i].reg].format = d->attr[i].format;
@@ -394,11 +432,70 @@ void *halopad_metal_pipeline(const hp_pipeline_desc *d, char *err, uint32_t errl
         NSError *e = nil;
         double t0 = CFAbsoluteTimeGetCurrent();
         ps = [gpu newRenderPipelineStateWithDescriptor:pd error:&e];
+        [libraries_lock lock];
         trace_pipes++; trace_pipe_s += CFAbsoluteTimeGetCurrent() - t0;
-        if (!ps) { snprintf(err, errlen, "%s", e.localizedDescription.UTF8String); return NULL; }
+        [libraries_lock unlock];
+        if (!ps) { snprintf(err, errlen, "%s", e.localizedDescription.UTF8String); return nil; }
     }
-    cache_put(&pipelines, d, sizeof *d, hash, ps);
-    return (__bridge void *)ps;
+    return ps;
+}
+
+/* TribesPad: a new shader used to compile on the game's thread the first time it
+   was drawn, 20 to 40 ms each (iOS keeps compiled shaders between launches, so this
+   happens once per device): a new weapon, effect or map froze the game while dozens
+   compiled one after another. Pipelines now build on other threads, several at once.
+   A draw waits for its pipeline within a budget of a few milliseconds a frame (enough
+   for one iOS already has); past that, a draw to the back buffer is skipped until its
+   pipeline is ready, a frame or two later. A draw into a texture always waits, since
+   the game may draw some of those only once. */
+@interface HPPendingPipeline : NSObject {
+@public
+    dispatch_semaphore_t done;
+    id<MTLRenderPipelineState> pipeline;
+    char err[512];
+}
+@end
+@implementation HPPendingPipeline
+@end
+static hp_cache pending_pipelines;
+
+void *halopad_metal_pipeline_async(const hp_pipeline_desc *d, int may_skip, int *skipped, char *err, uint32_t errlen)
+{
+    ensure_app();
+    *skipped = 0;
+    if (!libraries_lock) { libraries_lock = [NSLock new]; libraries = [NSMutableDictionary new]; }
+    uint64_t hash, pending_hash;
+    void *found = cache_get(&pipelines, d, sizeof *d, &hash);
+    if (found) return found;
+    HPPendingPipeline *p = (__bridge HPPendingPipeline *)cache_get(&pending_pipelines, d, sizeof *d, &pending_hash);
+    if (!p) {
+        p = [HPPendingPipeline new];
+        p->done = dispatch_semaphore_create(0);
+        hp_pipeline_desc copy = *d;                   /* shader sources live for the process */
+        HPPendingPipeline *q = p;
+        dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE, 0), ^{
+            q->pipeline = build_pipeline(&copy, q->err, sizeof q->err);
+            dispatch_semaphore_signal(q->done);
+        });
+        cache_put(&pending_pipelines, d, sizeof *d, pending_hash, p);
+    }
+    double t0 = CFAbsoluteTimeGetCurrent();
+    double budget = may_skip ? (wait_budget > 0 ? wait_budget : 0) : -1;
+    long waited = dispatch_semaphore_wait(p->done, budget < 0 ? DISPATCH_TIME_FOREVER : dispatch_time(DISPATCH_TIME_NOW, (int64_t)(budget * 1e9)));
+    double spent = CFAbsoluteTimeGetCurrent() - t0;
+    total_wait_s += spent;
+    if (may_skip) wait_budget -= spent;
+    if (waited) { *skipped = 1; halopad_trace_skipped++; total_skipped++; return NULL; }
+    dispatch_semaphore_signal(p->done);               /* stays signalled for any later look */
+    if (!p->pipeline) { snprintf(err, errlen, "%s", p->err); return NULL; }
+    cache_put(&pipelines, d, sizeof *d, hash, p->pipeline);
+    return (__bridge void *)p->pipeline;
+}
+
+void *halopad_metal_pipeline(const hp_pipeline_desc *d, char *err, uint32_t errlen)
+{
+    int skipped;
+    return halopad_metal_pipeline_async(d, 0, &skipped, err, errlen);
 }
 
 void *halopad_metal_depth_state(const hp_depth_desc *d)
@@ -525,9 +622,12 @@ void halopad_metal_texture_upload(void *tex, uint32_t level, uint32_t slice, con
                                   uint32_t bytes_per_image, uint32_t w, uint32_t h, uint32_t d)
 {
     id<MTLTexture> t = (__bridge id<MTLTexture>)tex;
-    if (in_flight) { [in_flight waitUntilCompleted]; in_flight = nil; }   /* the frame in flight may still sample it */
+    wait_in_flight();                                 /* the frame in flight may still sample it */
+    double t0 = CFAbsoluteTimeGetCurrent();
     [t replaceRegion:MTLRegionMake3D(0, 0, 0, w, h, d) mipmapLevel:level slice:slice withBytes:data
          bytesPerRow:bytes_per_row bytesPerImage:bytes_per_image];
+    total_upload_s += CFAbsoluteTimeGetCurrent() - t0; total_uploads++;
+    total_upload_bytes += (double)(bytes_per_image ? bytes_per_image : bytes_per_row * h) * d;
 }
 
 static void end_encoder(hp_target *t)
@@ -559,6 +659,12 @@ void halopad_metal_draw(void *target, const hp_draw_desc *d)
         if (!t->vis) t->vis = [gpu newBufferWithLength:8 * VIS_SLOTS options:MTLResourceStorageModeShared];
         rp.visibilityResultBuffer = t->vis;
         t->enc = [frame(t) renderCommandEncoderWithDescriptor:rp];
+        /* TribesPad: depth clamped, not clipped, at the near and far planes. Tribes:
+           Vengeance's first-person weapons reach through the near plane, and Metal cut
+           those parts off: the Blaster, Spinfusor and grenade launcher looked torn.
+           HALOPAD_DEPTH_CLIP=1 keeps clipping (to compare). */
+        { static int clip = -1; if (clip < 0) clip = getenv("HALOPAD_DEPTH_CLIP") != NULL;
+          if (!clip) [t->enc setDepthClipMode:MTLDepthClipModeClamp]; }
         if (t->vis_active) {                                /* a query spanning passes: a new counter per pass */
             if (t->vis_used) { t->vis_last = t->vis_next++ % VIS_SLOTS; ((uint64_t *)t->vis.contents)[t->vis_last] = 0; }
             t->vis_used = 1;

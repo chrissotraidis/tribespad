@@ -499,6 +499,11 @@ static uint32_t draw(device *d, uint32_t type, uint32_t prims, uint32_t start, i
     hp_ff_vs_key fvk;
     if (vs) {
         pd.vs_msl = vs_source(vs);
+        /* HALOPAD_TRACE_DRAWS_MSL: each traced vertex shader's Metal source, once. */
+        if (halopad_d3d9_tracing() && getenv("HALOPAD_TRACE_DRAWS_MSL") && !vs->traced) {
+            vs->traced = 1;
+            fprintf(stderr, "HALOPAD DRAW   vs %08x MSL:\n%s\n", d->vs, pd.vs_msl);
+        }
         memcpy(in_usage, vs->in_usage, 16); memcpy(in_index, vs->in_index, 16); memcpy(in_used, vs->in_used, 16);
     } else {
         static const uint8_t comps[17] = {1, 2, 3, 4, 4, 4, 2, 4, 4, 2, 4, 2, 4, 3, 3, 2, 4};
@@ -548,7 +553,10 @@ static uint32_t draw(device *d, uint32_t type, uint32_t prims, uint32_t start, i
     pd.depth = (uint8_t)bound.depth;
     pd.color_format = bound.mtl;
     char err[512];
-    dd.pipeline = halopad_metal_pipeline(&pd, err, sizeof err);
+    int skipped;
+    int halopad_d3d9_query_counting(void);
+    dd.pipeline = halopad_metal_pipeline_async(&pd, d->rt == d->backbuffer && !halopad_d3d9_query_counting(), &skipped, err, sizeof err);
+    if (skipped) return D3D_OK;                                     /* drawn once its pipeline is ready (halopad_metal.m) */
     if (!dd.pipeline) hp_unsupported("draw", "Metal pipeline: %s", err);
     if (pd.depth) {
         hp_depth_desc ds;

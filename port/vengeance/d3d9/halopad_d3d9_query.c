@@ -24,6 +24,10 @@ enum { Q_NEW, Q_BUILDING, Q_ISSUED, Q_EMPTY };
 typedef struct { uint32_t guest, device, type, state, first, last; uint64_t gen; } query;
 
 static uint32_t counting;                  /* the occlusion query now counting, if any */
+/* TribesPad: a draw is never deferred while a query counts (halopad_d3d9_draw.c), or
+   the game would read too few pixels and hide what it drew. */
+int halopad_d3d9_query_counting(void) { return counting != 0; }
+static uint32_t traced_queries;            /* VENGEANCE_TRACE_QUERIES: the first few, and how they answer */
 
 static query *Q(uint32_t g) { return halopad_com_state("IDirect3DQuery9", g); }
 static device *dev(uint32_t g) { return halopad_com_state("IDirect3DDevice9", g); }
@@ -47,6 +51,8 @@ uint32_t hpcom_IDirect3DDevice9_CreateQuery_c(uint32_t g, uint32_t type, uint32_
     dev(g);
     if (type != 9) hp_unsupported("IDirect3DDevice9::CreateQuery", "query type %u", type);   /* 9: OCCLUSION */
     if (!out) return D3D_OK;                                        /* a support check */
+    /* HALOPAD_NO_QUERIES: occlusion queries unavailable, as on hardware without them. */
+    if (getenv("HALOPAD_NO_QUERIES")) return 0x8876086Au;           /* D3DERR_NOTAVAILABLE */
     query *q = calloc(1, sizeof *q);
     q->device = g; q->type = type;
     q->guest = halopad_com_new("IDirect3DQuery9", 4, q, q_destroy);
@@ -99,5 +105,6 @@ uint32_t hpcom_IDirect3DQuery9_GetData_c(uint32_t g, uint32_t data, uint32_t siz
     uint64_t n = q->state == Q_EMPTY ? 0 : halopad_metal_visibility_read(dev(q->device)->target, q->first, q->last, q->gen);
     q->gen = 0;                                                     /* read once submitted */
     if (data) wr32(data, n > 0xFFFFFFFFu ? 0xFFFFFFFFu : (uint32_t)n);
+    if (traced_queries < 400 && getenv("HALOPAD_TRACE_QUERIES")) { traced_queries++; fprintf(stderr, "HALOPAD QUERY %08x: %llu pixels\n", g, (unsigned long long)n); }
     return D3D_OK;
 }
