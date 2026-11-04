@@ -61,6 +61,8 @@ ss = load('starsiege_build', R / 'scripts/starsiege/build_engine.py')
 X87_DOUBLE = os.environ.get('VENGEANCE_X87', 'double') == 'double'
 # The binary64 runtime as bitcode for the translated modules (compile_and_link), not a host object.
 INLINE_X87 = R / 'port/vengeance/vengeance_float64_inline.c'
+# Shift, dispatch-target and fs:[0] helpers, inlined into the translated modules the same way.
+INLINE_HELPERS = R / 'port/vengeance/vengeance_helpers_inline.c'
 RUNTIME = [p for p in ss.RUNTIME if p.name != 'tribes_float80.c' and not (X87_DOUBLE and p.name == 'starsiege_x87.c')]
 
 def set_platform(platform):
@@ -70,7 +72,7 @@ def set_platform(platform):
     SDK, TARGET = ss.SDK, ss.TARGET
 # The host: port/vengeance (C and Objective-C), with its Direct3D 9 on Metal in d3d9/.
 # The in-app installer (port/vengeance/installer) is the iOS app's, built by scripts/build-vengeance-installer.py.
-HOST = [p for p in sorted((R / 'port/vengeance').glob('**/*.c')) if p.name != INLINE_X87.name and 'installer' not in p.parts] + sorted((R / 'port/vengeance').glob('**/*.m'))
+HOST = [p for p in sorted((R / 'port/vengeance').glob('**/*.c')) if p.name not in (INLINE_X87.name, INLINE_HELPERS.name) and 'installer' not in p.parts] + sorted((R / 'port/vengeance').glob('**/*.m'))
 D3D9 = R / 'port/vengeance/d3d9'
 COM_BASE = 0xfff80000  # COM method addresses: clear of TribesPad's graphics (0xfffa....) and system (0xfffb....) exports
 # Host routes the guest calls (cdecl), at Starsiege's addresses: SDL's allocator callbacks.
@@ -333,7 +335,7 @@ def prepare(modules, out, report, backend_bindings):
                                 'define hidden fastcc void @vengeance_nested_handler(ptr %cpu) {\n %ret = call i32 @vg_nested_handler(ptr %cpu)\n'
                                 ' %fn = call ptr @tribes_lookup(i32 %ret)\n musttail call fastcc void %fn(ptr %cpu)\n ret void\n}\n')
     assert len({v for v, _ in entries}) == len(entries), 'duplicate dispatch address'
-    (out / 'dispatch.ll').write_text(fast_dispatch(va.dispatch_ir(entries), len(entries)))
+    (out / 'dispatch.ll').write_text(fast_dispatch(va.dispatch_ir(entries)))
     bindings = json.loads((R / 'port/llasm-runtime/win32-bindings.json').read_text())
     for config in [R / 'config/starsiege/bindings.json', R / 'config/vengeance/bindings.json']:
         extra = json.loads(config.read_text())
@@ -429,11 +431,11 @@ def prepare(modules, out, report, backend_bindings):
     (out / 'imports.json').write_text(json.dumps({'windows': [{'name': n, 'dll': windows[n], 'guest_va': wva[n], 'bound': n in used} for n in names]}, indent=1) + '\n')
     return modules
 
-def fast_dispatch(ir, count):
+def fast_dispatch(ir):
     """Every indirect jump passes through tribes_dispatch. Check guest_dispatch.c's cache
-    here (address, and table index plus one, in one 64-bit word) and jump straight to a
-    hit; a miss asks tribes_lookup, which also fills the cache. Vengeance has no
-    publication gates (tribes_dispatch_permitted is always true for it)."""
+    here (the address, and the function's offset from tribes_return_to_host, in one
+    64-bit word: TRIBESPAD_FIXED_DISPATCH) and jump straight to a hit; a miss asks
+    tribes_lookup, which also fills the cache. Vengeance has no publication gates."""
     old = ('define hidden fastcc void @tribes_dispatch(ptr %cpu) nounwind {\n'
            '  %mailbox = getelementptr i8, ptr %cpu, i64 172\n'
            '  %target = load i32, ptr %mailbox\n'
@@ -442,14 +444,14 @@ def fast_dispatch(ir, count):
            '  ret void\n'
            '}\n')
     assert ir.count(old) == 1, 'dispatch stub changed'
-    new = ('@tribes_dispatch_cache = external global [4096 x i64]\n'
+    new = ('@tribes_dispatch_cache = external global [65536 x i64]\n'
            'define hidden fastcc void @tribes_dispatch(ptr %cpu) nounwind {\n'
            '  %mailbox = getelementptr i8, ptr %cpu, i64 172\n'
            '  %target = load i32, ptr %mailbox\n'
            '  %mix = mul i32 %target, -1640531535\n'
-           '  %slot = lshr i32 %mix, 20\n'
+           '  %slot = lshr i32 %mix, 16\n'
            '  %slot64 = zext i32 %slot to i64\n'
-           '  %entryp = getelementptr [4096 x i64], ptr @tribes_dispatch_cache, i64 0, i64 %slot64\n'
+           '  %entryp = getelementptr [65536 x i64], ptr @tribes_dispatch_cache, i64 0, i64 %slot64\n'
            '  %entry = load atomic i64, ptr %entryp monotonic, align 8\n'
            '  %low = trunc i64 %entry to i32\n'
            '  %index = lshr i64 %entry, 32\n'
@@ -458,18 +460,18 @@ def fast_dispatch(ir, count):
            '  %hit = and i1 %same, %filled\n'
            '  br i1 %hit, label %fast, label %slow\n'
            'fast:\n'
-           '  %at = sub i64 %index, 1\n'
-           '  %fnp = getelementptr [%d x ptr], ptr @tribes_dispatch_fns, i64 0, i64 %%at\n'
-           '  %%cached = load ptr, ptr %%fnp\n'
-           '  musttail call fastcc void %%cached(ptr %%cpu)\n'
+           '  %offset32 = trunc i64 %index to i32\n'
+           '  %offset = sext i32 %offset32 to i64\n'
+           '  %base = ptrtoint ptr @tribes_return_to_host to i64\n'
+           '  %address = add i64 %base, %offset\n'
+           '  %cached = inttoptr i64 %address to ptr\n'
+           '  musttail call fastcc void %cached(ptr %cpu)\n'
            '  ret void\n'
            'slow:\n'
-           '  %%fn = call ptr @tribes_lookup(i32 %%target)\n'
-           '  musttail call fastcc void %%fn(ptr %%cpu)\n'
+           '  %fn = call ptr @tribes_lookup(i32 %target)\n'
+           '  musttail call fastcc void %fn(ptr %cpu)\n'
            '  ret void\n'
            '}\n')
-    head, tail = new.split('  %fnp = ', 1)
-    new = head + ('  %%fnp = ' + tail) % count
     return ir.replace(old, new)
 
 def compile_and_link(modules, out, report, graphics):
@@ -487,6 +489,10 @@ def compile_and_link(modules, out, report, graphics):
         # instruction; inlined, they no longer cost a call each. A compiler setting, so the
         # shared runtime source (pinned for Tribes 2) stays as it is.
         hot = ['-mllvm', '-inline-threshold=1000'] if source.name == 'vengeance_float80.c' else []
+        if source.name == 'guest_dispatch.c':  # no publication gates, and fixed native routes to cache (guest_dispatch.c)
+            hot = ['-DTRIBESPAD_FIXED_DISPATCH']
+        if source.name == 'guest_fls.c':  # FlsGetValue without a fresh CPU copy (guest_fls.c)
+            hot = ['-DTRIBESPAD_FLS_QUICK_GET']
         key = sha(source) + (sha(out / 'vengeance_engine.inc') if source.parent.name == 'vengeance' else '') + ' '.join(flags + hot)
         if source.parent == D3D9 or source.parent.name == 'vengeance':  # the Direct3D code's headers, and Vengeance's own
             key += ''.join(sha(h) for h in sorted(D3D9.glob('*.h')) + sorted((R / 'port/vengeance').glob('*.h')))
@@ -517,10 +523,17 @@ def compile_and_link(modules, out, report, graphics):
             subprocess.run(['clang'] + TARGET + flags + ['-I', str(R / 'port/llasm-support'), '-c', '-emit-llvm', str(INLINE_X87), '-o', str(bc)], check=True)
             cache[str(INLINE_X87)] = key
         inline = ['-Xclang', '-mlink-builtin-bitcode', '-Xclang', str(bc)]
+    helpers = out / 'obj' / 'helpers-inline.bc'
+    key = ''.join(sha(f) for f in [INLINE_HELPERS, R / 'port/core/shift.c', R / 'port/core/shift.h', R / 'port/llasm-support/tribes_shift.c',
+                                  R / 'port/llasm-support/llasm_cpu.h']) + ' '.join(flags)
+    if cache.get(str(INLINE_HELPERS)) != key or not helpers.exists():
+        subprocess.run(['clang'] + TARGET + flags + ['-I', str(R / 'port/llasm-support'), '-c', '-emit-llvm', str(INLINE_HELPERS), '-o', str(helpers)], check=True)
+        cache[str(INLINE_HELPERS)] = key
+    inline += ['-Xclang', '-mlink-builtin-bitcode', '-Xclang', str(helpers)]
     for m in modules:
         ll = out / pathlib.Path(m).stem / 'module.ll'
         obj = out / 'obj' / ('module_' + pathlib.Path(m).stem + '.o')
-        key = sha(ll) + OPT + PLATFORM + ('' if PLATFORM == 'macos' else ' weak-common') + (' x87-inline ' + sha(bc) if inline else '')
+        key = sha(ll) + OPT + PLATFORM + ('' if PLATFORM == 'macos' else ' weak-common') + (' x87-inline ' + sha(bc) if X87_DOUBLE else '') + ' helpers ' + sha(helpers)
         if cache.get(str(ll)) != key or not obj.exists():
             say('%s: compiling translated code (%s)' % (m, OPT))
             start = time.monotonic()

@@ -435,6 +435,10 @@ if bundled:
   (vengeance/'inputs.json').write_text(json.dumps({k:inputs[k] for k in ['title','archive','root','excluded','bytes','game']},separators=(',',':')))
   # The app refreshes its copy of the game folder's Program files when this changes (port/apple/vengeance_paths.m).
   (vengeance/'stamp.txt').write_text(hashlib.sha256(json.dumps(inputs['game'],sort_keys=True).encode()).hexdigest()[:16]+'\n')
+  # The game's shaders, built once in the background at first launch (halopad_metal.m, warm_shaders): scripts/vengeance/shader_warmup.py.
+  shaders=R/'generated/vengeance/vengeance-shaders.txt'
+  if shaders.exists():shutil.copyfile(shaders,vengeance/'vengeance-shaders.txt')
+  elif (vengeance/'vengeance-shaders.txt').exists():(vengeance/'vengeance-shaders.txt').unlink()
   config+='#define TB_VENGEANCE 1\n'
  elif not mac and (data/'Vengeance').exists():shutil.rmtree(data/'Vengeance')
 else:

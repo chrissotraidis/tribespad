@@ -105,6 +105,6 @@ uint32_t hpcom_IDirect3DQuery9_GetData_c(uint32_t g, uint32_t data, uint32_t siz
     uint64_t n = q->state == Q_EMPTY ? 0 : halopad_metal_visibility_read(dev(q->device)->target, q->first, q->last, q->gen);
     q->gen = 0;                                                     /* read once submitted */
     if (data) wr32(data, n > 0xFFFFFFFFu ? 0xFFFFFFFFu : (uint32_t)n);
-    if (traced_queries < 400 && getenv("HALOPAD_TRACE_QUERIES")) { traced_queries++; fprintf(stderr, "HALOPAD QUERY %08x: %llu pixels\n", g, (unsigned long long)n); }
+    if (traced_queries < 400 && getenv("HALOPAD_TRACE_QUERIES")) { traced_queries++; fprintf(stderr, "TribesPad query %08x: %llu pixels\n", g, (unsigned long long)n); }
     return D3D_OK;
 }

@@ -213,6 +213,7 @@ uint32_t tribes_lcmap_string_ex(uint64_t base,uint32_t locale,uint32_t flags,uin
 }
 
 static uint8_t reverse_character(uint16_t ch) {
+    if(ch<0x80)return (uint8_t)ch;   /* CP1252 is ASCII below 0x80: no search (Unreal converts every name and path) */
     size_t left=0,right=sizeof cp1252_from_unicode/sizeof cp1252_from_unicode[0];
     while(left<right) {
         size_t middle=left+(right-left)/2;
@@ -292,6 +293,7 @@ static uint16_t reverse_next(uint64_t base,uint32_t input,uint32_t length,uint32
     uint16_t first;memcpy(&first,(void *)(uintptr_t)(base+input+2ull*(*at)++),2);
     if(!(flags&0x200)||*at==length)return first;
     uint16_t second;memcpy(&second,(void *)(uintptr_t)(base+input+2ull*(*at)),2);
+    if(second<0x300)return first;   /* every composition's second unit is a combining mark (U+0300 and up) */
     uint32_t key=((uint32_t)first<<16)|second;size_t lo=0,hi=sizeof nls_composition/sizeof nls_composition[0];
     while(lo<hi){size_t mid=lo+(hi-lo)/2;uint32_t k=((uint32_t)nls_composition[mid].first<<16)|nls_composition[mid].second;if(k<key)lo=mid+1;else hi=mid;}
     if(lo<sizeof nls_composition/sizeof nls_composition[0]&&nls_composition[lo].first==first&&nls_composition[lo].second==second){

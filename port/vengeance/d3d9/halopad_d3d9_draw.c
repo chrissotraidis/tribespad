@@ -428,7 +428,7 @@ static uint32_t draw(device *d, uint32_t type, uint32_t prims, uint32_t start, i
         char callers[64];
         halopad_d3d9_trace_callers(callers, sizeof callers);
         const uint32_t *rs = d->rs;
-        fprintf(stderr, "HALOPAD DRAW f%u #%u type %u prims %u%s%s vs %08x ps %08x fvf %x rt %08x blend %u %u/%u op %u z %u/%u func %u atest %u/%u ref %u cw %x"
+        fprintf(stderr, "TribesPad draw f%u #%u type %u prims %u%s%s vs %08x ps %08x fvf %x rt %08x blend %u %u/%u op %u z %u/%u func %u atest %u/%u ref %u cw %x"
                 " tex %08x %08x %08x %08x vp %u,%u %ux%u from%s\n",
                 halopad_d3d9_frame, n++, type, prims, up ? " UP" : "", ib ? " indexed" : "", d->vs, d->ps, d->fvf, d->rt,
                 rs[27], rs[19], rs[20], rs[171], rs[7], rs[14], rs[23], rs[15], rs[25], rs[24] & 0xFF, rs[168],
@@ -436,27 +436,27 @@ static uint32_t draw(device *d, uint32_t type, uint32_t prims, uint32_t start, i
                 d->viewport[0], d->viewport[1], d->viewport[2], d->viewport[3], callers);
         for (int s = 0; s < 2; s++) if (d->texture[s]) {
             res *t = halopad_com_state(halopad_com_interface(d->texture[s]), d->texture[s]);
-            if (t) fprintf(stderr, "HALOPAD DRAW   tex%d %08x format %u %ux%u levels %u usage %x pool %u\n", s, d->texture[s], t->format, t->width, t->height, t->levels, t->usage, t->pool);
+            if (t) fprintf(stderr, "TribesPad draw   tex%d %08x format %u %ux%u levels %u usage %x pool %u\n", s, d->texture[s], t->format, t->width, t->height, t->levels, t->usage, t->pool);
         }
         for (int s = 0; s < 3; s++)
-            fprintf(stderr, "HALOPAD DRAW   stage%d color %u(%x,%x,%x) alpha %u(%x,%x,%x) result %x texcoord %x tfactor %08x\n", s,
+            fprintf(stderr, "TribesPad draw   stage%d color %u(%x,%x,%x) alpha %u(%x,%x,%x) result %x texcoord %x tfactor %08x\n", s,
                     d->tss[s][1], d->tss[s][2], d->tss[s][3], d->tss[s][26], d->tss[s][4], d->tss[s][5], d->tss[s][6], d->tss[s][27],
                     d->tss[s][28], d->tss[s][11], d->rs[60]);
-        fprintf(stderr, "HALOPAD DRAW   depth %g..%g bias %g slope %g stencil %u fog %u/%08x/%u scissor %u clip %u\n", f32(d->viewport[4]), f32(d->viewport[5]),
+        fprintf(stderr, "TribesPad draw   depth %g..%g bias %g slope %g stencil %u fog %u/%08x/%u scissor %u clip %u\n", f32(d->viewport[4]), f32(d->viewport[5]),
                 f32(rs[195]), f32(rs[175]), rs[52], rs[28], rs[34], rs[35], rs[174], rs[136]);
         if (up) {
             for (uint32_t i = 0; i < (prims <= 2 ? prims + 2 : 1); i++) {
                 const uint32_t *w = (const uint32_t *)G(up + i * up_stride);
                 const float *v = (const float *)w;
-                fprintf(stderr, "HALOPAD DRAW   vertex %u:", i);
+                fprintf(stderr, "TribesPad draw   vertex %u:", i);
                 for (uint32_t k = 0; k < up_stride / 4 && k < 8; k++) fprintf(stderr, " %g/%08x", v[k], w[k]);
                 fprintf(stderr, "\n");
             }
         }
         if (d->vs && getenv("HALOPAD_TRACE_DRAWS_VSCONSTS"))
-            for (int c = 0; c < 12; c++) fprintf(stderr, "HALOPAD DRAW   vs c%d = %g %g %g %g\n", c, d->vsf[c][0], d->vsf[c][1], d->vsf[c][2], d->vsf[c][3]);
+            for (int c = 0; c < 12; c++) fprintf(stderr, "TribesPad draw   vs c%d = %g %g %g %g\n", c, d->vsf[c][0], d->vsf[c][1], d->vsf[c][2], d->vsf[c][3]);
         if (d->ps && getenv("HALOPAD_TRACE_DRAWS_CONSTS"))
-            for (int c = 0; c < 8; c++) fprintf(stderr, "HALOPAD DRAW   ps c%d = %g %g %g %g\n", c, d->psf[c][0], d->psf[c][1], d->psf[c][2], d->psf[c][3]);
+            for (int c = 0; c < 8; c++) fprintf(stderr, "TribesPad draw   ps c%d = %g %g %g %g\n", c, d->psf[c][0], d->psf[c][1], d->psf[c][2], d->psf[c][3]);
     }
     check_states(d);
     hp_bound bound = halopad_d3d9_bind_targets(d);
@@ -502,7 +502,7 @@ static uint32_t draw(device *d, uint32_t type, uint32_t prims, uint32_t start, i
         /* HALOPAD_TRACE_DRAWS_MSL: each traced vertex shader's Metal source, once. */
         if (halopad_d3d9_tracing() && getenv("HALOPAD_TRACE_DRAWS_MSL") && !vs->traced) {
             vs->traced = 1;
-            fprintf(stderr, "HALOPAD DRAW   vs %08x MSL:\n%s\n", d->vs, pd.vs_msl);
+            fprintf(stderr, "TribesPad draw   vs %08x MSL:\n%s\n", d->vs, pd.vs_msl);
         }
         memcpy(in_usage, vs->in_usage, 16); memcpy(in_index, vs->in_index, 16); memcpy(in_used, vs->in_used, 16);
     } else {

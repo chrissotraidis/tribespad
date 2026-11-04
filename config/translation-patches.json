@@ -54,7 +54,7 @@
   },
   {
    "path": "generated/integration-review/guest-threads/macos/result.json",
-   "sha256": "fb2dd6c7ddd25415e6a00660e4e6250d366ec656da360705d16e272deaff630b",
+   "sha256": "2b340dc1973582df86ed444c5370c6ea422e7e96acb693709647eb693043c588",
    "base": "none",
    "patch": "596b01e8eb069ceb.zst"
   },

@@ -8,6 +8,8 @@
  * depth/stencil buffer is Depth32Float_Stencil8. Present copies the back buffer into the
  * window's drawable through the window's gamma table. */
 #import "halopad_host.h"
+#include <pthread.h>
+#include <stddef.h>
 #include <stdint.h>
 #include "halopad_metal.h"
 
@@ -31,6 +33,9 @@ static id<MTLCommandQueue> queue;
 static void end_encoder(hp_target *t);
 static id<MTLCommandBuffer> frame(hp_target *t);
 static id<MTLCommandBuffer> in_flight;               /* TribesPad: the last presented frame, possibly still on the GPU */
+static void warm_shaders(void);
+static NSMutableDictionary *libraries;              /* compiled shader sources */
+static NSLock *libraries_lock;                       /* pipelines build on other threads too */
 
 static void ensure_app(void)
 {
@@ -40,7 +45,9 @@ static void ensure_app(void)
     halopad_host_app();
     gpu = MTLCreateSystemDefaultDevice();
     queue = [gpu newCommandQueue];
-    if (!gpu || !queue) { fprintf(stderr, "HALOPAD TRAP: no Metal device\n"); abort(); }
+    if (!gpu || !queue) { fprintf(stderr, "TribesPad trap: no Metal device\n"); abort(); }
+    libraries_lock = [NSLock new]; libraries = [NSMutableDictionary new];
+    warm_shaders();
 }
 
 
@@ -65,12 +72,12 @@ static void present_texture(hp_window *win, id<MTLCommandBuffer> cb, id<MTLTextu
         pd.fragmentFunction = [lib newFunctionWithName:@"hp_ps"];
         pd.colorAttachments[0].pixelFormat = MTLPixelFormatBGRA8Unorm;
         present_pipe = [gpu newRenderPipelineStateWithDescriptor:pd error:&e];
-        if (!present_pipe) { fprintf(stderr, "HALOPAD TRAP: present pipeline: %s\n", e.localizedDescription.UTF8String); abort(); }
+        if (!present_pipe) { fprintf(stderr, "TribesPad trap: present pipeline: %s\n", e.localizedDescription.UTF8String); abort(); }
     }
     static int traced = -1, n_off, n_nil, n_shown;
     if (traced < 0) traced = getenv("HALOPAD_TRACE_WINDOWS") != NULL;
     if (traced && (n_off + n_nil + n_shown) % 300 == 299)
-        fprintf(stderr, "HALOPAD PRESENT: %d off screen, %d without a drawable, %d shown (layer %.0fx%.0f, drawable %.0fx%.0f, src %lux%lu)\n",
+        fprintf(stderr, "TribesPad present: %d off screen, %d without a drawable, %d shown (layer %.0fx%.0f, drawable %.0fx%.0f, src %lux%lu)\n",
                 n_off, n_nil, n_shown, win->layer.bounds.size.width, win->layer.bounds.size.height,
                 win->layer.drawableSize.width, win->layer.drawableSize.height, (unsigned long)src.width, (unsigned long)src.height);
     if (!win->on_screen) { n_off++; return; }                      /* nothing to show it on */
@@ -108,7 +115,7 @@ void halopad_host_window_gamma(void *p, const uint16_t ramp[768])
     hp_window *w = p;
     for (int i = 0; i < 768; i++) w->lut[i] = ramp[i] / 65535.0f;
     if (getenv("HALOPAD_TRACE_WINDOWS"))
-        fprintf(stderr, "HALOPAD GAMMA: ramp r %u %u %u  g %u %u %u  b %u %u %u\n", ramp[0], ramp[128], ramp[255],
+        fprintf(stderr, "TribesPad gamma: ramp r %u %u %u  g %u %u %u  b %u %u %u\n", ramp[0], ramp[128], ramp[255],
                 ramp[256], ramp[384], ramp[511], ramp[512], ramp[640], ramp[767]);
 }
 
@@ -261,7 +268,7 @@ int halopad_metal_present(void *p)
         double now = CFAbsoluteTimeGetCurrent();
         uint32_t tribes_trace_reads; uint64_t tribes_trace_read_bytes; double tribes_trace_read_s;
         tribes_trace_read_totals(&tribes_trace_reads, &tribes_trace_read_bytes, &tribes_trace_read_s);
-        /* HALOPAD HITCH: a frame over 100 ms, and where its time went. "other" is the
+        /* "TribesPad hitch": a frame over 100 ms, and where its time went. "other" is the
            game's own work (its code, loading objects from packages already read). */
         static double s_wait, s_upload, s_gpu, s_bytes, s_read;
         static int s_skipped, s_uploads, s_libs, s_frame;
@@ -272,7 +279,7 @@ int halopad_metal_present(void *p)
             if (gap > 0.1) {
                 long_gaps++;
                 double wait = total_wait_s - s_wait, upload = total_upload_s - s_upload, gpu = total_gpu_s - s_gpu, read = tribes_trace_read_s - s_read;
-                fprintf(stderr, "HALOPAD HITCH: %.0f ms at frame %d: shader waits %.0f ms, %d shaders compiled, %d draws deferred; "
+                fprintf(stderr, "TribesPad hitch: %.0f ms at frame %d: shader waits %.0f ms, %d shaders compiled, %d draws deferred; "
                         "%d texture uploads (%.1f MB, %.0f ms); %u file reads (%.1f MB, %.0f ms); GPU wait %.0f ms; other %.0f ms\n",
                         gap * 1000, s_frame, wait * 1000, total_libs - s_libs, total_skipped - s_skipped,
                         total_uploads - s_uploads, (total_upload_bytes - s_bytes) / 1e6, upload * 1000,
@@ -286,7 +293,7 @@ int halopad_metal_present(void *p)
         s_skipped = total_skipped; s_uploads = total_uploads; s_libs = total_libs; s_reads = tribes_trace_reads; s_read_bytes = tribes_trace_read_bytes;
         s_frame++;
         if (now - since >= 10) {
-            fprintf(stderr, "HALOPAD FRAMES: %d in %.1f s (%.1f/s), longest gap %.0f ms, %d gaps over 100 ms; %d shader libraries (%.2f s), %d pipelines (%.2f s), %d DXT decodes (%.2f s, %.1f Mpx); %d draws deferred\n",
+            fprintf(stderr, "TribesPad frames: %d in %.1f s (%.1f/s), longest gap %.0f ms, %d gaps over 100 ms; %d shader libraries (%.2f s), %d pipelines (%.2f s), %d DXT decodes (%.2f s, %.1f Mpx); %d draws deferred\n",
                     frames, now - since, frames / (now - since), longest * 1000, long_gaps, trace_libs, trace_lib_s, trace_pipes, trace_pipe_s,
                     halopad_trace_decodes, halopad_trace_decode_s, halopad_trace_decode_px / 1e6, halopad_trace_skipped);
             since = now; frames = 0; longest = 0; long_gaps = 0; trace_libs = trace_pipes = 0; trace_lib_s = trace_pipe_s = 0;
@@ -344,8 +351,6 @@ void halopad_metal_read_image(void *p, uint32_t *out, uint32_t w, uint32_t h)
 
 /* ---- frame, pipelines, resources and draws ---- */
 
-static NSMutableDictionary *libraries;
-static NSLock *libraries_lock;                       /* pipelines build on other threads too */
 static id<MTLBuffer> constant_attr;                 /* float4(0, 0, 0, 1) for missing vertex inputs */
 
 /* Pipeline, depth-stencil and sampler states by their descriptions: C hash tables, since
@@ -358,8 +363,16 @@ typedef struct { hp_cache_entry *bucket[4096]; } hp_cache;
 static hp_cache pipelines, depth_states, samplers;
 static uint64_t cache_hash(const void *key, uint32_t length)
 {
+    /* Eight bytes a step: the pipeline key (about 230 bytes) is hashed on every draw. */
     uint64_t h = 1469598103934665603ull;
-    for (uint32_t i = 0; i < length; i++) h = (h ^ ((const uint8_t *)key)[i]) * 1099511628211ull;
+    uint32_t i = 0;
+    for (; i + 8 <= length; i += 8) {
+        uint64_t w;
+        memcpy(&w, (const uint8_t *)key + i, 8);
+        h = (h ^ w) * 1099511628211ull;
+        h ^= h >> 29;
+    }
+    for (; i < length; i++) h = (h ^ ((const uint8_t *)key)[i]) * 1099511628211ull;
     return h;
 }
 static void *cache_get(hp_cache *c, const void *key, uint32_t length, uint64_t *hash)
@@ -378,7 +391,8 @@ static void cache_put(hp_cache *c, const void *key, uint32_t length, uint64_t ha
     e->next = c->bucket[hash & 4095]; c->bucket[hash & 4095] = e;
 }
 
-static id<MTLFunction> function(const char *src, NSString *name, char *err, uint32_t errlen)
+/* warm: shader warm-up (warm_shaders below), which keeps no library and counts its own time. */
+static id<MTLFunction> function(const char *src, NSString *name, char *err, uint32_t errlen, int warm)
 {
     NSString *s = [NSString stringWithUTF8String:src];
     [libraries_lock lock];
@@ -389,21 +403,24 @@ static id<MTLFunction> function(const char *src, NSString *name, char *err, uint
         double t0 = CFAbsoluteTimeGetCurrent();
         lib = [gpu newLibraryWithSource:s options:nil error:&e];
         if (!lib) { snprintf(err, errlen, "%s", e.localizedDescription.UTF8String); return nil; }
-        [libraries_lock lock];
-        trace_libs++; total_libs++; trace_lib_s += CFAbsoluteTimeGetCurrent() - t0;
-        libraries[s] = lib;
-        [libraries_lock unlock];
+        if (!warm) {
+            [libraries_lock lock];
+            trace_libs++; total_libs++; trace_lib_s += CFAbsoluteTimeGetCurrent() - t0;
+            libraries[s] = lib;
+            [libraries_lock unlock];
+        }
     }
     return [lib newFunctionWithName:name];
 }
 
-static id<MTLRenderPipelineState> build_pipeline(const hp_pipeline_desc *d, char *err, uint32_t errlen)
+static void record_pipeline(const hp_pipeline_desc *d);
+static id<MTLRenderPipelineState> build_pipeline(const hp_pipeline_desc *d, char *err, uint32_t errlen, int warm)
 {
     id<MTLRenderPipelineState> ps;
     @autoreleasepool {
         MTLRenderPipelineDescriptor *pd = [MTLRenderPipelineDescriptor new];
-        pd.vertexFunction = function(d->vs_msl, @"hp_vs", err, errlen);
-        pd.fragmentFunction = function(d->ps_msl, @"hp_ps", err, errlen);
+        pd.vertexFunction = function(d->vs_msl, @"hp_vs", err, errlen, warm);
+        pd.fragmentFunction = function(d->ps_msl, @"hp_ps", err, errlen, warm);
         if (!pd.vertexFunction || !pd.fragmentFunction) return nil;
         MTLVertexDescriptor *vd = [MTLVertexDescriptor vertexDescriptor];
         for (uint32_t i = 0; i < d->nattr; i++) {
@@ -432,12 +449,121 @@ static id<MTLRenderPipelineState> build_pipeline(const hp_pipeline_desc *d, char
         NSError *e = nil;
         double t0 = CFAbsoluteTimeGetCurrent();
         ps = [gpu newRenderPipelineStateWithDescriptor:pd error:&e];
-        [libraries_lock lock];
-        trace_pipes++; trace_pipe_s += CFAbsoluteTimeGetCurrent() - t0;
-        [libraries_lock unlock];
+        if (!warm) {
+            [libraries_lock lock];
+            trace_pipes++; trace_pipe_s += CFAbsoluteTimeGetCurrent() - t0;
+            [libraries_lock unlock];
+        }
         if (!ps) { snprintf(err, errlen, "%s", e.localizedDescription.UTF8String); return nil; }
+        if (!warm) record_pipeline(d);
     }
     return ps;
+}
+
+/* TribesPad shader warm-up. iOS keeps compiled shaders between launches, but the first
+   time a player meets a weapon, effect or map, its shaders compile while they play: on
+   the iPad, 15 s of compiling in a mission's first 10 s, and objects drawn a frame or two
+   late. VENGEANCE_SHADER_RECORD=<file> appends each pipeline the game builds (a test run
+   on the Mac); scripts/vengeance/shader_warmup.py merges those runs into
+   vengeance-shaders.txt, which the app bundles. At launch, three background threads
+   build every pipeline in it once, so iOS has them all before play. A marker in Caches
+   names the list done; a changed list (or VENGEANCE_SHADER_WARMUP=<file>) builds again. */
+#define DESC_TAIL (sizeof(hp_pipeline_desc) - offsetof(hp_pipeline_desc, nattr))
+static void record_pipeline(const hp_pipeline_desc *d)
+{
+    static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+    static FILE *out;
+    static int checked;
+    pthread_mutex_lock(&lock);
+    if (!checked) {
+        checked = 1;
+        const char *path = getenv("VENGEANCE_SHADER_RECORD");
+        if (path && *path) out = fopen(path, "a");
+    }
+    if (out) {
+        size_t vs = strlen(d->vs_msl), ps = strlen(d->ps_msl);
+        fprintf(out, "R %zu %zu ", vs, ps);
+        const uint8_t *tail = (const uint8_t *)&d->nattr;
+        for (size_t i = 0; i < DESC_TAIL; i++) fprintf(out, "%02x", tail[i]);
+        fputc('\n', out);
+        fwrite(d->vs_msl, 1, vs, out); fwrite(d->ps_msl, 1, ps, out);
+        fputc('\n', out);
+        fflush(out);
+    }
+    pthread_mutex_unlock(&lock);
+}
+
+static void warm_shaders(void)
+{
+    const char *forced = getenv("VENGEANCE_SHADER_WARMUP");
+    NSString *path = forced ? [NSString stringWithUTF8String:forced] : [[NSBundle mainBundle] pathForResource:@"vengeance-shaders" ofType:@"txt" inDirectory:@"GameData/Vengeance"];
+    NSData *data = path ? [NSData dataWithContentsOfFile:path] : nil;
+    if (!data.length) return;
+    uint64_t h = 1469598103934665603ull;
+    const uint8_t *bytes = data.bytes;
+    for (NSUInteger i = 0; i < data.length; i++) h = (h ^ bytes[i]) * 1099511628211ull;
+    NSString *caches = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES).firstObject;
+    NSString *marker = [caches stringByAppendingPathComponent:[NSString stringWithFormat:@"TribesPad/shaders-%016llx.done", (unsigned long long)h]];
+    if (!forced && [[NSFileManager defaultManager] fileExistsAtPath:marker]) return;
+
+    /* "TribesPad shaders 1", then "S <length>" lines each followed by a source, and
+       "P <vertex source> <pixel source> <descriptor hex>" lines. */
+    char *text = malloc(data.length + 1);
+    if (!text) return;
+    memcpy(text, bytes, data.length); text[data.length] = 0;
+    NSMutableData *sources = [NSMutableData new], *pipes = [NSMutableData new];
+    char *p = text, *end = text + data.length;
+    int ok = data.length > 20 && !strncmp(p, "TribesPad shaders 1\n", 20);
+    p += 20;
+    while (ok && p < end) {
+        char *line = p, *nl = memchr(p, '\n', (size_t)(end - p));
+        if (!nl) { ok = 0; break; }
+        *nl = 0; p = nl + 1;
+        if (line[0] == 'S') {
+            unsigned long n = strtoul(line + 2, NULL, 10);
+            if (n >= (unsigned long)(end - p)) { ok = 0; break; }
+            const char *src = p;
+            [sources appendBytes:&src length:sizeof src];
+            p[n] = 0; p += n + 1;
+        } else if (line[0] == 'P') {
+            char *q;
+            unsigned long vs = strtoul(line + 2, &q, 10), ps = strtoul(q, &q, 10);
+            unsigned long count = sources.length / sizeof(char *);
+            if (vs >= count || ps >= count || strlen(q) != 1 + 2 * DESC_TAIL) { ok = 0; break; }
+            hp_pipeline_desc d = {0};
+            d.vs_msl = ((const char **)sources.bytes)[vs]; d.ps_msl = ((const char **)sources.bytes)[ps];
+            uint8_t *tail = (uint8_t *)&d.nattr;
+            for (size_t i = 0; i < DESC_TAIL; i++) { unsigned v = 0; sscanf(q + 1 + 2 * i, "%2x", &v); tail[i] = (uint8_t)v; }
+            [pipes appendBytes:&d length:sizeof d];
+        } else ok = 0;
+    }
+    uint32_t n = (uint32_t)(pipes.length / sizeof(hp_pipeline_desc));
+    if (!ok || !n) { fprintf(stderr, "TribesPad shaders: %s is not a shader list for this build; not warming\n", path.UTF8String); free(text); return; }
+    fprintf(stderr, "TribesPad shaders: building %u pipelines (%lu shaders) in the background\n", n, (unsigned long)(sources.length / sizeof(char *)));
+    const hp_pipeline_desc *list = pipes.bytes;
+    dispatch_group_t group = dispatch_group_create();
+    dispatch_queue_t q = dispatch_get_global_queue(QOS_CLASS_UTILITY, 0);
+    static _Atomic uint32_t failed;
+    double t0 = CFAbsoluteTimeGetCurrent();
+    enum { WORKERS = 3 };
+    for (uint32_t w = 0; w < WORKERS; w++)
+        dispatch_group_async(group, q, ^{
+            for (uint32_t i = w; i < n; i += WORKERS) {
+                @autoreleasepool {
+                    char err[512];
+                    if (!build_pipeline(&list[i], err, sizeof err, 1)) failed++;
+                }
+            }
+        });
+    dispatch_group_notify(group, q, ^{
+        fprintf(stderr, "TribesPad shaders: built %u pipelines in %.1f s (%u failed)\n", n, CFAbsoluteTimeGetCurrent() - t0, (unsigned)failed);
+        if (!forced) {
+            [[NSFileManager defaultManager] createDirectoryAtPath:[marker stringByDeletingLastPathComponent] withIntermediateDirectories:YES attributes:nil error:nil];
+            [[NSData data] writeToFile:marker atomically:YES];
+        }
+        (void)sources; (void)pipes;    /* the list and its sources live until every pipeline is built */
+        free(text);
+    });
 }
 
 /* TribesPad: a new shader used to compile on the game's thread the first time it
@@ -463,7 +589,6 @@ void *halopad_metal_pipeline_async(const hp_pipeline_desc *d, int may_skip, int 
 {
     ensure_app();
     *skipped = 0;
-    if (!libraries_lock) { libraries_lock = [NSLock new]; libraries = [NSMutableDictionary new]; }
     uint64_t hash, pending_hash;
     void *found = cache_get(&pipelines, d, sizeof *d, &hash);
     if (found) return found;
@@ -474,7 +599,7 @@ void *halopad_metal_pipeline_async(const hp_pipeline_desc *d, int may_skip, int 
         hp_pipeline_desc copy = *d;                   /* shader sources live for the process */
         HPPendingPipeline *q = p;
         dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE, 0), ^{
-            q->pipeline = build_pipeline(&copy, q->err, sizeof q->err);
+            q->pipeline = build_pipeline(&copy, q->err, sizeof q->err, 0);
             dispatch_semaphore_signal(q->done);
         });
         cache_put(&pending_pipelines, d, sizeof *d, pending_hash, p);
@@ -794,12 +919,12 @@ void halopad_metal_stretch(void *p, void *src, uint32_t slevel, const uint32_t s
         if (!ps) {
             char err[512];
             MTLRenderPipelineDescriptor *pd = [MTLRenderPipelineDescriptor new];
-            pd.vertexFunction = function(stretch_msl, @"hp_vs", err, sizeof err);
-            pd.fragmentFunction = function(stretch_msl, opaque ? @"hp_ps_opaque" : @"hp_ps", err, sizeof err);
+            pd.vertexFunction = function(stretch_msl, @"hp_vs", err, sizeof err, 0);
+            pd.fragmentFunction = function(stretch_msl, opaque ? @"hp_ps_opaque" : @"hp_ps", err, sizeof err, 0);
             pd.colorAttachments[0].pixelFormat = d.pixelFormat;
             NSError *e = nil;
             ps = [gpu newRenderPipelineStateWithDescriptor:pd error:&e];
-            if (!ps) { fprintf(stderr, "HALOPAD TRAP: stretch pipeline: %s\n", e.localizedDescription.UTF8String); abort(); }
+            if (!ps) { fprintf(stderr, "TribesPad trap: stretch pipeline: %s\n", e.localizedDescription.UTF8String); abort(); }
             stretch_pipes[key] = ps;
         }
         float sw = (float)MAX(s.width >> slevel, 1u), sh = (float)MAX(s.height >> slevel, 1u);
@@ -840,7 +965,7 @@ void halopad_metal_read_texture(void *p, void *tex, uint32_t level, uint32_t x, 
 void halopad_metal_visibility_begin(void *p)
 {
     hp_target *t = p;
-    if (t->vis_active) { fprintf(stderr, "HALOPAD TRAP: occlusion query: a second query begun while one is counting\n"); abort(); }
+    if (t->vis_active) { fprintf(stderr, "TribesPad trap: occlusion query: a second query begun while one is counting\n"); abort(); }
     if (!t->vis) t->vis = [gpu newBufferWithLength:8 * VIS_SLOTS options:MTLResourceStorageModeShared];
     t->vis_first = t->vis_last = t->vis_next++ % VIS_SLOTS;
     ((uint64_t *)t->vis.contents)[t->vis_last] = 0;
@@ -907,7 +1032,7 @@ void halopad_metal_clear_area(void *p, const uint32_t rect[4], int color, int de
             pd.colorAttachments[0].writeMask = color ? MTLColorWriteMaskAll : MTLColorWriteMaskNone;
             if (t->zs) { pd.depthAttachmentPixelFormat = t->zs.pixelFormat; pd.stencilAttachmentPixelFormat = t->zs.pixelFormat; }
             pipe = [gpu newRenderPipelineStateWithDescriptor:pd error:&err];
-            if (!pipe) { fprintf(stderr, "HALOPAD TRAP: clear pipeline: %s\n", err.localizedDescription.UTF8String); abort(); }
+            if (!pipe) { fprintf(stderr, "TribesPad trap: clear pipeline: %s\n", err.localizedDescription.UTF8String); abort(); }
             clear_pipes[key] = pipe;
         }
         int which = (depth ? 1 : 0) | (stencil ? 2 : 0);

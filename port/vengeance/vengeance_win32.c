@@ -419,6 +419,8 @@ uint32_t vg_message_box_w(uint64_t base,uint32_t window,uint32_t text,uint32_t c
 extern uint32_t tribes_create_file_w(uint64_t base,uint32_t name,uint32_t access,uint32_t share,uint32_t security,uint32_t creation,uint32_t flags,uint32_t template_handle);
 uint32_t vg_create_file_w(uint64_t base,uint32_t name,uint32_t rights,uint32_t share,uint32_t security,uint32_t creation,uint32_t flags,uint32_t template_handle){
  const uint32_t write=UINT32_C(0x40000000)|2u|4u|0x100u|0x10u;
+ static int trace=-1;if(trace<0)trace=getenv("VENGEANCE_TRACE_FILES")!=NULL;
+ if(trace){char guest[PATH_MAX];if(read_ascii(base,name,1,guest,sizeof guest))fprintf(stderr,"TribesPad file: open %s\n",guest);}
  if(creation==3&&(flags&0x02000000u)&&(rights&write)){
   char guest[PATH_MAX],host[PATH_MAX];struct stat st;
   if(read_ascii(base,name,1,guest,sizeof guest)&&tribes_filesystem_resolve(base,guest,host,sizeof host)&&!stat(host,&st)&&S_ISDIR(st.st_mode)){
