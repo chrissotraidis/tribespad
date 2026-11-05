@@ -13,7 +13,7 @@
 #endif
 #include <stdlib.h>
 
-typedef struct Surface {SDL_Window *window;SDL_MetalView view;EGLSurface egl;unsigned refs;struct Surface *next;} Surface;
+typedef struct Surface {SDL_Window *window;SDL_MetalView view;EGLSurface egl;unsigned refs;void *frame;int frame_width,frame_height;struct Surface *next;} Surface;
 typedef struct Context {Surface *surface;EGLContext egl;int interval;struct Context *next;} Context;
 static EGLDisplay display=EGL_NO_DISPLAY;
 static EGLConfig config;
@@ -22,6 +22,18 @@ static Context *contexts,*current;
 static bool main_thread(void){return pthread_main_np() || SDL_SetError("ANGLE context operations require the main thread");}
 static bool failure(const char *operation){return SDL_SetError("ANGLE %s failed: EGL 0x%x",operation,eglGetError());}
 static Context *lookup(SDL_GLContext token){for(Context *c=contexts;c;c=c->next)if((SDL_GLContext)c==token)return c;return NULL;}
+#if !TARGET_OS_IPHONE
+/* The Mac: a window whose game draws at a fixed size (Starsiege: Tribes) gets a
+   scaled game frame (mac_frame.m), so the window can be resized and taken full
+   screen. Other windows draw to the whole window as before. */
+extern void *tb_mac_frame_layer(SDL_MetalView view,int width,int height);
+extern void tb_mac_frame_layout(void *frame,SDL_MetalView view,int width,int height);
+static struct {SDL_Window *window;int width,height;} fixed_frames[4];
+void tribes_angle_fix_frame(SDL_Window *window,int width,int height){
+ for(unsigned i=0;i<4;i++)if(fixed_frames[i].window==window||!fixed_frames[i].window){fixed_frames[i].window=window;fixed_frames[i].width=width;fixed_frames[i].height=height;break;}
+ for(Surface *s=surfaces;s;s=s->next)if(s->window==window&&s->frame){s->frame_width=width;s->frame_height=height;}
+}
+#endif
 static bool initialize(void){
  if(display!=EGL_NO_DISPLAY)return true;
  const EGLint attrs[]={EGL_PLATFORM_ANGLE_TYPE_ANGLE,EGL_PLATFORM_ANGLE_TYPE_METAL_ANGLE,EGL_NONE};
@@ -50,6 +62,9 @@ SDL_GLContext tribes_angle_create_context(SDL_Window *window){
   void *layer=tb_content_layer(s->view);
 #else
   void *layer=SDL_Metal_GetLayer(s->view);
+  for(unsigned i=0;i<4;i++)if(fixed_frames[i].window==window){
+   s->frame_width=fixed_frames[i].width;s->frame_height=fixed_frames[i].height;
+   layer=s->frame=tb_mac_frame_layer(s->view,s->frame_width,s->frame_height);break;}
 #endif
   s->egl=eglCreateWindowSurface(display,config,(EGLNativeWindowType)layer,NULL);
   if(s->egl==EGL_NO_SURFACE){failure("create Metal surface");SDL_Metal_DestroyView(s->view);free(s);return NULL;}
@@ -84,6 +99,9 @@ SDL_GLContext tribes_angle_current_context(void){return main_thread()?(SDL_GLCon
 SDL_Window *tribes_angle_current_window(void){return main_thread()&&current?current->surface->window:NULL;}
 bool tribes_angle_swap_window(SDL_Window *window){
  if(!main_thread())return false;if(!current||current->surface->window!=window)return SDL_SetError("ANGLE window is not current");
+#if !TARGET_OS_IPHONE
+ if(current->surface->frame)tb_mac_frame_layout(current->surface->frame,current->surface->view,current->surface->frame_width,current->surface->frame_height);
+#endif
  return eglSwapBuffers(display,current->surface->egl)||failure("swap buffers");
 }
 bool tribes_angle_set_swap_interval(int value){

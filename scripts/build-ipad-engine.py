@@ -256,6 +256,28 @@ function TribesPadStartRequests()
    }
    %file.delete();
 }
+function TribesPadHostBots( %count )
+{
+   if ( %count < 1 )
+      %count = 8;
+   $HostGameType = $PlayingOnline ? "Online" : "LAN";
+   $Host::BotsEnabled = 1;
+   $Host::BotCount = %count;
+   $HostGameBotCount = %count;
+   if ( $Host::MaxPlayers < %count + 2 )
+      $Host::MaxPlayers = %count + 2;
+   $Host::MissionType = "CTF";
+   $Host::Map = "Katabatic";
+   $ServerName = $Host::GameName;
+   export( "$Host::*", "prefs/ServerPrefs.cs", false );
+   MessagePopup( "STARTING SERVER", "Initializing..." );
+   Canvas.repaint();
+   cancelServerQuery();
+   setNetPort( $Host::Port );
+   CreateServer( $Host::Map, $Host::MissionType );
+   %playerPref = $pref::Player[$pref::Player::Current];
+   localConnect( getField( %playerPref, 0 ), getField( %playerPref, 1 ), getField( %playerPref, 2 ), getField( %playerPref, 3 ), getField( %playerPref, 4 ) );
+}
 function TribesPadReadRequest()
 {
    %line = "";
@@ -274,6 +296,14 @@ function TribesPadReadRequest()
    if ( getWord( %line, 1 ) $= "graphics" )
    {
       TribesPadGraphics( getWord( %line, 2 ) );
+      return;
+   }
+   // ··· > Play with Bots: host Katabatic CTF with bots, as HOST GAME does with
+   // Bots on (GameGui.cs StartHostedGame), between matches only.
+   if ( getWord( %line, 1 ) $= "bots" )
+   {
+      if ( !isObject( ServerConnection ) )
+         TribesPadHostBots( getWord( %line, 2 ) );
       return;
    }
    // Find a Game > Server List on a server: leave it (the lobby's own
@@ -435,6 +465,13 @@ if bundled:
   (vengeance/'inputs.json').write_text(json.dumps({k:inputs[k] for k in ['title','archive','root','excluded','bytes','game']},separators=(',',':')))
   # The app refreshes its copy of the game folder's Program files when this changes (port/apple/vengeance_paths.m).
   (vengeance/'stamp.txt').write_text(hashlib.sha256(json.dumps(inputs['game'],sort_keys=True).encode()).hexdigest()[:16]+'\n')
+  # Bots (scripts/vengeance/bots.py): TRIBESai's package and bot maps, copied into the
+  # player's game folder at launch (port/apple/vengeance_paths.m). Optional, like the shaders.
+  bots=R/'ref/vengeance/bots/Content'
+  if subprocess.run([sys.executable,str(R/'scripts/vengeance/bots.py')]).returncode==0 and bots.exists():
+   (vengeance/'Bots').mkdir(exist_ok=True)
+   subprocess.run(['rsync','-a','--delete',str(bots)+'/',str(vengeance/'Bots/Content')+'/'],check=True)
+  elif (vengeance/'Bots').exists():shutil.rmtree(vengeance/'Bots')
   # The game's shaders, built once in the background at first launch (halopad_metal.m, warm_shaders): scripts/vengeance/shader_warmup.py.
   shaders=R/'generated/vengeance/vengeance-shaders.txt'
   if shaders.exists():shutil.copyfile(shaders,vengeance/'vengeance-shaders.txt')
@@ -445,7 +482,7 @@ else:
  config='#define TB_BUNDLED_GAME_DATA 0\nstatic const char *launch_workdir='+json.dumps(str(R))+';\nstatic char *launch_arguments[]={'+','.join(json.dumps(p) for p in args)+',NULL};\n'
 (out/'mobile-engine-launch-config.h').write_text(config)
 host=[R/'port/apple/mobile_engine_main.m',R/'port/apple/mobile_game_paths.m',R/'port/apple/sdl_main.c',R/'port/apple/gl4es_context.c',R/'port/core/input.c']
-host+=[R/'port/apple/desktop_controls.c'] if mac else [R/'port/apple/mobile_controls.m',R/'port/apple/launcher.m',R/'port/apple/starsiege_paths.m',R/'port/apple/vengeance_paths.m',R/'port/apple/t1_live.c',R/'port/apple/mobile_controls.c',R/'port/apple/live_servers.m',R/'port/apple/content_area.m']
+host+=[R/'port/apple/desktop_controls.c',R/'port/apple/mac_frame.m',R/'port/apple/mac_menu.m'] if mac else [R/'port/apple/mobile_controls.m',R/'port/apple/launcher.m',R/'port/apple/starsiege_paths.m',R/'port/apple/vengeance_paths.m',R/'port/apple/t1_live.c',R/'port/apple/mobile_controls.c',R/'port/apple/live_servers.m',R/'port/apple/content_area.m']
 if a.angle:host.append(R/'port/apple/angle_sdl.c')
 vengeance_link=[]
 if a.vengeance_object and not mac:

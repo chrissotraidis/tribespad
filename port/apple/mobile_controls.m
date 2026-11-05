@@ -64,6 +64,11 @@ static _Atomic int tb_vengeance_playing=-1;
 void tb_vengeance_report_state(int playing){atomic_store(&tb_vengeance_playing,playing);}
 static _Atomic int tb_vengeance_typing;
 void tb_vengeance_report_typing(int typing){atomic_store(&tb_vengeance_typing,typing);}
+/* Vengeance's typed-command queue, handed over by its engine at its first frame. */
+static void (*_Atomic tb_vengeance_typer)(const char *line,int open_with_tab);
+void tb_vengeance_set_typer(void (*typer)(const char *line,int open_with_tab)){atomic_store(&tb_vengeance_typer,typer);}
+static void ss_type_command(const char *line,int open_with_tab){
+    void (*typer)(const char *,int)=atomic_load(&tb_vengeance_typer);if(typer)typer(line,open_with_tab);}
 /* Vengeance on a server (joined or hosted here): the map it last loaded, from
    the game's own log, is not a campaign map (SP-, CS-) or the menu map (Entry).
    Only the lines added since the last look are read. A load with ?listen is a
@@ -1310,6 +1315,15 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
             item(@"TribesPad Discord",@"person.2",^{[weak openLink:TBTribesPadDiscord];})]),
         group(@[item(@"TribesNEXT Forum",@"text.bubble",^{[weak openPage:TBTribesNextForum];})])]];
     NSArray *matchItems=game,*onlineItems=@[playing,servers,nights,community],*optionItems=controls;
+    /* Play with Bots, off a server, in each game: a game hosted here with bots on both
+       teams. Tribes 2's own bots on Katabatic (base/autoexec.cs, TribesPadHostBots). */
+    UIMenu *(^botsMenu)(NSArray<NSArray<NSString *> *> *,NSString *)=^UIMenu *(NSArray<NSArray<NSString *> *> *choices,NSString *subtitle){
+        NSMutableArray *bots=[NSMutableArray array];
+        for(NSArray<NSString *> *c in choices){NSString *request=c[1];UIAction *a=item(c[0],@"person.3.sequence",^{[weak playWithBots:request];});
+            a.subtitle=subtitle;[bots addObject:a];}
+        return [UIMenu menuWithTitle:@"Play with Bots" image:icon(@"person.3.sequence") identifier:nil options:0 children:bots];};
+    if(!self.connected)onlineItems=[onlineItems arrayByAddingObject:botsMenu(@[@[@"Katabatic, 4 Bots",@"bots 4"],@[@"Katabatic, 8 Bots",@"bots 8"],
+        @[@"Katabatic, 14 Bots",@"bots 14"]],@"Capture the Flag, bots on both teams")];
     if(tb_starsiege){
         /* Starsiege's own keys (config/config.cs): T and Y chat, I inventory,
            O objectives, C command, Tab scores, Ctrl+K kill. */
@@ -1347,6 +1361,10 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
                 item(@"Server List on the Web (tribes1.co)",@"server.rack",^{[weak openPage:TBTribes1Servers];}),
                 item(@"Tribes 1 JunkYard: configs, mods, demos",@"archivebox",^{[weak openPage:TBTribes1JunkYard];})])]];
         matchItems=t1;onlineItems=@[t1playing,t1servers,t1nights,t1community];
+        /* The game's own AI (scripts/starsiege/build_engine.py, TribesPad::playWithBots). */
+        if(!self.connected)onlineItems=[onlineItems arrayByAddingObject:botsMenu(@[@[@"Raindance, 4 Bots",@"bots 4 Raindance"],
+            @[@"Raindance, 8 Bots",@"bots 8 Raindance"],@[@"Dangerous Crossing, 8 Bots",@"bots 8 DangerousCrossing"],
+            @[@"Snowblind, 8 Bots",@"bots 8 Snowblind"]],@"Capture the Flag, bots on both teams")];
     }
     if(tb_vengeance){
         /* Vengeance's own keys (DefUser.ini): F2 scores, T and Y chat, V quick
@@ -1406,6 +1424,15 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
             group(@[item(@"TribesRevengeance.net",@"safari",^{[weak openPage:TBVengeanceSite];}),
                 item(@"Server List on the Web (OpenSpy)",@"server.rack",^{[weak openPage:TBVengeanceServers];})])]];
         onlineItems=@[tvplaying,tvservers,tvnights,tvcommunity];
+        /* Play with Bots: TRIBESai's bot maps (scripts/vengeance/bots.py), hosted here with
+           both teams' bots on; the same steps as the Mac menu (mac_menu.m). */
+        NSString *botMaps=[[NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,NSUserDomainMask,YES).firstObject
+            stringByAppendingPathComponent:@"TribesPad/VengeanceGame/Content/Maps"] stringByAppendingPathComponent:@"MP-FortBots_V5.tvm"];
+        if(!self.connected&&[NSFileManager.defaultManager fileExistsAtPath:botMaps]){NSMutableArray *bots=[NSMutableArray array];
+            for(NSArray<NSString *> *m in @[@[@"MP-FortBots_V5",@"Fort"],@[@"MP-EmeraldBots_V71",@"Emerald"],@[@"MP-TropicsBots_V1",@"Tropics"],@[@"MP-FeignedBeliefsBots_V1",@"Feigned Beliefs"]]){
+                NSString *file=m[0];UIAction *a=item([m[1] stringByAppendingString:@", Capture the Flag"],@"person.3.sequence",^{[weak playVengeanceBots:file];});
+                a.subtitle=@"Bots on both teams (TRIBESai)";[bots addObject:a];}
+            onlineItems=[onlineItems arrayByAddingObject:[UIMenu menuWithTitle:@"Play with Bots" image:icon(@"person.3.sequence") identifier:nil options:0 children:bots]];}
     }
     /* The same order in both games: This Match (on a server), Play Online,
        Options, Help, then Choose Game. Off a server Play Online leads, open. */
@@ -1494,6 +1521,26 @@ static UIAction *tb_menu_find(UIMenuElement *e,NSString *path,NSString *want){
     [codes addObject:@(SDL_SCANCODE_RETURN)];__weak TBGameControls *weak=self;
     for(NSUInteger i=0;i<codes.count;i++)dispatch_after(dispatch_time(DISPATCH_TIME_NOW,(int64_t)(i*40*NSEC_PER_MSEC)),dispatch_get_main_queue(),^{
         [weak tapKey:(SDL_Scancode)codes[i].intValue];});
+}
+/* Hosting a TRIBESai bot map with its bots on (mac_menu.m has the same steps): the
+   engine's typed-command queue (starsiege_input.c) types each command a key a frame.
+   The map's base consoles run 01Config01Script to 07 and 02Config01Script to 07; the
+   game runs them from its console with developer tools on, for this game only. */
+-(void)playVengeanceBots:(NSString *)map {
+    [self releaseControls];
+    ss_type_command("set MultiplayerGameInfo bTournamentMode False",1);
+    ss_type_command("set GameEngine EnableDevTools True",1);
+    ss_type_command([NSString stringWithFormat:@"open %@?game=GameClasses.ModeCTF?listen",map].UTF8String,1);
+    fprintf(stderr,"TribesPad: hosting %s with bots\n",map.UTF8String);
+    __block int phase=0,ticks=0;dispatch_source_t timer=dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER,0,0,dispatch_get_main_queue());
+    dispatch_source_set_timer(timer,dispatch_time(DISPATCH_TIME_NOW,3*NSEC_PER_SEC),NSEC_PER_SEC/2,NSEC_PER_SEC/10);
+    dispatch_source_set_event_handler(timer,^{int playing=atomic_load(&tb_vengeance_playing);ticks++;
+        if(phase==0&&playing==0)phase=1;else if(phase==1&&playing==1){phase=2;ticks=0;}
+        else if(phase==2&&ticks>=8){dispatch_source_cancel(timer);ss_type_command("changeteam 0",1);
+            for(NSString *team in @[@"01",@"02"])for(int i=1;i<=7;i++)ss_type_command([NSString stringWithFormat:@"runscript %@Config0%dScript",team,i].UTF8String,1);
+            ss_type_command("set GameEngine EnableDevTools False",1);fprintf(stderr,"TribesPad: bots switched on\n");}
+        if(ticks>360&&phase<2){dispatch_source_cancel(timer);fprintf(stderr,"TribesPad: the bot map did not start\n");}});
+    dispatch_resume(timer);
 }
 -(void)setVengeanceGraphics:(NSString *)quality {
     [NSUserDefaults.standardUserDefaults setObject:quality forKey:@"TribesPad.vengeanceGraphics"];[self rebuildMenu];
@@ -1598,6 +1645,12 @@ static UIAction *tb_menu_find(UIMenuElement *e,NSString *path,NSString *want){
     alert.overrideUserInterfaceStyle=UIUserInterfaceStyleDark;[[self presenter] presentViewController:alert animated:YES completion:nil];
 }
 -(void)sendRequest:(NSString *)request {[self sendRequest:request extra:nil];}
+-(void)playWithBots:(NSString *)request {
+    if(!self.gameReported&&!tb_starsiege){
+        [self showMessage:@"Play with Bots" text:@"Sign in to TribesNEXT first. Once you are past the login, this hosts Katabatic with bots."];return;
+    }
+    [self releaseControls];[self sendRequest:request];
+}
 -(void)sendRequest:(NSString *)request extra:(NSString *)extra {
     if(tb_starsiege){
         /* Starsiege runs only scripts that existed at its start: rewrite the

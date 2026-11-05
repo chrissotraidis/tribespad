@@ -287,6 +287,8 @@ def backend():
     # build falls back to the pinned download.
     angle_libraries = [x for x in angle_libraries if not x.startswith('-Wl,-rpath')] + ['-Wl,-rpath,@executable_path/../Frameworks', '-Wl,-rpath,' + angle_dir]
     host = [R / 'port/apple/gl4es_context.c', R / 'port/apple/angle_sdl.c', R / 'port/starsiege/starsiege_gl.c']
+    if PLATFORM == 'macos':
+        host += [R / 'port/apple/mac_frame.m', R / 'port/apple/mac_menu.m']  # the resizable game frame (angle_sdl.c) and the menus
     flags = flags + gl_flags + angle_flags + ['-I', str(folder), '-isystem', str(R / 'ref/gl4es/src'),
                                               '-DNOX11', '-DNOEGL', '-DNO_LOADER', '-DDEFAULT_ES=2']
     return {'sources': [pathlib.Path(s) for s in sources] + host, 'flags': flags,
@@ -435,6 +437,8 @@ function TribesPad::request() {
    // Quick chat from the controller panel: the chat menu entry's own command,
    // which the app writes beside the request ($TribesPad::chat).
    else if(%what == "chat") { if($TribesPad::chat != "") schedule($TribesPad::chat, 0); $TribesPad::chat = ""; }
+   // Play with Bots: "bots <count> [mission]" hosts a game here with the game's own AI.
+   else if(%what == "bots") TribesPad::playWithBots(%address, getWord($TribesPad::request, 3));
    else if(%what == "join" && %address != -1) {
       $Server::Address = "IP:" @ %address;
       if($PCFG::Name == "") OpenNewPlayerDialog(); else JoinGame();
@@ -478,6 +482,105 @@ function TribesPad::startReports() {
    $TribesPad::reported = ""; TribesPad::report();
 }
 schedule("TribesPad::startReports();", 1);
+'''
+    # Play with Bots: the game's own AI (scripts/server/ai/ai.cs, which its training
+    # missions use for their drones). TribesPad hosts a local game (not listed on
+    # the masters), and once the match starts spawns the bots on both teams at
+    # their drop points; each runs between the two flags and fights the players it
+    # sees, with the training drones' disc, chaingun and blaster. The stock AI does
+    # not carry flags: flag-ctf.cs ignores AI players. A dead bot is gone from the
+    # game (AI::getId gives False); the keeper spawns it again a few seconds later,
+    # and moves one that has stood still for 15 seconds (stuck in a base: the stock
+    # maps have no AI path graph). Every step is logged ("TribesPad bots: ...") in
+    # console.log.
+    text += '''
+$TribesPad::botNames = "Andrew Slacker Skeet Jett Nailz DiamondBack MotoMan UberBob Sebirt Missing SymLink Cornboy xgalaxy KillerBunny Bob Skeeter";
+function TribesPad::playWithBots(%count, %mission) {
+   if(%count < 1) %count = 4;
+   if(%count > 16) %count = 16;
+   if(%mission == "" || %mission == -1) %mission = "Raindance";
+   if($PCFG::Name == "") { OpenNewPlayerDialog(); return; }
+   $TribesPad::wantBots = %count; $TribesPad::botsAdded = 0; $TribesPad::botGame = $TribesPad::botGame + 1;
+   echo("TribesPad bots: hosting " @ %mission @ " with " @ %count @ " bots");
+   if($TribesPad::connected) { disconnect(); schedule("TribesPad::hostBots(\\"" @ %mission @ "\\");", 1); }
+   else TribesPad::hostBots(%mission);
+}
+function TribesPad::hostBots(%mission) {
+   $SinglePlayer = false; $Server::HostPublicGame = false;
+   createServer(%mission, false);
+   schedule("TribesPad::botsWait(" @ $TribesPad::botGame @ ", 0);", 2);
+}
+// Bots join once the match has started and the host is in it.
+function TribesPad::botsWait(%game, %tries) {
+   if(%game != $TribesPad::botGame) return;
+   if(!$matchStarted || !$TribesPad::connected) {
+      %next = %tries + 1;
+      if(%next < 180) schedule("TribesPad::botsWait(" @ %game @ ", " @ %next @ ");", 1);
+      else echo("TribesPad bots: the match did not start");
+      return;
+   }
+   TribesPad::addBots($TribesPad::wantBots);
+   schedule("TribesPad::keepBots(" @ %game @ ");", 5);
+}
+function TribesPad::addBots(%count) {
+   focusServer();
+   %teams = getNumTeams(); if(%teams < 1) %teams = 1;
+   %host = Client::getTeam(Client::getFirst()); if(%host < 0) %host = 0;
+   for(%i = 0; %i < %count; %i++) {
+      // The first bot joins the other team, then they alternate.
+      %team = %host + 1 + %i; %team = %team - floor(%team / %teams) * %teams;
+      %name = getWord($TribesPad::botNames, $TribesPad::botsAdded);
+      $TribesPad::botTeam[$TribesPad::botsAdded] = %team;
+      $TribesPad::botsAdded++;
+      TribesPad::spawnBot(%name, %team);
+   }
+   focusClient();
+}
+function TribesPad::spawnBot(%name, %team) {
+   %drop = Game::pickRandomSpawn(%team);
+   if(%drop == -1 || %drop == "" || %drop == false) %drop = Game::pickStartSpawn(%team);
+   if(%drop == -1 || %drop == "" || %drop == false) { echo("TribesPad bots: no drop point for team " @ %team); return; }
+   if(AI::spawn(%name, larmor, GameBase::getPosition(%drop), GameBase::getRotation(%drop), %name, "male2") == "false") {
+      echo("TribesPad bots: " @ %name @ " did not spawn"); return; }
+   GameBase::setTeam(AI::getId(%name), %team);
+   // Their run: the other team's flag, then their own, and back.
+   %order = 100;
+   for(%t = 0; %t < 2; %t++) {
+      if(%t == 0) %side = 1 - %team; else %side = %team;
+      %flag = $Team::Flag[%side];
+      if(%flag != "" && %flag.originalPosition != "") { AI::DirectiveWaypoint(%name, %flag.originalPosition, %order); %order += 100; }
+   }
+   AI::setVar(%name, iq, 70); AI::setVar(%name, attackMode, 1); AI::setVar(%name, pathType, 2);
+   AI::setWeapons(%name);
+   echo("TribesPad bots: " @ %name @ " spawned on team " @ %team);
+}
+// Respawns: a killed bot leaves the game; it comes back here. One that has not
+// moved a unit in three checks is taken out and comes back at another drop point.
+function TribesPad::keepBots(%game) {
+   if(%game != $TribesPad::botGame) return;
+   if(!$TribesPad::connected) { echo("TribesPad bots: left the game"); return; }
+   if($matchStarted) {
+      focusServer();
+      for(%i = 0; %i < $TribesPad::botsAdded; %i++) {
+         %name = getWord($TribesPad::botNames, %i);
+         %id = AI::getId(%name);
+         if(%id < 1) { $TribesPad::botStill[%i] = 0; $TribesPad::botAt[%i] = ""; TribesPad::spawnBot(%name, $TribesPad::botTeam[%i]); }
+         else TribesPad::checkStuck(%i, %name, GameBase::getPosition(Client::getOwnedObject(%id)));
+      }
+      focusClient();
+   }
+   schedule("TribesPad::keepBots(" @ %game @ ");", 5);
+}
+function TribesPad::checkStuck(%i, %name, %pos) {
+   if($TribesPad::botAt[%i] != "" && Vector::getDistance(%pos, $TribesPad::botAt[%i]) < 1) $TribesPad::botStill[%i]++;
+   else $TribesPad::botStill[%i] = 0;
+   $TribesPad::botAt[%i] = %pos;
+   if($TribesPad::botStill[%i] >= 3) {
+      echo("TribesPad bots: " @ %name @ " was stuck; moving it");
+      $TribesPad::botStill[%i] = 0; $TribesPad::botAt[%i] = "";
+      AI::Delete(%name);
+   }
+}
 '''
     script.write_text(text)
     (game / 'config/tribespad-request.cs').write_text('$TribesPad::request = "";\n')

@@ -13,6 +13,7 @@
 #include <CoreGraphics/CoreGraphics.h>
 #include <CoreFoundation/CoreFoundation.h>
 #include <pthread.h>
+#include <math.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -30,6 +31,18 @@ extern uint32_t tribes_sdl_gl_create_context(_cpu *cpu,uint32_t window);
 extern uint32_t tribes_sdl_gl_destroy_context(_cpu *cpu,uint32_t context);
 extern uint32_t tribes_sdl_gl_make_current(_cpu *cpu,uint32_t window,uint32_t context);
 extern uint32_t tribes_sdl_gl_swap_window(_cpu *cpu,uint32_t window);
+extern SDL_Window *tribes_sdl_native_window(uint32_t token);
+#if !TARGET_OS_IPHONE
+extern void tribes_angle_fix_frame(SDL_Window *window,int width,int height);
+/* The game's frame size for a window, as last told to ANGLE (the game can change resolution). */
+static void mac_frame(SDL_Window *native,int width,int height){
+ static SDL_Window *told[4];static int sizes[4][2];unsigned i=0;
+ while(i<4&&told[i]&&told[i]!=native)i++;
+ if(i==4)return;
+ if(told[i]==native&&sizes[i][0]==width&&sizes[i][1]==height)return;
+ told[i]=native;sizes[i][0]=width;sizes[i][1]=height;tribes_angle_fix_frame(native,width,height);
+}
+#endif
 extern uint32_t ss_window_client_size(uint64_t base,uint32_t handle,int32_t *width,int32_t *height);
 extern uint32_t ss_owns_window(uint64_t base,uint32_t handle);
 
@@ -93,6 +106,17 @@ uint32_t ss_get_dc(_cpu *cpu,uint32_t window){
  uint32_t sdl_window=tribes_sdl_create_window(cpu,guest_title,(uint32_t)width,(uint32_t)height,(uint32_t)flags,(uint32_t)(flags>>32));
  if(!sdl_window){fprintf(stderr,"TribesPad: SDL window failed: %s\n",SDL_GetError());tribes_set_last_error(2000);return 0;}
  fprintf(stderr,"TribesPad: GL drawable %dx%d for window 0x%x%s\n",(int)width,(int)height,window,headless()?" (hidden)":"");
+#if !TARGET_OS_IPHONE
+ /* The Mac: the game keeps its resolution in a resizable window, scaled at its
+    aspect (angle_sdl.c, mac_frame.m): sized to fit the screen, and full screen
+    with the green button or Control-Command-F. The 100x100 OpenGL probe stays as it is. */
+ if(!headless()&&width>=320){SDL_Window *native=tribes_sdl_native_window(sdl_window);SDL_Rect usable;
+  if(native){mac_frame(native,width,height);
+   if(SDL_GetDisplayUsableBounds(SDL_GetDisplayForWindow(native),&usable)){
+    float fit=fminf((float)(usable.w-40)/(float)width,(float)(usable.h-40)/(float)height);if(fit<1)fit=1;
+    SDL_SetWindowResizable(native,true);SDL_SetWindowAspectRatio(native,(float)width/(float)height,(float)width/(float)height);
+    SDL_SetWindowSize(native,(int)((float)width*fit),(int)((float)height*fit));SDL_SetWindowPosition(native,SDL_WINDOWPOS_CENTERED,SDL_WINDOWPOS_CENTERED);}}}
+#endif
  pthread_mutex_lock(&lock);dcs[free_slot]=(DeviceContext){sdl_window+0x02000000u,window,0,sdl_window};uint32_t dc=dcs[free_slot].dc;pthread_mutex_unlock(&lock);
  return dc;
 }
@@ -237,6 +261,10 @@ uint32_t ss_swap_buffers(_cpu *cpu,uint32_t dc){
  {extern void ss_gl_trace_report(uint64_t);if(swaps<=3||swaps==30||swaps==300||swaps==3000)ss_gl_trace_report(swaps);}
  int32_t width,height;if(ss_window_client_size(base,copy.window,&width,&height))capture(width,height);
  if(swaps==1||swaps%600==0)fprintf(stderr,"TribesPad: frames presented %llu\n",(unsigned long long)swaps);
+#if !TARGET_OS_IPHONE
+ {int32_t w,h;SDL_Window *native=tribes_sdl_native_window(copy.sdl_window);
+  if(native&&!headless()&&ss_window_client_size(cpu->_pointer_offset,copy.window,&w,&h)&&w>=320&&h>0)mac_frame(native,w,h);}
+#endif
  uint32_t presented=tribes_sdl_gl_swap_window(cpu,copy.sdl_window);
  {extern void ss_input_pump(_cpu *);ss_input_pump(cpu);}
  return presented;

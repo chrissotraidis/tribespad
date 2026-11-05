@@ -104,6 +104,8 @@ static int playing(void){
  uint32_t g=vengeance_gui_controller();if(!g)return 0;
  uint32_t flags;memcpy(&flags,GUEST(vengeance_guest_base(),g+0x28),4);return !(flags&2);
 }
+/* For TribesPad's Mac menu (port/apple/mac_menu.m): 1 in play, 0 in a menu or loading. */
+int vengeance_in_play(void){return playing();}
 /* A page made for typing is open in the game's GUI, so TribesPad brings up the
    on-screen keyboard: a new profile's name, a server or admin password, a saved
    game's name, the GameSpy login. GUIController.ActivePage is at 0xac (checked on
@@ -149,6 +151,11 @@ __attribute__((constructor)) static void install(void){ss_key_hook=key;ss_pointe
 extern void tb_app_note_frame(void);
 extern void tb_vengeance_report_state(int playing);
 extern void tb_vengeance_report_typing(int typing);
+/* The engine's typed-command queue (starsiege_input.c), handed to the app: only
+   the engine's entry point is visible outside it on iOS. The ··· menu's Play with
+   Bots types its console commands through it. */
+extern void ss_type_command(const char *line,int open_with_tab);
+extern void tb_vengeance_set_typer(void (*typer)(const char *line,int open_with_tab));
 #endif
 int vengeance_text_focused(void);
 /* Once per presented frame, on the game's thread. */
@@ -156,6 +163,7 @@ void vengeance_input_frame(_cpu *cpu){
  ss_count_frame();ss_input_pump(cpu);
 #if TARGET_OS_IPHONE
  tb_app_note_frame();
+ static int handed;if(!handed){handed=1;tb_vengeance_set_typer(ss_type_command);}
  static int reported=-1;int now=playing();
  if(now!=reported){reported=now;tb_vengeance_report_state(now);fprintf(stderr,"TribesPad: Vengeance %s (frame %llu)\n",now?"in play":"in menus",(unsigned long long)ss_frames());}
  /* A text box focused in a menu: the app opens the keyboard (mobile_controls.m). */

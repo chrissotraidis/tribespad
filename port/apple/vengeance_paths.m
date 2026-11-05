@@ -105,6 +105,18 @@ int tb_vengeance_prepare_paths(const char *gamedata,const char *storage,char *ar
                     withTemplate:[NSString stringWithFormat:@"%@%@=%@",key,axis?@"Y":@"X",wh[axis]]];}
             setenv("VENGEANCE_DISPLAY",size.UTF8String,1);
             if(![changed isEqualToString:text])[changed writeToFile:ini atomically:YES encoding:NSISOLatin1StringEncoding error:nil];}
+        /* Bots (scripts/vengeance/bots.py, the community's TRIBESai): the iOS app carries
+           its package and four bot maps in GameData/Vengeance/Bots, copied beside the
+           game's own Content once, when that folder is the player's copy (the Mac app's
+           game folder already holds them). */
+        NSString *bots=[data stringByAppendingPathComponent:@"Bots/Content"],*into=[source stringByAppendingPathComponent:@"Content"];
+        if([fm fileExistsAtPath:bots]&&[fm isWritableFileAtPath:into])
+            for(NSString *relative in [fm enumeratorAtPath:bots]){
+                NSString *from=[bots stringByAppendingPathComponent:relative],*to=[into stringByAppendingPathComponent:relative];BOOL dir=NO;
+                [fm fileExistsAtPath:from isDirectory:&dir];if(dir||[fm fileExistsAtPath:to])continue;
+                [fm createDirectoryAtPath:[to stringByDeletingLastPathComponent] withIntermediateDirectories:YES attributes:nil error:nil];
+                if([fm copyItemAtPath:from toPath:to error:nil])fprintf(stderr,"TribesPad: added bot file %s\n",relative.UTF8String);
+            }
         arguments[0]=strdup([data stringByAppendingPathComponent:@"images"].fileSystemRepresentation);
         arguments[1]=strdup(volume.fileSystemRepresentation);arguments[2]=strdup(game.fileSystemRepresentation);
         arguments[3]=strdup(temp.fileSystemRepresentation);

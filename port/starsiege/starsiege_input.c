@@ -157,6 +157,39 @@ static void load_script(void){
  }
  fclose(f);fprintf(stderr,"TribesPad: %u scripted input events\n",script_count);
 }
+/* Typed commands (TribesPad's Mac menu, port/apple/mac_menu.m): each character as
+   a key down and up on its own frame, Shift held around capitals, so the game's
+   console reads every one; a key change between two frames is lost when the game
+   reads one change a frame. ss_type_command adds a line (opened with Tab for
+   Vengeance's console, -console; Enter at the end); ss_typing_pending says how
+   many key changes are still queued. Any thread may add; the game thread types. */
+typedef struct {unsigned char dik;unsigned char down;} TypedKey;
+static TypedKey typed[4096];static unsigned typed_head,typed_tail;
+static pthread_mutex_t typed_lock=PTHREAD_MUTEX_INITIALIZER;
+static void typed_push(unsigned char dik,int down){unsigned next=(typed_tail+1)%4096;if(next==typed_head)return;typed[typed_tail]=(TypedKey){dik,(unsigned char)down};typed_tail=next;}
+static int typed_dik(char c,unsigned char *dik,int *shift){
+ static const char rows[][11]={"1234567890","qwertyuiop","asdfghjkl","zxcvbnm"};static const unsigned char first[]={2,16,30,44};
+ *shift=0;if(c>='A'&&c<='Z'){c=(char)(c-'A'+'a');*shift=1;}
+ for(unsigned r=0;r<4;r++){const char *at=strchr(rows[r],c);if(at&&c){*dik=(unsigned char)(first[r]+(at-rows[r]));return 1;}}
+ static const char plain[]=" -=;'/.",shifted[]="_+:\"?>";static const unsigned char codes[]={0x39,0x0c,0x0d,0x27,0x28,0x35,0x34};
+ const char *p=strchr(plain,c);if(p&&c){*dik=codes[p-plain];return 1;}
+ p=strchr(shifted,c);if(p&&c){*dik=codes[p-shifted+1];*shift=1;return 1;}
+ return 0;
+}
+void ss_type_command(const char *line,int open_with_tab){
+ pthread_mutex_lock(&typed_lock);
+ if(open_with_tab){typed_push(0x0f,1);typed_push(0x0f,0);}
+ for(const char *c=line;*c;c++){unsigned char dik;int shift;if(!typed_dik(*c,&dik,&shift))continue;
+  if(shift)typed_push(0x2a,1);typed_push(dik,1);typed_push(dik,0);if(shift)typed_push(0x2a,0);}
+ typed_push(0x1c,1);typed_push(0x1c,0);
+ pthread_mutex_unlock(&typed_lock);
+}
+unsigned ss_typing_pending(void){pthread_mutex_lock(&typed_lock);unsigned n=(typed_tail+4096-typed_head)%4096;pthread_mutex_unlock(&typed_lock);return n;}
+static void type_next(void){
+ static uint64_t last;uint64_t frame=ss_frames();if(frame==last)return;last=frame;
+ pthread_mutex_lock(&typed_lock);int any=typed_head!=typed_tail;TypedKey k=any?typed[typed_head]:(TypedKey){0,0};if(any)typed_head=(typed_head+1)%4096;pthread_mutex_unlock(&typed_lock);
+ if(any)key_change(k.dik,k.down);
+}
 static void run_script(void){
  if(!script_loaded)load_script();uint64_t frame=ss_frames();
  while(script_next<script_count&&script[script_next].frame<=frame){
@@ -345,7 +378,7 @@ void ss_input_pump(_cpu *cpu){
  static int pumping,introduced;if(pumping)return;pumping=1;pointer_base=cpu->_pointer_offset;
  if(!introduced&&ss_sdl_window()){introduced=1;windows_pointer(0,0);} /* the pointer starts over the new window */
  {static int watching;if(!watching){watching=1;pthread_t t;if(!pthread_create(&t,NULL,watchdog,NULL))pthread_detach(t);}}
- run_script();controller();
+ run_script();type_next();controller();
  uint32_t saved=cpu->_esp;cpu->_esp=(saved-512)&~15u;uint32_t address=cpu->_esp+256;
  while(tribes_sdl_poll_event(cpu,address)){
   unsigned char e[128];memcpy(e,(void *)(uintptr_t)(cpu->_pointer_offset+address),128);

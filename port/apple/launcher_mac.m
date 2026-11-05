@@ -369,8 +369,9 @@ int main(int argc,char **argv){
         if(snapshot){[NSApplication sharedApplication];tb_snapshot(snapshot);return 0;}
         const char *pick=getenv("TRIBESPAD_PICK");
         if(pick)return tb_exec(!strcmp(pick,"starsiege")&&tb_starsiege_ready()?TBStarsiege:!strcmp(pick,"vengeance")&&tb_vengeance_ready()?TBVengeance:TBTribes2);
+        /* A game's Choose Game (mac_menu.m) always shows the picker. */
         id show=[NSUserDefaults.standardUserDefaults objectForKey:@"TribesPad.showLauncher"];
-        if(show&&![show boolValue])return tb_exec(TBTribes2);
+        if(show&&![show boolValue]&&!getenv("TRIBESPAD_CHOOSE"))return tb_exec(TBTribes2);
         [NSApplication sharedApplication];[NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];[NSApp finishLaunching];
         NSRect screen=NSScreen.mainScreen.visibleFrame;NSSize size=NSMakeSize(fmin(1280,screen.size.width*.9),fmin(800,screen.size.height*.9));
         NSWindow *window=[[NSWindow alloc] initWithContentRect:NSMakeRect(0,0,size.width,size.height)
