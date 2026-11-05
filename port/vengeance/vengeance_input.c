@@ -136,8 +136,9 @@ int vengeance_text_focused(void){
  last_page=page;char name[64];class_name(base,page,name,sizeof name);
  static const char *const typed[]={"TribesDefaultTextEntryPopup","TribesAdminLoginPopup","TribesGamespyLogin","TribesGamespyTeamLogin","TribesSaveGameMenu"};
  typing=0;for(unsigned i=0;i<sizeof typed/sizeof typed[0];i++)if(!strcmp(name,typed[i]))typing=1;
- static int trace=-1;if(trace<0)trace=getenv("VENGEANCE_TRACE_GUI")!=NULL;
- if(trace)fprintf(stderr,"vengeance gui: page %s%s\n",name[0]?name:"(none)",typing?" (typing)":"");
+ /* Each page change is logged on iOS (the session log), on the Mac with VENGEANCE_TRACE_GUI. */
+ static int trace=-1;if(trace<0)trace=TARGET_OS_IPHONE||getenv("VENGEANCE_TRACE_GUI")!=NULL;
+ if(trace)fprintf(stderr,"TribesPad: game page %s%s\n",name[0]?name:"(none)",typing?" (typing)":"");
  return typing;
 }
 __attribute__((constructor)) static void install(void){ss_key_hook=key;ss_pointer_hook=pointer;ss_button_hook=button;ss_input_use_vengeance_pad();ss_play_state_hook=playing;ss_window_title="Tribes: Vengeance";}

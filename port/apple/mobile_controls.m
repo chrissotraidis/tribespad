@@ -66,7 +66,12 @@ static _Atomic int tb_vengeance_typing;
 void tb_vengeance_report_typing(int typing){atomic_store(&tb_vengeance_typing,typing);}
 /* Vengeance on a server (joined or hosted here): the map it last loaded, from
    the game's own log, is not a campaign map (SP-, CS-) or the menu map (Entry).
-   Only the lines added since the last look are read. */
+   Only the lines added since the last look are read. A load with ?listen is a
+   game hosted here; tb_vengeance_hosting counts each time hosting starts (a
+   hosted load after one that was not), so the team is picked once per game. */
+static BOOL tb_vengeance_hosted;
+static unsigned tb_vengeance_hosting;
+static unsigned tb_vengeance_loads;          /* maps loaded so far, any kind */
 static BOOL tb_vengeance_on_server(void){
     static unsigned long long seen;static BOOL server;static char tail[512];
     NSString *path=[NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,NSUserDomainMask,YES).firstObject
@@ -78,7 +83,12 @@ static BOOL tb_vengeance_on_server(void){
         NSString *s=[[NSString alloc] initWithData:text encoding:NSWindowsCP1252StringEncoding]?:@"";
         NSRange last=[s rangeOfString:@"LoadMap: " options:NSBackwardsSearch];
         if(last.location!=NSNotFound){NSString *map=[s substringFromIndex:NSMaxRange(last)];
-            server=!([map hasPrefix:@"SP-"]||[map hasPrefix:@"CS-"]||[map hasPrefix:@"Entry"]||[map hasPrefix:@"entry"]);}
+            server=!([map hasPrefix:@"SP-"]||[map hasPrefix:@"CS-"]||[map hasPrefix:@"Entry"]||[map hasPrefix:@"entry"]);
+            NSRange end=[map rangeOfString:@"\n"];NSString *url=end.location==NSNotFound?map:[map substringToIndex:end.location];
+            BOOL hosted=server&&[url rangeOfString:@"?listen" options:NSCaseInsensitiveSearch].location!=NSNotFound;
+            if(hosted&&!tb_vengeance_hosted)tb_vengeance_hosting++;
+            tb_vengeance_loads++;
+            tb_vengeance_hosted=hosted;}
         NSRange line=[s rangeOfString:@"\n" options:NSBackwardsSearch];NSString *rest=line.location==NSNotFound?s:[s substringFromIndex:NSMaxRange(line)];
         snprintf(tail,sizeof tail,"%s",rest.length<sizeof tail?rest.UTF8String:"");}
     [log closeFile];return server;
@@ -168,7 +178,7 @@ static void tb_set(NSString *key,double value){[NSUserDefaults.standardUserDefau
 -(void)toggleControls;
 -(void)settingsChanged;
 -(void)hideForController;
--(void)showControllerHint;
+-(BOOL)showControllerHint;
 -(void)pointerMoveTo:(CGPoint)point delta:(CGPoint)delta held:(BOOL)held;
 -(void)pointerButton:(BOOL)down at:(CGPoint)point;
 -(void)pointerClickAt:(CGPoint)point;
@@ -1099,10 +1109,29 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
         if(tb_vengeance&&tb_vengeance_graphics_pending){__weak TBGameControls *weak=self;
             dispatch_after(dispatch_time(DISPATCH_TIME_NOW,(int64_t)(NSEC_PER_SEC/2)),dispatch_get_main_queue(),^{[weak applyVengeanceGraphics];});}
         if(!self.expanded&&!(self.controllerUsed&&TB_HIDE_WITH_CONTROLLER)&&!self.mouseUsed)[self toggleControls];
-        if(self.controllerUsed)[self showControllerHint];
+        BOOL server=tb_vengeance&&tb_vengeance_on_server();
+        if(server)[self pickVengeanceTeam];
+        if(self.controllerUsed){if(![self showControllerHint]&&server)[self showPointerHint];}
         else if(self.expanded)[self showHint];
     } else if(self.expanded&&!self.restoreControlsAfterKeyboard)[self toggleControls];
     [self rebuildMenu];[self setNeedsLayout];
+}
+/* Hosting a Vengeance game here: the host joins as a spectator, and picking a team
+   took a trip through the game's team screen. Once per hosted game, the host joins
+   Blood Eagle (the console's changeTeam), then the respawn map is a press of RT away. */
+-(void)pickVengeanceTeam {
+    static unsigned picked;if(!tb_vengeance_hosted||picked==tb_vengeance_hosting)return;picked=tb_vengeance_hosting;
+    fprintf(stderr,"TribesPad: hosting, joining a team\n");
+    __weak TBGameControls *weak=self;
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW,(int64_t)(NSEC_PER_SEC*3/2)),dispatch_get_main_queue(),^{[weak typeVengeanceCommand:@"changeteam 0"];});
+}
+/* On a server, the respawn map and the loadout screen take a pointer: with a
+   controller the right stick moves it and RT clicks. Said at the start of each
+   match while the full controller hint is no longer shown. */
+-(void)showPointerHint {
+    static unsigned shownFor;if(shownFor==tb_vengeance_loads)return;shownFor=tb_vengeance_loads;
+    [self.hint.layer removeAllAnimations];
+    [self flashHint:@"Respawn map and loadout screens: the right stick moves the pointer, RT clicks"];
 }
 /* The first few times the controls appear, say what the main buttons do. */
 -(void)showHint {
@@ -1142,8 +1171,8 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
     for(NSUInteger i=0;i<codes.count;i++)dispatch_after(dispatch_time(DISPATCH_TIME_NOW,(int64_t)(i*70*NSEC_PER_MSEC)),dispatch_get_main_queue(),^{
         [weak tapKey:(SDL_Scancode)codes[i].intValue];});
 }
--(void)showControllerHint {
-    double shown=tb_setting(@"TribesPad.controllerHintsShown",0);if(shown>=3)return;tb_set(@"TribesPad.controllerHintsShown",shown+1);
+-(BOOL)showControllerHint {
+    double shown=tb_setting(@"TribesPad.controllerHintsShown",0);if(shown>=3)return NO;tb_set(@"TribesPad.controllerHintsShown",shown+1);
     /* Each game's own layout: Starsiege's is starsiege_input.c's. */
     self.hint.text=tb_vengeance?@"RT fire  ·  LT jet  ·  A jump (hold to ski)  ·  LB ski  ·  RB / D-pad left next / previous weapon\n"
         "Y grenade  ·  X pack  ·  B use  ·  D-pad: up zoom level, down objectives, right loadout\n"
@@ -1158,6 +1187,7 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
     [self.hint.layer removeAllAnimations];[self setNeedsLayout];[self layoutIfNeeded];
     [UIView animateWithDuration:.3 animations:^{self.hint.alpha=1;}];
     [UIView animateWithDuration:.6 delay:12 options:UIViewAnimationOptionAllowUserInteraction animations:^{self.hint.alpha=0;} completion:nil];
+    return YES;
 }
 /* Pointer events from the trackpad cursor, in window points like SDL's own. */
 -(void)pointerMoveTo:(CGPoint)point delta:(CGPoint)delta held:(BOOL)held {

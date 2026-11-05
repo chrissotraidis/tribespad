@@ -417,10 +417,12 @@ uint32_t vg_message_box_w(uint64_t base,uint32_t window,uint32_t text,uint32_t c
    folder's write permission is checked and the handle is opened for
    attributes only; nothing writes through a directory handle. */
 extern uint32_t tribes_create_file_w(uint64_t base,uint32_t name,uint32_t access,uint32_t share,uint32_t security,uint32_t creation,uint32_t flags,uint32_t template_handle);
+static uint32_t game_log=UINT32_MAX;   /* the game's own log (tv_cd_dvd.log), echoed in part below */
 uint32_t vg_create_file_w(uint64_t base,uint32_t name,uint32_t rights,uint32_t share,uint32_t security,uint32_t creation,uint32_t flags,uint32_t template_handle){
  const uint32_t write=UINT32_C(0x40000000)|2u|4u|0x100u|0x10u;
  static int trace=-1;if(trace<0)trace=getenv("VENGEANCE_TRACE_FILES")!=NULL;
- if(trace){char guest[PATH_MAX];if(read_ascii(base,name,1,guest,sizeof guest))fprintf(stderr,"TribesPad file: open %s\n",guest);}
+ char named[PATH_MAX];int have_name=read_ascii(base,name,1,named,sizeof named);
+ if(trace&&have_name)fprintf(stderr,"TribesPad file: open %s\n",named);
  if(creation==3&&(flags&0x02000000u)&&(rights&write)){
   char guest[PATH_MAX],host[PATH_MAX];struct stat st;
   if(read_ascii(base,name,1,guest,sizeof guest)&&tribes_filesystem_resolve(base,guest,host,sizeof host)&&!stat(host,&st)&&S_ISDIR(st.st_mode)){
@@ -428,7 +430,31 @@ uint32_t vg_create_file_w(uint64_t base,uint32_t name,uint32_t rights,uint32_t s
    rights&=~write;
   }
  }
- return tribes_create_file_w(base,name,rights,share,security,creation,flags,template_handle);
+ uint32_t handle=tribes_create_file_w(base,name,rights,share,security,creation,flags,template_handle);
+ size_t n=have_name?strlen(named):0;
+ if(handle!=UINT32_MAX&&(rights&UINT32_C(0x40000000))&&n>=13&&!strcasecmp(named+n-13,"tv_cd_dvd.log"))game_log=handle;
+ return handle;
+}
+
+/* WriteFile: TribesPad's service. Lines of the game's own log that say what it is
+   loading (map, game type, load times) or why it stopped also go to TribesPad's
+   log, as "TribesPad game: ...", beside the hitch and frame lines. */
+extern uint32_t tribes_write_file(uint64_t base,uint32_t handle,uint32_t buffer,uint32_t count,uint32_t output,uint32_t overlapped);
+static void echo_game_log(const char *text,uint32_t count){
+ static char line[512];static size_t used;
+ static const char *const kept[]={"Log: Browse:","Log: LoadMap:","Log: Loadmap executed","Log: Startup time","Log: Finished precaching",
+  "Log: Game class is","Log: Server switch level","Critical:","Exit: Preparing to exit"};
+ for(uint32_t i=0;i<count;i++){
+  char c=text[i];if(!c||c=='\r')continue;
+  if(c!='\n'){if(used+1<sizeof line)line[used++]=c;continue;}
+  line[used]=0;
+  for(unsigned k=0;k<sizeof kept/sizeof kept[0];k++)if(!strncmp(line,kept[k],strlen(kept[k]))){fprintf(stderr,"TribesPad game: %s\n",line);break;}
+  used=0;
+ }
+}
+uint32_t vg_write_file(uint64_t base,uint32_t handle,uint32_t buffer,uint32_t count,uint32_t output,uint32_t overlapped){
+ if(handle==game_log&&buffer&&count)echo_game_log((const char *)GUEST(base,buffer),count);
+ return tribes_write_file(base,handle,buffer,count,output,overlapped);
 }
 
 /* Identity and system information, the values a single-user Windows XP
