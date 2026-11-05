@@ -236,9 +236,24 @@ same release once to translate the game's code ([progress](docs/validation/venge
 
 - **Campaign:** New Game, Load Game and the whole story; ··· → This Match → Campaign has Quick
   Save and Quick Load.
-- **Bots:** **··· → Play Online → Play with Bots** hosts one of four bot maps from the community's
-  TRIBESai mod (Fort, Emerald, Tropics, Feigned Beliefs) and switches on the bots of both teams.
-  The build fetches the mod from tribesrevengeance.net; it is not in the repository.
+- **Bots:** on four bot maps from the community's TRIBESai mod: Fort, Emerald, Tropics and
+  Feigned Beliefs. The game's other maps have no bot paths, so bots can't be added to them.
+  - **Start:** **··· → Play Online → Play with Bots** on iPhone and iPad (shown when you are not
+    on a server), or **Game → Play with Bots** on the Mac, then choose a map.
+  - **What happens:** TribesPad hosts the map as capture the flag on your device, with
+    tournament mode off so the match starts at once, puts you on Blood Eagle, and a few seconds
+    after the map loads switches on both teams' bots. The map normally does that from a console
+    in each base; TribesPad runs the same scripts through the game's console, which flashes
+    briefly while it types. Bots spawn and play about 20 seconds after you choose.
+  - **How many:** each map's scripts set its bots (seven or eight a side on Fort); there is no
+    count to choose.
+  - **Your own game:** a game hosted from the game's MULTIPLAYER screen has no bots. On the Mac,
+    on one of the four bot maps, **Game → Play with Bots → Switch Bots On Here** turns them on.
+  - **Building:** the build fetches TRIBESai from tribesrevengeance.net and unpacks it with
+    `unar` (`brew install unar`); without `unar` the app has no bot maps and no Play with Bots.
+    Nothing from the mod is in the repository.
+  - **Checked:** on the Mac (by hand, and the menu's exact steps in a scripted run). Not yet
+    played on an iPad.
 - **Multiplayer:** the game's own MULTIPLAYER screen (··· → Play Online → Server List opens it)
   joins internet and LAN servers and hosts games. The game is free now, and like the community
   release's TV Key Generator, TribesPad gives it a CD key from that program's own list the first
