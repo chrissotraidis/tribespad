@@ -16,6 +16,7 @@
 #include <time.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 #include "../llasm-support/llasm_cpu.h"
 #include "../core/guest_heap.h"
 #include "d3d9/halopad_host.h"
@@ -118,6 +119,26 @@ void *halopad_window_host(uint32_t hwnd, uint32_t width, uint32_t height)
     w->refs = 1;
     for (int i = 0; i < 768; i++) w->lut[i] = (float)(i & 255) / 255.0f;
     w->on_screen = !headless();
+#if !TARGET_OS_IPHONE
+    /* The Mac: the game draws at its own size (tb_vengeance_resolution, 2048x1536 on a
+       Retina screen), and the window fits the screen at 4:3. It can be resized and
+       taken full screen (green button, Control-Command-F); the picture keeps 4:3 with
+       black bars. The game reads the mouse as motion, so the window's size changes
+       nothing for it. */
+    if (w->on_screen) {
+        w->layer.contentsGravity = kCAGravityResizeAspect;
+        w->layer.backgroundColor = CGColorGetConstantColor(kCGColorBlack);
+        SDL_Rect usable;
+        if (SDL_GetDisplayUsableBounds(SDL_GetDisplayForWindow(native), &usable) && width && height) {
+            float fit = fminf((float)(usable.w - 40) / (float)width, (float)(usable.h - 40) / (float)height);
+            if (fit > 1) fit = 1;
+            SDL_SetWindowResizable(native, true);
+            SDL_SetWindowAspectRatio(native, (float)width / (float)height, (float)width / (float)height);
+            SDL_SetWindowSize(native, (int)((float)width * fit), (int)((float)height * fit));
+            SDL_SetWindowPosition(native, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+        }
+    }
+#endif
     for (int i = 0; i < 4; i++)
         if (!known[i].hwnd) { known[i].hwnd = hwnd; known[i].w = w; w->refs++; break; }
     fprintf(stderr, "vengeance d3d9: window 0x%x draws %ux%u through Metal%s\n", hwnd, width, height, w->on_screen ? "" : " (hidden)");

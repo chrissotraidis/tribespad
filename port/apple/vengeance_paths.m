@@ -14,6 +14,8 @@
 #include <TargetConditionals.h>
 #if !TARGET_OS_OSX
 #import <UIKit/UIKit.h>
+#else
+#import <AppKit/AppKit.h>
 #endif
 #include <stdio.h>
 #include <string.h>
@@ -31,13 +33,14 @@ int tb_vengeance_bundled(const char *gamedata,const char *storage){
     return [NSFileManager.defaultManager fileExistsAtPath:[@(gamedata) stringByAppendingPathComponent:@"Vengeance/images"]]&&source_game(gamedata,storage)!=nil;
 }
 /* The game's drawing size, one of three 4:3 sizes, unless chosen otherwise:
-   2048x1536 on iPad and 1600x1200 on iPhone (scaled to the screen); 1024x768 on
-   the Mac, where it is the game's window and must fit the screen. The game is
-   bound by the CPU: on an M2 iPad Pro 2048x1536 costs about 1% of the frame rate. */
+   2048x1536 on iPad and 1600x1200 on iPhone (scaled to the screen); on the Mac
+   2048x1536 on a Retina screen and 1024x768 otherwise, in a window fitted to the
+   screen (vengeance_d3d9_host.m). The game is bound by the CPU: on an M2 iPad Pro
+   2048x1536 costs about 1% of the frame rate. */
 NSString *tb_vengeance_resolution(void){
     NSString *size=[NSUserDefaults.standardUserDefaults stringForKey:@"TribesPad.vengeanceResolution"];
 #if TARGET_OS_OSX
-    NSString *fallback=@"1024x768";
+    NSString *fallback=NSScreen.mainScreen.backingScaleFactor>1?@"2048x1536":@"1024x768";
 #else
     NSString *fallback=UIDevice.currentDevice.userInterfaceIdiom==UIUserInterfaceIdiomPad?@"2048x1536":@"1600x1200";
 #endif
