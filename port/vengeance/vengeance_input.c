@@ -186,7 +186,73 @@ static const char *const bot_classes[]={
  "Sniper","Sniper2","SniperLB","SniperLI","SniperLP","Spammer","SpammerHB","SpammerHI","SpammerHP",
  "SpammerHeavy","pilot",
 };
-static void bot_skill(const char *skill){
+/* The bots as they play, read in the game's memory: every live bot's aim and
+   reaction time in TribesPad's log ("tribespad botaudit", and by itself after the
+   bots start and after a difficulty change), to check what they really use.
+   Objects are UObject::GObjObjects; an object's
+   outer is at 0x18, its name (an FName index) at 0x20, its class at 0x24, and a
+   class's superclass at 0x28 (UField::SuperField). Rook declares its aim as eight
+   floats in a row: shotAngularDeviation and ...MP, shotLeadAbility and ...MP (each a
+   Range, min and max), reactionDelay and ...MP. Where they sit is read from Rook's
+   FloatProperty objects: the field that is 0x18 larger in reactionDelay's than in
+   shotAngularDeviation's is the property's offset. Runs on the game thread
+   (run_commands), in the command queue's order. */
+#include <ctype.h>
+#define GUEST_WORD(base,address) (*(const uint32_t *)GUEST(base,address))
+static uint32_t name_index(uint64_t base,const char *want){
+ static uint32_t names;if(!names)names=vengeance_export("?Names@FName@@0V?$TArray@PAUFNameEntry@@@@A");
+ uint32_t table[2];if(!names||!peek(base,names,table,8)||!table[0])return UINT32_MAX;
+ const uint32_t *entries=GUEST(base,table[0]);
+ for(uint32_t i=0;i<table[1];i++){if(!entries[i])continue;const uint16_t *t=GUEST(base,entries[i]+12);size_t n=0;
+  while(want[n]&&t[n]<128&&tolower(t[n])==tolower((unsigned char)want[n]))n++;
+  if(!want[n]&&!t[n])return i;}
+ return UINT32_MAX;
+}
+static void name_text(uint64_t base,uint32_t index,char *out,size_t size){
+ static uint32_t names;if(!names)names=vengeance_export("?Names@FName@@0V?$TArray@PAUFNameEntry@@@@A");
+ uint32_t table[2],entry;uint16_t text[48];out[0]=0;size_t n=0;
+ if(!names||!peek(base,names,table,8)||index>=table[1]||!peek(base,table[0]+4*index,&entry,4)||!peek(base,entry+12,text,sizeof text))return;
+ for(;n+1<size&&n<48&&text[n]&&text[n]<128;n++)out[n]=(char)text[n];
+ out[n]=0;
+}
+typedef struct {const uint32_t *list;uint32_t count,ai,offset;} BotScan;
+static int bot_scan(uint64_t base,BotScan *s){
+ static uint32_t objects,ai,offset,n_ai=UINT32_MAX,n_class;
+ if(!objects)objects=vengeance_export("?GObjObjects@UObject@@0V?$TArray@PAVUObject@@@@A");
+ uint32_t array[2];if(!objects||!peek(base,objects,array,8)||!array[0])return 0;
+ s->list=GUEST(base,array[0]);s->count=array[1];
+ if(n_ai==UINT32_MAX){n_ai=name_index(base,"BaseAICharacter");n_class=name_index(base,"Class");}
+ if(ai&&GUEST_WORD(base,ai+0x20)!=n_ai)ai=0;   /* a class unloaded since */
+ if(!ai||!offset){
+  uint32_t n_float=name_index(base,"FloatProperty"),n_rook=name_index(base,"Rook"),
+   n_dev=name_index(base,"shotAngularDeviation"),n_react=name_index(base,"reactionDelay"),dev=0,react=0;
+  for(uint32_t i=0;i<s->count;i++){uint32_t o=s->list[i],cls=o?GUEST_WORD(base,o+0x24):0;if(!cls)continue;
+   uint32_t name=GUEST_WORD(base,o+0x20),kind=GUEST_WORD(base,cls+0x20);
+   if(name==n_ai&&kind==n_class)ai=o;
+   else if(kind==n_float&&(name==n_dev||name==n_react)){uint32_t outer=GUEST_WORD(base,o+0x18);
+    if(outer&&GUEST_WORD(base,outer+0x20)==n_rook){if(name==n_dev)dev=o;else react=o;}}}
+  if(dev&&react&&!offset)for(uint32_t k=0x30;k<0x80;k+=4){uint32_t a=GUEST_WORD(base,dev+k);
+   if(a>=0x28&&a<0x10000&&GUEST_WORD(base,react+k)==a+0x18){offset=a;break;}}
+  if(ai&&offset)fprintf(stderr,"TribesPad bots: found the bots' aim settings in the game (+0x%x)\n",offset);
+ }
+ s->ai=ai;s->offset=offset;return ai&&offset;
+}
+static int is_bot(uint64_t base,uint32_t object,uint32_t ai){
+ uint32_t c=GUEST_WORD(base,object+0x24);
+ for(int depth=0;c&&depth<16;depth++,c=GUEST_WORD(base,c+0x28))if(c==ai)return 1;
+ return 0;
+}
+static void bot_audit(void){
+ uint64_t base=vengeance_guest_base();BotScan s;unsigned n=0;
+ if(!bot_scan(base,&s))return;
+ for(uint32_t i=0;i<s.count;i++){uint32_t o=s.list[i];if(!o||!is_bot(base,o,s.ai))continue;
+  const float *aim=GUEST(base,o+s.offset);char name[48];name_text(base,GUEST_WORD(base,o+0x20),name,sizeof name);
+  fprintf(stderr,"TribesPad bot: %s: aim spread %.1f degrees, lead %.1f to %.1f, reaction %.2f s\n",name,aim[0],aim[2],aim[3],aim[6]);n++;}
+ fprintf(stderr,"TribesPad bots: %u in the game\n",n);
+}
+static uint64_t audit_at;
+#define AUDIT_COMMAND "#tribespad-audit"   /* queued: run_commands audits there */
+static void bot_skill(const char *skill,int audit){
  /* TRIBESai's own: 2 degrees of spread either way (snipers 1, the Glorax 0), 0.5 s to react. */
  double spread=2,sniper=1,glorax=0,react=0.5;
  if(!strcmp(skill,"easy")){spread=9;sniper=5;glorax=9;react=1.5;}
@@ -196,8 +262,14 @@ static void bot_skill(const char *skill){
   double s=!strncmp(c,"Sniper",6)?sniper:!strcmp(c,"Glorax")?glorax:spread;
   snprintf(line,sizeof line,"set BaseBotsSTS.%s shotAngularDeviationMP %g",c,s);queue_command(line);
   snprintf(line,sizeof line,"set BaseBotsSTS.%s reactionDelayMP %g",c,react);queue_command(line);}
+ /* SET on a class reaches the bots playing too (checked with the audit): all of them,
+   then snipers and the Glorax their own spread. Then the audit, once these are done. */
  snprintf(line,sizeof line,"set BaseAICharacter shotAngularDeviation %g",spread);queue_command(line);
  snprintf(line,sizeof line,"set BaseAICharacter reactionDelay %g",react);queue_command(line);
+ for(size_t i=0;i<sizeof bot_classes/sizeof bot_classes[0];i++){const char *c=bot_classes[i];
+  if(strncmp(c,"Sniper",6)&&strcmp(c,"Glorax"))continue;
+  snprintf(line,sizeof line,"set BaseBotsSTS.%s shotAngularDeviation %g",c,!strcmp(c,"Glorax")?glorax:sniper);queue_command(line);}
+ if(audit)queue_command(AUDIT_COMMAND);
  fprintf(stderr,"TribesPad bots: difficulty %s: aim spread %g degrees (snipers %g), reaction %g s\n",skill,spread,sniper,react);
 }
 /* TribesPad's own commands, from the ··· menu and the Mac menu:
@@ -212,27 +284,37 @@ static void bot_skill(const char *skill){
                                 (15) is all seven. Every bot costs frames: they are the
                                 game's own scripted AI, run through translated code.
    "tribespad botskill <skill>" the difficulty for the bots playing and those to come;
-   "tribespad botlog on|off"    every bot's decisions (logTyrion) copied to TribesPad's log.
+   "tribespad botlog on|off"    every bot's decisions (logTyrion) copied to TribesPad's log;
+   "tribespad botaudit"         each bot's aim and reaction time in TribesPad's log (also
+                                logged by itself 25 s after the bots start, and after a
+                                difficulty change).
    SET and the map's scripts need the game's developer tools, on only meanwhile. */
 extern int vengeance_echo_all;
+/* Set below: the developer tools TribesPad keeps on for a bot map about to be hosted. */
+static int devtools_ours,bots_pending;
 void vengeance_run_command(const char *line){
  if(!line||!*line)return;
  if(strncmp(line,"tribespad ",10)){queue_command(line);return;}
  char what[16]="",arg[16]="",more[16]="",size[16]="";sscanf(line+10,"%15s %15s %15s %15s",what,arg,more,size);
  if(!strcmp(what,"bots")){
-  queue_command("changeteam 0");queue_command("set GameEngine EnableDevTools True");bot_skill(more[0]?more:"normal");
+  queue_command("changeteam 0");queue_command("set GameEngine EnableDevTools True");bot_skill(more[0]?more:"normal",0);
   static const int small[]={1,3,4},medium[]={1,3,4,5,6},full[]={1,2,3,4,5,6,7};
   const int *chosen=full;size_t count=7;
   if(!strcmp(size,"small")){chosen=small;count=3;}else if(!strcmp(size,"medium")){chosen=medium;count=5;}
   fprintf(stderr,"TribesPad bots: %s game, %zu of each base's 7 bot scripts\n",size[0]?size:"full",count);
   char script[48];for(int team=1;team<=2;team++)for(size_t i=0;i<count;i++){snprintf(script,sizeof script,"runscript %02dConfig%02dScript",team,chosen[i]);queue_command(script);}
   queue_command("set GameEngine EnableDevTools False");
+  audit_at=ss_frames()+1500;
  } else if(!strcmp(what,"botskill")){
-  queue_command("set GameEngine EnableDevTools True");bot_skill(arg);queue_command("set GameEngine EnableDevTools False");
+  /* Developer tools stay on if a bot map hosted from the Multiplayer screen needs them. */
+  queue_command("set GameEngine EnableDevTools True");bot_skill(arg,1);
+  if(!devtools_ours&&!bots_pending)queue_command("set GameEngine EnableDevTools False");
  } else if(!strcmp(what,"botlog")){
   int on=!strcmp(arg,"on");if(on!=vengeance_echo_all){vengeance_echo_all=on;queue_command("logTyrion");}
+  if(on)queue_command(AUDIT_COMMAND);
   fprintf(stderr,"TribesPad bots: decisions log %s\n",on?"on":"off");
- } else fprintf(stderr,"TribesPad command not known: %s\n",line);
+ } else if(!strcmp(what,"botaudit"))queue_command(AUDIT_COMMAND);
+ else fprintf(stderr,"TribesPad command not known: %s\n",line);
 }
 /* Hosting one of TRIBESai's bot maps, from the game's own MULTIPLAYER > HOST screen
    or anywhere else (a LoadMap of an MP-...Bots... map with ?listen, from the game's
@@ -240,14 +322,14 @@ void vengeance_run_command(const char *line){
    base's console had been used, at the difficulty and size TribesPad's settings give
    (TRIBESPAD_BOT_SKILL, TRIBESPAD_BOT_SIZE, set by the app). Any other load cancels it.
    The game writes its log in pieces, so it is flushed when play begins (run_commands). */
-static int bots_pending;static uint64_t bots_due;static int flush_wanted;
+static uint64_t bots_due;static int flush_wanted;
 /* The map's scripts run only through the game's developer cheat manager, which a
    hosted game gives its players when the game's developer tools are on as the level
    starts (MultiplayerGameInfo: CheatClass). So they are on while the game's
    Multiplayer screen is open, where hosting starts, and go off again once play
    begins: then the running game's CheatClass goes back to the standard one, so
    only the host keeps the developer commands and anyone who joins gets the usual. */
-static int devtools_ours;static uint64_t decide_at;
+static uint64_t decide_at;
 void vengeance_note_load(const char *url){
  int bot_map=!strncasecmp(url,"MP-",3)&&strcasestr(url,"Bots")&&strcasestr(url,"?listen");
  if(bot_map&&!bots_pending)fprintf(stderr,"TribesPad bots: hosting a bot map (%.60s); its bots start once play begins\n",url);
@@ -301,6 +383,7 @@ static void run_commands(_cpu *cpu){
  static uint32_t exec,glog;
  if(!exec){exec=vengeance_export("?Exec@UWindowsViewport@@UAEHPBGAAVFOutputDevice@@@Z");glog=vengeance_export("?GLog@@3PAVFOutputDevice@@A");}
  if(flush_wanted){flush_wanted=0;flush_game_log(cpu,(cpu->_esp-2048-64)&~15u);}
+ if(audit_at&&ss_frames()>=audit_at){audit_at=0;queue_command(AUDIT_COMMAND);}
  if(command_head==command_tail)return;
  static int told;if(!told){told=1;fprintf(stderr,"TribesPad command runner: game stack at 0x%x (%p to %p)\n",cpu->_esp,cpu->stack_bottom,cpu->stack_top);}
  /* At most about 6 ms a frame: a difficulty change is 220 commands. */
@@ -311,6 +394,7 @@ static void run_commands(_cpu *cpu){
   pthread_mutex_lock(&command_lock);char *line=command_head!=command_tail?commands[command_head]:NULL;
   if(line)command_head=(command_head+1)%512;pthread_mutex_unlock(&command_lock);
   if(!line)return;
+  if(!strcmp(line,AUDIT_COMMAND)){bot_audit();free(line);continue;}
   uint64_t base=vengeance_guest_base();uint32_t g=vengeance_gui_controller(),viewport=0,device=0;char kind[64]="";
   if(!exec||!glog||!g||!peek(base,g+0x2c,&viewport,4)||!class_name(base,viewport,kind,sizeof kind)||strcmp(kind,"WindowsViewport")||
      !peek(base,glog,&device,4)||!device){

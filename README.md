@@ -258,11 +258,16 @@ same release once to translate the game's code ([progress](docs/validation/venge
     vehicle bots). Every bot is the game's own scripted AI, and it costs frames: on the Mac,
     Small plays at 40 to 58 frames a second and Full at 20 to 30.
   - **Difficulty:** **Easy** (aim spread 9°, a 1.5 s reaction), **Normal** (5°, 0.9 s) or
-    **Hard** (TRIBESai's own: 2°, 0.5 s; snipers tighter). Size and difficulty are in **··· →
+    **Hard** (TRIBESai's own: 2°, 0.5 s). Snipers are tighter (5°, 3° and 1°). Every bot also
+    leads a moving target by a random 0 to 2 times its motion, as TRIBESai made them, so a
+    target that stands still is the easiest to hit. Size and difficulty are in **··· →
     Options → Bots** (the Mac: **Game → Bots**); during a bot game, **This Match → Bots** changes
     the difficulty of the bots already playing.
   - **Log Bot Decisions:** **This Match → Bots** writes every bot's choices (its goal and the
     action it takes, from the game's own AI log) to TribesPad's log; it costs a little speed.
+  - **Bot audit:** TribesPad's log lists every bot with the aim spread, lead and reaction time it
+    is really using, read from the game: 25 seconds after the bots start, after each difficulty
+    change, and when Log Bot Decisions is turned on (lines starting `TribesPad bot:`).
   - **Building:** the build fetches TRIBESai from tribesrevengeance.net and unpacks it with
     `unar` (`brew install unar`); without `unar` the app has no bot maps.
     Nothing from the mod is in the repository.
