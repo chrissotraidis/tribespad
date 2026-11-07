@@ -12,9 +12,11 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <strings.h>
 #include <stdlib.h>
 #include "../llasm-support/llasm_cpu.h"
 #include "../core/keyboard_state.h"
+#include <mach/mach.h>
 
 extern void (*ss_key_hook)(unsigned dik,int down);
 extern void ss_input_pump(_cpu *cpu);
@@ -33,6 +35,29 @@ extern uint64_t vengeance_guest_base(void);
 enum {WM_KEYDOWN=0x100,WM_KEYUP=0x101,WM_CHAR=0x102,WM_SYSKEYDOWN=0x104,WM_SYSKEYUP=0x105,WM_SYSCHAR=0x106};
 
 static int alt_down;
+/* The character each key down types, decided when the key goes down. The iPad's
+   keyboard sends Shift, the letter and Shift up within one pump, before the game
+   translates the message: translated then, a capital came out in lower case. */
+static struct {uint32_t vk;uint16_t c;uint8_t typed;} typed[32];
+static unsigned typed_head,typed_count;
+static uint32_t char_buffer(uint64_t base){
+ static uint32_t out;if(!out){uint32_t e=tribes_get_last_error();out=tribes_global_alloc(base,0x40,4);tribes_set_last_error(e);}return out;
+}
+static void note_typed(uint64_t base,uint32_t vk,unsigned scan){
+ uint32_t out=char_buffer(base);if(!out)return;
+ unsigned at=(typed_head+typed_count)%32;if(typed_count==32){typed_head=(typed_head+1)%32;typed_count--;}
+ typed[at].vk=vk;typed[at].typed=tribes_to_ascii(base,vk,scan,0,out,0)==1;
+ if(typed[at].typed)memcpy(&typed[at].c,GUEST(base,out),2);
+ typed_count++;
+}
+/* The character noted for this key down: 1 if one was noted (*c, or none typed). */
+static int take_typed(uint32_t vk,uint16_t *c,int *any){
+ for(unsigned i=0;i<typed_count;i++){unsigned at=(typed_head+i)%32;if(typed[at].vk!=vk)continue;
+  *c=typed[at].c;*any=typed[at].typed;
+  for(unsigned j=i;j>0;j--)typed[(typed_head+j)%32]=typed[(typed_head+j-1)%32];   /* drop it, keep the order */
+  typed_head=(typed_head+1)%32;typed_count--;return 1;}
+ return 0;
+}
 /* A DirectInput key code (scan code, | 0x80 for E0-prefixed keys) as a message. */
 static void key(unsigned dik,int down){
  uint64_t base=vengeance_guest_base();
@@ -44,6 +69,7 @@ static void key(unsigned dik,int down){
  uint32_t window=ss_get_focus();if(!window)window=ss_get_foreground_window();if(!window)return;
  uint32_t lp=1u|(scan<<16)|(extended<<24)|(down?0u:0xc0000000u);
  uint32_t message=(alt_down||vk==0x12)?(down?WM_SYSKEYDOWN:WM_SYSKEYUP):(down?WM_KEYDOWN:WM_KEYUP);
+ if(message==WM_KEYDOWN)note_typed(base,vk,scan);
  uint32_t posted=tribes_post_message(base,window,message,vk,lp);
  static int trace=-1;if(trace<0)trace=getenv("VENGEANCE_TRACE_KEYS")!=NULL;
  if(trace)fprintf(stderr,"vengeance key: dik 0x%x vk 0x%x %s to 0x%x (posted %u, state 0x%x) thread %p\n",dik,vk,down?"down":"up",window,posted,tribes_get_key_state(base,vk),(void *)pthread_self());
@@ -79,21 +105,361 @@ static int playing(void){
  uint32_t g=vengeance_gui_controller();if(!g)return 0;
  uint32_t flags;memcpy(&flags,GUEST(vengeance_guest_base(),g+0x28),4);return !(flags&2);
 }
+/* For TribesPad's Mac menu (port/apple/mac_menu.m): 1 in play, 0 in a menu or loading. */
+int vengeance_in_play(void){return playing();}
+/* A page made for typing is open in the game's GUI, so TribesPad brings up the
+   on-screen keyboard: a new profile's name, a server or admin password, a saved
+   game's name, the GameSpy login. GUIController.ActivePage is at 0xac (checked on
+   the Mac: the profile name popup appears there on CREATE). An object's class is
+   at 0x24 and a class's name at 0x20, an index into FName::Names (Core.dll),
+   whose entries hold the name as UTF-16 after 12 bytes. VENGEANCE_TRACE_GUI logs
+   each page as it opens. */
+extern uint32_t vengeance_export(const char *name);
+/* Guest memory read without trusting the pointer: the kernel reports an unmapped
+   address instead of the read faulting (the controller's fields are not set yet
+   early on, and a class or name pointer may be stale). */
+static int peek(uint64_t base,uint32_t address,void *out,size_t size){
+ vm_size_t got=0;
+ return address&&vm_read_overwrite(mach_task_self(),(vm_address_t)(base+address),size,(vm_address_t)out,&got)==KERN_SUCCESS&&got==size;
+}
+static int class_name(uint64_t base,uint32_t object,char *out,size_t size){
+ static uint32_t names;if(!names)names=vengeance_export("?Names@FName@@0V?$TArray@PAUFNameEntry@@@@A");
+ out[0]=0;if(!object||!names)return 0;
+ uint32_t cls,index,table[2],entry;uint16_t text[64];
+ if(!peek(base,object+0x24,&cls,4)||!peek(base,cls+0x20,&index,4)||!peek(base,names,table,8))return 0;
+ if(!table[0]||index>=table[1]||!peek(base,table[0]+4*index,&entry,4)||!peek(base,entry+12,text,sizeof text))return 0;
+ size_t n=0;for(;n+1<size&&n<64;n++){if(!text[n]||text[n]>127)break;out[n]=(char)text[n];}
+ out[n]=0;return n>0;
+}
+static char current_page[64];   /* the game's active GUI page, by class name */
+int vengeance_text_focused(void){
+ uint32_t g=vengeance_gui_controller();if(!g)return 0;uint64_t base=vengeance_guest_base();
+ uint32_t page;if(!peek(base,g+0xac,&page,4))return 0;
+ static uint32_t last_page;static int typing;
+ if(page==last_page)return typing;
+ last_page=page;char name[64];class_name(base,page,name,sizeof name);
+ snprintf(current_page,sizeof current_page,"%s",name);
+ static const char *const typed[]={"TribesDefaultTextEntryPopup","TribesAdminLoginPopup","TribesGamespyLogin","TribesGamespyTeamLogin","TribesSaveGameMenu"};
+ typing=0;for(unsigned i=0;i<sizeof typed/sizeof typed[0];i++)if(!strcmp(name,typed[i]))typing=1;
+ /* Each page change is logged on iOS (the session log), on the Mac with VENGEANCE_TRACE_GUI. */
+ static int trace=-1;if(trace<0)trace=TARGET_OS_IPHONE||getenv("VENGEANCE_TRACE_GUI")!=NULL;
+ if(trace)fprintf(stderr,"TribesPad: game page %s%s\n",name[0]?name:"(none)",typing?" (typing)":"");
+ return typing;
+}
 __attribute__((constructor)) static void install(void){ss_key_hook=key;ss_pointer_hook=pointer;ss_button_hook=button;ss_input_use_vengeance_pad();ss_play_state_hook=playing;ss_window_title="Tribes: Vengeance";}
+
+/* Console commands TribesPad runs itself (Play with Bots, Bot Difficulty, the bot
+   views): the game's own command handler, the viewport's Exec (UWindowsViewport::Exec,
+   Engine.dll: what the console calls, so the player's exec functions, the cheat
+   manager and the engine's SET and OPEN), called on the game thread at a presented
+   frame. Unlike typed commands it is instant and the console never opens. The game's
+   replies go to its log, which TribesPad's log copies for two seconds after each
+   (vengeance_win32.c). The viewport is GUIController.ViewportOwner (Interaction,
+   0x2c, after its flags at 0x28). VENGEANCE_COMMANDS names a file of
+   "<frame> <command>" lines for scripted checks. */
+#include <time.h>
+/* port/core/guest_callback.h (not included: it reaches llasm_cpu.h by another path) */
+extern uint32_t tribes_call_guest(_cpu *parent,uint32_t target,uint32_t count,const uint32_t *arguments,uint32_t stack_top);
+extern double vengeance_echo_all_until;
+static pthread_mutex_t command_lock=PTHREAD_MUTEX_INITIALIZER;
+static char *commands[512];static unsigned command_head,command_tail;
+static void queue_command(const char *line){
+ pthread_mutex_lock(&command_lock);unsigned next=(command_tail+1)%512;
+ if(next!=command_head){commands[command_tail]=strdup(line);command_tail=next;}
+ else fprintf(stderr,"TribesPad command dropped (queue full): %s\n",line);
+ pthread_mutex_unlock(&command_lock);
+}
+/* TRIBESai's bot classes (BaseBotsSTS.pkg, every class under BotAISettings): each
+   copies its multiplayer aim spread and reaction time when it spawns, so the
+   difficulty is set on each class (and on the bots already playing). */
+static const char *const bot_classes[]={
+ "BotAISettings","Buckler","CustomBots","Defender","DefenderMB","DefenderMI","DefenderMP","DefenderMedium",
+ "Duelist","DuelistHB","DuelistHI","DuelistHP","DuelistHeavy","DuelistLB","DuelistLI","DuelistLP",
+ "DuelistLight","DuelistMB","DuelistMI","DuelistMP","DuelistMedium","Glorax","Grenadier","GrenadierLB",
+ "GrenadierLI","GrenadierLP","GrenadierLight","GrenadierMB","GrenadierMI","GrenadierMP","GrenadierMedium",
+ "Grunt","GruntHB","GruntHI","GruntHP","GruntHeavy","GruntLB","GruntLI","GruntLP","GruntLight","GruntMB",
+ "GruntMI","GruntMP","GruntMedium","HDB","HDI","HDP","HOB","HOI","HOP","Heavy","HeavyD","HeavyO","LDB","LDI",
+ "LDP","LEB","LEI","LEP","LGB","LGI","LGP","LOB","LOI","LOP","LSB","LSI","LSP","Light","LightDefender",
+ "LightEnergy","LightGrenadier","LightHunter","MBB","MBI","MBP","MDB","MDI","MDP","MOB","MOI","MOP","Medium",
+ "MediumD","MediumO","PilotMD","PilotMI","PilotMP","PilotMedium","Protect","ProtectMB","ProtectMI",
+ "ProtectMP","ProtectMedium","Rocketier","RocketierMB","RocketierMI","RocketierMP","RocketierMedium",
+ "Sniper","Sniper2","SniperLB","SniperLI","SniperLP","Spammer","SpammerHB","SpammerHI","SpammerHP",
+ "SpammerHeavy","pilot",
+};
+/* The bots as they play, read in the game's memory: every live bot's aim and
+   reaction time in TribesPad's log ("tribespad botaudit", and by itself after the
+   bots start and after a difficulty change), to check what they really use.
+   Objects are UObject::GObjObjects; an object's
+   outer is at 0x18, its name (an FName index) at 0x20, its class at 0x24, and a
+   class's superclass at 0x28 (UField::SuperField). Rook declares its aim as eight
+   floats in a row: shotAngularDeviation and ...MP, shotLeadAbility and ...MP (each a
+   Range, min and max), reactionDelay and ...MP. Where they sit is read from Rook's
+   FloatProperty objects: the field that is 0x18 larger in reactionDelay's than in
+   shotAngularDeviation's is the property's offset. Runs on the game thread
+   (run_commands), in the command queue's order. */
+#include <ctype.h>
+#define GUEST_WORD(base,address) (*(const uint32_t *)GUEST(base,address))
+static uint32_t name_index(uint64_t base,const char *want){
+ static uint32_t names;if(!names)names=vengeance_export("?Names@FName@@0V?$TArray@PAUFNameEntry@@@@A");
+ uint32_t table[2];if(!names||!peek(base,names,table,8)||!table[0])return UINT32_MAX;
+ const uint32_t *entries=GUEST(base,table[0]);
+ for(uint32_t i=0;i<table[1];i++){if(!entries[i])continue;const uint16_t *t=GUEST(base,entries[i]+12);size_t n=0;
+  while(want[n]&&t[n]<128&&tolower(t[n])==tolower((unsigned char)want[n]))n++;
+  if(!want[n]&&!t[n])return i;}
+ return UINT32_MAX;
+}
+static void name_text(uint64_t base,uint32_t index,char *out,size_t size){
+ static uint32_t names;if(!names)names=vengeance_export("?Names@FName@@0V?$TArray@PAUFNameEntry@@@@A");
+ uint32_t table[2],entry;uint16_t text[48];out[0]=0;size_t n=0;
+ if(!names||!peek(base,names,table,8)||index>=table[1]||!peek(base,table[0]+4*index,&entry,4)||!peek(base,entry+12,text,sizeof text))return;
+ for(;n+1<size&&n<48&&text[n]&&text[n]<128;n++)out[n]=(char)text[n];
+ out[n]=0;
+}
+typedef struct {const uint32_t *list;uint32_t count,ai,offset;} BotScan;
+static int bot_scan(uint64_t base,BotScan *s){
+ static uint32_t objects,ai,offset,n_ai=UINT32_MAX,n_class;
+ if(!objects)objects=vengeance_export("?GObjObjects@UObject@@0V?$TArray@PAVUObject@@@@A");
+ uint32_t array[2];if(!objects||!peek(base,objects,array,8)||!array[0])return 0;
+ s->list=GUEST(base,array[0]);s->count=array[1];
+ if(n_ai==UINT32_MAX){n_ai=name_index(base,"BaseAICharacter");n_class=name_index(base,"Class");}
+ if(ai&&GUEST_WORD(base,ai+0x20)!=n_ai)ai=0;   /* a class unloaded since */
+ if(!ai||!offset){
+  uint32_t n_float=name_index(base,"FloatProperty"),n_rook=name_index(base,"Rook"),
+   n_dev=name_index(base,"shotAngularDeviation"),n_react=name_index(base,"reactionDelay"),dev=0,react=0;
+  for(uint32_t i=0;i<s->count;i++){uint32_t o=s->list[i],cls=o?GUEST_WORD(base,o+0x24):0;if(!cls)continue;
+   uint32_t name=GUEST_WORD(base,o+0x20),kind=GUEST_WORD(base,cls+0x20);
+   if(name==n_ai&&kind==n_class)ai=o;
+   else if(kind==n_float&&(name==n_dev||name==n_react)){uint32_t outer=GUEST_WORD(base,o+0x18);
+    if(outer&&GUEST_WORD(base,outer+0x20)==n_rook){if(name==n_dev)dev=o;else react=o;}}}
+  if(dev&&react&&!offset)for(uint32_t k=0x30;k<0x80;k+=4){uint32_t a=GUEST_WORD(base,dev+k);
+   if(a>=0x28&&a<0x10000&&GUEST_WORD(base,react+k)==a+0x18){offset=a;break;}}
+  if(ai&&offset)fprintf(stderr,"TribesPad bots: found the bots' aim settings in the game (+0x%x)\n",offset);
+ }
+ s->ai=ai;s->offset=offset;return ai&&offset;
+}
+static int is_bot(uint64_t base,uint32_t object,uint32_t ai){
+ uint32_t c=GUEST_WORD(base,object+0x24);
+ for(int depth=0;c&&depth<16;depth++,c=GUEST_WORD(base,c+0x28))if(c==ai)return 1;
+ return 0;
+}
+static void bot_audit(void){
+ uint64_t base=vengeance_guest_base();BotScan s;unsigned n=0;
+ if(!bot_scan(base,&s))return;
+ for(uint32_t i=0;i<s.count;i++){uint32_t o=s.list[i];if(!o||!is_bot(base,o,s.ai))continue;
+  const float *aim=GUEST(base,o+s.offset);char name[48];name_text(base,GUEST_WORD(base,o+0x20),name,sizeof name);
+  fprintf(stderr,"TribesPad bot: %s: aim spread %.1f degrees, lead %.1f to %.1f, reaction %.2f s\n",name,aim[0],aim[2],aim[3],aim[6]);n++;}
+ fprintf(stderr,"TribesPad bots: %u in the game\n",n);
+}
+static uint64_t audit_at;
+#define AUDIT_COMMAND "#tribespad-audit"   /* queued: run_commands audits there */
+static void bot_skill(const char *skill,int audit){
+ /* TRIBESai's own: 2 degrees of spread either way (snipers 1, the Glorax 0), 0.5 s to react. */
+ double spread=2,sniper=1,glorax=0,react=0.5;
+ if(!strcmp(skill,"easy")){spread=9;sniper=5;glorax=9;react=1.5;}
+ else if(strcmp(skill,"hard")){spread=5;sniper=3;glorax=5;react=0.9;}
+ char line[160];
+ for(size_t i=0;i<sizeof bot_classes/sizeof bot_classes[0];i++){const char *c=bot_classes[i];
+  double s=!strncmp(c,"Sniper",6)?sniper:!strcmp(c,"Glorax")?glorax:spread;
+  snprintf(line,sizeof line,"set BaseBotsSTS.%s shotAngularDeviationMP %g",c,s);queue_command(line);
+  snprintf(line,sizeof line,"set BaseBotsSTS.%s reactionDelayMP %g",c,react);queue_command(line);}
+ /* SET on a class reaches the bots playing too (checked with the audit): all of them,
+   then snipers and the Glorax their own spread. Then the audit, once these are done. */
+ snprintf(line,sizeof line,"set BaseAICharacter shotAngularDeviation %g",spread);queue_command(line);
+ snprintf(line,sizeof line,"set BaseAICharacter reactionDelay %g",react);queue_command(line);
+ for(size_t i=0;i<sizeof bot_classes/sizeof bot_classes[0];i++){const char *c=bot_classes[i];
+  if(strncmp(c,"Sniper",6)&&strcmp(c,"Glorax"))continue;
+  snprintf(line,sizeof line,"set BaseBotsSTS.%s shotAngularDeviation %g",c,!strcmp(c,"Glorax")?glorax:sniper);queue_command(line);}
+ if(audit)queue_command(AUDIT_COMMAND);
+ fprintf(stderr,"TribesPad bots: difficulty %s: aim spread %g degrees (snipers %g), reaction %g s\n",skill,spread,sniper,react);
+}
+/* TribesPad's own commands, from the ··· menu and the Mac menu:
+   "tribespad bots on <skill> [small|medium|full]"
+                                the host joins Blood Eagle, the difficulty, then the
+                                scripts each base's console runs to switch its bots on.
+                                On the four bot maps a base's scripts are, in order: two
+                                flag defenders; two repair gunners; a defender and a flag
+                                grabber; two grabbers; a duelist and a spammer; a spammer and
+                                a rocketeer; three vehicle bots. Small (6 a side) is the
+                                defenders and grabbers, medium (10) adds the fighters, full
+                                (15) is all seven. Every bot costs frames: they are the
+                                game's own scripted AI, run through translated code.
+   "tribespad botskill <skill>" the difficulty for the bots playing and those to come;
+   "tribespad botlog on|off"    every bot's decisions (logTyrion) copied to TribesPad's log;
+   "tribespad botaudit"         each bot's aim and reaction time in TribesPad's log (also
+                                logged by itself 25 s after the bots start, and after a
+                                difficulty change).
+   SET and the map's scripts need the game's developer tools, on only meanwhile. */
+extern int vengeance_echo_all;
+/* Set below: the developer tools TribesPad keeps on for a bot map about to be hosted. */
+static int devtools_ours,bots_pending;
+void vengeance_run_command(const char *line){
+ if(!line||!*line)return;
+ if(strncmp(line,"tribespad ",10)){queue_command(line);return;}
+ char what[16]="",arg[16]="",more[16]="",size[16]="";sscanf(line+10,"%15s %15s %15s %15s",what,arg,more,size);
+ if(!strcmp(what,"bots")){
+  queue_command("changeteam 0");queue_command("set GameEngine EnableDevTools True");bot_skill(more[0]?more:"normal",0);
+  static const int small[]={1,3,4},medium[]={1,3,4,5,6},full[]={1,2,3,4,5,6,7};
+  const int *chosen=full;size_t count=7;
+  if(!strcmp(size,"small")){chosen=small;count=3;}else if(!strcmp(size,"medium")){chosen=medium;count=5;}
+  fprintf(stderr,"TribesPad bots: %s game, %zu of each base's 7 bot scripts\n",size[0]?size:"full",count);
+  char script[48];for(int team=1;team<=2;team++)for(size_t i=0;i<count;i++){snprintf(script,sizeof script,"runscript %02dConfig%02dScript",team,chosen[i]);queue_command(script);}
+  queue_command("set GameEngine EnableDevTools False");
+  audit_at=ss_frames()+1500;
+ } else if(!strcmp(what,"botskill")){
+  /* Developer tools stay on if a bot map hosted from the Multiplayer screen needs them. */
+  queue_command("set GameEngine EnableDevTools True");bot_skill(arg,1);
+  if(!devtools_ours&&!bots_pending)queue_command("set GameEngine EnableDevTools False");
+ } else if(!strcmp(what,"botlog")){
+  int on=!strcmp(arg,"on");if(on!=vengeance_echo_all){vengeance_echo_all=on;queue_command("logTyrion");}
+  if(on)queue_command(AUDIT_COMMAND);
+  fprintf(stderr,"TribesPad bots: decisions log %s\n",on?"on":"off");
+ } else if(!strcmp(what,"botaudit"))queue_command(AUDIT_COMMAND);
+ else fprintf(stderr,"TribesPad command not known: %s\n",line);
+}
+/* Hosting one of TRIBESai's bot maps, from the game's own MULTIPLAYER > HOST screen
+   or anywhere else (a LoadMap of an MP-...Bots... map with ?listen, from the game's
+   log): its bots switch on by themselves a few seconds after play begins, as if each
+   base's console had been used, at the difficulty and size TribesPad's settings give
+   (TRIBESPAD_BOT_SKILL, TRIBESPAD_BOT_SIZE, set by the app). Any other load cancels it.
+   The game writes its log in pieces, so it is flushed when play begins (run_commands). */
+static uint64_t bots_due;static int flush_wanted;
+/* The map's scripts run only through the game's developer cheat manager, which a
+   hosted game gives its players when the game's developer tools are on as the level
+   starts (MultiplayerGameInfo: CheatClass). So they are on while the game's
+   Multiplayer screen is open, where hosting starts, and go off again once play
+   begins: then the running game's CheatClass goes back to the standard one, so
+   only the host keeps the developer commands and anyone who joins gets the usual. */
+static uint64_t decide_at;
+void vengeance_note_load(const char *url){
+ int bot_map=!strncasecmp(url,"MP-",3)&&strcasestr(url,"Bots")&&strcasestr(url,"?listen");
+ if(bot_map&&!bots_pending)fprintf(stderr,"TribesPad bots: hosting a bot map (%.60s); its bots start once play begins\n",url);
+ bots_pending=bot_map;bots_due=0;
+}
+static void start_bots_when_due(int now_playing){
+ static int was;
+ if(now_playing&&!was){flush_wanted=1;if(devtools_ours)decide_at=ss_frames()+60;}
+ was=now_playing;
+ if(!now_playing&&!devtools_ours&&!strcasecmp(current_page,"TribesMultiplayerMenu")){
+  devtools_ours=1;queue_command("set GameEngine EnableDevTools True");
+  fprintf(stderr,"TribesPad bots: developer tools on while the Multiplayer screen is open (a bot map hosted from it can switch its bots on)\n");}
+ if(decide_at&&ss_frames()>=decide_at){
+  decide_at=0;devtools_ours=0;
+  if(!bots_pending)queue_command("set GameEngine EnableDevTools False");
+  queue_command("set MultiplayerGameInfo CheatClass Engine.CheatManager");
+ }
+ if(!bots_pending||!now_playing)return;
+ if(!bots_due){bots_due=ss_frames()+240;return;}
+ if(ss_frames()<bots_due)return;
+ bots_pending=0;bots_due=0;
+ const char *skill=getenv("TRIBESPAD_BOT_SKILL"),*size=getenv("TRIBESPAD_BOT_SIZE");
+ char line[80];snprintf(line,sizeof line,"tribespad bots on %s %s",skill&&*skill?skill:"normal",size&&*size?size:"small");
+ vengeance_run_command(line);
+}
+static void scripted_commands(void){
+ static FILE *f;static int opened;static unsigned long long due;static char pending[1024];
+ if(!opened){opened=1;const char *path=getenv("VENGEANCE_COMMANDS");if(path&&!(f=fopen(path,"r")))fprintf(stderr,"TribesPad: VENGEANCE_COMMANDS %s unreadable\n",path);}
+ while(f){
+  if(!pending[0]){char line[1100];if(!fgets(line,sizeof line,f)){fclose(f);f=NULL;return;}
+   int at=0;if(sscanf(line,"%llu %n",&due,&at)!=1||!at)continue;
+   snprintf(pending,sizeof pending,"%s",line+at);pending[strcspn(pending,"\r\n")]=0;}
+  if(ss_frames()<due)return;
+  vengeance_run_command(pending);pending[0]=0;
+ }
+}
+/* The game writes its log in 4 KB pieces: TribesPad flushes it after each command,
+   so the replies show now, and when play begins, so the map's LoadMap line is read.
+   Flush is FOutputDevice's virtual; its slot is found in FOutputDevice's own vtable. */
+static void flush_game_log(_cpu *cpu,uint32_t stack_top){
+ static uint32_t glog;static int flush_slot=-2;uint64_t base=vengeance_guest_base();
+ if(!glog)glog=vengeance_export("?GLog@@3PAVFOutputDevice@@A");
+ if(flush_slot==-2){flush_slot=-1;uint32_t table=vengeance_export("??_7FOutputDevice@@6B@"),base_flush=vengeance_export("?Flush@FOutputDevice@@UAEXXZ"),entries[8];
+  if(table&&base_flush&&peek(base,table,entries,sizeof entries))for(int i=0;i<8;i++)if(entries[i]==base_flush){flush_slot=i;break;}}
+ uint32_t device=0,log_table=0,flush=0;
+ if(glog&&flush_slot>=0&&peek(base,glog,&device,4)&&device&&peek(base,device,&log_table,4)&&peek(base,log_table+4u*(uint32_t)flush_slot,&flush,4)&&flush){
+  uint32_t saved=cpu->_ecx;cpu->_ecx=device;tribes_call_guest(cpu,flush,0,NULL,stack_top);cpu->_ecx=saved;}
+}
+static void run_commands(_cpu *cpu){
+ scripted_commands();
+ static uint32_t exec,glog;
+ if(!exec){exec=vengeance_export("?Exec@UWindowsViewport@@UAEHPBGAAVFOutputDevice@@@Z");glog=vengeance_export("?GLog@@3PAVFOutputDevice@@A");}
+ if(flush_wanted){flush_wanted=0;flush_game_log(cpu,(cpu->_esp-2048-64)&~15u);}
+ if(audit_at&&ss_frames()>=audit_at){audit_at=0;queue_command(AUDIT_COMMAND);}
+ if(command_head==command_tail)return;
+ static int told;if(!told){told=1;fprintf(stderr,"TribesPad command runner: game stack at 0x%x (%p to %p)\n",cpu->_esp,cpu->stack_bottom,cpu->stack_top);}
+ /* At most about 6 ms a frame: a difficulty change is 220 commands. */
+ struct timespec begun;clock_gettime(CLOCK_MONOTONIC,&begun);
+ for(int n=0;n<128;n++){
+  struct timespec t;clock_gettime(CLOCK_MONOTONIC,&t);
+  if(n&&(t.tv_sec-begun.tv_sec)*1000.0+(t.tv_nsec-begun.tv_nsec)/1e6>6)return;
+  pthread_mutex_lock(&command_lock);char *line=command_head!=command_tail?commands[command_head]:NULL;
+  if(line)command_head=(command_head+1)%512;pthread_mutex_unlock(&command_lock);
+  if(!line)return;
+  if(!strcmp(line,AUDIT_COMMAND)){bot_audit();free(line);continue;}
+  uint64_t base=vengeance_guest_base();uint32_t g=vengeance_gui_controller(),viewport=0,device=0;char kind[64]="";
+  if(!exec||!glog||!g||!peek(base,g+0x2c,&viewport,4)||!class_name(base,viewport,kind,sizeof kind)||strcmp(kind,"WindowsViewport")||
+     !peek(base,glog,&device,4)||!device){
+   fprintf(stderr,"TribesPad command not run (no game viewport yet%s%s): %s\n",kind[0]?"; found ":"",kind,line);free(line);continue;}
+  /* Exec is FExec's virtual (UPlayer derives from UObject and FExec): MSVC passes
+     it the FExec part of the object. That part is the vtable slot holding Exec. */
+  static uint32_t adjust=UINT32_MAX;
+  if(adjust==UINT32_MAX){
+   for(uint32_t off=0;off<0x100&&adjust==UINT32_MAX;off+=4){uint32_t table=0,entries[16];
+    if(!peek(base,viewport+off,&table,4)||!peek(base,table,entries,sizeof entries))continue;
+    for(int i=0;i<16;i++)if(entries[i]==exec){adjust=off;break;}}
+   fprintf(stderr,"TribesPad command runner: Exec in the viewport's vtable at +0x%x\n",adjust);
+  }
+  if(adjust==UINT32_MAX){fprintf(stderr,"TribesPad command not run (Exec not found): %s\n",line);free(line);continue;}
+  size_t len=strlen(line);if(len>900)len=900;
+  uint32_t text=(cpu->_esp-2048)&~15u;uint16_t *wide=GUEST(base,text);
+  for(size_t i=0;i<len;i++)wide[i]=(unsigned char)line[i];
+  wide[len]=0;
+  struct timespec now;clock_gettime(CLOCK_MONOTONIC,&now);vengeance_echo_all_until=now.tv_sec+now.tv_nsec/1e9+2;
+  uint32_t saved=cpu->_ecx;cpu->_ecx=viewport+adjust;uint32_t arguments[2]={text,device};
+  clock_gettime(CLOCK_MONOTONIC,&now);double started=now.tv_sec+now.tv_nsec/1e9;
+  uint32_t handled=tribes_call_guest(cpu,exec,2,arguments,text-64);
+  cpu->_ecx=saved;
+  flush_game_log(cpu,text-64);
+  clock_gettime(CLOCK_MONOTONIC,&now);
+  fprintf(stderr,"TribesPad command: %s (%s, %.0f ms)\n",line,handled?"done":"not recognised",(now.tv_sec+now.tv_nsec/1e9-started)*1000);free(line);
+ }
+}
+
+/* PeekMessageW (config/vengeance/bindings.json): the top of the game's frame, where
+   its window messages (and so the console's keys) are handled, its stack is
+   shallow, and no level is mid-update: TribesPad's commands run here. */
+extern uint32_t tribes_peek_message(uint64_t base,uint32_t message,uint32_t window,uint32_t low,uint32_t high,uint32_t remove);
+uint32_t vg_peek_message_w(_cpu *cpu,uint32_t message,uint32_t window,uint32_t low,uint32_t high,uint32_t remove){
+ run_commands(cpu);
+ return tribes_peek_message(cpu->_pointer_offset,message,window,low,high,remove);
+}
 
 #if TARGET_OS_IPHONE
 /* TribesPad's overlay in the app (port/apple/mobile_controls.m): frames for its
    FPS counter, and whether the game is in play (no menu up). */
 extern void tb_app_note_frame(void);
 extern void tb_vengeance_report_state(int playing);
+extern void tb_vengeance_report_typing(int typing);
+extern void tb_vengeance_set_typer(void (*typer)(const char *line,int open_with_tab));
+/* The command runner above, handed to the app (only the engine's entry point is
+   visible outside it on iOS): the ··· menu's commands go through it. */
+static void app_command(const char *line,int open_with_tab){(void)open_with_tab;vengeance_run_command(line);}
 #endif
+int vengeance_text_focused(void);
 /* Once per presented frame, on the game's thread. */
 void vengeance_input_frame(_cpu *cpu){
  ss_count_frame();ss_input_pump(cpu);
+ start_bots_when_due(playing());
 #if TARGET_OS_IPHONE
  tb_app_note_frame();
+ static int handed;if(!handed){handed=1;tb_vengeance_set_typer(app_command);}
  static int reported=-1;int now=playing();
  if(now!=reported){reported=now;tb_vengeance_report_state(now);fprintf(stderr,"TribesPad: Vengeance %s (frame %llu)\n",now?"in play":"in menus",(unsigned long long)ss_frames());}
+ /* A text box focused in a menu: the app opens the keyboard (mobile_controls.m). */
+ static int typing=-1;int text=!now&&vengeance_text_focused();
+ if(text!=typing){typing=text;tb_vengeance_report_typing(text);fprintf(stderr,"TribesPad: Vengeance text box %s\n",text?"focused":"left");}
+#else
+ /* The active page (and its trace with VENGEANCE_TRACE_GUI), for the bots' developer tools. */
+ if(!playing())vengeance_text_focused();
 #endif
 }
 
@@ -103,9 +469,10 @@ uint32_t vg_translate_message(uint64_t base,uint32_t msg){
  if(!msg)return 0;uint32_t m[4];memcpy(m,GUEST(base,msg),16);
  if(m[1]!=WM_KEYDOWN&&m[1]!=WM_SYSKEYDOWN)return m[1]==WM_KEYUP||m[1]==WM_SYSKEYUP;
  if(m[1]==WM_SYSKEYDOWN)return 1;                       /* Alt combinations type nothing here */
- static uint32_t out;if(!out){uint32_t e=tribes_get_last_error();out=tribes_global_alloc(base,0x40,4);tribes_set_last_error(e);}
- if(out&&tribes_to_ascii(base,m[2],(m[3]>>16)&0xff,0,out,0)==1){
-  uint16_t c;memcpy(&c,GUEST(base,out),2);uint32_t posted=tribes_post_message(base,m[0],WM_CHAR,c,m[3]);
+ uint16_t c=0;int any=0;
+ if(!take_typed(m[2],&c,&any)){uint32_t out=char_buffer(base);any=out&&tribes_to_ascii(base,m[2],(m[3]>>16)&0xff,0,out,0)==1;if(any)memcpy(&c,GUEST(base,out),2);}
+ if(any){
+  uint32_t posted=tribes_post_message(base,m[0],WM_CHAR,c,m[3]);
   static int trace=-1;if(trace<0)trace=getenv("VENGEANCE_TRACE_KEYS")!=NULL;
   if(trace)fprintf(stderr,"vengeance key: WM_CHAR 0x%x to 0x%x (posted %u)\n",c,m[0],posted);
  }

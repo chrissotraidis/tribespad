@@ -282,7 +282,7 @@ uint32_t hpcom_IDirect3DDevice9_Clear_c(uint32_t g, uint32_t count, uint32_t rec
                                         uint32_t stencil)
 {
     device *d = dev(g);
-    if (halopad_d3d9_tracing()) fprintf(stderr, "HALOPAD DRAW f%u clear flags %x color %08x z %08x stencil %u rt %08x\n", halopad_d3d9_frame, flags, color, z, stencil, d->rt);
+    if (halopad_d3d9_tracing()) fprintf(stderr, "TribesPad draw f%u clear flags %x color %08x z %08x stencil %u rt %08x\n", halopad_d3d9_frame, flags, color, z, stencil, d->rt);
     if (flags & ~0x7u) return D3DERR_INVALIDCALL;
     hp_bound b = halopad_d3d9_bind_targets(d);
     if ((flags & 0x6) && !b.depth) return D3DERR_INVALIDCALL;        /* no depth/stencil surface */

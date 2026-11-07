@@ -435,13 +435,24 @@ if bundled:
   (vengeance/'inputs.json').write_text(json.dumps({k:inputs[k] for k in ['title','archive','root','excluded','bytes','game']},separators=(',',':')))
   # The app refreshes its copy of the game folder's Program files when this changes (port/apple/vengeance_paths.m).
   (vengeance/'stamp.txt').write_text(hashlib.sha256(json.dumps(inputs['game'],sort_keys=True).encode()).hexdigest()[:16]+'\n')
+  # Bots (scripts/vengeance/bots.py): TRIBESai's package and bot maps, copied into the
+  # player's game folder at launch (port/apple/vengeance_paths.m). Optional, like the shaders.
+  bots=R/'ref/vengeance/bots/Content'
+  if subprocess.run([sys.executable,str(R/'scripts/vengeance/bots.py')]).returncode==0 and bots.exists():
+   (vengeance/'Bots').mkdir(exist_ok=True)
+   subprocess.run(['rsync','-a','--delete',str(bots)+'/',str(vengeance/'Bots/Content')+'/'],check=True)
+  elif (vengeance/'Bots').exists():shutil.rmtree(vengeance/'Bots')
+  # The game's shaders, built once in the background at first launch (halopad_metal.m, warm_shaders): scripts/vengeance/shader_warmup.py.
+  shaders=R/'generated/vengeance/vengeance-shaders.txt'
+  if shaders.exists():shutil.copyfile(shaders,vengeance/'vengeance-shaders.txt')
+  elif (vengeance/'vengeance-shaders.txt').exists():(vengeance/'vengeance-shaders.txt').unlink()
   config+='#define TB_VENGEANCE 1\n'
  elif not mac and (data/'Vengeance').exists():shutil.rmtree(data/'Vengeance')
 else:
  config='#define TB_BUNDLED_GAME_DATA 0\nstatic const char *launch_workdir='+json.dumps(str(R))+';\nstatic char *launch_arguments[]={'+','.join(json.dumps(p) for p in args)+',NULL};\n'
 (out/'mobile-engine-launch-config.h').write_text(config)
 host=[R/'port/apple/mobile_engine_main.m',R/'port/apple/mobile_game_paths.m',R/'port/apple/sdl_main.c',R/'port/apple/gl4es_context.c',R/'port/core/input.c']
-host+=[R/'port/apple/desktop_controls.c'] if mac else [R/'port/apple/mobile_controls.m',R/'port/apple/launcher.m',R/'port/apple/starsiege_paths.m',R/'port/apple/vengeance_paths.m',R/'port/apple/t1_live.c',R/'port/apple/mobile_controls.c',R/'port/apple/live_servers.m',R/'port/apple/content_area.m']
+host+=[R/'port/apple/desktop_controls.c',R/'port/apple/mac_frame.m',R/'port/apple/mac_menu.m'] if mac else [R/'port/apple/mobile_controls.m',R/'port/apple/launcher.m',R/'port/apple/starsiege_paths.m',R/'port/apple/vengeance_paths.m',R/'port/apple/t1_live.c',R/'port/apple/mobile_controls.c',R/'port/apple/live_servers.m',R/'port/apple/content_area.m']
 if a.angle:host.append(R/'port/apple/angle_sdl.c')
 vengeance_link=[]
 if a.vengeance_object and not mac:

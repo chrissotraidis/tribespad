@@ -140,9 +140,22 @@ game's own key, so the original screens open.
 |---|---|
 | This Match (on a server) | **Game Menu** (the original Escape menu), **Scores**, **Chat** (all, team, quick chat), **Actions** (repair kit, mine or beacon, targeting laser, flag, zoom, third-person view, command map, suicide) |
 | Play Online | **Who's Playing Now**: every server with people (and, in Tribes 2, bots counted separately; the game's own list mixes them: "40/48 (38)" is two people); tap one to join. **Server List**: the original PLAY GAME → JOIN (on a server it offers to leave the match first). **Game Nights**: the regular pickup times, in your device's time zone. **Community**: the game's Discords and sites. Open at the top between matches; a submenu during one. |
-| Options | Show / Hide Touch Controls, Trackpad Cursor, FPS Counter (top right: frames each second and the slowest frame), Graphics Quality (Tribes 2: **Balanced** or **Fast**, and **Render Scale** on iPad), Settings… (touch size, opacity, look sensitivity, left-handed, hide with a controller, trackpad speed, notch, FPS counter, render scale) |
+| Options | Show / Hide Touch Controls, Trackpad Cursor, FPS Counter (top right: frames each second and the slowest frame), Graphics Quality (Tribes 2: **Balanced** or **Fast**, and **Render Scale** on iPad), **Bots** (Vengeance: difficulty and game size for the bot maps you host), Settings… (touch size, opacity, look sensitivity, left-handed, hide with a controller, trackpad speed, notch, FPS counter, render scale) |
 | Help | Touch and trackpad guide, controller guide, original console, TribesPad on GitHub, About |
 | Choose Game… | Closes TribesPad (iOS doesn't let an app restart itself); the next time you open it, the game picker appears |
+
+On the Mac the same items are in the menu bar (**Game**, **Play Online**, **Help**). Vengeance's
+Quick Save and Quick Load are ⌘S and ⌘L, and **Choose Game…** (⌘G) returns to the picker.
+
+### Bots
+
+Each game adds bots where it already would:
+
+| Game | Where |
+|---|---|
+| Tribes 2 | **HOST** screen: turn on Bots, choose how many and their difficulty range, then start (its own bots, on any map) |
+| Starsiege: Tribes | In a game you host, **Tab → Options → Bots…**: Add 2 Bots, Add 4 Bots, Remove All Bots, Easy, Normal or Hard Bots |
+| Tribes: Vengeance | **MULTIPLAYER → HOST**: choose Capture the Flag and one of the four TRIBESai bot maps; its bots switch on by themselves a few seconds after you are in. Difficulty and size: **··· → Options → Bots** (the Mac: **Game → Bots**) |
 
 ![Touch Settings during a match](docs/images/tribespad-touch-settings.jpg)
 
@@ -205,7 +218,10 @@ iPad and Mac, recompiled the same way as Tribes 2. Every build includes it: the 
 PlayT1's installer and checks it against `config/starsiege/inputs.json` (`--games tribes2` leaves
 it out).
 
-- **Offline:** TRAINING with bots, or HOST MULTIPLAYER.
+- **Offline:** TRAINING or HOST MULTIPLAYER. In a game you host, **Tab → Options → Bots…** adds
+  the game's own AI drones, two or four at a time, on both teams, and sets their difficulty (the
+  AI's own skill: IQ 40, 70 or 100). They run between the bases and fight; the original AI never
+  carries flags, and drones are not listed on the scoreboard.
 - **Online:** JOIN lists the community master servers (tribes1.co); **··· → Play Online** shows
   who is playing, PlayT1's nightly pickup in your time zone, and the PlayT1 Discord.
 - **Controller:** RT fire, LT jet, A jump, RB/LB next/previous weapon, Y grenade, X pack, B crouch;
@@ -230,6 +246,40 @@ same release once to translate the game's code ([progress](docs/validation/venge
 
 - **Campaign:** New Game, Load Game and the whole story; ··· → This Match → Campaign has Quick
   Save and Quick Load.
+- **Bots:** on four bot maps from the community's TRIBESai mod: Fort, Emerald, Tropics and
+  Feigned Beliefs. The game's other maps have no bot paths, so bots can't be added to them.
+  - **Start:** **MULTIPLAYER → HOST**, Capture the Flag, and one of the bot maps (FortBots,
+    EmeraldBots, Tropics or Feigned Beliefs Bots); start the server.
+  - **What happens:** a few seconds after you are in, TribesPad puts you on a team and switches
+    on both teams' bots. The map normally does that from a console in each base; TribesPad runs
+    the same scripts through the game's own command handler, so nothing appears on screen.
+  - **Game Size:** **Small** (6 a side: defenders and flag grabbers, the default), **Medium**
+    (10: adds duelists, spammers and a rocketeer) or **Full** (15: adds repair gunners and
+    vehicle bots). Every bot is the game's own scripted AI, and it costs frames: on the Mac,
+    Small plays at 40 to 58 frames a second and Full at 20 to 30.
+  - **Difficulty:** **Easy** (aim spread 9°, a 1.5 s reaction), **Normal** (5°, 0.9 s) or
+    **Hard** (TRIBESai's own: 2°, 0.5 s). Snipers are tighter (5°, 3° and 1°). Every bot also
+    leads a moving target by a random 0 to 2 times its motion, as TRIBESai made them, so a
+    target that stands still is the easiest to hit. Size and difficulty are in **··· →
+    Options → Bots** (the Mac: **Game → Bots**); during a bot game, **This Match → Bots** changes
+    the difficulty of the bots already playing.
+  - **Log Bot Decisions:** **This Match → Bots** writes every bot's choices (its goal and the
+    action it takes, from the game's own AI log) to TribesPad's log; it costs a little speed.
+  - **Bot audit:** TribesPad's log lists every bot with the aim spread, lead and reaction time it
+    is really using, read from the game: 25 seconds after the bots start, after each difficulty
+    change, and when Log Bot Decisions is turned on (lines starting `TribesPad bot:`).
+  - **Building:** the build fetches TRIBESai from tribesrevengeance.net and unpacks it with
+    `unar` (`brew install unar`); without `unar` the app has no bot maps.
+    Nothing from the mod is in the repository.
+  - **Checked:** on the Mac in scripted runs (a bot map hosted as HOST does it: the bots start
+    by themselves; difficulty reads back from the game; the decisions log fills) and played on
+    an iPad Pro with the full bot game; the HOST-screen start, size and difficulty are new and not
+    yet played on an iPad.
+- **Equipment:** your pack (Energy, Repair, Shield or Speed) works all the time; the pack button
+  (controller X, keyboard Q) fires its boost, which then recharges. Health kits are pickups: walk
+  over one to heal, and killed players drop them. Armor, pack and weapons change at an inventory
+  station in your base or on the respawn screen, where EDIT LOADOUTS saves a set; hold D-pad
+  right (Shift) in play to choose a saved one.
 - **Multiplayer:** the game's own MULTIPLAYER screen (··· → Play Online → Server List opens it)
   joins internet and LAN servers and hosts games. The game is free now, and like the community
   release's TV Key Generator, TribesPad gives it a CD key from that program's own list the first
@@ -238,10 +288,10 @@ same release once to translate the game's code ([progress](docs/validation/venge
 - **Controller:** RT fire, LT jet, A jump (hold to ski), LB ski, RB and D-pad left change weapons,
   Y grenade, X pack, B use; Menu opens the game menu.
 - **Graphics:** ··· → Options → Graphics Quality: Fast (the default, without projected lights and
-  shadows) or Full Detail, and a Resolution of 1024 × 768, 1600 × 1200 (the default) or
-  2048 × 1536.
-- **Speed:** 80 frames a second on the heaviest map on a Mac (SP-Spaceship); the iPad has not
-  been measured since the latest speed work.
+  shadows) or Full Detail, and a Resolution of 1024 × 768, 1600 × 1200 (the iPhone default) or
+  2048 × 1536 (the iPad default). Anisotropic filtering is on (8×).
+- **Speed:** on an iPad Pro (M2) the menus appear about 9 seconds after Play, the first campaign
+  map plays from about 20 seconds, and play runs at 90 to 120 frames a second.
 
 ### Keyboard and trackpad
 
@@ -329,6 +379,8 @@ for multiple targets or versions.
    ```sh
    brew install llvm@20 cmake ninja sevenzip zstd innoextract
    ```
+   `unar` (`brew install unar`) adds Tribes: Vengeance's bots: the build unpacks the community's
+   TRIBESai bot maps with it, and leaves the bots out without it.
 3. Build:
    - **With [PadMint](https://github.com/chrissotraidis/padmint) (0.5.13 or newer):** choose TribesPad and press **Build**.
    - **Or in Terminal:**

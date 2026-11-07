@@ -17,7 +17,7 @@ static void metadata_cases(const char *root){
     snprintf(outside,sizeof outside,"%s/outside",root);snprintf(directory,sizeof directory,"%s/folder",root);
     snprintf(hardlink,sizeof hardlink,"%s/hard",root);snprintf(file,sizeof file,"%s/public.store",root);
     assert(!symlink("public.store",linkpath)&&!symlink("absent",dangling)&&!symlink("/",outside));
-    assert(!mkdir(directory,0700)&&!link(file,hardlink));
+    assert(!mkdir(directory,0700)&&!link(file,hardlink));tribes_filesystem_changed();
     for(unsigned wide=0;wide<2;wide++){
         tribes_set_last_error(4321);
         uint32_t h=metadata_open("PuBlIc.StOrE",0x10180,7,0x02200000,wide);

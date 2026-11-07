@@ -12,7 +12,7 @@ from the game goes into the repository.
 Usage: .venv/bin/python scripts/vengeance/bundle_mac.py --app generated/macos-engine-hw/TribesPad.app
 Builds the engine first (scripts/vengeance/build_engine.py --target client) when needed.
 """
-import argparse, hashlib, json, pathlib, subprocess, sys
+import argparse, hashlib, importlib.util, json, pathlib, subprocess, sys
 
 R = pathlib.Path(__file__).resolve().parents[2]
 ENGINE = R / 'generated/vengeance/engine-client'
@@ -30,6 +30,17 @@ def engine():
     assert report.get('engine_sha256') == sha(exe), 'Vengeance engine build failed'
     return exe
 
+def load_bots():
+    """ref/vengeance/bots, fetched now if needed; None (and a note) when unar or the mirror is missing."""
+    spec = importlib.util.spec_from_file_location('bots', R / 'scripts/vengeance/bots.py')
+    bots = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(bots)
+    try:
+        return bots.fetch()
+    except (SystemExit, Exception) as e:
+        print('bundle: no Vengeance bots: %s' % e, flush=True)
+        return None
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split('\n')[0])
     ap.add_argument('--app', required=True, type=pathlib.Path)
@@ -45,6 +56,11 @@ def main():
     subprocess.run(['rsync', '-a', '--delete', str(ENGINE / 'images') + '/', str(data / 'images') + '/'], check=True)
     # The whole game: the campaign and the multiplayer maps a server would otherwise send slowly.
     subprocess.run(['rsync', '-a', '--delete', str(GAME) + '/', str(data / 'Game') + '/'], check=True)
+    # Bots (scripts/vengeance/bots.py, the community's TRIBESai): its package and four
+    # bot maps beside the game's own, when they could be fetched.
+    bots = load_bots()
+    if bots:
+        subprocess.run(['rsync', '-a', str(bots / 'Content') + '/', str(data / 'Game/Content') + '/'], check=True)
     # The same stamp as the iOS build (scripts/build-ipad-engine.py): the app refreshes
     # its copy of the game folder when it changes (port/apple/vengeance_paths.m).
     game = data / 'Game'

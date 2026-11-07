@@ -420,10 +420,11 @@
    "guest_base": true
   },
   "PeekMessageW": {
-   "helper": "tribes_peek_message",
+   "helper": "vg_peek_message_w",
    "arguments": 5,
    "returns": true,
-   "guest_base": true
+   "guest_base": false,
+   "cpu_argument": true
   },
   "GetMessageW": {
    "helper": "tribes_get_message",
@@ -986,6 +987,13 @@
    "returns": true,
    "guest_base": true,
    "why": "Unreal tests write permission by opening its own folder for GENERIC_WRITE with FILE_FLAG_BACKUP_SEMANTICS; TribesPad's CreateFileW opens directories read-only, so that case checks the host folder's write permission (port/vengeance/vengeance_win32.c). Every other call goes to TribesPad's service unchanged."
+  },
+  "WriteFile": {
+   "helper": "vg_write_file",
+   "arguments": 5,
+   "returns": true,
+   "guest_base": true,
+   "why": "TribesPad's WriteFile unchanged; lines of the game's own log (tv_cd_dvd.log) that name the map, game type and load times, or why it stopped, are also copied to TribesPad's log (port/vengeance/vengeance_win32.c)."
   },
   "GetProcAddress": {
    "helper": "vg_get_proc_address",

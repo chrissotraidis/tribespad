@@ -21,11 +21,11 @@ static inline void wr16(uint32_t guest, uint16_t v) { memcpy(halopad_guest_ptr(g
 void halopad_trace_guest_stack(void);   /* halopad_guest.c: guest registers and the top of the stack */
 /* HALOPAD_TRACE_FAILURES=1: services report failures they return (diagnostics only) */
 static inline int hp_trace_failures(void) { static int v = -1; if (v < 0) v = getenv("HALOPAD_TRACE_FAILURES") != NULL; return v; }
-#define HP_TRACE_FAIL(fmt, ...) do { if (hp_trace_failures()) fprintf(stderr, "HALOPAD FAILURE: " fmt "\n", __VA_ARGS__); } while (0)
+#define HP_TRACE_FAIL(fmt, ...) do { if (hp_trace_failures()) fprintf(stderr, "TribesPad failure: " fmt "\n", __VA_ARGS__); } while (0)
 __attribute__((noreturn, format(printf, 2, 3)))
 static inline void hp_unsupported(const char *service, const char *fmt, ...)
 {
-    fprintf(stderr, "HALOPAD TRAP: %s: ", service);
+    fprintf(stderr, "TribesPad trap: %s: ", service);
     __builtin_va_list ap;
     __builtin_va_start(ap, fmt);
     vfprintf(stderr, fmt, ap);

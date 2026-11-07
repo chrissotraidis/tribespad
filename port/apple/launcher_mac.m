@@ -71,6 +71,9 @@ static BOOL tb_vengeance_ready(void){
 @property(nonatomic,strong) CATextLayer *kicker,*status,*badgeText;
 @property(nonatomic) BOOL available,focused,banner;
 @property(nonatomic,copy) NSString *statusText,*badgeTitle;
+/* The second status line: what the game offers. The first is who is playing now. */
+@property(nonatomic,copy) NSString *detail;
+-(void)showLive:(NSString *)live;
 @end
 @implementation TBCard
 -(instancetype)initWithKicker:(NSString *)kicker art:(NSImage *)art fallback:(NSImage *)fallback available:(BOOL)available badge:(NSString *)badge {
@@ -100,6 +103,7 @@ static BOOL tb_vengeance_ready(void){
     self.focused=NO;return self;
 }
 -(void)setStatusText:(NSString *)text{_statusText=[text copy];self.status.string=tb_text(text,15,NSFontWeightMedium,tb_white(.9),0,YES);[self layout];}
+-(void)showLive:(NSString *)live{self.statusText=self.detail.length?[NSString stringWithFormat:@"%@\n%@",live,self.detail]:live;}
 -(void)setFocused:(BOOL)focused{
     _focused=focused;CGColorRef accent=tb_rgb(self.available?TB_CYAN:TB_AMBER,1);
     self.frameLine.strokeColor=focused?accent:tb_white(.18);self.frameLine.shadowColor=accent;
@@ -121,7 +125,9 @@ static BOOL tb_vengeance_ready(void){
     self.badge.frame=CGRectMake(pad,b.size.height-pad-badge.height-by,badge.width+bx,badge.height+by);
     self.badgeMask.path=tb_chamfer(self.badge.bounds,10);self.badgeText.frame=CGRectMake(0,by/2,badge.width+bx,badge.height);
     CGFloat w=b.size.width-2*pad-c,y=CGRectGetMinY(self.badge.frame)-12;
-    if(self.status.string){CGSize s=tb_fit(self.status.string,w);y-=s.height;self.status.frame=CGRectMake(pad,y,w,s.height);}
+    /* At least three status lines on every card, so the three titles line up. */
+    if(self.status.string){CGSize s=tb_fit(self.status.string,w),line=tb_fit(tb_text(@"X\nX\nX",15,NSFontWeightMedium,tb_white(.9),0,YES),w);
+        y-=fmax(s.height,line.height);self.status.frame=CGRectMake(pad,y,w,s.height);}
     CGSize k=tb_fit(self.kicker.string,w);y-=k.height+6;self.kicker.frame=CGRectMake(pad,y,w,k.height);
     [CATransaction commit];
     if(![self.backdrop animationForKey:@"drift"]&&!NSWorkspace.sharedWorkspace.accessibilityDisplayShouldReduceMotion){
@@ -168,13 +174,15 @@ static TBChoice tb_choice;
     NSImage *(^art)(NSString *)=^NSImage *(NSString *n){return [[NSImage alloc] initWithContentsOfFile:tb_data([@"Launcher" stringByAppendingPathComponent:n])];};
     TBCard *starsiege=[[TBCard alloc] initWithKicker:@"Starsiege: Tribes  \u00B7  1998" art:art(@"starsiege.png") fallback:emblem available:self.starsiege
         badge:self.starsiege?@"PLAY  \u25B8":@"NOT IN THIS BUILD"];
-    starsiege.statusText=self.starsiege?@"Version 1.41, the one the community plays. Bot matches offline, community servers online.":@"The original. Being translated to native code; it opens here once it plays.";
-    TBCard *tribes2=[[TBCard alloc] initWithKicker:@"Tribes 2  \u00B7  2001  \u00B7  TribesNEXT online" art:art(@"tribes2.png") fallback:emblem available:YES badge:@"PLAY  \u25B8"];
-    tribes2.statusText=@"Checking who is playing\u2026";
-    TBCard *vengeance=[[TBCard alloc] initWithKicker:@"Tribes: Vengeance  \u00B7  2004  \u00B7  OpenSpy online" art:art(@"vengeance.png") fallback:emblem available:self.vengeance
+    if(self.starsiege){starsiege.detail=@"Version 1.41. Bots offline, community servers online.";[starsiege showLive:@"Checking who is playing\u2026"];}
+    else starsiege.statusText=@"The original. Being translated to native code; it opens here once it plays.";
+    TBCard *tribes2=[[TBCard alloc] initWithKicker:@"Tribes 2  \u00B7  2001" art:art(@"tribes2.png") fallback:emblem available:YES badge:@"PLAY  \u25B8"];
+    tribes2.detail=@"Bots offline, TribesNEXT servers online.";[tribes2 showLive:@"Checking who is playing\u2026"];
+    TBCard *vengeance=[[TBCard alloc] initWithKicker:@"Tribes: Vengeance  \u00B7  2004" art:art(@"vengeance.png") fallback:emblem available:self.vengeance
         badge:self.vengeance?@"PLAY  \u25B8":@"NOT IN THIS BUILD"];
-    vengeance.statusText=self.vengeance?@"The campaign and online play, translated to native code.":
-        @"Not in this copy of TribesPad; build it with Vengeance (the default) to add it.";
+    vengeance.detail=@"The campaign offline, OpenSpy servers online.";
+    if(self.vengeance)[vengeance showLive:@"Checking who is playing\u2026"];
+    else vengeance.statusText=@"Not in this copy of TribesPad; build it with Vengeance (the default) to add it.";
     self.cards=@[starsiege,tribes2,vengeance];for(TBCard *c in self.cards)[self.layer addSublayer:c.root];
     self.focus=1;[self showFocus];
     self.footer=tb_label();self.footer.alignmentMode=kCAAlignmentCenter;
@@ -260,13 +268,15 @@ static TBChoice tb_choice;
 }
 /* People playing Starsiege: Tribes now, from the community masters (t1_live.c). */
 -(void)loadStarsiegePlayers{
-    __weak TBPickerView *weak=self;NSString *base=self.cards[0].statusText;
+    if(!self.starsiege)return;
+    __weak TBPickerView *weak=self;
     dispatch_async(dispatch_get_global_queue(QOS_CLASS_UTILITY,0),^{
         TBT1Live live;int ok=tb_t1_live(&live,4000);
-        dispatch_async(dispatch_get_main_queue(),^{TBPickerView *me=weak;if(!me||!ok)return;
+        dispatch_async(dispatch_get_main_queue(),^{TBPickerView *me=weak;if(!me)return;
+            if(!ok){[me.cards[0] showLive:@"Server list unavailable right now"];return;}
             NSString *now=live.people?[NSString stringWithFormat:@"%d %@ playing now on %d %@",live.people,live.people==1?@"person":@"people",live.busy_servers,live.busy_servers==1?@"server":@"servers"]:
-                [NSString stringWithFormat:@"Nobody on the %d Tribes 1 servers right now",live.servers_answered];
-            me.cards[0].statusText=[NSString stringWithFormat:@"%@\n%@",now,base];});
+                [NSString stringWithFormat:@"Nobody on the %d Tribes servers right now",live.servers_answered];
+            [me.cards[0] showLive:now];});
     });
 }
 /* People playing Tribes: Vengeance now, from OpenSpy, the community master. */
@@ -274,14 +284,15 @@ static TBChoice tb_choice;
     if(!self.vengeance)return;
     NSMutableURLRequest *r=[NSMutableURLRequest requestWithURL:[NSURL URLWithString:@"https://openspy-website.nyc3.digitaloceanspaces.com/servers/tribesv.json"]];
     [r setValue:@"TribesPad" forHTTPHeaderField:@"User-Agent"];r.timeoutInterval=8;r.cachePolicy=NSURLRequestReloadIgnoringLocalCacheData;
-    __weak TBPickerView *weak=self;NSString *base=self.cards[2].statusText;
+    __weak TBPickerView *weak=self;
     [[NSURLSession.sharedSession dataTaskWithRequest:r completionHandler:^(NSData *data,NSURLResponse *resp,NSError *error){
         (void)resp;(void)error;NSArray *list=data?[NSJSONSerialization JSONObjectWithData:data options:0 error:nil]:nil;
-        if(![list isKindOfClass:NSArray.class])return;NSInteger people=0,servers=0;
+        if(![list isKindOfClass:NSArray.class]){dispatch_async(dispatch_get_main_queue(),^{[weak.cards[2] showLive:@"Server list unavailable right now"];});return;}
+        NSInteger people=0,servers=0;
         for(NSDictionary *s in list){if(![s isKindOfClass:NSDictionary.class])continue;NSInteger n=[s[@"numplayers"] integerValue];if(n>0){people+=n;servers++;}}
         NSString *now=people?[NSString stringWithFormat:@"%ld %@ playing now on %ld %@",(long)people,people==1?@"person":@"people",(long)servers,servers==1?@"server":@"servers"]:
             [NSString stringWithFormat:@"Nobody on the %lu Vengeance servers right now",(unsigned long)list.count];
-        dispatch_async(dispatch_get_main_queue(),^{TBPickerView *me=weak;if(!me)return;me.cards[2].statusText=[NSString stringWithFormat:@"%@\n%@",now,base];});
+        dispatch_async(dispatch_get_main_queue(),^{[weak.cards[2] showLive:now];});
     }] resume];
 }
 /* People playing Tribes 2 now (players minus bots, TribesNEXT list.json). */
@@ -290,12 +301,12 @@ static TBChoice tb_choice;
     NSMutableURLRequest *r=[NSMutableURLRequest requestWithURL:[NSURL URLWithString:@"https://www.tribesnext.com/list.json"]];
     [r setValue:@"TribesPad" forHTTPHeaderField:@"User-Agent"];r.timeoutInterval=8;__weak TBPickerView *weak=self;
     [[NSURLSession.sharedSession dataTaskWithRequest:r completionHandler:^(NSData *data,NSURLResponse *resp,NSError *error){
-        (void)resp;(void)error;NSArray *list=data?[NSJSONSerialization JSONObjectWithData:data options:0 error:nil]:nil;NSInteger people=-1,servers=0;
+        (void)resp;(void)error;NSArray *list=data?[NSJSONSerialization JSONObjectWithData:data options:0 error:nil]:nil;NSInteger people=-1,servers=0,listed=[list isKindOfClass:NSArray.class]?(NSInteger)list.count:0;
         if([list isKindOfClass:NSArray.class]){people=0;for(NSDictionary *s in list){if(![s isKindOfClass:NSDictionary.class])continue;
             NSInteger n=[s[@"num_players"] integerValue]-[s[@"num_bots"] integerValue];if(n>0){people+=n;servers++;}}}
         dispatch_async(dispatch_get_main_queue(),^{TBPickerView *me=weak;if(!me)return;
-            me.cards[1].statusText=people<0?@"Online play with TribesNEXT":people==0?@"Nobody online right now \u00B7 see Game Nights in the \u00B7\u00B7\u00B7 menu":
-                [NSString stringWithFormat:@"%ld %@ playing now on %ld %@",(long)people,people==1?@"person":@"people",(long)servers,servers==1?@"server":@"servers"];});
+            [me.cards[1] showLive:people<0?@"Server list unavailable right now":people==0?[NSString stringWithFormat:@"Nobody on the %ld Tribes 2 servers right now",(long)listed]:
+                [NSString stringWithFormat:@"%ld %@ playing now on %ld %@",(long)people,people==1?@"person":@"people",(long)servers,servers==1?@"server":@"servers"]];});
     }] resume];
 }
 @end
@@ -339,7 +350,7 @@ static int tb_exec(TBChoice choice){
 static void tb_snapshot(NSString *path){
     CGFloat w=1280,h=800;const char *size=getenv("TRIBESPAD_PICKER_SIZE");if(size){double a,b;if(sscanf(size,"%lfx%lf",&a,&b)==2){w=a;h=b;}}
     TBPickerView *view=[[TBPickerView alloc] initWithFrame:NSMakeRect(0,0,w,h)];[view layout];
-    view.cards[1].statusText=@"Online play with TribesNEXT";
+
     if(getenv("TRIBESPAD_PICKER_LIVE")){[view loadPlayers];NSDate *until=[NSDate dateWithTimeIntervalSinceNow:6];
         while(until.timeIntervalSinceNow>0)[NSRunLoop.mainRunLoop runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:.1]];[view layout];}
     NSBitmapImageRep *rep=[[NSBitmapImageRep alloc] initWithBitmapDataPlanes:NULL pixelsWide:(NSInteger)(w*2) pixelsHigh:(NSInteger)(h*2) bitsPerSample:8 samplesPerPixel:4 hasAlpha:YES isPlanar:NO colorSpaceName:NSCalibratedRGBColorSpace bytesPerRow:0 bitsPerPixel:0];
@@ -358,8 +369,9 @@ int main(int argc,char **argv){
         if(snapshot){[NSApplication sharedApplication];tb_snapshot(snapshot);return 0;}
         const char *pick=getenv("TRIBESPAD_PICK");
         if(pick)return tb_exec(!strcmp(pick,"starsiege")&&tb_starsiege_ready()?TBStarsiege:!strcmp(pick,"vengeance")&&tb_vengeance_ready()?TBVengeance:TBTribes2);
+        /* A game's Choose Game (mac_menu.m) always shows the picker. */
         id show=[NSUserDefaults.standardUserDefaults objectForKey:@"TribesPad.showLauncher"];
-        if(show&&![show boolValue])return tb_exec(TBTribes2);
+        if(show&&![show boolValue]&&!getenv("TRIBESPAD_CHOOSE"))return tb_exec(TBTribes2);
         [NSApplication sharedApplication];[NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];[NSApp finishLaunching];
         NSRect screen=NSScreen.mainScreen.visibleFrame;NSSize size=NSMakeSize(fmin(1280,screen.size.width*.9),fmin(800,screen.size.height*.9));
         NSWindow *window=[[NSWindow alloc] initWithContentRect:NSMakeRect(0,0,size.width,size.height)

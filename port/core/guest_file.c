@@ -13,6 +13,8 @@
 #include <strings.h>
 #include <sys/stat.h>
 #include <sys/attr.h>
+#include <time.h>
+#include <pthread.h>
 #include <sys/mount.h>
 #include <unistd.h>
 /* x86 records are packed explicitly; native structs never cross the guest ABI. */
@@ -237,10 +239,7 @@ uint32_t tribes_create_file_w(uint64_t base,uint32_t name,uint32_t access,uint32
    type, so those and special objects remain ERROR_NOT_SUPPORTED here. */
 static uint32_t get_attributes(uint64_t base,uint32_t name,int wide) {
     char guest[PATH_MAX],host[PATH_MAX];if(!read_path(base,name,wide,guest))return UINT32_MAX;
-    if(!tribes_filesystem_resolve_link(base,guest,host,sizeof host)){
-        tribes_set_last_error(path_error(base,guest,errno));return UINT32_MAX;
-    }
-    struct stat st;if(lstat(host,&st)){
+    struct stat st;if(!tribes_filesystem_resolve_stat(base,guest,host,sizeof host,&st)){
         tribes_set_last_error(path_error(base,guest,errno));return UINT32_MAX;
     }
     if(!S_ISREG(st.st_mode)&&!S_ISDIR(st.st_mode)){tribes_set_last_error(50);return UINT32_MAX;}
@@ -280,6 +279,7 @@ uint32_t tribes_move_file_ex_w(uint64_t base,uint32_t from,uint32_t to,uint32_t 
         int e=errno;
         tribes_set_last_error(e==EEXIST?183:e==EXDEV?17:e==ENOSPC?112:path_error(base,target,e));return 0;
     }
+    tribes_filesystem_changed();
     if(flags&8){
         char parent[PATH_MAX];strcpy(parent,target_host);char *slash=strrchr(parent,'/');
         if(slash){*slash=0;int fd=open(parent,O_RDONLY|O_CLOEXEC);if(fd>=0){fsync(fd);close(fd);}}
@@ -320,6 +320,7 @@ uint32_t tribes_nt_set_information_file(uint64_t base,uint32_t handle,
         else if(!(flags&16)&&!(st.st_mode&S_IWUSR))status=0xc0000121u;
         else if(S_ISDIR(st.st_mode)?rmdir(info.host):unlink(info.host))
             status=errno==ENOTEMPTY||errno==EEXIST?0xc0000101u:errno==EACCES||errno==EPERM?0xc0000121u:0xc0000001u;
+        else tribes_filesystem_changed();
     }
     close(fd);
     uint32_t completion[2]={status,0};void *io=(void *)(uintptr_t)(base+iosb);
@@ -465,7 +466,15 @@ uint32_t tribes_set_file_time(uint64_t base,uint32_t handle,uint32_t creation,ui
     if(result){tribes_set_last_error(error==EBADF?6:error==EINVAL?87:error==ENOTSUP?50:error==EROFS?19:error==ENOSPC?112:error==EACCES||error==EPERM?5:1);return 0;}
     return 1;
 }
+/* Totals for the frame hitch log (Tribes: Vengeance, halopad_metal.m). */
+static uint32_t trace_reads;static uint64_t trace_read_bytes;static double trace_read_s;
+static pthread_mutex_t trace_lock=PTHREAD_MUTEX_INITIALIZER;
+void tribes_trace_read_totals(uint32_t *reads,uint64_t *bytes,double *seconds){
+    pthread_mutex_lock(&trace_lock);*reads=trace_reads;*bytes=trace_read_bytes;*seconds=trace_read_s;pthread_mutex_unlock(&trace_lock);
+}
+static double read_clock(void){struct timespec t;clock_gettime(CLOCK_UPTIME_RAW,&t);return (double)t.tv_sec+t.tv_nsec/1e9;}
 uint32_t tribes_read_file(uint64_t base,uint32_t handle,uint32_t buffer,uint32_t count,uint32_t output,uint32_t overlapped){
+    double started=read_clock();
     if(overlapped){fprintf(stderr,"TribesPad: overlapped ReadFile is not implemented\n");abort();}
     if(!output||output>UINT32_MAX-3||base>UINTPTR_MAX-output-3){tribes_set_last_error(87);return 0;}
     uint32_t zero=0;memcpy((void *)(uintptr_t)(base+output),&zero,4);
@@ -495,6 +504,8 @@ uint32_t tribes_read_file(uint64_t base,uint32_t handle,uint32_t buffer,uint32_t
     if(!error)memcpy(written,&total,4);
     if(count)tribes_memory_access_end(buffer_token);
     tribes_memory_access_end(output_token);
+    double spent=read_clock()-started;
+    pthread_mutex_lock(&trace_lock);trace_reads++;trace_read_bytes+=total;trace_read_s+=spent;pthread_mutex_unlock(&trace_lock);
     if(error){tribes_set_last_error(error);return 0;}return 1;
 }
 

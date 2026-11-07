@@ -38,6 +38,19 @@ extern void (*tribes_lookup(uint32_t address))(_cpu *);
 #define NESTED_CALL 0x10u
 #define STATUS_UNWIND 0xc0000027u
 #define REC_SIZE 0x50u
+
+/* The game's fs:[0] reads and writes, inlined into its translated code
+   (vengeance_helpers_inline.c): each thread's address of that word, found once
+   through guest_teb.c's TEB (its self pointer, fs:[0x18]); every other offset
+   still goes through guest_teb.c and its checks. */
+extern uint64_t vengeance_guest_base(void);
+_Thread_local uintptr_t vengeance_fs_chain;
+uintptr_t vengeance_fs_chain_find(void){
+ vengeance_fs_chain=(uintptr_t)(vengeance_guest_base()+x86_read_fs_dword(0x18));
+ return vengeance_fs_chain;
+}
+uint32_t vengeance_fs_read(uint32_t offset){return x86_read_fs_dword(offset);}
+void vengeance_fs_write(uint32_t offset,uint32_t value){x86_write_fs_dword(offset,value);}
 #define CTX_SIZE 0x2ccu
 enum {CTX_FLAGS=0x00,CTX_EDI=0x9c,CTX_ESI=0xa0,CTX_EBX=0xa4,CTX_EDX=0xa8,CTX_ECX=0xac,CTX_EAX=0xb0,
       CTX_EBP=0xb4,CTX_EIP=0xb8,CTX_CS=0xbc,CTX_EFLAGS=0xc0,CTX_ESP=0xc4,CTX_SS=0xc8};

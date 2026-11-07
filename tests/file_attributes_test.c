@@ -151,10 +151,10 @@ int main(int argc,char **argv){
   create_check(wide,"link/Forbidden",0,5);create_check(wide,"link",0,183);
   create_check(wide,"bad*name",0,123);
   char created[PATH_MAX];snprintf(created,sizeof created,"%s/NewFolder/Child",root);assert(!rmdir(created));
-  snprintf(created,sizeof created,"%s/NewFolder",root);assert(!rmdir(created));
+  snprintf(created,sizeof created,"%s/NewFolder",root);assert(!rmdir(created));tribes_filesystem_changed();
   check(wide,"aSSeT.Bin",32,1234);check(wide,"Folder",16,1234);check(wide,".",16,1234);
-  assert(!fchmod(fd,0400));check(wide,"Asset.bin",33,1234);assert(!fchmod(fd,0600));
-  assert(!fchflags(fd,UF_HIDDEN));check(wide,"Asset.bin",34,1234);assert(!fchflags(fd,0));
+  assert(!fchmod(fd,0400));tribes_filesystem_changed();check(wide,"Asset.bin",33,1234);assert(!fchmod(fd,0600));tribes_filesystem_changed();
+  assert(!fchflags(fd,UF_HIDDEN));tribes_filesystem_changed();check(wide,"Asset.bin",34,1234);assert(!fchflags(fd,0));tribes_filesystem_changed();
   strcpy((char *)memory+0x20001,"Asset.bin");uint32_t h=tribes_create_file(base,0x20001,0x80000000,0,0,3,0,0);assert(h!=UINT32_MAX);
   check(wide,"Asset.bin",32,1234);assert(tribes_close_handle(h));
   check(wide,"curl-ca-bundle.crt",UINT32_MAX,2);check(wide,"missing/child",UINT32_MAX,3);
