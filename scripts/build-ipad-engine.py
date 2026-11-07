@@ -256,42 +256,6 @@ function TribesPadStartRequests()
    }
    %file.delete();
 }
-function TribesPadHostBots( %count, %skill )
-{
-   if ( %count < 1 )
-      %count = 8;
-   // ··· > Play with Bots > Difficulty: the HOST screen's bot difficulty range.
-   switch$ ( %skill )
-   {
-      case "easy":
-         $Host::MinBotDifficulty = 0.1;
-         $Host::MaxBotDifficulty = 0.35;
-      case "hard":
-         $Host::MinBotDifficulty = 0.75;
-         $Host::MaxBotDifficulty = 1.0;
-      default:
-         $Host::MinBotDifficulty = 0.4;
-         $Host::MaxBotDifficulty = 0.65;
-   }
-   echo( "TribesPad bots: Katabatic with " @ %count @ " bots, difficulty " @ $Host::MinBotDifficulty @ " to " @ $Host::MaxBotDifficulty );
-   $HostGameType = $PlayingOnline ? "Online" : "LAN";
-   $Host::BotsEnabled = 1;
-   $Host::BotCount = %count;
-   $HostGameBotCount = %count;
-   if ( $Host::MaxPlayers < %count + 2 )
-      $Host::MaxPlayers = %count + 2;
-   $Host::MissionType = "CTF";
-   $Host::Map = "Katabatic";
-   $ServerName = $Host::GameName;
-   export( "$Host::*", "prefs/ServerPrefs.cs", false );
-   MessagePopup( "STARTING SERVER", "Initializing..." );
-   Canvas.repaint();
-   cancelServerQuery();
-   setNetPort( $Host::Port );
-   CreateServer( $Host::Map, $Host::MissionType );
-   %playerPref = $pref::Player[$pref::Player::Current];
-   localConnect( getField( %playerPref, 0 ), getField( %playerPref, 1 ), getField( %playerPref, 2 ), getField( %playerPref, 3 ), getField( %playerPref, 4 ) );
-}
 function TribesPadReadRequest()
 {
    %line = "";
@@ -310,14 +274,6 @@ function TribesPadReadRequest()
    if ( getWord( %line, 1 ) $= "graphics" )
    {
       TribesPadGraphics( getWord( %line, 2 ) );
-      return;
-   }
-   // ··· > Play with Bots: host Katabatic CTF with bots, as HOST GAME does with
-   // Bots on (GameGui.cs StartHostedGame), between matches only.
-   if ( getWord( %line, 1 ) $= "bots" )
-   {
-      if ( !isObject( ServerConnection ) )
-         TribesPadHostBots( getWord( %line, 2 ), getWord( %line, 3 ) );
       return;
    }
    // Find a Game > Server List on a server: leave it (the lobby's own

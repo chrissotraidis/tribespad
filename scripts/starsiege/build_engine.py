@@ -437,8 +437,6 @@ function TribesPad::request() {
    // Quick chat from the controller panel: the chat menu entry's own command,
    // which the app writes beside the request ($TribesPad::chat).
    else if(%what == "chat") { if($TribesPad::chat != "") schedule($TribesPad::chat, 0); $TribesPad::chat = ""; }
-   // Play with Bots: "bots <count> [mission] [easy|normal|hard]" hosts a game here with the game's own AI.
-   else if(%what == "bots") TribesPad::playWithBots(%address, getWord($TribesPad::request, 3), getWord($TribesPad::request, 4));
    else if(%what == "join" && %address != -1) {
       $Server::Address = "IP:" @ %address;
       if($PCFG::Name == "") OpenNewPlayerDialog(); else JoinGame();
@@ -483,11 +481,11 @@ function TribesPad::startReports() {
 }
 schedule("TribesPad::startReports();", 1);
 '''
-    # Play with Bots: the game's own AI (scripts/server/ai/ai.cs, which its training
-    # missions use for their drones). TribesPad hosts a local game (not listed on
-    # the masters), and once the match starts spawns the bots on both teams at
-    # their drop points; each runs between the two flags and fights the players it
-    # sees, with the training drones' disc, chaingun and blaster. The stock AI does
+    # Bots: the game's own AI (scripts/server/ai/ai.cs, which its training missions
+    # use for their drones), added from the Options menu of a game you host (Tab >
+    # Options > Bots..., below). They spawn on both teams at their drop points; each
+    # runs between the two flags and fights the players it sees, with the training
+    # drones' disc, chaingun and blaster, at the difficulty's iq. The stock AI does
     # not carry flags: flag-ctf.cs ignores AI players. A dead bot is gone from the
     # game (AI::getId gives False); the keeper spawns it again a few seconds later,
     # and moves one that has stood still for 15 seconds (stuck in a base: the stock
@@ -495,42 +493,12 @@ schedule("TribesPad::startReports();", 1);
     # console.log.
     text += '''
 $TribesPad::botNames = "Andrew Slacker Skeet Jett Nailz DiamondBack MotoMan UberBob Sebirt Missing SymLink Cornboy xgalaxy KillerBunny Bob Skeeter";
-function TribesPad::playWithBots(%count, %mission, %skill) {
-   if(%count < 1) %count = 4;
-   if(%count > 16) %count = 16;
-   if(%mission == "" || %mission == -1) %mission = "Raindance";
-   // Difficulty: the AI's iq (ai.cs uses 60 and 70), which sets how well it aims.
-   if(%skill == "easy") $TribesPad::botIQ = 40;
-   else if(%skill == "hard") $TribesPad::botIQ = 100;
-   else $TribesPad::botIQ = 70;
-   if($PCFG::Name == "") { OpenNewPlayerDialog(); return; }
-   $TribesPad::wantBots = %count; $TribesPad::botsAdded = 0; $TribesPad::botGame = $TribesPad::botGame + 1;
-   echo("TribesPad bots: hosting " @ %mission @ " with " @ %count @ " bots, iq " @ $TribesPad::botIQ);
-   if($TribesPad::connected) { disconnect(); schedule("TribesPad::hostBots(\\"" @ %mission @ "\\");", 1); }
-   else TribesPad::hostBots(%mission);
-}
-function TribesPad::hostBots(%mission) {
-   $SinglePlayer = false; $Server::HostPublicGame = false;
-   createServer(%mission, false);
-   schedule("TribesPad::botsWait(" @ $TribesPad::botGame @ ", 0);", 2);
-}
-// Bots join once the match has started and the host is in it.
-function TribesPad::botsWait(%game, %tries) {
-   if(%game != $TribesPad::botGame) return;
-   if(!$matchStarted || !$TribesPad::connected) {
-      %next = %tries + 1;
-      if(%next < 180) schedule("TribesPad::botsWait(" @ %game @ ", " @ %next @ ");", 1);
-      else echo("TribesPad bots: the match did not start");
-      return;
-   }
-   TribesPad::addBots($TribesPad::wantBots);
-   schedule("TribesPad::keepBots(" @ %game @ ");", 5);
-}
-function TribesPad::addBots(%count) {
-   focusServer();
+// %onServer: called from the server's own menu code, already in the server's context.
+function TribesPad::addBots(%count, %onServer) {
+   if(!%onServer) focusServer();
    %teams = getNumTeams(); if(%teams < 1) %teams = 1;
    %host = Client::getTeam(Client::getFirst()); if(%host < 0) %host = 0;
-   for(%i = 0; %i < %count; %i++) {
+   for(%i = 0; %i < %count && $TribesPad::botsAdded < 16; %i++) {
       // The first bot joins the other team, then they alternate.
       %team = %host + 1 + %i; %team = %team - floor(%team / %teams) * %teams;
       %name = getWord($TribesPad::botNames, $TribesPad::botsAdded);
@@ -538,7 +506,7 @@ function TribesPad::addBots(%count) {
       $TribesPad::botsAdded++;
       TribesPad::spawnBot(%name, %team);
    }
-   focusClient();
+   if(!%onServer) focusClient();
 }
 function TribesPad::spawnBot(%name, %team) {
    %drop = Game::pickRandomSpawn(%team);
@@ -565,7 +533,7 @@ function TribesPad::spawnBot(%name, %team) {
 // moved a unit in three checks is taken out and comes back at another drop point.
 function TribesPad::keepBots(%game) {
    if(%game != $TribesPad::botGame) return;
-   if(!$TribesPad::connected) { echo("TribesPad bots: left the game"); return; }
+   if(!$TribesPad::connected) { echo("TribesPad bots: left the game"); $TribesPad::botsAdded = 0; return; }
    if($matchStarted) {
       focusServer();
       for(%i = 0; %i < $TribesPad::botsAdded; %i++) {
@@ -588,9 +556,66 @@ function TribesPad::checkStuck(%i, %name, %pos) {
       AI::Delete(%name);
    }
 }
+// The Bots menu: Tab > Options > Bots... in a game you host (server/menus/admin.cs,
+// patched by tribespad_defaults), made with the game's own menu calls. Its choices
+// run in the server's context; the respawn keeper is scheduled from the client's,
+// where the game's scheduler lives.
+function TribesPad::botsMenu(%cl) {
+   if($TribesPad::botIQ == "") $TribesPad::botIQ = 70;
+   if($TribesPad::botsAdded == "") $TribesPad::botsAdded = 0;
+   %level = "Normal"; if($TribesPad::botIQ == 40) %level = "Easy"; else if($TribesPad::botIQ == 100) %level = "Hard";
+   menu::new("Bots: " @ $TribesPad::botsAdded @ " playing, " @ %level, "tribespadbots", %cl);
+   menu::add("Add 2 Bots", "add2", %cl, $TribesPad::botsAdded < 15);
+   menu::add("Add 4 Bots", "add4", %cl, $TribesPad::botsAdded < 13);
+   menu::add("Remove All Bots", "remove", %cl, $TribesPad::botsAdded > 0);
+   menu::add("Easy Bots", "easy", %cl, $TribesPad::botIQ != 40);
+   menu::add("Normal Bots", "normal", %cl, $TribesPad::botIQ != 70);
+   menu::add("Hard Bots", "hard", %cl, $TribesPad::botIQ != 100);
+}
+function processMenuTribesPadBots(%cl, %sel) {
+   if(%sel == "add2" || %sel == "add4") {
+      %count = 2; if(%sel == "add4") %count = 4;
+      if($TribesPad::botsAdded == "" || $TribesPad::botsAdded == 0) {
+         $TribesPad::botsAdded = 0; $TribesPad::botGame = $TribesPad::botGame + 1;
+         focusClient(); schedule("TribesPad::keepBots(" @ $TribesPad::botGame @ ");", 5); focusServer();
+      }
+      TribesPad::addBots(%count, true);
+      echo("TribesPad bots: " @ Client::getName(%cl) @ " added " @ %count @ " from the Options menu");
+      message::all(0, %count @ " bots joined the game.");
+   } else if(%sel == "remove") {
+      for(%i = 0; %i < $TribesPad::botsAdded; %i++) AI::Delete(getWord($TribesPad::botNames, %i));
+      $TribesPad::botsAdded = 0; $TribesPad::botGame = $TribesPad::botGame + 1;
+      echo("TribesPad bots: removed from the Options menu");
+      message::all(0, "The bots left the game.");
+   } else if(%sel == "easy" || %sel == "normal" || %sel == "hard") {
+      $TribesPad::botIQ = 70; if(%sel == "easy") $TribesPad::botIQ = 40; else if(%sel == "hard") $TribesPad::botIQ = 100;
+      for(%i = 0; %i < $TribesPad::botsAdded; %i++) {
+         %name = getWord($TribesPad::botNames, %i);
+         if(AI::getId(%name) > 0) AI::setVar(%name, iq, $TribesPad::botIQ);
+      }
+      echo("TribesPad bots: difficulty " @ %sel @ " (iq " @ $TribesPad::botIQ @ ")");
+      message::all(0, "Bots are now " @ %sel @ ".");
+   }
+   TribesPad::botsMenu(%cl);
+}
 '''
     script.write_text(text)
     (game / 'config/tribespad-request.cs').write_text('$TribesPad::request = "";\n')
+    # Bots in the game's own Options menu: Tab during a game you host (as its owner
+    # admin) lists the server's options (server/menus/admin.cs, a script the game
+    # loads from the folder); TribesPad adds "Bots..." there, handled by
+    # TribesPad::botsMenu in console.cs. Only the host's own server uses this file.
+    admin = game / 'base/scripts/server/menus/admin.cs'
+    source = admin.read_bytes().decode('latin-1')
+    if 'tribespadBots' not in source:
+        nl = '\r\n' if '\r\n' in source else '\n'
+        toggles = re.search(r'\tmenu::add\( "Server Toggles\.\.\.", "serverToggles", %cl \);\r?\n', source)
+        process = re.search(r'function processMenuAdmin\( %cl, %selection \) \{\r?\n', source)
+        assert toggles and process and toggles.start() < process.start(), 'admin.cs: menu lines not found'
+        source = (source[:toggles.start()] + '\tmenu::add( "Bots...", "tribespadBots", %cl );' + nl +
+                  source[toggles.start():process.end()] + '\tif(%selection == "tribespadBots") { TribesPad::botsMenu(%cl); return; }' + nl +
+                  source[process.end():])
+        admin.write_bytes(source.encode('latin-1'))
 
 def embed(objects, report):
     """iOS: one relocatable object for the TribesPad app. Everything inside,

@@ -447,6 +447,7 @@ extern uint32_t tribes_write_file(uint64_t base,uint32_t handle,uint32_t buffer,
    entry point visible (build_engine.py, embed), which common symbols would escape. */
 double vengeance_echo_all_until=0;
 int vengeance_echo_all=0;
+extern void vengeance_note_load(const char *url);
 static void echo_game_log(const char *text,uint32_t count){
  static char line[512];static size_t used;
  static const char *const kept[]={"Log: Browse:","Log: LoadMap:","Log: Loadmap executed","Log: Startup time","Log: Finished precaching",
@@ -455,6 +456,7 @@ static void echo_game_log(const char *text,uint32_t count){
   char c=text[i];if(!c||c=='\r')continue;
   if(c!='\n'){if(used+1<sizeof line)line[used++]=c;continue;}
   line[used]=0;
+  if(!strncmp(line,"Log: LoadMap: ",14))vengeance_note_load(line+14);
   struct timespec now;clock_gettime(CLOCK_MONOTONIC,&now);
   int all=vengeance_echo_all||now.tv_sec+now.tv_nsec/1e9<vengeance_echo_all_until;
   for(unsigned k=0;k<sizeof kept/sizeof kept[0];k++)if(all||!strncmp(line,kept[k],strlen(kept[k]))){fprintf(stderr,"TribesPad game: %s\n",line);break;}

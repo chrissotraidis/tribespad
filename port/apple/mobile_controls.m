@@ -1328,28 +1328,19 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
             item(@"TribesPad Discord",@"person.2",^{[weak openLink:TBTribesPadDiscord];})]),
         group(@[item(@"TribesNEXT Forum",@"text.bubble",^{[weak openPage:TBTribesNextForum];})])]];
     NSArray *matchItems=game,*onlineItems=@[playing,servers,nights,community],*optionItems=controls;
-    /* Play with Bots, in each game: a game hosted on this device with bots on both
-       teams, its own entry beside Play Online (off a server). The difficulty
-       (TribesPad.botSkill) is shared by the three games; each applies it its own way:
-       Tribes 2 the HOST screen's bot difficulty, Starsiege the AI's iq, Vengeance the
-       bots' aim spread and reaction time (vengeance_input.c). */
-    NSArray<NSString *> *skillNotes=tb_vengeance?@[@"Aim spread 9°, react in 1.5 s",@"Aim spread 5°, react in 0.9 s",@"As TRIBESai made them: 2°, 0.5 s"]:
-        tb_starsiege?@[@"The AI's skill (IQ) 40",@"IQ 70, as in the game's own training",@"IQ 100"]:
-        @[@"Bot skill 10 to 35%",@"Bot skill 40 to 65%",@"Bot skill 75 to 100%"];
+    /* Bots live in each game's own screens: Tribes 2's HOST screen (Bots, count and
+       difficulty), Starsiege's Options menu in a game you host (Tab > Options > Bots...,
+       scripts/starsiege/build_engine.py), and Vengeance's HOST screen, where a TRIBESai
+       bot map fills both teams by itself (vengeance_input.c). Vengeance's bot difficulty
+       and size have no screen in the game, so they are here: Options > Bots, and This
+       Match > Bots during a bot game. */
+    NSArray<NSString *> *skillNotes=@[@"Aim spread 9°, react in 1.5 s",@"Aim spread 5°, react in 0.9 s",@"As TRIBESai made them: 2°, 0.5 s"];
     UIMenu *(^difficultyMenu)(void)=^UIMenu *(void){
         NSString *skill=tb_bot_skill();NSMutableArray *skills=[NSMutableArray array];
         NSArray<NSString *> *levels=@[@"easy",@"normal",@"hard"],*names=@[@"Easy",@"Normal",@"Hard"];
         for(NSUInteger i=0;i<3;i++){NSString *level=levels[i];UIAction *a=item(names[i],@"dial.medium",^{[weak setBotSkill:level];});
             a.subtitle=skillNotes[i];a.state=[skill isEqualToString:level]?UIMenuElementStateOn:UIMenuElementStateOff;[skills addObject:a];}
         return [UIMenu menuWithTitle:@"Difficulty" image:nil identifier:nil options:UIMenuOptionsDisplayInline children:skills];};
-    UIMenu *(^botsMenu)(NSArray<NSArray<NSString *> *> *,NSString *)=^UIMenu *(NSArray<NSArray<NSString *> *> *choices,NSString *subtitle){
-        NSMutableArray *bots=[NSMutableArray array];
-        for(NSArray<NSString *> *c in choices){NSString *request=c[1];UIAction *a=item(c[0],@"person.3.sequence",^{[weak playWithBots:request];});
-            a.subtitle=subtitle;[bots addObject:a];}
-        return [UIMenu menuWithTitle:@"Play with Bots" image:icon(@"person.3.sequence") identifier:nil options:0 children:@[group(bots),difficultyMenu()]];};
-    /* Tribes 2's own bots on Katabatic (base/autoexec.cs, TribesPadHostBots). */
-    UIMenu *botGames=self.connected?nil:botsMenu(@[@[@"Katabatic, 4 Bots",@"bots 4"],@[@"Katabatic, 8 Bots",@"bots 8"],
-        @[@"Katabatic, 14 Bots",@"bots 14"]],@"Capture the Flag, bots on both teams");
     if(tb_starsiege){
         /* Starsiege's own keys (config/config.cs): T and Y chat, I inventory,
            O objectives, C command, Tab scores, Ctrl+K kill. */
@@ -1387,10 +1378,6 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
                 item(@"Server List on the Web (tribes1.co)",@"server.rack",^{[weak openPage:TBTribes1Servers];}),
                 item(@"Tribes 1 JunkYard: configs, mods, demos",@"archivebox",^{[weak openPage:TBTribes1JunkYard];})])]];
         matchItems=t1;onlineItems=@[t1playing,t1servers,t1nights,t1community];
-        /* The game's own AI (scripts/starsiege/build_engine.py, TribesPad::playWithBots). */
-        botGames=self.connected?nil:botsMenu(@[@[@"Raindance, 4 Bots",@"bots 4 Raindance"],
-            @[@"Raindance, 8 Bots",@"bots 8 Raindance"],@[@"Dangerous Crossing, 8 Bots",@"bots 8 DangerousCrossing"],
-            @[@"Snowblind, 8 Bots",@"bots 8 Snowblind"]],@"Capture the Flag, bots on both teams");
     }
     if(tb_vengeance){
         /* Vengeance's own keys (DefUser.ini): F2 scores, T and Y chat, V quick
@@ -1450,24 +1437,27 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
             group(@[item(@"TribesRevengeance.net",@"safari",^{[weak openPage:TBVengeanceSite];}),
                 item(@"Server List on the Web (OpenSpy)",@"server.rack",^{[weak openPage:TBVengeanceServers];})])]];
         onlineItems=@[tvplaying,tvservers,tvnights,tvcommunity];
-        /* Play with Bots: TRIBESai's bot maps (scripts/vengeance/bots.py), hosted here with
-           both teams' bots on (playVengeanceBots); the same steps as the Mac menu (mac_menu.m). */
+        /* Options > Bots: difficulty and size for TRIBESai's bot maps (scripts/vengeance/bots.py)
+           hosted from MULTIPLAYER > HOST; the engine reads them when the bots start. */
         NSString *botMaps=[[NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,NSUserDomainMask,YES).firstObject
             stringByAppendingPathComponent:@"TribesPad/VengeanceGame/Content/Maps"] stringByAppendingPathComponent:@"MP-FortBots_V5.tvm"];
-        botGames=!self.connected&&[NSFileManager.defaultManager fileExistsAtPath:botMaps]?botsMenu(@[@[@"Fort, Capture the Flag",@"MP-FortBots_V5"],
-            @[@"Emerald, Capture the Flag",@"MP-EmeraldBots_V71"],@[@"Tropics, Capture the Flag",@"MP-TropicsBots_V1"],
-            @[@"Feigned Beliefs, Capture the Flag",@"MP-FeignedBeliefsBots_V1"]],@"Bots on both teams (TRIBESai)"):nil;
+        setenv("TRIBESPAD_BOT_SKILL",tb_bot_skill().UTF8String,1);setenv("TRIBESPAD_BOT_SIZE",tb_vengeance_bot_size().UTF8String,1);
         /* Game Size: how many of each base's bots play (vengeance_input.c). Each bot
            costs frames, so fewer is smoother. */
-        if(botGames){NSString *size=tb_vengeance_bot_size();NSMutableArray *sizes=[NSMutableArray array];
+        if([NSFileManager.defaultManager fileExistsAtPath:botMaps]){NSString *size=tb_vengeance_bot_size();NSMutableArray *sizes=[NSMutableArray array];
             for(NSArray<NSString *> *z in @[@[@"small",@"Small: 6 a Side",@"Defenders and flag grabbers; the smoothest"],
                                             @[@"medium",@"Medium: 10 a Side",@"Adds duelists, spammers and a rocketeer"],
                                             @[@"full",@"Full: 15 a Side",@"Adds repair gunners and vehicle bots; the slowest"]]){
                 NSString *value=z[0];UIAction *a=item(z[1],@"person.2",^{[NSUserDefaults.standardUserDefaults setObject:value forKey:@"TribesPad.vengeanceBotSize"];
                     fprintf(stderr,"TribesPad: bot game size %s\n",value.UTF8String);[weak rebuildMenu];});
                 a.subtitle=z[2];a.state=[size isEqualToString:value]?UIMenuElementStateOn:UIMenuElementStateOff;[sizes addObject:a];}
-            botGames=[UIMenu menuWithTitle:botGames.title image:botGames.image identifier:nil options:0 children:[botGames.children arrayByAddingObject:
-                [UIMenu menuWithTitle:@"Game Size" image:nil identifier:nil options:UIMenuOptionsDisplayInline children:sizes]]];}
+            UIMenu *bots=[UIMenu menuWithTitle:@"Bots" image:icon(@"person.3.sequence") identifier:nil options:0 children:@[difficultyMenu(),
+                [UIMenu menuWithTitle:@"Game Size" image:nil identifier:nil options:UIMenuOptionsDisplayInline children:sizes],
+                group(@[item(@"How to Play with Bots",@"questionmark.circle",^{[weak showMessage:@"Play with Bots" text:
+                    @"In MULTIPLAYER > HOST, choose Capture the Flag and one of the four bot maps: FortBots, EmeraldBots, Tropics or Feigned Beliefs Bots. "
+                    "Start the server: a few seconds after you are in, TribesPad switches on both teams' bots, at the difficulty and size chosen here, and puts you on a team."];})])]];
+            if(@available(iOS 15,*))bots.subtitle=@"For the bot maps you host";
+            optionItems=[optionItems arrayByAddingObject:bots];}
         /* In a bot game hosted here: its difficulty now, and every bot's decisions
            in TribesPad's log (the game's logTyrion), for seeing what they are doing. */
         if(tb_vengeance_bot_game){
@@ -1485,7 +1475,6 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
     UIMenu *options=[UIMenu menuWithTitle:@"Options" image:icon(@"slider.horizontal.3") identifier:nil options:0 children:optionItems];
     NSMutableArray *groups=[NSMutableArray array];
     if(onServer)[groups addObject:[UIMenu menuWithTitle:@"This Match" image:nil identifier:nil options:UIMenuOptionsDisplayInline children:matchItems]];
-    else if(botGames)[groups addObject:group(@[botGames])];
     [groups addObject:onServer?group(@[online]):online];
     [groups addObject:group(@[options,help])];
     const char *gamedata=[NSBundle.mainBundle.resourcePath stringByAppendingPathComponent:@"GameData"].fileSystemRepresentation;
@@ -1569,30 +1558,8 @@ static UIAction *tb_menu_find(UIMenuElement *e,NSString *path,NSString *want){
     for(NSUInteger i=0;i<codes.count;i++)dispatch_after(dispatch_time(DISPATCH_TIME_NOW,(int64_t)(i*40*NSEC_PER_MSEC)),dispatch_get_main_queue(),^{
         [weak tapKey:(SDL_Scancode)codes[i].intValue];});
 }
-/* Hosting a TRIBESai bot map with its bots on (mac_menu.m has the same steps), through
-   the engine's command runner (vengeance_input.c): tournament mode off (no ready-up),
-   developer tools on (the map's scripts run only with them), the map hosted; once
-   play starts, "tribespad bots on" joins Blood Eagle, sets the difficulty and runs
-   the scripts each base's console would (01Config01Script to 07, 02Config01Script to 07). */
--(void)playVengeanceBots:(NSString *)map {
-    [self releaseControls];
-    tb_bot_log=NO;
-    ss_type_command("set MultiplayerGameInfo bTournamentMode False",0);
-    ss_type_command("set GameEngine EnableDevTools True",0);
-    ss_type_command([NSString stringWithFormat:@"open %@?game=GameClasses.ModeCTF?listen",map].UTF8String,0);
-    NSString *skill=tb_bot_skill(),*size=tb_vengeance_bot_size();
-    fprintf(stderr,"TribesPad: hosting %s with bots, difficulty %s, %s game\n",map.UTF8String,skill.UTF8String,size.UTF8String);
-    __block int phase=0,ticks=0;dispatch_source_t timer=dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER,0,0,dispatch_get_main_queue());
-    dispatch_source_set_timer(timer,dispatch_time(DISPATCH_TIME_NOW,3*NSEC_PER_SEC),NSEC_PER_SEC/2,NSEC_PER_SEC/10);
-    dispatch_source_set_event_handler(timer,^{int playing=atomic_load(&tb_vengeance_playing);ticks++;
-        if(phase==0&&playing==0)phase=1;else if(phase==1&&playing==1){phase=2;ticks=0;}
-        else if(phase==2&&ticks>=8){dispatch_source_cancel(timer);
-            ss_type_command([NSString stringWithFormat:@"tribespad bots on %@ %@",skill,size].UTF8String,0);fprintf(stderr,"TribesPad: bots switched on\n");}
-        if(ticks>360&&phase<2){dispatch_source_cancel(timer);fprintf(stderr,"TribesPad: the bot map did not start\n");}});
-    dispatch_resume(timer);
-}
-/* Play with Bots > Difficulty: kept for the next bot game in any of the three; in a
-   Vengeance bot game it also applies to the bots playing now. */
+/* Options > Bots > Difficulty (Vengeance): kept for the next bot game; in a bot game
+   it also applies to the bots playing now. The engine reads it when bots start. */
 -(void)setBotSkill:(NSString *)skill {
     [NSUserDefaults.standardUserDefaults setObject:skill forKey:@"TribesPad.botSkill"];[self rebuildMenu];
     fprintf(stderr,"TribesPad: bot difficulty %s\n",skill.UTF8String);
@@ -1710,14 +1677,6 @@ static UIAction *tb_menu_find(UIMenuElement *e,NSString *path,NSString *want){
     alert.overrideUserInterfaceStyle=UIUserInterfaceStyleDark;[[self presenter] presentViewController:alert animated:YES completion:nil];
 }
 -(void)sendRequest:(NSString *)request {[self sendRequest:request extra:nil];}
--(void)playWithBots:(NSString *)request {
-    if(tb_vengeance){[self playVengeanceBots:request];return;}
-    if(!self.gameReported&&!tb_starsiege){
-        [self showMessage:@"Play with Bots" text:@"Sign in to TribesNEXT first. Once you are past the login, this hosts Katabatic with bots."];return;
-    }
-    /* The difficulty goes last: "bots 8 hard", "bots 4 Raindance easy". */
-    [self releaseControls];[self sendRequest:[NSString stringWithFormat:@"%@ %@",request,tb_bot_skill()]];
-}
 -(void)sendRequest:(NSString *)request extra:(NSString *)extra {
     if(tb_starsiege){
         /* Starsiege runs only scripts that existed at its start: rewrite the

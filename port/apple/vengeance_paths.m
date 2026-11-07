@@ -104,6 +104,10 @@ int tb_vengeance_prepare_paths(const char *gamedata,const char *storage,char *ar
                 changed=[re stringByReplacingMatchesInString:changed options:0 range:NSMakeRange(0,changed.length)
                     withTemplate:[NSString stringWithFormat:@"%@%@=%@",key,axis?@"Y":@"X",wh[axis]]];}
             setenv("VENGEANCE_DISPLAY",size.UTF8String,1);
+            /* The game's developer tools start off: TribesPad turns them on only while
+               its Multiplayer screen is open, for bot maps (vengeance_input.c), and a
+               session that ended meanwhile may have saved them on. */
+            changed=[changed stringByReplacingOccurrencesOfString:@"EnableDevTools=True" withString:@"EnableDevTools=False"];
             if(![changed isEqualToString:text])[changed writeToFile:ini atomically:YES encoding:NSISOLatin1StringEncoding error:nil];}
         /* Bots (scripts/vengeance/bots.py, the community's TRIBESai): the iOS app carries
            its package and four bot maps in GameData/Vengeance/Bots, copied beside the
