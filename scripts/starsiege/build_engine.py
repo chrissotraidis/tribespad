@@ -437,8 +437,8 @@ function TribesPad::request() {
    // Quick chat from the controller panel: the chat menu entry's own command,
    // which the app writes beside the request ($TribesPad::chat).
    else if(%what == "chat") { if($TribesPad::chat != "") schedule($TribesPad::chat, 0); $TribesPad::chat = ""; }
-   // Play with Bots: "bots <count> [mission]" hosts a game here with the game's own AI.
-   else if(%what == "bots") TribesPad::playWithBots(%address, getWord($TribesPad::request, 3));
+   // Play with Bots: "bots <count> [mission] [easy|normal|hard]" hosts a game here with the game's own AI.
+   else if(%what == "bots") TribesPad::playWithBots(%address, getWord($TribesPad::request, 3), getWord($TribesPad::request, 4));
    else if(%what == "join" && %address != -1) {
       $Server::Address = "IP:" @ %address;
       if($PCFG::Name == "") OpenNewPlayerDialog(); else JoinGame();
@@ -495,13 +495,17 @@ schedule("TribesPad::startReports();", 1);
     # console.log.
     text += '''
 $TribesPad::botNames = "Andrew Slacker Skeet Jett Nailz DiamondBack MotoMan UberBob Sebirt Missing SymLink Cornboy xgalaxy KillerBunny Bob Skeeter";
-function TribesPad::playWithBots(%count, %mission) {
+function TribesPad::playWithBots(%count, %mission, %skill) {
    if(%count < 1) %count = 4;
    if(%count > 16) %count = 16;
    if(%mission == "" || %mission == -1) %mission = "Raindance";
+   // Difficulty: the AI's iq (ai.cs uses 60 and 70), which sets how well it aims.
+   if(%skill == "easy") $TribesPad::botIQ = 40;
+   else if(%skill == "hard") $TribesPad::botIQ = 100;
+   else $TribesPad::botIQ = 70;
    if($PCFG::Name == "") { OpenNewPlayerDialog(); return; }
    $TribesPad::wantBots = %count; $TribesPad::botsAdded = 0; $TribesPad::botGame = $TribesPad::botGame + 1;
-   echo("TribesPad bots: hosting " @ %mission @ " with " @ %count @ " bots");
+   echo("TribesPad bots: hosting " @ %mission @ " with " @ %count @ " bots, iq " @ $TribesPad::botIQ);
    if($TribesPad::connected) { disconnect(); schedule("TribesPad::hostBots(\\"" @ %mission @ "\\");", 1); }
    else TribesPad::hostBots(%mission);
 }
@@ -550,8 +554,11 @@ function TribesPad::spawnBot(%name, %team) {
       %flag = $Team::Flag[%side];
       if(%flag != "" && %flag.originalPosition != "") { AI::DirectiveWaypoint(%name, %flag.originalPosition, %order); %order += 100; }
    }
-   AI::setVar(%name, iq, 70); AI::setVar(%name, attackMode, 1); AI::setVar(%name, pathType, 2);
+   if($TribesPad::botIQ == "") $TribesPad::botIQ = 70;
+   AI::setVar(%name, attackMode, 1); AI::setVar(%name, pathType, 2);
+   // ai.cs's AI::setWeapons gives the weapons and sets iq 70; the difficulty's iq follows it.
    AI::setWeapons(%name);
+   AI::setVar(%name, iq, $TribesPad::botIQ);
    echo("TribesPad bots: " @ %name @ " spawned on team " @ %team);
 }
 // Respawns: a killed bot leaves the game; it comes back here. One that has not

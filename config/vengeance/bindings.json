@@ -420,10 +420,11 @@
    "guest_base": true
   },
   "PeekMessageW": {
-   "helper": "tribes_peek_message",
+   "helper": "vg_peek_message_w",
    "arguments": 5,
    "returns": true,
-   "guest_base": true
+   "guest_base": false,
+   "cpu_argument": true
   },
   "GetMessageW": {
    "helper": "tribes_get_message",

@@ -139,7 +139,8 @@ game's own key, so the original screens open.
 | Section | What it has |
 |---|---|
 | This Match (on a server) | **Game Menu** (the original Escape menu), **Scores**, **Chat** (all, team, quick chat), **Actions** (repair kit, mine or beacon, targeting laser, flag, zoom, third-person view, command map, suicide) |
-| Play Online | **Who's Playing Now**: every server with people (and, in Tribes 2, bots counted separately; the game's own list mixes them: "40/48 (38)" is two people); tap one to join. **Server List**: the original PLAY GAME → JOIN (on a server it offers to leave the match first). **Game Nights**: the regular pickup times, in your device's time zone. **Community**: the game's Discords and sites. **Play with Bots** (off a server): a capture-the-flag game hosted on your device with bots on both teams: Tribes 2's own bots on Katabatic, Starsiege's AI drones, or Vengeance's TRIBESai bot maps. Open at the top between matches; a submenu during one. |
+| Play with Bots (off a server) | A capture-the-flag game hosted on your device with bots on both teams: Tribes 2's own bots on Katabatic, Starsiege's AI drones, or Vengeance's TRIBESai bot maps. **Difficulty** (Easy, Normal, Hard) is shared by the three games and kept for the next game. In a Vengeance bot game, **This Match → Bots** changes the difficulty of the bots already playing and turns on **Log Bot Decisions**. |
+| Play Online | **Who's Playing Now**: every server with people (and, in Tribes 2, bots counted separately; the game's own list mixes them: "40/48 (38)" is two people); tap one to join. **Server List**: the original PLAY GAME → JOIN (on a server it offers to leave the match first). **Game Nights**: the regular pickup times, in your device's time zone. **Community**: the game's Discords and sites. Open at the top between matches; a submenu during one. |
 | Options | Show / Hide Touch Controls, Trackpad Cursor, FPS Counter (top right: frames each second and the slowest frame), Graphics Quality (Tribes 2: **Balanced** or **Fast**, and **Render Scale** on iPad), Settings… (touch size, opacity, look sensitivity, left-handed, hide with a controller, trackpad speed, notch, FPS counter, render scale) |
 | Help | Touch and trackpad guide, controller guide, original console, TribesPad on GitHub, About |
 | Choose Game… | Closes TribesPad (iOS doesn't let an app restart itself); the next time you open it, the game picker appears |
@@ -208,10 +209,11 @@ iPad and Mac, recompiled the same way as Tribes 2. Every build includes it: the 
 PlayT1's installer and checks it against `config/starsiege/inputs.json` (`--games tribes2` leaves
 it out).
 
-- **Offline:** TRAINING, HOST MULTIPLAYER, or **··· → Play Online → Play with Bots** (the Mac:
+- **Offline:** TRAINING, HOST MULTIPLAYER, or **··· → Play with Bots** (the Mac:
   Game → Play with Bots): Raindance, Dangerous Crossing or Snowblind with 4 or 8 of the game's own
   AI drones on both teams. They run between the bases and fight; the original AI never carries
-  flags, and drones are not listed on the scoreboard.
+  flags, and drones are not listed on the scoreboard. Difficulty sets the AI's own skill (IQ 40,
+  70 or 100).
 - **Online:** JOIN lists the community master servers (tribes1.co); **··· → Play Online** shows
   who is playing, PlayT1's nightly pickup in your time zone, and the PlayT1 Discord.
 - **Controller:** RT fire, LT jet, A jump, RB/LB next/previous weapon, Y grenade, X pack, B crouch;
@@ -238,22 +240,35 @@ same release once to translate the game's code ([progress](docs/validation/venge
   Save and Quick Load.
 - **Bots:** on four bot maps from the community's TRIBESai mod: Fort, Emerald, Tropics and
   Feigned Beliefs. The game's other maps have no bot paths, so bots can't be added to them.
-  - **Start:** **··· → Play Online → Play with Bots** on iPhone and iPad (shown when you are not
-    on a server), or **Game → Play with Bots** on the Mac, then choose a map.
+  - **Start:** **··· → Play with Bots** on iPhone and iPad (shown when you are not on a
+    server), or **Game → Play with Bots** on the Mac, then choose a map.
   - **What happens:** TribesPad hosts the map as capture the flag on your device, with
     tournament mode off so the match starts at once, puts you on Blood Eagle, and a few seconds
     after the map loads switches on both teams' bots. The map normally does that from a console
-    in each base; TribesPad runs the same scripts through the game's console, which flashes
-    briefly while it types. Bots spawn and play about 20 seconds after you choose.
-  - **How many:** each map's scripts set its bots (seven or eight a side on Fort); there is no
-    count to choose.
+    in each base; TribesPad runs the same scripts through the game's own command handler, so
+    nothing appears on screen. Bots spawn and play about 20 seconds after you choose.
+  - **Game Size:** **Small** (6 a side: defenders and flag grabbers, the default), **Medium**
+    (10: adds duelists, spammers and a rocketeer) or **Full** (15: adds repair gunners and
+    vehicle bots). Every bot is the game's own scripted AI, and it costs frames: on the Mac,
+    Small plays at 40 to 58 frames a second and Full at 20 to 30.
+  - **Difficulty:** **Easy** (aim spread 9°, a 1.5 s reaction), **Normal** (5°, 0.9 s) or
+    **Hard** (TRIBESai's own: 2°, 0.5 s; snipers tighter). Changing it in a bot game applies to
+    the bots already playing.
+  - **Log Bot Decisions:** **This Match → Bots** writes every bot's choices (its goal and the
+    action it takes, from the game's own AI log) to TribesPad's log; it costs a little speed.
   - **Your own game:** a game hosted from the game's MULTIPLAYER screen has no bots. On the Mac,
     on one of the four bot maps, **Game → Play with Bots → Switch Bots On Here** turns them on.
   - **Building:** the build fetches TRIBESai from tribesrevengeance.net and unpacks it with
     `unar` (`brew install unar`); without `unar` the app has no bot maps and no Play with Bots.
     Nothing from the mod is in the repository.
-  - **Checked:** on the Mac (by hand, and the menu's exact steps in a scripted run). Not yet
-    played on an iPad.
+  - **Checked:** on the Mac (by hand, and the menu's exact steps in scripted runs: the bots
+    spawn, difficulty reads back from the game, the decisions log fills) and played on an iPad
+    Pro with the full bot game; size and difficulty are new and not yet played on an iPad.
+- **Equipment:** your pack (Energy, Repair, Shield or Speed) works all the time; the pack button
+  (controller X, keyboard Q) fires its boost, which then recharges. Health kits are pickups: walk
+  over one to heal, and killed players drop them. Armor, pack and weapons change at an inventory
+  station in your base or on the respawn screen, where EDIT LOADOUTS saves a set; hold D-pad
+  right (Shift) in play to choose a saved one.
 - **Multiplayer:** the game's own MULTIPLAYER screen (··· → Play Online → Server List opens it)
   joins internet and LAN servers and hosts games. The game is free now, and like the community
   release's TV Key Generator, TribesPad gives it a CD key from that program's own list the first

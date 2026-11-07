@@ -256,10 +256,24 @@ function TribesPadStartRequests()
    }
    %file.delete();
 }
-function TribesPadHostBots( %count )
+function TribesPadHostBots( %count, %skill )
 {
    if ( %count < 1 )
       %count = 8;
+   // ··· > Play with Bots > Difficulty: the HOST screen's bot difficulty range.
+   switch$ ( %skill )
+   {
+      case "easy":
+         $Host::MinBotDifficulty = 0.1;
+         $Host::MaxBotDifficulty = 0.35;
+      case "hard":
+         $Host::MinBotDifficulty = 0.75;
+         $Host::MaxBotDifficulty = 1.0;
+      default:
+         $Host::MinBotDifficulty = 0.4;
+         $Host::MaxBotDifficulty = 0.65;
+   }
+   echo( "TribesPad bots: Katabatic with " @ %count @ " bots, difficulty " @ $Host::MinBotDifficulty @ " to " @ $Host::MaxBotDifficulty );
    $HostGameType = $PlayingOnline ? "Online" : "LAN";
    $Host::BotsEnabled = 1;
    $Host::BotCount = %count;
@@ -303,7 +317,7 @@ function TribesPadReadRequest()
    if ( getWord( %line, 1 ) $= "bots" )
    {
       if ( !isObject( ServerConnection ) )
-         TribesPadHostBots( getWord( %line, 2 ) );
+         TribesPadHostBots( getWord( %line, 2 ), getWord( %line, 3 ) );
       return;
    }
    // Find a Game > Server List on a server: leave it (the lobby's own

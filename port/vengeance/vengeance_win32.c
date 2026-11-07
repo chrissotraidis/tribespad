@@ -15,6 +15,7 @@
 #include <strings.h>
 #include <sys/stat.h>
 #include <sys/statvfs.h>
+#include <time.h>
 #include <unistd.h>
 #include "../llasm-support/llasm_cpu.h"
 #include "../core/guest_filesystem.h"
@@ -440,6 +441,10 @@ uint32_t vg_create_file_w(uint64_t base,uint32_t name,uint32_t rights,uint32_t s
    loading (map, game type, load times) or why it stopped also go to TribesPad's
    log, as "TribesPad game: ...", beside the hitch and frame lines. */
 extern uint32_t tribes_write_file(uint64_t base,uint32_t handle,uint32_t buffer,uint32_t count,uint32_t output,uint32_t overlapped);
+/* Every line, not just the kept ones: for two seconds after TribesPad runs a console
+   command (vengeance_input.c), so its replies show, and while Bot Decisions logging is on. */
+double vengeance_echo_all_until;
+int vengeance_echo_all;
 static void echo_game_log(const char *text,uint32_t count){
  static char line[512];static size_t used;
  static const char *const kept[]={"Log: Browse:","Log: LoadMap:","Log: Loadmap executed","Log: Startup time","Log: Finished precaching",
@@ -448,7 +453,9 @@ static void echo_game_log(const char *text,uint32_t count){
   char c=text[i];if(!c||c=='\r')continue;
   if(c!='\n'){if(used+1<sizeof line)line[used++]=c;continue;}
   line[used]=0;
-  for(unsigned k=0;k<sizeof kept/sizeof kept[0];k++)if(!strncmp(line,kept[k],strlen(kept[k]))){fprintf(stderr,"TribesPad game: %s\n",line);break;}
+  struct timespec now;clock_gettime(CLOCK_MONOTONIC,&now);
+  int all=vengeance_echo_all||now.tv_sec+now.tv_nsec/1e9<vengeance_echo_all_until;
+  for(unsigned k=0;k<sizeof kept/sizeof kept[0];k++)if(all||!strncmp(line,kept[k],strlen(kept[k]))){fprintf(stderr,"TribesPad game: %s\n",line);break;}
   used=0;
  }
 }
