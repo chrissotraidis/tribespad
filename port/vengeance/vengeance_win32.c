@@ -443,8 +443,10 @@ uint32_t vg_create_file_w(uint64_t base,uint32_t name,uint32_t rights,uint32_t s
 extern uint32_t tribes_write_file(uint64_t base,uint32_t handle,uint32_t buffer,uint32_t count,uint32_t output,uint32_t overlapped);
 /* Every line, not just the kept ones: for two seconds after TribesPad runs a console
    command (vengeance_input.c), so its replies show, and while Bot Decisions logging is on. */
-double vengeance_echo_all_until;
-int vengeance_echo_all;
+/* Initialised, so they are ordinary definitions: the iOS engine object keeps only its
+   entry point visible (build_engine.py, embed), which common symbols would escape. */
+double vengeance_echo_all_until=0;
+int vengeance_echo_all=0;
 static void echo_game_log(const char *text,uint32_t count){
  static char line[512];static size_t used;
  static const char *const kept[]={"Log: Browse:","Log: LoadMap:","Log: Loadmap executed","Log: Startup time","Log: Finished precaching",
