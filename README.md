@@ -371,14 +371,13 @@ TribesPad never ships the games. You build your own copy: the build downloads th
 official Tribes 2 and TribesNEXT files, PlayT1's Starsiege: Tribes installer and the
 Revengeance release of Tribes: Vengeance, and turns them into one app on your Mac (add
 `--games tribes2` to build Tribes 2 alone). It needs a
-Mac with Apple Silicon and about 40 minutes the first time. After installing Xcode and
-the tools below, allow **20 GiB (about 22 GB) of free build space** for one target with
-Tribes 2 and Starsiege. This includes downloads, generated code, build files and packaging, with
-headroom above the [measured clean builds](docs/validation/build-disk-space.md).
-Tribes: Vengeance needs more: its 3.1 GB download unpacks to 10 GB and its translation takes
-a few more, so allow about 20 GB more for iPhone and iPad and about 35 GB more for the Mac,
-whose app carries the game (estimated from a development checkout, not yet a measured clean
-build). It also adds time to the first build.
+Mac with Apple Silicon and about an hour the first time (clean PadMint builds took 51 minutes
+for iPhone and iPad and 69 for the Mac). After installing Xcode and the tools below, allow
+**60 GiB (about 64 GB) of free build space** for one target with all three games. Clean
+builds measured about 32 GiB for iPhone and iPad and 46 GiB for the Mac, including the
+downloads, generated code, build files, packaging and PadMint's output copy; most of it is
+Tribes: Vengeance's unpacked game. See the [measurement record](docs/validation/build-disk-space.md).
+With `--games tribes2,starsiege`, 20 GiB (about 22 GB) is enough.
 Xcode and the build tools need their own space; keep more free if you retain builds
 for multiple targets or versions.
 
@@ -398,7 +397,9 @@ for multiple targets or versions.
      cd tribespad
      scripts/build-tribespad.sh --platform macos
      ```
-4. Unzip `build/output/TribesPad-mac.zip`, drag **TribesPad** to Applications and open it.
+4. Double-click `build/output/TribesPad-mac.zip` in Finder, drag **TribesPad** to Applications
+   and open it. With all three games the zip is about 4.9 GB, which the `unzip` command can't
+   read; in Terminal use `ditto -x -k TribesPad-mac.zip .` instead.
 
 No Apple account is needed for the Mac.
 

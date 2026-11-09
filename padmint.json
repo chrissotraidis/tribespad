@@ -58,7 +58,7 @@
     }
   },
   "requirements": {
-    "disk_gb": 20,
+    "disk_gb": 64,
     "tools": [
       {
         "name": "xcodebuild",
