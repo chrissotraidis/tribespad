@@ -25,11 +25,11 @@
 ![TribesPad: jetting over Katabatic on iPad with touch controls](docs/images/tribespad-gameplay-jet.jpg)
 
 > [!IMPORTANT]
-> **TribesPad is an early release.** One command downloads the free official Tribes 2 and
-> TribesNEXT files, the community's Starsiege: Tribes 1.41 installer and the community's free
-> Revengeance release of Tribes: Vengeance, and builds your own copy for iPhone, iPad and Mac.
-> Pick any of the three games when it opens. (PadMint's **Build** button builds Tribes 2 and
-> Starsiege for now.) On a real iPad and iPhone it signs in to TribesNEXT and joins online
+> **TribesPad is an early release.** One command (or PadMint's **Build** button) downloads the
+> free official Tribes 2 and TribesNEXT files, the community's Starsiege: Tribes 1.41 installer
+> and the community's free Revengeance release of Tribes: Vengeance, and builds your own copy
+> for iPhone, iPad and Mac. Pick any of the three games when it opens. On a real iPad and
+> iPhone it signs in to TribesNEXT and joins online
 > matches with touch or a controller. Expect rough edges: some crashes are still being
 > found in online play, and every fix so far came from a session log. See
 > [Get TribesPad](#get-tribespad) and [Known issues](#known-issues).
@@ -246,10 +246,10 @@ on the device and checks every file against `config/vengeance/inputs.json`. It n
 15 GB free while it installs and keeps 11 GB (the campaign and its 200 multiplayer maps); keep
 TribesPad open meanwhile, and a paused download continues where it left off. The gear on the
 picker has **Remove Tribes: Vengeance** to free the space. The Mac app carries the game itself.
-Every build from Terminal includes it (`--games tribes2,starsiege` leaves it out); the build
-downloads the same release once to translate the game's code
-([progress](docs/validation/vengeance-progress.md)). PadMint's **Build** button leaves it out for
-now; build in Terminal to get it.
+Every build includes it, from Terminal or PadMint's **Build** button (`--games tribes2,starsiege`
+leaves it out); the build downloads the same release once to translate the game's code
+([progress](docs/validation/vengeance-progress.md)). The build on GitHub's free Mac, for players
+without a Mac, leaves it out.
 
 - **Campaign:** New Game, Load Game and the whole story; ··· → This Match → Campaign has Quick
   Save and Quick Load.
@@ -276,7 +276,7 @@ now; build in Terminal to get it.
     is really using, read from the game: 25 seconds after the bots start, after each difficulty
     change, and when Log Bot Decisions is turned on (lines starting `TribesPad bot:`).
   - **Building:** the build fetches TRIBESai from tribesrevengeance.net and unpacks it with
-    `unar` (`brew install unar`); without `unar` the app has no bot maps.
+    `unar` (in the Homebrew line under [Mac](#mac)); without `unar` the app has no bot maps.
     Nothing from the mod is in the repository.
   - **Checked:** played on an iPad Pro with a controller, and on the Mac in scripted runs through
     the HOST screen (the bots start by themselves, and the bot audit shows each bot using the
@@ -371,14 +371,13 @@ TribesPad never ships the games. You build your own copy: the build downloads th
 official Tribes 2 and TribesNEXT files, PlayT1's Starsiege: Tribes installer and the
 Revengeance release of Tribes: Vengeance, and turns them into one app on your Mac (add
 `--games tribes2` to build Tribes 2 alone). It needs a
-Mac with Apple Silicon and about 40 minutes the first time. After installing Xcode and
-the tools below, allow **20 GiB (about 22 GB) of free build space** for one target with
-Tribes 2 and Starsiege. This includes downloads, generated code, build files and packaging, with
-headroom above the [measured clean builds](docs/validation/build-disk-space.md).
-Tribes: Vengeance needs more: its 3.1 GB download unpacks to 10 GB and its translation takes
-a few more, so allow about 20 GB more for iPhone and iPad and about 35 GB more for the Mac,
-whose app carries the game (estimated from a development checkout, not yet a measured clean
-build). It also adds time to the first build.
+Mac with Apple Silicon and about an hour the first time (clean PadMint builds took 51 minutes
+for iPhone and iPad and 69 for the Mac). After installing Xcode and the tools below, allow
+**60 GiB (about 64 GB) of free build space** for one target with all three games. Clean
+builds measured about 32 GiB for iPhone and iPad and 46 GiB for the Mac, including the
+downloads, generated code, build files, packaging and PadMint's output copy; most of it is
+Tribes: Vengeance's unpacked game. See the [measurement record](docs/validation/build-disk-space.md).
+With `--games tribes2,starsiege`, 20 GiB (about 22 GB) is enough.
 Xcode and the build tools need their own space; keep more free if you retain builds
 for multiple targets or versions.
 
@@ -387,19 +386,20 @@ for multiple targets or versions.
 1. Install **Xcode** from the App Store and open it once.
 2. Install [Homebrew](https://brew.sh), then run:
    ```sh
-   brew install llvm@20 cmake ninja sevenzip zstd innoextract
+   brew install llvm@20 cmake ninja sevenzip zstd innoextract unar
    ```
-   `unar` (`brew install unar`) adds Tribes: Vengeance's bots: the build unpacks the community's
-   TRIBESai bot maps with it, and leaves the bots out without it.
+   `innoextract` unpacks Tribes: Vengeance and `unar` the community's TRIBESai bot maps.
 3. Build:
-   - **With [PadMint](https://github.com/chrissotraidis/padmint) (0.5.13 or newer):** choose TribesPad and press **Build** (Tribes 2 and Starsiege for now).
+   - **With [PadMint](https://github.com/chrissotraidis/padmint) (0.5.13 or newer):** choose TribesPad and press **Build**.
    - **Or in Terminal:**
      ```sh
      git clone https://github.com/chrissotraidis/tribespad.git
      cd tribespad
      scripts/build-tribespad.sh --platform macos
      ```
-4. Unzip `build/output/TribesPad-mac.zip`, drag **TribesPad** to Applications and open it.
+4. Double-click `build/output/TribesPad-mac.zip` in Finder, drag **TribesPad** to Applications
+   and open it. With all three games the zip is about 4.9 GB, which the `unzip` command can't
+   read; in Terminal use `ditto -x -k TribesPad-mac.zip .` instead.
 
 No Apple account is needed for the Mac.
 
@@ -411,7 +411,8 @@ No Apple account is needed for the Mac.
    ```
    No Mac? Build it on GitHub's free Mac from Windows, Linux or any computer with a web
    browser: follow [PadMint's steps](https://github.com/chrissotraidis/padmint#no-mac-build-on-githubs-mac).
-   The IPA contains the game, so keep it to yourself.
+   That build has Tribes 2 and Starsiege: Tribes; Tribes: Vengeance needs a build on your own
+   Mac. The IPA contains the game, so keep it to yourself.
 2. Install `build/output/TribesPad.ipa` with [Sideloadly](https://sideloadly.io) or
    your usual signing tool.
 

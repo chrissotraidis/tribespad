@@ -1,4 +1,62 @@
-# Build disk space (27 October 2026)
+# Build disk space (9 November 2026, TribesPad 0.3.0)
+
+Allow **60 GiB (about 64 GB) free after installing Xcode and the build tools**
+for a clean build of one target with all three games. With
+`--games tribes2,starsiege` the 20 GiB allowance measured for 0.2.0 (below) still applies.
+
+## Measurements
+
+Measured the 0.3.0 release candidate at
+`d1c4ff2389222c24240c99ea219553db47a76e14` (the tagged release differs only in this
+record, the README and the recipe's disk figure), using PadMint main at
+`b2a56237fee0507ee40ae3365cf7c4922a96abe5`:
+
+| Target | Largest sampled footprint | With PadMint's output copy | Build time | Player check |
+| --- | ---: | ---: | ---: | --- |
+| iPhone/iPad | 31.06 GiB | about 31.8 GiB | 51 min | PASS |
+| Mac | 41.49 GiB | about 46.1 GiB | 69 min | PASS |
+
+At the iPhone/iPad peak, 15.94 GiB was in `ref/` (the three games' downloads and the
+unpacked Tribes: Vengeance), 12.14 GiB in `generated/`, 1.38 GiB in `build/` and
+1.15 GiB in the packaging copy in the system temporary folder. At the Mac peak, 15.56 GiB
+was in `ref/`, 20.88 GiB in `generated/` (the app carries Vengeance's 11 GB game) and
+4.59 GiB in `build/` (the 4.9 GB archive). These checks build from a checkout, so
+PadMint makes no output copy; a player's `padmint make` copies the archive once more
+(0.74 GiB IPA, 4.59 GiB Mac zip), added in the third column. The 60 GiB allowance leaves
+about 30% above the larger total.
+
+## Method and scope
+
+Ran these sequentially, with Apple's `/usr/bin/python3` 3.9.6, an empty PadMint folder,
+a fresh source clone and a fresh pip cache for each:
+
+```sh
+scripts/player-check.sh tribespad ios - <checkout>
+scripts/player-check.sh tribespad macos - <checkout>
+```
+
+The host was Apple Silicon, macOS 26.6.2, Xcode 27.2 (27B52), on APFS, with the documented
+Homebrew tools (now including `innoextract` and `unar`) installed. Sampling was the same
+tree walk as for 0.2.0 (allocated blocks, hard links counted once, two-second pauses), over
+the check's workspace with `TMPDIR` and `PIP_CACHE_DIR` inside it, plus any `tmp.*`
+folder the build made in the system temporary folder (the iOS packaging copy).
+
+## Build evidence, separate from gameplay
+
+- **iPhone/iPad:** the IPA contains `GameData/Starsiege/`, `GameData/Vengeance/` and the
+  four TRIBESai bot maps; the backend log has no Starsiege or Vengeance fallback; the
+  archive's CRC check passed.
+- **Mac:** the backend log has no fallback. The 4.9 GB zip, written by `ditto`, extracted
+  with `ditto -x -k` (the engine Finder uses) to the full 11 GB app with
+  `TribesPadEngine`, `StarsiegeEngine`, `VengeanceEngine` and the four bot maps, and
+  `codesign --verify --deep` passed. Info-ZIP's `unzip` and Python's `zipfile` misread
+  this archive (every offset 2^32 too high), so the README points Terminal users to
+  `ditto`.
+
+These measurements add no device, controller, multiplayer or gameplay evidence.
+
+# Build disk space (27 October 2026, TribesPad 0.2.0)
+
 
 Allow **20 GiB (about 22 GB) free after installing Xcode and the build tools**
 for a clean build of one target with both games. The previous 40 GB requirement
