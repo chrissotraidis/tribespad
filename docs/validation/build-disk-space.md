@@ -1,7 +1,7 @@
 # Build disk space (9 November 2026, TribesPad 0.3.0)
 
-Allow **60 GiB (about 64 GB) free after installing Xcode and the build tools**
-for a clean build of one target with all three games. With
+Allow **40 GiB (about 43 GB) for iPhone and iPad, or 60 GiB (about 64 GB) for the Mac,
+free after installing Xcode and the build tools** for a clean build with all three games. With
 `--games tribes2,starsiege` the 20 GiB allowance measured for 0.2.0 (below) still applies.
 
 ## Measurements
@@ -22,8 +22,10 @@ unpacked Tribes: Vengeance), 12.14 GiB in `generated/`, 1.38 GiB in `build/` and
 was in `ref/`, 20.88 GiB in `generated/` (the app carries Vengeance's 11 GB game) and
 4.59 GiB in `build/` (the 4.9 GB archive). These checks build from a checkout, so
 PadMint makes no output copy; a player's `padmint make` copies the archive once more
-(0.74 GiB IPA, 4.59 GiB Mac zip), added in the third column. The 60 GiB allowance leaves
-about 30% above the larger total.
+(0.74 GiB IPA, 4.59 GiB Mac zip), added in the third column. The allowances leave about
+25% (iPhone/iPad) and 30% (Mac) above those totals. PadMint's catalog uses the same figures
+(`free_space_gb` 40, `free_space_gb_by_target` macos 60); the release recipe's single
+`disk_gb` is 64, for the larger target.
 
 ## Method and scope
 
