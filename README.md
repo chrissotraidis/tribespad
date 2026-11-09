@@ -373,7 +373,8 @@ Revengeance release of Tribes: Vengeance, and turns them into one app on your Ma
 `--games tribes2` to build Tribes 2 alone). It needs a
 Mac with Apple Silicon and about an hour the first time (clean PadMint builds took 51 minutes
 for iPhone and iPad and 69 for the Mac). After installing Xcode and the tools below, allow
-**60 GiB (about 64 GB) of free build space** for one target with all three games. Clean
+**40 GiB (about 43 GB) of free build space** for iPhone and iPad, or **60 GiB (about 64 GB)**
+for the Mac, with all three games. Clean
 builds measured about 32 GiB for iPhone and iPad and 46 GiB for the Mac, including the
 downloads, generated code, build files, packaging and PadMint's output copy; most of it is
 Tribes: Vengeance's unpacked game. See the [measurement record](docs/validation/build-disk-space.md).
