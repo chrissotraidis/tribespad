@@ -5,7 +5,7 @@
 <h1 align="center">TribesPad</h1>
 
 <p align="center">
-  <strong>The original Tribes 2 and Starsiege: Tribes, native on iPad, iPhone and Mac.</strong><br>
+  <strong>The original Starsiege: Tribes, Tribes 2 and Tribes: Vengeance, native on iPad, iPhone and Mac.</strong><br>
   Jetpacks, skiing and capture the flag, translated ahead of time from x86 to native ARM64 and rendered through Metal, with touch controls and gamepad support.
 </p>
 
@@ -25,9 +25,11 @@
 ![TribesPad: jetting over Katabatic on iPad with touch controls](docs/images/tribespad-gameplay-jet.jpg)
 
 > [!IMPORTANT]
-> **TribesPad is an early release.** One command (or PadMint's **Build** button) downloads
-> the free official Tribes 2 and TribesNEXT files and the community's Starsiege: Tribes 1.41
-> installer, and builds your own copy for iPhone, iPad and Mac. Pick either game when it opens. On a real iPad and iPhone it signs in to TribesNEXT and joins online
+> **TribesPad is an early release.** One command downloads the free official Tribes 2 and
+> TribesNEXT files, the community's Starsiege: Tribes 1.41 installer and the community's free
+> Revengeance release of Tribes: Vengeance, and builds your own copy for iPhone, iPad and Mac.
+> Pick any of the three games when it opens. (PadMint's **Build** button builds Tribes 2 and
+> Starsiege for now.) On a real iPad and iPhone it signs in to TribesNEXT and joins online
 > matches with touch or a controller. Expect rough edges: some crashes are still being
 > found in online play, and every fix so far came from a session log. See
 > [Get TribesPad](#get-tribespad) and [Known issues](#known-issues).
@@ -45,8 +47,10 @@ the Windows, OpenGL, audio, input and networking services the game expects. The
 original menus, maps, weapons, physics, bots and scripts are all the game's own.
 
 It also runs **Starsiege: Tribes** (1998), version 1.41, the one the community plays
-online, translated the same way. TribesPad opens to a picker with both games and how
-many people are playing each right now.
+online, translated the same way, and **Tribes: Vengeance** (2004), Irrational Games' Unreal
+Engine 2 sequel: the whole campaign, online play on the community's OpenSpy servers, and bot
+matches on the community's TRIBESai maps. TribesPad opens to a picker with all three games
+and how many people are playing each right now.
 
 On iPhone and iPad it adds an analog touch layout, gamepad mapping and a small
 TribesPad menu for settings. On Mac it runs as a
@@ -73,7 +77,8 @@ normal app with mouse and keyboard, on the same Metal renderer.
 | Online play? | **Yes.** TribesPad opens to the TribesNEXT login, remembers your password if you ask it to, and joins community servers. Most servers are empty outside North American evenings; see [Online servers](#online-servers). |
 | Controllers? | One Xbox, PlayStation or MFi extended gamepad maps to the original bindings, played on iPad with an Xbox controller. |
 | Starsiege: Tribes? | **Yes.** Version 1.41 from the game picker: bot matches offline and community servers online, with the same touch, controller and ··· menu as Tribes 2. Played on iPad; Mac and the iPhone Simulator reach the menus and matches. See [Starsiege: Tribes](#starsiege-tribes). |
-| Is the game included? | **No.** Your build downloads the free official Tribes 2 installer and the TribesNEXT client and checks them by SHA-256. See [Game data](#game-data). |
+| Tribes: Vengeance? | **Yes.** The campaign, online play through OpenSpy, and bot matches on four TRIBESai maps with Easy, Normal and Hard bots, with touch, a controller and the ··· menu. Played on a 12.9-inch iPad Pro with an Xbox controller; the Mac app runs it too. On iPhone and iPad it is an optional 3.1 GB download inside the app. See [Tribes: Vengeance](#tribes-vengeance). |
+| Is the game included? | **No.** Your build downloads the free official Tribes 2 installer, the TribesNEXT client, the Starsiege: Tribes installer and the Revengeance release, and checks them by SHA-256. See [Game data](#game-data). |
 
 ### Performance
 
@@ -241,8 +246,10 @@ on the device and checks every file against `config/vengeance/inputs.json`. It n
 15 GB free while it installs and keeps 11 GB (the campaign and its 200 multiplayer maps); keep
 TribesPad open meanwhile, and a paused download continues where it left off. The gear on the
 picker has **Remove Tribes: Vengeance** to free the space. The Mac app carries the game itself.
-Every build includes it (`--games tribes2,starsiege` leaves it out); the build downloads the
-same release once to translate the game's code ([progress](docs/validation/vengeance-progress.md)).
+Every build from Terminal includes it (`--games tribes2,starsiege` leaves it out); the build
+downloads the same release once to translate the game's code
+([progress](docs/validation/vengeance-progress.md)). PadMint's **Build** button leaves it out for
+now; build in Terminal to get it.
 
 - **Campaign:** New Game, Load Game and the whole story; ··· → This Match → Campaign has Quick
   Save and Quick Load.
@@ -271,10 +278,9 @@ same release once to translate the game's code ([progress](docs/validation/venge
   - **Building:** the build fetches TRIBESai from tribesrevengeance.net and unpacks it with
     `unar` (`brew install unar`); without `unar` the app has no bot maps.
     Nothing from the mod is in the repository.
-  - **Checked:** on the Mac in scripted runs (a bot map hosted as HOST does it: the bots start
-    by themselves; difficulty reads back from the game; the decisions log fills) and played on
-    an iPad Pro with the full bot game; the HOST-screen start, size and difficulty are new and not
-    yet played on an iPad.
+  - **Checked:** played on an iPad Pro with a controller, and on the Mac in scripted runs through
+    the HOST screen (the bots start by themselves, and the bot audit shows each bot using the
+    chosen difficulty, including after a change mid-match).
 - **Equipment:** your pack (Energy, Repair, Shield or Speed) works all the time; the pack button
   (controller X, keyboard Q) fires its boost, which then recharges. Health kits are pickups: walk
   over one to heal, and killed players drop them. Armor, pack and weapons change at an inventory
@@ -367,8 +373,12 @@ Revengeance release of Tribes: Vengeance, and turns them into one app on your Ma
 `--games tribes2` to build Tribes 2 alone). It needs a
 Mac with Apple Silicon and about 40 minutes the first time. After installing Xcode and
 the tools below, allow **20 GiB (about 22 GB) of free build space** for one target with
-both games. This includes downloads, generated code, build files and packaging, with
+Tribes 2 and Starsiege. This includes downloads, generated code, build files and packaging, with
 headroom above the [measured clean builds](docs/validation/build-disk-space.md).
+Tribes: Vengeance needs more: its 3.1 GB download unpacks to 10 GB and its translation takes
+a few more, so allow about 20 GB more for iPhone and iPad and about 35 GB more for the Mac,
+whose app carries the game (estimated from a development checkout, not yet a measured clean
+build). It also adds time to the first build.
 Xcode and the build tools need their own space; keep more free if you retain builds
 for multiple targets or versions.
 
@@ -382,7 +392,7 @@ for multiple targets or versions.
    `unar` (`brew install unar`) adds Tribes: Vengeance's bots: the build unpacks the community's
    TRIBESai bot maps with it, and leaves the bots out without it.
 3. Build:
-   - **With [PadMint](https://github.com/chrissotraidis/padmint) (0.5.13 or newer):** choose TribesPad and press **Build**.
+   - **With [PadMint](https://github.com/chrissotraidis/padmint) (0.5.13 or newer):** choose TribesPad and press **Build** (Tribes 2 and Starsiege for now).
    - **Or in Terminal:**
      ```sh
      git clone https://github.com/chrissotraidis/tribespad.git
@@ -408,20 +418,25 @@ No Apple account is needed for the Mac.
 > [!NOTE]
 > TribesPad runs without Apple's *Extended Virtual Addressing* permission. It was tested
 > with a paid Apple Developer account; a free Apple ID should work (apps then expire after
-> seven days) but has not been tried. The app is about 1 GB with the game data.
+> seven days) but has not been tried. The app is about 1 GB with the game data; Tribes:
+> Vengeance downloads inside the app when you pick it.
 
 ### First launch
 
 Accept the license, create a warrior, then choose **LAN GAME → HOST → START GAME** for a
 match against bots. On iPhone and iPad, tap the controller button to show touch controls.
+In Tribes: Vengeance, choose **MULTIPLAYER → HOST**, Capture the Flag and **FortBots**, then
+**START SERVER**: both teams' bots switch on a few seconds after you are in.
 
 ## Game data
 
-No Tribes 2, TribesNEXT or Starsiege: Tribes files are stored in this repository or published by it. The
+No Tribes 2, TribesNEXT, Starsiege: Tribes or Tribes: Vengeance files, and nothing from the
+TRIBESai bot mod, are stored in this repository or published by it. The
 build keeps the downloads in the ignored `ref/` folder and its own work in `generated/`.
 The accepted files are listed by SHA-256 in [inputs-manifest.json](inputs-manifest.json)
-and [config/game-inputs.json](config/game-inputs.json), and Starsiege's in
-[config/starsiege/inputs.json](config/starsiege/inputs.json). That a game is free to
+and [config/game-inputs.json](config/game-inputs.json), Starsiege's in
+[config/starsiege/inputs.json](config/starsiege/inputs.json) and Vengeance's in
+[config/vengeance/inputs.json](config/vengeance/inputs.json). That a game is free to
 download does not grant the right to redistribute it.
 
 To recreate the exact translated code the engine was tested with, the build lifts your
@@ -452,6 +467,10 @@ How this works, stage by stage, is in [Reproducible build](docs/REPRODUCIBLE-BUI
   in New York; if it does not finish, the build completes with Tribes 2 alone and the picker
   says Starsiege is not in this build. Save `retro_141_installerv2.exe` from playt1.com
   into `ref/downloads` in the `tribespad` folder and build again; its SHA-256 is checked.
+- **Tribes: Vengeance:** bots play only on the four TRIBESai maps (the game's other maps have no
+  bot paths); every bot costs frames, so a Full bot game is slower than a Small one; opening the
+  Escape menu in a match pauses for about a second; and the first visit to a new area can hitch
+  briefly while its graphics load.
 
 ## Roadmap
 
@@ -464,7 +483,7 @@ How this works, stage by stage, is in [Reproducible build](docs/REPRODUCIBLE-BUI
 - Join TribesNEXT community servers
 - Starsiege: mod packs, IRC chat, graphics presets and faster loading
   ([plan](docs/STARSIEGE-TRIBES-PLAN.md), [validation](docs/validation/starsiege-g2.md))
-- Tribes: Vengeance device acceptance on iPad; Ascend after that
+- Tribes: Vengeance: in PadMint's Build button, faster bot games and a measured clean build; Ascend after that
   ([plan](docs/VENGEANCE-ASCEND-PLAN.md), [progress](docs/validation/vengeance-progress.md))
 - A headless dedicated server on a Mac, then Linux on ARM
   ([plan](docs/DEDICATED-SERVER-PLAN.md))
@@ -481,6 +500,7 @@ How this works, stage by stage, is in [Reproducible build](docs/REPRODUCIBLE-BUI
 - [Starsiege: Tribes plan](docs/STARSIEGE-TRIBES-PLAN.md): evidence, a lift preview and gated steps for a second game
 - [Vengeance and Ascend plan](docs/VENGEANCE-ASCEND-PLAN.md): optional engines in the same app, community inputs, milestones and the next implementation handoff
 - [Vengeance implementation plan](docs/VENGEANCE-IMPLEMENTATION-PLAN.md): concrete translation/bootstrap sequence, campaign target, touch/controller bindings and third-engine integration
+- [Vengeance progress](docs/validation/vengeance-progress.md): what was built, how each step was checked, and what remains
 - [Expansion research](docs/TRIBES-EXPANSION-RESEARCH.md): community services, binary audits, reusable runtime code and distribution evidence
 - [Launcher plan](docs/LAUNCHER-PLAN.md): the game picker, Switch Game, per-game controls and folders, and when it ships
 - [Android and Linux plan](docs/ANDROID-LINUX-PLAN.md): what carries over from the Apple build, and gated steps for Raspberry Pi and Android
@@ -492,13 +512,19 @@ How this works, stage by stage, is in [Reproducible build](docs/REPRODUCIBLE-BUI
 
 Tribes 2 was developed by Dynamix and published by Sierra. Thanks to the
 [TribesNEXT](https://www.tribesnext.com) community, which keeps the game and its
-servers alive. Touch control design follows HaloPad /
+servers alive. Starsiege: Tribes was developed by Dynamix; thanks to
+[PlayT1](https://playt1.com) and the Tribes 1 community. Tribes: Vengeance was developed by
+Irrational Games and published by Vivendi Universal Games; thanks to
+[tribesrevengeance.net](https://tribesrevengeance.net/) for the free Revengeance release,
+[OpenSpy](https://openspy.net) for its servers, and the authors of the TRIBESai bot mod.
+Touch control design follows HaloPad /
 [ProjectReach](https://github.com/chrissotraidis/projectreach) and SunPad.
 
-TribesPad's own code is released under the [MIT License](LICENSE). Tribes 2, TribesNEXT
-and their files belong to their owners and are not covered by it; this repository
+TribesPad's own code is released under the [MIT License](LICENSE). Tribes 2, TribesNEXT,
+Starsiege: Tribes, Tribes: Vengeance, TRIBESai and their files belong to their owners and are
+not covered by it; this repository
 contains none of them. The translation patches in `patches/translation` apply only to
 your own lift of the official downloads.
 
 TribesPad is an unofficial fan project and is not affiliated with or endorsed by
-the owners of Tribes 2. Report problems in [issues](https://github.com/chrissotraidis/tribespad/issues).
+the owners of the Tribes games. Report problems in [issues](https://github.com/chrissotraidis/tribespad/issues).
