@@ -62,9 +62,33 @@ static BOOL tb_vengeance;
 static BOOL tb_vengeance_graphics_pending;   /* a Graphics Quality choice not yet sent to the game */
 static _Atomic int tb_vengeance_playing=-1;
 void tb_vengeance_report_state(int playing){atomic_store(&tb_vengeance_playing,playing);}
+static _Atomic int tb_vengeance_typing;
+void tb_vengeance_report_typing(int typing){atomic_store(&tb_vengeance_typing,typing);}
+/* Vengeance's typed-command queue, handed over by its engine at its first frame. */
+static void (*_Atomic tb_vengeance_typer)(const char *line,int open_with_tab);
+void tb_vengeance_set_typer(void (*typer)(const char *line,int open_with_tab)){atomic_store(&tb_vengeance_typer,typer);}
+static void ss_type_command(const char *line,int open_with_tab){
+    void (*typer)(const char *,int)=atomic_load(&tb_vengeance_typer);if(typer)typer(line,open_with_tab);}
+/* Play with Bots' difficulty, shared by the three games: easy, normal or hard. */
+static NSString *tb_bot_skill(void){
+    NSString *s=[NSUserDefaults.standardUserDefaults stringForKey:@"TribesPad.botSkill"];
+    return [@[@"easy",@"normal",@"hard"] containsObject:s]?s:@"normal";
+}
+/* Vengeance's bot game size: small, medium or full (vengeance_input.c). */
+static NSString *tb_vengeance_bot_size(void){
+    NSString *s=[NSUserDefaults.standardUserDefaults stringForKey:@"TribesPad.vengeanceBotSize"];
+    return [@[@"small",@"medium",@"full"] containsObject:s]?s:@"small";
+}
+static BOOL tb_bot_log;                      /* Vengeance's Log Bot Decisions, on or off */
 /* Vengeance on a server (joined or hosted here): the map it last loaded, from
    the game's own log, is not a campaign map (SP-, CS-) or the menu map (Entry).
-   Only the lines added since the last look are read. */
+   Only the lines added since the last look are read. A load with ?listen is a
+   game hosted here; tb_vengeance_hosting counts each time hosting starts (a
+   hosted load after one that was not), so the team is picked once per game. */
+static BOOL tb_vengeance_hosted;
+static unsigned tb_vengeance_hosting;
+static BOOL tb_vengeance_bot_game;            /* hosting one of TRIBESai's bot maps (MP-...Bots...) */
+static unsigned tb_vengeance_loads;          /* maps loaded so far, any kind */
 static BOOL tb_vengeance_on_server(void){
     static unsigned long long seen;static BOOL server;static char tail[512];
     NSString *path=[NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,NSUserDomainMask,YES).firstObject
@@ -76,14 +100,22 @@ static BOOL tb_vengeance_on_server(void){
         NSString *s=[[NSString alloc] initWithData:text encoding:NSWindowsCP1252StringEncoding]?:@"";
         NSRange last=[s rangeOfString:@"LoadMap: " options:NSBackwardsSearch];
         if(last.location!=NSNotFound){NSString *map=[s substringFromIndex:NSMaxRange(last)];
-            server=!([map hasPrefix:@"SP-"]||[map hasPrefix:@"CS-"]||[map hasPrefix:@"Entry"]||[map hasPrefix:@"entry"]);}
+            server=!([map hasPrefix:@"SP-"]||[map hasPrefix:@"CS-"]||[map hasPrefix:@"Entry"]||[map hasPrefix:@"entry"]);
+            NSRange end=[map rangeOfString:@"\n"];NSString *url=end.location==NSNotFound?map:[map substringToIndex:end.location];
+            BOOL hosted=server&&[url rangeOfString:@"?listen" options:NSCaseInsensitiveSearch].location!=NSNotFound;
+            if(hosted&&!tb_vengeance_hosted)tb_vengeance_hosting++;
+            tb_vengeance_loads++;
+            tb_vengeance_hosted=hosted;
+            tb_vengeance_bot_game=hosted&&[url rangeOfString:@"Bots" options:NSCaseInsensitiveSearch].location!=NSNotFound;}
         NSRange line=[s rangeOfString:@"\n" options:NSBackwardsSearch];NSString *rest=line.location==NSNotFound?s:[s substringFromIndex:NSMaxRange(line)];
         snprintf(tail,sizeof tail,"%s",rest.length<sizeof tail?rest.UTF8String:"");}
     [log closeFile];return server;
 }
 static _Atomic uint64_t tb_app_frames,tb_app_longest_ns,tb_app_last_ns;
 void tb_app_note_frame(void){
-    uint64_t now=SDL_GetTicksNS(),last=atomic_exchange(&tb_app_last_ns,now);atomic_fetch_add(&tb_app_frames,1);
+    uint64_t now=SDL_GetTicksNS(),last=atomic_exchange(&tb_app_last_ns,now);
+    /* The first frame takes the loading screen away (launcher.m). The engine runs on the main thread. */
+    if(!atomic_fetch_add(&tb_app_frames,1)){extern void tb_launcher_hide_loading(void);tb_launcher_hide_loading();}
     if(last&&now-last>atomic_load(&tb_app_longest_ns))atomic_store(&tb_app_longest_ns,now-last);
 }
 static uint64_t tb_frames(void){return tb_vengeance?atomic_load(&tb_app_frames):tribes_gl4es_presented_frames();}
@@ -164,7 +196,7 @@ static void tb_set(NSString *key,double value){[NSUserDefaults.standardUserDefau
 -(void)toggleControls;
 -(void)settingsChanged;
 -(void)hideForController;
--(void)showControllerHint;
+-(BOOL)showControllerHint;
 -(void)pointerMoveTo:(CGPoint)point delta:(CGPoint)delta held:(BOOL)held;
 -(void)pointerButton:(BOOL)down at:(CGPoint)point;
 -(void)pointerClickAt:(CGPoint)point;
@@ -1043,7 +1075,7 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
     NSString *state=[NSString stringWithContentsOfFile:tb_state_path() encoding:NSUTF8StringEncoding error:nil];
     /* Vengeance: the engine reports whether the game holds the mouse for aiming. */
     if(tb_vengeance){int p=atomic_load(&tb_vengeance_playing);
-        state=p<0?nil:[NSString stringWithFormat:@"%d 0 %d",p?1:0,tb_vengeance_on_server()?1:0];}
+        state=p<0?nil:[NSString stringWithFormat:@"%d %d %d",p?1:0,!p&&atomic_load(&tb_vengeance_typing)?1:0,tb_vengeance_on_server()?1:0];}
     if(tb_starsiege&&state.length){
         /* Starsiege's export: $TribesPad::state = "1 0 1"; */
         NSRange q=[state rangeOfString:@"\""];if(q.location==NSNotFound)return;
@@ -1095,10 +1127,29 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
         if(tb_vengeance&&tb_vengeance_graphics_pending){__weak TBGameControls *weak=self;
             dispatch_after(dispatch_time(DISPATCH_TIME_NOW,(int64_t)(NSEC_PER_SEC/2)),dispatch_get_main_queue(),^{[weak applyVengeanceGraphics];});}
         if(!self.expanded&&!(self.controllerUsed&&TB_HIDE_WITH_CONTROLLER)&&!self.mouseUsed)[self toggleControls];
-        if(self.controllerUsed)[self showControllerHint];
+        BOOL server=tb_vengeance&&tb_vengeance_on_server();
+        if(server)[self pickVengeanceTeam];
+        if(self.controllerUsed){if(![self showControllerHint]&&server)[self showPointerHint];}
         else if(self.expanded)[self showHint];
     } else if(self.expanded&&!self.restoreControlsAfterKeyboard)[self toggleControls];
     [self rebuildMenu];[self setNeedsLayout];
+}
+/* Hosting a Vengeance game here: the host joins as a spectator, and picking a team
+   took a trip through the game's team screen. Once per hosted game, the host joins
+   Blood Eagle (the console's changeTeam), then the respawn map is a press of RT away. */
+-(void)pickVengeanceTeam {
+    static unsigned picked;if(!tb_vengeance_hosted||picked==tb_vengeance_hosting)return;picked=tb_vengeance_hosting;
+    fprintf(stderr,"TribesPad: hosting, joining a team\n");
+    __weak TBGameControls *weak=self;
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW,(int64_t)(NSEC_PER_SEC*3/2)),dispatch_get_main_queue(),^{[weak typeVengeanceCommand:@"changeteam 0"];});
+}
+/* On a server, the respawn map and the loadout screen take a pointer: with a
+   controller the right stick moves it and RT clicks. Said at the start of each
+   match while the full controller hint is no longer shown. */
+-(void)showPointerHint {
+    static unsigned shownFor;if(shownFor==tb_vengeance_loads)return;shownFor=tb_vengeance_loads;
+    [self.hint.layer removeAllAnimations];
+    [self flashHint:@"Respawn map and loadout screens: the right stick moves the pointer, RT clicks"];
 }
 /* The first few times the controls appear, say what the main buttons do. */
 -(void)showHint {
@@ -1138,12 +1189,13 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
     for(NSUInteger i=0;i<codes.count;i++)dispatch_after(dispatch_time(DISPATCH_TIME_NOW,(int64_t)(i*70*NSEC_PER_MSEC)),dispatch_get_main_queue(),^{
         [weak tapKey:(SDL_Scancode)codes[i].intValue];});
 }
--(void)showControllerHint {
-    double shown=tb_setting(@"TribesPad.controllerHintsShown",0);if(shown>=3)return;tb_set(@"TribesPad.controllerHintsShown",shown+1);
+-(BOOL)showControllerHint {
+    double shown=tb_setting(@"TribesPad.controllerHintsShown",0);if(shown>=3)return NO;tb_set(@"TribesPad.controllerHintsShown",shown+1);
     /* Each game's own layout: Starsiege's is starsiege_input.c's. */
     self.hint.text=tb_vengeance?@"RT fire  ·  LT jet  ·  A jump (hold to ski)  ·  LB ski  ·  RB / D-pad left next / previous weapon\n"
-        "Y grenade  ·  X pack  ·  B use  ·  D-pad: up zoom level, down objectives, right loadout\n"
-        "Click right stick: zoom  ·  click left stick: third person  ·  Menu: game menu  ·  View: scores":
+        "Y grenade  ·  X use pack (its boost)  ·  B use  ·  D-pad: up zoom level, down objectives, right loadout\n"
+        "Click right stick: zoom  ·  click left stick: third person  ·  Menu: game menu  ·  View: scores\n"
+        "Respawn and loadout screens: the right stick moves the pointer, RT clicks  ·  Main menus: the left stick does, A clicks":
         tb_starsiege?@"RT fire  ·  LT jet  ·  A jump / ski  ·  RB / LB next / previous weapon\n"
         "Y grenade  ·  X use pack  ·  B crouch  ·  D-pad: up repair kit, down inventory, left beacon, right quick chat\n"
         "Spawning? Press RT  ·  Menu: game menu  ·  View: scores":
@@ -1153,6 +1205,7 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
     [self.hint.layer removeAllAnimations];[self setNeedsLayout];[self layoutIfNeeded];
     [UIView animateWithDuration:.3 animations:^{self.hint.alpha=1;}];
     [UIView animateWithDuration:.6 delay:12 options:UIViewAnimationOptionAllowUserInteraction animations:^{self.hint.alpha=0;} completion:nil];
+    return YES;
 }
 /* Pointer events from the trackpad cursor, in window points like SDL's own. */
 -(void)pointerMoveTo:(CGPoint)point delta:(CGPoint)delta held:(BOOL)held {
@@ -1275,6 +1328,19 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
             item(@"TribesPad Discord",@"person.2",^{[weak openLink:TBTribesPadDiscord];})]),
         group(@[item(@"TribesNEXT Forum",@"text.bubble",^{[weak openPage:TBTribesNextForum];})])]];
     NSArray *matchItems=game,*onlineItems=@[playing,servers,nights,community],*optionItems=controls;
+    /* Bots live in each game's own screens: Tribes 2's HOST screen (Bots, count and
+       difficulty), Starsiege's Options menu in a game you host (Tab > Options > Bots...,
+       scripts/starsiege/build_engine.py), and Vengeance's HOST screen, where a TRIBESai
+       bot map fills both teams by itself (vengeance_input.c). Vengeance's bot difficulty
+       and size have no screen in the game, so they are here: Options > Bots, and This
+       Match > Bots during a bot game. */
+    NSArray<NSString *> *skillNotes=@[@"Aim spread 9°, react in 1.5 s",@"Aim spread 5°, react in 0.9 s",@"As TRIBESai made them: 2°, 0.5 s"];
+    UIMenu *(^difficultyMenu)(void)=^UIMenu *(void){
+        NSString *skill=tb_bot_skill();NSMutableArray *skills=[NSMutableArray array];
+        NSArray<NSString *> *levels=@[@"easy",@"normal",@"hard"],*names=@[@"Easy",@"Normal",@"Hard"];
+        for(NSUInteger i=0;i<3;i++){NSString *level=levels[i];UIAction *a=item(names[i],@"dial.medium",^{[weak setBotSkill:level];});
+            a.subtitle=skillNotes[i];a.state=[skill isEqualToString:level]?UIMenuElementStateOn:UIMenuElementStateOff;[skills addObject:a];}
+        return [UIMenu menuWithTitle:@"Difficulty" image:nil identifier:nil options:UIMenuOptionsDisplayInline children:skills];};
     if(tb_starsiege){
         /* Starsiege's own keys (config/config.cs): T and Y chat, I inventory,
            O objectives, C command, Tab scores, Ctrl+K kill. */
@@ -1348,7 +1414,7 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
         tvFull.subtitle=@"The game's own projected lights and shadows";tvFull.state=[quality isEqualToString:@"full"]?UIMenuElementStateOn:UIMenuElementStateOff;
         /* Resolution: the game's 4:3 drawing size, applied when Vengeance next starts. */
         NSString *size=tb_vengeance_resolution();NSMutableArray<UIAction *> *sizes=[NSMutableArray array];
-        for(NSArray<NSString *> *r in @[@[@"1024x768",@"The game's own default, the lightest"],@[@"1600x1200",@"Sharper; the TribesPad default"],@[@"2048x1536",@"Sharpest, the most work for the GPU"]]){
+        for(NSArray<NSString *> *r in @[@[@"1024x768",@"The game's own default, the lightest"],@[@"1600x1200",@"Sharper; the iPhone default"],@[@"2048x1536",@"Sharpest; the iPad default"]]){
             NSString *value=r[0];UIAction *a=item([value stringByReplacingOccurrencesOfString:@"x" withString:@" × "],@"rectangle.expand.vertical",^{[weak setVengeanceResolution:value];});
             a.subtitle=r[1];a.state=[size isEqualToString:value]?UIMenuElementStateOn:UIMenuElementStateOff;[sizes addObject:a];}
         optionItems=@[controls[0],controls[1],controls[2],
@@ -1371,6 +1437,35 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
             group(@[item(@"TribesRevengeance.net",@"safari",^{[weak openPage:TBVengeanceSite];}),
                 item(@"Server List on the Web (OpenSpy)",@"server.rack",^{[weak openPage:TBVengeanceServers];})])]];
         onlineItems=@[tvplaying,tvservers,tvnights,tvcommunity];
+        /* Options > Bots: difficulty and size for TRIBESai's bot maps (scripts/vengeance/bots.py)
+           hosted from MULTIPLAYER > HOST; the engine reads them when the bots start. */
+        NSString *botMaps=[[NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,NSUserDomainMask,YES).firstObject
+            stringByAppendingPathComponent:@"TribesPad/VengeanceGame/Content/Maps"] stringByAppendingPathComponent:@"MP-FortBots_V5.tvm"];
+        setenv("TRIBESPAD_BOT_SKILL",tb_bot_skill().UTF8String,1);setenv("TRIBESPAD_BOT_SIZE",tb_vengeance_bot_size().UTF8String,1);
+        /* Game Size: how many of each base's bots play (vengeance_input.c). Each bot
+           costs frames, so fewer is smoother. */
+        if([NSFileManager.defaultManager fileExistsAtPath:botMaps]){NSString *size=tb_vengeance_bot_size();NSMutableArray *sizes=[NSMutableArray array];
+            for(NSArray<NSString *> *z in @[@[@"small",@"Small: 6 a Side",@"Defenders and flag grabbers; the smoothest"],
+                                            @[@"medium",@"Medium: 10 a Side",@"Adds duelists, spammers and a rocketeer"],
+                                            @[@"full",@"Full: 15 a Side",@"Adds repair gunners and vehicle bots; the slowest"]]){
+                NSString *value=z[0];UIAction *a=item(z[1],@"person.2",^{[NSUserDefaults.standardUserDefaults setObject:value forKey:@"TribesPad.vengeanceBotSize"];
+                    fprintf(stderr,"TribesPad: bot game size %s\n",value.UTF8String);[weak rebuildMenu];});
+                a.subtitle=z[2];a.state=[size isEqualToString:value]?UIMenuElementStateOn:UIMenuElementStateOff;[sizes addObject:a];}
+            UIMenu *bots=[UIMenu menuWithTitle:@"Bots" image:icon(@"person.3.sequence") identifier:nil options:0 children:@[difficultyMenu(),
+                [UIMenu menuWithTitle:@"Game Size" image:nil identifier:nil options:UIMenuOptionsDisplayInline children:sizes],
+                group(@[item(@"How to Play with Bots",@"questionmark.circle",^{[weak showMessage:@"Play with Bots" text:
+                    @"In MULTIPLAYER > HOST, choose Capture the Flag and one of the four bot maps: FortBots, EmeraldBots, Tropics or Feigned Beliefs Bots. "
+                    "Start the server: a few seconds after you are in, TribesPad switches on both teams' bots, at the difficulty and size chosen here, and puts you on a team."];})])]];
+            if(@available(iOS 15,*))bots.subtitle=@"For the bot maps you host";
+            optionItems=[optionItems arrayByAddingObject:bots];}
+        /* In a bot game hosted here: its difficulty now, and every bot's decisions
+           in TribesPad's log (the game's logTyrion), for seeing what they are doing. */
+        if(tb_vengeance_bot_game){
+            UIAction *log=item(@"Log Bot Decisions",@"doc.text.magnifyingglass",^{[weak toggleBotView:@"log"];});
+            log.subtitle=@"Each bot's goals, in TribesPad's log (slows the game a little)";log.state=tb_bot_log?UIMenuElementStateOn:UIMenuElementStateOff;
+            matchItems=[matchItems arrayByAddingObject:[UIMenu menuWithTitle:@"Bots" image:icon(@"person.3.sequence") identifier:nil options:0 children:@[
+                difficultyMenu(),group(@[log])]]];
+        }
     }
     /* The same order in both games: This Match (on a server), Play Online,
        Options, Help, then Choose Game. Off a server Play Online leads, open. */
@@ -1448,9 +1543,12 @@ static UIAction *tb_menu_find(UIMenuElement *e,NSString *path,NSString *want){
         owner.fps.textColor=frames>=30&&longest<50&&!hot?UIColor.greenColor:UIColor.orangeColor;}];
 }
 -(void)tapKey:(SDL_Scancode)scancode {[self tapKey:scancode mod:SDL_KMOD_NONE];}
-/* Vengeance: a console command typed through its console (Tab opens a command
-   line, Return runs it), one key every 40 ms. Lower-case letters, digits, spaces, periods. */
+/* Vengeance: a console command, run by the engine itself (vengeance_input.c, at once,
+   with no console on screen) once its first frame has handed over the runner;
+   before that, typed through the console (Tab opens a command line, Return runs it),
+   one key every 40 ms: lower-case letters, digits, spaces, periods. */
 -(void)typeVengeanceCommand:(NSString *)command {
+    if(atomic_load(&tb_vengeance_typer)){ss_type_command(command.UTF8String,0);return;}
     [self releaseControls];NSMutableArray<NSNumber *> *codes=[NSMutableArray arrayWithObject:@(SDL_SCANCODE_TAB)];
     for(NSUInteger i=0;i<command.length;i++){unichar c=[command.lowercaseString characterAtIndex:i];
         if(c>='a'&&c<='z')[codes addObject:@(SDL_SCANCODE_A+(c-'a'))];
@@ -1459,6 +1557,22 @@ static UIAction *tb_menu_find(UIMenuElement *e,NSString *path,NSString *want){
     [codes addObject:@(SDL_SCANCODE_RETURN)];__weak TBGameControls *weak=self;
     for(NSUInteger i=0;i<codes.count;i++)dispatch_after(dispatch_time(DISPATCH_TIME_NOW,(int64_t)(i*40*NSEC_PER_MSEC)),dispatch_get_main_queue(),^{
         [weak tapKey:(SDL_Scancode)codes[i].intValue];});
+}
+/* Options > Bots > Difficulty (Vengeance): kept for the next bot game; in a bot game
+   it also applies to the bots playing now. The engine reads it when bots start. */
+-(void)setBotSkill:(NSString *)skill {
+    [NSUserDefaults.standardUserDefaults setObject:skill forKey:@"TribesPad.botSkill"];[self rebuildMenu];
+    fprintf(stderr,"TribesPad: bot difficulty %s\n",skill.UTF8String);
+    if(tb_vengeance&&tb_vengeance_bot_game)ss_type_command([NSString stringWithFormat:@"tribespad botskill %@",skill].UTF8String,0);
+}
+-(void)vengeanceBotCommand:(NSString *)command {
+    [self releaseControls];fprintf(stderr,"TribesPad: bots: %s\n",command.UTF8String);ss_type_command(command.UTF8String,0);
+}
+/* Log Bot Decisions: the game's own logTyrion writes every bot's decisions to the
+   game's log, which TribesPad's log copies while it is on (vengeance_input.c). */
+-(void)toggleBotView:(NSString *)which {
+    (void)which;tb_bot_log=!tb_bot_log;[self vengeanceBotCommand:tb_bot_log?@"tribespad botlog on":@"tribespad botlog off"];
+    [self rebuildMenu];
 }
 -(void)setVengeanceGraphics:(NSString *)quality {
     [NSUserDefaults.standardUserDefaults setObject:quality forKey:@"TribesPad.vengeanceGraphics"];[self rebuildMenu];
@@ -1764,9 +1878,15 @@ static UIAction *tb_menu_find(UIMenuElement *e,NSString *path,NSString *want){
     if(tb_vengeance){
         [self showMessage:name.length?name:@"Controller Guide" text:[NSString stringWithFormat:@"%@\n\n"
             "PLAYING\nLeft stick: move · Right stick: aim\nRT: fire · LT: jet · A: jump (hold to ski) · LB: ski\n"
-            "RB / D-pad left: next / previous weapon\nY: grenade · X: pack · B: use\n"
+            "RB / D-pad left: next / previous weapon\nY: throw a grenade · X: use your pack · B: use (stations, switches)\n"
             "D-pad: up zoom level · down objectives · right loadout (hold)\n"
             "Click right stick: zoom on / off · click left stick: third person\nMenu: game menu (save and load) · View: scores\n\n"
+            "EQUIPMENT\nYour pack (Energy, Repair, Shield or Speed) works all the time; X fires its boost, which then recharges (Q on a keyboard).\n"
+            "Health kits are pickups: walk over one to heal. Killed players drop them.\n"
+            "Repairs: the Repair Pack's boost, or a repair station.\n"
+            "Armor, pack and weapons: at an inventory station in your base (B to use it) or on the respawn screen, where EDIT LOADOUTS saves a set. "
+            "Hold D-pad right in play to choose a saved loadout.\n\n"
+            "RESPAWN AND LOADOUT SCREENS\nRight stick: move the pointer · RT: click\n\n"
             "MENUS\nLeft stick or D-pad: move the cursor · A: click\nX: double-click · B: back · Right stick: scroll",status]];
         return;
     }

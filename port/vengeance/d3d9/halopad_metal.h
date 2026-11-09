@@ -53,6 +53,9 @@ typedef struct {
 } hp_draw_desc;
 
 void *halopad_metal_pipeline(const hp_pipeline_desc *d, char *err, uint32_t errlen);
+/* may_skip: return NULL with *skipped set if the pipeline is still building after
+   this frame's wait budget (TribesPad: draws to the back buffer). */
+void *halopad_metal_pipeline_async(const hp_pipeline_desc *d, int may_skip, int *skipped, char *err, uint32_t errlen);
 void *halopad_metal_depth_state(const hp_depth_desc *d);
 void *halopad_metal_sampler(const hp_sampler_desc *d);
 void *halopad_metal_buffer(const void *data, uint32_t length);

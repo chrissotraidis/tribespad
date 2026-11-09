@@ -40,6 +40,12 @@ uint32_t tribes_fls_alloc(_cpu *cpu,uint32_t callback) {
     return prepare(cpu)?tribes_fls_alloc_index(cpu->_pointer_offset,callback):UINT32_MAX;
 }
 uint32_t tribes_fls_get(_cpu *cpu,uint32_t index) {
+#ifdef TRIBESPAD_FLS_QUICK_GET
+    /* Tribes: Vengeance only (scripts/vengeance/build_engine.py): its C runtime reads
+       its per-thread data on nearly every call. Once the thread has its cleanup
+       context, a read needs no fresh copy of the CPU: alloc, set and free keep it current. */
+    if(tribes_fls_current_context(cpu->_pointer_offset))return tribes_fls_get_value(cpu->_pointer_offset,index);
+#endif
     return prepare(cpu)?tribes_fls_get_value(cpu->_pointer_offset,index):0;
 }
 uint32_t tribes_fls_set(_cpu *cpu,uint32_t index,uint32_t value) {

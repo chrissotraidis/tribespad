@@ -53,6 +53,7 @@ static int enter_starsiege(void) {
    --platform device|simulator), the same process model as the other two. */
 extern int vengeance_mobile_engine_main(int,char **);
 static int enter_vengeance(void) {
+    extern void tb_launcher_show_loading(const char *);tb_launcher_show_loading("Tribes: Vengeance");
     NSURL *support=[NSFileManager.defaultManager URLForDirectory:NSApplicationSupportDirectory inDomain:NSUserDomainMask appropriateForURL:nil create:YES error:nil];
     if(!support){fprintf(stderr,"TribesPad: no app support directory\n");return 125;}
     NSString *gamedata=[NSBundle.mainBundle.resourcePath stringByAppendingPathComponent:@"GameData"];

@@ -157,6 +157,39 @@ static void load_script(void){
  }
  fclose(f);fprintf(stderr,"TribesPad: %u scripted input events\n",script_count);
 }
+/* Typed commands (TribesPad's Mac menu, port/apple/mac_menu.m): each character as
+   a key down and up on its own frame, Shift held around capitals, so the game's
+   console reads every one; a key change between two frames is lost when the game
+   reads one change a frame. ss_type_command adds a line (opened with Tab for
+   Vengeance's console, -console; Enter at the end); ss_typing_pending says how
+   many key changes are still queued. Any thread may add; the game thread types. */
+typedef struct {unsigned char dik;unsigned char down;} TypedKey;
+static TypedKey typed[4096];static unsigned typed_head,typed_tail;
+static pthread_mutex_t typed_lock=PTHREAD_MUTEX_INITIALIZER;
+static void typed_push(unsigned char dik,int down){unsigned next=(typed_tail+1)%4096;if(next==typed_head)return;typed[typed_tail]=(TypedKey){dik,(unsigned char)down};typed_tail=next;}
+static int typed_dik(char c,unsigned char *dik,int *shift){
+ static const char rows[][11]={"1234567890","qwertyuiop","asdfghjkl","zxcvbnm"};static const unsigned char first[]={2,16,30,44};
+ *shift=0;if(c>='A'&&c<='Z'){c=(char)(c-'A'+'a');*shift=1;}
+ for(unsigned r=0;r<4;r++){const char *at=strchr(rows[r],c);if(at&&c){*dik=(unsigned char)(first[r]+(at-rows[r]));return 1;}}
+ static const char plain[]=" -=;'/.",shifted[]="_+:\"?>";static const unsigned char codes[]={0x39,0x0c,0x0d,0x27,0x28,0x35,0x34};
+ const char *p=strchr(plain,c);if(p&&c){*dik=codes[p-plain];return 1;}
+ p=strchr(shifted,c);if(p&&c){*dik=codes[p-shifted+1];*shift=1;return 1;}
+ return 0;
+}
+void ss_type_command(const char *line,int open_with_tab){
+ pthread_mutex_lock(&typed_lock);
+ if(open_with_tab){typed_push(0x0f,1);typed_push(0x0f,0);}
+ for(const char *c=line;*c;c++){unsigned char dik;int shift;if(!typed_dik(*c,&dik,&shift))continue;
+  if(shift)typed_push(0x2a,1);typed_push(dik,1);typed_push(dik,0);if(shift)typed_push(0x2a,0);}
+ typed_push(0x1c,1);typed_push(0x1c,0);
+ pthread_mutex_unlock(&typed_lock);
+}
+unsigned ss_typing_pending(void){pthread_mutex_lock(&typed_lock);unsigned n=(typed_tail+4096-typed_head)%4096;pthread_mutex_unlock(&typed_lock);return n;}
+static void type_next(void){
+ static uint64_t last;uint64_t frame=ss_frames();if(frame==last)return;last=frame;
+ pthread_mutex_lock(&typed_lock);int any=typed_head!=typed_tail;TypedKey k=any?typed[typed_head]:(TypedKey){0,0};if(any)typed_head=(typed_head+1)%4096;pthread_mutex_unlock(&typed_lock);
+ if(any)key_change(k.dik,k.down);
+}
 static void run_script(void){
  if(!script_loaded)load_script();uint64_t frame=ss_frames();
  while(script_next<script_count&&script[script_next].frame<=frame){
@@ -314,11 +347,38 @@ static void *watchdog(void *unused){
 
 /* Drain SDL's queue. The event buffer is guest stack scratch below ESP. */
 static float carry_x,carry_y;
+#if !TARGET_OS_IPHONE
+/* The Mac, with the pointer free in a game that reads the Windows pointer (Tribes:
+   Vengeance's menus; ss_pointer_hook): the game's cursor goes where the Mac pointer is, in game
+   pixels. The window may be larger or smaller than the game's picture, which is
+   centred at its own 4:3 (vengeance_d3d9_host.m). Pointer motion would otherwise
+   move the game's cursor from wherever it was, away from the Mac pointer, and a
+   click land beside the button under it. */
+extern SDL_Window *tribes_sdl_native_window(uint32_t token);
+static int follow_pointer(const unsigned char e[128]){
+ if(relative_mode||scripted_pad_on||!ss_pointer_hook)return 0;   /* Vengeance only: Starsiege captures the mouse */
+ uint32_t window=ss_sdl_window();SDL_Window *native=window?tribes_sdl_native_window(window):NULL;int ww=0,wh=0;
+ if(!native||!SDL_GetWindowSize(native,&ww,&wh)||ww<1||wh<1)return 0;
+ float x,y,gw,gh;memcpy(&x,e+28,4);memcpy(&y,e+32,4);game_size(&gw,&gh);if(game_x<0){game_x=gw/2;game_y=gh/2;}
+ /* The game moves its cursor by the motion it reads, from where it last was: once,
+    both go to the top left corner, where both stop, and then move together. */
+ static int synced;if(!synced){synced=1;mouse_move(-100000,-100000,0);}
+ float scale=fminf((float)ww/gw,(float)wh/gh);x=(x-((float)ww-gw*scale)/2)/scale;y=(y-((float)wh-gh*scale)/2)/scale;
+ if(x<0)x=0;if(y<0)y=0;if(x>gw-1)x=gw-1;if(y>gh-1)y=gh-1;
+ int32_t dx=(int32_t)lroundf(x-game_x),dy=(int32_t)lroundf(y-game_y);
+ TRACE("pointer at %.0f,%.0f (window %dx%d, game %.0fx%.0f, was %.0f,%.0f)\n",x,y,ww,wh,gw,gh,game_x,game_y);
+ if(dx||dy)mouse_move(dx,dy,0);
+ static int hidden;if(!hidden){hidden=1;SDL_HideCursor();}   /* the game draws its own cursor there */
+ return 1;
+}
+#else
+static int follow_pointer(const unsigned char e[128]){(void)e;return 0;}
+#endif
 void ss_input_pump(_cpu *cpu){
  static int pumping,introduced;if(pumping)return;pumping=1;pointer_base=cpu->_pointer_offset;
  if(!introduced&&ss_sdl_window()){introduced=1;windows_pointer(0,0);} /* the pointer starts over the new window */
  {static int watching;if(!watching){watching=1;pthread_t t;if(!pthread_create(&t,NULL,watchdog,NULL))pthread_detach(t);}}
- run_script();controller();
+ run_script();type_next();controller();
  uint32_t saved=cpu->_esp;cpu->_esp=(saved-512)&~15u;uint32_t address=cpu->_esp+256;
  while(tribes_sdl_poll_event(cpu,address)){
   unsigned char e[128];memcpy(e,(void *)(uintptr_t)(cpu->_pointer_offset+address),128);
@@ -331,8 +391,8 @@ void ss_input_pump(_cpu *cpu){
    if(x<0)x=0;if(y<0)y=0;if(x>w-1)x=w-1;if(y>h-1)y=h-1;
    int32_t dx=(int32_t)lroundf(x-game_x),dy=(int32_t)lroundf(y-game_y);if(dx||dy)mouse_move(dx,dy,0);
    if(type!=SDL_EVENT_MOUSE_MOTION)mouse_button(0,type==SDL_EVENT_MOUSE_BUTTON_DOWN);}
-  else if(type==SDL_EVENT_MOUSE_MOTION){float rx,ry;memcpy(&rx,e+36,4);memcpy(&ry,e+40,4);carry_x+=rx;carry_y+=ry;int32_t dx=(int32_t)carry_x,dy=(int32_t)carry_y;carry_x-=dx;carry_y-=dy;if(dx||dy)mouse_move(dx,dy,0);}
-  else if(type==SDL_EVENT_MOUSE_BUTTON_DOWN||type==SDL_EVENT_MOUSE_BUTTON_UP){static const unsigned map[]={0,0,2,1,3,4};unsigned b=e[24];if(b>=1&&b<=5)mouse_button(map[b],type==SDL_EVENT_MOUSE_BUTTON_DOWN);}
+  else if(type==SDL_EVENT_MOUSE_MOTION){if(follow_pointer(e))continue;float rx,ry;memcpy(&rx,e+36,4);memcpy(&ry,e+40,4);carry_x+=rx;carry_y+=ry;int32_t dx=(int32_t)carry_x,dy=(int32_t)carry_y;carry_x-=dx;carry_y-=dy;if(dx||dy)mouse_move(dx,dy,0);}
+  else if(type==SDL_EVENT_MOUSE_BUTTON_DOWN||type==SDL_EVENT_MOUSE_BUTTON_UP){static const unsigned map[]={0,0,2,1,3,4};unsigned b=e[24];(void)follow_pointer(e);if(b>=1&&b<=5)mouse_button(map[b],type==SDL_EVENT_MOUSE_BUTTON_DOWN);}
   else if(type==SDL_EVENT_MOUSE_WHEEL){float y;memcpy(&y,e+28,4);int32_t dz=(int32_t)(y*120.0f);if(dz)mouse_move(0,0,dz);}
   else if(type==SDL_EVENT_QUIT||type==SDL_EVENT_WINDOW_CLOSE_REQUESTED){
    /* Closing the Mac window or Quit: the game's own WM_CLOSE path quits it. */

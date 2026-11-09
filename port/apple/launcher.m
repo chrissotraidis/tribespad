@@ -74,6 +74,9 @@ static UIBezierPath *tb_chamfer(CGRect r,CGFloat c){
 @property(nonatomic) BOOL available,selectedCard;
 @property(nonatomic) BOOL titleArt,banner;
 @property(nonatomic,copy) NSString *badgeTitle;
+/* The card's second status line: what the game offers. The first is who is playing now. */
+@property(nonatomic,copy) NSString *detail;
+-(void)showLive:(NSString *)live;
 @end
 @implementation TBLauncherCard
 -(instancetype)initWithKicker:(NSString *)kicker art:(UIImage *)art fallback:(UIImage *)fallback available:(BOOL)available badge:(NSString *)badge label:(NSString *)label {
@@ -148,9 +151,14 @@ static UIBezierPath *tb_chamfer(CGRect r,CGFloat c){
     self.badge.frame=CGRectMake(pad,b.size.height-pad-badge.height,badge.width,badge.height);
     ((CAShapeLayer *)self.badge.layer.mask).path=tb_chamfer(self.badge.bounds,10).CGPath;
     CGFloat w=b.size.width-2*pad-c,y=CGRectGetMinY(self.badge.frame)-12;
-    CGSize s=[self.status sizeThatFits:CGSizeMake(w,200)];y-=s.height;self.status.frame=CGRectMake(pad,y,w,s.height);
+    /* At least three lines for the status on every card, so the three titles line up. */
+    CGSize s=[self.status sizeThatFits:CGSizeMake(w,200)];CGFloat region=fmax(s.height,ceil(self.status.font.lineHeight*3));
+    y-=region;self.status.frame=CGRectMake(pad,y,w,s.height);
     s=[self.kicker sizeThatFits:CGSizeMake(w,200)];y-=s.height+6;self.kicker.frame=CGRectMake(pad,y,w,s.height);
     [self drift];
+}
+-(void)showLive:(NSString *)live {
+    self.status.text=self.detail.length?[NSString stringWithFormat:@"%@\n%@",live,self.detail]:live;[self setNeedsLayout];
 }
 -(void)setHighlighted:(BOOL)highlighted {
     [super setHighlighted:highlighted];
@@ -200,22 +208,22 @@ static UIBezierPath *tb_chamfer(CGRect r,CGFloat c){
         art:[UIImage imageWithContentsOfFile:[art stringByAppendingPathComponent:@"starsiege.png"]] fallback:emblem available:tb_starsiege_here()
         badge:tb_starsiege_here()?@"PLAY  \u25B8":@"NOT IN THIS BUILD"
         label:tb_starsiege_here()?@"Starsiege: Tribes, play":@"Starsiege: Tribes, not in this build"];
-    starsiege.status.text=tb_starsiege_here()?@"Version 1.41, the one the community plays. Bot matches offline, community servers online.":@"The original. Being translated to native code; it opens here once it plays.";
-    TBLauncherCard *tribes2=[[TBLauncherCard alloc] initWithKicker:@"Tribes 2  \u00B7  2001  \u00B7  TribesNEXT online"
+    if(tb_starsiege_here()){starsiege.detail=@"Version 1.41. Bots offline, community servers online.";[starsiege showLive:@"Checking who is playing\u2026"];}
+    else starsiege.status.text=@"The original. Being translated to native code; it opens here once it plays.";
+    TBLauncherCard *tribes2=[[TBLauncherCard alloc] initWithKicker:@"Tribes 2  \u00B7  2001"
         art:[UIImage imageWithContentsOfFile:[art stringByAppendingPathComponent:@"tribes2.png"]] fallback:emblem available:YES badge:@"PLAY  \u25B8"
         label:@"Tribes 2, play"];
-    tribes2.status.text=@"Checking who is playing\u2026";
+    tribes2.detail=@"Bots offline, TribesNEXT servers online.";[tribes2 showLive:@"Checking who is playing\u2026"];
     BOOL vgInstalled=tb_vengeance_here(),vgDownload=!vgInstalled&&tb_vengeance_download_class()!=nil;
-    TBLauncherCard *vengeance=[[TBLauncherCard alloc] initWithKicker:@"Tribes: Vengeance  \u00B7  2004  \u00B7  OpenSpy online"
+    TBLauncherCard *vengeance=[[TBLauncherCard alloc] initWithKicker:@"Tribes: Vengeance  \u00B7  2004"
         art:[UIImage imageWithContentsOfFile:[art stringByAppendingPathComponent:@"vengeance.png"]] fallback:emblem available:vgInstalled||vgDownload
         badge:vgInstalled?@"PLAY  \u25B8":vgDownload?@"DOWNLOAD  \u25BE":@"NOT IN THIS BUILD"
         label:vgInstalled?@"Tribes: Vengeance, play":vgDownload?@"Tribes: Vengeance, download":@"Tribes: Vengeance, not in this build"];
-    vengeance.status.text=vgInstalled?@"The campaign and online play, translated to native code.":
-        vgDownload?[self vengeanceOffer]:@"Not in this copy of TribesPad.";
+    vengeance.detail=@"The campaign offline, OpenSpy servers online.";
+    if(vgInstalled)[vengeance showLive:@"Checking who is playing\u2026"];
+    else vengeance.status.text=vgDownload?[self vengeanceOffer]:@"Not in this copy of TribesPad.";
     [starsiege addTarget:self action:@selector(starsiegeTapped) forControlEvents:UIControlEventTouchUpInside];
     [tribes2 addTarget:self action:@selector(play) forControlEvents:UIControlEventTouchUpInside];
-    /* Its title screen centres the logo; the backdrop takes the blue frame below it instead. */
-    vengeance.backdrop.layer.contentsRect=CGRectMake(.05,.74,.9,.24);
     [vengeance addTarget:self action:@selector(vengeanceTapped) forControlEvents:UIControlEventTouchUpInside];
     self.cards=@[starsiege,tribes2,vengeance];for(UIView *c in self.cards)[self.view addSubview:c];
     TBGame last=tb_last_game();self.focus=last==TBGameStarsiege?0:last==TBGameVengeance?2:1;[self showFocus];
@@ -363,7 +371,7 @@ static UIBezierPath *tb_chamfer(CGRect r,CGFloat c){
     [shared setProgress:^(NSString *status,double fraction){TBLauncherController *me=weak;if(!me)return;
         card.status.text=status;card.badgeTitle=[NSString stringWithFormat:@"%.0f%%",fraction*100];[card setNeedsLayout];}];
     [shared setFinished:^(NSError *error){TBLauncherController *me=weak;if(!me)return;
-        if(!error&&tb_vengeance_here()){card.badgeTitle=@"PLAY  \u25B8";card.status.text=@"Installed. The campaign and online play, translated to native code.";
+        if(!error&&tb_vengeance_here()){card.badgeTitle=@"PLAY  \u25B8";[card showLive:@"Installed. Checking who is playing\u2026"];[me loadVengeancePlayers];
             card.accessibilityLabel=@"Tribes: Vengeance, play";[card setNeedsLayout];[me rebuildSettingsMenu];return;}
         card.badgeTitle=@"DOWNLOAD  \u25BE";card.status.text=[me vengeanceOffer];[card setNeedsLayout];
         UIAlertController *a=[UIAlertController alertControllerWithTitle:@"Tribes: Vengeance" message:error.localizedDescription preferredStyle:UIAlertControllerStyleAlert];
@@ -406,14 +414,16 @@ static UIBezierPath *tb_chamfer(CGRect r,CGFloat c){
 }
 /* People playing Starsiege: Tribes now, from the community masters (t1_live.c). */
 -(void)loadStarsiegePlayers {
-    __weak TBLauncherController *weak=self;NSString *base=self.cards[0].status.text;
+    if(!tb_starsiege_here())return;
+    __weak TBLauncherController *weak=self;
     dispatch_async(dispatch_get_global_queue(QOS_CLASS_UTILITY,0),^{
         TBT1Live live;int ok=tb_t1_live(&live,4000);
         dispatch_async(dispatch_get_main_queue(),^{
-            TBLauncherController *me=weak;if(!me||!ok)return;TBLauncherCard *card=me.cards[0];
+            TBLauncherController *me=weak;if(!me)return;TBLauncherCard *card=me.cards[0];
+            if(!ok){[card showLive:@"Server list unavailable right now"];return;}
             NSString *now=live.people?[NSString stringWithFormat:@"%d %@ playing now on %d %@",live.people,live.people==1?@"person":@"people",live.busy_servers,live.busy_servers==1?@"server":@"servers"]:
-                [NSString stringWithFormat:@"Nobody on the %d Tribes 1 servers right now",live.servers_answered];
-            card.status.text=[NSString stringWithFormat:@"%@\n%@",now,base];[card setNeedsLayout];});
+                [NSString stringWithFormat:@"Nobody on the %d Tribes servers right now",live.servers_answered];
+            [card showLive:now];});
     });
 }
 /* People playing Tribes: Vengeance now, from OpenSpy, the community master
@@ -422,16 +432,16 @@ static UIBezierPath *tb_chamfer(CGRect r,CGFloat c){
     if(!tb_vengeance_here())return;
     NSMutableURLRequest *r=[NSMutableURLRequest requestWithURL:[NSURL URLWithString:@"https://openspy-website.nyc3.digitaloceanspaces.com/servers/tribesv.json"]];
     [r setValue:@"TribesPad" forHTTPHeaderField:@"User-Agent"];r.timeoutInterval=8;r.cachePolicy=NSURLRequestReloadIgnoringLocalCacheData;
-    __weak TBLauncherController *weak=self;NSString *base=self.cards[2].status.text;
+    __weak TBLauncherController *weak=self;
     [[NSURLSession.sharedSession dataTaskWithRequest:r completionHandler:^(NSData *data,NSURLResponse *resp,NSError *error){
         (void)resp;(void)error;NSArray *list=data?[NSJSONSerialization JSONObjectWithData:data options:0 error:nil]:nil;
-        if(![list isKindOfClass:NSArray.class])return;NSInteger people=0,servers=0;
+        if(![list isKindOfClass:NSArray.class]){dispatch_async(dispatch_get_main_queue(),^{[weak.cards[2] showLive:@"Server list unavailable right now"];});return;}
+        NSInteger people=0,servers=0;
         for(NSDictionary *s in list){if(![s isKindOfClass:NSDictionary.class])continue;NSInteger n=[s[@"numplayers"] integerValue];if(n>0){people+=n;servers++;}}
         NSString *now=people?[NSString stringWithFormat:@"%ld %@ playing now on %ld %@",(long)people,people==1?@"person":@"people",(long)servers,servers==1?@"server":@"servers"]:
             [NSString stringWithFormat:@"Nobody on the %lu Vengeance servers right now",(unsigned long)list.count];
         dispatch_async(dispatch_get_main_queue(),^{
-            TBLauncherController *me=weak;if(!me)return;TBLauncherCard *card=me.cards[2];
-            card.status.text=[NSString stringWithFormat:@"%@\n%@",now,base];[card setNeedsLayout];});
+            [weak.cards[2] showLive:now];});
     }] resume];
 }
 /* People playing Tribes 2 now (players minus bots, TribesNEXT list.json). */
@@ -442,17 +452,49 @@ static UIBezierPath *tb_chamfer(CGRect r,CGFloat c){
     __weak TBLauncherController *weak=self;
     [[NSURLSession.sharedSession dataTaskWithRequest:r completionHandler:^(NSData *data,NSURLResponse *resp,NSError *error){
         (void)resp;(void)error;NSArray *list=data?[NSJSONSerialization JSONObjectWithData:data options:0 error:nil]:nil;
-        NSInteger people=-1,servers=0;
+        NSInteger people=-1,servers=0,listed=[list isKindOfClass:NSArray.class]?(NSInteger)list.count:0;
         if([list isKindOfClass:NSArray.class]){people=0;for(NSDictionary *s in list){if(![s isKindOfClass:NSDictionary.class])continue;
             NSInteger p=[s[@"num_players"] integerValue]-[s[@"num_bots"] integerValue];if(p>0){people+=p;servers++;}}}
         dispatch_async(dispatch_get_main_queue(),^{
             TBLauncherController *me=weak;if(!me)return;TBLauncherCard *card=me.cards[1];
-            card.status.text=people<0?@"Online play with TribesNEXT":people==0?@"Nobody online right now \u00B7 see Game Nights in the \u00B7\u00B7\u00B7 menu":
-                [NSString stringWithFormat:@"%ld %@ playing now on %ld %@",(long)people,people==1?@"person":@"people",(long)servers,servers==1?@"server":@"servers"];
-            [card setNeedsLayout];});
+            [card showLive:people<0?@"Server list unavailable right now":people==0?[NSString stringWithFormat:@"Nobody on the %ld Tribes 2 servers right now",(long)listed]:
+                [NSString stringWithFormat:@"%ld %@ playing now on %ld %@",(long)people,people==1?@"person":@"people",(long)servers,servers==1?@"server":@"servers"]];});
     }] resume];
 }
 @end
+
+/* Tribes: Vengeance takes several seconds before its first frame (its menus at
+   about 8 s on an iPad Pro); until then the screen was black and looked stuck.
+   Its card art, a spinner and a line of text, in a window above the game's, which
+   the game's first frame takes away. Touches pass through. Core Animation keeps
+   the spinner turning while the engine starts on the main thread. */
+static UIWindow *tb_loading;
+void tb_launcher_show_loading(const char *title){
+    UIWindowScene *scene=nil;
+    for(UIScene *s in UIApplication.sharedApplication.connectedScenes)if([s isKindOfClass:UIWindowScene.class])scene=(UIWindowScene *)s;
+    if(!scene||tb_loading)return;
+    UIWindow *w=[[UIWindow alloc] initWithWindowScene:scene];w.windowLevel=UIWindowLevelNormal+1;w.backgroundColor=tb_rgb(0x03070D,1);
+    w.userInteractionEnabled=NO;UIViewController *c=[UIViewController new];w.rootViewController=c;UIView *v=c.view;v.backgroundColor=UIColor.clearColor;
+    NSString *art=[[[NSBundle.mainBundle.resourcePath stringByAppendingPathComponent:@"GameData"] stringByAppendingPathComponent:@"Launcher"] stringByAppendingPathComponent:@"vengeance.png"];
+    UIImageView *image=[[UIImageView alloc] initWithImage:[UIImage imageWithContentsOfFile:art]];image.contentMode=UIViewContentModeScaleAspectFit;
+    image.translatesAutoresizingMaskIntoConstraints=NO;[v addSubview:image];
+    UIActivityIndicatorView *spin=[[UIActivityIndicatorView alloc] initWithFrame:CGRectZero];spin.activityIndicatorViewStyle=UIActivityIndicatorViewStyleLarge;
+    spin.color=tb_rgb(TB_CYAN,1);spin.translatesAutoresizingMaskIntoConstraints=NO;[spin startAnimating];[v addSubview:spin];
+    UILabel *label=[UILabel new];label.translatesAutoresizingMaskIntoConstraints=NO;
+    label.attributedText=[[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@"STARTING %s",title].uppercaseString attributes:@{NSKernAttributeName:@3,
+        NSFontAttributeName:[UIFont systemFontOfSize:13 weight:UIFontWeightBold],NSForegroundColorAttributeName:tb_rgb(0xBFEFF1,1)}];
+    [v addSubview:label];
+    [NSLayoutConstraint activateConstraints:@[
+        [image.centerXAnchor constraintEqualToAnchor:v.centerXAnchor],[image.centerYAnchor constraintEqualToAnchor:v.centerYAnchor constant:-40],
+        [image.widthAnchor constraintEqualToAnchor:v.widthAnchor multiplier:.6],[image.heightAnchor constraintEqualToAnchor:image.widthAnchor multiplier:.75],
+        [spin.centerXAnchor constraintEqualToAnchor:v.centerXAnchor],[spin.topAnchor constraintEqualToAnchor:image.bottomAnchor constant:28],
+        [label.centerXAnchor constraintEqualToAnchor:v.centerXAnchor],[label.topAnchor constraintEqualToAnchor:spin.bottomAnchor constant:14]]];
+    w.hidden=NO;tb_loading=w;[CATransaction flush];
+}
+void tb_launcher_hide_loading(void){
+    UIWindow *w=tb_loading;if(!w)return;tb_loading=nil;
+    [UIView animateWithDuration:.35 animations:^{w.alpha=0;} completion:^(BOOL f){(void)f;w.hidden=YES;w.rootViewController=nil;}];
+}
 
 TBGame tb_launcher_run(void) {
     /* Every way in waits for the window scene to be on screen first. A start

@@ -12,6 +12,7 @@
 #include <strings.h>
 #include <sys/stat.h>
 #include <sys/statvfs.h>
+#include <time.h>
 
 typedef struct Mounts { uint64_t base;char volume[PATH_MAX],game[PATH_MAX],temp[PATH_MAX],content[PATH_MAX],cwd[PATH_MAX];int cwd_fd;struct Mounts *next; } Mounts;
 static Mounts *mounts;
@@ -41,10 +42,92 @@ static int ascii(const char *s) { for(;*s;s++)if((unsigned char)*s>=128)return 0
 static int inside(const char *root,const char *path) {
     size_t n=strlen(root);return !strncmp(root,path,n)&&(!path[n]||path[n]=='/'||(n==1&&root[0]=='/'));
 }
+/* Folder listings for case-insensitive matching, cached per host folder. A
+   lookup used to open and read every folder on the path and realpath() each
+   step: dozens of system calls per GetFileAttributes, and Tribes: Vengeance
+   checks thousands of files at start-up (most of a minute on an iPad).
+   It also reads its INI files through GetFileAttributes at nearly every
+   setting it reads: hundreds of thousands of checks while a map loads.
+   A listing, and the attributes of a name in it, are used without a system
+   call for 100 ms after they were checked. Then one stat of the folder shows
+   whether it changed (change time, inode), and it is read again if so. When
+   TribesPad itself creates, removes, renames or changes the attributes of
+   something (tribes_filesystem_changed), everything is checked again at once;
+   a change made by another program shows within 100 ms. */
+enum {LISTING_FRESH_NS=100000000};
+typedef struct {char *name;unsigned char type;uint32_t flags;mode_t mode;unsigned stat_generation;uint64_t stat_time;} ListedName;
+typedef struct Listing {struct Listing *next;char *path;struct timespec changed;ino_t ino;dev_t dev;unsigned generation;uint64_t checked;size_t count;ListedName *names;} Listing;
+static Listing *listings[2048];
+static unsigned listing_generation;
+static pthread_mutex_t listing_lock=PTHREAD_MUTEX_INITIALIZER;
+void tribes_filesystem_changed(void){pthread_mutex_lock(&listing_lock);listing_generation++;pthread_mutex_unlock(&listing_lock);}
+unsigned tribes_filesystem_generation(void){pthread_mutex_lock(&listing_lock);unsigned g=listing_generation;pthread_mutex_unlock(&listing_lock);return g;}
+static unsigned listing_slot(const char *s){unsigned h=2166136261u;while(*s)h=(h^(unsigned char)*s++)*16777619u;return h&2047u;}
+/* Sorted and searched here: the guarded runtime admits no callback-taking library calls (qsort, bsearch). */
+static void listed_sort(ListedName *names,size_t count){
+    for(size_t gap=count/2;gap;gap/=2)for(size_t i=gap;i<count;i++){
+        ListedName v=names[i];size_t j=i;
+        while(j>=gap&&strcasecmp(names[j-gap].name,v.name)>0){names[j]=names[j-gap];j-=gap;}
+        names[j]=v;}
+}
+static ListedName *listed_find(ListedName *names,size_t count,const char *name){
+    size_t lo=0,hi=count;
+    while(lo<hi){size_t mid=lo+(hi-lo)/2;int c=strcasecmp(names[mid].name,name);if(!c)return names+mid;if(c<0)lo=mid+1;else hi=mid;}
+    return NULL;
+}
+static int listing_read(Listing *l,const struct stat *st){
+    DIR *d=opendir(l->path);if(!d)return 0;
+    size_t count=0,capacity=32;ListedName *names=malloc(capacity*sizeof *names);struct dirent *entry;
+    while(names&&(entry=readdir(d))){
+        if(!strcmp(entry->d_name,".")||!strcmp(entry->d_name,".."))continue;
+        if(count==capacity){ListedName *grown=realloc(names,2*capacity*sizeof *names);if(!grown)break;names=grown;capacity*=2;}
+        memset(names+count,0,sizeof *names);
+        if(!(names[count].name=strdup(entry->d_name)))break;names[count++].type=entry->d_type;
+    }
+    closedir(d);if(!names){errno=ENOMEM;return 0;}
+    listed_sort(names,count);
+    for(size_t i=0;i<l->count;i++)free(l->names[i].name);free(l->names);
+    l->names=names;l->count=count;l->changed=st->st_ctimespec;l->ino=st->st_ino;l->dev=st->st_dev;return 1;
+}
+/* One stat of the folder; read again if it changed. 0: the folder cannot be read (errno). */
+static int listing_check(Listing *l,uint64_t now){
+    struct stat st;if(stat(l->path,&st))return 0;if(!S_ISDIR(st.st_mode)){errno=ENOTDIR;return 0;}
+    if(!l->names||st.st_ctimespec.tv_sec!=l->changed.tv_sec||st.st_ctimespec.tv_nsec!=l->changed.tv_nsec||st.st_ino!=l->ino||st.st_dev!=l->dev)
+        if(!listing_read(l,&st))return 0;
+    l->generation=listing_generation;l->checked=now;return 1;
+}
+/* 1: name is in folder (match holds its case, ambiguous if more than one), 0: it is not, -1: the folder cannot be read (errno).
+   verify checks the folder first, for a name about to be created. st, if given,
+   receives the name's lstat mode and flags (-1 and errno if lstat fails). */
+static int listing_find(const char *folder,int verify,const char *name,char *match,unsigned char *type,int *ambiguous,struct stat *st){
+    pthread_mutex_lock(&listing_lock);
+    unsigned slot=listing_slot(folder);Listing *l=listings[slot];while(l&&strcmp(l->path,folder))l=l->next;
+    struct timespec clock;clock_gettime(CLOCK_UPTIME_RAW,&clock);uint64_t now=(uint64_t)clock.tv_sec*1000000000u+(uint64_t)clock.tv_nsec;int result=0;
+    if(!l){l=calloc(1,sizeof *l);if(!l||!(l->path=strdup(folder))){free(l);pthread_mutex_unlock(&listing_lock);errno=ENOMEM;return -1;}
+        if(!listing_check(l,now)){int e=errno;free(l->path);free(l);pthread_mutex_unlock(&listing_lock);errno=e;return -1;}
+        l->next=listings[slot];listings[slot]=l;}
+    else if(verify||l->generation!=listing_generation||now-l->checked>=LISTING_FRESH_NS){
+        if(!listing_check(l,now)){pthread_mutex_unlock(&listing_lock);return -1;}}
+    ListedName *hit=listed_find(l->names,l->count,name);
+    if(hit){
+        ListedName *first=hit,*last=hit,*end=l->names+l->count;
+        while(first>l->names&&!strcasecmp(first[-1].name,name))first--;
+        while(last+1<end&&!strcasecmp(last[1].name,name))last++;
+        strcpy(match,first->name);*type=first->type;*ambiguous=first!=last;result=1;
+        if(st&&(first->stat_generation!=listing_generation||!first->stat_time||now-first->stat_time>=LISTING_FRESH_NS)){
+            char path[PATH_MAX];struct stat full;
+            if(snprintf(path,sizeof path,"%s/%s",folder,first->name)>=(int)sizeof path){errno=ENAMETOOLONG;result=-1;}
+            else if(lstat(path,&full)){result=-1;l->checked=0;}   /* gone since: read the folder again next time */
+            else{first->mode=full.st_mode;first->flags=full.st_flags;first->stat_time=now;first->stat_generation=listing_generation;}
+        }
+        if(st&&result==1){memset(st,0,sizeof *st);st->st_mode=first->mode;st->st_flags=first->flags;}
+    }
+    pthread_mutex_unlock(&listing_lock);return result;
+}
 /* Resolve a snapshot of the process CWD. Mount paths are immutable and never
    freed during a guest process lifetime. Setter calls serialize their snapshot,
    validation and publication; ordinary resolutions use a copied CWD. */
-static int resolve_path(const Mounts *m,const char *cwd,const char *guest,char *host,size_t capacity,char *canonical,int final_link) {
+static int resolve_path(const Mounts *m,const char *cwd,const char *guest,char *host,size_t capacity,char *canonical,int final_link,struct stat *st) {
     if(!guest||!host||!capacity){errno=EINVAL;return 0;}
     size_t n=strnlen(guest,PATH_MAX);if(!n){errno=ENOENT;return 0;}if(n==PATH_MAX){errno=ENAMETOOLONG;return 0;}
     if(!ascii(guest)){errno=ENOTSUP;return 0;}
@@ -67,11 +150,9 @@ static int resolve_path(const Mounts *m,const char *cwd,const char *guest,char *
     }
     char path[PATH_MAX];strcpy(path,root);
     for(size_t i=start;i<count;i++){
-        DIR *d=opendir(path);if(!d)return 0;struct dirent *entry;char match[NAME_MAX+1]={0};int ambiguous=0;
-        while((entry=readdir(d)))if(!strcasecmp(entry->d_name,parts[i])){
-            if(match[0])ambiguous=1;else strcpy(match,entry->d_name);
-        }
-        closedir(d);
+        char match[NAME_MAX+1]={0};int ambiguous=0;unsigned char type=DT_UNKNOWN;
+        int found=listing_find(path,(final_link==2||final_link==3)&&i+1==count,parts[i],match,&type,&ambiguous,i+1==count?st:NULL);
+        if(found<0)return 0;if(!found)match[0]=0;
         if((final_link==2||final_link==3)&&i+1==count&&(!match[0]||final_link==2)){
             if(match[0]){errno=EEXIST;return 0;}
             if(strlen(parts[i])>NAME_MAX){errno=ENAMETOOLONG;return 0;}
@@ -82,7 +163,9 @@ static int resolve_path(const Mounts *m,const char *cwd,const char *guest,char *
         path[len++]='/';memcpy(path+len,match,add+1);
         /* OPEN_REPARSE_POINT names the final link object, including dangling
            links. Intermediate components still resolve within this mount. */
-        if(!final_link||i+1<count){char actual[PATH_MAX];if(!realpath(path,actual))return 0;
+        /* Only a link (or an entry of unknown type) can lead elsewhere: a plain
+           file or folder named by its listing keeps the path canonical. */
+        if((!final_link||i+1<count)&&(type==DT_LNK||type==DT_UNKNOWN)){char actual[PATH_MAX];if(!realpath(path,actual))return 0;
             if(!inside(root,actual)){errno=EACCES;return 0;}strcpy(path,actual);}
         len=strlen(logical);if(len+add+2>sizeof logical){errno=ENAMETOOLONG;return 0;}
         if(logical[len-1]!='\\')logical[len++]='\\';memcpy(logical+len,match,add+1);
@@ -96,8 +179,8 @@ int tribes_filesystem_create_directory(uint64_t base,const char *guest) {
     pthread_mutex_lock(&lock);Mounts *m=mounts;while(m&&m->base!=base)m=m->next;
     char path[PATH_MAX];int result=0,error;
     if(!m)errno=ENODEV;
-    else if(resolve_path(m,m->cwd,guest,path,sizeof path,NULL,2))result=mkdir(path,0777)==0;
-    error=errno;pthread_mutex_unlock(&lock);errno=error;return result;
+    else if(resolve_path(m,m->cwd,guest,path,sizeof path,NULL,2,NULL))result=mkdir(path,0777)==0;
+    error=errno;pthread_mutex_unlock(&lock);if(result)tribes_filesystem_changed();errno=error;return result;
 }
 /* Native O_EXCL distinguishes creation from reopening without truncating.
    Hold the CWD/creation lock through the open so guest case variants serialize.
@@ -106,24 +189,31 @@ int tribes_filesystem_open_create(uint64_t base,const char *guest,char *host,siz
     pthread_mutex_lock(&lock);Mounts *m=mounts;while(m&&m->base!=base)m=m->next;
     int fd=-1,error;*created=0;
     if(!m)errno=ENODEV;
-    else if(resolve_path(m,m->cwd,guest,host,capacity,canonical,3)){
+    else if(resolve_path(m,m->cwd,guest,host,capacity,canonical,3,NULL)){
         do{fd=open(host,mode|O_CREAT|O_EXCL|O_CLOEXEC|O_NONBLOCK|O_NOFOLLOW,0666);}while(fd<0&&errno==EINTR);
         if(fd>=0)*created=1;
         else if(errno==EEXIST){do{fd=open(host,mode|O_CLOEXEC|O_NONBLOCK|O_NOFOLLOW);}while(fd<0&&errno==EINTR);}
     }
-    error=errno;pthread_mutex_unlock(&lock);errno=error;return fd;
+    error=errno;pthread_mutex_unlock(&lock);if(*created)tribes_filesystem_changed();errno=error;return fd;
 }
 /* Host path for a leaf that may not exist yet, with the same confinement,
    case matching and name validation as CREATE_ALWAYS (resolve mode 3). */
 int tribes_filesystem_resolve_create(uint64_t base,const char *guest,char *host,size_t capacity) {
     pthread_mutex_lock(&lock);Mounts *m=mounts;while(m&&m->base!=base)m=m->next;
     int ok=0,error;
-    if(!m)errno=ENODEV;else ok=resolve_path(m,m->cwd,guest,host,capacity,NULL,3);
+    if(!m)errno=ENODEV;else ok=resolve_path(m,m->cwd,guest,host,capacity,NULL,3,NULL);
     error=errno;pthread_mutex_unlock(&lock);errno=error;return ok;
 }
-int tribes_filesystem_resolve_open(uint64_t base,const char *guest,char *host,size_t capacity,char *canonical,int final_link) {
+static int resolve_snapshot(uint64_t base,const char *guest,char *host,size_t capacity,char *canonical,int final_link,struct stat *st) {
     char cwd[PATH_MAX];pthread_mutex_lock(&lock);Mounts *m=mounts;while(m&&m->base!=base)m=m->next;if(m)strcpy(cwd,m->cwd);pthread_mutex_unlock(&lock);
-    if(!m){errno=ENODEV;return 0;}return resolve_path(m,cwd,guest,host,capacity,canonical,final_link);
+    if(!m){errno=ENODEV;return 0;}return resolve_path(m,cwd,guest,host,capacity,canonical,final_link,st);
+}
+int tribes_filesystem_resolve_open(uint64_t base,const char *guest,char *host,size_t capacity,char *canonical,int final_link) {
+    return resolve_snapshot(base,guest,host,capacity,canonical,final_link,NULL);
+}
+int tribes_filesystem_resolve_stat(uint64_t base,const char *guest,char *host,size_t capacity,struct stat *st) {
+    memset(st,0,sizeof *st);if(!resolve_snapshot(base,guest,host,capacity,NULL,1,st))return 0;
+    return st->st_mode||!lstat(host,st);   /* a mount's own folder has no listing entry */
 }
 int tribes_filesystem_resolve(uint64_t base,const char *guest,char *host,size_t capacity) {
     return tribes_filesystem_resolve_open(base,guest,host,capacity,NULL,0);
@@ -142,7 +232,7 @@ uint32_t tribes_set_current_directory(uint64_t base,uint32_t name) {
     pthread_mutex_lock(&lock);Mounts *m=mounts;while(m&&m->base!=base)m=m->next;
     if(!m){pthread_mutex_unlock(&lock);tribes_set_last_error(3);return 0;}
     char host[PATH_MAX],logical[PATH_MAX];int fd=-1,error=0;
-    if(!resolve_path(m,m->cwd,guest,host,sizeof host,logical,0))error=errno;
+    if(!resolve_path(m,m->cwd,guest,host,sizeof host,logical,0,NULL))error=errno;
     else{struct stat st;if(stat(host,&st))error=errno;else if(!S_ISDIR(st.st_mode))error=ENOTDIR;else if((fd=open(host,O_RDONLY|O_DIRECTORY|O_CLOEXEC))<0)error=errno;}
     if(error){pthread_mutex_unlock(&lock);tribes_set_last_error(error==EACCES?5:error==ENOTSUP?50:error==EINVAL?123:error==ENAMETOOLONG?206:error==ENOTDIR?267:3);return 0;}
     int old=m->cwd_fd;m->cwd_fd=fd;strcpy(m->cwd,logical);pthread_mutex_unlock(&lock);close(old);return 1;

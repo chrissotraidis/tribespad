@@ -127,7 +127,7 @@ int halopad_d3d9_tracing(void);
 extern uint32_t halopad_d3d9_frame;
 uint32_t hpcom_IDirect3DDevice9_SetRenderTarget_c(uint32_t g, uint32_t index, uint32_t s)
 {
-    if (halopad_d3d9_tracing()) fprintf(stderr, "HALOPAD DRAW f%u set render target %u = %08x\n", halopad_d3d9_frame, index, s);
+    if (halopad_d3d9_tracing()) fprintf(stderr, "TribesPad draw f%u set render target %u = %08x\n", halopad_d3d9_frame, index, s);
     device *d = dev(g);
     if (index || !is_surface(s) || !(S(s)->usage & 0x1)) return D3DERR_INVALIDCALL;
     rebind(&d->rt, s);
@@ -169,7 +169,7 @@ static int rect(uint32_t r, uint32_t w, uint32_t h, uint32_t out[4])
 
 uint32_t hpcom_IDirect3DDevice9_StretchRect_c(uint32_t g, uint32_t src, uint32_t sr, uint32_t dst, uint32_t dr, uint32_t filter)
 {
-    if (halopad_d3d9_tracing()) fprintf(stderr, "HALOPAD DRAW f%u stretch %08x -> %08x filter %u\n", halopad_d3d9_frame, src, dst, filter);
+    if (halopad_d3d9_tracing()) fprintf(stderr, "TribesPad draw f%u stretch %08x -> %08x filter %u\n", halopad_d3d9_frame, src, dst, filter);
     device *d = dev(g);
     if (!is_surface(src) || !is_surface(dst) || src == dst || filter > 2) return D3DERR_INVALIDCALL;   /* NONE, POINT, LINEAR */
     res *s = S(src), *t = S(dst);

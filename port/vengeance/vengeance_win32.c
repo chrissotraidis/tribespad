@@ -15,6 +15,7 @@
 #include <strings.h>
 #include <sys/stat.h>
 #include <sys/statvfs.h>
+#include <time.h>
 #include <unistd.h>
 #include "../llasm-support/llasm_cpu.h"
 #include "../core/guest_filesystem.h"
@@ -157,7 +158,7 @@ int vg_cdkey(char out[21]){
  FILE *f=fopen(path,"r");
  if(f){if(!fgets(text,sizeof text,f))text[0]=0;fclose(f);return cdkey_text(text,out);}
  if(!generated_cdkey(out))return 0;
- if((f=fopen(path,"w"))){fprintf(f,"%.4s-%.4s-%.4s-%.4s-%.4s\n",out,out+4,out+8,out+12,out+16);fclose(f);}
+ if((f=fopen(path,"w"))){fprintf(f,"%.4s-%.4s-%.4s-%.4s-%.4s\n",out,out+4,out+8,out+12,out+16);fclose(f);tribes_filesystem_changed();}
  return 1;
 }
 uint32_t vg_reg_open_key_ex_a(uint64_t base,uint32_t key,uint32_t subkey,uint32_t options,uint32_t access,uint32_t output){
@@ -282,13 +283,13 @@ static uint32_t delete_file(uint64_t base,uint32_t name,int wide){
  char guest[PATH_MAX],host[PATH_MAX];if(!existing(base,name,wide,guest,host))return 0;
  struct stat st;if(lstat(host,&st)){tribes_set_last_error(error_of(errno));return 0;}
  if(S_ISDIR(st.st_mode)){tribes_set_last_error(5);return 0;}
- if(unlink(host)){tribes_set_last_error(error_of(errno));return 0;}return 1;
+ if(unlink(host)){tribes_set_last_error(error_of(errno));return 0;}tribes_filesystem_changed();return 1;
 }
 uint32_t vg_delete_file_a(uint64_t base,uint32_t name){return delete_file(base,name,0);}
 uint32_t vg_delete_file_w(uint64_t base,uint32_t name){return delete_file(base,name,1);}
 static uint32_t remove_directory(uint64_t base,uint32_t name,int wide){
  char guest[PATH_MAX],host[PATH_MAX];if(!existing(base,name,wide,guest,host))return 0;
- if(rmdir(host)){tribes_set_last_error(errno==ENOTDIR?267:error_of(errno));return 0;}return 1;
+ if(rmdir(host)){tribes_set_last_error(errno==ENOTDIR?267:error_of(errno));return 0;}tribes_filesystem_changed();return 1;
 }
 uint32_t vg_remove_directory_a(uint64_t base,uint32_t name){return remove_directory(base,name,0);}
 uint32_t vg_remove_directory_w(uint64_t base,uint32_t name){return remove_directory(base,name,1);}
@@ -306,7 +307,7 @@ static uint32_t set_attributes(uint64_t base,uint32_t name,uint32_t attributes,i
  char guest[PATH_MAX],host[PATH_MAX];if(!existing(base,name,wide,guest,host))return 0;
  struct stat st;if(stat(host,&st)){tribes_set_last_error(error_of(errno));return 0;}
  mode_t mode=attributes&1?st.st_mode&~(mode_t)(S_IWUSR|S_IWGRP|S_IWOTH):st.st_mode|S_IWUSR;
- if(chmod(host,mode&07777)){tribes_set_last_error(error_of(errno));return 0;}return 1;
+ if(chmod(host,mode&07777)){tribes_set_last_error(error_of(errno));return 0;}tribes_filesystem_changed();return 1;
 }
 uint32_t vg_set_file_attributes_a(uint64_t base,uint32_t name,uint32_t attributes){return set_attributes(base,name,attributes,0);}
 uint32_t vg_set_file_attributes_w(uint64_t base,uint32_t name,uint32_t attributes){return set_attributes(base,name,attributes,1);}
@@ -417,8 +418,12 @@ uint32_t vg_message_box_w(uint64_t base,uint32_t window,uint32_t text,uint32_t c
    folder's write permission is checked and the handle is opened for
    attributes only; nothing writes through a directory handle. */
 extern uint32_t tribes_create_file_w(uint64_t base,uint32_t name,uint32_t access,uint32_t share,uint32_t security,uint32_t creation,uint32_t flags,uint32_t template_handle);
+static uint32_t game_log=UINT32_MAX;   /* the game's own log (tv_cd_dvd.log), echoed in part below */
 uint32_t vg_create_file_w(uint64_t base,uint32_t name,uint32_t rights,uint32_t share,uint32_t security,uint32_t creation,uint32_t flags,uint32_t template_handle){
  const uint32_t write=UINT32_C(0x40000000)|2u|4u|0x100u|0x10u;
+ static int trace=-1;if(trace<0)trace=getenv("VENGEANCE_TRACE_FILES")!=NULL;
+ char named[PATH_MAX];int have_name=read_ascii(base,name,1,named,sizeof named);
+ if(trace&&have_name)fprintf(stderr,"TribesPad file: open %s\n",named);
  if(creation==3&&(flags&0x02000000u)&&(rights&write)){
   char guest[PATH_MAX],host[PATH_MAX];struct stat st;
   if(read_ascii(base,name,1,guest,sizeof guest)&&tribes_filesystem_resolve(base,guest,host,sizeof host)&&!stat(host,&st)&&S_ISDIR(st.st_mode)){
@@ -426,7 +431,41 @@ uint32_t vg_create_file_w(uint64_t base,uint32_t name,uint32_t rights,uint32_t s
    rights&=~write;
   }
  }
- return tribes_create_file_w(base,name,rights,share,security,creation,flags,template_handle);
+ uint32_t handle=tribes_create_file_w(base,name,rights,share,security,creation,flags,template_handle);
+ size_t n=have_name?strlen(named):0;
+ if(handle!=UINT32_MAX&&(rights&UINT32_C(0x40000000))&&n>=13&&!strcasecmp(named+n-13,"tv_cd_dvd.log"))game_log=handle;
+ return handle;
+}
+
+/* WriteFile: TribesPad's service. Lines of the game's own log that say what it is
+   loading (map, game type, load times) or why it stopped also go to TribesPad's
+   log, as "TribesPad game: ...", beside the hitch and frame lines. */
+extern uint32_t tribes_write_file(uint64_t base,uint32_t handle,uint32_t buffer,uint32_t count,uint32_t output,uint32_t overlapped);
+/* Every line, not just the kept ones: for two seconds after TribesPad runs a console
+   command (vengeance_input.c), so its replies show, and while Bot Decisions logging is on. */
+/* Initialised, so they are ordinary definitions: the iOS engine object keeps only its
+   entry point visible (build_engine.py, embed), which common symbols would escape. */
+double vengeance_echo_all_until=0;
+int vengeance_echo_all=0;
+extern void vengeance_note_load(const char *url);
+static void echo_game_log(const char *text,uint32_t count){
+ static char line[512];static size_t used;
+ static const char *const kept[]={"Log: Browse:","Log: LoadMap:","Log: Loadmap executed","Log: Startup time","Log: Finished precaching",
+  "Log: Game class is","Log: Server switch level","Critical:","Exit: Preparing to exit"};
+ for(uint32_t i=0;i<count;i++){
+  char c=text[i];if(!c||c=='\r')continue;
+  if(c!='\n'){if(used+1<sizeof line)line[used++]=c;continue;}
+  line[used]=0;
+  if(!strncmp(line,"Log: LoadMap: ",14))vengeance_note_load(line+14);
+  struct timespec now;clock_gettime(CLOCK_MONOTONIC,&now);
+  int all=vengeance_echo_all||now.tv_sec+now.tv_nsec/1e9<vengeance_echo_all_until;
+  for(unsigned k=0;k<sizeof kept/sizeof kept[0];k++)if(all||!strncmp(line,kept[k],strlen(kept[k]))){fprintf(stderr,"TribesPad game: %s\n",line);break;}
+  used=0;
+ }
+}
+uint32_t vg_write_file(uint64_t base,uint32_t handle,uint32_t buffer,uint32_t count,uint32_t output,uint32_t overlapped){
+ if(handle==game_log&&buffer&&count)echo_game_log((const char *)GUEST(base,buffer),count);
+ return tribes_write_file(base,handle,buffer,count,output,overlapped);
 }
 
 /* Identity and system information, the values a single-user Windows XP
