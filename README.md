@@ -248,8 +248,8 @@ TribesPad open meanwhile, and a paused download continues where it left off. The
 picker has **Remove Tribes: Vengeance** to free the space. The Mac app carries the game itself.
 Every build includes it, from Terminal or PadMint's **Build** button (`--games tribes2,starsiege`
 leaves it out); the build downloads the same release once to translate the game's code
-([progress](docs/validation/vengeance-progress.md)). The build on GitHub's free Mac, for players
-without a Mac, leaves it out.
+([progress](docs/validation/vengeance-progress.md)). On GitHub's free Mac, for players without a
+Mac, Tribes: Vengeance is not yet confirmed; if it doesn't fit, the app keeps the other two games.
 
 - **Campaign:** New Game, Load Game and the whole story; ··· → This Match → Campaign has Quick
   Save and Quick Load.
@@ -412,8 +412,9 @@ No Apple account is needed for the Mac.
    ```
    No Mac? Build it on GitHub's free Mac from Windows, Linux or any computer with a web
    browser: follow [PadMint's steps](https://github.com/chrissotraidis/padmint#no-mac-build-on-githubs-mac).
-   That build has Tribes 2 and Starsiege: Tribes; Tribes: Vengeance needs a build on your own
-   Mac. The IPA contains the game, so keep it to yourself.
+   Tribes 2 and Starsiege: Tribes are checked there; Tribes: Vengeance is not yet confirmed on
+   GitHub's Mac (if it doesn't fit, the app keeps the other two). The IPA contains the game, so
+   keep it to yourself.
 2. Install `build/output/TribesPad.ipa` with [Sideloadly](https://sideloadly.io) or
    your usual signing tool.
 
