@@ -162,6 +162,8 @@ Each game adds bots where it already would:
 | Starsiege: Tribes | In a game you host, **Tab → Options → Bots…**: Add 2 Bots, Add 4 Bots, Remove All Bots, Easy, Normal or Hard Bots |
 | Tribes: Vengeance | **MULTIPLAYER → HOST**: choose Capture the Flag and one of the four TRIBESai bot maps; its bots switch on by themselves a few seconds after you are in. Difficulty and size: **··· → Options → Bots** (the Mac: **Game → Bots**) |
 
+No bots? See [the FAQ](#faq).
+
 ![Touch Settings during a match](docs/images/tribespad-touch-settings.jpg)
 
 ### Controller layout
@@ -449,8 +451,82 @@ from [patches/translation](patches/translation) (about 3.5 MB, recorded in
 checked by SHA-256. The patches are useless without your own lift of the official files.
 How this works, stage by stage, is in [Reproducible build](docs/REPRODUCIBLE-BUILD.md).
 
+## FAQ
+
+**How do I get bots in Tribes: Vengeance? Is there a menu to spawn them?**
+
+There is no spawn menu: the bots start by themselves. Choose **MULTIPLAYER → HOST**, set the game
+type to **Capture the Flag**, pick one of the four bot maps (**FortBots**, **EmeraldBots**,
+**Tropics** or **Feigned Beliefs Bots**) and press **START SERVER**. A few seconds after you are
+in, TribesPad puts you on a team and both teams' bots switch on. To choose how hard they are
+and how many play, set **··· → Options → Bots** (the Mac: **Game → Bots**) before you host; during
+the match, **··· → This Match → Bots** changes their difficulty.
+
+**I hosted a game and no bots appeared. What's wrong?**
+
+Check these in order:
+
+1. **The map.** Only the four maps with "Bots" in the name have bots. The game's other 200 maps
+   have no bot paths, so nothing happens on them.
+2. **Hosting.** Bots start only in a game you host from **MULTIPLAYER → HOST**. They don't start
+   when you join someone else's server.
+3. **The bot maps are in your build.** If the four bot maps aren't in the HOST map list, your copy
+   was built without them: the build fetches the community's TRIBESai mod and unpacks it with
+   `unar`. Install it (`brew install unar`) and build again. PadMint 0.3.0 and newer asks for it
+   before building.
+4. **Your version.** Vengeance's bots arrived in [TribesPad 0.3.0](https://github.com/chrissotraidis/tribespad/releases/tag/v0.3.0).
+   An older build has no Vengeance or no bots; build again.
+5. **Still nothing?** [Open an issue](https://github.com/chrissotraidis/tribespad/issues) saying
+   which device, map and build you used. If you can, attach the session log
+   (`Library/Logs/TribesPad.log` in TribesPad's app data): its `TribesPad bots:` lines show
+   whether the bot map was seen and the bots were started.
+
+**How hard are the bots?**
+
+**Easy** aims within 9° and waits 1.5 s before firing at someone new; **Normal** (the default)
+5° and 0.9 s; **Hard** is TRIBESai's own, 2° and 0.5 s, and hits hard at range, mortars included.
+Moving targets are harder for them to hit than players who stand still. Snipers are tighter at
+every level.
+
+**Why is a Full bot game slower?**
+
+Every bot is the game's own scripted AI. **Small** (6 a side) is the smoothest; **Full** (15 a
+side, with repair and vehicle bots) costs the most frames.
+
+**Do Tribes 2 and Starsiege: Tribes have bots?**
+
+Yes, in their own screens: Tribes 2's **HOST** screen has Bots, a count and a difficulty range,
+on any map. In Starsiege: Tribes, host a game, then **Tab → Options → Bots…** adds two or four at
+a time and sets Easy, Normal or Hard. Starsiege's bots never carry the flag, as in the original.
+
+**Is there a download, or do I have to build it?**
+
+You build your own copy on an Apple Silicon Mac, with [PadMint](https://github.com/chrissotraidis/padmint)
+or one command (see [Get TribesPad](#get-tribespad)). TribesPad never ships the games: the build
+downloads the free official installers and community releases and checks them by SHA-256.
+
+**Does it run on iPhone? How much space does it need?**
+
+Yes, on iPhone and iPad. The app is about 1 GB with Starsiege and Tribes 2. Tribes: Vengeance is
+an optional 3.1 GB download inside the app: it needs about 15 GB free while it installs and keeps
+11 GB, so a newer device with plenty of free space works best. On the Mac, the build needs about
+40 GiB free for iPhone and iPad or 60 GiB for the Mac.
+
+**Can I play online?**
+
+Yes. Tribes 2 joins TribesNEXT servers, Starsiege: Tribes the community's tribes1.co masters, and
+Tribes: Vengeance the community's OpenSpy servers. The picker shows how many people are playing
+each game now.
+
+**Can this approach run Starsiege, the 1999 mech game?**
+
+Probably: it shares much of Tribes' engine, and TribesPad's translation works the same way on any
+of these Windows games. It isn't planned here, because TribesPad is for the Tribes games.
+
 ## Known issues
 
+- **Tribes: Vengeance terrain:** one terrain texture is reported not to tile correctly (it
+  looks stretched); everything else on the maps draws as the original does.
 - **Crashes in online play.** Each crash so far was a Windows or OpenGL function the
   translated game had not reached before. TribesPad now keeps a session log in its
   app data (`Library/Logs/TribesPad.log`, previous session beside it); attach it to an
@@ -519,7 +595,7 @@ servers alive. Starsiege: Tribes was developed by Dynamix; thanks to
 [PlayT1](https://playt1.com) and the Tribes 1 community. Tribes: Vengeance was developed by
 Irrational Games and published by Vivendi Universal Games; thanks to
 [tribesrevengeance.net](https://tribesrevengeance.net/) for the free Revengeance release,
-[OpenSpy](https://openspy.net) for its servers, and the authors of the TRIBESai bot mod.
+[OpenSpy](https://openspy.net) for its servers, and airfranse for the TRIBESai bot mod.
 Touch control design follows HaloPad /
 [ProjectReach](https://github.com/chrissotraidis/projectreach) and SunPad.
 
