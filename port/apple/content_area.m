@@ -1,48 +1,66 @@
 #import <UIKit/UIKit.h>
 #import <QuartzCore/QuartzCore.h>
 #include "content_area.h"
+#include "content_geometry.h"
 #include <math.h>
 static float inset=-1,density=0;
 static int fixed_width,fixed_height;
-void tb_content_fix_game_size(int width,int height){fixed_width=width;fixed_height=height;inset=-1;}
-/* Measured once, on the main thread, from the first landscape window. */
-static bool measure(void){
-    if(inset>=0)return true;
-    if(![NSThread isMainThread])return false;
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-    NSArray<UIWindow *> *windows=UIApplication.sharedApplication.windows;
-#pragma clang diagnostic pop
-    for(UIWindow *w in windows){
-        CGSize s=w.bounds.size;if(s.width<=s.height)continue;
-        UIEdgeInsets e=w.safeAreaInsets;
-        /* On by default: the notch and rounded corners would cover the HUD and
-           menu edges. The inset margins hold TribesPad's own buttons. */
-        id setting=[NSUserDefaults.standardUserDefaults objectForKey:@"TribesPad.avoidNotch"];
-        BOOL avoid=setting?[setting boolValue]:YES;
-        inset=avoid?(float)ceil(MAX(e.left,e.right)):0;
-        /* Phones are under 480 points tall. The original UI needs 480 lines at
-           its scale, and QoL only uses whole scales, so render the game 960
-           pixels tall: scale 2 then draws the UI over exactly 480 lines, as
-           large as it can be. iPad keeps the native resolution unless
-           Settings > Render Scale lowers it: the game then draws fewer pixels
-           and the system scales them up. The menus keep their size, because
-           the UI scale follows the pixel height (guest_sdl_backend.c). */
-        if(fixed_width>0&&fixed_height>0){
-            /* A fixed game frame: a centred area with its aspect, drawn at its pixel size. */
-            CGFloat area=fmin(s.width,s.height*fixed_width/fixed_height);
-            inset=(float)floor((s.width-area)/2);density=(float)(fixed_height/s.height);
-            NSLog(@"TribesPad content: fixed %dx%d game frame, inset %.0f points, %.3f pixels per point",fixed_width,fixed_height,inset,density);
-            return true;
-        }
-        double scale=[NSUserDefaults.standardUserDefaults doubleForKey:@"TribesPad.renderScale"];
-        if(scale<=0||scale>1)scale=1;scale=fmax(scale,.5);
-        if(s.height<480)density=(float)fmin(w.screen.scale,960.0/s.height);
-        else density=scale<.99?(float)fmax(w.screen.scale*scale,480.0/s.height):0;
-        NSLog(@"TribesPad content inset %.0f points on each side of %.0fx%.0f, %.3f pixels per point",inset,s.width,s.height,density);
-        return true;
+/* What the values were measured from: a resize, a safe-area change or a move
+   to a display with another scale measures again. */
+static __weak UIWindow *measured_window;
+static CGSize measured_size;
+static UIEdgeInsets measured_insets;
+static CGFloat measured_scale;
+/* The inset game layer (tb_content_layer) follows each new measurement. */
+static __weak CAMetalLayer *content_layer;
+static __weak UIView *content_view;
+void tb_content_fix_game_size(int width,int height){fixed_width=width;fixed_height=height;inset=-1;measured_window=nil;}
+/* The game's own window: SDL's UIKit window once it exists, before that the
+   key window of the app's foreground scene (Info.plist declares one). Never
+   the main screen or whichever landscape window UIKit happens to list first. */
+static UIWindow *game_window(void){
+    int count=0;SDL_Window **windows=SDL_GetWindows(&count);UIWindow *found=nil;
+    for(int i=0;windows&&i<count&&!found;i++)
+        found=(__bridge UIWindow *)SDL_GetPointerProperty(SDL_GetWindowProperties(windows[i]),SDL_PROP_WINDOW_UIKIT_WINDOW_POINTER,NULL);
+    SDL_free(windows);if(found)return found;
+    for(UIScene *scene in UIApplication.sharedApplication.connectedScenes){
+        if(![scene isKindOfClass:UIWindowScene.class])continue;
+        if(scene.activationState!=UISceneActivationStateForegroundActive&&scene.activationState!=UISceneActivationStateForegroundInactive)continue;
+        UIWindowScene *windowScene=(UIWindowScene *)scene;
+        if(windowScene.keyWindow)return windowScene.keyWindow;
+        if(windowScene.windows.firstObject)return windowScene.windows.firstObject;
     }
-    return false;
+    return nil;
+}
+static void update_layer(void){
+    CAMetalLayer *layer=content_layer;UIView *view=content_view;if(!layer||!view)return;
+    layer.frame=CGRectInset(view.bounds,inset,0);if(density>0)layer.contentsScale=density;
+    layer.drawableSize=fixed_width>0&&fixed_height>0?CGSizeMake(fixed_width,fixed_height):
+        CGSizeMake(round(layer.bounds.size.width*layer.contentsScale),round(layer.bounds.size.height*layer.contentsScale));
+}
+/* Main thread only; other threads see the last measurement. */
+static bool measure(void){
+    if(![NSThread isMainThread])return inset>=0;
+    UIWindow *w=game_window();if(!w)return inset>=0;
+    CGSize s=w.bounds.size;
+    /* The game is landscape-only: a transient portrait layout keeps the last values. */
+    if(s.width<=s.height)return inset>=0;
+    UIEdgeInsets e=w.safeAreaInsets;
+    CGFloat displayScale=w.traitCollection.displayScale>0?w.traitCollection.displayScale:w.windowScene.screen.scale;
+    if(inset>=0&&w==measured_window&&CGSizeEqualToSize(s,measured_size)&&UIEdgeInsetsEqualToEdgeInsets(e,measured_insets)&&displayScale==measured_scale)return true;
+    /* On by default: the notch and rounded corners would cover the HUD and
+       menu edges. The inset margins hold TribesPad's own buttons. */
+    id setting=[NSUserDefaults.standardUserDefaults objectForKey:@"TribesPad.avoidNotch"];
+    BOOL avoid=setting?[setting boolValue]:YES;
+    double scale=[NSUserDefaults.standardUserDefaults doubleForKey:@"TribesPad.renderScale"];
+    TBContentGeometry g=tb_content_geometry(s.width,s.height,e.left,e.right,displayScale,avoid,scale,fixed_width,fixed_height);
+    inset=g.inset;density=g.density;
+    measured_window=w;measured_size=s;measured_insets=e;measured_scale=displayScale;
+    if(fixed_width>0&&fixed_height>0)
+        NSLog(@"TribesPad content: fixed %dx%d game frame, inset %.0f points, %.3f pixels per point",fixed_width,fixed_height,inset,density);
+    else NSLog(@"TribesPad content inset %.0f points on each side of %.0fx%.0f @%.1f, %.3f pixels per point",inset,s.width,s.height,displayScale,density);
+    update_layer();
+    return true;
 }
 float tb_content_inset(void){return measure()?inset:0;}
 float tb_content_density(void){return measure()?density:0;}
@@ -65,5 +83,5 @@ void *tb_content_layer(SDL_MetalView view){
     layer.pixelFormat=full.pixelFormat;layer.device=full.device;layer.opaque=YES;
     layer.drawableSize=fixed_width>0&&fixed_height>0?CGSizeMake(fixed_width,fixed_height):
         CGSizeMake(round(layer.bounds.size.width*layer.contentsScale),round(layer.bounds.size.height*layer.contentsScale));
-    [full addSublayer:layer];return (__bridge void *)layer;
+    [full addSublayer:layer];content_layer=layer;content_view=v;return (__bridge void *)layer;
 }
