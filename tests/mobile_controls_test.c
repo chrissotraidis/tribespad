@@ -62,5 +62,16 @@ int main(void) {
     tb_mobile_controls_gamepad_look(&c,NAN,INFINITY,.01,900);assert(!drain(events));
     tb_mobile_controls_gamepad_look(&c,1,1,NAN,900);assert(!drain(events));
     tb_mobile_controls_gamepad_look(&c,1,1,-1,900);assert(!drain(events));
-    SDL_Quit();puts("PASS: simultaneous controls, relative aim, tap edges, cancellation and gamepad aim timing");
+    // Touch controls beside a controller (shown, was hiding, hiding, in match, mouse used).
+    assert(!tb_touch_shown_for_controller(1,0,1,1,0));  // controller in use with auto-hide on hides them
+    assert(!tb_touch_shown_for_controller(1,0,1,0,0));  // also before a match: a controller present at launch
+    assert(tb_touch_shown_for_controller(0,1,0,1,0));   // auto-hide turned off brings them back at once
+    assert(tb_touch_shown_for_controller(0,1,0,1,0));   // as does the last controller going
+    assert(tb_touch_shown_for_controller(1,1,0,1,0));   // Show (auto-hide now off) keeps them with the controller connected
+    assert(!tb_touch_shown_for_controller(0,1,1,1,0));  // one of two controllers going: the other still hides them
+    assert(!tb_touch_shown_for_controller(0,0,0,1,0));  // a deliberate Hide stays when nothing changed for the controller
+    assert(!tb_touch_shown_for_controller(0,1,0,0,0));  // menus: they come back with the next match instead
+    assert(!tb_touch_shown_for_controller(0,1,0,1,1));  // a mouse in use keeps them away
+    assert(tb_touch_shown_for_controller(1,0,0,1,0));   // no controller in use: unchanged
+    SDL_Quit();puts("PASS: simultaneous controls, relative aim, tap edges, cancellation, gamepad aim timing and controller auto-hide");
 }

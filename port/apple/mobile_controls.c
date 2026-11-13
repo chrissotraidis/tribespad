@@ -72,6 +72,11 @@ void tb_mobile_controls_emit(TBMobileControls *controls) {
 void tb_mobile_controls_release(TBMobileControls *controls) {
     tb_input_reset(&controls->input);controls->carryX=controls->carryY=0;tb_mobile_controls_emit(controls);
 }
+int tb_touch_shown_for_controller(int shown,int was_hiding,int hiding,int in_match,int mouse_used) {
+    if(hiding)return 0;
+    if(was_hiding&&!shown&&in_match&&!mouse_used)return 1;
+    return shown;
+}
 void tb_mobile_controls_gamepad_look(TBMobileControls *controls,float x,float y,double seconds,float speed) {
     if(!isfinite(seconds)||seconds<=0)return;
     /* A delayed display callback must not turn a pause into a large aim jump. */
