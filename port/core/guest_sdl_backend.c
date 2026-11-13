@@ -526,12 +526,13 @@ static void event_to_guest(unsigned char out[128],const SDL_Event *e){
     if(e->type>=SDL_EVENT_DISPLAY_FIRST&&e->type<=SDL_EVENT_DISPLAY_LAST){EF(16,display.displayID);EF(20,display.data1);EF(24,display.data2);return;}
     if(e->type>=SDL_EVENT_WINDOW_FIRST&&e->type<=SDL_EVENT_WINDOW_LAST){
         EF(16,window.windowID);EF(20,window.data1);EF(24,window.data2);
-        /* Sizes describe the game area (content_area.h). */
-        SDL_Window *native=NULL;int32_t width=e->window.data1;
+        /* Sizes describe the game area (content_area.h), both dimensions: a move to
+           a display of another density changes the pixel height as well. */
+        SDL_Window *native=NULL;int32_t width=e->window.data1,height=e->window.data2;
         for(Window *w=windows;w&&!native;w=w->next)if(SDL_GetWindowID(w->native)==e->window.windowID)native=w->native;
         if(e->type==SDL_EVENT_WINDOW_RESIZED)width=(int32_t)((float)width-2*CONTENT_INSET()+0.5f);
-        else if(e->type==SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED&&native&&!content_pixels(native,&width,NULL))stop();
-        memcpy(out+20,&width,4);return;}
+        else if(e->type==SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED&&native&&!content_pixels(native,&width,&height))stop();
+        memcpy(out+20,&width,4);memcpy(out+24,&height,4);return;}
     switch(e->type){
     case SDL_EVENT_QUIT:case SDL_EVENT_TERMINATING:case SDL_EVENT_LOW_MEMORY:
     case SDL_EVENT_WILL_ENTER_BACKGROUND:case SDL_EVENT_DID_ENTER_BACKGROUND:
