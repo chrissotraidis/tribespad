@@ -7,7 +7,8 @@
    both sides instead, so the HUD stays visible in either orientation. The
    guest sees only the game area: display modes, window sizes, framebuffer
    and pointer coordinates all use it. Devices without side insets see 0.
-   Main thread only; the value is fixed once a landscape window exists. */
+   Measured on the main thread from the game's own window (its size, safe
+   area and display scale) and measured again when any of those change. */
 float tb_content_inset(void);
 /* Guest pixels per point on phones (see content_area.m), 0 elsewhere. */
 float tb_content_density(void);
