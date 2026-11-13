@@ -196,6 +196,7 @@ static void tb_set(NSString *key,double value){[NSUserDefaults.standardUserDefau
 -(void)toggleControls;
 -(void)settingsChanged;
 -(void)hideForController;
+-(void)setHideWithController:(BOOL)on;
 -(BOOL)showControllerHint;
 -(void)pointerMoveTo:(CGPoint)point delta:(CGPoint)delta held:(BOOL)held;
 -(void)pointerButton:(BOOL)down at:(CGPoint)point;
@@ -352,7 +353,7 @@ static const TBSettingRow tb_rows[]={
     {0,YES,"Control Opacity","TribesPad.controlOpacity",NULL,.3,1.0,NO},
     {0,YES,"Look Sensitivity","TribesPad.lookSensitivity",NULL,.4,2.5,YES},
     {0,NO,"Left-Handed Layout","TribesPad.leftHanded","Move on the right, fire and aim on the left.",0,0,NO},
-    {0,NO,"Hide with a Controller","TribesPad.hideWithController","Touch controls step aside when a gamepad connects.",0,0,NO},
+    {0,NO,"Auto-hide Touch Controls with Controller","TribesPad.hideWithController","Touch controls step aside while a gamepad is in use. Show Touch Controls brings them back and turns this off.",0,0,NO},
     {1,NO,"Trackpad Cursor","TribesPad.trackpad","Point and click in menus instead of tapping them directly.",0,0,NO},
     {1,YES,"Cursor Speed","TribesPad.cursorSpeed",NULL,.5,2.5,YES},
     {2,NO,"Keep Clear of the Notch","TribesPad.avoidNotch","Keeps the game clear of the notch and rounded corners. Turn off to fill the screen. Applies the next time TribesPad opens.",0,0,NO},
@@ -452,13 +453,16 @@ static NSString *tb_slider_text(const TBSettingRow *r,double v){return r->multip
     ((UILabel *)[slider.superview viewWithTag:100]).text=tb_slider_text(r,slider.value);[self.owner settingsChanged];
 }
 -(void)switched:(UISwitch *)toggle {
-    const TBSettingRow *r=&tb_rows[toggle.tag];tb_set(@(r->key),toggle.on);[self.owner settingsChanged];
-    // Turning this on with a controller already connected steps the controls aside now.
-    if(toggle.on&&!strcmp(r->key,"TribesPad.hideWithController"))[self.owner hideForController];
+    const TBSettingRow *r=&tb_rows[toggle.tag];
+    // Applies now: on steps the controls aside for a controller in use, off brings them back.
+    if(!strcmp(r->key,"TribesPad.hideWithController")){[self.owner setHideWithController:toggle.on];return;}
+    tb_set(@(r->key),toggle.on);[self.owner settingsChanged];
 }
 -(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)path {
     [tableView deselectRowAtIndexPath:path animated:YES];if(tb_section(path.section)!=TBSectionCount)return;
+    BOOL autoHide=tb_setting(@"TribesPad.hideWithController",1)!=0;
     for(unsigned i=0;i<TBRowCount;i++)[NSUserDefaults.standardUserDefaults removeObjectForKey:@(tb_rows[i].key)];
+    if(!autoHide)[self.owner setHideWithController:YES];
     [tableView reloadData];[self.owner settingsChanged];
 }
 @end
@@ -712,7 +716,7 @@ static TBChatNode *tb_starsiege_chat_tree(void){
     // Below everything else, so the buttons stay tappable over it.
     self.trackpad=[[TBTrackpad alloc] initWithFrame:self.bounds];self.trackpad.owner=self;[self addSubview:self.trackpad];
     self.keyboard=tb_round_button(@"keyboard",@"Keyboard",self,@selector(toggleKeyboard));
-    self.toggle=tb_round_button(@"gamecontroller.fill",@"Touch controls",self,@selector(toggleControls));
+    self.toggle=tb_round_button(@"gamecontroller.fill",@"Touch controls",self,@selector(showOrHideControls));
     self.cursor=tb_round_button(@"cursorarrow.rays",@"Trackpad cursor",self,@selector(toggleTrackpad));
     self.menu=tb_round_button(@"ellipsis",@"Menu",self,nil);
     self.menu.showsMenuAsPrimaryAction=YES;
@@ -759,7 +763,9 @@ static TBChatNode *tb_starsiege_chat_tree(void){
         name:UIApplicationWillResignActiveNotification object:nil];
     // Time spent in the background is not a slow frame.
     [NSNotificationCenter.defaultCenter addObserverForName:UIApplicationDidBecomeActiveNotification object:nil
-        queue:NSOperationQueue.mainQueue usingBlock:^(NSNotification *n){(void)n;tribes_gl4es_resume_frame_stats();}];
+        queue:NSOperationQueue.mainQueue usingBlock:^(NSNotification *n){(void)n;tribes_gl4es_resume_frame_stats();
+            // A controller may have come or gone while TribesPad was away.
+            [weakSelf controllerChanged:nil];}];
     [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(keyboardFrameChanged:)
         name:UIKeyboardDidChangeFrameNotification object:nil];
     [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(keyboardHidden:)
@@ -891,18 +897,24 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
         }
         BOOL was=self.controllerUsed;
         if(any!=was)fprintf(stderr,"TribesPad controller %s (%s)\n",any?"connected":"disconnected",tb_vengeance?"Vengeance":"Starsiege");
+        BOOL wasHiding=was&&TB_HIDE_WITH_CONTROLLER;
         self.controllerUsed=any;
         /* As in Tribes 2: a controller connected during play puts the touch
            controls away; they come back when it goes. */
-        if(any&&!was){[self hideForController];if(self.inMatch)[self showControllerHint];}
-        else if(!any&&was&&self.inMatch&&!self.expanded&&!self.mouseUsed)[self toggleControls];
+        [self applyControllerTouch:wasHiding];
+        if(any&&!was&&self.inMatch)[self showControllerHint];
         [self rebuildMenu];[self setNeedsLayout];return;
     }
     if(self.controller&&[GCController.controllers containsObject:self.controller])return;
+    BOOL wasUsed=self.controllerUsed,wasHiding=wasUsed&&TB_HIDE_WITH_CONTROLLER;
     [self detachController];
     for(GCController *controller in GCController.controllers)if(controller.extendedGamepad){
         self.controller=controller;controller.handlerQueue=dispatch_get_main_queue();break;
     }
+    /* Another controller still connected carries on where the one that went left
+       off; with none, the touch controls it put away come back, as in Starsiege. */
+    if(self.controller)self.controllerUsed=wasUsed;
+    [self applyControllerTouch:wasHiding];
     [self rebuildMenu];
     if(!self.controller)return;
     GCExtendedGamepad *pad=self.controller.extendedGamepad;
@@ -1053,6 +1065,21 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
 -(void)settingsChanged {
     self.laidOutArea=CGRectNull;[self applyFPSSetting];[self rebuildMenu];[self setNeedsLayout];
     tribes_set_keyboard_wasd(tb_setting(@"TribesPad.keyboardWASD",1)!=0);
+}
+/* The touch controls button and Show Touch Controls. Showing them over a
+   controller in use turns auto-hide off until it is turned on again. */
+-(void)showOrHideControls {
+    if(!self.expanded&&self.controllerUsed&&TB_HIDE_WITH_CONTROLLER)tb_set(@"TribesPad.hideWithController",0);
+    [self toggleControls];
+}
+-(void)setHideWithController:(BOOL)on {
+    BOOL wasHiding=self.controllerUsed&&TB_HIDE_WITH_CONTROLLER;
+    tb_set(@"TribesPad.hideWithController",on);
+    [self applyControllerTouch:wasHiding];[self settingsChanged];
+}
+-(void)applyControllerTouch:(BOOL)wasHiding {
+    BOOL hiding=self.controllerUsed&&TB_HIDE_WITH_CONTROLLER;
+    if(tb_touch_shown_for_controller(self.expanded,wasHiding,hiding,self.inMatch,self.mouseUsed)!=self.expanded)[self toggleControls];
 }
 -(void)toggleTrackpad{tb_set(@"TribesPad.trackpad",!TB_TRACKPAD);[self settingsChanged];}
 -(void)toggleFPS{tb_set(@"TribesPad.showFPS",!TB_SHOW_FPS);[self settingsChanged];}
@@ -1248,7 +1275,7 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
     e.wheel.y=(float)steps;e.wheel.integer_y=steps;e.wheel.direction=SDL_MOUSEWHEEL_NORMAL;
     e.wheel.mouse_x=(float)point.x;e.wheel.mouse_y=(float)point.y;SDL_PushEvent(&e);
 }
--(void)hideForController{if(self.controllerUsed&&TB_HIDE_WITH_CONTROLLER&&self.expanded)[self toggleControls];}
+-(void)hideForController{[self applyControllerTouch:NO];}
 /* The menu holds what the original menus cannot reach by touch: chat, scores
    and the in-match keys that have no touch button, then TribesPad's own
    controls, then help. Everything the game's own menus do stays there. */
@@ -1298,9 +1325,11 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
     double rs=tb_setting(@"TribesPad.renderScale",1);
     scale.subtitle=[NSString stringWithFormat:@"%.0f%% of the screen's pixels, in Settings",rs*100];
     if(UIDevice.currentDevice.userInterfaceIdiom!=UIUserInterfaceIdiomPad)scale.attributes=UIMenuElementAttributesHidden;
+    UIAction *autoHide=item(@"Auto-hide Touch Controls with Controller",@"gamecontroller",^{[weak setHideWithController:!TB_HIDE_WITH_CONTROLLER];});
+    autoHide.state=TB_HIDE_WITH_CONTROLLER?UIMenuElementStateOn:UIMenuElementStateOff;
     NSArray *controls=@[
-        item(self.expanded?@"Hide Touch Controls":@"Show Touch Controls",self.expanded?@"xmark.circle":@"gamecontroller",^{[weak toggleControls];}),
-        trackpad,fps,
+        item(self.expanded?@"Hide Touch Controls":@"Show Touch Controls",self.expanded?@"xmark.circle":@"gamecontroller",^{[weak showOrHideControls];}),
+        autoHide,trackpad,fps,
         [UIMenu menuWithTitle:@"Graphics Quality" image:icon(@"slider.horizontal.3") identifier:nil options:0 children:@[
             group(@[balanced,fast]),group(@[scale])]],
         item(@"Settings…",@"gearshape",^{[weak showSettings];})];
