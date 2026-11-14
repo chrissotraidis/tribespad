@@ -348,21 +348,25 @@ static void *watchdog(void *unused){
 /* Drain SDL's queue. The event buffer is guest stack scratch below ESP. */
 static float carry_x,carry_y;
 #if !TARGET_OS_IPHONE
-/* The Mac, with the pointer free in a game that reads the Windows pointer (Tribes:
-   Vengeance's menus; ss_pointer_hook): the game's cursor goes where the Mac pointer is, in game
-   pixels. The window may be larger or smaller than the game's picture, which is
-   centred at its own 4:3 (vengeance_d3d9_host.m). Pointer motion would otherwise
-   move the game's cursor from wherever it was, away from the Mac pointer, and a
-   click land beside the button under it. */
+static bool resync_menu_pointer = true;
+/* Map the free Mac pointer to the game's centered picture. Starsiege's menus
+   still consume DirectInput deltas, so send the movement needed to reach that
+   point before forwarding a click. */
 extern SDL_Window *tribes_sdl_native_window(uint32_t token);
 static int follow_pointer(const unsigned char e[128]){
- if(relative_mode||scripted_pad_on||!ss_pointer_hook)return 0;   /* Vengeance only: Starsiege captures the mouse */
+ if(relative_mode||scripted_pad_on)return 0;
  uint32_t window=ss_sdl_window();SDL_Window *native=window?tribes_sdl_native_window(window):NULL;int ww=0,wh=0;
- if(!native||!SDL_GetWindowSize(native,&ww,&wh)||ww<1||wh<1)return 0;
+ if(!native||!SDL_GetWindowSizeInPixels(native,&ww,&wh)||ww<1||wh<1)return 0;
  float x,y,gw,gh;memcpy(&x,e+28,4);memcpy(&y,e+32,4);game_size(&gw,&gh);if(game_x<0){game_x=gw/2;game_y=gh/2;}
- /* The game moves its cursor by the motion it reads, from where it last was: once,
-    both go to the top left corner, where both stop, and then move together. */
- static int synced;if(!synced){synced=1;mouse_move(-100000,-100000,0);}
+ /* The canvas cursor can reset on a mode change and does not track aim
+    deltas. Reestablish its origin when resuming absolute menu input. */
+ static float last_width,last_height;
+ if(resync_menu_pointer||(!ss_pointer_hook&&(gw!=last_width||gh!=last_height))){
+  resync_menu_pointer=false;
+  last_width=gw;last_height=gh;
+  if(ss_pointer_hook)mouse_move(-100000,-100000,0);
+  else mouse_move(-(int32_t)gw,-(int32_t)gh,0);
+ }
  float scale=fminf((float)ww/gw,(float)wh/gh);x=(x-((float)ww-gw*scale)/2)/scale;y=(y-((float)wh-gh*scale)/2)/scale;
  if(x<0)x=0;if(y<0)y=0;if(x>gw-1)x=gw-1;if(y>gh-1)y=gh-1;
  int32_t dx=(int32_t)lroundf(x-game_x),dy=(int32_t)lroundf(y-game_y);
@@ -399,13 +403,19 @@ void ss_input_pump(_cpu *cpu){
    int32_t x,y;uint32_t window=ss_pointer_to_client(0,0,&x,&y);if(window)(void)tribes_post_message(cpu->_pointer_offset,window,0x0010,0,0);}
   else if(type==SDL_EVENT_WINDOW_FOCUS_LOST){for(unsigned k=1;k<256;k++)if(keys[k])key_change(k,0);for(unsigned b=0;b<8;b++)if(buttons[b])mouse_button(b,0);}
  }
- /* The game draws its own cursor from relative motion: capture the pointer
-    while a mouse is acquired exclusively (the window is hidden when headless). */
- pthread_mutex_lock(&lock);int want=0;
- for(Input *p=inputs;p;p=p->next)if(p->is_device&&p->acquired&&kind(p)==2){DeviceState *s=state_of(p->object,0);if(s&&(s->cooperative&1))want=1;}
- pthread_mutex_unlock(&lock);
+ pthread_mutex_lock(&lock);int want=mouse_exclusive_locked();pthread_mutex_unlock(&lock);
+#if !TARGET_OS_IPHONE
+ /* Starsiege acquires DirectInput even in menus. Reserve native capture for
+    mouse look so fullscreen menus receive ordinary window pointer events. */
+ if(want&&!ss_play_state_hook)want=play_state()==1;
+#endif
  uint32_t window=ss_sdl_window();
- if(window&&want!=relative_mode){tribes_sdl_set_window_relative_mouse_mode(cpu,window,(uint32_t)want);relative_mode=want;}
+ if(window&&want!=relative_mode&&tribes_sdl_set_window_relative_mouse_mode(cpu,window,(uint32_t)want)){
+  relative_mode=want;
+#if !TARGET_OS_IPHONE
+  if(!want&&!ss_play_state_hook)resync_menu_pointer=true;
+#endif
+ }
  cpu->_esp=saved;pumping=0;
 }
 

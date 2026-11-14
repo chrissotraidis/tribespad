@@ -10,10 +10,20 @@
 #include <TargetConditionals.h>
 #if TARGET_OS_IPHONE
 #include "content_area.h"
+#else
+#include <GLES3/gl3.h>
+#include <stdio.h>
+#include <string.h>
 #endif
 #include <stdlib.h>
 
-typedef struct Surface {SDL_Window *window;SDL_MetalView view;EGLSurface egl;unsigned refs;void *frame;int frame_width,frame_height;struct Surface *next;} Surface;
+typedef struct Surface {
+ SDL_Window *window;SDL_MetalView view;EGLSurface egl;unsigned refs;void *frame;int frame_width,frame_height;struct Surface *next;
+#if !TARGET_OS_IPHONE
+ bool fullscreen_registered;
+ int last_dimensions[7];
+#endif
+} Surface;
 typedef struct Context {Surface *surface;EGLContext egl;int interval;struct Context *next;} Context;
 static EGLDisplay display=EGL_NO_DISPLAY;
 static EGLConfig config;
@@ -28,6 +38,28 @@ static Context *lookup(SDL_GLContext token){for(Context *c=contexts;c;c=c->next)
    screen. Other windows draw to the whole window as before. */
 extern void *tb_mac_frame_layer(SDL_MetalView view,int width,int height);
 extern void tb_mac_frame_layout(void *frame,SDL_MetalView view,int width,int height);
+/* The standalone graphics probes can link ANGLE without the Mac menus. */
+extern void tb_mac_restore_fullscreen(SDL_Window *window) __attribute__((weak_import));
+
+static void trace_render_size(Surface *surface){
+ static int enabled=-1;
+ if(enabled<0)enabled=getenv("TRIBESPAD_TRACE_RENDER_SIZE")!=NULL;
+ if(!enabled)return;
+ int dimensions[7]={0};
+ SDL_GetWindowSizeInPixels(surface->window,&dimensions[0],&dimensions[1]);
+ eglQuerySurface(display,surface->egl,EGL_WIDTH,&dimensions[2]);
+ eglQuerySurface(display,surface->egl,EGL_HEIGHT,&dimensions[3]);
+ GLint viewport[4]={0};
+ PFNGLGETINTEGERVPROC get=(PFNGLGETINTEGERVPROC)eglGetProcAddress("glGetIntegerv");
+ get(GL_VIEWPORT,viewport);
+ dimensions[4]=viewport[2];dimensions[5]=viewport[3];
+ dimensions[6]=(SDL_GetWindowFlags(surface->window)&SDL_WINDOW_FULLSCREEN)!=0;
+ if(!memcmp(dimensions,surface->last_dimensions,sizeof dimensions))return;
+ memcpy(surface->last_dimensions,dimensions,sizeof dimensions);
+ fprintf(stderr,"TribesPad render size: %s, window %dx%d, drawable %dx%d, viewport %dx%d\n",
+         dimensions[6]?"fullscreen":"windowed",dimensions[0],dimensions[1],dimensions[2],dimensions[3],dimensions[4],dimensions[5]);
+}
+
 static struct {SDL_Window *window;int width,height;} fixed_frames[4];
 void tribes_angle_fix_frame(SDL_Window *window,int width,int height){
  for(unsigned i=0;i<4;i++)if(fixed_frames[i].window==window||!fixed_frames[i].window){fixed_frames[i].window=window;fixed_frames[i].width=width;fixed_frames[i].height=height;break;}
@@ -99,10 +131,19 @@ SDL_GLContext tribes_angle_current_context(void){return main_thread()?(SDL_GLCon
 SDL_Window *tribes_angle_current_window(void){return main_thread()&&current?current->surface->window:NULL;}
 bool tribes_angle_swap_window(SDL_Window *window){
  if(!main_thread())return false;if(!current||current->surface->window!=window)return SDL_SetError("ANGLE window is not current");
+ Surface *surface=current->surface;
 #if !TARGET_OS_IPHONE
- if(current->surface->frame)tb_mac_frame_layout(current->surface->frame,current->surface->view,current->surface->frame_width,current->surface->frame_height);
+ if(surface->frame)tb_mac_frame_layout(surface->frame,surface->view,surface->frame_width,surface->frame_height);
 #endif
- return eglSwapBuffers(display,current->surface->egl)||failure("swap buffers");
+ if(!eglSwapBuffers(display,surface->egl))return failure("swap buffers");
+#if !TARGET_OS_IPHONE
+ if(!surface->fullscreen_registered&&tb_mac_restore_fullscreen&&!(SDL_GetWindowFlags(window)&SDL_WINDOW_HIDDEN)){
+  int width=0;SDL_GetWindowSize(window,&width,NULL);
+  if(width>=320){surface->fullscreen_registered=true;tb_mac_restore_fullscreen(window);}
+ }
+ trace_render_size(surface);
+#endif
+ return true;
 }
 bool tribes_angle_set_swap_interval(int value){
  if(!main_thread())return false;if(!current)return SDL_SetError("No current ANGLE context");

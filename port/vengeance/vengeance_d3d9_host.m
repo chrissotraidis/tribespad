@@ -11,6 +11,9 @@
 #import <QuartzCore/QuartzCore.h>
 #import <ImageIO/ImageIO.h>
 #include <TargetConditionals.h>
+#if TARGET_OS_OSX
+#import <AppKit/AppKit.h>
+#endif
 #include <SDL3/SDL.h>
 #include <stdio.h>
 #include <time.h>
@@ -38,6 +41,35 @@ extern uint32_t halopad_d3d9_frame;
 #if TARGET_OS_IPHONE
 /* The app's game area (port/apple/content_area.m): a 4:3 layer centred on wider screens. */
 extern void *tb_content_layer(SDL_MetalView view);
+#else
+extern void *tb_mac_frame_layer(SDL_MetalView view, int width, int height);
+extern void tb_mac_frame_layout(void *frame, SDL_MetalView view, int width, int height);
+static SDL_MetalView mac_view;
+static CAMetalLayer *mac_frame;
+static NSString *const fullscreen_key = @"TribesPad.vengeanceFullscreen";
+
+static void remember_fullscreen(SDL_Window *native)
+{
+    NSWindow *window = (__bridge NSWindow *)SDL_GetPointerProperty(
+        SDL_GetWindowProperties(native), SDL_PROP_WINDOW_COCOA_WINDOW_POINTER, NULL);
+    if (!window) return;
+
+    NSNotificationCenter *center = NSNotificationCenter.defaultCenter;
+    [center addObserverForName:NSWindowDidEnterFullScreenNotification object:window queue:nil
+        usingBlock:^(__unused NSNotification *notification) {
+            [NSUserDefaults.standardUserDefaults setBool:YES forKey:fullscreen_key];
+        }];
+    [center addObserverForName:NSWindowDidExitFullScreenNotification object:window queue:nil
+        usingBlock:^(__unused NSNotification *notification) {
+            [NSUserDefaults.standardUserDefaults setBool:NO forKey:fullscreen_key];
+        }];
+    if ([NSUserDefaults.standardUserDefaults boolForKey:fullscreen_key]) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if (window.isVisible && !(window.styleMask & NSWindowStyleMaskFullScreen))
+                [window toggleFullScreen:nil];
+        });
+    }
+}
 #endif
 
 _Thread_local _cpu *halopad_cpu;   /* set by each COM method's wrapper (scripts/vengeance/build_engine.py) */
@@ -109,7 +141,9 @@ void *halopad_window_host(uint32_t hwnd, uint32_t width, uint32_t height)
 #if TARGET_OS_IPHONE
     w->layer = (__bridge CAMetalLayer *)tb_content_layer(view);
 #else
-    w->layer = (__bridge CAMetalLayer *)SDL_Metal_GetLayer(view);
+    w->layer = (__bridge CAMetalLayer *)tb_mac_frame_layer(view, (int)width, (int)height);
+    mac_view = view;
+    mac_frame = w->layer;
 #endif
     w->layer.device = halopad_metal_gpu();
     w->layer.pixelFormat = MTLPixelFormatBGRA8Unorm;
@@ -120,14 +154,9 @@ void *halopad_window_host(uint32_t hwnd, uint32_t width, uint32_t height)
     for (int i = 0; i < 768; i++) w->lut[i] = (float)(i & 255) / 255.0f;
     w->on_screen = !headless();
 #if !TARGET_OS_IPHONE
-    /* The Mac: the game draws at its own size (tb_vengeance_resolution, 2048x1536 on a
-       Retina screen), and the window fits the screen at 4:3. It can be resized and
-       taken full screen (green button, Control-Command-F); the picture keeps 4:3 with
-       black bars. The game reads the mouse as motion, so the window's size changes
-       nothing for it. */
+    /* Fit the initial window to the display. The Metal frame keeps the game's
+       pixel size and aspect ratio as the window resizes or enters fullscreen. */
     if (w->on_screen) {
-        w->layer.contentsGravity = kCAGravityResizeAspect;
-        w->layer.backgroundColor = CGColorGetConstantColor(kCGColorBlack);
         SDL_Rect usable;
         if (SDL_GetDisplayUsableBounds(SDL_GetDisplayForWindow(native), &usable) && width && height) {
             float fit = fminf((float)(usable.w - 40) / (float)width, (float)(usable.h - 40) / (float)height);
@@ -137,6 +166,7 @@ void *halopad_window_host(uint32_t hwnd, uint32_t width, uint32_t height)
             SDL_SetWindowSize(native, (int)((float)width * fit), (int)((float)height * fit));
             SDL_SetWindowPosition(native, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
         }
+        remember_fullscreen(native);
     }
 #endif
     for (int i = 0; i < 4; i++)
@@ -151,11 +181,14 @@ extern void vengeance_input_frame(_cpu *cpu);
 static void capture(uint32_t g)
 {
     if (halopad_cpu) vengeance_input_frame(halopad_cpu);
+    device *d = halopad_com_state("IDirect3DDevice9", g);
+#if TARGET_OS_OSX
+    if (mac_frame) tb_mac_frame_layout((__bridge void *)mac_frame, mac_view, (int)d->pp[0], (int)d->pp[1]);
+#endif
     {   /* Presentation interval: a device that asks for vertical sync (any interval but
            D3DPRESENT_INTERVAL_IMMEDIATE) presents at most 60 times a second, as on a
            60 Hz display; hidden windows have no display to wait for. The game's
            character physics steps at 60 Hz and moves nothing at much higher rates. */
-        device *d = halopad_com_state("IDirect3DDevice9", g);
         static double next;
         if (d->pp[13] != 0x80000000u) {
             struct timespec now;
@@ -176,7 +209,6 @@ static void capture(uint32_t g)
     }
     int frame = (int)halopad_d3d9_frame;
     if (!folder || frame < first || (frame - first) % every) return;
-    device *d = halopad_com_state("IDirect3DDevice9", g);
     uint32_t w = d->pp[0], h = d->pp[1];
     uint32_t *pixels = malloc((size_t)w * h * 4);
     halopad_metal_read_image(d->target, pixels, w, h);

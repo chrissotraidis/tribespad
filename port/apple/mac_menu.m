@@ -10,9 +10,50 @@
 #include <SDL3/SDL.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include "vengeance_mac_display.h"
 
 typedef enum { TB_TRIBES2, TB_STARSIEGE, TB_VENGEANCE } TBMacGame;
 static TBMacGame game;
+static __weak NSWindow *fullscreen_window;
+
+static void toggle_fullscreen(NSWindow *window)
+{
+    if (!(window.styleMask & NSWindowStyleMaskFullScreen))
+        window.collectionBehavior |= NSWindowCollectionBehaviorFullScreenPrimary;
+    [window toggleFullScreen:nil];
+}
+
+/* Called after the first swap of a visible game window, after the GL probe. */
+void tb_mac_restore_fullscreen(SDL_Window *native)
+{
+    if (game == TB_VENGEANCE || getenv("STARSIEGE_HEADLESS")) return;
+    NSWindow *window = (__bridge NSWindow *)SDL_GetPointerProperty(
+        SDL_GetWindowProperties(native), SDL_PROP_WINDOW_COCOA_WINDOW_POINTER, NULL);
+    if (!window || window == fullscreen_window) return;
+    fullscreen_window = window;
+
+    NSString *key = game == TB_STARSIEGE ? @"TribesPad.starsiegeFullscreen" : @"TribesPad.tribes2Fullscreen";
+    static dispatch_once_t once;
+    dispatch_once(&once, ^{
+        NSNotificationCenter *center = NSNotificationCenter.defaultCenter;
+        [center addObserverForName:NSWindowDidEnterFullScreenNotification object:nil queue:nil
+            usingBlock:^(NSNotification *note) {
+                if (note.object == fullscreen_window)
+                    [NSUserDefaults.standardUserDefaults setBool:YES forKey:key];
+            }];
+        [center addObserverForName:NSWindowDidExitFullScreenNotification object:nil queue:nil
+            usingBlock:^(NSNotification *note) {
+                if (note.object == fullscreen_window)
+                    [NSUserDefaults.standardUserDefaults setBool:NO forKey:key];
+            }];
+    });
+    if ([NSUserDefaults.standardUserDefaults boolForKey:key]) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if (window == fullscreen_window && window.isVisible && !(window.styleMask & NSWindowStyleMaskFullScreen))
+                toggle_fullscreen(window);
+        });
+    }
+}
 
 /* The engine's play state (vengeance_input.c defines it for Vengeance). */
 __attribute__((weak)) int vengeance_in_play(void) { return -1; }
@@ -261,16 +302,29 @@ static NSArray<NSMenuItem *> *game_items(void)
         full.state = [quality isEqualToString:@"full"] ? NSControlStateValueOn : NSControlStateValueOff;
         fast.state = [quality isEqualToString:@"fast"] ? NSControlStateValueOn : NSControlStateValueOff;
         NSMutableArray<NSMenuItem *> *sizes = [NSMutableArray array];
-        NSString *size = [NSUserDefaults.standardUserDefaults stringForKey:@"TribesPad.vengeanceResolution"];
-        for (NSString *s in @[@"1024x768", @"1600x1200", @"2048x1536"]) {
-            NSMenuItem *r = item([[s stringByReplacingOccurrencesOfString:@"x" withString:@" × "] stringByAppendingString:@" (next start)"], nil, ^{
-                [NSUserDefaults.standardUserDefaults setObject:s forKey:@"TribesPad.vengeanceResolution"]; });
+        NSString *size = tb_vengeance_mac_selection();
+        NSArray<NSString *> *options = [@[@"display"] arrayByAddingObjectsFromArray:tb_vengeance_mac_sizes()];
+        for (NSString *s in options) {
+            BOOL display = [s isEqualToString:@"display"];
+            NSString *pixels = [(display ? tb_vengeance_mac_display_size() : s)
+                stringByReplacingOccurrencesOfString:@"x" withString:@" × "];
+            NSString *label = display ? [NSString stringWithFormat:@"Main Display (%@)", pixels] : pixels;
+            NSMenuItem *r = item([label stringByAppendingString:@" (next start)"], nil, ^{
+                [NSUserDefaults.standardUserDefaults setObject:s forKey:@"TribesPad.vengeanceResolution"];
+                rebuild_menus(); });
             r.state = [size isEqualToString:s] ? NSControlStateValueOn : NSControlStateValueOff;
             [sizes addObject:r];
         }
-        [items addObject:submenu(@"Graphics Quality", @[full, fast, NSMenuItem.separatorItem, submenu(@"Resolution", sizes)])];
+        [items addObject:submenu(@"Graphics Quality", @[full, fast])];
+        [items addObject:submenu(@"Resolution", sizes)];
     }
     [items addObject:NSMenuItem.separatorItem];
+    NSMenuItem *fullscreen = item(@"Toggle Full Screen", @"f", ^{
+        if (game == TB_VENGEANCE) [NSApp.keyWindow toggleFullScreen:nil];
+        else toggle_fullscreen(fullscreen_window);
+    });
+    fullscreen.keyEquivalentModifierMask = NSEventModifierFlagControl | NSEventModifierFlagCommand;
+    [items addObject:fullscreen];
     [items addObject:key_item(@"Console", game == TB_VENGEANCE ? SDL_SCANCODE_TAB : SDL_SCANCODE_GRAVE, SDL_KMOD_NONE)];
     [items addObject:item(@"Choose Game…", @"g", ^{ open_picker(); })];
     return items;

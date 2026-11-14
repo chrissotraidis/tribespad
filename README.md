@@ -151,6 +151,8 @@ game's own key, so the original screens open.
 
 On the Mac the same items are in the menu bar (**Game**, **Play Online**, **Help**). Vengeance's
 Quick Save and Quick Load are ⌘S and ⌘L, and **Choose Game…** (⌘G) returns to the picker.
+**Game → Toggle Full Screen** (Control–Command–F) switches between fullscreen and windowed mode.
+Each game remembers its own setting for the next launch.
 
 ### Bots
 
@@ -293,11 +295,19 @@ Mac, Tribes: Vengeance is not yet confirmed; if it doesn't fit, the app keeps th
   release's TV Key Generator, TribesPad gives it a CD key from that program's own list the first
   time one is needed, kept in `TribesPad-CDKey.txt` in the game folder (put your own key there to
   use it instead). Who's Playing Now lists OpenSpy's servers with their players and maps.
+  **Multiplayer → Join → Show LAN Servers Only** also discovers servers that announce their
+  GameSpy query port over Bonjour. On a Linux host, copy the
+  [Avahi example](scripts/vengeance/server/tribes-vengeance.service) into `/etc/avahi/services/`,
+  set the server name and query port, and enable Avahi and mDNS on the LAN interface.
 - **Controller:** RT fire, LT jet, A jump (hold to ski), LB ski, RB and D-pad left change weapons,
   Y grenade, X pack, B use; Menu opens the game menu.
 - **Graphics:** ··· → Options → Graphics Quality: Fast (the default, without projected lights and
   shadows) or Full Detail, and a Resolution of 1024 × 768, 1600 × 1200 (the iPhone default) or
   2048 × 1536 (the iPad default). Anisotropic filtering is on (8×).
+  On Mac, choose **Game → Resolution → Main Display** to render at the main display's
+  pixel resolution the next time Vengeance starts. **Game → Toggle Full Screen**
+  (Control–Command–F) enters or exits macOS fullscreen during play. Vengeance remembers
+  whether it was fullscreen or windowed for the next launch.
 - **Speed:** on an iPad Pro (M2) the menus appear about 9 seconds after Play, the first campaign
   map plays from about 20 seconds, and play runs at 90 to 120 frames a second.
 

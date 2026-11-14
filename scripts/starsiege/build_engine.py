@@ -349,7 +349,7 @@ def link(objects, report):
     report['engine_sha256'] = sha(exe)
     return exe
 
-def tribespad_defaults(game):
+def tribespad_defaults(game, *, mac=False):
     """TribesPad's changes to a game folder, for every run and the app.
     Polite GUI: the 1.41 canvas turns $pref::politeGui on when it creates its
     window, and then never takes the pointer from Windows, so it leaves the
@@ -362,6 +362,27 @@ def tribespad_defaults(game):
     at = text.index(anchor)
     end = text.index('\n', at) + 1
     text = text[:end] + '   $pref::politeGui = false; // TribesPad: the game draws its own cursor\n' + text[end:]
+    if mac:
+        anchor = '   OptionsVideo::apply();'
+        assert text.count(anchor) == 1
+        text = text.replace(anchor, '''   // Use the guest fullscreen renderer at the selected pixel size.
+   // The Mac window remembers its own fullscreen setting.
+   $pref::VideoFullScreen = "TRUE";
+   if ($pref::TribesPad::MacDisplayConfigured == "") {
+      $pref::VideoFullScreenRes = Canvas::getDesktopResolution();
+      $pref::TribesPad::MacDisplayConfigured = "1";
+   }
+''' + anchor)
+    # The Graphics panel already has a Show Weather checkbox. Terrain detail
+    # and its presets must preserve that choice when adjusting draw distance.
+    options = game / 'base/scripts/gui/Options.cs'
+    source = options.read_bytes()
+    updated, count = re.subn(
+        rb'(?m)^   \$pref::WeatherPrecipitation = floor\(Control::getValue\(OptionsTerrainDetail\) \* 1\.4\);\r?\n',
+        b'', source,
+    )
+    assert count == 1, 'Options.cs: expected one terrain detail weather assignment'
+    options.write_bytes(updated)
     # The 1.41 layout is drawn for 1920x1080. At 800x600 the game scales HUD
     # positions (y by 600/1080) but not their sizes, so the energy bar (y 34)
     # lands at 18, inside the 35-pixel health bar, and the match clock and ping

@@ -1,0 +1,9 @@
+<?xml version="1.0" standalone="no"?>
+<!DOCTYPE service-group SYSTEM "avahi-service.dtd">
+<service-group>
+  <name>Tribes Vengeance</name>
+  <service protocol="ipv4">
+    <type>_tribesv._udp</type>
+    <port>7778</port>
+  </service>
+</service-group>

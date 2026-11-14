@@ -1,32 +1,89 @@
 /* Display modes for Starsiege: Tribes, which picks and switches its own
  * fullscreen mode through EnumDisplaySettingsA/ChangeDisplaySettingsA. The
- * desktop is TribesPad's configured guest display (guest_display.c). Modes are
- * the usual 4:3 sizes that fit it plus the desktop size itself, at 16 and 32
- * bits. A switch records the guest's mode; the Apple host scales the frame to
- * the real screen, so nothing on the Mac or iPad changes resolution. */
+ * desktop follows the Mac's active display or the configured guest display
+ * (guest_display.c). Modes include the Mac's pixel sizes plus legacy sizes,
+ * at 16 and 32 bits.
+ * A mode switch changes the guest render size inside the Apple window. */
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <TargetConditionals.h>
+#if TARGET_OS_OSX
+#include <CoreGraphics/CoreGraphics.h>
+#endif
 #include "../core/guest_display.h"
 #include "../core/guest_memory_checks.h"
 
 typedef struct { uint32_t width,height,bits; } Mode;
-static Mode modes[16];
-static unsigned mode_count;
-static Mode current;
+static Mode *modes;
+static size_t mode_count,mode_capacity;
+static Mode desktop,current;
+
+static void add_mode(uint32_t width,uint32_t height,uint32_t bits){
+ if(!width||!height)return;
+ for(size_t i=0;i<mode_count;i++)
+  if(modes[i].width==width&&modes[i].height==height&&modes[i].bits==bits)return;
+ if(mode_count==mode_capacity){
+  mode_capacity=mode_capacity?2*mode_capacity:16;
+  Mode *grown=realloc(modes,mode_capacity*sizeof *modes);
+  if(!grown)abort();
+  modes=grown;
+ }
+ modes[mode_count++]=(Mode){width,height,bits};
+}
+
+#if TARGET_OS_OSX
+static int compare_modes(const void *a,const void *b){
+ const Mode *left=a,*right=b;
+ if(left->bits!=right->bits)return left->bits<right->bits?-1:1;
+ if(left->width!=right->width)return left->width<right->width?-1:1;
+ if(left->height!=right->height)return left->height<right->height?-1:1;
+ return 0;
+}
+
+void ss_mac_display_modes(uint32_t *width,uint32_t *height){
+ CGDirectDisplayID display=CGMainDisplayID();
+ CGDisplayModeRef active=CGDisplayCopyDisplayMode(display);
+ if(!active)return;
+ uint32_t active_width=(uint32_t)CGDisplayModeGetPixelWidth(active);
+ uint32_t active_height=(uint32_t)CGDisplayModeGetPixelHeight(active);
+ CGDisplayModeRelease(active);
+ if(!active_width||!active_height)return;
+ *width=active_width;
+ *height=active_height;
+
+ const void *key=kCGDisplayShowDuplicateLowResolutionModes,*value=kCFBooleanTrue;
+ CFDictionaryRef options=CFDictionaryCreate(NULL,&key,&value,1,
+     &kCFTypeDictionaryKeyCallBacks,&kCFTypeDictionaryValueCallBacks);
+ CFArrayRef available=CGDisplayCopyAllDisplayModes(display,options);
+ if(options)CFRelease(options);
+ if(available){
+  for(CFIndex i=0;i<CFArrayGetCount(available);i++){
+   CGDisplayModeRef mode=(CGDisplayModeRef)CFArrayGetValueAtIndex(available,i);
+   uint32_t w=(uint32_t)CGDisplayModeGetPixelWidth(mode),h=(uint32_t)CGDisplayModeGetPixelHeight(mode);
+   add_mode(w,h,16);
+   add_mode(w,h,32);
+  }
+  CFRelease(available);
+ }
+}
+#endif
 
 static void build_modes(uint64_t base){
- if(mode_count)return;
+ if(desktop.width)return;
  uint32_t width=tribes_get_system_metrics(base,0),height=tribes_get_system_metrics(base,1);
  if(!width||!height){fprintf(stderr,"TribesPad: display not configured\n");abort();}
  static const uint32_t sizes[][2]={{640,480},{800,600},{1024,768},{1280,960},{1600,1200}};
  for(unsigned bits=16;bits<=32;bits+=16){
   for(unsigned i=0;i<sizeof sizes/sizeof sizes[0];i++)
-   if(sizes[i][0]<=width&&sizes[i][1]<=height&&!(sizes[i][0]==width&&sizes[i][1]==height))modes[mode_count++]=(Mode){sizes[i][0],sizes[i][1],bits};
-  modes[mode_count++]=(Mode){width,height,bits};
+   if(sizes[i][0]<=width&&sizes[i][1]<=height)add_mode(sizes[i][0],sizes[i][1],bits);
+  add_mode(width,height,bits);
  }
- current=modes[mode_count-1];
+ desktop=current=(Mode){width,height,32};
+#if TARGET_OS_OSX
+ qsort(modes,mode_count,sizeof *modes,compare_modes);
+#endif
 }
 static int device_ok(uint64_t base,uint32_t device){
  if(!device)return 1;
@@ -40,7 +97,7 @@ uint32_t ss_enum_display_settings(uint64_t base,uint32_t device,uint32_t index,u
  if(!device_ok(base,device)||!output)return 0;
  Mode m;
  if(index==0xffffffffu)m=current;
- else if(index==0xfffffffeu)m=modes[mode_count-1];
+ else if(index==0xfffffffeu)m=desktop;
  else if(index<mode_count)m=modes[index];
  else return 0;
  unsigned char *d=(unsigned char *)(uintptr_t)(base+output);
@@ -58,7 +115,7 @@ uint32_t ss_enum_display_settings(uint64_t base,uint32_t device,uint32_t index,u
 uint32_t ss_change_display_settings(uint64_t base,uint32_t input,uint32_t flags){
  build_modes(base);
  if(flags&~(uint32_t)(1|2|4|8)){fprintf(stderr,"TribesPad: ChangeDisplaySettingsA flags 0x%x\n",flags);abort();}
- if(!input){current=modes[mode_count-1];return 0;}
+ if(!input){current=desktop;return 0;}
  const unsigned char *d=(const unsigned char *)(uintptr_t)(base+input);
  uint32_t token=tribes_memory_access_begin(d,124,1),fields,bits,width,height;
  memcpy(&fields,d+40,4);memcpy(&bits,d+104,4);memcpy(&width,d+108,4);memcpy(&height,d+112,4);tribes_memory_access_end(token);
@@ -66,7 +123,7 @@ uint32_t ss_change_display_settings(uint64_t base,uint32_t input,uint32_t flags)
  if(fields&0x40000)want.bits=bits;
  if(fields&0x80000)want.width=width;
  if(fields&0x100000)want.height=height;
- for(unsigned i=0;i<mode_count;i++)if(modes[i].width==want.width&&modes[i].height==want.height&&modes[i].bits==want.bits){
+ for(size_t i=0;i<mode_count;i++)if(modes[i].width==want.width&&modes[i].height==want.height&&modes[i].bits==want.bits){
   if(!(flags&2)){current=want;fprintf(stderr,"TribesPad: guest display mode %ux%u, %u bits\n",want.width,want.height,want.bits);}
   return 0;
  }
