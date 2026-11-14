@@ -36,7 +36,7 @@ def engine():
     assert report.get('opt') == '-O1' and report.get('engine_sha256') == sha(exe), 'Starsiege engine build failed'
     return exe
 
-def add_game_data(gamedata):
+def add_game_data(gamedata, *, mac=False):
     """GameData/Starsiege for any TribesPad app: the engine image, the game folder
     with TribesPad's defaults and without the installer's stale server state,
     and a stamp the app compares to decide when to refresh its copy."""
@@ -44,7 +44,7 @@ def add_game_data(gamedata):
     data.mkdir(parents=True, exist_ok=True)
     shutil.copy2(ENGINE / 'image.bin', data / 'image.bin')
     subprocess.run(['rsync', '-a', '--delete', '--exclude', 'temp/serverTempData*.cs', str(GAME) + '/', str(data / 'Game') + '/'], check=True)
-    load('build_engine', R / 'scripts/starsiege/build_engine.py').tribespad_defaults(data / 'Game')
+    load('build_engine', R / 'scripts/starsiege/build_engine.py').tribespad_defaults(data / 'Game', mac=mac)
     files = sorted(p for p in (data / 'Game').rglob('*') if p.is_file())
     digest = hashlib.sha256()
     for p in files:
@@ -64,7 +64,7 @@ def main():
     assert (GAME / 'Tribes.exe').exists(), 'run scripts/starsiege/prepare-inputs.py first'
     exe = engine()
     shutil.copy2(exe, macos / 'StarsiegeEngine')
-    data, files, stamp = add_game_data(resources / 'GameData')
+    data, files, stamp = add_game_data(resources / 'GameData', mac=True)
     subprocess.run(['codesign', '--force', '--sign', '-', str(macos / 'StarsiegeEngine')], check=True)
     subprocess.run(['codesign', '--force', '--sign', '-', str(app)], check=True)
     subprocess.run(['codesign', '--verify', '--deep', '--strict', str(app)], check=True)

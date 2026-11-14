@@ -54,6 +54,9 @@ static pthread_mutex_t lock=PTHREAD_MUTEX_INITIALIZER;
 static int sdl_started;
 static uint32_t current_dc;
 static uint64_t swaps;
+#if !TARGET_OS_IPHONE
+static uint32_t presented_window;
+#endif
 static int has_context(void);
 
 static _Noreturn void unsupported(const char *what,uint32_t value){fprintf(stderr,"TribesPad: unsupported Starsiege GL operation: %s 0x%x\n",what,value);abort();}
@@ -96,6 +99,10 @@ uint32_t ss_get_dc(_cpu *cpu,uint32_t window){
  const char *title=ss_window_title;size_t title_size=strlen(title)+1;uint32_t guest_title=cpu->_esp-1024,token=tribes_memory_access_begin((void *)(uintptr_t)(base+guest_title),title_size,2);
  memcpy((void *)(uintptr_t)(base+guest_title),title,title_size);tribes_memory_access_end(token);
  uint64_t flags=SDL_WINDOW_OPENGL|(headless()?SDL_WINDOW_HIDDEN:0);
+#if TARGET_OS_OSX
+ /* Keep the startup OpenGL probe out of the Window menu and focus order. */
+ if(width<320&&!strcmp(ss_window_title,"Starsiege: Tribes"))flags|=SDL_WINDOW_HIDDEN;
+#endif
 #if TARGET_OS_IPHONE
  /* Borderless: SDL hides the status bar for it, so the clock and battery do
     not sit over the game's HUD (Tribes 2's window is the same). Full screen:
@@ -263,7 +270,9 @@ uint32_t ss_swap_buffers(_cpu *cpu,uint32_t dc){
  if(swaps==1||swaps%600==0)fprintf(stderr,"TribesPad: frames presented %llu\n",(unsigned long long)swaps);
 #if !TARGET_OS_IPHONE
  {int32_t w,h;SDL_Window *native=tribes_sdl_native_window(copy.sdl_window);
-  if(native&&!headless()&&ss_window_client_size(cpu->_pointer_offset,copy.window,&w,&h)&&w>=320&&h>0)mac_frame(native,w,h);}
+  if(native&&!headless()&&ss_window_client_size(cpu->_pointer_offset,copy.window,&w,&h)&&w>=320&&h>0){
+   mac_frame(native,w,h);presented_window=copy.sdl_window;
+  }}
 #endif
  uint32_t presented=tribes_sdl_gl_swap_window(cpu,copy.sdl_window);
  {extern void ss_input_pump(_cpu *);ss_input_pump(cpu);}
@@ -273,7 +282,13 @@ uint32_t ss_swap_buffers(_cpu *cpu,uint32_t dc){
 uint64_t ss_frames(void){return swaps;}
 /* A host presenting without SwapBuffers (Tribes: Vengeance's Metal device) counts its frames here. */
 void ss_count_frame(void){swaps++;}
-uint32_t ss_sdl_window(void){pthread_mutex_lock(&lock);uint32_t w=0;for(unsigned i=0;i<16;i++)if(dcs[i].dc){w=dcs[i].sdl_window;break;}pthread_mutex_unlock(&lock);return w;}
+uint32_t ss_sdl_window(void){
+#if !TARGET_OS_IPHONE
+ /* The first DC may still belong to the OpenGL probe. Use the game window once it presents. */
+ if(presented_window)return presented_window;
+#endif
+ pthread_mutex_lock(&lock);uint32_t w=0;for(unsigned i=0;i<16;i++)if(dcs[i].dc){w=dcs[i].sdl_window;break;}pthread_mutex_unlock(&lock);return w;
+}
 
 
 /* OpenGL 1.1 entry points Starsiege uses that Tribes 2 never reached (they

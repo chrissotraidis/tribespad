@@ -15,7 +15,7 @@
 #if !TARGET_OS_OSX
 #import <UIKit/UIKit.h>
 #else
-#import <AppKit/AppKit.h>
+#include "vengeance_mac_display.h"
 #endif
 #include <stdio.h>
 #include <string.h>
@@ -32,19 +32,16 @@ static NSString *source_game(const char *gamedata,const char *storage){
 int tb_vengeance_bundled(const char *gamedata,const char *storage){
     return [NSFileManager.defaultManager fileExistsAtPath:[@(gamedata) stringByAppendingPathComponent:@"Vengeance/images"]]&&source_game(gamedata,storage)!=nil;
 }
-/* The game's drawing size, one of three 4:3 sizes, unless chosen otherwise:
-   2048x1536 on iPad and 1600x1200 on iPhone (scaled to the screen); on the Mac
-   2048x1536 on a Retina screen and 1024x768 otherwise, in a window fitted to the
-   screen (vengeance_d3d9_host.m). The game is bound by the CPU: on an M2 iPad Pro
-   2048x1536 costs about 1% of the frame rate. */
+/* The game renders at a fixed size chosen at launch. */
 NSString *tb_vengeance_resolution(void){
-    NSString *size=[NSUserDefaults.standardUserDefaults stringForKey:@"TribesPad.vengeanceResolution"];
 #if TARGET_OS_OSX
-    NSString *fallback=NSScreen.mainScreen.backingScaleFactor>1?@"2048x1536":@"1024x768";
+    NSString *size=tb_vengeance_mac_selection();
+    return [size isEqualToString:@"display"]?tb_vengeance_mac_display_size():size;
 #else
+    NSString *size=[NSUserDefaults.standardUserDefaults stringForKey:@"TribesPad.vengeanceResolution"];
     NSString *fallback=UIDevice.currentDevice.userInterfaceIdiom==UIUserInterfaceIdiomPad?@"2048x1536":@"1600x1200";
-#endif
     return [@[@"1024x768",@"1600x1200",@"2048x1536"] containsObject:size]?size:fallback;
+#endif
 }
 static BOOL players(NSString *relative){
     NSString *lower=relative.lowercaseString;
@@ -94,9 +91,7 @@ int tb_vengeance_prepare_paths(const char *gamedata,const char *storage,char *ar
                and walls stay sharp into the distance, at no measurable cost on iPad. */
             changed=[changed stringByReplacingOccurrencesOfString:@"LevelOfAnisotropy=1\r" withString:@"LevelOfAnisotropy=8\r"];
             changed=[changed stringByReplacingOccurrencesOfString:@"LevelOfAnisotropy=1\n" withString:@"LevelOfAnisotropy=8\n"];
-            /* TribesPad's Resolution (the same menu): the game draws at this 4:3 size and
-               the screen scales it to fit. The engine's desktop is the same size
-               (VENGEANCE_DISPLAY), so it is the one mode the game offers. */
+            /* Use the chosen render size for both game viewport modes and the guest desktop. */
             NSString *size=tb_vengeance_resolution();
             NSArray<NSString *> *wh=[size componentsSeparatedByString:@"x"];
             for(NSString *key in @[@"FullscreenViewport",@"WindowedViewport"])for(NSUInteger axis=0;axis<2;axis++){

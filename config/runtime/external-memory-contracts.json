@@ -712,7 +712,7 @@
     "port/core/gdi_memory.h": "a83bdab6a4d2e3e25f85bf3ff038aa9a647482cf69f40e5e4af3e82f28690391",
     "port/apple/gl4es_context.c": "1b9c5e69d4d6192f837b4401e1ff9f4cb19fa2151703a121d9ce5eb1b24fa6b4",
     "port/apple/gl4es_context.h": "92808b15510fea7b02e574cc2dfc29f97d05da2ce156550f3fcc05541669f2ce",
-    "port/apple/angle_sdl.c": "db0af0f38dbff2773b35bb591d7e6e6cb2dd97b62d69d9be26691130e3ab6760",
+    "port/apple/angle_sdl.c": "77a78cf5d2154e82f5f293e636ad2d9fc1e5b5946b4888175857169194835e6f",
     "port/apple/angle_sdl.h": "d66fd545320b83fa81797b93ae8177081d872d11d6bda2d5383478db1ed9c116"
   },
   "scalar_softfloat_contract": "f32/f64 add/sub/mul/div and sqrt only: Apple ARM64 scalar-struct ABI i32 (i64,i64) / i64 (i64,i64) for binary operations; sqrt is i32 (i64) / i64 (i64), exact nonvariadic C declaration/call. Arguments are values, never addresses. Reviewed dependencies use locals, bounded internal tables and host thread-local rounding/exception state. Exact library identity and header contents checked by sse_inputs.",

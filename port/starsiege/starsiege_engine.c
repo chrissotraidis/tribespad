@@ -12,6 +12,7 @@
 #include <sys/mman.h>
 #include <unistd.h>
 #include <pthread.h>
+#include <TargetConditionals.h>
 #include "../core/guest_threads.h"
 #include "../llasm-support/tribes_absolute_memory.h"
 #include "../core/guest_teb.h"
@@ -103,6 +104,12 @@ int main(int argc,char **argv){
  /* The guest desktop: the host's screen, or 1024x768 when headless. */
  uint32_t display_width=1024,display_height=768;const char *display=getenv("STARSIEGE_DISPLAY");
  if(display&&sscanf(display,"%ux%u",&display_width,&display_height)!=2){fprintf(stderr,"STARSIEGE_DISPLAY must be WIDTHxHEIGHT\n");return 2;}
+#if TARGET_OS_OSX
+ if(!display&&!getenv("STARSIEGE_HEADLESS")){
+  extern void ss_mac_display_modes(uint32_t *,uint32_t *);
+  ss_mac_display_modes(&display_width,&display_height);
+ }
+#endif
  assert(tribes_display_configure(base,display_width,display_height));
  assert(tribes_graphics_configure(base));
  /* SDL keeps its own allocations in guest memory (see starsiege_heap.c). */

@@ -1109,11 +1109,11 @@
    "why": "IpDrv reads its sockets' buffer sizes (SO_RCVBUF, SO_SNDBUF) from the host socket; protocol-info queries go to TribesPad's service (port/starsiege/starsiege_winsock.c)."
   },
   "sendto": {
-   "helper": "ss_sendto",
+   "helper": "vg_sendto",
    "arguments": 6,
    "returns": true,
    "guest_base": true,
-   "why": "TRIBESPAD_TRACE_NET logs each new destination (port/starsiege/starsiege_winsock.c), then TribesPad's sendto."
+   "why": "Vengeance also sends GameSpy LAN queries to servers discovered via Bonjour (port/vengeance/vengeance_lan.c)."
   }
  }
 }
