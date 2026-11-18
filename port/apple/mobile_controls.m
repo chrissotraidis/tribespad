@@ -913,7 +913,7 @@ static bool SDLCALL tb_mouse_watch(void *context,SDL_Event *e){
     }
     /* Another controller still connected carries on where the one that went left
        off; with none, the touch controls it put away come back, as in Starsiege. */
-    if(self.controller)self.controllerUsed=wasUsed;
+    self.controllerUsed=self.controller!=nil;
     [self applyControllerTouch:wasHiding];
     [self rebuildMenu];
     if(!self.controller)return;
