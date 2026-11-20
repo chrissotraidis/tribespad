@@ -1153,9 +1153,20 @@ uint32_t tribes_sdl_set_number_property(_cpu *cpu,uint32_t id,uint32_t name,uint
     uint64_t bits=((uint64_t)high<<32)|low;Sint64 value;memcpy(&value,&bits,8);
     uint32_t result=SDL_SetNumberProperty(id,n,value);free(n);WINDOW_RETURN(result);
 }
+/* iPhone and iPad: a game window always fills its screen. Tribes 2 otherwise
+   opens at its saved resolution (a portrait 820x1180 from an earlier iPad
+   session), which on a TV is a box at the left edge. */
+static void mobile_fill_screen(SDL_Window *window){
+#if TARGET_OS_IPHONE
+    if(window&&!(SDL_GetWindowFlags(window)&SDL_WINDOW_FULLSCREEN))SDL_SetWindowFullscreen(window,true);
+#else
+    (void)window;
+#endif
+}
 uint32_t tribes_sdl_create_window_properties(_cpu *cpu,uint32_t id){
     WINDOW_ENTER();(void)properties_slot(id);Window *w=calloc(1,sizeof *w);if(!w){SDL_OutOfMemory();WINDOW_RETURN(0);}
     w->native=SDL_CreateWindowWithProperties(id);if(!w->native){free(w);WINDOW_RETURN(0);}
+    mobile_fill_screen(w->native);
     if(next_window_token>=0xda100000)stop();w->token=next_window_token++;if(!tribes_window_add(base,w->token+0x03000000u,0,window_style(w->native)))stop();w->next=windows;windows=w;WINDOW_RETURN(w->token);
 }
 uint32_t tribes_sdl_create_window(_cpu *cpu,uint32_t title,uint32_t width,uint32_t height,uint32_t low,uint32_t high){
@@ -1163,6 +1174,7 @@ uint32_t tribes_sdl_create_window(_cpu *cpu,uint32_t title,uint32_t width,uint32
     Window *w=calloc(1,sizeof *w);if(!w){free(name);SDL_OutOfMemory();WINDOW_RETURN(0);}
     w->native=SDL_CreateWindow(name,(int32_t)width,(int32_t)height,((uint64_t)high<<32)|low);free(name);
     if(!w->native){free(w);WINDOW_RETURN(0);}
+    mobile_fill_screen(w->native);
     if(next_window_token>=0xda100000)stop();w->token=next_window_token++;if(!tribes_window_add(base,w->token+0x03000000u,0,window_style(w->native)))stop();w->next=windows;windows=w;WINDOW_RETURN(w->token);
 }
 void tribes_sdl_destroy_window(_cpu *cpu,uint32_t token){
@@ -1225,7 +1237,15 @@ uint32_t tribes_sdl_get_closest_fullscreen_mode(_cpu *cpu,uint32_t display,uint3
 }
 uint32_t tribes_sdl_sync_window(_cpu *cpu,uint32_t token){WINDOW_ENTER();WINDOW_RETURN(SDL_SyncWindow(native_window(token)));}
 uint32_t tribes_sdl_set_window_fullscreen(_cpu *cpu,uint32_t token,uint32_t value){WINDOW_ENTER();WINDOW_RETURN(SDL_SetWindowFullscreen(native_window(token),(value&0xffu)!=0));}
-uint32_t tribes_sdl_set_window_size(_cpu *cpu,uint32_t token,uint32_t width,uint32_t height){WINDOW_ENTER();WINDOW_RETURN(SDL_SetWindowSize(native_window(token),(int32_t)width,(int32_t)height));}
+uint32_t tribes_sdl_set_window_size(_cpu *cpu,uint32_t token,uint32_t width,uint32_t height){
+    WINDOW_ENTER();
+#if TARGET_OS_IPHONE
+    /* The window keeps the whole screen (mobile_fill_screen); the game follows its size. */
+    (void)native_window(token);(void)width;(void)height;WINDOW_RETURN(1);
+#else
+    WINDOW_RETURN(SDL_SetWindowSize(native_window(token),(int32_t)width,(int32_t)height));
+#endif
+}
 uint32_t tribes_sdl_set_window_bordered(_cpu *cpu,uint32_t token,uint32_t value){WINDOW_ENTER();WINDOW_RETURN(SDL_SetWindowBordered(native_window(token),(value&0xffu)!=0));}
 uint32_t tribes_sdl_set_window_relative_mouse_mode(_cpu *cpu,uint32_t token,uint32_t value){
     WINDOW_ENTER();bool on=(value&0xffu)!=0,result=SDL_SetWindowRelativeMouseMode(native_window(token),on);
