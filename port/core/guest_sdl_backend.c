@@ -670,6 +670,12 @@ uint32_t tribes_sdl_get_primary_display(_cpu *cpu) {
 static int pixel_modes(const SDL_DisplayMode *m){return m&&m->pixel_density>1.0f&&(m->w<640||m->h<480)&&(m->h<480||m->w<480);}
 /* Landscape phones also lose the safe-area inset on each side (content_area.h). */
 static void guest_mode_size(const SDL_DisplayMode *m,int *w,int *h,float *density){
+#if TARGET_OS_IPHONE
+    /* A TV (iPadOS extended display) is not one of SDL's displays: Tribes 2
+       picked the iPad's 1366x1024 and drew it into the left half of a TV. */
+    SDL_DisplayMode window_mode;int ww,wh;
+    if(m&&tb_content_window_points(&ww,&wh)&&(ww!=m->w||wh!=m->h)){window_mode=*m;window_mode.w=ww;window_mode.h=wh;m=&window_mode;}
+#endif
     float width=(float)m->w-2*CONTENT_INSET();
     *w=(int)(width+0.5f);*h=m->h;*density=m->pixel_density;
     if(pixel_modes(m)){

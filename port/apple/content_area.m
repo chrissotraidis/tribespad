@@ -63,6 +63,10 @@ static bool measure(void){
     return true;
 }
 float tb_content_inset(void){return measure()?inset:0;}
+bool tb_content_window_points(int *width,int *height){
+    if(!measure()||measured_size.width<1||measured_size.height<1)return false;
+    *width=(int)lround(measured_size.width);*height=(int)lround(measured_size.height);return true;
+}
 float tb_content_density(void){return measure()?density:0;}
 bool tb_content_pixels(SDL_Window *window,int *width,int *height){
     int w=0,h=0,pw=0,ph=0;float d=tb_content_inset(),scale=tb_content_density();
