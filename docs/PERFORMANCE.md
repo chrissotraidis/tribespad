@@ -81,3 +81,11 @@ Reading a slow-stretch line: `25.0 FPS ... waiting for the GPU 4.1 of 40.0 ms pe
 
 Other directions are planned separately: a headless dedicated server on a Mac, then Linux on ARM ([DEDICATED-SERVER-PLAN.md](DEDICATED-SERVER-PLAN.md)); Raspberry Pi 5 / Linux and Android builds ([ANDROID-LINUX-PLAN.md](ANDROID-LINUX-PLAN.md)); community features ([COMMUNITY-RESEARCH.md](COMMUNITY-RESEARCH.md)); and Starsiege: Tribes ([STARSIEGE-TRIBES-PLAN.md](STARSIEGE-TRIBES-PLAN.md)). Device performance comes first, because every one of those builds on the same engine.
 
+
+## TV (extended display), 20 November 2026
+
+Tribes: Vengeance runs and looks right on a 1280x720 TV but stutters, worst
+while hosting a game (the hosting stutter already happened on the iPad's own
+screen). Starsiege: Tribes runs well there. Tribes 2 opened as a portrait box
+at the left edge (its saved 820x1180 resolution); 0.3.2 (6) keeps its window
+full screen on iPhone and iPad.

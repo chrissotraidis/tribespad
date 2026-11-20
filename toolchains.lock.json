@@ -14,15 +14,15 @@
     "build": "generated/tool-builds/9d6c88b47852-7ddadfc0",
     "evidence": "docs/artifacts/2026-09-28/G0/lifter-9d6c88b47852-7ddadfc0",
     "artifacts": {
-      "SRW/SRW.exe": "33350eb64813531cbe9a6838aca93904747f0802c0288b99f494e58861d81a4a",
-      "llasm/llasm": "9b9ae4421de954546c7f42942b97902570337b2735c7f3243127ad1e2cdd11eb"
+      "SRW/SRW.exe": "d7db10d92c9aa252e1db63075a2996afd08f0f36aa62c0e2dbba90cc42855c5b",
+      "llasm/llasm": "4ba74ae4af894d2c56f813bf931572f5bc9e32ad1b28c4ad61a88e3f7a1cafb9"
     }
   },
   "artifacts": {
-    "SRW/SRW.exe": "33350eb64813531cbe9a6838aca93904747f0802c0288b99f494e58861d81a4a",
-    "llasm/llasm": "9b9ae4421de954546c7f42942b97902570337b2735c7f3243127ad1e2cdd11eb"
+    "SRW/SRW.exe": "d7db10d92c9aa252e1db63075a2996afd08f0f36aa62c0e2dbba90cc42855c5b",
+    "llasm/llasm": "4ba74ae4af894d2c56f813bf931572f5bc9e32ad1b28c4ad61a88e3f7a1cafb9"
   },
-  "validation": "Cached tools matched the HaloPad build manifest; Tribes-specific correctness is assessed separately.",
+  "validation": "Lifter built on this Mac from the locked sources by scripts/build-tools.py.",
   "tribes_extensions": {
     "base_sources": {
       "SConstruct": "a66ad6f350f1cd781c8f971353efc2caf910b09b18595748272e5fbd9676d516",
