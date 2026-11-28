@@ -54,7 +54,7 @@
   },
   {
    "path": "generated/integration-review/guest-threads/macos/result.json",
-   "sha256": "48a38fa3adfa9b388db2a69785754d49eb5eae7f30d341557e6769129bbe2060",
+   "sha256": "cf575859a3cbf4012166d8743919443607adea64c89df8e0092f6fe2a9564dbf",
    "base": "none",
    "patch": "596b01e8eb069ceb.zst"
   },
@@ -132,7 +132,7 @@
   },
   {
    "path": "generated/integration-review/sdl-io/result.json",
-   "sha256": "153458ddc2895a83acc0ab6b52ac3a92bbbd67925b80d87b81f013fab326fdbd",
+   "sha256": "274124f01c7cf063bf47b8c47ea0669f6e4e2d10f2d9a82e89583d375a4372e0",
    "base": "none",
    "patch": "c7f2e10cbee1c0e0.zst"
   },
