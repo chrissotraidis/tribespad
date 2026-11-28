@@ -14,6 +14,10 @@ float tb_content_inset(void);
 float tb_content_density(void);
 /* Pixel size of the inset game area of an SDL window. */
 bool tb_content_pixels(SDL_Window *window,int *width,int *height);
+/* Point size of the game's window (or, before it exists, of the app's
+   foreground scene). SDL's display modes describe the iPad's own screen even
+   when iPadOS shows the app on a TV; the guest's modes use this instead. */
+bool tb_content_window_points(int *width,int *height);
 /* The Metal layer the game draws into. SDL makes its Metal view the root
    view, which UIKit always stretches over the whole screen, so an inset game
    area gets its own layer inside it. Owned by the view's layer. */
