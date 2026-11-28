@@ -8,6 +8,7 @@
     "tribes_gl4es_note_gpu_wait",
     "tb_content_inset",
     "tb_content_density",
+    "tb_content_window_points",
     "tb_audio_session_restore",
     "SDL_IsAudioDevicePlayback",
     "getenv",
